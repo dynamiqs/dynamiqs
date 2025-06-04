@@ -3,19 +3,21 @@ from __future__ import annotations
 import jax.numpy as jnp
 import numpy as np
 from IPython.display import Image
-from jax.typing import ArrayLike
+from jaxtyping import ArrayLike
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 
 from .._checks import check_shape
+from ..qarrays.qarray import QArrayLike
+from ..qarrays.utils import asqarray, to_jax
 from ..utils import wigner as compute_wigner
 from .utils import add_colorbar, colors, gif_indices, gifit, grid, optional_ax
 
-__all__ = ['wigner', 'wigner_mosaic', 'wigner_gif']
+__all__ = ['wigner_data', 'wigner', 'wigner_gif', 'wigner_mosaic']
 
 
 @optional_ax
-def plot_wigner_data(
+def wigner_data(
     wigner: ArrayLike,
     xmax: float,
     ymax: float,
@@ -28,8 +30,27 @@ def plot_wigner_data(
     cross: bool = False,
     clear: bool = False,
 ):
-    w = jnp.asarray(wigner)
+    r"""Plot a pre-computed Wigner function.
+
+    Warning:
+        Documentation redaction in progress.
+
+    Note:
+        Choose a diverging colormap `cmap` for better results.
+
+    See also:
+        - [`dq.wigner()`][dynamiqs.wigner]: compute the Wigner distribution of a ket or
+            density matrix.
+        - [`dq.plot.wigner()`][dynamiqs.plot.wigner]: plot the Wigner function of a
+            state.
+    """
+    w = to_jax(wigner)
     check_shape(w, 'wigner', '(n, n)')
+    if w.dtype not in (jnp.float32, jnp.float64):
+        raise TypeError(
+            f'Wigner data must be of type `float`, not `{w.dtype}`. Consider using'
+            f' `dq.plot.wigner(x)` to plot the Wigner function of a quantum state `x`.'
+        )
 
     # set plot norm
     vmin = -vmax
@@ -40,7 +61,7 @@ def plot_wigner_data(
 
     # plot
     ax.imshow(
-        w,
+        w.T,
         cmap=cmap,
         norm=norm,
         origin='lower',
@@ -68,7 +89,7 @@ def plot_wigner_data(
 
 @optional_ax
 def wigner(
-    state: ArrayLike,
+    state: QArrayLike,
     *,
     ax: Axes | None = None,
     xmax: float = 5.0,
@@ -94,6 +115,12 @@ def wigner(
         coordinates $(x,y)=(\mathrm{Re}(\alpha),\mathrm{Im}(\alpha))$, which is
         different from the default behaviour of `qutip.plot_wigner()`.
 
+    See also:
+        - [`dq.wigner()`][dynamiqs.wigner]: compute the Wigner distribution of a ket or
+            density matrix.
+        - [`dq.plot.wigner_data()`][dynamiqs.plot.wigner_data]: plot a pre-computed
+            Wigner function.
+
     Examples:
         >>> psi = dq.coherent(16, 2.0)
         >>> dq.plot.wigner(psi)
@@ -101,31 +128,31 @@ def wigner(
 
         ![plot_wigner_coh](../../figs_code/plot_wigner_coh.png){.fig-half}
 
-        >>> psi = dq.unit(dq.coherent(16, 2) + dq.coherent(16, -2))
+        >>> psi = (dq.coherent(16, 2) + dq.coherent(16, -2)).unit()
         >>> dq.plot.wigner(psi, xmax=4.0, ymax=2.0, colorbar=False)
         >>> renderfig('plot_wigner_cat')
 
         ![plot_wigner_cat](../../figs_code/plot_wigner_cat.png){.fig-half}
 
-        >>> psi = dq.unit(dq.fock(2, 0) + dq.fock(2, 1))
+        >>> psi = (dq.fock(2, 0) + dq.fock(2, 1)).unit()
         >>> dq.plot.wigner(psi, xmax=2.0, cross=True)
         >>> renderfig('plot_wigner_01')
 
         ![plot_wigner_01](../../figs_code/plot_wigner_01.png){.fig-half}
 
-        >>> psi = dq.unit(sum(dq.coherent(32, 3 * a) for a in [1, 1j, -1, -1j]))
+        >>> psi = dq.coherent(32, [3, 3j, -3, -3j]).sum(0).unit()
         >>> dq.plot.wigner(psi, npixels=201, clear=True)
         >>> renderfig('plot_wigner_4legged')
 
         ![plot_wigner_4legged](../../figs_code/plot_wigner_4legged.png){.fig-half}
     """
-    state = jnp.asarray(state)
+    state = asqarray(state)
     check_shape(state, 'state', '(n, 1)', '(n, n)')
 
     ymax = xmax if ymax is None else ymax
     _, _, w = compute_wigner(state, xmax, ymax, npixels)
 
-    plot_wigner_data(
+    wigner_data(
         w,
         xmax,
         ymax,
@@ -140,7 +167,7 @@ def wigner(
 
 
 def wigner_mosaic(
-    states: ArrayLike,
+    states: QArrayLike,
     *,
     n: int = 8,
     nrows: int = 1,
@@ -170,7 +197,7 @@ def wigner_mosaic(
 
         >>> n = 16
         >>> a = dq.destroy(n)
-        >>> H = dq.zero(n)
+        >>> H = dq.zeros(n)
         >>> jump_ops = [a @ a - 4.0 * dq.eye(n)]  # cat state inflation
         >>> psi0 = dq.coherent(n, 0)
         >>> tsave = jnp.linspace(0, 1.0, 101)
@@ -182,7 +209,7 @@ def wigner_mosaic(
 
         >>> n = 16
         >>> a = dq.destroy(n)
-        >>> H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
+        >>> H = a.dag() @ a.dag() @ a @ a  # Kerr Hamiltonian
         >>> psi0 = dq.coherent(n, 2)
         >>> tsave = jnp.linspace(0, jnp.pi, 101)
         >>> result = dq.sesolve(H, psi0, tsave)
@@ -191,7 +218,7 @@ def wigner_mosaic(
 
         ![plot_wigner_mosaic_kerr](../../figs_code/plot_wigner_mosaic_kerr.png){.fig}
     """
-    states = jnp.asarray(states)
+    states = asqarray(states)
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
 
     nstates = len(states)
@@ -214,7 +241,7 @@ def wigner_mosaic(
 
     # plot individual wigner
     for i, ax in enumerate(axs):
-        plot_wigner_data(
+        wigner_data(
             wig[i],
             ax=ax,
             xmax=xmax,
@@ -230,7 +257,7 @@ def wigner_mosaic(
 
 
 def wigner_gif(
-    states: ArrayLike,
+    states: QArrayLike,
     *,
     gif_duration: float = 5.0,
     fps: int = 10,
@@ -255,7 +282,7 @@ def wigner_gif(
     Examples:
         >>> n = 16
         >>> a = dq.destroy(n)
-        >>> H = dq.zero(n)
+        >>> H = dq.zeros(n)
         >>> jump_ops = [a @ a - 4.0 * dq.eye(n)]  # cat state inflation
         >>> psi0 = dq.coherent(n, 0)
         >>> tsave = jnp.linspace(0, 1.0, 1001)
@@ -267,7 +294,7 @@ def wigner_gif(
 
         >>> n = 16
         >>> a = dq.destroy(n)
-        >>> H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
+        >>> H = a.dag() @ a.dag() @ a @ a  # Kerr Hamiltonian
         >>> psi0 = dq.coherent(n, 2)
         >>> tsave = jnp.linspace(0, jnp.pi, 1001)
         >>> result = dq.sesolve(H, psi0, tsave)
@@ -278,7 +305,7 @@ def wigner_gif(
 
         ![plot_wigner_gif_kerr](../../figs_code/wigner-kerr.gif){.fig-half}
     """
-    states = jnp.asarray(states)
+    states = asqarray(states)
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
 
     ymax = xmax if ymax is None else ymax
@@ -286,7 +313,7 @@ def wigner_gif(
     indices = gif_indices(len(states), nframes)
     _, _, wig = compute_wigner(states[indices], xmax, ymax, npixels)
 
-    return gifit(plot_wigner_data)(
+    return gifit(wigner_data)(
         wig,
         w=w,
         h=ymax / xmax * w,

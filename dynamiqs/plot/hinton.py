@@ -13,6 +13,8 @@ from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
 
 from .._checks import check_shape
+from ..qarrays.qarray import QArrayLike
+from ..qarrays.utils import to_jax
 from .utils import add_colorbar, bra_ticks, integer_ticks, ket_ticks, optional_ax
 
 __all__ = ['hinton']
@@ -58,7 +60,7 @@ def _plot_squares(
 
     patch_list = [
         patches.Rectangle(xy, side, side, facecolor=color)
-        for xy, side, color in zip(corners, sides, colors)
+        for xy, side, color in zip(corners, sides, colors, strict=True)
     ]
 
     squares = PatchCollection(
@@ -120,7 +122,7 @@ def _plot_hinton(
 
 @optional_ax
 def hinton(
-    x: ArrayLike,
+    x: QArrayLike,
     *,
     ax: Axes | None = None,
     cmap: str | None = None,
@@ -140,14 +142,14 @@ def hinton(
 
     Examples:
         >>> rho = dq.coherent_dm(16, 2.0)
-        >>> dq.plot.hinton(jnp.abs(rho))
+        >>> dq.plot.hinton(jnp.abs(rho.to_jax()))
         >>> renderfig('plot_hinton_coherent')
 
         ![plot_hinton_coherent](../../figs_code/plot_hinton_coherent.png){.fig-half}
 
         >>> a = dq.destroy(16)
-        >>> H = dq.dag(a) @ a + 2.0 * (a + dq.dag(a))
-        >>> dq.plot.hinton(jnp.abs(H))
+        >>> H = a.dag() @ a + 2.0 * (a + a.dag())
+        >>> dq.plot.hinton(jnp.abs(H.to_jax()))
         >>> renderfig('plot_hinton_hamiltonian')
 
         ![plot_hinton_hamiltonian](../../figs_code/plot_hinton_hamiltonian.png){.fig-half}
@@ -166,9 +168,9 @@ def hinton(
         ![plot_hinton_random_complex](../../figs_code/plot_hinton_random_complex.png){.fig-half}
 
         >>> _, axs = dq.plot.grid(2)
-        >>> psi = dq.unit(dq.fock(4, 0) - dq.fock(4, 2))
-        >>> dq.plot.hinton(dq.todm(psi), ax=next(axs))
-        >>> rho = dq.unit(dq.fock_dm(4, 0) + dq.fock_dm(4, 2))
+        >>> psi = (dq.fock(4, 0) - dq.fock(4, 2)).unit()
+        >>> dq.plot.hinton(psi.todm(), ax=next(axs))
+        >>> rho = (dq.fock_dm(4, 0) + dq.fock_dm(4, 2)).unit()
         >>> dq.plot.hinton(rho, ax=next(axs))
         >>> renderfig('plot_hinton_fock02')
 
@@ -177,7 +179,9 @@ def hinton(
         >>> _, axs = dq.plot.grid(2)
         >>> x = np.random.uniform(-1.0, 1.0, (10, 10))
         >>> dq.plot.hinton(x, ax=next(axs), vmin=-1.0, vmax=1.0)
-        >>> dq.plot.hinton(jnp.abs(x), ax=next(axs), cmap='Greys', vmax=1.0, ecolor='black')
+        >>> dq.plot.hinton(
+        ...     jnp.abs(x), ax=next(axs), cmap='Greys', vmax=1.0, ecolor='black'
+        ... )
         >>> renderfig('plot_hinton_real')
 
         ![plot_hinton_real](../../figs_code/plot_hinton_real.png){.fig-half}
@@ -187,8 +191,8 @@ def hinton(
         >>> renderfig('plot_hinton_large')
 
         ![plot_hinton_large](../../figs_code/plot_hinton_large.png){.fig}
-    """  # noqa: E501
-    x = jnp.asarray(x)
+    """
+    x = to_jax(x)
     check_shape(x, 'x', '(n, n)')
 
     # set different defaults, areas and colors for real matrix, positive real matrix

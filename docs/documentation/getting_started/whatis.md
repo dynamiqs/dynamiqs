@@ -2,7 +2,7 @@
 
 ## In a nutshell
 
-**Dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger equation, the Lindblad master equation, and the stochastic master equation. The library is built with [JAX](https://jax.readthedocs.io/en/latest/index.html) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
+**Dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger equation, the Lindblad master equation, the stochastic master equation, and others. The library is built with [JAX](https://jax.readthedocs.io/en/latest/index.html) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
 
 See the [Python API](../../python_api/index.md) for a list of available functions and classes.
 
@@ -16,7 +16,7 @@ The main features of **Dynamiqs** are:
 We hope that this library will prove useful to the community for e.g. simulation of large quantum systems, gradient-based parameter estimation or quantum optimal control. The library is designed for large-scale problems, but also runs efficiently on CPUs for smaller problems.
 
 !!! Warning
-    This library is under active development and while the APIs and solvers are still finding their footing, we're working hard to make it worth the wait. Check back soon for the grand opening!
+    This library is under active development and some APIs and solvers are still finding their footing. While most of the library is stable, new releases might introduce breaking changes.
 
 ## The Dynamiqs project
 
@@ -38,12 +38,11 @@ Below are some cool features of **Dynamiqs** that are either already available o
 
 ### Solvers
 
-- Choose between a variety of solvers, from **modern** explicit and implicit ODE solvers (e.g. Tsit5 and PID controllers for adaptive step-sizing) to **quantum-tailored** solvers that preserve the physicality of the evolution (the state trace and positivity are preserved).
+- Choose between a variety of methods for each solver, from **modern** explicit and implicit ODE methods (e.g. Tsit5 and PID controllers for adaptive step-sizing) to **quantum-tailored** methods that preserve the physicality of the evolution (the state trace and positivity are preserved).
 - Simulate **time-varying problems** (both Hamiltonian and jump operators) with support for various formats (piecewise constant operator, constant operator modulated by a time-dependent factor, etc.).
 - Define a **custom save function** during the evolution (e.g. to register only the state purity, to track a subsystem by taking the partial trace of the full system, or to compute the population in the last Fock states to regularise your QOC problem).
 - Easily implement **your own solvers** by subclassing our base solver class and focusing directly on the solver logic.
 - Simulate SME trajectories **orders of magnitude faster** by batching the simulation over the stochastic trajectories.
-- Use **adaptive step-size solvers** to solve the SME (based on Brownian bridges to generate the correct statistics).
 - **Parallelise** large simulations across multiple CPUs/GPUs.
 
 ### Gradients
@@ -56,6 +55,7 @@ Below are some cool features of **Dynamiqs** that are either already available o
 ### Utilities
 
 - Balance **accuracy and speed** by choosing between single precision (`float32` and `complex64`) or double precision (`float64` and `complex128`).
+- Discover a custom **sparse data format** designed for matrices with only a few dense diagonals, offering substantial speedups for large systems.
 - Plot beautiful figures by using our **handcrafted plotting function**.
 - Apply any functions to **batched arrays** (e.g. `dq.wigner(states)` to compute the wigners of many states at once).
 - Use **QuTiP objects as arguments** to any functions (e.g. if you have existing code to define your Hamiltonian in QuTiP, or if you want to use our nice plotting functions on a list of QuTiP states).
@@ -67,6 +67,5 @@ Below are some cool features of **Dynamiqs** that are either already available o
 
 ### Coming soon
 
-- Discover a custom **sparse format**, with substantial speedups for large systems.
 - Simulate using propagators solvers based on **Krylov subspace methods**.
 - **Benchmark code** to compare solvers and performance for different systems.

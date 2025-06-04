@@ -2,188 +2,215 @@ from __future__ import annotations
 
 import warnings
 from abc import abstractmethod
+from functools import partial
 
 import diffrax as dx
 import equinox as eqx
-import jax.numpy as jnp
 from jax import Array
-from jaxtyping import PyTree
+from jaxtyping import PyTree, Scalar
 
-from ...gradient import Autograd, CheckpointAutograd
-from ...result import Result
-from ...utils.quantum_utils.general import dag
+from ..._utils import obj_type_str
+from ...gradient import Autograd, CheckpointAutograd, ForwardAutograd, Gradient
+from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
+from ...options import Options
+from ...result import Result, Saved
+from ...utils.vectorization import slindbladian
 from .abstract_integrator import BaseIntegrator
-from .save_mixin import SaveMixin
-from .interfaces import SEInterface, MEInterface
+from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
+from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
 
 
-class DiffraxIntegrator(BaseIntegrator, SaveMixin):
+class FixedStepInfos(eqx.Module):
+    nsteps: Array
+
+    def __str__(self) -> str:
+        if self.nsteps.ndim >= 1:
+            # note: fixed step methods always make the same number of steps
+            return f'{int(self.nsteps.mean())} steps | infos shape {self.nsteps.shape}'
+        return f'{self.nsteps} steps'
+
+
+class AdaptiveStepInfos(eqx.Module):
+    nsteps: Array
+    naccepted: Array
+    nrejected: Array
+
+    def __str__(self) -> str:
+        if self.nsteps.ndim >= 1:
+            return (
+                f'avg. {self.nsteps.mean():.1f} steps ({self.naccepted.mean():.1f}'
+                f' accepted, {self.nrejected.mean():.1f} rejected) | infos shape'
+                f' {self.nsteps.shape}'
+            )
+        return (
+            f'{self.nsteps} steps ({self.naccepted} accepted,'
+            f' {self.nrejected} rejected)'
+        )
+
+
+class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
     """Integrator using the Diffrax library."""
 
-    # subclasses should implement: stepsize_controller, dt0, max_steps, diffrax_solver,
-    # terms, discontinuity_ts, infos()
+    diffrax_solver: dx.AbstractSolver
+    fixed_step: bool
 
     @property
-    @abstractmethod
     def stepsize_controller(self) -> dx.AbstractStepSizeController:
-        pass
+        if self.fixed_step:
+            return dx.ConstantStepSize()
+        else:
+            jump_ts = None if len(self.discontinuity_ts) == 0 else self.discontinuity_ts
+            return dx.PIDController(
+                rtol=self.method.rtol,
+                atol=self.method.atol,
+                safety=self.method.safety_factor,
+                factormin=self.method.min_factor,
+                factormax=self.method.max_factor,
+                jump_ts=jump_ts,
+            )
 
     @property
-    @abstractmethod
     def dt0(self) -> float | None:
-        pass
+        return self.method.dt if self.fixed_step else None
 
     @property
-    @abstractmethod
     def max_steps(self) -> int:
-        pass
-
-    @property
-    @abstractmethod
-    def diffrax_solver(self) -> dx.AbstractSolver:
-        pass
+        # TODO: fix hard-coded max_steps for fixed methods
+        return 100_000 if self.fixed_step else self.method.max_steps
 
     @property
     @abstractmethod
     def terms(self) -> dx.AbstractTerm:
         pass
 
-    def run(self) -> Result:
+    @property
+    def adjoint(self) -> dx.AbstractAdjoint:
+        if self.gradient is None:
+            return dx.RecursiveCheckpointAdjoint()
+        elif isinstance(self.gradient, CheckpointAutograd):
+            return dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
+        elif isinstance(self.gradient, ForwardAutograd):
+            return dx.ForwardMode()
+        elif isinstance(self.gradient, Autograd):
+            return dx.DirectAdjoint()
+        else:
+            raise TypeError(f'Unknown gradient type {obj_type_str(self.gradient)}.')
+
+    def diffeqsolve(
+        self,
+        t0: Scalar,
+        t1: Scalar,
+        y0: PyTree,
+        saveat: dx.SaveAt,
+        event: dx.Event | None = None,
+    ) -> dx.Solution:
         with warnings.catch_warnings():
             # TODO: remove once complex support is stabilized in diffrax
             warnings.simplefilter('ignore', UserWarning)
 
-            # === prepare diffrax arguments
-            fn = lambda t, y, args: self.save(y)  # noqa: ARG005
-            subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
-            subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-            saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
-
-            if self.gradient is None:
-                adjoint = dx.RecursiveCheckpointAdjoint()
-            elif isinstance(self.gradient, CheckpointAutograd):
-                adjoint = dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
-            elif isinstance(self.gradient, Autograd):
-                adjoint = dx.DirectAdjoint()
-
             # === solve differential equation with diffrax
-            solution = dx.diffeqsolve(
+            return dx.diffeqsolve(
                 self.terms,
                 self.diffrax_solver,
-                t0=self.t0,
-                t1=self.t1,
+                t0=t0,
+                t1=t1,
                 dt0=self.dt0,
-                y0=self.y0,
+                y0=y0,
                 saveat=saveat,
                 stepsize_controller=self.stepsize_controller,
-                adjoint=adjoint,
+                adjoint=self.adjoint,
+                event=event,
                 max_steps=self.max_steps,
                 progress_meter=self.options.progress_meter.to_diffrax(),
             )
+
+    def run(self) -> Result:
+        # === prepare diffrax arguments
+        fn = lambda t, y, args: self.save(y)  # noqa: ARG005
+        subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
+        subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
+        saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+
+        # === solve differential equation
+        solution = self.diffeqsolve(self.t0, self.t1, self.y0, saveat)
 
         # === collect and return results
         saved = self.postprocess_saved(*solution.ys)
         return self.result(saved, infos=self.infos(solution.stats))
 
-    @abstractmethod
     def infos(self, stats: dict[str, Array]) -> PyTree:
-        pass
-
-
-class FixedStepDiffraxIntegrator(DiffraxIntegrator):
-    """Integrator using a fixed step Diffrax solver."""
-
-    # subclasses should implement: diffrax_solver, terms, discontinuity_ts
-
-    class Infos(eqx.Module):
-        nsteps: Array
-
-        def __str__(self) -> str:
-            if self.nsteps.ndim >= 1:
-                # note: fixed step solvers always make the same number of steps
-                return (
-                    f'{int(self.nsteps.mean())} steps | infos shape {self.nsteps.shape}'
-                )
-            return f'{self.nsteps} steps'
-
-    def infos(self, stats: dict[str, Array]) -> PyTree:
-        return self.Infos(stats['num_steps'])
-
-    @property
-    def stepsize_controller(self) -> dx.AbstractStepSizeController:
-        return dx.ConstantStepSize()
-
-    @property
-    def dt0(self) -> float | None:
-        return self.solver.dt
-
-    @property
-    def max_steps(self) -> int:
-        return 100_000  # TODO: fix hard-coded max_steps
-
-
-class AdaptiveStepDiffraxIntegrator(DiffraxIntegrator):
-    """Integrator using an adaptive step Diffrax solver."""
-
-    # subclasses should implement: diffrax_solver, terms, discontinuity_ts
-
-    class Infos(eqx.Module):
-        nsteps: Array
-        naccepted: Array
-        nrejected: Array
-
-        def __str__(self) -> str:
-            if self.nsteps.ndim >= 1:
-                return (
-                    f'avg. {self.nsteps.mean():.1f} steps ({self.naccepted.mean():.1f}'
-                    f' accepted, {self.nrejected.mean():.1f} rejected) | infos shape'
-                    f' {self.nsteps.shape}'
-                )
-            return (
-                f'{self.nsteps} steps ({self.naccepted} accepted,'
-                f' {self.nrejected} rejected)'
+        if self.fixed_step:
+            return FixedStepInfos(stats['num_steps'])
+        else:
+            return AdaptiveStepInfos(
+                stats['num_steps'],
+                stats['num_accepted_steps'],
+                stats['num_rejected_steps'],
             )
 
-    def infos(self, stats: dict[str, Array]) -> PyTree:
-        return self.Infos(
-            stats['num_steps'], stats['num_accepted_steps'], stats['num_rejected_steps']
-        )
 
-    @property
-    def stepsize_controller(self) -> dx.AbstractStepSizeController:
-        return dx.PIDController(
-            rtol=self.solver.rtol,
-            atol=self.solver.atol,
-            safety=self.solver.safety_factor,
-            factormin=self.solver.min_factor,
-            factormax=self.solver.max_factor,
-            jump_ts=self.discontinuity_ts,
-        )
+def call_diffeqsolve(
+    ts: Array,
+    y0: PyTree,
+    terms: dx.AbstractTerm,
+    method: Method,
+    gradient: Gradient,
+    options: Options,
+    discontinuity_ts: Array,
+    event: dx.Event | None = None,
+    save: callable | None = None,
+) -> dx.Solution:
+    # === define custom diffrax integrator
+    class BasicDiffraxIntegrator(DiffraxIntegrator):
+        @property
+        def terms(self) -> dx.AbstractTerm:
+            return terms
 
-    @property
-    def dt0(self) -> float | None:
-        return None
+        @property
+        def discontinuity_ts(self) -> Array:
+            return discontinuity_ts
 
-    @property
-    def max_steps(self) -> int:
-        return self.solver.max_steps
+        def save(self, y: PyTree) -> Saved:
+            pass
 
+        def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
+            pass
 
-# fmt: off
-# ruff: noqa
-class EulerIntegrator(FixedStepDiffraxIntegrator): diffrax_solver = dx.Euler()
-class Dopri5Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Dopri5()
-class Dopri8Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Dopri8()
-class Tsit5Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Tsit5()
-class Kvaerno3Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Kvaerno3()
-class Kvaerno5Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Kvaerno5()
-# fmt: on
+    # === set Diffrax solver
+    diffrax_solver, fixed_step = {
+        Euler: (dx.Euler(), True),
+        Dopri5: (dx.Dopri5(), False),
+        Dopri8: (dx.Dopri8(), False),
+        Tsit5: (dx.Tsit5(), False),
+        Kvaerno3: (dx.Kvaerno3(), False),
+        Kvaerno5: (dx.Kvaerno5(), False),
+    }[type(method)]
+
+    # === init integrator
+    integrator = BasicDiffraxIntegrator(
+        ts=ts,
+        y0=y0,
+        method=method,
+        gradient=gradient,
+        result_class=None,
+        options=options,
+        diffrax_solver=diffrax_solver,
+        fixed_step=fixed_step,
+    )
+
+    if save is None:
+        save = lambda y: y
+    fn = lambda t, y, args: save(y)  # noqa: ARG005
+    subsaveat_a = dx.SubSaveAt(ts=ts, fn=fn)  # save solution regularly
+    subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
+    saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+
+    # === run integrator
+    return integrator.diffeqsolve(ts[0], ts[-1], y0, saveat, event=event)
 
 
 class SEDiffraxIntegrator(DiffraxIntegrator, SEInterface):
     """Integrator solving the Schrödinger equation with Diffrax."""
-
-    # subclasses should implement: diffrax_solver, discontinuity_ts
 
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -192,10 +219,60 @@ class SEDiffraxIntegrator(DiffraxIntegrator, SEInterface):
         return dx.ODETerm(vector_field)
 
 
+class SEPropagatorDiffraxIntegrator(SEDiffraxIntegrator, PropagatorSaveMixin):
+    """Integrator computing the propagator of the Schrödinger equation using the Diffrax
+    library.
+    """
+
+
+sepropagator_euler_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
+)
+sepropagator_dopri5_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+)
+sepropagator_dopri8_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+)
+sepropagator_tsit5_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+)
+sepropagator_kvaerno3_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+)
+sepropagator_kvaerno5_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+)
+
+
+class SESolveDiffraxIntegrator(SEDiffraxIntegrator, SolveSaveMixin, SolveInterface):
+    """Integrator computing the time evolution of the Schrödinger equation using the
+    Diffrax library.
+    """
+
+
+sesolve_euler_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
+)
+sesolve_dopri5_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+)
+sesolve_dopri8_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+)
+sesolve_tsit5_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+)
+sesolve_kvaerno3_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+)
+sesolve_kvaerno5_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+)
+
+
 class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
     """Integrator solving the Lindblad master equation with Diffrax."""
-
-    # subclasses should implement: diffrax_solver, discontinuity_ts
 
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -218,16 +295,75 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
         # and is thus more efficient numerically with only a negligible numerical error
         # induced on the dynamics.
 
-        def vector_field_dissipative(t, y, _):  # noqa: ANN001, ANN202
-            L = self.L(t)
-            Ld = dag(L)
-            LdL = (Ld @ L).sum(0)
-            tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (L @ y @ Ld).sum(0)
-            return tmp + dag(tmp)
+        def vector_field(t, y, _):  # noqa: ANN001, ANN202
+            L, H = self.L(t), self.H(t)
+            Hnh = -1j * H + sum([-0.5 * _L.dag() @ _L for _L in L])
+            tmp = Hnh @ y + sum([0.5 * _L @ y @ _L.dag() for _L in L])
+            return tmp + tmp.dag()
 
-        def vector_field_unitary(t, y, _):  # noqa: ANN001, ANN202
-            tmp = -1j * self.H(t) @ y
-            return tmp + dag(tmp)
+        return dx.ODETerm(vector_field)
 
-        vf = vector_field_dissipative if len(self.Ls) > 0 else vector_field_unitary
-        return dx.ODETerm(vf)
+
+class MESolveDiffraxIntegrator(MEDiffraxIntegrator, SolveSaveMixin, SolveInterface):
+    """Integrator computing the time evolution of the Lindblad master equation using the
+    Diffrax library.
+    """
+
+
+mesolve_euler_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
+)
+mesolve_dopri5_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+)
+mesolve_dopri8_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+)
+mesolve_tsit5_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+)
+mesolve_kvaerno3_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+)
+mesolve_kvaerno5_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+)
+
+
+class MEPropagatorDiffraxIntegrator(
+    DiffraxIntegrator, MEInterface, PropagatorSaveMixin
+):
+    """Integrator computing the propagator of the Lindblad master equation using the
+    Diffrax library.
+    """
+
+    @property
+    def terms(self) -> dx.AbstractTerm:
+        # define vector field for Lindblad equation in superoperator form
+        # drho/dt = \mathcal{L}(\rho)
+
+        def vector_field(t, y, _):  # noqa: ANN001, ANN202
+            L, H = self.L(t), self.H(t)
+            return slindbladian(H, L) @ y
+
+        return dx.ODETerm(vector_field)
+
+
+mepropagator_euler_integrator_constructor = partial(
+    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
+)
+mepropagator_dopri5_integrator_constructor = partial(
+    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+)
+mepropagator_dopri8_integrator_constructor = partial(
+    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+)
+mepropagator_tsit5_integrator_constructor = partial(
+    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+)
+mepropagator_kvaerno3_integrator_constructor = partial(
+    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+)
+mepropagator_kvaerno5_integrator_constructor = partial(
+    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+)

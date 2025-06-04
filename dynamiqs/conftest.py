@@ -6,6 +6,7 @@ import jax.numpy as jnp
 import matplotlib
 import numpy as np
 import pytest
+import qutip
 from matplotlib import pyplot as plt
 from sybil import Sybil
 from sybil.parsers.doctest import DocTestParser
@@ -20,16 +21,17 @@ def sybil_setup(namespace):
     namespace['plt'] = plt
     namespace['jax'] = jax
     namespace['jnp'] = jnp
+    namespace['qt'] = qutip
 
 
 @pytest.fixture(scope='session', autouse=True)
-def _jax_set_printoptions():
+def jax_set_printoptions():
     jnp.set_printoptions(precision=3, suppress=True)
 
 
 @pytest.fixture(scope='session', autouse=True)
-def _mpl_params():
-    dynamiqs.plot.utils.mplstyle(dpi=150)
+def mpl_params():
+    dynamiqs.plot.mplstyle(dpi=150)
     # use a non-interactive backend for matplotlib, to avoid opening a display window
     matplotlib.use('Agg')
 
@@ -66,10 +68,11 @@ def rendergif():
 pytest_collect_file = Sybil(
     parsers=[DocTestParser(optionflags=ELLIPSIS), PythonCodeBlockParser()],
     patterns=['*.py'],
+    excludes=['options.py'],
     setup=sybil_setup,
     fixtures=[
-        '_jax_set_printoptions',
-        '_mpl_params',
+        'jax_set_printoptions',
+        'mpl_params',
         'default_mpl_style',
         'renderfig',
         'rendergif',

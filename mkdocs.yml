@@ -19,6 +19,7 @@ theme:
     repo: fontawesome/brands/github
     admonition:
       example: material/human-male-board
+      see-also: material/book-open-variant
     annotation: material/plus-circle
   logo: media/logo.png
   favicon: media/favicon.svg
@@ -39,7 +40,7 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-copyright: "&copy Copyright 2023-2024, Dynamiqs developers."
+copyright: "&copy Copyright 2023-2025, Dynamiqs developers."
 extra:
   social:
     - icon: fontawesome/brands/github
@@ -82,6 +83,7 @@ plugins:
             show_root_heading: true
             show_root_toc_entry: false
             show_root_full_path: false
+            show_labels: false
             heading_level: 1
             members_order: source
             docstring_section_style: list
@@ -145,44 +147,51 @@ nav:
           - Computing gradients: documentation/basics/computing-gradients.md
       - Advanced examples:
           - Driven-dissipative Kerr oscillator: documentation/advanced_examples/kerr-oscillator.md
+          - Continuous jump measurement: documentation/advanced_examples/continuous-jump-measurement.md
+          - Continuous diffusive measurement: documentation/advanced_examples/continuous-diffusive-measurement.md
   - Python API:
       - python_api/index.md
-      - Quantum solvers:
+      - Solvers:
           - sesolve: python_api/integrators/sesolve.md
           - mesolve: python_api/integrators/mesolve.md
-          - smesolve: python_api/integrators/smesolve.md
           - sepropagator: python_api/integrators/sepropagator.md
           - mepropagator: python_api/integrators/mepropagator.md
+          - floquet: python_api/integrators/floquet.md
+          - stochastic:
+            - jssesolve: python_api/integrators/jssesolve.md
+            - dssesolve: python_api/integrators/dssesolve.md
+            - jsmesolve: python_api/integrators/jsmesolve.md
+            - dsmesolve: python_api/integrators/dsmesolve.md
       - Core:
-          - Time-dependent arrays:
-              - TimeArray: python_api/time_array/TimeArray.md
-              - constant: python_api/time_array/constant.md
-              - pwc: python_api/time_array/pwc.md
-              - modulated: python_api/time_array/modulated.md
-              - timecallable: python_api/time_array/timecallable.md
-          - Solvers (dq.solver):
-              - Tsit5: python_api/solver/Tsit5.md
-              - Dopri5: python_api/solver/Dopri5.md
-              - Dopri8: python_api/solver/Dopri8.md
-              - Kvaerno3: python_api/solver/Kvaerno3.md
-              - Kvaerno5: python_api/solver/Kvaerno5.md
-              - Euler: python_api/solver/Euler.md
-              - Rouchon1: python_api/solver/Rouchon1.md
-              - Rouchon2: python_api/solver/Rouchon2.md
-              - Expm: python_api/solver/Expm.md
+          - Quantum arrays: python_api/qarrays/qarray/QArray.md
+          - Time-dependent qarrays:
+              - TimeQArray: python_api/time_qarray/TimeQArray.md
+              - constant: python_api/time_qarray/constant.md
+              - pwc: python_api/time_qarray/pwc.md
+              - modulated: python_api/time_qarray/modulated.md
+              - timecallable: python_api/time_qarray/timecallable.md
+          - Methods (dq.method):
+              - Tsit5: python_api/method/Tsit5.md
+              - Dopri5: python_api/method/Dopri5.md
+              - Dopri8: python_api/method/Dopri8.md
+              - Kvaerno3: python_api/method/Kvaerno3.md
+              - Kvaerno5: python_api/method/Kvaerno5.md
+              - Euler: python_api/method/Euler.md
+              - EulerJump: python_api/method/EulerJump.md
+              - EulerMaruyama: python_api/method/EulerMaruyama.md
+              - Rouchon1: python_api/method/Rouchon1.md
+              - Expm: python_api/method/Expm.md
+              - Event: python_api/method/Event.md
           - Gradients (dq.gradient):
               - Autograd: python_api/gradient/Autograd.md
               - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md
-          - Options: python_api/options/Options.md
-          - Results:
-              - SESolveResult: python_api/result/SESolveResult.md
-              - MESolveResult: python_api/result/MESolveResult.md
-              - SEPropagatorResult: python_api/result/SEPropagatorResult.md
-              - MEPropagatorResult: python_api/result/MEPropagatorResult.md
+              - ForwardAutograd: python_api/gradient/ForwardAutograd.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md
-              - zero: python_api/utils/operators/zero.md
+              - eye_like: python_api/utils/operators/eye_like.md
+              - zeros: python_api/utils/operators/zeros.md
+              - zeros_like: python_api/utils/operators/zeros_like.md
               - destroy: python_api/utils/operators/destroy.md
               - create: python_api/utils/operators/create.md
               - number: python_api/utils/operators/number.md
@@ -195,6 +204,7 @@ nav:
               - sigmax: python_api/utils/operators/sigmax.md
               - sigmay: python_api/utils/operators/sigmay.md
               - sigmaz: python_api/utils/operators/sigmaz.md
+              - xyz: python_api/utils/operators/xyz.md
               - sigmap: python_api/utils/operators/sigmap.md
               - sigmam: python_api/utils/operators/sigmam.md
               - hadamard: python_api/utils/operators/hadamard.md
@@ -216,40 +226,51 @@ nav:
               - excited: python_api/utils/states/excited.md
               - thermal_dm: python_api/utils/states/thermal_dm.md
           - Quantum utilities:
-              - dag: python_api/utils/quantum_utils/dag.md
-              - powm: python_api/utils/quantum_utils/powm.md
-              - expm: python_api/utils/quantum_utils/expm.md
-              - cosm: python_api/utils/quantum_utils/cosm.md
-              - sinm: python_api/utils/quantum_utils/sinm.md
-              - trace: python_api/utils/quantum_utils/trace.md
-              - tracemm: python_api/utils/quantum_utils/tracemm.md
-              - ptrace: python_api/utils/quantum_utils/ptrace.md
-              - tensor: python_api/utils/quantum_utils/tensor.md
-              - expect: python_api/utils/quantum_utils/expect.md
-              - norm: python_api/utils/quantum_utils/norm.md
-              - unit: python_api/utils/quantum_utils/unit.md
-              - dissipator: python_api/utils/quantum_utils/dissipator.md
-              - lindbladian: python_api/utils/quantum_utils/lindbladian.md
-              - isket: python_api/utils/quantum_utils/isket.md
-              - isbra: python_api/utils/quantum_utils/isbra.md
-              - isdm: python_api/utils/quantum_utils/isdm.md
-              - isop: python_api/utils/quantum_utils/isop.md
-              - isherm: python_api/utils/quantum_utils/isherm.md
-              - toket: python_api/utils/quantum_utils/toket.md
-              - tobra: python_api/utils/quantum_utils/tobra.md
-              - todm: python_api/utils/quantum_utils/todm.md
-              - proj: python_api/utils/quantum_utils/proj.md
-              - braket: python_api/utils/quantum_utils/braket.md
-              - overlap: python_api/utils/quantum_utils/overlap.md
-              - fidelity: python_api/utils/quantum_utils/fidelity.md
-              - entropy_vn: python_api/utils/quantum_utils/entropy_vn.md
-              - bloch_coordinates: python_api/utils/quantum_utils/bloch_coordinates.md
-              - wigner: python_api/utils/quantum_utils/wigner.md
-          - JAX-related utilities:
-              - to_qutip: python_api/utils/jax_utils/to_qutip.md
-              - set_device: python_api/utils/jax_utils/set_device.md
-              - set_precision: python_api/utils/jax_utils/set_precision.md
-              - set_matmul_precision: python_api/utils/jax_utils/set_matmul_precision.md
+              - dag: python_api/utils/general/dag.md
+              - powm: python_api/utils/general/powm.md
+              - expm: python_api/utils/general/expm.md
+              - cosm: python_api/utils/general/cosm.md
+              - sinm: python_api/utils/general/sinm.md
+              - signm: python_api/utils/general/signm.md
+              - trace: python_api/utils/general/trace.md
+              - tracemm: python_api/utils/general/tracemm.md
+              - ptrace: python_api/utils/general/ptrace.md
+              - tensor: python_api/utils/general/tensor.md
+              - expect: python_api/utils/general/expect.md
+              - norm: python_api/utils/general/norm.md
+              - unit: python_api/utils/general/unit.md
+              - dissipator: python_api/utils/general/dissipator.md
+              - lindbladian: python_api/utils/general/lindbladian.md
+              - isket: python_api/utils/general/isket.md
+              - isbra: python_api/utils/general/isbra.md
+              - isdm: python_api/utils/general/isdm.md
+              - isop: python_api/utils/general/isop.md
+              - isherm: python_api/utils/general/isherm.md
+              - toket: python_api/utils/general/toket.md
+              - tobra: python_api/utils/general/tobra.md
+              - todm: python_api/utils/general/todm.md
+              - proj: python_api/utils/general/proj.md
+              - braket: python_api/utils/general/braket.md
+              - overlap: python_api/utils/general/overlap.md
+              - fidelity: python_api/utils/general/fidelity.md
+              - purity: python_api/utils/general/purity.md
+              - entropy_vn: python_api/utils/general/entropy_vn.md
+              - bloch_coordinates: python_api/utils/general/bloch_coordinates.md
+              - wigner: python_api/utils/general/wigner.md
+          - QArray utilities:
+              - asqarray: python_api/qarrays/utils/asqarray.md
+              - isqarraylike: python_api/qarrays/utils/isqarraylike.md
+              - stack: python_api/qarrays/utils/stack.md
+              - to_jax: python_api/qarrays/utils/to_jax.md
+              - to_numpy: python_api/qarrays/utils/to_numpy.md
+              - to_qutip: python_api/qarrays/utils/to_qutip.md
+              - sparsedia_from_dict: python_api/qarrays/utils/sparsedia_from_dict.md
+          - Global settings:
+              - set_device: python_api/utils/global_settings/set_device.md
+              - set_precision: python_api/utils/global_settings/set_precision.md
+              - set_matmul_precision: python_api/utils/global_settings/set_matmul_precision.md
+              - set_layout: python_api/utils/global_settings/set_layout.md
+              - set_progress_meter: python_api/utils/global_settings/set_progress_meter.md
           - Vectorization:
               - operator_to_vector: python_api/utils/vectorization/operator_to_vector.md
               - vector_to_operator: python_api/utils/vectorization/vector_to_operator.md
@@ -261,7 +282,7 @@ nav:
           - Quantum optimal control:
               - snap_gate: python_api/utils/optimal_control/snap_gate.md
               - cd_gate: python_api/utils/optimal_control/cd_gate.md
-          - Random arrays (dq.random):
+          - Random (dq.random):
               - real: python_api/random/real.md
               - complex: python_api/random/complex.md
               - herm: python_api/random/herm.md
@@ -272,13 +293,17 @@ nav:
               - wigner: python_api/plot/wigner.md
               - wigner_mosaic: python_api/plot/wigner_mosaic.md
               - wigner_gif: python_api/plot/wigner_gif.md
+              - wigner_data: python_api/plot/wigner_data.md
               - pwc_pulse: python_api/plot/pwc_pulse.md
               - fock: python_api/plot/fock.md
               - fock_evolution: python_api/plot/fock_evolution.md
               - hinton: python_api/plot/hinton.md
+              - xyz: python_api/plot/xyz.md
               - gifit: python_api/plot/gifit.md
               - grid: python_api/plot/grid.md
               - mplstyle: python_api/plot/mplstyle.md
+          - Magic helpers:
+            - hc: python_api/hermitian_conjugate/hc.md
   - Community:
       - community/index.md
       - Contributing: community/contributing.md

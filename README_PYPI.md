@@ -2,15 +2,15 @@
     <img alt="Dynamiqs logo" width="360" src="https://github.com/dynamiqs/dynamiqs/blob/main/docs/media/logo-typeface-darktype.png?raw=true">
 </h1>
 
-[P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois)
+[P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois), [D. Weiss](https://github.com/dkweiss31)
 
-[![ci](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml?query=branch%3Amain)  ![python version](https://img.shields.io/badge/python-3.9%2B-blue) [![chat](https://badgen.net/badge/icon/on%20slack?icon=slack&label=chat&color=orange)](https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA) [![license: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-yellow)](https://github.com/dynamiqs/dynamiqs/blob/main/LICENSE) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![ci](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml?query=branch%3Amain)  ![python version](https://img.shields.io/badge/python-3.10%2B-blue) [![chat](https://badgen.net/badge/icon/on%20slack?icon=slack&label=chat&color=orange)](https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA) [![license: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-yellow)](https://github.com/dynamiqs/dynamiqs/blob/main/LICENSE) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 High-performance quantum systems simulation with JAX.
 
-**Dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger equation, the Lindblad master equation, and the stochastic master equation. The library is built with [JAX](https://jax.readthedocs.io/en/latest/index.html) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
+**Dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger equation, the Lindblad master equation, the stochastic master equation, and others. The library is built with [JAX](https://jax.readthedocs.io/en/latest/index.html) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
 
-Documentation is available on our website, <https://www.dynamiqs.org>; see the [Python API](https://www.dynamiqs.org/python_api/index.html) for a list of all implemented functions.
+Documentation is available on our website, <https://www.dynamiqs.org>; see the [Python API](https://www.dynamiqs.org/stable/python_api/index.html) for a list of all implemented functions.
 
 The main features of **Dynamiqs** are:
 
@@ -21,7 +21,7 @@ The main features of **Dynamiqs** are:
 
 We hope that this library will prove useful to the community for e.g. simulation of large quantum systems, gradient-based parameter estimation or quantum optimal control. The library is designed for large-scale problems, but also runs efficiently on CPUs for smaller problems.
 
-⚠️ This library is under active development and while the APIs and solvers are still finding their footing, we're working hard to make it worth the wait. Check back soon for the grand opening!
+⚠️ This library is under active development and some APIs and solvers are still finding their footing. While most of the library is stable, new releases might introduce breaking changes.
 
 ## Installation
 
@@ -65,9 +65,9 @@ print(result)
 ```text
 |██████████| 100.0% ◆ elapsed 6.30ms ◆ remaining 0.00ms
 ==== MESolveResult ====
-Solver : Tsit5
+Method : Tsit5
 Infos  : 40 steps (40 accepted, 0 rejected)
-States : Array complex64 (101, 16, 16) | 202.0 Kb
+States : QArray complex64 (101, 16, 16) | 202.0 Kb
 ```
 
 ### Compute gradients with respect to some parameters
@@ -119,18 +119,18 @@ Gradient w.r.t. alpha0: 1.0670
 
 $$
 \nabla_\theta\ \bar{n} = \begin{pmatrix}
-  \partial\bar{n} / \partial\omega \\
-  \partial\bar{n} / \partial\kappa \\
+  \partial\bar{n} / \partial\omega \\\\
+  \partial\bar{n} / \partial\kappa \\\\
   \partial\bar{n} / \partial\alpha_0
 \end{pmatrix}
 = \begin{pmatrix}
-  0\\
-  -\alpha_0^2 T e^{-\kappa T} \\
+  0 \\\\
+  -\alpha_0^2 T e^{-\kappa T} \\\\
   2 \alpha_0 e^{-\kappa T}
 \end{pmatrix}
 \approx \begin{pmatrix}
-  0.0 \\
-  -3.3520 \\
+  0.0 \\\\
+  -3.3520 \\\\
   1.0670
 \end{pmatrix}
 $$
@@ -141,12 +141,11 @@ Below are some cool features of **Dynamiqs** that are either already available o
 
 **Solvers**
 
-- Choose between a variety of solvers, from **modern** explicit and implicit ODE solvers (e.g. Tsit5 and PID controllers for adaptive step-sizing) to **quantum-tailored** solvers that preserve the physicality of the evolution (the state trace and positivity are preserved).
+- Choose between a variety of methods for each solver, from **modern** explicit and implicit ODE methods (e.g. Tsit5 and PID controllers for adaptive step-sizing) to **quantum-tailored** methods that preserve the physicality of the evolution (the state trace and positivity are preserved).
 - Simulate **time-varying problems** (both Hamiltonian and jump operators) with support for various formats (piecewise constant operator, constant operator modulated by a time-dependent factor, etc.).
 - Define a **custom save function** during the evolution (e.g. to register only the state purity, to track a subsystem by taking the partial trace of the full system, or to compute the population in the last Fock states to regularise your QOC problem).
 - Easily implement **your own solvers** by subclassing our base solver class and focusing directly on the solver logic.
 - Simulate SME trajectories **orders of magnitude faster** by batching the simulation over the stochastic trajectories.
-- Use **adaptive step-size solvers** to solve the SME (based on Brownian bridges to generate the correct statistics).
 - **Parallelise** large simulations across multiple CPUs/GPUs.
 
 **Gradients**
@@ -159,6 +158,7 @@ Below are some cool features of **Dynamiqs** that are either already available o
 **Utilities**
 
 - Balance **accuracy and speed** by choosing between single precision (`float32` and `complex64`) or double precision (`float64` and `complex128`).
+- Discover a custom **sparse data format** designed for matrices with only a few dense diagonals, offering substantial speedups for large systems.
 - Plot beautiful figures by using our **handcrafted plotting function**.
 - Apply any functions to **batched arrays** (e.g. `dq.wigner(states)` to compute the wigners of many states at once).
 - Use **QuTiP objects as arguments** to any functions (e.g. if you have existing code to define your Hamiltonian in QuTiP, or if you want to use our nice plotting functions on a list of QuTiP states).
@@ -170,7 +170,6 @@ Below are some cool features of **Dynamiqs** that are either already available o
 
 **Coming soon**
 
-- Discover a custom **sparse format**, with substantial speedups for large systems.
 - Simulate using propagators solvers based on **Krylov subspace methods**.
 - **Benchmark code** to compare solvers and performance for different systems.
 
@@ -201,12 +200,12 @@ We warmly welcome all contributions. If you're a junior developer or physicist, 
 If you have found this library useful in your academic research, you can cite:
 
 ```bibtex
-@unpublished{guilmin2024dynamiqs,
+@unpublished{guilmin2025dynamiqs,
   title  = {Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems},
-  author = {Pierre Guilmin and Ronan Gautier and Adrien Bocquet and {\'{E}}lie Genois},
-  year   = {2024},
+  author = {Pierre Guilmin and Adrien Bocquet and {\'{E}}lie Genois and Daniel Weiss and Ronan Gautier},
+  year   = {2025},
   url    = {https://github.com/dynamiqs/dynamiqs}
 }
 ```
 
-> P. Guilmin, R. Gautier, A. Bocquet, E. Genois. Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems (2024), in preparation.
+> P. Guilmin, A. Bocquet, E. Genois, D. Weiss, R. Gautier. Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems (2025), in preparation.

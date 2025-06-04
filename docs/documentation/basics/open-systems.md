@@ -78,7 +78,7 @@ For large Hilbert space sizes, the time complexity of computing the matrix expon
 
 ### Integrating the ODE
 
-The Lindblad master equation is an ODE, for which a wide variety of solvers have been developed. The simplest approach is the Euler method, a first-order ODE solver with a fixed step size which we describe shortly. Let us write the Taylor series expansion of the state at time $t+\dt$ up to first order:
+The Lindblad master equation is an ODE, for which a wide variety of methods have been developed. The simplest approach is the Euler method, a first-order ODE method with a fixed step size which we describe shortly. Let us write the Taylor series expansion of the state at time $t+\dt$ up to first order:
 $$
     \begin{aligned}
         \rho(t+\dt) &= \rho(t)+\dt\frac{\dd\rho(t)}{\dt}+\mathcal{O}(\dt^2) \\\\
@@ -88,7 +88,7 @@ $$
 $$
 where we used the Lindblad master equation to replace the time derivative of the state. By choosing a sufficiently small step size $\dt$ and starting from $\rho(0)$, the state is then iteratively evolved to a final time using the previous equation.
 
-There are two main types of ODE solvers:
+There are two main types of ODE methods:
 
 - **Fixed step size**: as with the Euler method, the step size $\dt$ is fixed during the simulation. The best known higher order methods are the *Runge-Kutta methods*. It is important for all these methods that the time step is sufficiently small to ensure the accuracy of the solution.
 - **Adaptive step size**: the step size is automatically adjusted during the simulation, at each time step. A well-known method is the *Dormand-Prince method*.
@@ -105,11 +105,13 @@ Also called the **quantum-jump** approach.
 
 ## Using Dynamiqs
 
-You can create the state, Hamiltonian and jump operators using any array-like object. Let's take the example of a two-level system with a simple Hamiltonian and a single jump operator:
+You can create the state, Hamiltonian and jump operators using any qarray-like. Let's take the example of a two-level system with a simple Hamiltonian and a single jump operator:
 
 ```python
 import jax.numpy as jnp
 import dynamiqs as dq
+
+jnp.set_printoptions(precision=3, suppress=True)  # set custom array print style
 
 psi0 = dq.excited()                         # initial state
 H = dq.sigmaz()                             # Hamiltonian
@@ -120,12 +122,13 @@ print(res.states[-1])                       # print the final state
 ```
 
 ```text title="Output"
-|██████████| 100.0% ◆ elapsed 4.47ms ◆ remaining 0.00ms
-Array([[0.368+0.j, 0.   +0.j],
-       [0.   +0.j, 0.632+0.j]], dtype=complex64)
+|██████████| 100.0% ◆ elapsed 1.75ms ◆ remaining 0.00ms
+QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+[[0.368+0.j 0.   +0.j]
+ [0.   +0.j 0.632+0.j]]
 ```
 
-If you want to know more about the available solvers or the different options, head to the [`dq.mesolve()`][dynamiqs.mesolve] API documentation.
+If you want to know more about the available methods or the different options, head to the [`dq.mesolve()`][dynamiqs.mesolve] API documentation.
 
 You can also directly compute the propagator with the [`dq.mepropagator()`][dynamiqs.mepropagator] solver. Continuing the last example:
 
@@ -135,9 +138,9 @@ print(res.propagators[-1])  # print the final propagator
 ```
 
 ```text title="Output"
-|██████████| 100.0% ◆ elapsed 2.56ms ◆ remaining 0.00ms
-Array([[ 0.368+0.j     0.   +0.j     0.   +0.j     0.   +0.j   ]
-       [ 0.   +0.j    -0.252+0.552j  0.   +0.j     0.   +0.j   ]
-       [ 0.   +0.j     0.   +0.j    -0.252-0.552j  0.   +0.j   ]
-       [ 0.632+0.j     0.   +0.j     0.   +0.j     1.   +0.j   ]], dtype=complex64)
+QArray: shape=(4, 4), dims=(2,), dtype=complex64, layout=dense, vectorized=True
+[[ 0.368+0.j     0.   +0.j     0.   +0.j     0.   +0.j   ]
+ [ 0.   +0.j    -0.252+0.552j  0.   +0.j     0.   +0.j   ]
+ [ 0.   +0.j     0.   +0.j    -0.252-0.552j  0.   +0.j   ]
+ [ 0.632+0.j     0.   +0.j     0.   +0.j     1.   +0.j   ]]
 ```

@@ -6,6 +6,7 @@ authors = [
   { name = "Ronan Gautier", email = "ron.gautier@gmail.com" },
   { name = "Adrien Bocquet", email = "adrienbocquet38@gmail.com" },
   { name = "Elie Genois", email = "elie.genois@usherbrooke.ca" },
+  { name = "Daniel Weiss", email = "daniel.kamrath.weiss@gmail.com" },
 ]
 dynamic = ["version"]
 license = { file = "LICENSE" }
@@ -16,19 +17,18 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Physics",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "qutip>=4.7.5",
     "scipy",
     "numpy",
     "matplotlib",
     "tqdm",
-    # todo: fix when https://github.com/patrick-kidger/equinox/pull/871 is released
-    "jax<0.4.34",
-    "jaxlib",
+    "jax>=0.4.36,<0.5.3", # >=0.4.36 for GPU eig support
     "jaxtyping",
-    "diffrax>=0.5.1",  # for complex support (0.5.0) and progress meter (0.5.1)
+    "diffrax>=0.6.1",  # for complex support (0.5.0), progress meter (0.5.1), compatibility with jax 0.4.36 (0.6.1)
     "equinox",
+    "optimistix",  # for typing of root-finding in Event method
     "pillow",
     "cmasher>=1.8.0",  # avoid matplotlib colormaps deprecation warning
     "ipython",
@@ -47,9 +47,10 @@ build-backend = "flit_core.buildapi"
 [project.optional-dependencies]
 dev = [
     "taskipy",
-    "ruff",
+    "ruff>=0.8",
     "codespell",
     "pytest>=8.0",
+    "pytest-ordering",
     "pytest-sugar",
     "pytest-xdist",
     "mkdocs-material",
@@ -85,11 +86,13 @@ extend-select = ["D204", "D400", "D404", "D406", "D410"]
 ignore = [
     "F403", "F405",
     "E203", "E731", "E741",
-    "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "D205", "D417",
-    "ANN101", "ANN002", "ANN003", "ANN401",
-    "RET505",
+    "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "D205", "D405", "D417",
+    "ANN002", "ANN003", "ANN401",
+    "ARG001",
+    "RET505", "RUF022",
     "TRY003",
-    "PLR0913", "PLR2004"
+    "PLR0913", "PLR2004",
+    "SLF001",
 ]
 
 [tool.ruff.lint.isort]

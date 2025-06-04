@@ -5,43 +5,42 @@ from functools import wraps
 from typing import Any
 
 import jax
-import jax.numpy as jnp
 from jax._src.lib import xla_client
-from jaxtyping import ArrayLike, PyTree
+from jaxtyping import PyTree
 
-from .._utils import cdtype, obj_type_str
-from ..solver import Solver, _DEAdaptiveStep
-from ..time_array import (
-    ConstantTimeArray,
-    PWCTimeArray,
-    Shape,
-    SummedTimeArray,
-    TimeArray,
+from .._utils import obj_type_str
+from ..method import Method, _DEAdaptiveStep
+from ..qarrays.qarray import QArrayLike
+from ..qarrays.utils import asqarray
+from ..time_qarray import (
+    ConstantTimeQArray,
+    PWCTimeQArray,
+    SummedTimeQArray,
+    TimeQArray,
 )
-from .core.abstract_integrator import AbstractIntegrator
 
 
-def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
-    if isinstance(x, TimeArray):
+def astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
+    if isinstance(x, TimeQArray):
         return x
     else:
         try:
             # same as dq.constant() but not checking the shape
-            array = jnp.asarray(x, dtype=cdtype())
-            return ConstantTimeArray(array)
+            qarray = asqarray(x)
+            return ConstantTimeQArray(qarray)
         except (TypeError, ValueError) as e:
             raise TypeError(
-                'Argument must be an array-like or a time-array object, but has type'
+                'Argument must be a qarray-like or a time-qarray, but has type'
                 f' {obj_type_str(x)}.'
             ) from e
 
 
-def ispwc(x: TimeArray) -> bool:
-    # check if a time array is constant or piecewise constant
-    if isinstance(x, (ConstantTimeArray, PWCTimeArray)):
+def ispwc(x: TimeQArray) -> bool:
+    # check if a time-qarray is constant or piecewise constant
+    if isinstance(x, ConstantTimeQArray | PWCTimeQArray):
         return True
-    elif isinstance(x, SummedTimeArray):
-        return all(ispwc(timearray) for timearray in x.timearrays)
+    elif isinstance(x, SummedTimeQArray):
+        return all(ispwc(timeqarray) for timeqarray in x.timeqarrays)
     else:
         return False
 
@@ -58,41 +57,34 @@ def catch_xla_runtime_error(func: callable) -> callable:
         except xla_client.XlaRuntimeError as e:
             # === `max_steps` reached error
             eqx_max_steps_error_msg = (
-                'EqxRuntimeError: The maximum number of solver steps was reached. '
+                'EqxRuntimeError: The maximum number of method steps was reached. '
             )
             if eqx_max_steps_error_msg in str(e):
                 default_max_steps = _DEAdaptiveStep.max_steps
                 raise RuntimeError(
-                    'The maximum number of solver steps has been reached (the default'
+                    'The maximum number of method steps has been reached (the default'
                     f' value is `max_steps={default_max_steps:_}`). Try increasing'
-                    ' `max_steps` with the `solver` argument, e.g.'
-                    ' `solver=dq.solver.Tsit5(max_steps=1_000_000)`.'
+                    ' `max_steps` with the `method` argument, e.g.'
+                    ' `method=dq.method.Tsit5(max_steps=1_000_000)`.'
                 ) from e
             # === other errors
             raise RuntimeError(
                 'An internal JAX error interrupted the execution, please report this to'
                 ' the Dynamiqs developers by opening an issue on GitHub or sending a'
                 ' message on Dynamiqs Slack (links available at'
-                ' https://www.dynamiqs.org/getting_started/lets-talk.html).'
+                ' https://www.dynamiqs.org/stable/community/lets-talk.html).'
             ) from e
 
     return wrapper
 
 
-def get_integrator_class(
-    integrators: dict[Solver, AbstractIntegrator], solver: Solver
-) -> AbstractIntegrator:
-    if not isinstance(solver, tuple(integrators.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in integrators)
+def assert_method_supported(method: Method, supported_methods: Sequence[Method]):
+    if not isinstance(method, tuple(supported_methods)):
+        supported_str = ', '.join(f'`{x.__name__}`' for x in supported_methods)
         raise TypeError(
-            f'Solver of type `{type(solver).__name__}` is not supported (supported'
-            f' solver types: {supported_str}).'
+            f'Method of type `{type(method).__name__}` is not supported (supported'
+            f' method types: {supported_str}).'
         )
-    return integrators[type(solver)]
-
-
-def is_shape(x: object) -> bool:
-    return isinstance(x, Shape)
 
 
 def multi_vmap(
@@ -182,8 +174,8 @@ def cartesian_vmap(
     for path, n in keyleaf[::-1]:
         if n > 0:
             # set all elements `in_axes` to `None` except for a specific subpart
-            keep_path_only = (
-                lambda cpath, x, path=path: x if cpath[: len(path)] == path else None
+            keep_path_only = lambda cpath, x, path=path: (
+                x if cpath[: len(path)] == path else None
             )
             in_axes_single = jax.tree_util.tree_map_with_path(keep_path_only, in_axes)
             for _ in range(n):

@@ -2,7 +2,9 @@
 
 The **Dynamiqs** Python API features two main types of functions: solvers of differential equations describing quantum systems, and various utility functions to ease the creation and manipulation of quantum states and operators.
 
-## Quantum solvers
+## Solvers
+
+### General
 
 ::: dynamiqs.integrators
     options:
@@ -10,27 +12,46 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         members:
         - sesolve
         - mesolve
-        - smesolve
         - sepropagator
         - mepropagator
+        - floquet
 
-## Core
+### Stochastic
 
-### Time-dependent arrays
-
-::: dynamiqs.time_array
+::: dynamiqs.integrators
     options:
         table: true
         members:
-        - TimeArray
+        - jssesolve
+        - dssesolve
+        - jsmesolve
+        - dsmesolve
+
+## Core
+
+### Quantum arrays
+
+::: dynamiqs.qarrays.qarray
+    options:
+        table: true
+        members:
+        - QArray
+
+### Time-dependent qarrays
+
+::: dynamiqs.time_qarray
+    options:
+        table: true
+        members:
+        - TimeQArray
         - constant
         - pwc
         - modulated
         - timecallable
 
-### Solvers (dq.solver)
+### Methods (dq.method)
 
-::: dynamiqs.solver
+::: dynamiqs.method
     options:
         table: true
         members:
@@ -40,9 +61,11 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - Kvaerno3
         - Kvaerno5
         - Euler
+        - EulerJump
+        - EulerMaruyama
         - Rouchon1
-        - Rouchon2
         - Expm
+        - Event
 
 ### Gradients (dq.gradient)
 
@@ -52,25 +75,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         members:
         - Autograd
         - CheckpointAutograd
-
-### Options
-
-::: dynamiqs.options
-    options:
-        table: true
-        members:
-        - Options
-
-### Results
-
-::: dynamiqs.result
-    options:
-        table: true
-        members:
-        - SESolveResult
-        - MESolveResult
-        - SEPropagatorResult
-        - MEPropagatorResult
+        - ForwardAutograd
 
 ## Utilities
 
@@ -81,7 +86,9 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         table: true
         members:
         - eye
-        - zero
+        - eye_like
+        - zeros
+        - zeros_like
         - destroy
         - create
         - number
@@ -94,6 +101,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - sigmax
         - sigmay
         - sigmaz
+        - xyz
         - sigmap
         - sigmam
         - hadamard
@@ -125,7 +133,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ### Quantum utilities
 
-::: dynamiqs.utils.quantum_utils
+::: dynamiqs.utils
     options:
         table: true
         members:
@@ -134,6 +142,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - expm
         - cosm
         - sinm
+        - signm
         - trace
         - tracemm
         - ptrace
@@ -155,21 +164,38 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - braket
         - overlap
         - fidelity
+        - purity
         - entropy_vn
         - bloch_coordinates
         - wigner
+        namespace: utils/general/
 
 
-### JAX-related utilities
+### QArray utilities
 
-::: dynamiqs.utils.jax_utils
+::: dynamiqs.qarrays.utils
     options:
         table: true
         members:
+        - asqarray
+        - isqarraylike
+        - stack
+        - to_jax
+        - to_numpy
         - to_qutip
+        - sparsedia_from_dict
+
+### Global settings
+
+::: dynamiqs.utils.global_settings
+    options:
+        table: true
+        members:
         - set_device
         - set_precision
         - set_matmul_precision
+        - set_layout
+        - set_progress_meter
 
 
 ### Vectorization
@@ -197,7 +223,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - cd_gate
 
 
-### Random arrays (dq.random)
+### Random (dq.random)
 
 ::: dynamiqs.random
     options:
@@ -220,10 +246,20 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - wigner
         - wigner_mosaic
         - wigner_gif
+        - wigner_data
         - pwc_pulse
         - fock
         - fock_evolution
         - hinton
+        - xyz
         - gifit
         - grid
         - mplstyle
+
+### Magic helpers
+
+::: dynamiqs.hermitian_conjugate
+    options:
+        table: true
+        members:
+        - hc

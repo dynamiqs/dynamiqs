@@ -191,6 +191,22 @@ Description: Extra CSS for the Dynamiqs documentation
   background-color: var(--md-example-bg-color);
 }
 
+/* Add a "See also" admonition */
+.md-typeset .admonition.see-also,
+.md-typeset details.see-also {
+border-color: var(--md-seealso-fg-color);
+}
+.md-typeset .see-also > .admonition-title,
+.md-typeset .see-also > summary {
+background-color: var(--md-seealso-bg-color);
+}
+.md-typeset .see-also > .admonition-title::before,
+.md-typeset .see-also > summary::before {
+background-color: var(--md-seealso-fg-color);
+-webkit-mask-image: var(--md-admonition-icon--see-also);
+        mask-image: var(--md-admonition-icon--see-also);
+}
+
 /* Admonition styling */
 .md-typeset .admonition,
 .md-typeset details,
@@ -228,7 +244,11 @@ p {
 }
 
 .katex-display {
-    margin: 0.75em 0;
+    margin: 0.8em 0 !important;
+}
+
+.katex {
+    line-height: 1.05 !important;
 }
 
 .md-typeset .doc-heading {
@@ -244,7 +264,7 @@ p {
 }
 
 .md-typeset .doc-contents p {
-  margin-top: 1em;
+  margin-top: 0.75em;
   margin-bottom: 0.2em;
 }
 
@@ -319,7 +339,7 @@ p {
 }
 
 /* Fix for two-line parameters when deploying doc */
-.field-body p {
+.field-body p:not(details p) {
   display: inline;
 }
 

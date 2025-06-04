@@ -3,18 +3,23 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
+from dynamiqs import asqarray
+
+from ..order import TEST_LONG
 
 
 def rand_mesolve_args(n, nH, nLs, npsi0, nEs):
     nkeys = len(nLs) + 3
     kH, *kLs, kpsi0, kEs = jax.random.split(jax.random.PRNGKey(42), nkeys)
     H = dq.random.herm(kH, (*nH, n, n))
-    Ls = [dq.random.herm(kL, (*nL, n, n)) for kL, nL in zip(kLs, nLs)]
+    Ls = [dq.random.herm(kL, (*nL, n, n)) for kL, nL in zip(kLs, nLs, strict=True)]
     psi0 = dq.random.ket(kpsi0, (*npsi0, n, 1))
     Es = dq.random.complex(kEs, (nEs, n, n))
+    Es = [asqarray(E) for E in Es]
     return H, Ls, psi0, Es
 
 
+@pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('nH', [(), (3,), (3, 4)])
 @pytest.mark.parametrize('npsi0', [(), (5,)])
 @pytest.mark.parametrize('nL1', [(), (7, 8)])
@@ -37,6 +42,7 @@ def test_cartesian_batching(nH, npsi0, nL1, nL2):
 
 # H has fixed shape (3, 4, n, n) for the next test case, we test a broad ensemble of
 # compatible broadcastable shape
+@pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('nL1', [(), (5, 1, 4)])
 @pytest.mark.parametrize('npsi0', [(), (1,), (4,), (3, 1), (3, 4), (5, 1, 4)])
 def test_flat_batching(nL1, npsi0):
@@ -58,6 +64,7 @@ def test_flat_batching(nL1, npsi0):
     assert result.expects.shape == (*broadcast_shape, nEs, ntsave)
 
 
+@pytest.mark.run(order=TEST_LONG)
 def test_batching_boris():
     n = 9
     a = dq.destroy(n)
@@ -65,12 +72,12 @@ def test_batching_boris():
     # first modulated operator (1, 5, 9, 9)
     omega1 = jnp.linspace(0, 1, 5)[None, :]
     f = lambda t: jnp.cos(omega1 * t)
-    H1 = dq.modulated(f, a + dq.dag(a))
+    H1 = dq.modulated(f, a + a.dag())
 
     # second modulated operator 2 (7, 1, 9, 9)
     omega2 = jnp.linspace(0, 1, 7)[:, None]
     f = lambda t: jnp.cos(omega2 * t)
-    H2 = dq.modulated(f, 1j * a - 1j * dq.dag(a))
+    H2 = dq.modulated(f, 1j * a - 1j * a.dag())
 
     # Hamiltonian
     H = H1 + H2

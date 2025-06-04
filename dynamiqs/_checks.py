@@ -4,6 +4,9 @@ import equinox as eqx
 import jax.numpy as jnp
 from jax import Array
 
+from .qarrays.layout import dense
+from .qarrays.qarray import QArray
+
 _is_perfect_square = lambda n: int(n**0.5) ** 2 == n
 
 
@@ -31,7 +34,7 @@ _cases = {
 }
 
 
-def has_shape(x: Array, shape: str) -> bool:
+def _has_shape(x: Array | QArray, shape: str) -> bool:
     if shape in _cases:
         return _cases[shape](x)
     else:
@@ -39,14 +42,14 @@ def has_shape(x: Array, shape: str) -> bool:
 
 
 def check_shape(
-    x: Array, argname: str, *shapes: str, subs: dict[str, str] | None = None
+    x: Array | QArray, argname: str, *shapes: str, subs: dict[str, str] | None = None
 ):
     # subs is used to replace symbols in the error message, this can be used to e.g.
     # specify a shape (?, n, n) but print an error message with (nH?, n, n), by passing
     # subs={'?': 'nH?'} to replace the '?' by 'nH?' in the shape specification
 
     for shape in shapes:
-        if has_shape(x, shape):
+        if _has_shape(x, shape):
             return
 
     if len(shapes) == 1:
@@ -88,9 +91,27 @@ def check_times(x: Array, argname: str, allow_empty: bool = False) -> Array:
     )
 
 
-def check_type_int(x: Array, argname: str):
+def check_type_int(x: Array | QArray, argname: str):
     if not jnp.issubdtype(x.dtype, jnp.integer):
         raise ValueError(
             f'Argument {argname} must be of type integer, but is of type'
             f' {argname}.dtype={x.dtype}.'
+        )
+
+
+def check_hermitian(x: QArray, argname: str) -> QArray:
+    rtol, atol = 1e-5, 1e-5  # TODO: fix hard-coded tolerances
+    return eqx.error_if(
+        x,
+        jnp.logical_not(x.isherm(rtol=rtol, atol=atol)),
+        f'Argument {argname} is not hermitian.',
+    )
+
+
+def check_qarray_is_dense(x: QArray, argname: str):
+    # check if the layout of x is dense
+    if x.layout != dense:
+        raise ValueError(
+            f'Argument {argname} must have layout `dense` but has layout '
+            f'{argname}.layout={x.layout}.'
         )

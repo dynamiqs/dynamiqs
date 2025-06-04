@@ -7,9 +7,9 @@ import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
 
-from dynamiqs.gradient import Gradient
+from dynamiqs.gradient import ForwardAutograd, Gradient
+from dynamiqs.method import Method
 from dynamiqs.options import Options
-from dynamiqs.solver import Solver
 
 from .system import System
 
@@ -18,18 +18,20 @@ class IntegratorTester:
     def _test_correctness(
         self,
         system: System,
-        solver: Solver,
+        method: Method,
         *,
         options: Options = Options(),  # noqa: B008
         ysave_atol: float = 1e-3,
         esave_rtol: float = 1e-3,
         esave_atol: float = 1e-4,
     ):
-        result = system.run(solver, options=options)
+        result = system.run(method, options=options)
 
         # === test ysave
         true_ysave = system.states(system.tsave)
-        errs = jnp.linalg.norm(true_ysave - result.states, axis=(-2, -1))
+        errs = jnp.linalg.norm(
+            true_ysave.to_jax() - result.states.to_jax(), axis=(-2, -1)
+        )
         logging.warning(f'true_ysave = {true_ysave}')
         logging.warning(f'ysave      = {result.states}')
         assert jnp.all(errs <= ysave_atol)
@@ -48,7 +50,7 @@ class IntegratorTester:
     def _test_gradient(
         self,
         system: System,
-        solver: Solver,
+        method: Method,
         gradient: Gradient,
         *,
         options: Options = Options(),  # noqa: B008
@@ -65,11 +67,17 @@ class IntegratorTester:
 
         # === test gradients depending on final ysave
         def loss_ysave(params):
-            res = system.run(solver, gradient=gradient, options=options, params=params)
+            res = system.run(method, gradient=gradient, options=options, params=params)
             return system.loss_state(res.states[-1])
 
+        # jax.grad uses reverse mode by default
+        if isinstance(gradient, ForwardAutograd):
+            jax_grad, jax_jac = jax.jacfwd, jax.jacfwd
+        else:
+            jax_grad, jax_jac = jax.grad, jax.jacrev
+
         true_grads_ysave = system.grads_state(system.tsave[-1])
-        grads_ysave = jax.grad(loss_ysave)(system.params_default)
+        grads_ysave = jax_grad(loss_ysave)(system.params_default)
 
         logging.warning(f'true_grads_ysave = {true_grads_ysave}')
         logging.warning(f'grads_ysave      = {grads_ysave}')
@@ -78,11 +86,11 @@ class IntegratorTester:
 
         # === test gradients depending on final Esave
         def loss_Esave(params):
-            res = system.run(solver, gradient=gradient, options=options, params=params)
+            res = system.run(method, gradient=gradient, options=options, params=params)
             return system.loss_expect(res.expects[:, -1])
 
         true_grads_Esave = system.grads_expect(system.tsave[-1])
-        grads_Esave = jax.jacrev(loss_Esave)(system.params_default)
+        grads_Esave = jax_jac(loss_Esave)(system.params_default)
 
         logging.warning(f'true_grads_Esave = {true_grads_Esave}')
         logging.warning(f'grads_Esave      = {grads_Esave}')

@@ -13,13 +13,13 @@ import dynamiqs
 
 
 @pytest.fixture(scope='session', autouse=True)
-def _jax_set_printoptions():
+def jax_set_printoptions():
     jnp.set_printoptions(precision=3, suppress=True)
 
 
 @pytest.fixture(scope='session', autouse=True)
-def _mpl_params():
-    dynamiqs.plot.utils.mplstyle(dpi=150)
+def mpl_params():
+    dynamiqs.plot.mplstyle(dpi=150)
     # use a non-interactive backend for matplotlib, to avoid opening a display window
     matplotlib.use('Agg')
 
@@ -63,5 +63,5 @@ class PyconCodeBlockParser(PythonCodeBlockParser):
 pytest_collect_file = Sybil(
     parsers=[PythonCodeBlockParser(), PyconCodeBlockParser(), SkipParser()],
     patterns=['*.md'],
-    fixtures=['_jax_set_printoptions', '_mpl_params', 'renderfig', 'rendergif'],
+    fixtures=['jax_set_printoptions', 'mpl_params', 'renderfig', 'rendergif'],
 ).pytest()

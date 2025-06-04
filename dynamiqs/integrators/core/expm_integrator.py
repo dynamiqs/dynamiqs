@@ -6,19 +6,21 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jax import Array
+from jaxtyping import PyTree
 
-from dynamiqs._utils import _concatenate_sort
+from dynamiqs._utils import concatenate_sort
 
-from ...result import Result
-from ...utils.quantum_utils.general import expm
-from ...utils.vectorization import slindbladian
+from ...qarrays.qarray import QArray
+from ...result import Result, Saved
+from ...utils.general import expm
+from ...utils.vectorization import operator_to_vector, slindbladian, vector_to_operator
 from .._utils import ispwc
-from .abstract_integrator import AbstractIntegrator
-from .interfaces import MEInterface, SEInterface
-from .save_mixin import SaveMixin
+from ..core.abstract_integrator import BaseIntegrator
+from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
+from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
 
 
-class ExpmIntegrator(AbstractIntegrator, SaveMixin):
+class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
     r"""Integrator solving a linear ODE of the form $dX/dt = AX$ by explicitly
     exponentiating the propagator.
 
@@ -37,14 +39,12 @@ class ExpmIntegrator(AbstractIntegrator, SaveMixin):
     - for sepropagator/mepropagator, the state $X$ is an (N, N) matrix.
     """
 
-    # subclasses should implement: discontinuity_ts, generator()
-
     class Infos(eqx.Module):
         nsteps: Array
 
         def __str__(self) -> str:
             if self.nsteps.ndim >= 1:
-                # note: expm solvers can make different number of steps between
+                # note: expm methods can make different number of steps between
                 # batch elements when batching over PWC objects
                 return (
                     f'avg. {self.nsteps.mean():.1f} steps | infos shape'
@@ -53,7 +53,7 @@ class ExpmIntegrator(AbstractIntegrator, SaveMixin):
             return f'{self.nsteps} steps'
 
     @abstractmethod
-    def generator(self, t: float) -> Array:
+    def generator(self, t: float) -> QArray:
         pass
 
     def run(self) -> Result:
@@ -61,19 +61,18 @@ class ExpmIntegrator(AbstractIntegrator, SaveMixin):
         # find all times where the solution should be saved (self.ts) or at which the
         # generator changes (self.discontinuity_ts)
         disc_ts = self.discontinuity_ts
-        if disc_ts is not None:
-            disc_ts = disc_ts.clip(self.t0, self.t1)
-        times = _concatenate_sort(jnp.asarray([self.t0]), self.ts, disc_ts)  # (ntimes,)
+        disc_ts = disc_ts.clip(self.t0, self.t1)
+        times = concatenate_sort(jnp.asarray([self.t0]), self.ts, disc_ts)  # (ntimes,)
 
         # === compute time differences (null for times outside [t0, t1])
         delta_ts = jnp.diff(times)  # (ntimes-1,)
 
         # === batch-compute the propagators $e^{\Delta t A}$ on each time interval
-        As = jax.vmap(self.generator)(times[:-1])  # (ntimes-1, N, N)
+        As = jax.vmap(self.generator)(times[:-1]).asdense()  # (ntimes-1, N, N)
         step_propagators = expm(delta_ts[:, None, None] * As)  # (ntimes-1, N, N)
 
         # === combine the propagators together
-        def step(carry: Array, x: Array) -> tuple[Array, Array]:
+        def step(carry: QArray, x: QArray) -> tuple[QArray, QArray]:
             # note the ordering x @ carry: we accumulate propagators from the left
             x_next = x @ carry
             return x_next, self.save(x_next)
@@ -102,11 +101,29 @@ class SEExpmIntegrator(ExpmIntegrator, SEInterface):
         # check that Hamiltonian is constant or pwc, or a sum of constant/pwc
         if not ispwc(self.H):
             raise TypeError(
-                'Solver `Expm` requires a constant or piecewise constant Hamiltonian.'
+                'Method `Expm` requires a constant or piecewise constant Hamiltonian.'
             )
 
-    def generator(self, t: float) -> Array:
+    def generator(self, t: float) -> QArray:
         return -1j * self.H(t)  # (n, n)
+
+
+class SESolveExpmIntegrator(SEExpmIntegrator, SolveSaveMixin, SolveInterface):
+    """Integrator computing the time evolution of the Schrödinger equation by
+    explicitly exponentiating the propagator.
+    """
+
+
+sesolve_expm_integrator_constructor = SESolveExpmIntegrator
+
+
+class SEPropagatorExpmIntegrator(SEExpmIntegrator, PropagatorSaveMixin):
+    """Integrator computing the propagator of the Lindblad master equation by
+    explicitly exponentiating the propagator.
+    """
+
+
+sepropagator_expm_integrator_constructor = SEPropagatorExpmIntegrator
 
 
 class MEExpmIntegrator(ExpmIntegrator, MEInterface):
@@ -118,14 +135,42 @@ class MEExpmIntegrator(ExpmIntegrator, MEInterface):
         # check that Hamiltonian is constant or pwc, or a sum of constant/pwc
         if not ispwc(self.H):
             raise TypeError(
-                'Solver `Expm` requires a constant or piecewise constant Hamiltonian.'
+                'Method `Expm` requires a constant or piecewise constant Hamiltonian.'
             )
 
         # check that all jump operators are constant or pwc, or a sum of constant/pwc
         if not all(ispwc(L) for L in self.Ls):
             raise TypeError(
-                'Solver `Expm` requires constant or piecewise constant jump operators.'
+                'Method `Expm` requires constant or piecewise constant jump operators.'
             )
 
-    def generator(self, t: float) -> Array:
+    def generator(self, t: float) -> QArray:
         return slindbladian(self.H(t), self.L(t))  # (n^2, n^2)
+
+
+class MESolveExpmIntegrator(MEExpmIntegrator, SolveSaveMixin, SolveInterface):
+    """Integrator computing the time evolution of the Lindblad master equation by
+    explicitly exponentiating the propagator.
+    """
+
+    def __post_init__(self):
+        # convert to vectorized form
+        self.y0 = operator_to_vector(self.y0)  # (n^2, 1)
+
+    def save(self, y: PyTree) -> Saved:
+        # TODO: implement bexpect for vectorized operators and convert at the end
+        # instead of at each step
+        y = vector_to_operator(y)
+        return super().save(y)
+
+
+mesolve_expm_integrator_constructor = MESolveExpmIntegrator
+
+
+class MEPropagatorExpmIntegrator(MEExpmIntegrator, PropagatorSaveMixin):
+    """Integrator computing the propagator of the Lindblad master equation by
+    explicitly exponentiating the propagator.
+    """
+
+
+mepropagator_expm_integrator_constructor = MEPropagatorExpmIntegrator

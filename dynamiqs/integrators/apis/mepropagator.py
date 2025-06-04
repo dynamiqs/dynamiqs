@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import logging
+import warnings
 from functools import partial
 
 import jax
@@ -9,28 +9,37 @@ from jaxtyping import Array, ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...options import Options
+from ...method import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Method, Tsit5
+from ...options import Options, check_options
+from ...qarrays.dense_qarray import DenseQArray
+from ...qarrays.qarray import QArrayLike
 from ...result import MEPropagatorResult
-from ...solver import Expm, Solver
-from ...time_array import TimeArray
-from ...utils.operators import eye
+from ...time_qarray import TimeQArray
 from .._utils import (
-    _astimearray,
+    assert_method_supported,
+    astimeqarray,
     cartesian_vmap,
     catch_xla_runtime_error,
-    get_integrator_class,
+    ispwc,
     multi_vmap,
 )
-from ..core.abstract_integrator import MEPropagatorIntegrator
-from ..mepropagator.expm_integrator import MEPropagatorExpmIntegrator
+from ..core.diffrax_integrator import (
+    mepropagator_dopri5_integrator_constructor,
+    mepropagator_dopri8_integrator_constructor,
+    mepropagator_euler_integrator_constructor,
+    mepropagator_kvaerno3_integrator_constructor,
+    mepropagator_kvaerno5_integrator_constructor,
+    mepropagator_tsit5_integrator_constructor,
+)
+from ..core.expm_integrator import mepropagator_expm_integrator_constructor
 
 
 def mepropagator(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
+    H: QArrayLike | TimeQArray,
+    jump_ops: list[QArrayLike | TimeQArray],
     tsave: ArrayLike,
     *,
-    solver: Solver = Expm(),  # noqa: B008
+    method: Method | None = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> MEPropagatorResult:
@@ -45,74 +54,169 @@ def mepropagator(
     Liouvillian. The formula simplifies to $\mathcal{U}(t)=e^{t\mathcal{L}}$ if the
     Liouvillian does not depend on time.
 
-    Warning:
-        This function only supports constant or piecewise constant Hamiltonians and jump
-        operators. Support for arbitrary time dependence will be added soon.
-
-    Note-: Defining a time-dependent Hamiltonian or jump operator
-        If the Hamiltonian or the jump operators depend on time, they can be converted
-        to time-arrays using [`dq.pwc()`][dynamiqs.pwc],
-        [`dq.modulated()`][dynamiqs.modulated], or
-        [`dq.timecallable()`][dynamiqs.timecallable]. See the
-        [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
-        tutorial for more details.
-
-    Note-: Running multiple simulations concurrently
-        The Hamiltonian `H` and the jump operators `jump_ops` can be batched to compute
-        multiple propagators concurrently. All other arguments are common to every
-        batch. See the
-        [Batching simulations](../../documentation/basics/batching-simulations.md)
-        tutorial for more details.
+    If the Liouvillian is constant or piecewise constant, the propagator is
+    computed by directly exponentiating the Liouvillian. Otherwise, the
+    propagator is computed by solving the Lindblad master equation with an ODE
+    method.
 
     Args:
-        H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of array-like or time-array, each of shape (...Lk, n, n))_:
+        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
             List of jump operators.
         tsave _(array-like of shape (ntsave,))_: Times at which the propagators are
             saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or from `t0`
             to `tsave[-1]` if `t0` is specified in `options`.
-        solver: Solver for the integration. Defaults to
-            [`dq.solver.Expm`][dynamiqs.solver.Expm] (explicit matrix exponentiation),
-            which is the only supported solver for now.
+        method: Method for the integration. Defaults to `None` which redirects
+            to [`dq.method.Expm`][dynamiqs.method.Expm] (explicit matrix
+            exponentiation) or [`dq.method.Tsit5`][dynamiqs.method.Tsit5]
+            depending on the Liouvillian type (supported:
+            [`Expm`][dynamiqs.method.Expm],
+            [`Tsit5`][dynamiqs.method.Tsit5],
+            [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8],
+            [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5],
+            [`Euler`][dynamiqs.method.Euler]).
         gradient: Algorithm used to compute the gradient. The default is
-            solver-dependent, refer to the documentation of the chosen solver for more
+            method-dependent, refer to the documentation of the chosen method for more
             details.
-        options: Generic options, see [`dq.Options`][dynamiqs.Options].
+        options: Generic options (supported: `save_propagators`, `cartesian_batching`,
+            `progress_meter`, `t0`, `save_extra`).
+            ??? "Detailed options API"
+                ```
+                dq.Options(
+                    save_propagators: bool = True,
+                    cartesian_batching: bool = True,
+                    progress_meter: AbstractProgressMeter | bool | None = None,
+                    t0: ScalarLike | None = None,
+                    save_extra: callable[[Array], PyTree] | None = None,
+                )
+                ```
+
+                **Parameters**
+
+                - **save_propagators** - If `True`, the propagator is saved at every
+                    time in `tsave`, otherwise only the final propagator is returned.
+                - **cartesian_batching** - If `True`, batched arguments are treated as
+                    separated batch dimensions, otherwise the batching is performed over
+                    a single shared batched dimension.
+                - **progress_meter** - Progress meter indicating how far the solve has
+                    progressed. Defaults to `None` which uses the global default
+                    progress meter (see
+                    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
+                    `True` for a [tqdm](https://github.com/tqdm/tqdm) progress meter,
+                    and `False` for no output. See other options in
+                    [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
+                    If gradients are computed, the progress meter only displays during
+                    the forward pass.
+                - **t0** - Initial time. If `None`, defaults to the first time in
+                    `tsave`.
+                - **save_extra** _(function, optional)_ - A function with signature
+                    `f(QArray) -> PyTree` that takes a propagator as input and returns
+                    a PyTree. This can be used to save additional arbitrary data
+                    during the integration, accessible in `result.extra`.
 
     Returns:
-        [`dq.MEPropagatorResult`][dynamiqs.MEPropagatorResult] object holding
-            the result of the propagator computation. Use the attribute
-            `propagators` to access saved quantities, more details in
-            [`dq.MEPropagatorResult`][dynamiqs.MEPropagatorResult].
-    """  # noqa: E501
+        `dq.MEPropagatorResult` object holding the result of the propagator computation.
+            Use `result.propagators` to access the saved propagators.
+
+            ??? "Detailed result API"
+                ```python
+                dq.MEPropagatorResult
+                ```
+
+                **Attributes**
+
+                - **propagators** _(qarray of shape (..., nsave, n^2, n^2))_ - Saved
+                    propagators with `nsave = ntsave`, or `nsave = 1` if
+                    `options.save_propagators=False`.
+                - **final_propagator** _(qarray of shape (..., n^2, n^2))_ - Saved final
+                    propagator.
+                - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
+                    specified in `options`.
+                - **infos** _(PyTree or None)_ - Method-dependent information on the
+                    resolution.
+                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
+                    saved.
+                - **method** _(Method)_ - Method used.
+                - **gradient** _(Gradient)_ - Gradient used.
+                - **options** _(Options)_ - Options used.
+
+    # Advanced use-cases
+
+    ## Defining a time-dependent Hamiltonian or jump operator
+
+    If the Hamiltonian or the jump operators depend on time, they can be converted
+    to time-qarrays using [`dq.pwc()`][dynamiqs.pwc],
+    [`dq.modulated()`][dynamiqs.modulated], or
+    [`dq.timecallable()`][dynamiqs.timecallable]. See the
+    [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
+    tutorial for more details.
+
+    ## Running multiple simulations concurrently
+
+    The Hamiltonian `H` and the jump operators `jump_ops` can be batched to compute
+    multiple propagators concurrently. All other arguments are common to every
+    batch. The resulting propagators are batched according to the leading dimensions of
+    `H` and `jump_ops`. The behaviour depends on the value of the `cartesian_batching`
+    option.
+
+    === "If `cartesian_batching = True` (default value)"
+        The results leading dimensions are
+        ```
+        ... = ...H, ...L0, ...L1, (...)
+        ```
+        For example if:
+
+        - `H` has shape _(2, 3, n, n)_,
+        - `jump_ops = [L0, L1]` has shape _[(4, 5, n, n), (6, n, n)]_,
+
+        then `result.propagators` has shape _(2, 3, 4, 5, 6, ntsave, n^2, n^2)_.
+    === "If `cartesian_batching = False`"
+        The results leading dimensions are
+        ```
+        ... = ...H = ...L0 = ...L1 = (...)  # (once broadcasted)
+        ```
+        For example if:
+
+        - `H` has shape _(2, 3, n, n)_,
+        - `jump_ops = [L0, L1]` has shape _[(3, n, n), (2, 1, n, n)]_,
+
+        then `result.propagators` has shape _(2, 3, ntsave, n^2, n^2)_.
+
+    See the
+    [Batching simulations](../../documentation/basics/batching-simulations.md)
+    tutorial for more details.
+    """
     # === convert arguments
-    H = _astimearray(H)
-    Ls = [_astimearray(L) for L in jump_ops]
+    H = astimeqarray(H)
+    Ls = [astimeqarray(L) for L in jump_ops]
     tsave = jnp.asarray(tsave)
 
     # === check arguments
     _check_mepropagator_args(H, Ls)
     tsave = check_times(tsave, 'tsave')
+    check_options(options, 'mepropagator')
+    options = options.initialise()
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
-    # objects (which are not JIT-compatible) to JAX arrays
-    return _vectorized_mepropagator(H, Ls, tsave, solver, gradient, options)
+    # objects (which are not JIT-compatible) to qarrays
+    return _vectorized_mepropagator(H, Ls, tsave, method, gradient, options)
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_mepropagator(
-    H: TimeArray,
-    Ls: list[TimeArray],
+    H: TimeQArray,
+    Ls: list[TimeQArray],
     tsave: Array,
-    solver: Solver,
+    method: Method,
     gradient: Gradient | None,
     options: Options,
 ) -> MEPropagatorResult:
     # vectorize input over H and Ls
     in_axes = (H.in_axes, [L.in_axes for L in Ls], None, None, None, None)
-    # vectorize output over `_saved` and `infos`
-    out_axes = MEPropagatorResult(None, None, None, None, 0, 0)
+    out_axes = MEPropagatorResult.out_axes()
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], 0, 0, 0, 0)
@@ -127,28 +231,50 @@ def _vectorized_mepropagator(
         # vectorize the function
         f = multi_vmap(_mepropagator, in_axes, out_axes, nvmap)
 
-    return f(H, Ls, tsave, solver, gradient, options)
+    return f(H, Ls, tsave, method, gradient, options)
 
 
 def _mepropagator(
-    H: TimeArray,
-    Ls: list[TimeArray],
+    H: TimeQArray,
+    Ls: list[TimeQArray],
     tsave: Array,
-    solver: Solver,
+    method: Method,
     gradient: Gradient | None,
     options: Options,
 ) -> MEPropagatorResult:
-    # === select integrator class
-    integrators = {Expm: MEPropagatorExpmIntegrator}
-    integrator_class: MEPropagatorIntegrator = get_integrator_class(integrators, solver)
+    # === select integrator constructor
+    if method is None:  # default method
+        method = Expm() if all(ispwc(x) for x in [H, *Ls]) else Tsit5()
+
+    integrator_constructors = {
+        Expm: mepropagator_expm_integrator_constructor,
+        Euler: mepropagator_euler_integrator_constructor,
+        Dopri5: mepropagator_dopri5_integrator_constructor,
+        Dopri8: mepropagator_dopri8_integrator_constructor,
+        Tsit5: mepropagator_tsit5_integrator_constructor,
+        Kvaerno3: mepropagator_kvaerno3_integrator_constructor,
+        Kvaerno5: mepropagator_kvaerno5_integrator_constructor,
+    }
+    assert_method_supported(method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method)]
 
     # === check gradient is supported
-    solver.assert_supports_gradient(gradient)
+    method.assert_supports_gradient(gradient)
 
     # === init integrator
-    y0 = eye(H.shape[-1] ** 2)
-    integrator = integrator_class(
-        ts=tsave, y0=y0, solver=solver, gradient=gradient, options=options, H=H, Ls=Ls
+    # todo: replace with vectorized utils constructor for eye
+    data = jnp.eye(H.shape[-1] ** 2, dtype=H.dtype)
+    # todo: timeqarray should expose dims without having to call at specific time
+    y0 = DenseQArray(H(0.0).dims, True, data)
+    integrator = integrator_constructor(
+        ts=tsave,
+        y0=y0,
+        method=method,
+        gradient=gradient,
+        result_class=MEPropagatorResult,
+        options=options,
+        H=H,
+        Ls=Ls,
     )
 
     # === run integrator
@@ -158,7 +284,7 @@ def _mepropagator(
     return result  # noqa: RET504
 
 
-def _check_mepropagator_args(H: TimeArray, Ls: list[TimeArray]):
+def _check_mepropagator_args(H: TimeQArray, Ls: list[TimeQArray]):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
@@ -167,7 +293,8 @@ def _check_mepropagator_args(H: TimeArray, Ls: list[TimeArray]):
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
 
     if len(Ls) == 0:
-        logging.warning(
+        warnings.warn(
             'Argument `jump_ops` is an empty list, consider using `dq.sepropagator()`'
-            ' to compute propagators for the Schrödinger equation.'
+            ' to compute propagators for the Schrödinger equation.',
+            stacklevel=2,
         )
