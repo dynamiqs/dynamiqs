@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from math import prod
 
 import jax.numpy as jnp
@@ -88,11 +89,11 @@ class CompositeQArray(QArray):
     @property
     def mT(self) -> QArray:
         terms = [tuple(factor.mT for factor in term) for term in self.terms]
-        return CompositeQArray(self.dims, self.vectorized, terms)
+        return replace(self, terms=terms)
 
     def conj(self) -> QArray:
         terms = [tuple(factor.conj() for factor in term) for term in self.terms]
-        return CompositeQArray(self.dims, self.vectorized, terms)
+        return replace(self, terms=terms)
 
     def _reshape_unchecked(self, *shape: int) -> QArray:
         # TODO
