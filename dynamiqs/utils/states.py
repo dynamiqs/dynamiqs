@@ -351,20 +351,20 @@ def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> QArray:
     r"""Returns the density matrix of a thermal state or a tensor product of thermal
     states.
 
-    It is defined for a thermal photon number $n_{th}$ by:
+    For a single mode, it is defined for a thermal photon number $n_{th}$ by:
 
     $$
-        \rho = \sum_k \frac{(n_{th})^k}{(1+n_{th})^{1+k}} \ket{k}\bra{k},
+        \rho = \sum_k \frac{(n_{th})^k}{(1+n_{th})^{1+k}} \ket{k}\bra{k}.
     $$
 
     Args:
         dim: Hilbert space dimension of each mode.
-        nth _(array_like of shape (...) or (..., len(dim)))_: Thermal photon number for
+        nth _(array-like of shape (...) or (..., len(dim)))_: Thermal photon number for
             each mode. If `dim` is a tuple, the last dimension of `nth` should match the
             length of `dim`.
 
     Returns:
-        _(array of shape (..., n, n))_ Density matrix of the thermal state or tensor
+        _(qarray of shape (..., n, n))_ Density matrix of the thermal state or tensor
             product of thermal states, with _n = prod(dims)_.
 
     Examples:
@@ -385,10 +385,9 @@ def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> QArray:
         (12, 12)
 
         Batched multi-mode thermal states:
-        >>> nths = [(0.1, 0.2), (0.2, 0.1), (0.2, 0.2)]
-        >>> dq.thermal_dm((4, 3), nths).shape
+        >>> nth = [(0.1, 0.2), (0.2, 0.1), (0.2, 0.2)]
+        >>> dq.thermal_dm((4, 3), nth).shape
         (3, 12, 12)
-
     """
     dim = np.asarray(dim)
     nth = jnp.asarray(nth)
