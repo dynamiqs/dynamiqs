@@ -10,7 +10,7 @@ from ..qarrays.dense_qarray import DenseQArray
 from ..qarrays.layout import Layout, dense, get_layout
 from ..qarrays.qarray import QArray, QArrayLike, get_dims
 from ..qarrays.sparsedia_qarray import SparseDIAQArray
-from ..qarrays.utils import asqarray, init_dims, sparsedia_from_dict, to_jax
+from ..qarrays.utils import asqarray, init_dims, sparsedia_from_dict, stack, to_jax
 from .general import tensor
 
 __all__ = [
@@ -35,6 +35,7 @@ __all__ = [
     'sigmax',
     'sigmay',
     'sigmaz',
+    'xyz',
     'squeeze',
     'tgate',
     'toffoli',
@@ -679,6 +680,31 @@ def sigmaz(*, layout: Layout | None = None) -> QArray:
         return asqarray(array)
     else:
         return sparsedia_from_dict({0: [1, -1]}, dtype=cdtype())
+
+
+def xyz(*, layout: Layout | None = None) -> QArray:
+    r"""Returns the Pauli $\sigma_x$, $\sigma_y$ and $\sigma_z$ operators.
+
+    Args:
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+
+    Returns:
+        _(qarray of shape (3, 2, 2))_ Pauli $\sigma_x$, $\sigma_y$ and $\sigma_z$
+            operators.
+
+    Examples:
+        >>> dq.xyz()
+        QArray: shape=(3, 2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=3
+        [[[   ⋅     1.+0.j]
+          [ 1.+0.j    ⋅   ]]
+        <BLANKLINE>
+         [[   ⋅     0.-1.j]
+          [ 0.+1.j    ⋅   ]]
+        <BLANKLINE>
+         [[ 1.+0.j    ⋅   ]
+          [   ⋅    -1.+0.j]]]
+    """
+    return stack([sigmax(layout=layout), sigmay(layout=layout), sigmaz(layout=layout)])
 
 
 def sigmap(*, layout: Layout | None = None) -> QArray:

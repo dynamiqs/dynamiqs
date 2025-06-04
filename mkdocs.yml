@@ -205,6 +205,7 @@ nav:
               - sigmax: python_api/utils/operators/sigmax.md
               - sigmay: python_api/utils/operators/sigmay.md
               - sigmaz: python_api/utils/operators/sigmaz.md
+              - xyz: python_api/utils/operators/xyz.md
               - sigmap: python_api/utils/operators/sigmap.md
               - sigmam: python_api/utils/operators/sigmam.md
               - hadamard: python_api/utils/operators/hadamard.md
@@ -224,6 +225,7 @@ nav:
               - coherent_dm: python_api/utils/states/coherent_dm.md
               - ground: python_api/utils/states/ground.md
               - excited: python_api/utils/states/excited.md
+              - thermal_dm: python_api/utils/states/thermal_dm.md
           - Quantum utilities:
               - dag: python_api/utils/general/dag.md
               - powm: python_api/utils/general/powm.md
@@ -292,6 +294,7 @@ nav:
               - wigner: python_api/plot/wigner.md
               - wigner_mosaic: python_api/plot/wigner_mosaic.md
               - wigner_gif: python_api/plot/wigner_gif.md
+              - wigner_data: python_api/plot/wigner_data.md
               - pwc_pulse: python_api/plot/pwc_pulse.md
               - fock: python_api/plot/fock.md
               - fock_evolution: python_api/plot/fock_evolution.md
