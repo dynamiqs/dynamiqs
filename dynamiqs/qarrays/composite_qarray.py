@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from math import prod
+
 import jax.numpy as jnp
 import numpy as np
 from jax import Array, Device
@@ -14,23 +16,6 @@ __all__ = ['CompositeQArray']
 from .dense_qarray import DenseQArray
 from .qarray import QArrayLike
 from .sparsedia_qarray import SparseDIAQArray
-
-
-def _tensor_product_shape(shapes: list[tuple[int, ...]]) -> tuple[int, ...]:
-    """Compute the shape of a tensor product from the shapes of the arrays
-    involved in this product.
-    """
-    max_shape = max(len(shape) for shape in shapes)
-
-    final_shape: list[int] = []
-    for i in range(max_shape):
-        dim = 1
-        for shape in shapes:
-            if i < len(shape):
-                dim *= shape[-(i + 1)]
-        final_shape.append(dim)
-
-    return tuple(final_shape[::-1])
 
 
 class CompositeQArray(QArray):
@@ -66,8 +51,10 @@ class CompositeQArray(QArray):
 
     @property
     def shape(self) -> tuple[int, ...]:
-        shapes = [factor.shape for factor in self._first_term]
-        return _tensor_product_shape(shapes)
+        bshape = ()  # TODO: find broadcasted batching shape with jnp.broadcast_shapes
+        ns = [factor.shape[-1] for factor in self._first_term]
+        ntot = prod(ns)
+        return (*bshape, ntot, ntot)
 
     @property
     def mT(self) -> QArray:
