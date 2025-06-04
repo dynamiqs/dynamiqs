@@ -6,7 +6,7 @@ from jax import Array, Device
 from jaxtyping import ArrayLike
 from qutip import Qobj
 
-from .layout import Layout, composite
+from .layout import Layout
 from .qarray import QArray
 
 __all__ = ['CompositeQArray']
@@ -62,7 +62,7 @@ class CompositeQArray(QArray):
 
     @property
     def layout(self) -> Layout:
-        return composite
+        return NotImplemented  # TODO
 
     @property
     def shape(self) -> tuple[int, ...]:
