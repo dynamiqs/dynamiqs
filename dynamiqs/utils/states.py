@@ -347,7 +347,7 @@ def excited() -> QArray:
     return asqarray(jnp.array([[1], [0]], dtype=cdtype()), dims=(2,))
 
 
-def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> Array:
+def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> QArray:
     r"""Returns the density matrix of a thermal state or a tensor product of thermal
     states.
 
@@ -421,7 +421,7 @@ def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> Array:
     return _vectorized_thermal_dm(nth)
 
 
-def _single_thermal_dm(dim: int, nth: Array) -> Array:
+def _single_thermal_dm(dim: int, nth: Array) -> QArray:
     """Returns the density matrix of a thermal state for a single mode."""
     # compute the unnormalized diagonal elements of the density matrix
     fock_indices = jnp.arange(dim)
