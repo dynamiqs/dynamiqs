@@ -1,4 +1,5 @@
 import warnings
+from dataclasses import replace
 
 from ...result import Result, SolveSaved
 from ..apis.jssesolve import _vectorized_jssesolve
@@ -8,6 +9,9 @@ from .interfaces import MEInterface, SolveInterface
 
 class MESolveJumpMonteCarloIntegrator(BaseIntegrator, MEInterface, SolveInterface):
     def run(self) -> Result:
+        # modify nmaxclick in the options passed to jssesolve
+        jsse_options = replace(self.options, nmaxclick=self.method.jsse_nmaxclick)
+
         # call _vectorized_jssesolve to compute the jump SSE results
         jsse_result = _vectorized_jssesolve(
             self.H,
@@ -18,7 +22,7 @@ class MESolveJumpMonteCarloIntegrator(BaseIntegrator, MEInterface, SolveInterfac
             self.Es,
             self.method.jsse_method,
             self.gradient,
-            self.method.jsse_options,
+            jsse_options,
         )
 
         # compute mean states and expectation values

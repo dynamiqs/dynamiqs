@@ -8,7 +8,6 @@ from optimistix import AbstractRootFinder
 
 from ._utils import tree_str_inline
 from .gradient import Autograd, CheckpointAutograd, ForwardAutograd, Gradient
-from .options import Options, check_options
 
 __all__ = [
     'Dopri5',
@@ -546,12 +545,15 @@ class JumpMonteCarlo(_DEMethod):
         If you are looking for direct access to individual trajectories, use
         [`dq.jssesolve()`][dynamiqs.jssesolve] instead.
 
+    Warning:
+        This method does not support the `progress_meter` option.
+
     Args:
         keys _(list of PRNG keys)_: Keys used for the jump SSE solver. See
             [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
         jsse_method: Method used for the jump SSE solver. See
             [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
-        jsse_options: Options for the jump SSE solver. See
+        jsse_nmaxclick: Maximum buffer size for `clicktimes`. See
             [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
 
     Note-: Supported gradients
@@ -560,7 +562,7 @@ class JumpMonteCarlo(_DEMethod):
 
     keys: PRNGKeyArray
     jsse_method: Method = Event()
-    jsse_options: Options = eqx.field(static=True, default=Options())
+    jsse_nmaxclick: int = eqx.field(static=True, default=10_000)
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
         Autograd,
@@ -573,9 +575,8 @@ class JumpMonteCarlo(_DEMethod):
         self,
         keys: PRNGKeyArray,
         jsse_method: Method = Event(),  # noqa: B008
-        jsse_options: Options = Options(),  # noqa: B008
+        jsse_nmaxclick: int = 10_000,
     ):
         self.keys = keys
         self.jsse_method = jsse_method
-        check_options(jsse_options, 'jssesolve')
-        self.jsse_options = jsse_options.initialise()
+        self.jsse_nmaxclick = jsse_nmaxclick
