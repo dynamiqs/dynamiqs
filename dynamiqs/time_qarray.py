@@ -387,7 +387,7 @@ class TimeQArray(eqx.Module):
         return self.mT.conj()
 
     def squeeze(self, axis: int | None = None) -> TimeQArray:
-        """Squeeze a time-qarray.
+        """Squeezes a time-qarray.
 
         Args:
             axis: Axis to squeeze. If `None`, all axes with dimension 1 are squeezed.
