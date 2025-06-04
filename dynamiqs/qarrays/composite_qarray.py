@@ -23,6 +23,37 @@ class CompositeQArray(QArray):
     """List of tuple of `QArray`s. Each element of the list is called a _term_. Each
     term is composed of _factors_."""
 
+    def __check_init__(self):
+        # check that there is at least one term
+        if len(self.terms) == 0:
+            raise ValueError('CompositeQArray must have at least one term.')
+
+        # check that each term has at least one factor
+        for term in self.terms:
+            if len(term) == 0:
+                raise ValueError(
+                    'Each term in a CompositeQArray must have at least one factor.'
+                )
+
+        # check that all factors have the same dtype and devices
+        for factor in self._all_factors():
+            if factor.dtype != self.dtype:
+                raise ValueError(
+                    'All factors in a CompositeQArray must have the same dtype.'
+                )
+            if factor.devices() != self.devices():
+                raise ValueError(
+                    'All factors in a CompositeQArray must be on the same device.'
+                )
+
+        # check that all factors have broadcastable shapes
+        try:
+            jnp.broadcast_shapes(*[factor.shape[:-2] for factor in self._all_factors()])
+        except ValueError as e:
+            raise ValueError(
+                'All factors in a CompositeQArray must have broadcastable shapes.'
+            ) from e
+
     @property
     def _first_term(self) -> tuple[QArray, ...]:
         """Return the first term."""
@@ -32,6 +63,10 @@ class CompositeQArray(QArray):
     def _first_factor(self) -> QArray:
         """Return the first factor of the first term."""
         return self._first_term[0]
+
+    def _all_factors(self) -> list[QArray]:
+        """Return a list of all factors in all terms."""
+        return [factor for term in self.terms for factor in term]
 
     @property
     def dtype(self) -> jnp.dtype:
