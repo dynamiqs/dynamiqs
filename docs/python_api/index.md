@@ -197,6 +197,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - set_precision
         - set_matmul_precision
         - set_layout
+        - set_composite
         - set_progress_meter
 
 
