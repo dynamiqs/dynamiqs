@@ -267,7 +267,7 @@ class TimeQArray(eqx.Module):
     """
 
     # Subclasses should implement:
-    # - the properties: dtype, shape, dims, ndiags, offsets, vectorized, layout, mT,
+    # - the properties: dtype, shape, dims, ndiags, vectorized, layout, mT,
     #                   in_axes, discontinuity_ts
     # - the methods: reshape, broadcast_to, conj, _call, __mul__
 
@@ -300,11 +300,6 @@ class TimeQArray(eqx.Module):
     @property
     @abstractmethod
     def ndiags(self) -> int:
-        pass
-
-    @property
-    @abstractmethod
-    def offsets(self) -> tuple[int, ...]:
         pass
 
     @property
@@ -509,10 +504,6 @@ class ConstantTimeQArray(TimeQArray):
         return self.qarray.ndiags
 
     @property
-    def offsets(self) -> tuple[int, ...]:
-        return self.qarray.offsets
-
-    @property
     def vectorized(self) -> bool:
         return self.qarray.vectorized
 
@@ -594,10 +585,6 @@ class PWCTimeQArray(TimeQArray):
     @property
     def ndiags(self) -> int:
         return self.qarray.ndiags
-
-    @property
-    def offsets(self) -> tuple[int, ...]:
-        return self.qarray.offsets
 
     @property
     def vectorized(self) -> int:
@@ -687,10 +674,6 @@ class ModulatedTimeQArray(TimeQArray):
         return self.qarray.ndiags
 
     @property
-    def offsets(self) -> tuple[int, ...]:
-        return self.qarray.offsets
-
-    @property
     def vectorized(self) -> bool:
         return self.qarray.vectorized
 
@@ -763,10 +746,6 @@ class CallableTimeQArray(TimeQArray):
     @property
     def ndiags(self) -> int:
         return jax.eval_shape(self.f, 0.0).ndiags
-
-    @property
-    def offsets(self) -> tuple[int, ...]:
-        return jax.eval_shape(self.f, 0.0).offsets
 
     @property
     def vectorized(self) -> bool:
@@ -855,10 +834,6 @@ class SummedTimeQArray(TimeQArray):
     @property
     def ndiags(self) -> int:
         return jax.eval_shape(self.__call__, 0.0).ndiags
-
-    @property
-    def offsets(self) -> tuple[int, ...]:
-        return jax.eval_shape(self.__call__, 0.0).offsets
 
     @property
     def vectorized(self) -> bool:
