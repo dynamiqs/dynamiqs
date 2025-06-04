@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from dataclasses import replace
 from math import prod
 
@@ -96,93 +97,136 @@ class CompositeQArray(QArray):
         return replace(self, terms=terms)
 
     def _reshape_unchecked(self, *shape: int) -> QArray:
-        # TODO
+        # TODO (skip for now)
         pass
 
     def broadcast_to(self, *shape: int) -> QArray:
-        # TODO
+        # TODO (skip for now)
         pass
 
     def ptrace(self, *keep: int) -> QArray:
+        # TODO
         pass
 
     def powm(self, n: int) -> QArray:
+        # TODO
         pass
 
     def expm(self, *, max_squarings: int = 16) -> QArray:
-        pass
+        warnings.warn(
+            'A `CompositeQArray` has been converted to a `DenseQArray` while attempting'
+            ' to compute its matrix exponential.',
+            stacklevel=2,
+        )
+        return self.asdense().expm(max_squarings=max_squarings)
 
     def norm(self) -> Array:
-        pass
+        return self.trace().real
 
     def trace(self) -> Array:
+        # TODO
         pass
 
     def sum(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
+        # TODO (skip for now)
         pass
 
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
+        # TODO (skip for now)
         pass
 
     def _eig(self) -> tuple[Array, QArray]:
-        pass
+        warnings.warn(
+            'A `CompositeQArray` has been converted to a `DenseQArray` while attempting'
+            ' to compute its eigen-decomposition.',
+            stacklevel=2,
+        )
+        return self.asdense()._eig()
 
     def _eigh(self) -> tuple[Array, Array]:
-        pass
+        warnings.warn(
+            'A `CompositeQArray` has been converted to a `DenseQArray` while attempting'
+            ' to compute its eigen-decomposition.',
+            stacklevel=2,
+        )
+        return self.asdense()._eigh()
 
     def _eigvals(self) -> Array:
-        pass
+        warnings.warn(
+            'A `CompositeQArray` has been converted to a `DenseQArray` while attempting'
+            ' to compute its eigen-decomposition.',
+            stacklevel=2,
+        )
+        return self.asdense()._eigvals()
 
     def _eigvalsh(self) -> Array:
-        pass
+        warnings.warn(
+            'A `CompositeQArray` has been converted to a `DenseQArray` while attempting'
+            ' to compute its eigen-decomposition.',
+            stacklevel=2,
+        )
+        return self.asdense()._eigvalsh()
 
     def devices(self) -> set[Device]:
-        pass
+        return self._first_factor.devices()
 
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+        # TODO
         pass
 
     def to_qutip(self) -> Qobj | list[Qobj]:
-        pass
+        return self.asdense().to_qutip()
 
     def to_jax(self) -> Array:
-        pass
+        return self.asdense().to_jax()
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:
-        pass
+        return self.asdense().__array__(dtype=dtype, copy=copy)
 
     def asdense(self) -> DenseQArray:
+        # TODO
         pass
 
     def assparsedia(self) -> SparseDIAQArray:
+        # TODO
         pass
 
     def block_until_ready(self) -> QArray:
-        pass
+        _ = self._first_factor.block_until_ready()
+        return self
 
     def __mul__(self, y: ArrayLike) -> QArray:
+        # TODO
         pass
 
     def __add__(self, y: QArrayLike) -> QArray:
+        # TODO
         pass
 
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
+        # TODO
         pass
 
     def __rmatmul__(self, y: QArrayLike) -> QArray:
+        # TODO
         pass
 
     def __and__(self, y: QArray) -> QArray:
+        # TODO
         pass
 
     def addscalar(self, y: ArrayLike) -> QArray:
+        # TODO
         pass
 
     def elmul(self, y: QArrayLike) -> QArray:
+        # TODO
         pass
 
     def elpow(self, power: int) -> QArray:
+        # TODO
         pass
 
     def __getitem__(self, key: int | slice) -> QArray:
+        # TODO (skip for now)
         pass
