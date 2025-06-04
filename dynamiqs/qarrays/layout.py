@@ -4,6 +4,7 @@ from enum import Enum
 
 
 class Layout(Enum):
+    COMPOSITE = 'composite'
     DENSE = 'dense'
     DIA = 'dia'
 
@@ -14,6 +15,7 @@ class Layout(Enum):
         return repr(self)
 
 
+composite = Layout.COMPOSITE
 dense = Layout.DENSE
 dia = Layout.DIA
 
@@ -32,13 +34,14 @@ def get_layout(layout: Layout | None = None) -> Layout:
         return layout
     else:
         raise TypeError(
-            'Argument `layout` must be `dq.dense`, `dq.dia` or `None`, but is'
-            f' `{layout}`.'
+            'Argument `layout` must be `dq.composite`, `dq.dense`, `dq.dia` '
+            f'or `None`, but is `{layout}`.'
         )
 
 
 def promote_layouts(layout1: Layout, layout2: Layout) -> Layout:
+    if layout1 is composite and layout2 is composite:
+        return composite
     if layout1 is dia and layout2 is dia:
         return dia
-    else:
-        return dense
+    return dense
