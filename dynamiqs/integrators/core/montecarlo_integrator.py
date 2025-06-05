@@ -52,7 +52,7 @@ class MESolveJumpMonteCarloIntegrator(BaseIntegrator, MEInterface, SolveInterfac
 
         # return
         saved = SolveSaved(ysave=ysave, extra=extra, Esave=Esave)
-        return self.result(saved, infos=None)
+        return self.result(saved, infos=jsse_result.infos)
 
 
 mesolve_jumpmontecarlo_integrator_constructor = MESolveJumpMonteCarloIntegrator
