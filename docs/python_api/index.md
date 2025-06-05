@@ -147,8 +147,6 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - signm
         - trace
         - tracemm
-        - trace_norm
-        - trace_distance
         - ptrace
         - tensor
         - expect

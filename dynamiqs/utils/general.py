@@ -40,8 +40,6 @@ __all__ = [
     'toket',
     'trace',
     'tracemm',
-    'trace_norm',
-    'trace_distance',
     'unit',
     'signm',
 ]
@@ -237,73 +235,6 @@ def trace(x: QArrayLike) -> Array:
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
     return x.trace()
-
-
-def trace_norm(x: QArrayLike) -> Array:
-    r"""Returns the trace norm of a Hermitian matrix.
-
-    The trace norm (also known as nuclear norm) is defined for a Hermitian matrix $A$
-    by:
-    $$
-        \\|A\\|_1 = \tr{\sqrt{A^\dag A}} = \sum_i |\lambda_i|
-    $$
-    where $\lambda_i$ are the eigenvalues of $A$.
-
-    Args:
-        x _(qarray-like of shape (..., n, n))_: Square Hermitian matrix.
-
-    Returns:
-        _(array of shape (...)_ Trace norm of `x`.
-
-    See also:
-        - [`dq.trace_distance()`][dynamiqs.trace_distance]: returns the trace distance
-            between two density matrices.
-
-    Examples:
-        >>> x = jnp.array([[1, 0], [0, -1]])
-        >>> dq.trace_norm(x)
-        Array(2., dtype=float32)
-    """
-    x = asqarray(x)
-    check_shape(x, 'x', '(..., n, n)')
-    x = check_hermitian(x, 'x')
-    eigvals = x._eigvalsh()
-    return jnp.abs(eigvals).sum(-1)
-
-
-def trace_distance(x: QArrayLike, y: QArrayLike) -> Array:
-    r"""Returns the trace distance between two density matrices.
-
-    The trace distance between two density matrices $\rho$ and $\sigma$ is defined by
-    $$
-        T(\rho, \sigma) = \frac12 \\|\rho-\sigma\\|_1
-    $$
-    where $\| \cdot \|_1$ is the trace norm.
-
-    Args:
-        x _(qarray-like of shape (..., n, n))_: Density matrix.
-        y _(qarray-like of shape (..., n, n))_: Density matrix.
-
-    Returns:
-        _(array of shape (...))_ Real-valued trace distance between `x` and `y`.
-
-    See also:
-        - [`dq.trace_norm()`][dynamiqs.trace_norm]: returns the trace norm of a
-            Hermitian matrix.
-
-    Examples:
-        Compute the trace distance between $\rho=\ket{0}\bra{0}$ and
-        $\sigma=\ket{1}\bra{1}$:
-        >>> rho = dq.basis_dm(2, 0)
-        >>> sigma = dq.basis_dm(2, 1)
-        >>> dq.trace_distance(rho, sigma)
-        Array(1., dtype=float32)
-    """
-    x = asqarray(x)
-    y = asqarray(y)
-    check_shape(x, 'x', '(..., n, n)')
-    check_shape(y, 'y', '(..., n, n)')
-    return trace_norm(x - y) / 2
 
 
 def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
@@ -542,18 +473,29 @@ def _expect_single(O: QArray, x: QArray) -> Array:
         return tracemm(O, x)  # tr(Ox)
 
 
-def norm(x: QArrayLike) -> Array:
-    r"""Returns the norm of a ket, bra or density matrix.
+def norm(x: QArrayLike, *, assume_psd: bool = True) -> Array:
+    r"""Returns the norm of a ket, bra, density matrix, or hermitian matrix.
 
     For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a density
-    matrix, it is $\tr{\rho}$.
+    matrix (if `assume_psd=True`), it is $\tr{\rho}$. Otherwise, for a hermitian
+    matrix (if `assume_psd=False`), it is the trace norm defined by:
+    $$
+        \\|A\\|_1 = \tr{\sqrt{A^\dag A}} = \sum_i |\lambda_i|
+    $$
+    where $\lambda_i$ are the eigenvalues of $A$.
 
     Args:
-        x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
-            or density matrix.
+        x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
+            density matrix, or hermitian matrix.
+        assume_psd: Whether to assume if `x` is a positive semi-definite matrix. This
+            is only used if the input is a matrix to speed up the computation.
 
     Returns:
         _(array of shape (...))_ Real-valued norm of `x`.
+
+    See also:
+        - [`dq.unit()`][dynamiqs.unit]: normalize a ket, bra, density matrix, or
+            hermitian matrix to unit norm.
 
     Examples:
         For a ket:
@@ -571,22 +513,33 @@ def norm(x: QArrayLike) -> Array:
 
     if isket(x) or isbra(x):
         return jnp.sqrt((jnp.abs(x.to_jax()) ** 2).sum((-2, -1)))
-    else:
+
+    if assume_psd:
         return trace(x).real
 
+    x = check_hermitian(x, 'x')
+    eigvals = x._eigvalsh()
+    return jnp.abs(eigvals).sum(-1)
 
-def unit(x: QArrayLike) -> QArray:
-    r"""Normalize a ket, bra or density matrix to unit norm.
+
+def unit(x: QArrayLike, *, assume_psd: bool = True) -> QArray:
+    r"""Normalize a ket, bra, density matrix or hermitian matrix to unit norm.
 
     The returned object is divided by its norm (see [`dq.norm()`][dynamiqs.norm]).
 
     Args:
         x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
             or density matrix.
+        assume_psd: Whether to assume if `x` is a positive semi-definite matrix. This
+            is only used if the input is a matrix to speed up the computation.
 
     Returns:
         _(qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n))_ Normalized ket,
             bra or density matrix.
+
+    See also:
+        - [`dq.norm()`][dynamiqs.norm]: returns the norm of a ket, bra, density matrix,
+            or hermitian matrix.
 
     Examples:
         >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
@@ -598,7 +551,7 @@ def unit(x: QArrayLike) -> QArray:
     """
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
-    return x / norm(x)[..., None, None]
+    return x / norm(x, assume_psd=assume_psd)[..., None, None]
 
 
 def dissipator(L: QArrayLike, rho: QArrayLike) -> QArray:
