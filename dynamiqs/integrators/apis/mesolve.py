@@ -262,7 +262,7 @@ def _vectorized_mesolve(
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
-        rho0 = rho0.broadcast_to(*bshape, *rho0.shape[:-2])
+        rho0 = rho0.broadcast_to(*bshape, *rho0.shape[-2:])
         # vectorize the function
         f = multi_vmap(_mesolve, in_axes, out_axes, nvmap)
 
