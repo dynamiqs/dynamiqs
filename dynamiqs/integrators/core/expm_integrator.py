@@ -10,6 +10,7 @@ from jaxtyping import PyTree
 
 from dynamiqs._utils import concatenate_sort
 
+from ..._checks import check_hermitian
 from ...qarrays.qarray import QArray
 from ...result import Result, Saved
 from ...utils.general import expm
@@ -154,6 +155,10 @@ class MESolveExpmIntegrator(MEExpmIntegrator, SolveSaveMixin, SolveInterface):
     """
 
     def __post_init__(self):
+        # convert y0 to a density matrix
+        self.y0 = self.y0.todm()
+        self.y0 = check_hermitian(self.y0, 'y0')
+
         # convert to vectorized form
         self.y0 = operator_to_vector(self.y0)  # (n^2, 1)
 

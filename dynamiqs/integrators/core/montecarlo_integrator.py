@@ -10,6 +10,14 @@ from .interfaces import MEInterface, SolveInterface
 
 
 class MESolveJumpMonteCarloIntegrator(BaseIntegrator, MEInterface, SolveInterface):
+    def __post_init__(self):
+        # check that y0 is a ket
+        if not self.y0.isket():
+            raise ValueError(
+                'For the `JumpMonteCarlo` method, `rho0` must be a ket, '
+                f'but has shape {self.y0.shape}.'
+            )
+
     def run(self) -> Result:
         # modify nmaxclick in the options passed to jssesolve
         jsse_options = replace(self.options, nmaxclick=self.method.jsse_nmaxclick)

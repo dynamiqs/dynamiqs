@@ -8,7 +8,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
+from ..._checks import check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
 from ...method import (
     Dopri5,
@@ -231,10 +231,6 @@ def mesolve(
     check_options(options, 'mesolve')
     options = options.initialise()
 
-    # === convert rho0 to density matrix
-    rho0 = rho0.todm()
-    rho0 = check_hermitian(rho0, 'rho0')
-
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
     return _vectorized_mesolve(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
@@ -266,7 +262,7 @@ def _vectorized_mesolve(
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
-        rho0 = rho0.broadcast_to(*bshape, n, n)
+        rho0 = rho0.broadcast_to(*bshape, *rho0.shape[:-2])
         # vectorize the function
         f = multi_vmap(_mesolve, in_axes, out_axes, nvmap)
 
