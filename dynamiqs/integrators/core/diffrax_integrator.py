@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from abc import abstractmethod
+from dataclasses import replace
 from functools import partial
 
 import diffrax as dx
@@ -104,10 +105,16 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         y0: PyTree,
         saveat: dx.SaveAt,
         event: dx.Event | None = None,
+        dtmax: float | None = None,
     ) -> dx.Solution:
         with warnings.catch_warnings():
             # TODO: remove once complex support is stabilized in diffrax
             warnings.simplefilter('ignore', UserWarning)
+
+            # === prepare stepsize controller
+            stepsize_controller = self.stepsize_controller
+            if dtmax is not None:
+                stepsize_controller = replace(stepsize_controller, dtmax=dtmax)
 
             # === solve differential equation with diffrax
             return dx.diffeqsolve(
@@ -118,7 +125,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                 dt0=self.dt0,
                 y0=y0,
                 saveat=saveat,
-                stepsize_controller=self.stepsize_controller,
+                stepsize_controller=stepsize_controller,
                 adjoint=self.adjoint,
                 event=event,
                 max_steps=self.max_steps,
@@ -160,6 +167,7 @@ def call_diffeqsolve(
     discontinuity_ts: Array,
     event: dx.Event | None = None,
     save: callable | None = None,
+    dtmax: float | None = None,
 ) -> dx.Solution:
     # === define custom diffrax integrator
     class BasicDiffraxIntegrator(DiffraxIntegrator):
@@ -207,7 +215,7 @@ def call_diffeqsolve(
     saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
 
     # === run integrator
-    return integrator.diffeqsolve(ts[0], ts[-1], y0, saveat, event=event)
+    return integrator.diffeqsolve(ts[0], ts[-1], y0, saveat, event=event, dtmax=dtmax)
 
 
 class SEDiffraxIntegrator(DiffraxIntegrator, SEInterface):
