@@ -291,3 +291,21 @@ The returned object can be called at different times:
     If there is a discontinuous jump in the function values, you should use the optional
     argument `discontinuity_ts` to enforce adaptive step size methods to stop at these
     times (i.e., right before, and right after the jump).
+
+## Clipping a time-qarray
+
+Time-dependent operators can be clipped to a given time interval, outside which the
+returned qarray is null. For example:
+```pycon
+>>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
+>>> H = dq.modulated(f, dq.sigmax())
+>>> H(2.0)
+QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
+[[  ⋅    1.+0.j]
+ [1.+0.j   ⋅   ]]
+>>> H = H.clip(0, 1)  # clip to 0 <= t < 1
+>>> H(2.0)
+QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
+[[  ⋅      ⋅   ]
+ [  ⋅      ⋅   ]]
+```
