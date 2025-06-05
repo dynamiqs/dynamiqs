@@ -21,9 +21,11 @@ __all__ = [
     'coherent',
     'coherent_dm',
     'excited',
+    'excited_dm',
     'fock',
     'fock_dm',
     'ground',
+    'ground_dm',
     'thermal_dm',
 ]
 
@@ -306,7 +308,7 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
 
 
 def ground() -> QArray:
-    r"""Returns the eigenvector with eigenvalue -1 of the Pauli $\sigma_z$ operator.
+    r"""Returns the eigenvector with eigenvalue $-1$ of the Pauli $\sigma_z$ operator.
 
     It is defined by $\ket{g} = \begin{pmatrix}0\\1\end{pmatrix}$.
 
@@ -326,8 +328,30 @@ def ground() -> QArray:
     return asqarray(jnp.array([[0], [1]], dtype=cdtype()), dims=(2,))
 
 
+def ground_dm() -> QArray:
+    r"""Returns the projector on the eigenvector with eigenvalue $-1$ of the Pauli
+    $\sigma_z$ operator.
+
+    It is defined by $\ket{g}\bra{g} = \begin{pmatrix}0 & 0\\0 & 1\end{pmatrix}$.
+
+    Note:
+        This function is named `ground_dm` because $\ket{g}$ is the lower energy state
+        of a two-level system with Hamiltonian $H=\omega \sigma_z$.
+
+    Returns:
+        _(qarray of shape (2, 2))_ Density matrix $\ket{g}\bra{g}$.
+
+    Examples:
+        >>> dq.ground_dm()
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[0.+0.j 0.+0.j]
+         [0.+0.j 1.+0.j]]
+    """
+    return ground().todm()
+
+
 def excited() -> QArray:
-    r"""Returns the eigenvector with eigenvalue +1 of the Pauli $\sigma_z$ operator.
+    r"""Returns the eigenvector with eigenvalue $+1$ of the Pauli $\sigma_z$ operator.
 
     It is defined by $\ket{e} = \begin{pmatrix}1\\0\end{pmatrix}$.
 
@@ -345,6 +369,28 @@ def excited() -> QArray:
          [0.+0.j]]
     """
     return asqarray(jnp.array([[1], [0]], dtype=cdtype()), dims=(2,))
+
+
+def excited_dm() -> QArray:
+    r"""Returns the projector on the eigenvector with eigenvalue $+1$ of the Pauli
+    $\sigma_z$ operator.
+
+    It is defined by $\ket{e}\bra{e} = \begin{pmatrix}1 & 0\\0 & 0\end{pmatrix}$.
+
+    Note:
+        This function is named `excited_dm` because $\ket{e}$ is the higher energy state
+        of a two-level-system with Hamiltonian $H=\omega \sigma_z$.
+
+    Returns:
+        _(qarray of shape (2, 2))_ Density matrix $\ket{e}\bra{e}$.
+
+    Examples:
+        >>> dq.excited_dm()
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[1.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j]]
+    """
+    return excited().todm()
 
 
 def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> QArray:
