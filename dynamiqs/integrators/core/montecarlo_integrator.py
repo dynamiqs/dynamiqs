@@ -37,8 +37,8 @@ class MESolveJumpMonteCarloIntegrator(BaseIntegrator, MEInterface, SolveInterfac
         extra = None
         if self.options.save_extra:
             if self.options.save_states:
-                # todo: vectorize save_extra (expected signature is `f(QArray) -> PyTree`
-                # with a QArray of shape (n, n))
+                # todo: vectorize save_extra (expected signature is
+                # `f(QArray) -> PyTree` with a QArray of shape (n, n))
                 extra = self.options.save_extra(ysave)
             else:
                 # this is enforced because `save_extra` is not necessarily a linear
