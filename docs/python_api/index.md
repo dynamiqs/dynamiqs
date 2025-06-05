@@ -128,7 +128,9 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - coherent
         - coherent_dm
         - ground
+        - ground_dm
         - excited
+        - excited_dm
         - thermal_dm
 
 
