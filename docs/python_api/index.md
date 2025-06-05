@@ -207,8 +207,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
         members:
-        - operator_to_vector
-        - vector_to_operator
+        - vectorize
+        - unvectorize
         - spre
         - spost
         - sprepost

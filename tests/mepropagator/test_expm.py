@@ -7,10 +7,10 @@ from dynamiqs import (
     dag,
     eye,
     mepropagator,
-    operator_to_vector,
     pwc,
     slindbladian,
-    vector_to_operator,
+    unvectorize,
+    vectorize,
 )
 
 from ..integrator_tester import IntegratorTester
@@ -28,10 +28,10 @@ class TestMEPropagator(IntegratorTester):
         Ls = system.Ls(params)
         y0 = system.y0(params)
         rho0 = y0 @ dag(y0)
-        rho0_vec = operator_to_vector(rho0)
+        rho0_vec = vectorize(rho0)
         propresult = mepropagator(H, Ls, system.tsave)
         propagators = propresult.propagators.to_jax()
-        prop_ysave = vector_to_operator(propagators @ rho0_vec).to_jax()
+        prop_ysave = unvectorize(propagators @ rho0_vec).to_jax()
         true_ysave = system.states(system.tsave).to_jax()
         assert jnp.allclose(prop_ysave, true_ysave, atol=ysave_atol)
 
