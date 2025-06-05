@@ -605,10 +605,6 @@
          <lastmod>2025-06-05</lastmod>
     </url>
     <url>
-         <loc>https://www.dynamiqs.org/stable/python_api/utils/vectorization/operator_to_vector.html</loc>
-         <lastmod>2025-06-05</lastmod>
-    </url>
-    <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/vectorization/sdissipator.html</loc>
          <lastmod>2025-06-05</lastmod>
     </url>
@@ -629,7 +625,11 @@
          <lastmod>2025-06-05</lastmod>
     </url>
     <url>
-         <loc>https://www.dynamiqs.org/stable/python_api/utils/vectorization/vector_to_operator.html</loc>
+         <loc>https://www.dynamiqs.org/stable/python_api/utils/vectorization/unvectorize.html</loc>
+         <lastmod>2025-06-05</lastmod>
+    </url>
+    <url>
+         <loc>https://www.dynamiqs.org/stable/python_api/utils/vectorization/vectorize.html</loc>
          <lastmod>2025-06-05</lastmod>
     </url>
 </urlset>

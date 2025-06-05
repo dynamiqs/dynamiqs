@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/vectorization/operator_to_vector.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/vectorization/vectorize.html">
 
 
     <link rel="prev" href="../global_settings/set_progress_meter.html">
 
 
-    <link rel="next" href="vector_to_operator.html">
+    <link rel="next" href="unvectorize.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>operator_to_vector - Dynamiqs</title>
+        <title>vectorize - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.vectorization.operator_to_vector" class="md-skip">
+        <a href="#dynamiqs.utils.vectorization.vectorize" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                operator_to_vector
+                vectorize
               
             </span>
           </div>
@@ -4543,12 +4543,12 @@
         
       
       
-      <a href="operator_to_vector.html" class="md-nav__link md-nav__link--active">
+      <a href="vectorize.html" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
-    operator_to_vector
+    vectorize
     
   </span>
   
@@ -4567,12 +4567,12 @@
   
   
     <li class="md-nav__item">
-      <a href="vector_to_operator.html" class="md-nav__link">
+      <a href="unvectorize.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    vector_to_operator
+    unvectorize
     
   </span>
   
@@ -5637,12 +5637,12 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.vectorization.operator_to_vector" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.operator_to_vector</span>
+<h1 id="dynamiqs.utils.vectorization.vectorize" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.vectorize</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">operator_to_vector</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">vectorize</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5690,7 +5690,7 @@ $$</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">A</span>
 <span class="go">Array([[1.+1.j, 2.+2.j],</span>
 <span class="go">       [3.+3.j, 4.+4.j]], dtype=complex64)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">operator_to_vector</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
 <span class="go">QArray: shape=(4, 1), dims=(2,), dtype=complex64, layout=dense, vectorized=True</span>
 <span class="go">[[1.+1.j]</span>
 <span class="go"> [3.+3.j]</span>

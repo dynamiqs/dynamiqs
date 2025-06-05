@@ -4643,12 +4643,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python_api/utils/vectorization/operator_to_vector.html" class="md-nav__link">
+      <a href="../../python_api/utils/vectorization/vectorize.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    operator_to_vector
+    vectorize
     
   </span>
   
@@ -4666,12 +4666,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python_api/utils/vectorization/vector_to_operator.html" class="md-nav__link">
+      <a href="../../python_api/utils/vectorization/unvectorize.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    vector_to_operator
+    unvectorize
     
   </span>
   
@@ -5814,6 +5814,9 @@
 <p>This tutorial explains how to define time-dependent Hamiltonians – and more generally time-dependent operators – in Dynamiqs. There are currently four supported formats: constant operator, piecewise constant operator, constant operator modulated by a time-dependent factor, or arbitrary time-dependent operator defined by a function.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynamiqs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dq</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="n">dq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">mplstyle</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>  <span class="c1"># set custom matplotlib style</span>
 </code></pre></div>
 <h2 id="the-timeqarray-type">The <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.TimeQArray&lt;/span&gt;" href="../../python_api/time_qarray/TimeQArray.html#dynamiqs.time_qarray.TimeQArray"><code>TimeQArray</code></a> type</h2>
 <p>In Dynamiqs, time-dependent operators are defined with type <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.TimeQArray&lt;/span&gt;" href="../../python_api/time_qarray/TimeQArray.html#dynamiqs.time_qarray.TimeQArray"><code>TimeQArray</code></a>. They can be called at arbitrary times, and return the corresponding qarray at that time. For example to define the Hamiltonian
@@ -5953,6 +5956,11 @@ where <span class="arithmatex">\(c_k\)</span> are constant values, <span class="
 </div>
 </div>
 </div>
+<p>We can use <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.plot.pwc_pulse&lt;/span&gt;" href="../../python_api/plot/pwc_pulse.html#dynamiqs.plot.pwc_pulse"><code>dq.plot.pwc_pulse()</code></a> to plot the <abbr title="piecewise constant">PWC</abbr> pulse values at different times:
+<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">pwc_pulse</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">times</span><span class="p">,</span> <span class="n">H</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Time $t$&#39;</span><span class="p">)</span>
+</code></pre></div></p>
+<p><a class="glightbox" href="../../figs_docs/tqarray_plot_pwc_pulse.png" data-type="image" data-width="70%" data-height="auto" data-desc-position="bottom"><img alt="tqarray_plot_pwc_pulse" class="fig" src="../../figs_docs/tqarray_plot_pwc_pulse.png" /></a></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The argument <code>times</code> must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time-qarray at time <span class="arithmatex">\(t\)</span>, the returned qarray is the operator <span class="arithmatex">\(c_k\ O_0\)</span> corresponding to the interval <span class="arithmatex">\([t_k, t_{k+1}[\)</span> in which the time <span class="arithmatex">\(t\)</span> falls. If <span class="arithmatex">\(t\)</span> does not belong to any time intervals, the returned qarray is null.</p>
@@ -6004,6 +6012,12 @@ where <span class="arithmatex">\(f(t)\)</span> is a time-dependent scalar. In Dy
 </div>
 </div>
 </div>
+<p>We can use the <code>prefactor()</code> method to plot <span class="arithmatex">\(f(t)\)</span> at different times:
+<div class="highlight"><pre><span></span><code><span class="n">ts</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">501</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="n">H</span><span class="o">.</span><span class="n">prefactor</span><span class="p">(</span><span class="n">ts</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Time $t$&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;$f(t)$&#39;</span><span class="p">)</span>
+</code></pre></div></p>
+<p><a class="glightbox" href="../../figs_docs/tqarray_plot_modulated.png" data-type="image" data-width="70%" data-height="auto" data-desc-position="bottom"><img alt="tqarray_plot_modulated" class="fig" src="../../figs_docs/tqarray_plot_modulated.png" /></a></p>
 <details class="note">
 <summary>Batching modulated operators</summary>
 <p>The batching of the returned time-qarray is specified by the array returned by <code>f</code>. For example, to define a modulated Hamiltonian <span class="arithmatex">\(H(t)=\cos(\omega t)\sigma_x\)</span> batched over the parameter <span class="arithmatex">\(\omega\)</span>:
@@ -6106,12 +6120,25 @@ returned qarray is null. For example:
 <span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2</span>
 <span class="go">[[  ⋅    1.+0.j]</span>
 <span class="go"> [1.+0.j   ⋅   ]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># clip to 0 &lt;= t &lt; 1</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H_clipped</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># clip to 0 &lt;= t &lt; 1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H_clipped</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
 <span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2</span>
 <span class="go">[[  ⋅      ⋅   ]</span>
 <span class="go"> [  ⋅      ⋅   ]]</span>
 </code></pre></div></p>
+<p>We can plot the resulting prefactor values after clipping:
+<div class="highlight"><pre><span></span><code><span class="n">_</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">sharexy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">axs</span><span class="p">)</span>
+
+<span class="n">ts</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">501</span><span class="p">)</span>
+
+<span class="n">ax0</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="n">H</span><span class="o">.</span><span class="n">prefactor</span><span class="p">(</span><span class="n">ts</span><span class="p">))</span>
+<span class="n">ax0</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Time $t$&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;$f(t)$&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;H&#39;</span><span class="p">)</span>
+
+<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="n">H_clipped</span><span class="o">.</span><span class="n">prefactor</span><span class="p">(</span><span class="n">ts</span><span class="p">))</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Time $t$&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;H.clip(0, 1)&#39;</span><span class="p">)</span>
+</code></pre></div></p>
+<p><a class="glightbox" href="../../figs_docs/tqarray_plot_clip.png" data-type="image" data-width="70%" data-height="auto" data-desc-position="bottom"><img alt="tqarray_plot_clip" class="fig" src="../../figs_docs/tqarray_plot_clip.png" /></a></p>
 
 
 

@@ -8,10 +8,10 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/vectorization/vector_to_operator.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/vectorization/unvectorize.html">
 
 
-    <link rel="prev" href="operator_to_vector.html">
+    <link rel="prev" href="vectorize.html">
 
 
     <link rel="next" href="spre.html">
@@ -22,7 +22,7 @@
 
     
       
-        <title>vector_to_operator - Dynamiqs</title>
+        <title>unvectorize - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.vectorization.vector_to_operator" class="md-skip">
+        <a href="#dynamiqs.utils.vectorization.unvectorize" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                vector_to_operator
+                unvectorize
               
             </span>
           </div>
@@ -4534,12 +4534,12 @@
   
   
     <li class="md-nav__item">
-      <a href="operator_to_vector.html" class="md-nav__link">
+      <a href="vectorize.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    operator_to_vector
+    vectorize
     
   </span>
   
@@ -4566,12 +4566,12 @@
         
       
       
-      <a href="vector_to_operator.html" class="md-nav__link md-nav__link--active">
+      <a href="unvectorize.html" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
-    vector_to_operator
+    unvectorize
     
   </span>
   
@@ -5637,12 +5637,12 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.vectorization.vector_to_operator" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.vector_to_operator</span>
+<h1 id="dynamiqs.utils.vectorization.unvectorize" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.unvectorize</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">vector_to_operator</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">unvectorize</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5693,7 +5693,7 @@ $$</p>
 <span class="go">       [2.+2.j],</span>
 <span class="go">       [3.+3.j],</span>
 <span class="go">       [4.+4.j]], dtype=complex64)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">vector_to_operator</span><span class="p">(</span><span class="n">Avec</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">unvectorize</span><span class="p">(</span><span class="n">Avec</span><span class="p">)</span>
 <span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense</span>
 <span class="go">[[1.+1.j 3.+3.j]</span>
 <span class="go"> [2.+2.j 4.+4.j]]</span>
