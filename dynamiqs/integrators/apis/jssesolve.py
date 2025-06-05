@@ -77,12 +77,12 @@ def jssesolve(
     solver returns the times at which the detector clicked,
     $I_k = \{t \in [t_0, t_\text{end}[ \,|\, \dd N_k(t)=1\}$.
 
-    !!! Note
+    Note:
         If you are only interested in simulating trajectories to solve the Lindblad
         master equation, consider using [`dq.mesolve()`][dynamiqs.mesolve] with the
         [`dq.method.JumpMonteCarlo`][dynamiqs.method.JumpMonteCarlo] method.
 
-    !!! Note
+    Note:
         This function is the Dynamiqs counterpart of QuTiP's `mcsolve()` function.
 
     Args:
