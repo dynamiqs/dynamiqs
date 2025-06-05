@@ -545,9 +545,6 @@ class JumpMonteCarlo(_DEMethod):
         If you are looking for direct access to individual trajectories, use
         [`dq.jssesolve()`][dynamiqs.jssesolve] instead.
 
-    Warning:
-        This method does not support the `progress_meter` option.
-
     Args:
         keys _(list of PRNG keys)_: PRNG keys used for the jump SSE solver. See
             [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
