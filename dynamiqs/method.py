@@ -549,11 +549,11 @@ class JumpMonteCarlo(_DEMethod):
         This method does not support the `progress_meter` option.
 
     Args:
-        keys _(list of PRNG keys)_: Keys used for the jump SSE solver. See
+        keys _(list of PRNG keys)_: PRNG keys used for the jump SSE solver. See
             [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
         jsse_method: Method used for the jump SSE solver. See
             [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
-        jsse_nmaxclick: Maximum buffer size for `clicktimes`. See
+        jsse_nmaxclick: Maximum buffer size for `result.clicktimes`. See
             [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
 
     Note-: Supported gradients
@@ -564,6 +564,7 @@ class JumpMonteCarlo(_DEMethod):
     jsse_method: Method = Event()
     jsse_nmaxclick: int = eqx.field(static=True, default=10_000)
 
+    # dummy variable, the proper check of gradient support will be done by `jsse_method`
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
         Autograd,
         CheckpointAutograd,
