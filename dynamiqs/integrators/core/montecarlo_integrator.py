@@ -35,17 +35,20 @@ class MESolveJumpMonteCarloIntegrator(BaseIntegrator, MEInterface, SolveInterfac
 
         # compute save_extra if requested
         extra = None
-        if self.options.save_extra and self.options.save_states:
-            extra = self.options.save_extra(ysave)
-        elif self.options.save_extra:
-            # this is enforced because `save_extra` is not necessarily a linear
-            # function of the states, and thus save_extra(mean(states)) may not
-            # be equal to mean(save_extra(states)).
-            warnings.warn(
-                '`save_extra` is not supported with the `JumpMonteCarlo` method'
-                'unless `save_states` is also set to True.',
-                stacklevel=2,
-            )
+        if self.options.save_extra:
+            if self.options.save_states:
+                # todo: vectorize save_extra (expected signature is `f(QArray) -> PyTree`
+                # with a QArray of shape (n, n))
+                extra = self.options.save_extra(ysave)
+            else:
+                # this is enforced because `save_extra` is not necessarily a linear
+                # function of the states, and thus save_extra(mean(states)) may not
+                # be equal to mean(save_extra(states)).
+                warnings.warn(
+                    'The `save_extra` option is not supported with the `JumpMonteCarlo`'
+                    'method unless the `save_states` option is also set to True.',
+                    stacklevel=2,
+                )
 
         # return
         saved = SolveSaved(ysave=ysave, extra=extra, Esave=Esave)
