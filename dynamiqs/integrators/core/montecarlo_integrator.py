@@ -1,6 +1,8 @@
 import warnings
 from dataclasses import replace
 
+import jax.numpy as jnp
+
 from ...result import Result, SolveSaved
 from ..apis.jssesolve import _vectorized_jssesolve
 from .abstract_integrator import BaseIntegrator
@@ -12,13 +14,15 @@ class MESolveJumpMonteCarloIntegrator(BaseIntegrator, MEInterface, SolveInterfac
         # modify nmaxclick in the options passed to jssesolve
         jsse_options = replace(self.options, nmaxclick=self.method.jsse_nmaxclick)
 
+        keys = jnp.asarray(self.method.keys)
+
         # call _vectorized_jssesolve to compute the jump SSE results
         jsse_result = _vectorized_jssesolve(
             self.H,
             self.Ls,
             self.y0,
             self.ts,
-            self.method.keys,
+            keys,
             self.Es,
             self.method.jsse_method,
             self.gradient,
