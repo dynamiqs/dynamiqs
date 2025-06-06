@@ -30,10 +30,10 @@ jump_ops = [dq.sigmam(), dq.sigmap()]
 psi0 = dq.excited()
 
 # define save times
-tsave = np.linspace(0, 1.0, 101)
+tsave = np.linspace(0, 2.0, 101)
 
 # define a certain number of PRNG key, one for each trajectory
-key = jax.random.PRNGKey(20)
+key = jax.random.PRNGKey(42)
 ntrajs = 3
 keys = jax.random.split(key, ntrajs)
 
