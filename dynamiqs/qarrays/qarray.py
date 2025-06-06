@@ -217,11 +217,12 @@ class QArray(eqx.Module):
     # Subclasses should implement:
     # - the properties: dtype, layout, shape, mT
     # - the methods:
-    #   - qarray methods: conj, dag, _reshape_unchecked, broadcast_to, ptrace, powm,
-    #                     expm, block_until_ready
+    #   - qarray methods: conj, _reshape_unchecked, broadcast_to, ptrace, powm,
+    #                     expm
     #   - returning a JAX array or other: norm, trace, sum, squeeze, _eig, _eigh,
     #                                     _eigvals, _eigvalsh, devices, isherm
-    #   - conversion/utils methods: to_qutip, to_jax, __array__, block_until_ready
+    #   - conversion/utils methods: to_qutip, to_jax, __array__, asdense, assparsedia,
+    #                               block_until_ready
     #   - special methods: __mul__, __add__, __matmul__, __rmatmul__, __and__,
     #                      addscalar, elmul, elpow, __getitem__
 

@@ -124,12 +124,10 @@ class SparseDIAQArray(QArray):
             'its matrix exponential.',
             stacklevel=2,
         )
-        x = sparsedia_to_array(self.offsets, self.diags)
-        expm_x = jax.scipy.linalg.expm(x, max_squarings=max_squarings)
-        return DenseQArray(self.dims, self.vectorized, expm_x)
+        return self.asdense().expm(max_squarings=max_squarings)
 
     def norm(self) -> Array:
-        return self.trace()
+        return self.trace().real
 
     def trace(self) -> Array:
         return trace_sparsedia(self.offsets, self.diags)
@@ -189,7 +187,7 @@ class SparseDIAQArray(QArray):
         return self.asdense()._eigvalsh()
 
     def devices(self) -> set[jax.Device]:
-        raise NotImplementedError
+        return self.diags.devices()
 
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         # TODO: Improve this by using a direct QArray comparison function, once it is
