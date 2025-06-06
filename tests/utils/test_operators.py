@@ -109,3 +109,9 @@ def test_operators_dispatch():
     assert jnp.allclose(
         dq.sigmam(layout=dq.dense).to_jax(), dq.sigmam(layout=dq.dia).to_jax()
     )
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_eye_like_layout():
+    assert dq.eye_like(dq.sigmax(layout=dq.dense)).layout == dq.dense  # dia
+    assert dq.eye_like(dq.sigmax(layout=dq.dia)).layout == dq.dia  # dia
