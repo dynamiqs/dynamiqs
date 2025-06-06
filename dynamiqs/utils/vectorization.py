@@ -11,17 +11,17 @@ from .general import dag
 from .operators import eye
 
 __all__ = [
-    'operator_to_vector',
+    'vectorize',
     'sdissipator',
     'slindbladian',
     'spost',
     'spre',
     'sprepost',
-    'vector_to_operator',
+    'unvectorize',
 ]
 
 
-def operator_to_vector(x: QArrayLike) -> QArray:
+def vectorize(x: QArrayLike) -> QArray:
     r"""Returns the vectorized version of an operator.
 
     The vectorized column vector $\kett{A}$ (shape $n^2\times 1$) is obtained by
@@ -43,7 +43,7 @@ def operator_to_vector(x: QArrayLike) -> QArray:
         >>> A
         Array([[1.+1.j, 2.+2.j],
                [3.+3.j, 4.+4.j]], dtype=complex64)
-        >>> dq.operator_to_vector(A)
+        >>> dq.vectorize(A)
         QArray: shape=(4, 1), dims=(2,), dtype=complex64, layout=dense, vectorized=True
         [[1.+1.j]
          [3.+3.j]
@@ -57,7 +57,7 @@ def operator_to_vector(x: QArrayLike) -> QArray:
     return replace(x, vectorized=True)
 
 
-def vector_to_operator(x: QArrayLike) -> QArray:
+def unvectorize(x: QArrayLike) -> QArray:
     r"""Returns the operator version of a vectorized operator.
 
     The matrix $A$ (shape $n\times n$) is obtained by stacking horizontally next to
@@ -82,7 +82,7 @@ def vector_to_operator(x: QArrayLike) -> QArray:
                [2.+2.j],
                [3.+3.j],
                [4.+4.j]], dtype=complex64)
-        >>> dq.vector_to_operator(Avec)
+        >>> dq.unvectorize(Avec)
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
         [[1.+1.j 3.+3.j]
          [2.+2.j 4.+4.j]]
