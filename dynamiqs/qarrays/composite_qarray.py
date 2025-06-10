@@ -13,7 +13,7 @@ from qutip import Qobj
 
 from .dense_qarray import DenseQArray
 from .layout import Layout
-from .qarray import QArray, QArrayLike, to_jax
+from .qarray import QArray, QArrayLike
 from .sparsedia_qarray import SparseDIAQArray
 
 __all__ = ['CompositeQArray']
@@ -214,25 +214,17 @@ class CompositeQArray(QArray):
 
         super().__add__(y)
 
-        if isinstance(y, QArray):
-            try:
-                jnp.broadcast_shapes(self.shape, y.shape)
-            except ValueError as e:
-                raise ValueError('The shape of the new term is not compatible.') from e
-
-            if isinstance(y, CompositeQArray):
-                return replace(self, terms=[*self.terms, *y.terms])
-
-            if isinstance(y, DenseQArray | SparseDIAQArray):
-                return replace(self, terms=[*self.terms, (y,)])
-
-        if isinstance(y, get_args(ArrayLike)):
+        if isinstance(y, CompositeQArray):
+            return replace(self, terms=self.terms + y.terms)
+        elif isinstance(y, DenseQArray | SparseDIAQArray):
+            return replace(self, terms=[*self.terms, (y,)])
+        elif isinstance(y, get_args(ArrayLike)):
             warnings.warn(
                 'A CompositeQArray has been converted to a DenseQArray due to'
                 ' element-wise addition with an ArrayLike.',
                 stacklevel=2,
             )
-            return self.asdense() + to_jax(y)
+            return self.asdense() + y
 
         return NotImplemented
 
