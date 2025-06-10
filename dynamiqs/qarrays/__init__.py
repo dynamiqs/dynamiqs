@@ -1,3 +1,4 @@
+from .composite_qarray import *
 from .dense_qarray import *
 from .qarray import *
 from .qarray import QArrayLike  # excluded from documentation

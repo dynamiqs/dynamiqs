@@ -8,6 +8,7 @@ from ..progress_meter import AbstractProgressMeter, NoProgressMeter, TqdmProgres
 from ..qarrays.layout import dense, dia, set_global_layout
 
 __all__ = [
+    'set_composite',
     'set_device',
     'set_layout',
     'set_matmul_precision',
@@ -16,6 +17,7 @@ __all__ = [
 ]
 
 _DEFAULT_PROGRESS_METER: AbstractProgressMeter = TqdmProgressMeter()
+_USE_COMPOSITE = False
 
 
 def set_device(device: Literal['cpu', 'gpu', 'tpu'], index: int = 0):
@@ -174,3 +176,16 @@ def get_progress_meter(
     elif progress_meter is False:
         return NoProgressMeter()
     return progress_meter
+
+
+def set_composite(use_composite: bool):
+    """Configure whether to use composite qarrays.
+
+    Args:
+        use_composite: `True` to use composite qarrays, `False` otherwise.
+
+    Examples:
+        TODO
+    """
+    global _USE_COMPOSITE  # noqa: PLW0603
+    _USE_COMPOSITE = use_composite
