@@ -104,8 +104,20 @@ class CompositeQArray(QArray):
         pass
 
     def ptrace(self, *keep: int) -> QArray:
-        terms = [tuple(factor.ptrace(keep) for factor in term) for term in self.terms]
-        return replace(self, terms=terms)
+        super().ptrace(*keep)
+
+        dont_keep = [i for i in range(len(self.dims)) if i not in keep]
+
+        def ptrace_term(term: tuple[QArray, ...]) -> tuple[QArray, ...]:
+            traced_factors = prod(term[i].trace() for i in dont_keep)
+            kept_factors = [term[i] for i in keep]
+            kept_factors[0] *= traced_factors
+            return tuple(kept_factors)
+
+        terms = [ptrace_term(term) for term in self.terms]
+
+        new_dims = tuple(self.dims[i] for i in keep)
+        return replace(self, dims=new_dims, terms=terms)
 
     def powm(self, n: int) -> QArray:
         warnings.warn(
