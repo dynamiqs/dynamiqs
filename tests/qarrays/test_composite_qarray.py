@@ -1,8 +1,10 @@
 from math import prod
 
+import jax
 import jax.numpy as jnp
 import pytest
 
+import dynamiqs as dq
 from dynamiqs import DenseQArray, asqarray, eye_like, sigmax, sigmay, sigmaz
 from dynamiqs.qarrays.composite_qarray import CompositeQArray
 from dynamiqs.qarrays.layout import Layout, dia
@@ -76,6 +78,19 @@ class TestCompositeQArray:
             self.qarray.conj().asdense().data,
             jnp.array([[0, 1, 0, 1j], [1, 0, -1j, 0], [0, 1j, 0, -1], [-1j, 0, -1, 0]]),
         )
+
+    def test_ptrace(self):
+        k1, k2, k3 = jax.random.split(jax.random.PRNGKey(42), 3)
+        A1, B1 = asqarray(dq.random.complex(k1, (2, 3, 3)))
+        A2, B2 = asqarray(dq.random.complex(k2, (2, 4, 4)))
+        A3, B3 = asqarray(dq.random.complex(k3, (2, 5, 5)))
+
+        qarray = CompositeQArray((3, 4, 5), False, [(A1, A2, A3), (B1, B2, B3)])
+
+        for keep in [(0,), (1,), (2,), (0, 1), (0, 2), (1, 2), (0, 1, 2)]:
+            assert jnp.allclose(
+                qarray.ptrace(*keep).asdense().data, qarray.asdense().ptrace(*keep).data
+            )
 
     def test_trace(self):
         qarray = CompositeQArray((2, 2), False, [(self.qarray_44, self.qarray_244)])
