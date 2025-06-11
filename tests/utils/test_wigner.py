@@ -1,9 +1,10 @@
+import jax
 import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
 
-from ..order import TEST_SHORT
+from ..order import TEST_INSTANT, TEST_SHORT
 
 
 @pytest.mark.run(order=TEST_SHORT)
@@ -52,3 +53,17 @@ def test_wigner_coherent():
     a_wig = jnp.sum(wig * a_vec) * dx * dy
 
     assert jnp.allclose(a, a_wig)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_tracing():
+    # prepare inputs
+    state = dq.coherent(8, 1.0)
+    xvec = jnp.linspace(-3, 3, 101)
+    yvec = jnp.linspace(-2, 2, 51)
+
+    # check that no error is raised while tracing dq.wigner
+    jax.jit(dq.wigner).trace(state)
+    jax.jit(dq.wigner).trace(state, xvec=xvec)
+    jax.jit(dq.wigner).trace(state, yvec=yvec)
+    jax.jit(dq.wigner).trace(state, xvec=xvec, yvec=yvec)
