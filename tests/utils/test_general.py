@@ -129,7 +129,7 @@ def test_ptrace():
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_jit_general_utils():
+def test_tracing():
     # prepare inputs
     keya, keyb, keyx, keyy, keyz = jax.random.split(jax.random.PRNGKey(0), 5)
 
