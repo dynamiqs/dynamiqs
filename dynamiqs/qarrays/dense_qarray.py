@@ -62,6 +62,7 @@ class DenseQArray(QArray):
 
         return ptrace(self.data, keep, self.dims)
 
+    @partial(jax.jit, static_argnums=(1,))
     def powm(self, n: int) -> QArray:
         data = jnp.linalg.matrix_power(self.data, n)
         return replace(self, data=data)
