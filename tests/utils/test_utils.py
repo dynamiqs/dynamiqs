@@ -134,30 +134,25 @@ def test_hadamard():
     assert jnp.allclose(dq.hadamard(3).to_jax(), H3)
 
 
-@pytest.mark.skip('broken test')
 @pytest.mark.run(order=TEST_INSTANT)
 def test_jit_ptrace():
     key = jax.random.PRNGKey(0)
     key1, key2, key3, key4 = jax.random.split(key, 4)
 
     # kets
-
-    # TODO: this one doesn't pass
-
-    a = dq.random.ket(20, key=key1)
-    b = dq.random.ket(30, key=key2)
+    a = dq.random.ket(key1, (20, 1))
+    b = dq.random.ket(key2, (30, 1))
 
     ab = a & b
     ap = dq.ptrace(ab, 0, (20, 30))
 
-    assert jnp.allclose(a, ap, 1e-3)
+    assert jnp.allclose(a.todm().to_jax(), ap.to_jax(), 1e-3)
 
-    # density matrix
-
-    a = dq.random.dm(20, key=key3)
-    b = dq.random.dm(30, key=key4)
+    # density matrices
+    a = dq.random.dm(key3, (20, 20))
+    b = dq.random.dm(key4, (30, 30))
 
     ab = a & b
     ap = dq.ptrace(ab, 0, (20, 30))
 
-    assert jnp.allclose(a, ap, 1e-3)
+    assert jnp.allclose(a.to_jax(), ap.to_jax(), 1e-3)
