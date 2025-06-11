@@ -5846,10 +5846,10 @@
 <span class="n">psi0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">excited</span><span class="p">()</span>
 
 <span class="c1"># define save times</span>
-<span class="n">tsave</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
+<span class="n">tsave</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
 
 <span class="c1"># define a certain number of PRNG key, one for each trajectory</span>
-<span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
 <span class="n">ntrajs</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">keys</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">ntrajs</span><span class="p">)</span>
 
