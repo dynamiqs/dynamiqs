@@ -1,3 +1,4 @@
+import jax
 import jax.numpy as jnp
 import pytest
 
@@ -139,3 +140,53 @@ def test_hadamard():
         dtype=cdtype(),
     )
     assert jnp.allclose(dq.hadamard(3).to_jax(), H3)
+
+
+@pytest.mark.parametrize('layout', [None, dq.dense, dq.dia])
+@pytest.mark.run(order=TEST_INSTANT)
+def test_tracing(layout):
+    # prepare random keys and dimensions
+    key = jax.random.PRNGKey(0)
+    x = dq.random.dm(key, (2, 2))
+    dim = 2
+    dims_1 = (2,)
+    dims_2 = (2, 3)
+
+    # check that no error is raised while tracing the functions
+    jit_static_layout(dq.eye, static_argnums=(0,)).trace(*dims_1, layout=layout)
+    jit_static_layout(dq.eye, static_argnums=(0, 1)).trace(*dims_2, layout=layout)
+    jit_static_layout(dq.eye_like).trace(x, layout=layout)
+    jit_static_layout(dq.zeros, static_argnums=(0,)).trace(*dims_1, layout=layout)
+    jit_static_layout(dq.zeros, static_argnums=(0, 1)).trace(*dims_2, layout=layout)
+    jit_static_layout(dq.zeros_like).trace(x, layout=layout)
+    jit_static_layout(dq.destroy, static_argnums=(0,)).trace(*dims_1, layout=layout)
+    jit_static_layout(dq.destroy, static_argnums=(0, 1)).trace(*dims_2, layout=layout)
+    jit_static_layout(dq.create, static_argnums=(0,)).trace(*dims_1, layout=layout)
+    jit_static_layout(dq.create, static_argnums=(0, 1)).trace(*dims_2, layout=layout)
+    jit_static_layout(dq.number, static_argnums=(0,)).trace(*dims_1, layout=layout)
+    jit_static_layout(dq.number, static_argnums=(0, 1)).trace(*dims_2, layout=layout)
+    jit_static_layout(dq.parity, static_argnums=(0,)).trace(dim, layout=layout)
+    jax.jit(dq.displace, static_argnums=(0,)).trace(dim, 0.0)
+    jax.jit(dq.squeeze, static_argnums=(0,)).trace(dim, 0.0)
+    jit_static_layout(dq.quadrature, static_argnums=(0,)).trace(dim, 0.0, layout=layout)
+    jit_static_layout(dq.position, static_argnums=(0,)).trace(dim, layout=layout)
+    jit_static_layout(dq.momentum, static_argnums=(0,)).trace(dim, layout=layout)
+    jit_static_layout(dq.xyz).trace(layout=layout)
+    jit_static_layout(dq.sigmax).trace(layout=layout)
+    jit_static_layout(dq.sigmay).trace(layout=layout)
+    jit_static_layout(dq.sigmaz).trace(layout=layout)
+    jit_static_layout(dq.sigmap).trace(layout=layout)
+    jit_static_layout(dq.sigmam).trace(layout=layout)
+    jax.jit(dq.hadamard, static_argnums=(0,)).trace(1)
+    jax.jit(dq.hadamard, static_argnums=(0,)).trace(2)
+    jax.jit(dq.rx).trace(0.5)
+    jax.jit(dq.ry).trace(0.5)
+    jax.jit(dq.rz).trace(0.5)
+    jax.jit(dq.sgate).trace()
+    jax.jit(dq.tgate).trace()
+    jax.jit(dq.cnot).trace()
+    jax.jit(dq.toffoli).trace()
+
+
+def jit_static_layout(f, *args, **kwargs):
+    return jax.jit(f, *args, **kwargs, static_argnames=('layout',))
