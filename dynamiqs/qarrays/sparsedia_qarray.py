@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 import warnings
 from dataclasses import replace
-from functools import partial
 
 import equinox as eqx
 import jax
@@ -115,7 +114,6 @@ class SparseDIAQArray(QArray):
     def ptrace(self, *keep: int) -> QArray:
         raise NotImplementedError
 
-    @partial(jax.jit, static_argnums=(1,))
     def powm(self, n: int) -> QArray:
         offsets, diags = powm_sparsedia(self.offsets, self.diags, n)
         return replace(self, offsets=offsets, diags=diags)

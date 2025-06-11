@@ -71,7 +71,6 @@ def dag(x: QArrayLike) -> QArray:
     return x.mT.conj()
 
 
-@partial(jax.jit, static_argnums=(1,))
 def powm(x: QArrayLike, n: int) -> QArray:
     """Returns the $n$-th matrix power of a qarray.
 
