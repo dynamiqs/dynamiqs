@@ -92,6 +92,11 @@ class StochasticSolveFixedStepIntegrator(
     def dt(self) -> float:
         return self.method.dt
 
+    @property
+    def total_nsteps(self) -> int:
+        # total number of steps of length dt
+        return round((self.t1 - self.t0) / self.dt)
+
     @abstractmethod
     def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> PyTree:
         pass
@@ -133,7 +138,7 @@ class StochasticSolveFixedStepIntegrator(
         # chunks of 1000 dts to ensure a fixed memory usage
 
         nsteps_per_chunk = 1000
-        nchunks = int(nsteps // nsteps_per_chunk)
+        nchunks = round(nsteps / nsteps_per_chunk)
 
         # iterate over each chunk
         def step(carry, key):  # noqa: ANN001, ANN202
@@ -159,10 +164,8 @@ class StochasticSolveFixedStepIntegrator(
         # === define variables
         # number of save interval
         nsave = len(self.ts) - 1
-        # total number of steps (of length dt)
-        nsteps = int((self.t1 - self.t0) / self.dt)
         # number of steps per save interval
-        nsteps_per_save = int(nsteps // nsave)
+        nsteps_per_save = round(self.total_nsteps / nsave)
 
         # === initial state
         # define initial SDE state
@@ -188,15 +191,15 @@ class StochasticSolveFixedStepIntegrator(
         # postprocess the saved results
         saved = self.postprocess_saved(saved, ylast)
 
-        return self.result(saved, infos=self.Infos(nsteps))
+        return self.result(saved, infos=self.Infos(self.total_nsteps))
 
 
 class JumpState(SDEState):
     """State for the jump SSE/SME fixed step integrators."""
 
     state: QArray  # state (integrated from initial to current time)
-    # click indicator of shape (nsteps): 0 = no click, i + 1 = click of the i-th jump
-    # operator
+    # click indicator of shape (self.total_nsteps): 0 = no click, i + 1 = click of the
+    # i-th jump operator
     clicks: Array
     step_idx: int  # step index
 
@@ -210,9 +213,7 @@ class JumpSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
         pass
 
     def sde_y0(self) -> SDEState:
-        # total number of steps (of length dt)
-        nsteps = int((self.t1 - self.t0) / self.dt)
-        clicks = jnp.full(nsteps, jnp.nan)
+        clicks = jnp.full(self.total_nsteps, jnp.nan)
         return JumpState(self.y0, clicks, 0)
 
     def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> PyTree:
@@ -234,7 +235,7 @@ class JumpSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
         #   => clicktimes = [[10, 30, nan, ...], [50, nan, nan, ...]]
         clicktimes = jnp.full((self.nmeas, self.options.nmaxclick), jnp.nan)
         for jump_idx in jnp.arange(self.nmeas):
-            times = jnp.arange(self.t0, self.t1, self.dt)
+            times = self.t0 + jnp.arange(self.total_nsteps) * self.dt
             times = jnp.where(ylast.clicks == jump_idx + 1, times, jnp.nan).sort()
             ncopy = min(len(times), clicktimes.shape[1])
             clicktimes = clicktimes.at[jump_idx, :ncopy].set(times[:ncopy])
