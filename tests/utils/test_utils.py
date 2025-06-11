@@ -135,7 +135,7 @@ def test_hadamard():
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_jit_ptrace():
+def test_ptrace():
     key = jax.random.PRNGKey(0)
     key1, key2, key3, key4 = jax.random.split(key, 4)
 
