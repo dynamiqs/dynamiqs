@@ -139,7 +139,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
         pass
 
 
-class MESolveRouchon1Integrator(MESolveFixedRouchonIntegrator):
+class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using the
     fixed step Rouchon 1 method.
     """
@@ -154,12 +154,14 @@ class MESolveRouchon1Integrator(MESolveFixedRouchonIntegrator):
         return [e1] + [jnp.sqrt(dt) * _L for _L in L]
 
 
-mesolve_rouchon1_integrator_constructor = lambda **kwargs: MESolveRouchon1Integrator(
-    **kwargs, diffrax_solver=RouchonDXSolver(1), fixed_step=True
+mesolve_rouchon1_integrator_constructor = (
+    lambda **kwargs: MESolveFixedRouchon1Integrator(
+        **kwargs, diffrax_solver=RouchonDXSolver(1), fixed_step=True
+    )
 )
 
 
-class MESolveRouchon2Integrator(MESolveFixedRouchonIntegrator):
+class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using the
     fixed step Rouchon 2 method.
     """
@@ -178,12 +180,7 @@ class MESolveRouchon2Integrator(MESolveFixedRouchonIntegrator):
         )
 
 
-mesolve_rouchon2_integrator_constructor = lambda **kwargs: MESolveRouchon2Integrator(
-    **kwargs, diffrax_solver=RouchonDXSolver(2), fixed_step=True
-)
-
-
-class MESolveRouchon3Integrator(MESolveFixedRouchonIntegrator):
+class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using the
     fixed step Rouchon 3 method.
     """
@@ -211,12 +208,7 @@ class MESolveRouchon3Integrator(MESolveFixedRouchonIntegrator):
         )
 
 
-mesolve_rouchon3_integrator_constructor = lambda **kwargs: MESolveRouchon3Integrator(
-    **kwargs, diffrax_solver=RouchonDXSolver(3), fixed_step=True
-)
-
-
-class MESolveAdaptiveRouchon12Integrator(MESolveDiffraxIntegrator):
+class MESolveAdaptiveRouchon2Integrator(MESolveDiffraxIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using the
     adaptive Rouchon 1-2 method.
     """
@@ -231,12 +223,12 @@ class MESolveAdaptiveRouchon12Integrator(MESolveDiffraxIntegrator):
             L, H = self.L(t), self.H(t)
 
             # === first order
-            Ms_1 = MESolveRouchon1Integrator.Ms(H, L, dt, self.method.exact_expm)
+            Ms_1 = MESolveFixedRouchon1Integrator.Ms(H, L, dt, self.method.exact_expm)
             rho_1 = cholesky_normalize(Ms_1, rho) if self.method.normalize else rho
             rho_1 = sum([M @ rho_1 @ M.dag() for M in Ms_1])
 
             # === second order
-            Ms_2 = MESolveRouchon2Integrator.Ms(H, L, dt, self.method.exact_expm)
+            Ms_2 = MESolveFixedRouchon2Integrator.Ms(H, L, dt, self.method.exact_expm)
             rho_2 = cholesky_normalize(Ms_2, rho) if self.method.normalize else rho
             rho_2 = sum([M @ rho_2 @ M.dag() for M in Ms_2])
 
@@ -245,14 +237,7 @@ class MESolveAdaptiveRouchon12Integrator(MESolveDiffraxIntegrator):
         return AbstractRouchonTerm(kraus_map)
 
 
-mesolve_adaptive_rouchon12_integrator_constructor = (
-    lambda **kwargs: MESolveAdaptiveRouchon12Integrator(
-        **kwargs, diffrax_solver=AdaptiveRouchonDXSolver(2), fixed_step=False
-    )
-)
-
-
-class MESolveAdaptiveRouchon23Integrator(MESolveDiffraxIntegrator):
+class MESolveAdaptiveRouchon3Integrator(MESolveDiffraxIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using the
     adaptive Rouchon 2-3 method.
     """
@@ -267,12 +252,12 @@ class MESolveAdaptiveRouchon23Integrator(MESolveDiffraxIntegrator):
             L, H = self.L(t), self.H(t)
 
             # === second order
-            Ms_2 = MESolveRouchon2Integrator.Ms(H, L, dt, self.method.exact_expm)
+            Ms_2 = MESolveFixedRouchon2Integrator.Ms(H, L, dt, self.method.exact_expm)
             rho_2 = cholesky_normalize(Ms_2, rho) if self.method.normalize else rho
             rho_2 = sum([M @ rho_2 @ M.dag() for M in Ms_2])
 
             # === third order
-            Ms_3 = MESolveRouchon3Integrator.Ms(H, L, dt, self.method.exact_expm)
+            Ms_3 = MESolveFixedRouchon3Integrator.Ms(H, L, dt, self.method.exact_expm)
             rho_3 = cholesky_normalize(Ms_3, rho) if self.method.normalize else rho
             rho_3 = sum([M @ rho_3 @ M.dag() for M in Ms_3])
 
@@ -281,8 +266,23 @@ class MESolveAdaptiveRouchon23Integrator(MESolveDiffraxIntegrator):
         return AbstractRouchonTerm(kraus_map)
 
 
-mesolve_adaptive_rouchon23_integrator_constructor = (
-    lambda **kwargs: MESolveAdaptiveRouchon23Integrator(
+def mesolve_rouchon2_integrator_constructor(**kwargs):
+    """Factory function to create a Rouchon2 integrator."""
+    if kwargs['method'].dt is not None:
+        return MESolveFixedRouchon2Integrator(
+            **kwargs, diffrax_solver=RouchonDXSolver(2), fixed_step=True
+        )
+    return MESolveAdaptiveRouchon2Integrator(
+        **kwargs, diffrax_solver=AdaptiveRouchonDXSolver(2), fixed_step=False
+    )
+
+
+def mesolve_rouchon3_integrator_constructor(**kwargs):
+    """Factory function to create a Rouchon3 integrator."""
+    if kwargs['method'].dt is not None:
+        return MESolveFixedRouchon3Integrator(
+            **kwargs, diffrax_solver=RouchonDXSolver(3), fixed_step=True
+        )
+    return MESolveAdaptiveRouchon3Integrator(
         **kwargs, diffrax_solver=AdaptiveRouchonDXSolver(3), fixed_step=False
     )
-)
