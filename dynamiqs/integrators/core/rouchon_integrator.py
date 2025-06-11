@@ -240,7 +240,7 @@ class MESolveAdaptiveRouchon12Integrator(MESolveDiffraxIntegrator):
             rho_2 = cholesky_normalize(Ms_2, rho) if self.method.normalize else rho
             rho_2 = sum([M @ rho_2 @ M.dag() for M in Ms_2])
 
-            return rho_2, rho_2 - rho_1
+            return rho_2, 0.5 * (rho_2 - rho_1)
 
         return AbstractRouchonTerm(kraus_map)
 
@@ -276,7 +276,7 @@ class MESolveAdaptiveRouchon23Integrator(MESolveDiffraxIntegrator):
             rho_3 = cholesky_normalize(Ms_3, rho) if self.method.normalize else rho
             rho_3 = sum([M @ rho_3 @ M.dag() for M in Ms_3])
 
-            return rho_3, rho_3 - rho_2
+            return rho_3, 0.5 * (rho_3 - rho_2)
 
         return AbstractRouchonTerm(kraus_map)
 
