@@ -195,7 +195,9 @@ class JumpState(SDEState):
     """State for the jump SSE/SME fixed step integrators."""
 
     state: QArray  # state (integrated from initial to current time)
-    clicks: Array  # click times of shape (nsteps)
+    # click indicator of shape (nsteps): 0 = no click, i + 1 = click of the i-th jump
+    # operator
+    clicks: Array
     step_idx: int  # step index
 
 
@@ -225,7 +227,8 @@ class JumpSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
     def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
         saved = super().postprocess_saved(saved, ylast.state)
 
-        # convert array of click value at each time to array of clicktimes, for example:
+        # convert array of click indicators at each step to array of clicktimes, for
+        # example:
         #   times = [0, 10, 20, 30, 40, 50]
         #   clicks = [0, 1, 0, 1, 0, 2]
         #   => clicktimes = [[10, 30, nan, ...], [50, nan, nan, ...]]
