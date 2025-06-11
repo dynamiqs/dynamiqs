@@ -91,6 +91,10 @@ class CompositeQArray(QArray):
         terms = [tuple(factor.mT for factor in term) for term in self.terms]
         return replace(self, terms=terms)
 
+    @property
+    def nterms(self) -> int:
+        return len(self.terms)
+
     def conj(self) -> QArray:
         terms = [tuple(factor.conj() for factor in term) for term in self.terms]
         return replace(self, terms=terms)
@@ -201,6 +205,12 @@ class CompositeQArray(QArray):
     def block_until_ready(self) -> QArray:
         _ = self._first_factor.block_until_ready()
         return self
+
+    def __repr__(self) -> str:
+        return (
+            f'QArray: shape={self.shape}, dims={self.dims}, dtype={self.dtype}, '
+            f'type=composite, nterms={self.nterms}'
+        )
 
     def __mul__(self, y: ArrayLike) -> QArray:
         super().__mul__(y)
