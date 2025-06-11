@@ -66,6 +66,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - Rouchon1
         - Rouchon2
         - Rouchon3
+        - AdaptiveRouchon12
+        - AdaptiveRouchon23
         - Expm
         - Event
 
