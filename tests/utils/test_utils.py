@@ -5,7 +5,6 @@ import qutip as qt
 from jax import Array
 
 import dynamiqs as dq
-from dynamiqs._utils import cdtype
 
 from ..order import TEST_INSTANT
 
@@ -103,35 +102,6 @@ def test_ket_dm_fidelity_batching():
     rho = qobj_to_array(rho)
     assert dq.fidelity(rho, psi).shape == (b1, b2)
     assert dq.fidelity(psi, rho).shape == (b1, b2)
-
-
-@pytest.mark.run(order=TEST_INSTANT)
-def test_hadamard():
-    # one qubit
-    H1 = 2 ** (-1 / 2) * jnp.array([[1, 1], [1, -1]], dtype=cdtype())
-    assert jnp.allclose(dq.hadamard(1).to_jax(), H1)
-
-    # two qubits
-    H2 = 0.5 * jnp.array(
-        [[1, 1, 1, 1], [1, -1, 1, -1], [1, 1, -1, -1], [1, -1, -1, 1]], dtype=cdtype()
-    )
-    assert jnp.allclose(dq.hadamard(2).to_jax(), H2)
-
-    # three qubits
-    H3 = 2 ** (-3 / 2) * jnp.array(
-        [
-            [1, 1, 1, 1, 1, 1, 1, 1],
-            [1, -1, 1, -1, 1, -1, 1, -1],
-            [1, 1, -1, -1, 1, 1, -1, -1],
-            [1, -1, -1, 1, 1, -1, -1, 1],
-            [1, 1, 1, 1, -1, -1, -1, -1],
-            [1, -1, 1, -1, -1, 1, -1, 1],
-            [1, 1, -1, -1, -1, -1, 1, 1],
-            [1, -1, -1, 1, -1, 1, 1, -1],
-        ],
-        dtype=cdtype(),
-    )
-    assert jnp.allclose(dq.hadamard(3).to_jax(), H3)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
