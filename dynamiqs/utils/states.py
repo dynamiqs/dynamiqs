@@ -21,9 +21,12 @@ __all__ = [
     'coherent',
     'coherent_dm',
     'excited',
+    'excited_dm',
     'fock',
     'fock_dm',
     'ground',
+    'ground_dm',
+    'thermal_dm',
 ]
 
 
@@ -305,7 +308,7 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
 
 
 def ground() -> QArray:
-    r"""Returns the eigenvector with eigenvalue -1 of the Pauli $\sigma_z$ operator.
+    r"""Returns the eigenvector with eigenvalue $-1$ of the Pauli $\sigma_z$ operator.
 
     It is defined by $\ket{g} = \begin{pmatrix}0\\1\end{pmatrix}$.
 
@@ -325,8 +328,30 @@ def ground() -> QArray:
     return asqarray(jnp.array([[0], [1]], dtype=cdtype()), dims=(2,))
 
 
+def ground_dm() -> QArray:
+    r"""Returns the projector on the eigenvector with eigenvalue $-1$ of the Pauli
+    $\sigma_z$ operator.
+
+    It is defined by $\ket{g}\bra{g} = \begin{pmatrix}0 & 0\\0 & 1\end{pmatrix}$.
+
+    Note:
+        This function is named `ground_dm` because $\ket{g}$ is the lower energy state
+        of a two-level system with Hamiltonian $H=\omega \sigma_z$.
+
+    Returns:
+        _(qarray of shape (2, 2))_ Density matrix $\ket{g}\bra{g}$.
+
+    Examples:
+        >>> dq.ground_dm()
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[0.+0.j 0.+0.j]
+         [0.+0.j 1.+0.j]]
+    """
+    return ground().todm()
+
+
 def excited() -> QArray:
-    r"""Returns the eigenvector with eigenvalue +1 of the Pauli $\sigma_z$ operator.
+    r"""Returns the eigenvector with eigenvalue $+1$ of the Pauli $\sigma_z$ operator.
 
     It is defined by $\ket{e} = \begin{pmatrix}1\\0\end{pmatrix}$.
 
@@ -344,3 +369,115 @@ def excited() -> QArray:
          [0.+0.j]]
     """
     return asqarray(jnp.array([[1], [0]], dtype=cdtype()), dims=(2,))
+
+
+def excited_dm() -> QArray:
+    r"""Returns the projector on the eigenvector with eigenvalue $+1$ of the Pauli
+    $\sigma_z$ operator.
+
+    It is defined by $\ket{e}\bra{e} = \begin{pmatrix}1 & 0\\0 & 0\end{pmatrix}$.
+
+    Note:
+        This function is named `excited_dm` because $\ket{e}$ is the higher energy state
+        of a two-level-system with Hamiltonian $H=\omega \sigma_z$.
+
+    Returns:
+        _(qarray of shape (2, 2))_ Density matrix $\ket{e}\bra{e}$.
+
+    Examples:
+        >>> dq.excited_dm()
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[1.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j]]
+    """
+    return excited().todm()
+
+
+def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> QArray:
+    r"""Returns the density matrix of a thermal state or a tensor product of thermal
+    states.
+
+    For a single mode, it is defined for a thermal photon number $n_{th}$ by:
+
+    $$
+        \rho = \sum_k \frac{(n_{th})^k}{(1+n_{th})^{1+k}} \ket{k}\bra{k}.
+    $$
+
+    Args:
+        dim: Hilbert space dimension of each mode.
+        nth _(array-like of shape (...) or (..., len(dim)))_: Thermal photon number for
+            each mode. If `dim` is a tuple, the last dimension of `nth` should match the
+            length of `dim`.
+
+    Returns:
+        _(qarray of shape (..., n, n))_ Density matrix of the thermal state or tensor
+            product of thermal states, with _n = prod(dims)_.
+
+    Examples:
+        Single-mode thermal state with thermal photon number $n_{th}=0.1$:
+        >>> dq.thermal_dm(4, 0.1)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        [[0.909+0.j 0.   +0.j 0.   +0.j 0.   +0.j]
+         [0.   +0.j 0.083+0.j 0.   +0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.008+0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 0.001+0.j]]
+
+        Batched single-mode thermal states:
+        >>> dq.thermal_dm(4, [0.1, 0.2, 0.3]).shape
+        (3, 4, 4)
+
+        Multi-mode thermal state:
+        >>> dq.thermal_dm((4, 3), (0.1, 0.2)).shape
+        (12, 12)
+
+        Batched multi-mode thermal states:
+        >>> nth = [(0.1, 0.2), (0.2, 0.1), (0.2, 0.2)]
+        >>> dq.thermal_dm((4, 3), nth).shape
+        (3, 12, 12)
+    """
+    dim = np.asarray(dim)
+    nth = jnp.asarray(nth)
+    check_type_int(dim, 'dim')
+
+    # check if dim is a single value or a tuple
+    if dim.ndim > 1:
+        raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
+
+    # if dim is an integer, convert shapes dim: () -> (1,) and nth: (...) -> (..., 1)
+    if dim.ndim == 0:
+        dim = dim[None]
+        nth = nth[..., None]
+
+    # check if nth has shape (..., len(ndim))
+    if nth.shape[-1] != dim.shape[-1]:
+        raise ValueError(
+            'Argument `nth` must have shape `(...)` or `(..., len(dim))`, but'
+            f' has shape nth.shape={nth.shape}.'
+        )
+
+    # compute all density matrices
+    def _thermal_dm(nth: Array) -> QArray:
+        dms = [_single_thermal_dm(d, n) for d, n in zip(dim, nth, strict=True)]
+        return tensor(*dms)
+
+    _vectorized_thermal_dm = jnp.vectorize(
+        _thermal_dm, signature='(ndim)->(prod_ndim,prod_ndim)'
+    )
+    return _vectorized_thermal_dm(nth)
+
+
+def _single_thermal_dm(dim: int, nth: Array) -> QArray:
+    """Returns the density matrix of a thermal state for a single mode."""
+    # compute the unnormalized diagonal elements of the density matrix
+    fock_indices = jnp.arange(dim)
+    rho_diag = (nth**fock_indices) / ((1 + nth) ** (1 + fock_indices))
+
+    # cast to complex dtype
+    rho_diag = rho_diag.astype(cdtype())
+
+    # construct the density matrix
+    bdiag = jnp.vectorize(jnp.diag, signature='(a)->(a,a)')
+    rho = asqarray(bdiag(rho_diag), dims=(dim.item(),))
+
+    # normalize the density matrix
+    return rho.unit()

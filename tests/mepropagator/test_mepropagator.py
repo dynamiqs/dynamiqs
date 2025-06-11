@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs import mepropagator, operator_to_vector, vector_to_operator
+from dynamiqs import mepropagator, unvectorize, vectorize
 
 from ..integrator_tester import IntegratorTester
 from ..mesolve.open_system import dense_ocavity, otdqubit
@@ -19,7 +19,5 @@ class TestMEPropagator(IntegratorTester):
         rho0 = y0.todm()
         propresult = mepropagator(H, Ls, system.tsave)
         true_ysave = system.states(system.tsave).to_jax()
-        prop_ysave = (
-            vector_to_operator(propresult.propagators @ operator_to_vector(rho0))
-        ).to_jax()
+        prop_ysave = (unvectorize(propresult.propagators @ vectorize(rho0))).to_jax()
         assert jnp.allclose(true_ysave, prop_ysave, atol=ysave_atol)

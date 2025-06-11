@@ -5,7 +5,6 @@ import qutip as qt
 from jax import Array
 
 import dynamiqs as dq
-from dynamiqs._utils import cdtype
 
 from ..order import TEST_INSTANT
 
@@ -106,58 +105,81 @@ def test_ket_dm_fidelity_batching():
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_hadamard():
-    # one qubit
-    H1 = 2 ** (-1 / 2) * jnp.array([[1, 1], [1, -1]], dtype=cdtype())
-    assert jnp.allclose(dq.hadamard(1).to_jax(), H1)
-
-    # two qubits
-    H2 = 0.5 * jnp.array(
-        [[1, 1, 1, 1], [1, -1, 1, -1], [1, 1, -1, -1], [1, -1, -1, 1]], dtype=cdtype()
-    )
-    assert jnp.allclose(dq.hadamard(2).to_jax(), H2)
-
-    # three qubits
-    H3 = 2 ** (-3 / 2) * jnp.array(
-        [
-            [1, 1, 1, 1, 1, 1, 1, 1],
-            [1, -1, 1, -1, 1, -1, 1, -1],
-            [1, 1, -1, -1, 1, 1, -1, -1],
-            [1, -1, -1, 1, 1, -1, -1, 1],
-            [1, 1, 1, 1, -1, -1, -1, -1],
-            [1, -1, 1, -1, -1, 1, -1, 1],
-            [1, 1, -1, -1, -1, -1, 1, 1],
-            [1, -1, -1, 1, -1, 1, 1, -1],
-        ],
-        dtype=cdtype(),
-    )
-    assert jnp.allclose(dq.hadamard(3).to_jax(), H3)
-
-
-@pytest.mark.skip('broken test')
-@pytest.mark.run(order=TEST_INSTANT)
-def test_jit_ptrace():
+def test_ptrace():
     key = jax.random.PRNGKey(0)
     key1, key2, key3, key4 = jax.random.split(key, 4)
 
     # kets
-
-    # TODO: this one doesn't pass
-
-    a = dq.random.ket(20, key=key1)
-    b = dq.random.ket(30, key=key2)
+    a = dq.random.ket(key1, (20, 1))
+    b = dq.random.ket(key2, (30, 1))
 
     ab = a & b
     ap = dq.ptrace(ab, 0, (20, 30))
 
-    assert jnp.allclose(a, ap, 1e-3)
+    assert jnp.allclose(a.todm().to_jax(), ap.to_jax(), 1e-3)
 
-    # density matrix
-
-    a = dq.random.dm(20, key=key3)
-    b = dq.random.dm(30, key=key4)
+    # density matrices
+    a = dq.random.dm(key3, (20, 20))
+    b = dq.random.dm(key4, (30, 30))
 
     ab = a & b
     ap = dq.ptrace(ab, 0, (20, 30))
 
-    assert jnp.allclose(a, ap, 1e-3)
+    assert jnp.allclose(a.to_jax(), ap.to_jax(), 1e-3)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_tracing():
+    # prepare inputs
+    keya, keyb, keyx, keyy, keyz = jax.random.split(jax.random.PRNGKey(0), 5)
+
+    a = dq.random.ket(keya, (2, 1))
+    b = dq.random.ket(keyb, (2, 1))
+    x = dq.random.dm(keyx, (2, 2))
+    y = dq.random.dm(keyy, (2, 2))
+    z = dq.random.dm(keyz, (2, 2))
+
+    # check that no error is raised while tracing the functions
+    jax.jit(dq.dag).trace(x)
+    jax.jit(dq.powm, static_argnums=(1,)).trace(x, 2)
+    jax.jit(dq.expm).trace(x)
+    jax.jit(dq.cosm).trace(x)
+    jax.jit(dq.sinm).trace(x)
+    jax.jit(dq.signm).trace(x)
+    jax.jit(dq.trace).trace(x)
+    jax.jit(dq.tracemm).trace(x, y)
+    jax.jit(dq.ptrace, static_argnums=(1,)).trace(a & b, 0)
+    jax.jit(dq.ptrace, static_argnums=(1,)).trace(x & y, 0)
+    jax.jit(dq.tensor).trace(x, y)
+    jax.jit(dq.expect).trace(x, y)
+    jax.jit(dq.norm).trace(a)
+    jax.jit(dq.norm).trace(x)
+    jax.jit(dq.unit).trace(a)
+    jax.jit(dq.unit).trace(x)
+    jax.jit(dq.dissipator).trace(x, y)
+    jax.jit(dq.lindbladian).trace(x, [y], z)
+    jax.jit(dq.isket).trace(a)
+    jax.jit(dq.isbra).trace(a)
+    jax.jit(dq.isdm).trace(x)
+    jax.jit(dq.isop).trace(x)
+    jax.jit(dq.isherm).trace(x)
+    jax.jit(dq.toket).trace(a)
+    jax.jit(dq.tobra).trace(a)
+    jax.jit(dq.todm).trace(a)
+    jax.jit(dq.todm).trace(x)
+    jax.jit(dq.proj).trace(a)
+    jax.jit(dq.braket).trace(a, b)
+    jax.jit(dq.overlap).trace(a, b)
+    jax.jit(dq.overlap).trace(a, y)
+    jax.jit(dq.overlap).trace(x, b)
+    jax.jit(dq.overlap).trace(x, y)
+    jax.jit(dq.fidelity).trace(a, b)
+    jax.jit(dq.fidelity).trace(a, y)
+    jax.jit(dq.fidelity).trace(x, b)
+    jax.jit(dq.fidelity).trace(x, y)
+    jax.jit(dq.purity).trace(a)
+    jax.jit(dq.purity).trace(x)
+    jax.jit(dq.entropy_vn).trace(a)
+    jax.jit(dq.entropy_vn).trace(x)
+    jax.jit(dq.bloch_coordinates).trace(a)
+    jax.jit(dq.bloch_coordinates).trace(x)

@@ -2,6 +2,7 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
+from dynamiqs._utils import cdtype
 
 from ..order import TEST_INSTANT
 
@@ -87,6 +88,10 @@ def test_operators_dispatch():
     )
 
     assert jnp.allclose(
+        dq.xyz(layout=dq.dense).to_jax(), dq.xyz(layout=dq.dia).to_jax()
+    )
+
+    assert jnp.allclose(
         dq.sigmax(layout=dq.dense).to_jax(), dq.sigmax(layout=dq.dia).to_jax()
     )
 
@@ -105,3 +110,32 @@ def test_operators_dispatch():
     assert jnp.allclose(
         dq.sigmam(layout=dq.dense).to_jax(), dq.sigmam(layout=dq.dia).to_jax()
     )
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_hadamard():
+    # one qubit
+    H1 = 2 ** (-1 / 2) * jnp.array([[1, 1], [1, -1]], dtype=cdtype())
+    assert jnp.allclose(dq.hadamard(1).to_jax(), H1)
+
+    # two qubits
+    H2 = 0.5 * jnp.array(
+        [[1, 1, 1, 1], [1, -1, 1, -1], [1, 1, -1, -1], [1, -1, -1, 1]], dtype=cdtype()
+    )
+    assert jnp.allclose(dq.hadamard(2).to_jax(), H2)
+
+    # three qubits
+    H3 = 2 ** (-3 / 2) * jnp.array(
+        [
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            [1, -1, 1, -1, 1, -1, 1, -1],
+            [1, 1, -1, -1, 1, 1, -1, -1],
+            [1, -1, -1, 1, 1, -1, -1, 1],
+            [1, 1, 1, 1, -1, -1, -1, -1],
+            [1, -1, 1, -1, -1, 1, -1, 1],
+            [1, 1, -1, -1, -1, -1, 1, 1],
+            [1, -1, -1, 1, -1, 1, 1, -1],
+        ],
+        dtype=cdtype(),
+    )
+    assert jnp.allclose(dq.hadamard(3).to_jax(), H3)
