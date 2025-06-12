@@ -4,11 +4,17 @@ import pytest
 
 import dynamiqs as dq
 
-from ..order import TEST_INSTANT, TEST_SHORT
+from ..order import TEST_SHORT
 
 
 @pytest.mark.run(order=TEST_SHORT)
-def test_wigner_cat():
+def test_wigner():
+    _test_wigner_cat()
+    _test_wigner_coherent()
+    _test_wigner_tracing()
+
+
+def _test_wigner_cat():
     # parameters
     n = 16
     alpha = 2.0
@@ -31,8 +37,7 @@ def test_wigner_cat():
     assert jnp.allclose(nbar, nbar_wig)
 
 
-@pytest.mark.run(order=TEST_SHORT)
-def test_wigner_coherent():
+def _test_wigner_coherent():
     # parameters
     n = 16
     alpha = 2.0
@@ -55,8 +60,7 @@ def test_wigner_coherent():
     assert jnp.allclose(a, a_wig)
 
 
-@pytest.mark.run(order=TEST_INSTANT)
-def test_tracing():
+def _test_wigner_tracing():
     # prepare inputs
     state = dq.coherent(8, 1.0)
     xvec = jnp.linspace(-3, 3, 101)
