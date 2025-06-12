@@ -20,8 +20,6 @@ __all__ = [
     'Rouchon1',
     'Rouchon2',
     'Rouchon3',
-    'AdaptiveRouchon12',
-    'AdaptiveRouchon23',
     'Tsit5',
     'Event',
 ]
@@ -236,92 +234,28 @@ class Rouchon1(_DEFixedStep):
         self.exact_expm = exact_expm
 
 
-class Rouchon2(_DEFixedStep):
-    r"""Second-order Rouchon method (fixed step size ODE method).
+class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
+    r"""Second-order Rouchon method (fixed or adaptive step size ODE method).
+
+    Note:
+        By default the scheme is using adaptive step size. The error is estimated
+        using the difference between the first-order and second-order. To use a fixed
+        step size second-order method (without evaluating the first-order), set the `dt`
+        argument.
 
     Args:
-        dt: Fixed time step.
+        rtol: Relative tolerance.
+        atol: Absolute tolerance.
+        safety_factor: Safety factor for adaptive step sizing.
+        min_factor: Minimum factor for adaptive step sizing.
+        max_factor: Maximum factor for adaptive step sizing.
+        max_steps: Maximum number of steps.
+        dt: Fixed time step, if specified all arguments specific to adaptive step sizing
+            are ignored (`rtol`, `atol`, `safety_factor`, `min_factor`, `max_factor`
+            and `max_steps`).
         normalize: If True, the scheme is trace-preserving to machine precision, which
             is the recommended option because it is much more stable. Otherwise, it is
-            only trace-preserving to the scheme order in $\dt$.
-        exact_expm: If True, the scheme uses the exact matrix exponential internally (at
-            the cost of losing sparsity), otherwise it uses a Taylor expansion up to
-            the scheme order.
-
-    Note-: Supported gradients
-        This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
-        (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
-    """
-
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
-    )
-
-    # todo: fix static dt (similar issue as static tsave in dssesolve)
-    dt: float = eqx.field(static=True)
-    normalize: bool = eqx.field(static=True, default=True)
-    exact_expm: bool = eqx.field(static=True, default=False)
-
-    # dummy init to have the signature in the documentation
-    def __init__(self, dt: float, normalize: bool = True, exact_expm: bool = False):
-        super().__init__(dt)
-        self.normalize = normalize
-        self.exact_expm = exact_expm
-
-
-class Rouchon3(_DEFixedStep):
-    r"""Third-order Rouchon method (fixed step size ODE method).
-
-    Args:
-        dt: Fixed time step.
-        normalize: If True, the scheme is trace-preserving to machine precision, which
-            is the recommended option because it is much more stable. Otherwise, it is
-            only trace-preserving to the scheme order in $\dt$.
-        exact_expm: If True, the scheme uses the exact matrix exponential internally (at
-            the cost of losing sparsity), otherwise it uses a Taylor expansion up to
-            the scheme order.
-
-    Note-: Supported gradients
-        This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
-        (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
-    """
-
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
-    )
-
-    # todo: fix static dt (similar issue as static tsave in dssesolve)
-    dt: float = eqx.field(static=True)
-    normalize: bool = eqx.field(static=True, default=True)
-    exact_expm: bool = eqx.field(static=True, default=False)
-
-    # dummy init to have the signature in the documentation
-    def __init__(self, dt: float, normalize: bool = True, exact_expm: bool = False):
-        super().__init__(dt)
-        self.normalize = normalize
-        self.exact_expm = exact_expm
-
-
-class AdaptiveRouchon12(_DEAdaptiveStep):
-    r"""Adaptive second-order Rouchon method (adaptive step size ODE method).
-
-    The error is estimated using the difference between the first-order and
-    second-order.
-
-    Args:
-        normalize: If True, the scheme is trace-preserving to machine precision, which
-            is the recommended option because it is much more stable. Otherwise, it is
-            only trace-preserving to the scheme order in $\dt$.
+            only trace-preserving to the scheme order in the numerical step size.
         exact_expm: If True, the scheme uses the exact matrix exponential internally (at
             the cost of losing sparsity), otherwise it uses a Taylor expansion up to
             the scheme order.
@@ -352,24 +286,40 @@ class AdaptiveRouchon12(_DEAdaptiveStep):
         min_factor: float = 0.2,
         max_factor: float = 5.0,
         max_steps: int = 100_000,
+        dt: float | None = None,
         normalize: bool = True,
         exact_expm: bool = False,
     ):
-        super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
+        _DEFixedStep.__init__(self, dt)
+        _DEAdaptiveStep.__init__(
+            self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
+        )
         self.normalize = normalize
         self.exact_expm = exact_expm
 
 
-class AdaptiveRouchon23(_DEAdaptiveStep):
-    r"""Adaptive third-order Rouchon method (adaptive step size ODE method).
+class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
+    r"""Third-order Rouchon method (fixed or adaptive step size ODE method).
 
-    The error is estimated using the difference between the second-order and
-    third-order.
+    Note:
+        By default the scheme is using adaptive step size. The error is estimated
+        using the difference between the second-order and third-order. To use a fixed
+        step size third-order method (without evaluating the second-order), set the `dt`
+        argument.
 
     Args:
+        rtol: Relative tolerance.
+        atol: Absolute tolerance.
+        safety_factor: Safety factor for adaptive step sizing.
+        min_factor: Minimum factor for adaptive step sizing.
+        max_factor: Maximum factor for adaptive step sizing.
+        max_steps: Maximum number of steps.
+        dt: Fixed time step, if specified all arguments specific to adaptive step sizing
+            are ignored (`rtol`, `atol`, `safety_factor`, `min_factor`, `max_factor`
+            and `max_steps`).
         normalize: If True, the scheme is trace-preserving to machine precision, which
             is the recommended option because it is much more stable. Otherwise, it is
-            only trace-preserving to the scheme order in $\dt$.
+            only trace-preserving to the scheme order in the numerical step size.
         exact_expm: If True, the scheme uses the exact matrix exponential internally (at
             the cost of losing sparsity), otherwise it uses a Taylor expansion up to
             the scheme order.
@@ -400,10 +350,14 @@ class AdaptiveRouchon23(_DEAdaptiveStep):
         min_factor: float = 0.2,
         max_factor: float = 5.0,
         max_steps: int = 100_000,
+        dt: float | None = None,
         normalize: bool = True,
         exact_expm: bool = False,
     ):
-        super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
+        _DEFixedStep.__init__(self, dt)
+        _DEAdaptiveStep.__init__(
+            self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
+        )
         self.normalize = normalize
         self.exact_expm = exact_expm
 

@@ -14,7 +14,7 @@ from .open_system import dense_ocavity, otdqubit
 
 
 @pytest.mark.run(order=TEST_LONG)
-class TestMESolveRouchon(IntegratorTester):
+class TestMESolveFixedRouchon(IntegratorTester):
     @pytest.mark.parametrize(
         ('method_class', 'dt'), [(Rouchon1, 1e-4), (Rouchon2, 1e-3), (Rouchon3, 1e-2)]
     )
