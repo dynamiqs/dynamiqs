@@ -23,7 +23,7 @@ from .interfaces import (
     JSSEInterface,
     SolveInterface,
 )
-from .rouchon_integrator import MESolveRouchon1Integrator, cholesky_normalize
+from .rouchon_integrator import MESolveFixedRouchon1Integrator, cholesky_normalize
 from .save_mixin import SolveSaveMixin
 
 
@@ -500,7 +500,9 @@ class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
         dY = exp * self.dt + dW
 
         # === state psi
-        Ms_average = MESolveRouchon1Integrator.Ms(H, L, self.dt, self.method.exact_expm)
+        Ms_average = MESolveFixedRouchon1Integrator.Ms(
+            H, L, self.dt, self.method.exact_expm
+        )
         if self.method.normalize:
             psi = cholesky_normalize_ket(Ms_average, psi)
 
@@ -584,7 +586,9 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         dY = jnp.sqrt(self.etas) * trace * self.dt + dW  # (nLm,)
 
         # === state rho
-        Ms_average = MESolveRouchon1Integrator.Ms(H, L, self.dt, self.method.exact_expm)
+        Ms_average = MESolveFixedRouchon1Integrator.Ms(
+            H, L, self.dt, self.method.exact_expm
+        )
         if self.method.normalize:
             rho = cholesky_normalize(Ms_average, rho)
 
