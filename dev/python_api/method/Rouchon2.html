@@ -1681,10 +1681,6 @@
       
         
       
-        
-      
-        
-      
     
     
     
@@ -1974,52 +1970,6 @@
   
   <span class="md-ellipsis">
     Rouchon3
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="AdaptiveRouchon12.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    AdaptiveRouchon12
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="AdaptiveRouchon23.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    AdaptiveRouchon23
     
   </span>
   
@@ -5743,30 +5693,80 @@
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Rouchon2</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">exact_expm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Rouchon2</span><span class="p">(</span>
+    <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">,</span>
+    <span class="n">atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">,</span>
+    <span class="n">safety_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">,</span>
+    <span class="n">min_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">max_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">,</span>
+    <span class="n">max_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span>
+    <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">exact_expm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
 
-        <p>Second-order Rouchon method (fixed step size ODE method).</p>
+        <p>Second-order Rouchon method (fixed or adaptive step size ODE method).</p>
 
+<details class="note"
+ open >
+  <summary>Note</summary>
+  <p>By default the scheme is using adaptive step size. The error is estimated
+using the difference between the first-order and second-order. To use a fixed
+step size second-order method (without evaluating the first-order), set the <code>dt</code>
+argument.</p>
+</details>
     <!-- <p>Parameters:</p> -->
     <p>
       <strong>Parameters</strong>
     </p>
     <ul>
         <li class="field-body">
+          <b>rtol</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Relative tolerance.</p>
+        </li>
+        <li class="field-body">
+          <b>atol</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Absolute tolerance.</p>
+        </li>
+        <li class="field-body">
+          <b>safety_factor</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Safety factor for adaptive step sizing.</p>
+        </li>
+        <li class="field-body">
+          <b>min_factor</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Minimum factor for adaptive step sizing.</p>
+        </li>
+        <li class="field-body">
+          <b>max_factor</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Maximum factor for adaptive step sizing.</p>
+        </li>
+        <li class="field-body">
+          <b>max_steps</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Maximum number of steps.</p>
+        </li>
+        <li class="field-body">
           <b>dt</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Fixed time step.</p>
+          – <p>Fixed time step, if specified all arguments specific to adaptive step sizing
+are ignored (<code>rtol</code>, <code>atol</code>, <code>safety_factor</code>, <code>min_factor</code>, <code>max_factor</code>
+and <code>max_steps</code>).</p>
         </li>
         <li class="field-body">
           <b>normalize</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
           – <p>If True, the scheme is trace-preserving to machine precision, which
 is the recommended option because it is much more stable. Otherwise, it is
-only trace-preserving to the scheme order in <span class="arithmatex">\(\dt\)</span>.</p>
+only trace-preserving to the scheme order in the numerical step size.</p>
         </li>
         <li class="field-body">
           <b>exact_expm</b>
