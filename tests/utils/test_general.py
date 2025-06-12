@@ -443,8 +443,8 @@ def test_entropy_vn():
 def test_bloch_coordinates():
     # prepare inputs
     keya, keyx = jax.random.split(jax.random.PRNGKey(0), 2)
-    a = dq.random.ket(keya, (4, 1))
-    x = dq.random.dm(keyx, (4, 4))
+    a = dq.random.ket(keya, (2, 1))
+    x = dq.random.dm(keyx, (2, 2))
 
     # check that no error is raised while tracing the function
     jax.jit(dq.bloch_coordinates).trace(a)
