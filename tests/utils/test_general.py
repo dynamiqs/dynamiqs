@@ -6,86 +6,83 @@ from jax import Array
 
 import dynamiqs as dq
 
-from ..order import TEST_INSTANT
+from ..order import TEST_INSTANT, TEST_SHORT
+
+
+@pytest.fixture
+def x():
+    key = jax.random.PRNGKey(0)
+    return dq.random.dm(key, (4, 4))
+
+
+@pytest.fixture
+def y():
+    key = jax.random.PRNGKey(1)
+    return dq.random.dm(key, (4, 4))
+
+
+@pytest.fixture
+def z():
+    key = jax.random.PRNGKey(2)
+    return dq.random.dm(key, (4, 4))
+
+
+@pytest.fixture
+def a():
+    key = jax.random.PRNGKey(3)
+    return dq.random.ket(key, (4, 1))
+
+
+@pytest.fixture
+def b():
+    key = jax.random.PRNGKey(4)
+    return dq.random.ket(key, (4, 1))
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_dag():
-    # prepare inputs
-    key = jax.random.PRNGKey(0)
-    x = dq.random.dm(key, (4, 4))
-
+def test_dag(x):
     # check that no error is raised while tracing the function
     jax.jit(dq.dag).trace(x)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_powm():
-    # prepare inputs
-    key = jax.random.PRNGKey(0)
-    x = dq.random.dm(key, (4, 4))
-
+def test_powm(x):
     # check that no error is raised while tracing the function
     jax.jit(dq.powm, static_argnums=(1,)).trace(x, 2)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_expm():
-    # prepare inputs
-    key = jax.random.PRNGKey(0)
-    x = dq.random.dm(key, (4, 4))
-
+def test_expm(x):
     # check that no error is raised while tracing the function
     jax.jit(dq.expm).trace(x)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_cosm():
-    # prepare inputs
-    key = jax.random.PRNGKey(0)
-    x = dq.random.dm(key, (4, 4))
-
+def test_cosm(x):
     # check that no error is raised while tracing the function
     jax.jit(dq.cosm).trace(x)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_sinm():
-    # prepare inputs
-    key = jax.random.PRNGKey(0)
-    x = dq.random.dm(key, (4, 4))
-
+def test_sinm(x):
     # check that no error is raised while tracing the function
     jax.jit(dq.sinm).trace(x)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_signm():
-    # prepare inputs
-    key = jax.random.PRNGKey(0)
-    x = dq.random.dm(key, (4, 4))
-
+def test_signm(x):
     # check that no error is raised while tracing the function
     jax.jit(dq.signm).trace(x)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_trace():
-    # prepare inputs
-    key = jax.random.PRNGKey(0)
-    x = dq.random.dm(key, (4, 4))
-
+def test_trace(x):
     # check that no error is raised while tracing the function
     jax.jit(dq.trace).trace(x)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_tracemm():
-    # prepare inputs
-    keyx, keyy = jax.random.split(jax.random.PRNGKey(0), 2)
-    x = dq.random.dm(keyx, (4, 4))
-    y = dq.random.dm(keyy, (4, 4))
-
+def test_tracemm(x, y):
     # check that no error is raised while tracing the function
     jax.jit(dq.tracemm).trace(x, y)
 
@@ -113,187 +110,106 @@ def test_ptrace():
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_tensor():
-    # prepare inputs
-    keyx, keyy = jax.random.split(jax.random.PRNGKey(0), 2)
-    x = dq.random.dm(keyx, (4, 4))
-    y = dq.random.dm(keyy, (4, 4))
-
+def test_tensor(x, y):
     # check that no error is raised while tracing the function
     jax.jit(dq.tensor).trace(x, y)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_expect():
-    # prepare inputs
-    keyx, keyy = jax.random.split(jax.random.PRNGKey(0), 2)
-    x = dq.random.dm(keyx, (4, 4))
-    y = dq.random.dm(keyy, (4, 4))
-
+def test_expect(x, y):
     # check that no error is raised while tracing the function
     jax.jit(dq.expect).trace(x, y)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_norm():
-    # prepare inputs
-    keya, keyx = jax.random.split(jax.random.PRNGKey(0), 2)
-    a = dq.random.ket(keya, (4, 1))
-    x = dq.random.dm(keyx, (4, 4))
-
+def test_norm(a, x):
     # check that no error is raised while tracing the function
     jax.jit(dq.norm).trace(a)
     jax.jit(dq.norm).trace(x)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_unit():
-    # prepare inputs
-    keya, keyx = jax.random.split(jax.random.PRNGKey(0), 2)
-    a = dq.random.ket(keya, (4, 1))
-    x = dq.random.dm(keyx, (4, 4))
-
+def test_unit(a, x):
     # check that no error is raised while tracing the function
     jax.jit(dq.unit).trace(a)
     jax.jit(dq.unit).trace(x)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_dissipator():
-    # prepare inputs
-    keyx, keyy = jax.random.split(jax.random.PRNGKey(0), 2)
-    x = dq.random.dm(keyx, (4, 4))
-    y = dq.random.dm(keyy, (4, 4))
-
+def test_dissipator(x, y):
     # check that no error is raised while tracing the function
     jax.jit(dq.dissipator).trace(x, y)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_lindbladian():
-    # prepare inputs
-    keyx, keyy, keyz = jax.random.split(jax.random.PRNGKey(0), 3)
-    x = dq.random.dm(keyx, (4, 4))
-    y = dq.random.dm(keyy, (4, 4))
-    z = dq.random.dm(keyz, (4, 4))
-
+def test_lindbladian(x, y, z):
     # check that no error is raised while tracing the function
     jax.jit(dq.lindbladian).trace(x, [y], z)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_isket():
-    # prepare inputs
-    key = jax.random.PRNGKey(0)
-    a = dq.random.ket(key, (4, 1))
-
+def test_isket(a):
     # check that no error is raised while tracing the function
     jax.jit(dq.isket).trace(a)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_isbra():
-    # prepare inputs
-    key = jax.random.PRNGKey(0)
-    a = dq.random.ket(key, (4, 1))
-
+def test_isbra(a):
     # check that no error is raised while tracing the function
     jax.jit(dq.isbra).trace(a)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_isdm():
-    # prepare inputs
-    key = jax.random.PRNGKey(0)
-    x = dq.random.dm(key, (4, 4))
-
+def test_isdm(x):
     # check that no error is raised while tracing the function
     jax.jit(dq.isdm).trace(x)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_isop():
-    # prepare inputs
-    key = jax.random.PRNGKey(0)
-    x = dq.random.dm(key, (4, 4))
-
+def test_isop(x):
     # check that no error is raised while tracing the function
     jax.jit(dq.isop).trace(x)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_isherm():
-    # prepare inputs
-    key = jax.random.PRNGKey(0)
-    x = dq.random.dm(key, (4, 4))
-
+def test_isherm(x):
     # check that no error is raised while tracing the function
     jax.jit(dq.isherm).trace(x)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_toket():
-    # prepare inputs
-    key = jax.random.PRNGKey(0)
-    a = dq.random.ket(key, (4, 1))
-
+def test_toket(a):
     # check that no error is raised while tracing the function
     jax.jit(dq.toket).trace(a)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_tobra():
-    # prepare inputs
-    key = jax.random.PRNGKey(0)
-    a = dq.random.ket(key, (4, 1))
-
+def test_tobra(a):
     # check that no error is raised while tracing the function
     jax.jit(dq.tobra).trace(a)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_todm():
-    # prepare inputs
-    keya, keyx = jax.random.split(jax.random.PRNGKey(0), 2)
-    a = dq.random.ket(keya, (4, 1))
-    x = dq.random.dm(keyx, (4, 4))
-
+def test_todm(a, x):
     # check that no error is raised while tracing the function
     jax.jit(dq.todm).trace(a)
     jax.jit(dq.todm).trace(x)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_proj():
-    # prepare inputs
-    key = jax.random.PRNGKey(0)
-    a = dq.random.ket(key, (4, 1))
-
+def test_proj(a):
     # check that no error is raised while tracing the function
     jax.jit(dq.proj).trace(a)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_braket():
-    # prepare inputs
-    keya, keyb = jax.random.split(jax.random.PRNGKey(0), 2)
-    a = dq.random.ket(keya, (4, 1))
-    b = dq.random.ket(keyb, (4, 1))
-
+def test_braket(a, b):
     # check that no error is raised while tracing the function
     jax.jit(dq.braket).trace(a, b)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_overlap():
-    # prepare inputs
-    keya, keyb, keyx, keyy = jax.random.split(jax.random.PRNGKey(0), 4)
-
-    a = dq.random.ket(keya, (4, 1))
-    b = dq.random.ket(keyb, (4, 1))
-    x = dq.random.dm(keyx, (4, 4))
-    y = dq.random.dm(keyy, (4, 4))
-
+def test_overlap(a, b, x, y):
     # check that no error is raised while tracing the function
     jax.jit(dq.overlap).trace(a, b)
     jax.jit(dq.overlap).trace(a, y)
@@ -301,16 +217,8 @@ def test_overlap():
     jax.jit(dq.overlap).trace(x, y)
 
 
-@pytest.mark.run(order=TEST_INSTANT)
-def test_fidelity():
-    # prepare inputs
-    keya, keyb, keyx, keyy = jax.random.split(jax.random.PRNGKey(0), 4)
-
-    a = dq.random.ket(keya, (4, 1))
-    b = dq.random.ket(keyb, (4, 1))
-    x = dq.random.dm(keyx, (4, 4))
-    y = dq.random.dm(keyy, (4, 4))
-
+@pytest.mark.run(order=TEST_SHORT)
+def test_fidelity(a, b, x, y):
     # check that no error is raised while tracing the function
     jax.jit(dq.fidelity).trace(a, b)
     jax.jit(dq.fidelity).trace(a, y)
@@ -416,24 +324,14 @@ def _qobj_to_array(x: qt.Qobj) -> Array:
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_purity():
-    # prepare inputs
-    keya, keyx = jax.random.split(jax.random.PRNGKey(0), 2)
-    a = dq.random.ket(keya, (4, 1))
-    x = dq.random.dm(keyx, (4, 4))
-
+def test_purity(a, x):
     # check that no error is raised while tracing the function
     jax.jit(dq.purity).trace(a)
     jax.jit(dq.purity).trace(x)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_entropy_vn():
-    # prepare inputs
-    keya, keyx = jax.random.split(jax.random.PRNGKey(0), 2)
-    a = dq.random.ket(keya, (4, 1))
-    x = dq.random.dm(keyx, (4, 4))
-
+def test_entropy_vn(a, x):
     # check that no error is raised while tracing the function
     jax.jit(dq.entropy_vn).trace(a)
     jax.jit(dq.entropy_vn).trace(x)
