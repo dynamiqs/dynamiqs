@@ -14,17 +14,17 @@ from .open_system import dense_ocavity, otdqubit
 
 
 @pytest.mark.run(order=TEST_LONG)
-class TestMESolveRouchon(IntegratorTester):
+class TestMESolveFixedRouchon(IntegratorTester):
     @pytest.mark.parametrize(
-        ('method_class', 'dt'), [(Rouchon1, 1e-4), (Rouchon2, 1e-2), (Rouchon3, 1e-2)]
+        ('method_class', 'dt'), [(Rouchon1, 1e-4), (Rouchon2, 1e-3), (Rouchon3, 1e-2)]
     )
     @pytest.mark.parametrize('system', [dense_ocavity, otdqubit])
     def test_correctness(self, method_class, dt, system):
         method = method_class(dt=dt)
-        self._test_correctness(system, method, esave_atol=1e-3)
+        self._test_correctness(system, method)
 
     @pytest.mark.parametrize(
-        ('method_class', 'dt'), [(Rouchon1, 1e-4), (Rouchon2, 1e-2), (Rouchon3, 1e-2)]
+        ('method_class', 'dt'), [(Rouchon1, 1e-4), (Rouchon2, 1e-3), (Rouchon3, 1e-2)]
     )
     @pytest.mark.parametrize('system', [dense_ocavity, otdqubit])
     @pytest.mark.parametrize(
@@ -32,4 +32,4 @@ class TestMESolveRouchon(IntegratorTester):
     )
     def test_gradient(self, method_class, dt, system, gradient):
         method = method_class(dt=dt)
-        self._test_gradient(system, method, gradient, rtol=1e-3, atol=1e-3)
+        self._test_gradient(system, method, gradient)
