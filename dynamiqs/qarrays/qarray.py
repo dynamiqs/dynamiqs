@@ -327,7 +327,12 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def ptrace(self, *keep: int) -> QArray:
-        pass
+        keep = np.asarray(keep)
+        if np.any(keep < 0) or np.any(keep > len(self.dims) - 1):
+            raise ValueError(
+                'Argument `keep` must match the Hilbert space structure specified by '
+                f'`dims`, but got keep={keep} and dims={self.dims}.'
+            )
 
     @abstractmethod
     def powm(self, n: int) -> QArray:

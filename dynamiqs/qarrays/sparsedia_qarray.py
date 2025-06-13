@@ -112,7 +112,12 @@ class SparseDIAQArray(QArray):
         return replace(self, offsets=offsets, diags=diags)
 
     def ptrace(self, *keep: int) -> QArray:
-        raise NotImplementedError
+        warnings.warn(
+            'A `SparseDIAQArray` has been converted to a `DenseQArray` while computing '
+            'its partial trace.',
+            stacklevel=2,
+        )
+        return self.asdense().ptrace(*keep)
 
     def powm(self, n: int) -> QArray:
         offsets, diags = powm_sparsedia(self.offsets, self.diags, n)

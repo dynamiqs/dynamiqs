@@ -58,9 +58,44 @@ class DenseQArray(QArray):
         return replace(self, data=data)
 
     def ptrace(self, *keep: int) -> QArray:
-        from ..utils.general import ptrace
+        super().ptrace(*keep)
 
-        return ptrace(self.data, keep, self.dims)
+        ndims = len(self.dims)  # e.g. 3
+
+        # sort keep
+        keep = np.asarray(keep)
+        keep.sort()  # e.g. [1, 2]
+
+        # create einsum alphabet
+        alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+        # compute einsum equations
+        eq1 = alphabet[:ndims]  # e.g. 'abc'
+        unused = iter(alphabet[ndims:])
+        eq2 = ''.join(
+            [next(unused) if i in keep else eq1[i] for i in range(ndims)]
+        )  # e.g. 'ade'
+
+        bshape = self.shape[:-2]
+
+        # trace out x over unkept dimensions
+        x = self.data
+        if self.isket() or self.isbra():
+            x = x.reshape(*bshape, *self.dims)  # e.g. (..., 20, 2, 5)
+            eq = f'...{eq1},...{eq2}'  # e.g. '...abc,...ade'
+            x = jnp.einsum(eq, x, x.conj())  # e.g. (..., 2, 5, 2, 5)
+        else:
+            x = x.reshape(
+                *bshape, *self.dims, *self.dims
+            )  # e.g. (..., 20, 2, 5, 20, 2, 5)
+            eq = f'...{eq1}{eq2}'  # e.g. '...abcade'
+            x = jnp.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
+
+        new_dims = tuple(self.dims[i] for i in keep)
+        prod_new_dims = np.prod(new_dims)  # e.g. 10
+        x = x.reshape(*bshape, prod_new_dims, prod_new_dims)  # e.g. (..., 10, 10)
+
+        return replace(self, data=x, dims=new_dims)
 
     def powm(self, n: int) -> QArray:
         data = jnp.linalg.matrix_power(self.data, n)
