@@ -13,7 +13,7 @@ from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import stack
 from ...result import DiffusiveSolveSaved, JumpSolveSaved, Result, Saved
-from ...utils.general import dag, expect
+from ...utils.general import expect
 from ...utils.operators import eye_like
 from .abstract_integrator import StochasticBaseIntegrator
 from .interfaces import (
@@ -23,7 +23,7 @@ from .interfaces import (
     JSSEInterface,
     SolveInterface,
 )
-from .rouchon_integrator import cholesky_normalize
+from .rouchon_integrator import MESolveFixedRouchon1Integrator, cholesky_normalize
 from .save_mixin import SolveSaveMixin
 
 
@@ -92,8 +92,13 @@ class StochasticSolveFixedStepIntegrator(
     def dt(self) -> float:
         return self.method.dt
 
+    @property
+    def total_nsteps(self) -> int:
+        # total number of steps of length dt
+        return round((self.t1 - self.t0) / self.dt)
+
     @abstractmethod
-    def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> Array:
+    def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> PyTree:
         pass
 
     @abstractmethod
@@ -103,7 +108,7 @@ class StochasticSolveFixedStepIntegrator(
         pass
 
     @abstractmethod
-    def sde_y0(self, key: PRNGKeyArray) -> SDEState:
+    def sde_y0(self) -> SDEState:
         # define initial SDE state
         pass
 
@@ -133,7 +138,7 @@ class StochasticSolveFixedStepIntegrator(
         # chunks of 1000 dts to ensure a fixed memory usage
 
         nsteps_per_chunk = 1000
-        nchunks = int(nsteps // nsteps_per_chunk)
+        nchunks = round(nsteps / nsteps_per_chunk)
 
         # iterate over each chunk
         def step(carry, key):  # noqa: ANN001, ANN202
@@ -159,15 +164,12 @@ class StochasticSolveFixedStepIntegrator(
         # === define variables
         # number of save interval
         nsave = len(self.ts) - 1
-        # total number of steps (of length dt)
-        nsteps = int((self.t1 - self.t0) / self.dt)
         # number of steps per save interval
-        nsteps_per_save = int(nsteps // nsave)
+        nsteps_per_save = round(self.total_nsteps / nsave)
 
         # === initial state
         # define initial SDE state
-        key0, key = jax.random.split(self.key)
-        sde_y0 = self.sde_y0(key0)
+        sde_y0 = self.sde_y0()
         # save initial SDE state at time 0
         saved0 = self.save(sde_y0)
 
@@ -179,7 +181,7 @@ class StochasticSolveFixedStepIntegrator(
             return (t, y), self.save(y)
 
         # split the key for each save interval
-        keys = jax.random.split(key, nsave)
+        keys = jax.random.split(self.key, nsave)
         ylast, saved = jax.lax.scan(outer_step, (self.t0, sde_y0), keys)
         ylast = ylast[1]
 
@@ -189,21 +191,17 @@ class StochasticSolveFixedStepIntegrator(
         # postprocess the saved results
         saved = self.postprocess_saved(saved, ylast)
 
-        return self.result(saved, infos=self.Infos(nsteps))
+        return self.result(saved, infos=self.Infos(self.total_nsteps))
 
 
 class JumpState(SDEState):
     """State for the jump SSE/SME fixed step integrators."""
 
     state: QArray  # state (integrated from initial to current time)
-    clicktimes: Array  # click times of shape (nLs, nmaxclick)
-    indices: Array  # last click time indices of shape (nLs,)
-    key_jump_choice: PRNGKeyArray  # random key to sample a click jump operator
-
-    def new_click(self, idx: int, t: float) -> tuple[Array, Array]:
-        clicktimes = self.clicktimes.at[idx, self.indices[idx]].set(t)
-        indices = self.indices.at[idx].add(1)
-        return clicktimes, indices
+    # click indicator of shape (self.total_nsteps): 0 = no click, i + 1 = click of the
+    # i-th jump operator
+    clicks: Array
+    step_idx: int  # step index
 
 
 class JumpSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
@@ -214,27 +212,46 @@ class JumpSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
     def nmeas(self) -> int:
         pass
 
-    def sde_y0(self, key: PRNGKeyArray) -> SDEState:
-        clicktimes = jnp.full((self.nmeas, self.options.nmaxclick), jnp.nan)
-        indices = jnp.zeros(self.nmeas, dtype=int)
-        key_jump_choice = key
-        return JumpState(self.y0, clicktimes, indices, key_jump_choice)
+    def sde_y0(self) -> SDEState:
+        clicks = jnp.full(self.total_nsteps, jnp.nan)
+        return JumpState(self.y0, clicks, 0)
 
-    def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> Array:
-        return jax.random.uniform(key, nsteps)  # sample uniform between 0 and 1
+    def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> PyTree:
+        # Sample a tuple of uniform between 0 and 1 for each step. The first value is
+        # used to sample a click or no click, the second value is used to sample one of
+        # the jump operator when a click occurs.
+        return jax.random.uniform(key, (nsteps, 2))
 
     def save(self, y: PyTree) -> Saved:
         return super().save(y.state)
 
     def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
         saved = super().postprocess_saved(saved, ylast.state)
-        return JumpSolveSaved(saved.ysave, saved.extra, saved.Esave, ylast.clicktimes)
+
+        # convert array of click indicators at each step to array of clicktimes, for
+        # example:
+        #   times = [0, 10, 20, 30, 40, 50]
+        #   clicks = [0, 1, 0, 1, 0, 2]
+        #   => clicktimes = [[10, 30, nan, ...], [50, nan, nan, ...]]
+        clicktimes = jnp.full((self.nmeas, self.options.nmaxclick), jnp.nan)
+        for jump_idx in jnp.arange(self.nmeas):
+            times = self.t0 + jnp.arange(self.total_nsteps) * self.dt
+            times = jnp.where(ylast.clicks == jump_idx + 1, times, jnp.nan).sort()
+            ncopy = min(len(times), clicktimes.shape[1])
+            clicktimes = clicktimes.at[jump_idx, :ncopy].set(times[:ncopy])
+
+        return JumpSolveSaved(saved.ysave, saved.extra, saved.Esave, clicktimes)
 
 
 class JSSESolveFixedStepIntegrator(JumpSolveFixedStepIntegrator, JSSEInterface):
     @property
     def nmeas(self) -> int:
         return len(self.Ls)
+
+
+def _safe_divide(x: ArrayLike, y: ArrayLike) -> ArrayLike:
+    # avoid division by zero by returning 0 when y is 0
+    return jnp.where(y == 0.0, 0.0, x / y)
 
 
 class JSSESolveEulerJumpIntegrator(JSSESolveFixedStepIntegrator):
@@ -246,31 +263,40 @@ class JSSESolveEulerJumpIntegrator(JSSESolveFixedStepIntegrator):
         LdL = L.dag() @ L
 
         exp_LdL = expect(LdL, psi).real
+
+        # === click probabilities
         tmp = exp_LdL * self.dt
         any_click_proba = sum(tmp)
-        L_probas = tmp / any_click_proba
+        # avoid division by zero when the click probability is zero
+        click_probas = _safe_divide(tmp, any_click_proba)
 
-        def click(y: JumpState) -> JumpState:
-            # sample one of the jump operators
-            key, newkey = jax.random.split(y.key_jump_choice)
-            idx = jax.random.choice(key, self.nmeas, p=L_probas)
+        # === click or no click?
+        dN = jax.lax.select(dX[0] < any_click_proba, 1, 0)
 
-            # apply the jump operator
-            psi = L[idx] @ y.state / jnp.sqrt(exp_LdL[idx])
+        # === click
+        # sample one of the jump operators
+        cum_probas = jnp.cumsum(click_probas)
+        jump_idx = jnp.searchsorted(
+            cum_probas, dX[1], side='right', method='compare_all'
+        )
+        # avoid division by zero when the click probability is zero
+        normalisation = _safe_divide(1, jnp.sqrt(exp_LdL[jump_idx]))
+        # apply the jump operator
+        psi_click = L[jump_idx] @ psi * normalisation
 
-            # update click time and index
-            clicktimes, indices = y.new_click(idx, t)
+        # === no click
+        psi_noclick = psi - (
+            self.dt * (1j * H + 0.5 * sum(LdL - exp_LdL[:, None, None] * I)) @ psi
+        )
 
-            return JumpState(psi, clicktimes, indices, newkey)
+        # === update state
+        psi = dN * psi_click + (1 - dN) * psi_noclick
 
-        def noclick(y: JumpState) -> JumpState:
-            psi = y.state
-            psi -= (
-                self.dt * (1j * H + 0.5 * sum(LdL - exp_LdL[:, None, None] * I)) @ psi
-            )
-            return eqx.tree_at(lambda y: y.state, y, psi)
+        # === update click record
+        # 0 for no click, i + 1 for click of the i-th jump operator
+        clicks = y.clicks.at[y.step_idx].set(dN * (jump_idx + 1))
 
-        return jax.lax.cond(dX < any_click_proba, click, noclick, y)
+        return JumpState(psi, clicks, y.step_idx + 1)
 
 
 jssesolve_euler_jump_integrator_constructor = JSSESolveEulerJumpIntegrator
@@ -304,37 +330,46 @@ class JSMESolveEulerJumpIntegrator(JSMESolveFixedStepIntegrator):
         Ccal_rho = thetas * rho + etas * Lm_rho_Lmdag  # (nLm, n, n)
         tr_Ccal_rho = Ccal_rho.trace().real  # (nLm,)
 
-        click_probas = tr_Ccal_rho * self.dt
-        any_click_proba = sum(click_probas)
+        # === click probabilities
+        tmp = tr_Ccal_rho * self.dt
+        any_click_proba = sum(tmp)
+        # avoid division by zero when the click probability is zero
+        click_probas = _safe_divide(tmp, any_click_proba)
 
-        def click(y):  # noqa: ANN001, ANN202
-            # sample one of the jump operators
-            key, newkey = jax.random.split(y.key_jump_choice)
-            idx = jax.random.choice(key, self.nmeas, p=click_probas / any_click_proba)
+        # === click or no click?
+        dN = jax.lax.select(dX[0] < any_click_proba, 1, 0)
 
-            # apply the measurement backaction superoperator
-            rho = Ccal_rho[idx] / tr_Ccal_rho[idx]
+        # === click
+        # sample one of the jump operators
+        cum_probas = jnp.cumsum(click_probas)
+        jump_idx = jnp.searchsorted(
+            cum_probas, dX[1], side='right', method='compare_all'
+        )
+        # avoid division by zero when the click probability is zero
+        normalisation = _safe_divide(1, tr_Ccal_rho[jump_idx])
+        # apply the measurement backaction superoperator
+        rho_click = Ccal_rho[jump_idx] * normalisation
 
-            # update click time and index
-            clicktimes, indices = y.new_click(idx, t)
+        # === no click
+        # compute Lcal(rho), see `MEDiffraxIntegrator` in
+        # `integrators/core/diffrax_integrator.py`
+        Hnh = -1j * H - 0.5 * sum(L.dag() @ L)
+        tmp = Hnh @ rho + 0.5 * sum(Lm_rho_Lmdag)
+        Lcal_rho = tmp + tmp.dag()
+        rho_noclick = (
+            rho
+            + Lcal_rho * self.dt
+            + self.dt * sum(tr_Ccal_rho[:, None, None] * rho - Ccal_rho)
+        )
 
-            return JumpState(rho, clicktimes, indices, newkey)
+        # === update state
+        rho = dN * rho_click + (1 - dN) * rho_noclick
 
-        def noclick(y):  # noqa: ANN001, ANN202
-            rho = y.state
+        # === update click record
+        # 0 for no click, i + 1 for click of the i-th jump operator
+        clicks = y.clicks.at[y.step_idx].set(dN * (jump_idx + 1))
 
-            # === Lcal(rho)
-            # (see MEDiffraxIntegrator in `integrators/core/diffrax_integrator.py`)
-            Hnh = -1j * H - 0.5 * sum(L.dag() @ L)
-            tmp = Hnh @ rho + 0.5 * sum(Lm_rho_Lmdag)
-            Lcal_rho = tmp + tmp.dag()
-
-            rho += Lcal_rho * self.dt + self.dt * sum(
-                tr_Ccal_rho[:, None, None] * rho - Ccal_rho
-            )
-            return eqx.tree_at(lambda y: y.state, y, rho)
-
-        return jax.lax.cond(dX < any_click_proba, click, noclick, y)
+        return JumpState(rho, clicks, y.step_idx + 1)
 
 
 jsmesolve_euler_jump_integrator_constructor = JSMESolveEulerJumpIntegrator
@@ -355,11 +390,11 @@ class DiffusiveSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
     def nmeas(self) -> int:
         pass
 
-    def sde_y0(self, key: PRNGKeyArray) -> SDEState:  # noqa: ARG002
+    def sde_y0(self) -> SDEState:
         # define initial SDE state (state, Y) = (state0, 0)
         return DiffusiveState(self.y0, jnp.zeros(self.nmeas))
 
-    def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> Array:
+    def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> PyTree:
         return jnp.sqrt(self.dt) * jax.random.normal(key, (nsteps, self.nmeas))
 
     def save(self, y: PyTree) -> Saved:
@@ -420,7 +455,7 @@ class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
             + sum(
                 [
                     (_Lpsi - 0.5 * _exp * psi) * _dW
-                    for _L, _Lpsi, _exp, _dW in zip(L, Lpsi, exp, dW, strict=True)
+                    for _Lpsi, _exp, _dW in zip(Lpsi, exp, dW, strict=True)
                 ]
             )
         )
@@ -428,7 +463,58 @@ class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
         return DiffusiveState(psi + dpsi, y.Y + dY)
 
 
+def cholesky_normalize_ket(Ms: list[QArray], psi: QArray) -> jax.Array:
+    # See comment of `cholesky_normalize()`.
+    # For a ket we compute ~M @ psi = M @ T^{†(-1)} @ psi, so we directly replace psi by
+    # T^{†(-1)} @ psi.
+
+    S = sum([M.dag() @ M for M in Ms])
+    T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
+
+    psi = psi.to_jax()[:, 0]  # (n, 1) -> (n,)
+    # solve T^† @ x = psi => x = T^{†(-1)} @ psi
+    return jax.lax.linalg.triangular_solve(
+        T, psi, lower=True, transpose_a=True, conjugate_a=True
+    )[:, None]  # (n,) -> (n, 1)
+
+
+class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
+    """Integrator solving the diffusive SSE with the Rouchon1 method."""
+
+    def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
+        psi = y.state
+        dW = dX
+        L, H = self.L(t), self.H(t)
+        Lpsi = [_L @ psi for _L in L]
+
+        # === measurement Y
+        # dY = <L+Ld> dt + dW
+        # small trick to compute <L+Ld>
+        #   <L+Ld> = <psi|L+Ld|psi >
+        #          = psi.dag() @ (L + Ld) @ psi
+        #          = psi.dag() @ L @ psi + (psi.dag() @ L @ psi).dag()
+        #          = 2 Re[psi.dag() @ Lpsi]
+        exp = jnp.stack(
+            [2 * (psi.dag() @ _Lpsi).squeeze((-1, -2)).real for _Lpsi in Lpsi]
+        )  # (nL)
+        dY = exp * self.dt + dW
+
+        # === state psi
+        Ms_average = MESolveFixedRouchon1Integrator.Ms(
+            H, L, self.dt, self.method.exact_expm
+        )
+        if self.method.normalize:
+            psi = cholesky_normalize_ket(Ms_average, psi)
+
+        M_dY = Ms_average[0] + sum([_dY * _L for _dY, _L in zip(dY, L, strict=True)])
+
+        psi = (M_dY @ psi).unit()  # normalise by signal probability
+
+        return DiffusiveState(psi, y.Y + dY)
+
+
 dssesolve_euler_maruyama_integrator_constructor = DSSESolveEulerMayuramaIntegrator
+dssesolve_rouchon1_integrator_constructor = DSSESolveRouchon1Integrator
 
 
 class DSMEFixedStepIntegrator(DiffusiveSolveFixedStepIntegrator, DSMEInterface):
@@ -488,13 +574,11 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         #   M1 = sqrt(1 - eta) * L sqrt(dt)
         #
         # See comment of `cholesky_normalize()` for the normalisation (computed for the
-        # "average" Kraus operators M0 = I - (iH + 0.5 Ld @ L) dt and M1 = L sqrt(dt)).
+        # "average" Kraus operator).
 
         rho = y.state
         dW = dX
         L, Lc, Lm, H = self.L(t), self.Lc(t), self.Lm(t), self.H(t)
-        I = eye_like(H)
-        LdL = sum([_L.dag() @ _L for _L in L])
 
         # === measurement Y
         # dY_{k+1} = sqrt(eta) Tr[(L+Ld) @ rho_k)] dt + dW
@@ -502,22 +586,28 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         dY = jnp.sqrt(self.etas) * trace * self.dt + dW  # (nLm,)
 
         # === state rho
-        M0 = I - (1j * H + 0.5 * LdL) * self.dt
-        M_dY = M0 + sum(
+        Ms_average = MESolveFixedRouchon1Integrator.Ms(
+            H, L, self.dt, self.method.exact_expm
+        )
+        if self.method.normalize:
+            rho = cholesky_normalize(Ms_average, rho)
+
+        M_dY = Ms_average[0] + sum(
             [
                 jnp.sqrt(eta) * _dY * _Lm
                 for eta, _dY, _Lm in zip(self.etas, dY, Lm, strict=True)
             ]
         )
-        Ms = [
-            jnp.sqrt((1 - eta) * self.dt) * _Lm
-            for eta, _Lm in zip(self.etas, Lm, strict=True)
-        ] + [self.dt * _Lc for _Lc in Lc]
+        Ms = (
+            [M_dY]
+            + [
+                jnp.sqrt((1 - eta) * self.dt) * _Lm
+                for eta, _Lm in zip(self.etas, Lm, strict=True)
+            ]
+            + [self.dt * _Lc for _Lc in Lc]
+        )
 
-        if self.method.normalize:
-            rho = cholesky_normalize(M0, LdL, self.dt, rho)
-
-        rho = M_dY @ rho @ dag(M_dY) + sum([_M @ rho @ dag(_M) for _M in Ms])
+        rho = sum([M @ rho @ M.dag() for M in Ms])
         rho = rho / rho.trace()  # normalise by signal probability
 
         return DiffusiveState(rho, y.Y + dY)

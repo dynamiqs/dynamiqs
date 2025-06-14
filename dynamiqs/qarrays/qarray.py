@@ -351,11 +351,11 @@ class QArray(eqx.Module):
 
         return signm(self)
 
-    def unit(self) -> QArray:
-        return self / self.norm()[..., None, None]
+    def unit(self, *, psd: bool = True) -> QArray:
+        return self / self.norm(psd=psd)[..., None, None]
 
     @abstractmethod
-    def norm(self) -> Array:
+    def norm(self, *, psd: bool = True) -> Array:
         pass
 
     @abstractmethod
