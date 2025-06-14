@@ -202,7 +202,8 @@ def zeros_like(
         dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
             system Hilbert space tensor product. Defaults to `None` (`x.dims` if
             available, single Hilbert space `dims=(n,)` otherwise).
-        layout _(dq.dense, dq.dia or None)_: Matrix layout.
+        layout _(dq.dense, dq.dia or None)_: Overrides the returned matrix layout. If
+            `None`, the layout is the same as `x`.
 
     Returns:
         _(qarray of shape (n, n))_ Null operator, with _n = prod(dims)_.
@@ -232,6 +233,7 @@ def zeros_like(
         - [`dq.zeros()`][dynamiqs.zeros]: returns the null operator.
     """
     xdims = get_dims(x)
+    layout = layout or x.layout
     # todo: we should rather use a _get_shape util that never converts to a jax array
     x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
