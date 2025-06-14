@@ -70,10 +70,10 @@ class DenseQArray(QArray):
         data = jax.scipy.linalg.expm(self.data, max_squarings=max_squarings)
         return replace(self, data=data)
 
-    def norm(self) -> Array:
+    def norm(self, *, psd: bool = True) -> Array:
         from ..utils.general import norm
 
-        return norm(self.data)
+        return norm(self.data, psd=psd)
 
     def trace(self) -> Array:
         return self.data.trace(axis1=-1, axis2=-2)
