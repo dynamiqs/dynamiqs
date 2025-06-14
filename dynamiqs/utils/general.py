@@ -174,9 +174,9 @@ def sinm(x: QArrayLike) -> QArray:
 
 
 def signm(x: QArrayLike) -> QArray:
-    r"""Returns the operator sign function of a hermitian qarray.
+    r"""Returns the operator sign function of a Hermitian qarray.
 
-    The operator sign function $\mathrm{sign}(A)$ of a hermitian matrix $A$ with
+    The operator sign function $\mathrm{sign}(A)$ of a Hermitian matrix $A$ with
     eigendecomposition $A = U\, \text{diag}(\lambda_1,\dots,\lambda_n)\, U^\dagger$,
     with $(\lambda_1,\dots,\lambda_n)\in\R^n$ the eigenvalues of $A$, is defined by
     $$
@@ -185,7 +185,7 @@ def signm(x: QArrayLike) -> QArray:
     where $\mathrm{sign}(x)$ is the sign of $x\in\R$.
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Square hermitian matrix.
+        x _(qarray-like of shape (..., n, n))_: Square Hermitian matrix.
 
     Returns:
         _(qarray of shape (..., n, n))_ Operator sign function of `x`.
@@ -474,28 +474,30 @@ def _expect_single(O: QArray, x: QArray) -> Array:
 
 
 def norm(x: QArrayLike, *, psd: bool = True) -> Array:
-    r"""Returns the norm of a ket, bra, density matrix, or hermitian matrix.
+    r"""Returns the norm of a ket, bra, density matrix, or Hermitian matrix.
 
-    For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a density
-    matrix (if `psd=True`), it is $\tr{\rho}$. Otherwise, for a hermitian
-    matrix (if `psd=False`), it is the trace norm defined by:
+    For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a
+    Hermitian matrix, the returned norm is the trace norm defined by:
     $$
         \\|A\\|_1 = \tr{\sqrt{A^\dag A}} = \sum_i |\lambda_i|
     $$
-    where $\lambda_i$ are the eigenvalues of $A$.
+    where $\lambda_i$ are the eigenvalues of $A$. If $A$ is positive semi-definite (set
+    `psd=True`), for example for a density matrix, the expression reduces to
+    $\|A\|_1 =\tr{A}$.
 
     Args:
         x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
-            density matrix, or hermitian matrix.
-        psd: Whether to assume if `x` is a positive semi-definite matrix. This
-            is only used if the input is a matrix to speed up the computation.
+            density matrix, or Hermitian matrix.
+        psd: Whether `x` is a positive semi-definite matrix. If `True`, returns the
+            trace of `x`, otherwise computes the eigenvalues of `x` to evaluate the
+            norm.
 
     Returns:
         _(array of shape (...))_ Real-valued norm of `x`.
 
     See also:
         - [`dq.unit()`][dynamiqs.unit]: normalize a ket, bra, density matrix, or
-            hermitian matrix to unit norm.
+            Hermitian matrix to unit norm.
 
     Examples:
         For a ket:
@@ -523,15 +525,15 @@ def norm(x: QArrayLike, *, psd: bool = True) -> Array:
 
 
 def unit(x: QArrayLike, *, psd: bool = True) -> QArray:
-    r"""Normalize a ket, bra, density matrix or hermitian matrix to unit norm.
+    r"""Normalize a ket, bra, density matrix or Hermitian matrix to unit norm.
 
     The returned object is divided by its norm (see [`dq.norm()`][dynamiqs.norm]).
 
     Args:
         x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
             or density matrix.
-        psd: Whether to assume if `x` is a positive semi-definite matrix. This
-            is only used if the input is a matrix to speed up the computation.
+        psd: Whether `x` is a positive semi-definite matrix (see
+            [`dq.norm()`][dynamiqs.norm]).
 
     Returns:
         _(qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n))_ Normalized ket,
@@ -539,7 +541,7 @@ def unit(x: QArrayLike, *, psd: bool = True) -> QArray:
 
     See also:
         - [`dq.norm()`][dynamiqs.norm]: returns the norm of a ket, bra, density matrix,
-            or hermitian matrix.
+            or Hermitian matrix.
 
     Examples:
         >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
