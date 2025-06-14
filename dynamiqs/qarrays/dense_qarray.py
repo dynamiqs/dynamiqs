@@ -127,10 +127,10 @@ class DenseQArray(QArray):
     def asdense(self) -> DenseQArray:
         return self
 
-    def assparsedia(self) -> SparseDIAQArray:
+    def assparsedia(self, offsets: tuple[int, ...] | None = None) -> SparseDIAQArray:
         from .sparsedia_qarray import SparseDIAQArray
 
-        offsets, diags = array_to_sparsedia(self.data)
+        offsets, diags = array_to_sparsedia(self.data, offsets)
         return SparseDIAQArray(self.dims, self.vectorized, offsets, diags)
 
     def block_until_ready(self) -> QArray:
