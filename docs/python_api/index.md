@@ -64,6 +64,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - EulerJump
         - EulerMaruyama
         - Rouchon1
+        - Rouchon2
+        - Rouchon3
         - Expm
         - Event
         - JumpMonteCarlo

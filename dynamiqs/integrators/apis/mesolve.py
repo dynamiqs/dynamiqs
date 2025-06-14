@@ -20,6 +20,8 @@ from ...method import (
     Kvaerno5,
     Method,
     Rouchon1,
+    Rouchon2,
+    Rouchon3,
     Tsit5,
 )
 from ...options import Options, check_options
@@ -44,7 +46,11 @@ from ..core.diffrax_integrator import (
 )
 from ..core.expm_integrator import mesolve_expm_integrator_constructor
 from ..core.montecarlo_integrator import mesolve_jumpmontecarlo_integrator_constructor
-from ..core.rouchon_integrator import mesolve_rouchon1_integrator_constructor
+from ..core.rouchon_integrator import (
+    mesolve_rouchon1_integrator_constructor,
+    mesolve_rouchon2_integrator_constructor,
+    mesolve_rouchon3_integrator_constructor,
+)
 
 
 def mesolve(
@@ -98,6 +104,8 @@ def mesolve(
             [`Kvaerno5`][dynamiqs.method.Kvaerno5],
             [`Euler`][dynamiqs.method.Euler],
             [`Rouchon1`][dynamiqs.method.Rouchon1],
+            [`Rouchon2`][dynamiqs.method.Rouchon2],
+            [`Rouchon3`][dynamiqs.method.Rouchon3],
             [`Expm`][dynamiqs.method.Expm],
             [`JumpMonteCarlo`][dynamiqs.method.JumpMonteCarlo]).
         gradient: Algorithm used to compute the gradient. The default is
@@ -283,6 +291,8 @@ def _mesolve(
     integrator_constructors = {
         Euler: mesolve_euler_integrator_constructor,
         Rouchon1: mesolve_rouchon1_integrator_constructor,
+        Rouchon2: mesolve_rouchon2_integrator_constructor,
+        Rouchon3: mesolve_rouchon3_integrator_constructor,
         Dopri5: mesolve_dopri5_integrator_constructor,
         Dopri8: mesolve_dopri8_integrator_constructor,
         Tsit5: mesolve_tsit5_integrator_constructor,

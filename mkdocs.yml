@@ -180,6 +180,8 @@ nav:
               - EulerJump: python_api/method/EulerJump.md
               - EulerMaruyama: python_api/method/EulerMaruyama.md
               - Rouchon1: python_api/method/Rouchon1.md
+              - Rouchon2: python_api/method/Rouchon2.md
+              - Rouchon3: python_api/method/Rouchon3.md
               - Expm: python_api/method/Expm.md
               - Event: python_api/method/Event.md
               - JumpMonteCarlo: python_api/method/JumpMonteCarlo.md

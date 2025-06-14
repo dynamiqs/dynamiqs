@@ -70,10 +70,10 @@ class DenseQArray(QArray):
         data = jax.scipy.linalg.expm(self.data, max_squarings=max_squarings)
         return replace(self, data=data)
 
-    def norm(self) -> Array:
+    def norm(self, *, psd: bool = True) -> Array:
         from ..utils.general import norm
 
-        return norm(self.data)
+        return norm(self.data, psd=psd)
 
     def trace(self) -> Array:
         return self.data.trace(axis1=-1, axis2=-2)
@@ -127,10 +127,10 @@ class DenseQArray(QArray):
     def asdense(self) -> DenseQArray:
         return self
 
-    def assparsedia(self) -> SparseDIAQArray:
+    def assparsedia(self, offsets: tuple[int, ...] | None = None) -> SparseDIAQArray:
         from .sparsedia_qarray import SparseDIAQArray
 
-        offsets, diags = array_to_sparsedia(self.data)
+        offsets, diags = array_to_sparsedia(self.data, offsets)
         return SparseDIAQArray(self.dims, self.vectorized, offsets, diags)
 
     def block_until_ready(self) -> QArray:
