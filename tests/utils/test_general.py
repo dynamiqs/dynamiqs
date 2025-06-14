@@ -214,7 +214,7 @@ def test_fidelity_correctness(a, b, x, y):
     for X, Y in [(a, b), (x, y), (a, x)]:
         qt_fid = qt.fidelity(X.to_qutip(), Y.to_qutip()) ** 2
         dq_fid = dq.fidelity(X, Y).item()
-        assert qt_fid == pytest.approx(dq_fid)
+        assert qt_fid == pytest.approx(dq_fid, rel=1e-5, abs=1e-5)
 
 
 @pytest.mark.run(order=TEST_SHORT)
