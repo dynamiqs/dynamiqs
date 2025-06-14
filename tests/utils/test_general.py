@@ -2,41 +2,19 @@ import jax
 import jax.numpy as jnp
 import pytest
 import qutip as qt
-from jax import Array
 
 import dynamiqs as dq
 
 from ..order import TEST_INSTANT, TEST_SHORT
 
-
-@pytest.fixture
-def x():
-    key = jax.random.PRNGKey(0)
-    return dq.random.dm(key, (4, 4))
-
-
-@pytest.fixture
-def y():
-    key = jax.random.PRNGKey(1)
-    return dq.random.dm(key, (4, 4))
-
-
-@pytest.fixture
-def z():
-    key = jax.random.PRNGKey(2)
-    return dq.random.dm(key, (4, 4))
-
-
-@pytest.fixture
-def a():
-    key = jax.random.PRNGKey(3)
-    return dq.random.ket(key, (4, 1))
-
-
-@pytest.fixture
-def b():
-    key = jax.random.PRNGKey(4)
-    return dq.random.ket(key, (4, 1))
+# prepare inputs
+key = jax.random.PRNGKey(42)
+k1, k2, k3, k4, k5 = jax.random.split(key, 5)
+a = pytest.fixture(lambda: dq.random.ket(k1, (4, 1)))
+b = pytest.fixture(lambda: dq.random.ket(k2, (4, 1)))
+x = pytest.fixture(lambda: dq.random.dm(k3, (4, 4)))
+y = pytest.fixture(lambda: dq.random.dm(k4, (4, 4)))
+z = pytest.fixture(lambda: dq.random.dm(k5, (4, 4)))
 
 
 @pytest.mark.run(order=TEST_INSTANT)
@@ -90,12 +68,13 @@ def test_tracemm(x, y):
 @pytest.mark.run(order=TEST_INSTANT)
 def test_ptrace():
     # prepare inputs
-    keya, keyb, keyx, keyy = jax.random.split(jax.random.PRNGKey(0), 4)
+    key = jax.random.PRNGKey(42)
+    k1, k2, k3, k4 = jax.random.split(key, 4)
 
-    a = dq.random.ket(keya, (5, 1))
-    b = dq.random.ket(keyb, (8, 1))
-    x = dq.random.dm(keyx, (5, 5))
-    y = dq.random.dm(keyy, (8, 8))
+    a = dq.random.ket(k1, (5, 1))
+    b = dq.random.ket(k2, (8, 1))
+    x = dq.random.dm(k3, (5, 5))
+    y = dq.random.dm(k4, (8, 8))
 
     # check that no error is raised while tracing the function
     jax.jit(dq.ptrace, static_argnums=(1,)).trace(a & b, 0)
@@ -103,10 +82,10 @@ def test_ptrace():
 
     # test correctness
     ap = dq.ptrace(a & b, 0)
-    assert jnp.allclose(a.todm().to_jax(), ap.to_jax(), 1e-5)
+    assert jnp.allclose(a.todm().to_jax(), ap.to_jax())
 
     xp = dq.ptrace(x & y, 0)
-    assert jnp.allclose(x.to_jax(), xp.to_jax(), 1e-5)
+    assert jnp.allclose(x.to_jax(), xp.to_jax())
 
 
 @pytest.mark.run(order=TEST_INSTANT)
@@ -116,8 +95,9 @@ def test_tensor(x, y):
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_expect(x, y):
+def test_expect(a, x, y):
     # check that no error is raised while tracing the function
+    jax.jit(dq.expect).trace(x, a)
     jax.jit(dq.expect).trace(x, y)
 
 
@@ -144,7 +124,9 @@ def test_dissipator(x, y):
 @pytest.mark.run(order=TEST_INSTANT)
 def test_lindbladian(x, y, z):
     # check that no error is raised while tracing the function
+    jax.jit(dq.lindbladian).trace(x, [], z)
     jax.jit(dq.lindbladian).trace(x, [y], z)
+    jax.jit(dq.lindbladian).trace(x, [y, y], z)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
@@ -217,110 +199,31 @@ def test_overlap(a, b, x, y):
     jax.jit(dq.overlap).trace(x, y)
 
 
-@pytest.mark.run(order=TEST_SHORT)
-def test_fidelity(a, b, x, y):
-    # check that no error is raised while tracing the function
+@pytest.mark.run(order=TEST_INSTANT)
+def test_fidelity_tracing(a, b, x, y):
+    # === check that no error is raised while tracing the function
     jax.jit(dq.fidelity).trace(a, b)
     jax.jit(dq.fidelity).trace(a, y)
     jax.jit(dq.fidelity).trace(x, b)
     jax.jit(dq.fidelity).trace(x, y)
 
-    # test correctness
-    _test_ket_fidelity_correctness()
-    _test_ket_fidelity_batching()
-    _test_dm_fidelity_correctness()
-    _test_dm_fidelity_batching()
-    _test_ket_dm_fidelity_correctness()
-    _test_ket_dm_fidelity_batching()
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_fidelity_correctness(a, b, x, y):
+    # ket vs ket, dm vs dm, ket vs dm
+    for X, Y in [(a, b), (x, y), (a, x)]:
+        qt_fid = qt.fidelity(X.to_qutip(), Y.to_qutip()) ** 2
+        dq_fid = dq.fidelity(X, Y).item()
+        assert qt_fid == pytest.approx(dq_fid)
 
 
-def _test_ket_fidelity_correctness():
-    n = 8
-
-    # qutip
-    psi = qt.rand_ket(n, seed=42)
-    phi = qt.rand_ket(n, seed=43)
-    qt_fid = qt.fidelity(psi, phi) ** 2
-
-    # Dynamiqs
-    psi = _qobj_to_array(psi)
-    phi = _qobj_to_array(phi)
-    dq_fid = dq.fidelity(psi, phi).item()
-
-    # compare
-    assert qt_fid == pytest.approx(dq_fid)
-
-
-def _test_ket_fidelity_batching():
-    b1, b2, n = 3, 5, 8
-    psi = [[qt.rand_ket(n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, 1)
-    phi = [[qt.rand_ket(n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, 1)
-    psi = _qobj_to_array(psi)
-    phi = _qobj_to_array(phi)
-    assert dq.fidelity(psi, phi).shape == (b1, b2)
-
-
-def _test_dm_fidelity_correctness():
-    n = 8
-
-    # qutip
-    rho = qt.rand_dm(n, n, seed=42)
-    sigma = qt.rand_dm(n, n, seed=43)
-    qt_fid = qt.fidelity(rho, sigma) ** 2
-
-    # Dynamiqs
-    rho = _qobj_to_array(rho)
-    sigma = _qobj_to_array(sigma)
-    dq_fid = dq.fidelity(rho, sigma).item()
-
-    # compare
-    assert qt_fid == pytest.approx(dq_fid, abs=1e-5)
-
-
-def _test_dm_fidelity_batching():
-    b1, b2, n = 3, 5, 8
-    rho = [[qt.rand_dm(n, n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, n)
-    sigma = [[qt.rand_dm(n, n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, n)
-    rho = _qobj_to_array(rho)
-    sigma = _qobj_to_array(sigma)
-    assert dq.fidelity(rho, sigma).shape == (b1, b2)
-
-
-def _test_ket_dm_fidelity_correctness():
-    n = 8
-
-    # qutip
-    psi = qt.rand_ket(n, seed=42)
-    rho = qt.rand_dm(n, n, seed=43)
-    qt_fid = qt.fidelity(psi, rho) ** 2
-
-    # Dynamiqs
-    psi = _qobj_to_array(psi)
-    rho = _qobj_to_array(rho)
-    dq_fid_ket_dm = dq.fidelity(psi, rho).item()
-    dq_fid_dm_ket = dq.fidelity(rho, psi).item()
-
-    # compare
-    assert qt_fid == pytest.approx(dq_fid_ket_dm, abs=1e-6)
-    assert qt_fid == pytest.approx(dq_fid_dm_ket, abs=1e-6)
-
-
-def _test_ket_dm_fidelity_batching():
-    b1, b2, n = 3, 5, 8
-    psi = [[qt.rand_ket(n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n)
-    rho = [[qt.rand_dm(n, n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, n)
-    psi = _qobj_to_array(psi)
-    rho = _qobj_to_array(rho)
-    assert dq.fidelity(rho, psi).shape == (b1, b2)
-    assert dq.fidelity(psi, rho).shape == (b1, b2)
-
-
-def _qobj_to_array(x: qt.Qobj) -> Array:
-    # todo: support QuTiP >= 5.0, remove once https://github.com/qutip/qutip/pull/2533
-    # is merged, and use `jnp.asarray` instead
-    if isinstance(x, list):
-        return jnp.asarray([_qobj_to_array(y) for y in x])
-    return jnp.asarray(x.full())
+@pytest.mark.run(order=TEST_SHORT)
+def test_fidelity_batching(a, b, x, y):
+    b1, b2 = 3, 5
+    batch = lambda X: dq.asqarray(jnp.tile(X.to_jax(), (3, 5, 1, 1)))
+    assert dq.fidelity(batch(a), batch(b)).shape == (b1, b2)
+    assert dq.fidelity(batch(x), batch(y)).shape == (b1, b2)
+    assert dq.fidelity(batch(a), batch(y)).shape == (b1, b2)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
@@ -340,9 +243,9 @@ def test_entropy_vn(a, x):
 @pytest.mark.run(order=TEST_INSTANT)
 def test_bloch_coordinates():
     # prepare inputs
-    keya, keyx = jax.random.split(jax.random.PRNGKey(0), 2)
-    a = dq.random.ket(keya, (2, 1))
-    x = dq.random.dm(keyx, (2, 2))
+    k1, k2 = jax.random.split(jax.random.PRNGKey(42), 2)
+    a = dq.random.ket(k1, (2, 1))
+    x = dq.random.dm(k2, (2, 2))
 
     # check that no error is raised while tracing the function
     jax.jit(dq.bloch_coordinates).trace(a)
