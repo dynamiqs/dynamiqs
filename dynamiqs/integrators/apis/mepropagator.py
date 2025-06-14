@@ -265,7 +265,7 @@ def _mepropagator(
     # todo: replace with vectorized utils constructor for eye
     data = jnp.eye(H.shape[-1] ** 2, dtype=H.dtype)
     # todo: timeqarray should expose dims without having to call at specific time
-    y0 = DenseQArray(H(0.0).dims, True, data)
+    y0 = DenseQArray(H.dims, True, data)
     integrator = integrator_constructor(
         ts=tsave,
         y0=y0,

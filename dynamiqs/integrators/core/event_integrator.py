@@ -77,7 +77,6 @@ class JSSESolveEventIntegrator(
         out_axes = JumpSolveSaved(0, 0, 0, 0)
         f = lambda key: self._solve_single_trajectory(key, noclick_prob)
         saved = jax.vmap(f, 0, out_axes)(self.key)
-        saved = self.reorder_Esave(saved)
         return self.result(saved, infos)
 
     def _solve_noclick(
@@ -201,9 +200,8 @@ class JSSESolveEventIntegrator(
         )
 
         # === return result
-        return JumpSolveSaved(
-            yend.saved.ysave, yend.saved.extra, yend.saved.Esave, yend.clicktimes
-        )
+        saved = self.postprocess_saved(yend.saved, yend.psi[None, ...])
+        return JumpSolveSaved(saved.ysave, saved.extra, saved.Esave, yend.clicktimes)
 
 
 jssesolve_event_integrator_constructor = JSSESolveEventIntegrator
