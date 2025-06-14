@@ -56,13 +56,13 @@ def test_wigner_coherent():
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_tracing():
+def test_wigner_tracing():
     # prepare inputs
     state = dq.coherent(8, 1.0)
     xvec = jnp.linspace(-3, 3, 101)
     yvec = jnp.linspace(-2, 2, 51)
 
-    # check that no error is raised while tracing dq.wigner
+    # check that no error is raised while tracing the function
     jax.jit(dq.wigner).trace(state)
     jax.jit(dq.wigner).trace(state, xvec=xvec)
     jax.jit(dq.wigner).trace(state, yvec=yvec)
