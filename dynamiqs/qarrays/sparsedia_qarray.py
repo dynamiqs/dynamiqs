@@ -212,7 +212,7 @@ class SparseDIAQArray(QArray):
         data = sparsedia_to_array(self.offsets, self.diags)
         return DenseQArray(self.dims, self.vectorized, data)
 
-    def assparsedia(self) -> SparseDIAQArray:
+    def assparsedia(self, offsets: tuple[int, ...] | None = None) -> SparseDIAQArray:
         return self
 
     def block_until_ready(self) -> QArray:
