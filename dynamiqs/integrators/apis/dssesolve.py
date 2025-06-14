@@ -9,7 +9,7 @@ from jaxtyping import ArrayLike, PRNGKeyArray
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...method import EulerMaruyama, Method
+from ...method import EulerMaruyama, Method, Rouchon1
 from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
@@ -24,6 +24,7 @@ from .._utils import (
 )
 from ..core.fixed_step_stochastic_integrator import (
     dssesolve_euler_maruyama_integrator_constructor,
+    dssesolve_rouchon1_integrator_constructor,
 )
 
 
@@ -105,7 +106,8 @@ def dssesolve(
         exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
         method: Method for the integration. No defaults for now, you have to specify a
-            method (supported: [`EulerMaruyama`][dynamiqs.method.EulerMaruyama]).
+            method (supported: [`EulerMaruyama`][dynamiqs.method.EulerMaruyama],
+            [`Rouchon1`][dynamiqs.method.Rouchon1]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
@@ -246,7 +248,7 @@ def dssesolve(
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('tsave', 'method', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('tsave', 'gradient', 'options'))
 def _vectorized_dssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
@@ -258,22 +260,13 @@ def _vectorized_dssesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSSESolveResult:
-    f = _dssesolve_single_trajectory
-
-    # === vectorize function over stochastic trajectories
-    # the input is vectorized over `key`
-    in_axes = (None, None, None, None, 0, None, None, None, None)
-    # the result is vectorized over `_saved`, `infos` and `keys`
-    out_axes = DSSESolveResult.out_axes()
-    f = jax.vmap(f, in_axes, out_axes)
-
-    # === vectorize function
-    # vectorize input over H, Ls and psi0
+    # vectorize input over H, Ls and rho0
     in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, *(None,) * 6)
+    out_axes = DSSESolveResult.out_axes()
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, 0, 0, 0, 0, 0, 0)
-        f = cartesian_vmap(f, in_axes, out_axes, nvmap)
+        f = cartesian_vmap(_dssesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
         nvmap = len(bshape)
@@ -283,9 +276,26 @@ def _vectorized_dssesolve(
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
         psi0 = psi0.broadcast_to(*bshape, n, 1)
         # vectorize the function
-        f = multi_vmap(f, in_axes, out_axes, nvmap)
+        f = multi_vmap(_dssesolve_many_trajectories, in_axes, out_axes, nvmap)
 
-    # === apply vectorized function
+    return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
+
+
+def _dssesolve_many_trajectories(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    psi0: QArray,
+    tsave: Array,
+    keys: PRNGKeyArray,
+    exp_ops: list[QArray] | None,
+    method: Method,
+    gradient: Gradient | None,
+    options: Options,
+) -> DSSESolveResult:
+    # vectorize input over keys
+    in_axes = (None, None, None, None, 0, None, None, None, None)
+    out_axes = DSSESolveResult(None, None, None, None, 0, 0, 0)
+    f = jax.vmap(_dssesolve_single_trajectory, in_axes, out_axes)
     return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
 
@@ -302,7 +312,8 @@ def _dssesolve_single_trajectory(
 ) -> DSSESolveResult:
     # === select integrator constructor
     integrator_constructors = {
-        EulerMaruyama: dssesolve_euler_maruyama_integrator_constructor
+        EulerMaruyama: dssesolve_euler_maruyama_integrator_constructor,
+        Rouchon1: dssesolve_rouchon1_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
     integrator_constructor = integrator_constructors[type(method)]

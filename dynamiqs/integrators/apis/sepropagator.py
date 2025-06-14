@@ -172,7 +172,7 @@ def sepropagator(
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('method', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_sepropagator(
     H: TimeQArray,
     tsave: Array,

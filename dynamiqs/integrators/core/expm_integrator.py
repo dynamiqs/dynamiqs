@@ -13,7 +13,7 @@ from dynamiqs._utils import concatenate_sort
 from ...qarrays.qarray import QArray
 from ...result import Result, Saved
 from ...utils.general import expm
-from ...utils.vectorization import operator_to_vector, slindbladian, vector_to_operator
+from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .._utils import ispwc
 from ..core.abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
@@ -155,12 +155,12 @@ class MESolveExpmIntegrator(MEExpmIntegrator, SolveSaveMixin, SolveInterface):
 
     def __post_init__(self):
         # convert to vectorized form
-        self.y0 = operator_to_vector(self.y0)  # (n^2, 1)
+        self.y0 = vectorize(self.y0)  # (n^2, 1)
 
     def save(self, y: PyTree) -> Saved:
         # TODO: implement bexpect for vectorized operators and convert at the end
         # instead of at each step
-        y = vector_to_operator(y)
+        y = unvectorize(y)
         return super().save(y)
 
 

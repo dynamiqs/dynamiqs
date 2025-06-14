@@ -266,7 +266,7 @@ def dsmesolve(
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('tsave', 'method', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('tsave', 'gradient', 'options'))
 def _vectorized_dsmesolve(
     H: TimeQArray,
     Lcs: list[TimeQArray],
@@ -280,22 +280,13 @@ def _vectorized_dsmesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSMESolveResult:
-    f = _dsmesolve_single_trajectory
-
-    # === vectorize function over stochastic trajectories
-    # the input is vectorized over `key`
-    in_axes = (None, None, None, None, None, None, 0, None, None, None, None)
-    # the result is vectorized over `_saved`, `infos` and `keys`
-    out_axes = DSMESolveResult.out_axes()
-    f = jax.vmap(f, in_axes, out_axes)
-
-    # === vectorize function
     # vectorize input over H and rho0
-    in_axes = (H.in_axes, None, None, None, 0, None, None, None, None, None, None)
+    in_axes = (H.in_axes, None, None, None, 0, *(None,) * 6)
+    out_axes = DSMESolveResult.out_axes()
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, 0, 0, 0, rho0.ndim - 2, 0, 0, 0, 0, 0, 0)
-        f = cartesian_vmap(f, in_axes, out_axes, nvmap)
+        f = cartesian_vmap(_dsmesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
         nvmap = len(bshape)
@@ -304,9 +295,28 @@ def _vectorized_dsmesolve(
         H = H.broadcast_to(*bshape, n, n)
         rho0 = rho0.broadcast_to(*bshape, n, n)
         # vectorize the function
-        f = multi_vmap(f, in_axes, out_axes, nvmap)
+        f = multi_vmap(_dsmesolve_many_trajectories, in_axes, out_axes, nvmap)
 
-    # === apply vectorized function
+    return f(H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, method, gradient, options)
+
+
+def _dsmesolve_many_trajectories(
+    H: TimeQArray,
+    Lcs: list[TimeQArray],
+    Lms: list[TimeQArray],
+    etas: Array,
+    rho0: QArray,
+    tsave: Array,
+    keys: PRNGKeyArray,
+    exp_ops: list[QArray] | None,
+    method: Method,
+    gradient: Gradient | None,
+    options: Options,
+) -> DSMESolveResult:
+    # vectorize input over keys
+    in_axes = (None, None, None, None, None, None, 0, None, None, None, None)
+    out_axes = DSMESolveResult(None, None, None, None, 0, 0, 0)
+    f = jax.vmap(_dsmesolve_single_trajectory, in_axes, out_axes)
     return f(H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, method, gradient, options)
 
 

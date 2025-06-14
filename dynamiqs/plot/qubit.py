@@ -8,7 +8,7 @@ from .._checks import check_shape
 from ..qarrays.qarray import QArrayLike
 from ..qarrays.utils import to_jax
 from ..utils.general import expect
-from ..utils.operators import sigmax, sigmay, sigmaz
+from ..utils.operators import xyz as sigmaxyz
 from .utils import optional_ax
 
 __all__ = ['xyz']
@@ -44,8 +44,7 @@ def xyz(
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
 
     x = jnp.arange(len(states)) if times is None else times
-    sx, sy, sz = sigmax(), sigmay(), sigmaz()
-    y = expect([sx, sy, sz], states).real  # (3, nstates)
+    y = expect(sigmaxyz(), states).real  # (3, nstates)
     y = y.T  # (nstates, 3)
     label = [rf'$\langle \sigma_{k}\rangle$' for k in ['x', 'y', 'z']]
     ax.plot(x, y, label=label)

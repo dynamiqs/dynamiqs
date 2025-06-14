@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import equinox as eqx
 from optimistix import AbstractRootFinder
@@ -12,11 +12,14 @@ __all__ = [
     'Dopri5',
     'Dopri8',
     'Euler',
+    'EulerJump',
     'EulerMaruyama',
     'Expm',
     'Kvaerno3',
     'Kvaerno5',
     'Rouchon1',
+    'Rouchon2',
+    'Rouchon3',
     'Tsit5',
     'Event',
 ]
@@ -113,7 +116,7 @@ class _DEAdaptiveStep(_DEMethod):
     safety_factor: float = 0.9
     min_factor: float = 0.2
     max_factor: float = 5.0
-    max_steps: int = 100_000
+    max_steps: int = eqx.field(static=True, default=100_000)
 
 
 # === public methods options
@@ -148,6 +151,27 @@ class Euler(_DEFixedStep):
         super().__init__(dt)
 
 
+class EulerJump(_DEFixedStep):
+    r"""Euler-Jump method (fixed step size SDE method).
+
+    Args:
+        dt: Fixed time step.
+
+    Note-: Supported gradients
+        This method supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] (default).
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
+
+    # todo: fix static dt (similar issue as static tsave in dssesolve)
+    dt: float = eqx.field(static=True)
+
+    # dummy init to have the signature in the documentation
+    def __init__(self, dt: float):
+        super().__init__(dt)
+
+
 class EulerMaruyama(_DEFixedStep):
     r"""Euler-Maruyama method (fixed step size SDE method).
 
@@ -164,6 +188,9 @@ class EulerMaruyama(_DEFixedStep):
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
 
+    # todo: fix static dt (similar issue as static tsave in dssesolve)
+    dt: float = eqx.field(static=True)
+
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
         super().__init__(dt)
@@ -176,7 +203,10 @@ class Rouchon1(_DEFixedStep):
         dt: Fixed time step.
         normalize: If True, the scheme is trace-preserving to machine precision, which
             is the recommended option because it is much more stable. Otherwise, it is
-            only trace-preserving to first order in $\dt$.
+            only trace-preserving to the scheme order in $\dt$.
+        exact_expm: If True, the scheme uses the exact matrix exponential internally (at
+            the cost of losing sparsity), otherwise it uses a Taylor expansion up to
+            the scheme order.
 
     Note-: Supported gradients
         This method supports differentiation with
@@ -191,24 +221,145 @@ class Rouchon1(_DEFixedStep):
         CheckpointAutograd,
         ForwardAutograd,
     )
-    normalize: bool
+
+    # todo: fix static dt (similar issue as static tsave in dssesolve)
+    dt: float = eqx.field(static=True)
+    normalize: bool = eqx.field(static=True, default=True)
+    exact_expm: bool = eqx.field(static=True, default=False)
 
     # dummy init to have the signature in the documentation
-    def __init__(self, dt: float, normalize: bool = True):
+    def __init__(self, dt: float, normalize: bool = True, exact_expm: bool = False):
         super().__init__(dt)
         self.normalize = normalize
+        self.exact_expm = exact_expm
 
-    # normalize: The default scheme is trace-preserving at first order only. This
-    # parameter sets the normalisation behaviour:
-    # - `None`: The scheme is not normalized.
-    # - `'sqrt'`: The Kraus map is renormalized with a matrix square root. Ideal
-    #   for stiff problems, recommended for time-independent problems.
-    # - `cholesky`: The Kraus map is renormalized at each time step using a Cholesky
-    #   decomposition. Ideal for stiff problems, recommended for time-dependent
-    #   problems.
 
-    # TODO: fix, strings are not valid JAX types
-    # normalize: Literal['sqrt', 'cholesky'] | None = None
+class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
+    r"""Second-order Rouchon method (fixed or adaptive step size ODE method).
+
+    Note:
+        By default the scheme is using adaptive step size. The error is estimated
+        using the difference between the first-order and second-order. To use a fixed
+        step size second-order method (without evaluating the first-order), set the `dt`
+        argument.
+
+    Args:
+        rtol: Relative tolerance.
+        atol: Absolute tolerance.
+        safety_factor: Safety factor for adaptive step sizing.
+        min_factor: Minimum factor for adaptive step sizing.
+        max_factor: Maximum factor for adaptive step sizing.
+        max_steps: Maximum number of steps.
+        dt: Fixed time step, if specified all arguments specific to adaptive step sizing
+            are ignored (`rtol`, `atol`, `safety_factor`, `min_factor`, `max_factor`
+            and `max_steps`).
+        normalize: If True, the scheme is trace-preserving to machine precision, which
+            is the recommended option because it is much more stable. Otherwise, it is
+            only trace-preserving to the scheme order in the numerical step size.
+        exact_expm: If True, the scheme uses the exact matrix exponential internally (at
+            the cost of losing sparsity), otherwise it uses a Taylor expansion up to
+            the scheme order.
+
+    Note-: Supported gradients
+        This method supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default)
+        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
+        Autograd,
+        CheckpointAutograd,
+        ForwardAutograd,
+    )
+
+    normalize: bool = eqx.field(static=True, default=True)
+    exact_expm: bool = eqx.field(static=True, default=False)
+
+    # dummy init to have the signature in the documentation
+    def __init__(
+        self,
+        rtol: float = 1e-6,
+        atol: float = 1e-6,
+        safety_factor: float = 0.9,
+        min_factor: float = 0.2,
+        max_factor: float = 5.0,
+        max_steps: int = 100_000,
+        dt: float | None = None,
+        normalize: bool = True,
+        exact_expm: bool = False,
+    ):
+        _DEFixedStep.__init__(self, dt)
+        _DEAdaptiveStep.__init__(
+            self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
+        )
+        self.normalize = normalize
+        self.exact_expm = exact_expm
+
+
+class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
+    r"""Third-order Rouchon method (fixed or adaptive step size ODE method).
+
+    Note:
+        By default the scheme is using adaptive step size. The error is estimated
+        using the difference between the second-order and third-order. To use a fixed
+        step size third-order method (without evaluating the second-order), set the `dt`
+        argument.
+
+    Args:
+        rtol: Relative tolerance.
+        atol: Absolute tolerance.
+        safety_factor: Safety factor for adaptive step sizing.
+        min_factor: Minimum factor for adaptive step sizing.
+        max_factor: Maximum factor for adaptive step sizing.
+        max_steps: Maximum number of steps.
+        dt: Fixed time step, if specified all arguments specific to adaptive step sizing
+            are ignored (`rtol`, `atol`, `safety_factor`, `min_factor`, `max_factor`
+            and `max_steps`).
+        normalize: If True, the scheme is trace-preserving to machine precision, which
+            is the recommended option because it is much more stable. Otherwise, it is
+            only trace-preserving to the scheme order in the numerical step size.
+        exact_expm: If True, the scheme uses the exact matrix exponential internally (at
+            the cost of losing sparsity), otherwise it uses a Taylor expansion up to
+            the scheme order.
+
+    Note-: Supported gradients
+        This method supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default)
+        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
+        Autograd,
+        CheckpointAutograd,
+        ForwardAutograd,
+    )
+
+    normalize: bool = eqx.field(static=True, default=True)
+    exact_expm: bool = eqx.field(static=True, default=False)
+
+    # dummy init to have the signature in the documentation
+    def __init__(
+        self,
+        rtol: float = 1e-6,
+        atol: float = 1e-6,
+        safety_factor: float = 0.9,
+        min_factor: float = 0.2,
+        max_factor: float = 5.0,
+        max_steps: int = 100_000,
+        dt: float | None = None,
+        normalize: bool = True,
+        exact_expm: bool = False,
+    ):
+        _DEFixedStep.__init__(self, dt)
+        _DEAdaptiveStep.__init__(
+            self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
+        )
+        self.normalize = normalize
+        self.exact_expm = exact_expm
 
 
 class Dopri5(_DEAdaptiveStep):
@@ -463,21 +614,26 @@ class Event(_DEMethod):
         root_finder: Root finder to refine the click times, defaults to `None`
             (precision determined by the integration step size).
         smart_sampling: If `True`, the no-click trajectory is sampled only once, and
-            `result.states` contains only trajectories with one or more clicks. Use
-            `result.noclick_states` to access the no-click trajectory, and
-            `result.noclick_prob` for its associated probability.
+            `result.states` contains only trajectories with one or more clicks.
+            Information about the no-click trajectory are stored in `result.infos`:
+
+            - `result.infos.noclick_states` _(qarray of shape (..., nsave, n, 1))_ -
+                No-click trajectory.
+            - `result.infos.noclick_prob` _(array of shape (...))_ - Probability of
+                the no-click trajectory.
+            - `result.infos.noclick_expects` _(array of shape
+                (..., len(exp_ops), ntsave) or None)_ - No-click trajectory expectation
+                values.
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
-        (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        (default).
     """
 
     noclick_method: Method = Tsit5()
-    root_finder: AbstractRootFinder | None = None
-    smart_sampling: bool = False
+    root_finder: AbstractRootFinder | None = eqx.field(static=True, default=None)
+    smart_sampling: bool = eqx.field(static=True, default=False)
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
         Autograd,
@@ -495,7 +651,3 @@ class Event(_DEMethod):
         self.noclick_method = noclick_method
         self.root_finder = root_finder
         self.smart_sampling = smart_sampling
-
-    # inherit attributes from the noclick_method
-    def __getattr__(self, attr: str) -> Any:
-        return getattr(self.noclick_method, attr)
