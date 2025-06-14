@@ -473,12 +473,12 @@ def _expect_single(O: QArray, x: QArray) -> Array:
         return tracemm(O, x)  # tr(Ox)
 
 
-def norm(x: QArrayLike, *, assume_psd: bool = True) -> Array:
+def norm(x: QArrayLike, *, psd: bool = True) -> Array:
     r"""Returns the norm of a ket, bra, density matrix, or hermitian matrix.
 
     For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a density
-    matrix (if `assume_psd=True`), it is $\tr{\rho}$. Otherwise, for a hermitian
-    matrix (if `assume_psd=False`), it is the trace norm defined by:
+    matrix (if `psd=True`), it is $\tr{\rho}$. Otherwise, for a hermitian
+    matrix (if `psd=False`), it is the trace norm defined by:
     $$
         \\|A\\|_1 = \tr{\sqrt{A^\dag A}} = \sum_i |\lambda_i|
     $$
@@ -487,7 +487,7 @@ def norm(x: QArrayLike, *, assume_psd: bool = True) -> Array:
     Args:
         x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
             density matrix, or hermitian matrix.
-        assume_psd: Whether to assume if `x` is a positive semi-definite matrix. This
+        psd: Whether to assume if `x` is a positive semi-definite matrix. This
             is only used if the input is a matrix to speed up the computation.
 
     Returns:
@@ -514,7 +514,7 @@ def norm(x: QArrayLike, *, assume_psd: bool = True) -> Array:
     if isket(x) or isbra(x):
         return jnp.sqrt((jnp.abs(x.to_jax()) ** 2).sum((-2, -1)))
 
-    if assume_psd:
+    if psd:
         return trace(x).real
 
     x = check_hermitian(x, 'x')
@@ -522,7 +522,7 @@ def norm(x: QArrayLike, *, assume_psd: bool = True) -> Array:
     return jnp.abs(eigvals).sum(-1)
 
 
-def unit(x: QArrayLike, *, assume_psd: bool = True) -> QArray:
+def unit(x: QArrayLike, *, psd: bool = True) -> QArray:
     r"""Normalize a ket, bra, density matrix or hermitian matrix to unit norm.
 
     The returned object is divided by its norm (see [`dq.norm()`][dynamiqs.norm]).
@@ -530,7 +530,7 @@ def unit(x: QArrayLike, *, assume_psd: bool = True) -> QArray:
     Args:
         x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
             or density matrix.
-        assume_psd: Whether to assume if `x` is a positive semi-definite matrix. This
+        psd: Whether to assume if `x` is a positive semi-definite matrix. This
             is only used if the input is a matrix to speed up the computation.
 
     Returns:
@@ -551,7 +551,7 @@ def unit(x: QArrayLike, *, assume_psd: bool = True) -> QArray:
     """
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
-    return x / norm(x, assume_psd=assume_psd)[..., None, None]
+    return x / norm(x, psd=psd)[..., None, None]
 
 
 def dissipator(L: QArrayLike, rho: QArrayLike) -> QArray:
