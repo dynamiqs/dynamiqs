@@ -40,11 +40,6 @@ def asqarray(
 ) -> QArray:
     """Converts a qarray-like into a qarray.
 
-    Because the sparse DIA layout is data-dependent, the function is not compatible with
-    JIT and other JAX transformations when `layout==dq.dia`. The optional `offsets`
-    argument can be passed statically to retrieve compatibility with JAX
-    transformations.
-
     Args:
         x: Object to convert.
         dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
@@ -52,9 +47,10 @@ def asqarray(
             available, single Hilbert space `dims=(n,)` otherwise).
         layout _(dq.dense, dq.dia or None)_: Matrix layout. If `None`, the default
             layout is `dq.dense`, except for qarrays that are directly returned.
-        offsets _(tuple of ints or None)_: If specified, the diagonal offsets in the
-            input `x` object. This argument is used to make the function compatible with
-            JAX transformations.
+        offsets: Offsets of the stored diagonals if `layout==dq.dia`. If `None`, offsets
+            are determined automatically from the matrix structure. This argument can
+            also be explicitly specified to ensure compatibility with JAX
+            transformations, which require static offset values.
 
     Returns:
         Qarray representation of the input.
