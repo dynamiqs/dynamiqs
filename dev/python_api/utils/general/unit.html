@@ -5692,12 +5692,12 @@
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">unit</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">unit</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">psd</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Normalize a ket, bra or density matrix to unit norm.</p>
+        <p>Normalize a ket, bra, density matrix or Hermitian matrix to unit norm.</p>
 <p>The returned object is divided by its norm (see <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.norm&lt;/span&gt;" href="norm.html#dynamiqs.utils.general.norm"><code>dq.norm()</code></a>).</p>
 
     <!-- <p>Parameters:</p> -->
@@ -5712,6 +5712,12 @@
 (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))              </i>
           – <p>Ket, bra
 or density matrix.</p>
+        </li>
+        <li class="field-body">
+          <b>psd</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Whether <code>x</code> is a positive semi-definite matrix (see
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.norm&lt;/span&gt;" href="norm.html#dynamiqs.utils.general.norm"><code>dq.norm()</code></a>).</p>
         </li>
     </ul>
 
@@ -5729,6 +5735,14 @@ bra or density matrix.</p>
       <span class="field-body"><p><em>(qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n))</em> Normalized ket,
 bra or density matrix.</p></span>
 
+<details class="see-also"
+ open >
+  <summary>See also</summary>
+  <ul>
+<li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.norm&lt;/span&gt;" href="norm.html#dynamiqs.utils.general.norm"><code>dq.norm()</code></a>: returns the norm of a ket, bra, density matrix,
+    or Hermitian matrix.</li>
+</ul>
+</details>
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
