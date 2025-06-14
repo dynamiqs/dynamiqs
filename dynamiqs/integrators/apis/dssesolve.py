@@ -9,7 +9,7 @@ from jaxtyping import ArrayLike, PRNGKeyArray
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...method import EulerMaruyama, Method
+from ...method import EulerMaruyama, Method, Rouchon1
 from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
@@ -24,6 +24,7 @@ from .._utils import (
 )
 from ..core.fixed_step_stochastic_integrator import (
     dssesolve_euler_maruyama_integrator_constructor,
+    dssesolve_rouchon1_integrator_constructor,
 )
 
 
@@ -105,7 +106,8 @@ def dssesolve(
         exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
         method: Method for the integration. No defaults for now, you have to specify a
-            method (supported: [`EulerMaruyama`][dynamiqs.method.EulerMaruyama]).
+            method (supported: [`EulerMaruyama`][dynamiqs.method.EulerMaruyama],
+            [`Rouchon1`][dynamiqs.method.Rouchon1]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
@@ -310,7 +312,8 @@ def _dssesolve_single_trajectory(
 ) -> DSSESolveResult:
     # === select integrator constructor
     integrator_constructors = {
-        EulerMaruyama: dssesolve_euler_maruyama_integrator_constructor
+        EulerMaruyama: dssesolve_euler_maruyama_integrator_constructor,
+        Rouchon1: dssesolve_rouchon1_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
     integrator_constructor = integrator_constructors[type(method)]

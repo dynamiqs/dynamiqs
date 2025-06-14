@@ -682,31 +682,6 @@ def sigmaz(*, layout: Layout | None = None) -> QArray:
         return sparsedia_from_dict({0: [1, -1]}, dtype=cdtype())
 
 
-def xyz(*, layout: Layout | None = None) -> QArray:
-    r"""Returns the Pauli $\sigma_x$, $\sigma_y$ and $\sigma_z$ operators.
-
-    Args:
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
-
-    Returns:
-        _(qarray of shape (3, 2, 2))_ Pauli $\sigma_x$, $\sigma_y$ and $\sigma_z$
-            operators.
-
-    Examples:
-        >>> dq.xyz()
-        QArray: shape=(3, 2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=3
-        [[[   ⋅     1.+0.j]
-          [ 1.+0.j    ⋅   ]]
-        <BLANKLINE>
-         [[   ⋅     0.-1.j]
-          [ 0.+1.j    ⋅   ]]
-        <BLANKLINE>
-         [[ 1.+0.j    ⋅   ]
-          [   ⋅    -1.+0.j]]]
-    """
-    return stack([sigmax(layout=layout), sigmay(layout=layout), sigmaz(layout=layout)])
-
-
 def sigmap(*, layout: Layout | None = None) -> QArray:
     r"""Returns the Pauli raising operator $\sigma_+$.
 
@@ -757,6 +732,31 @@ def sigmam(*, layout: Layout | None = None) -> QArray:
         return asqarray(array)
     else:
         return sparsedia_from_dict({-1: [1]}, dtype=cdtype())
+
+
+def xyz(*, layout: Layout | None = None) -> QArray:
+    r"""Returns the Pauli $\sigma_x$, $\sigma_y$ and $\sigma_z$ operators.
+
+    Args:
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+
+    Returns:
+        _(qarray of shape (3, 2, 2))_ Pauli $\sigma_x$, $\sigma_y$ and $\sigma_z$
+            operators.
+
+    Examples:
+        >>> dq.xyz()
+        QArray: shape=(3, 2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=3
+        [[[   ⋅     1.+0.j]
+          [ 1.+0.j    ⋅   ]]
+        <BLANKLINE>
+         [[   ⋅     0.-1.j]
+          [ 0.+1.j    ⋅   ]]
+        <BLANKLINE>
+         [[ 1.+0.j    ⋅   ]
+          [   ⋅    -1.+0.j]]]
+    """
+    return stack([sigmax(layout=layout), sigmay(layout=layout), sigmaz(layout=layout)])
 
 
 def hadamard(n: int = 1) -> QArray:

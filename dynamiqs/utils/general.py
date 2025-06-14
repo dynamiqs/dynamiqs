@@ -1140,7 +1140,7 @@ def bloch_coordinates(x: QArrayLike) -> Array:
         rb, tb = jnp.abs(b), jnp.angle(b)
         r = 1  # for a pure state
         theta = 2 * jnp.acos(ra)
-        phi = tb - ta if rb != 0 else 0.0
+        phi = jax.lax.select(rb != 0, tb - ta, 0.0)
     elif isdm(x):
         # cartesian coordinates
         # see https://en.wikipedia.org/wiki/Bloch_sphere#u,_v,_w_representation
@@ -1150,12 +1150,8 @@ def bloch_coordinates(x: QArrayLike) -> Array:
 
         # spherical coordinates
         r = jnp.linalg.norm(jnp.array([rx, ry, rz]))
-        if r == 0:
-            theta = 0.0
-            phi = 0.0
-        else:
-            theta = jnp.acos(rz / r)
-            phi = jnp.arctan2(ry, rx)
+        theta = jax.lax.select(r == 0, 0.0, jnp.arccos(rz / r))
+        phi = jax.lax.select(r == 0, 0.0, jnp.arctan2(ry, rx))
 
     # map phi to [0, 2pi[
     phi = phi % (2 * jnp.pi)
