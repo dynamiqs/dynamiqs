@@ -104,8 +104,8 @@ def eye_like(
         dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
             system Hilbert space tensor product. Defaults to `None` (`x.dims` if
             available, single Hilbert space `dims=(n,)` otherwise).
-        layout _(dq.dense, dq.dia or None)_: Matrix layout. By default, the layout is
-            the same is `x`
+        layout _(dq.dense, dq.dia or None)_: Overrides the returned matrix layout. If
+            `None`, the layout is the same as `x`.
 
     Returns:
         _(qarray of shape (n, n))_ Identity operator, with _n = prod(dims)_.
