@@ -1756,6 +1756,8 @@
       
         
       
+        
+      
     
     
     
@@ -2081,6 +2083,29 @@
   
   <span class="md-ellipsis">
     Event
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../method/JumpMonteCarlo.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    JumpMonteCarlo
     
   </span>
   
@@ -5852,13 +5877,19 @@ $$</p>
 <p>The continuous-time measurements are defined by the point processes <span class="arithmatex">\(\dd N_k\)</span>. The
 solver returns the times at which the detector clicked,
 <span class="arithmatex">\(I_k = \{t \in [t_0, t_\text{end}[ \,|\, \dd N_k(t)=1\}\)</span>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If you are looking for the equivalent of QuTiP's <code>mcsolve</code>, look no further!
-<code>jssesolve</code> computes the very same quantities, albeit under a different name in
-this library.</p>
-</div>
 
+<details class="note"
+ open >
+  <summary>Note</summary>
+  <p>If you are only interested in simulating trajectories to solve the Lindblad
+master equation, consider using <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.mesolve&lt;/span&gt;" href="mesolve.html#dynamiqs.integrators.mesolve"><code>dq.mesolve()</code></a> with the
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.JumpMonteCarlo&lt;/span&gt;" href="../method/JumpMonteCarlo.html#dynamiqs.method.JumpMonteCarlo"><code>dq.method.JumpMonteCarlo</code></a> method.</p>
+</details>
+<details class="note"
+ open >
+  <summary>Note</summary>
+  <p>This function is the Dynamiqs counterpart of QuTiP's <code>mcsolve()</code> function.</p>
+</details>
     <!-- <p>Parameters:</p> -->
     <p>
       <strong>Parameters</strong>
