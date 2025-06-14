@@ -54,6 +54,10 @@ def test_eye_like():
     _jit_static_layout(dq.eye_like).trace(x, layout=dq.dense)
     _jit_static_layout(dq.eye_like).trace(x, layout=dq.dia)
 
+    # test default layout
+    assert dq.eye_like(dq.sigmax(layout=dq.dense)).layout == dq.dense
+    assert dq.eye_like(dq.sigmax(layout=dq.dia)).layout == dq.dia
+
 
 @pytest.mark.run(order=TEST_INSTANT)
 def test_zeros():
@@ -83,6 +87,10 @@ def test_zeros_like():
     # check that no error is raised while tracing the function
     _jit_static_layout(dq.zeros_like).trace(x, layout=dq.dense)
     _jit_static_layout(dq.zeros_like).trace(x, layout=dq.dia)
+
+    # test default layout
+    assert dq.zeros_like(dq.sigmax(layout=dq.dense)).layout == dq.dense
+    assert dq.zeros_like(dq.sigmax(layout=dq.dia)).layout == dq.dia
 
 
 @pytest.mark.run(order=TEST_INSTANT)
