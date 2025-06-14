@@ -5,17 +5,11 @@ import dynamiqs as dq
 
 from ..order import TEST_INSTANT
 
-
-@pytest.fixture
-def x():
-    key = jax.random.PRNGKey(0)
-    return dq.random.dm(key, (4, 4))
-
-
-@pytest.fixture
-def y():
-    key = jax.random.PRNGKey(1)
-    return dq.random.dm(key, (3, 4, 4))
+# prepare inputs
+key = jax.random.PRNGKey(42)
+k1, k2 = jax.random.split(key, 2)
+x = pytest.fixture(lambda: dq.random.dm(k1, (4, 4)))
+y = pytest.fixture(lambda: dq.random.dm(k2, (3, 4, 4)))
 
 
 @pytest.mark.run(order=TEST_INSTANT)
@@ -65,11 +59,22 @@ def test_sdissipator(x, y):
 @pytest.mark.run(order=TEST_INSTANT)
 def test_slindbladian(x, y):
     # check that no error is raised while tracing the function
+    jax.jit(dq.slindbladian)(x, [])
     jax.jit(dq.slindbladian)(x, [x])
-    jax.jit(dq.slindbladian)(x, [x, x])
-    jax.jit(dq.slindbladian)(y, [x])
-    jax.jit(dq.slindbladian)(y, [x, x])
     jax.jit(dq.slindbladian)(x, [y])
-    jax.jit(dq.slindbladian)(x, [y, y])
+    jax.jit(dq.slindbladian)(x, [x, y])
+
+    jax.jit(dq.slindbladian)(y, [])
+    jax.jit(dq.slindbladian)(y, [x])
     jax.jit(dq.slindbladian)(y, [y])
-    jax.jit(dq.slindbladian)(y, [y, y])
+    jax.jit(dq.slindbladian)(y, [x, y])
+
+    jax.jit(dq.slindbladian)(x, [])
+    jax.jit(dq.slindbladian)(x, [x])
+    jax.jit(dq.slindbladian)(x, [y])
+    jax.jit(dq.slindbladian)(x, [x, y])
+
+    jax.jit(dq.slindbladian)(y, [])
+    jax.jit(dq.slindbladian)(y, [x])
+    jax.jit(dq.slindbladian)(y, [y])
+    jax.jit(dq.slindbladian)(y, [x, y])
