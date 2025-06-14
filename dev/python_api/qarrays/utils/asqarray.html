@@ -5693,7 +5693,11 @@
 
 </h1>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">asqarray</span><span class="p">(</span>
-    <span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span> <span class="n">dims</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">layout</span><span class="p">:</span> <span class="n">Layout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span>
+    <span class="n">dims</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">layout</span><span class="p">:</span> <span class="n">Layout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">offsets</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
 </code></pre></div>
 
@@ -5727,6 +5731,14 @@ available, single Hilbert space <code>dims=(n,)</code> otherwise).</p>
 (dq.dense, dq.dia or None)              </i>
           – <p>Matrix layout. If <code>None</code>, the default
 layout is <code>dq.dense</code>, except for qarrays that are directly returned.</p>
+        </li>
+        <li class="field-body">
+          <b>offsets</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Offsets of the stored diagonals if <code>layout==dq.dia</code>. If <code>None</code>, offsets
+are determined automatically from the matrix structure. This argument can
+also be explicitly specified to ensure compatibility with JAX
+transformations, which require static offset values.</p>
         </li>
     </ul>
 
