@@ -477,8 +477,14 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def assparsedia(self) -> SparseDIAQArray:
+    def assparsedia(self, offsets: tuple[int, ...] | None = None) -> SparseDIAQArray:
         """Converts to a sparse diagonal layout.
+
+        Args:
+            offsets: Offsets of the stored diagonals. If `None`, offsets are determined
+                automatically from the matrix structure. This argument can also be
+                explicitly specified to ensure compatibility with JAX transformations,
+                which require static offset values.
 
         Returns:
             A `SparseDIAQArray`.

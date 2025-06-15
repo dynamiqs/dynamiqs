@@ -226,7 +226,7 @@ class JumpSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
         return super().save(y.state)
 
     def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
-        saved = super().postprocess_saved(saved, ylast.state)
+        saved = super().postprocess_saved(saved, ylast.state[None, :])
 
         # convert array of click indicators at each step to array of clicktimes, for
         # example:
@@ -402,7 +402,7 @@ class DiffusiveSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
         return DiffusiveSolveSaved(saved.ysave, saved.extra, saved.Esave, y.Y)
 
     def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
-        saved = super().postprocess_saved(saved, ylast.state)
+        saved = super().postprocess_saved(saved, ylast.state[None, :])
 
         # The averaged measurement I^{(ta, tb)} is recovered by diffing the measurement
         # I which is integrated between ts[0] and ts[-1]

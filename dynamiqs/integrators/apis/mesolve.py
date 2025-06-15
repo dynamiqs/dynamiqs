@@ -8,13 +8,14 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
+from ..._checks import check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
 from ...method import (
     Dopri5,
     Dopri8,
     Euler,
     Expm,
+    JumpMonteCarlo,
     Kvaerno3,
     Kvaerno5,
     Method,
@@ -44,6 +45,7 @@ from ..core.diffrax_integrator import (
     mesolve_tsit5_integrator_constructor,
 )
 from ..core.expm_integrator import mesolve_expm_integrator_constructor
+from ..core.montecarlo_integrator import mesolve_jumpmontecarlo_integrator_constructor
 from ..core.rouchon_integrator import (
     mesolve_rouchon1_integrator_constructor,
     mesolve_rouchon2_integrator_constructor,
@@ -104,7 +106,8 @@ def mesolve(
             [`Rouchon1`][dynamiqs.method.Rouchon1],
             [`Rouchon2`][dynamiqs.method.Rouchon2],
             [`Rouchon3`][dynamiqs.method.Rouchon3],
-            [`Expm`][dynamiqs.method.Expm]).
+            [`Expm`][dynamiqs.method.Expm],
+            [`JumpMonteCarlo`][dynamiqs.method.JumpMonteCarlo]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
@@ -236,10 +239,6 @@ def mesolve(
     check_options(options, 'mesolve')
     options = options.initialise()
 
-    # === convert rho0 to density matrix
-    rho0 = rho0.todm()
-    rho0 = check_hermitian(rho0, 'rho0')
-
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
     return _vectorized_mesolve(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
@@ -271,7 +270,7 @@ def _vectorized_mesolve(
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
-        rho0 = rho0.broadcast_to(*bshape, n, n)
+        rho0 = rho0.broadcast_to(*bshape, *rho0.shape[-2:])
         # vectorize the function
         f = multi_vmap(_mesolve, in_axes, out_axes, nvmap)
 
@@ -300,6 +299,7 @@ def _mesolve(
         Kvaerno3: mesolve_kvaerno3_integrator_constructor,
         Kvaerno5: mesolve_kvaerno5_integrator_constructor,
         Expm: mesolve_expm_integrator_constructor,
+        JumpMonteCarlo: mesolve_jumpmontecarlo_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
     integrator_constructor = integrator_constructors[type(method)]

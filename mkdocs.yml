@@ -184,6 +184,7 @@ nav:
               - Rouchon3: python_api/method/Rouchon3.md
               - Expm: python_api/method/Expm.md
               - Event: python_api/method/Event.md
+              - JumpMonteCarlo: python_api/method/JumpMonteCarlo.md
           - Gradients (dq.gradient):
               - Autograd: python_api/gradient/Autograd.md
               - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md

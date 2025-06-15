@@ -9,6 +9,7 @@ import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
+from ..._checks import check_hermitian
 from ..._utils import obj_type_str
 from ...gradient import Autograd, CheckpointAutograd, ForwardAutograd, Gradient
 from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
@@ -308,6 +309,11 @@ class MESolveDiffraxIntegrator(MEDiffraxIntegrator, SolveSaveMixin, SolveInterfa
     """Integrator computing the time evolution of the Lindblad master equation using the
     Diffrax library.
     """
+
+    def __post_init__(self):
+        # convert y0 to a density matrix
+        self.y0 = self.y0.todm()
+        self.y0 = check_hermitian(self.y0, 'y0')
 
 
 mesolve_euler_integrator_constructor = partial(

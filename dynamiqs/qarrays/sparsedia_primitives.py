@@ -137,9 +137,18 @@ def _vectorized_diag(diag: Array, offset: int) -> Array:
     return jnp.diag(diag[_sparsedia_slice(offset)], k=offset)
 
 
-def array_to_sparsedia(x: Array) -> tuple[tuple[int, ...], Array]:
-    concrete_or_error(None, x, '`array_to_sparsedia` does not support tracing.')
-    offsets = _find_offsets(x)
+def array_to_sparsedia(
+    x: Array, offsets: tuple[int, ...] | None
+) -> tuple[tuple[int, ...], Array]:
+    if offsets is None:
+        concrete_or_error(
+            None,
+            x,
+            'The `offsets` argument of `array_to_sparsedia` must be statically '
+            'specified to use `array_to_sparsedia` within JAX transformations.',
+        )
+        offsets = _find_offsets(x)
+
     diags = _construct_diags(offsets, x)
     return offsets, diags
 
