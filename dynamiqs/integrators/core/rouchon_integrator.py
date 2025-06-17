@@ -209,13 +209,13 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
         )
 
 
-class MESolveAdaptiveRouchonIntegator(MESolveDiffraxIntegrator):
+class MESolveAdaptiveRouchonIntegrator(MESolveDiffraxIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using an
     adaptive Rouchon method.
     """
 
 
-class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegator):
+class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using the
     adaptive Rouchon 1-2 method.
     """
@@ -252,7 +252,7 @@ class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegator):
         return AbstractRouchonTerm(kraus_map)
 
 
-class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegator):
+class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using the
     adaptive Rouchon 2-3 method.
     """
