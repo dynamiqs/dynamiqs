@@ -6,7 +6,6 @@ from abc import abstractmethod
 import equinox as eqx
 import jax
 import jax.numpy as jnp
-import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
 
@@ -30,15 +29,15 @@ from .save_mixin import SolveSaveMixin
 def _is_multiple_of(
     x: ArrayLike, dt: float, *, rtol: float = 1e-5, atol: float = 1e-5
 ) -> bool:
-    x_rounded = np.round(np.array(x) / dt) * dt
-    return np.allclose(x, x_rounded, rtol=rtol, atol=atol)
+    x_rounded = jnp.round(x / dt) * dt
+    return jnp.allclose(x, x_rounded, rtol=rtol, atol=atol)
 
 
 def _is_linearly_spaced(
     x: ArrayLike, *, rtol: float = 1e-5, atol: float = 1e-5
 ) -> bool:
-    diffs = np.diff(x)
-    return np.allclose(diffs, diffs[0], rtol=rtol, atol=atol)
+    diffs = jnp.diff(x)
+    return jnp.allclose(diffs, diffs[0], rtol=rtol, atol=atol)
 
 
 class SDEState(eqx.Module):
@@ -54,15 +53,27 @@ class StochasticSolveFixedStepIntegrator(
 
     def __check_init__(self):
         # check that all tsave values are exact multiples of dt
-        if not _is_multiple_of(self.ts, self.dt):
-            raise ValueError(
+        self = eqx.tree_at(  # noqa: PLW0642
+            lambda x: x.ts,
+            self,
+            eqx.error_if(
+                self.ts,
+                jnp.logical_not(_is_multiple_of(self.ts, self.dt)),
                 'Argument `tsave` should only contain exact multiples of the method '
-                'fixed step size `dt`.'
-            )
+                'fixed step size `dt`.',
+            ),
+        )
 
         # check that tsave is linearly spaced
-        if not _is_linearly_spaced(self.ts):
-            raise ValueError('Argument `tsave` should be linearly spaced.')
+        self = eqx.tree_at(  # noqa: PLW0642
+            lambda x: x.ts,
+            self,
+            eqx.error_if(
+                self.ts,
+                jnp.logical_not(_is_linearly_spaced(self.ts)),
+                'Argument `tsave` should be linearly spaced.',
+            ),
+        )
 
         # check that options.t0 is not used
         if self.options.t0 is not None:
