@@ -337,17 +337,17 @@ class QArray(eqx.Module):
         pass
 
     def cosm(self) -> QArray:
-        from ..utils import cosm
+        from ..utils import cosm  # noqa: PLC0415
 
         return cosm(self)
 
     def sinm(self) -> QArray:
-        from ..utils import sinm
+        from ..utils import sinm  # noqa: PLC0415
 
         return sinm(self)
 
     def signm(self) -> QArray:
-        from ..utils import signm
+        from ..utils import signm  # noqa: PLC0415
 
         return signm(self)
 
@@ -404,22 +404,22 @@ class QArray(eqx.Module):
         pass
 
     def isket(self) -> bool:
-        from ..utils import isket
+        from ..utils import isket  # noqa: PLC0415
 
         return isket(self)
 
     def isbra(self) -> bool:
-        from ..utils import isbra
+        from ..utils import isbra  # noqa: PLC0415
 
         return isbra(self)
 
     def isdm(self) -> bool:
-        from ..utils import isdm
+        from ..utils import isdm  # noqa: PLC0415
 
         return isdm(self)
 
     def isop(self) -> bool:
-        from ..utils import isop
+        from ..utils import isop  # noqa: PLC0415
 
         return isop(self)
 
@@ -428,22 +428,22 @@ class QArray(eqx.Module):
         pass
 
     def toket(self) -> QArray:
-        from ..utils import toket
+        from ..utils import toket  # noqa: PLC0415
 
         return toket(self)
 
     def tobra(self) -> QArray:
-        from ..utils import tobra
+        from ..utils import tobra  # noqa: PLC0415
 
         return tobra(self)
 
     def todm(self) -> QArray:
-        from ..utils import todm
+        from ..utils import todm  # noqa: PLC0415
 
         return todm(self)
 
     def proj(self) -> QArray:
-        from ..utils import proj
+        from ..utils import proj  # noqa: PLC0415
 
         return proj(self)
 
@@ -562,8 +562,10 @@ class QArray(eqx.Module):
         if isinstance(y, QArray):
             check_compatible_dims(self.dims, y.dims)
 
-        if is_batched_scalar(y):  # noqa: RET503
+        if is_batched_scalar(y):
             raise TypeError('Attempted matrix product between a scalar and a qarray.')
+
+        return None
 
     @abstractmethod
     def __rmatmul__(self, y: QArrayLike) -> QArray:

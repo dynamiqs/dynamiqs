@@ -58,7 +58,7 @@ class DenseQArray(QArray):
         return replace(self, data=data)
 
     def ptrace(self, *keep: int) -> QArray:
-        from ..utils.general import ptrace
+        from ..utils.general import ptrace  # noqa: PLC0415
 
         return ptrace(self.data, keep, self.dims)
 
@@ -71,7 +71,7 @@ class DenseQArray(QArray):
         return replace(self, data=data)
 
     def norm(self, *, psd: bool = True) -> Array:
-        from ..utils.general import norm
+        from ..utils.general import norm  # noqa: PLC0415
 
         return norm(self.data, psd=psd)
 
@@ -128,7 +128,7 @@ class DenseQArray(QArray):
         return self
 
     def assparsedia(self, offsets: tuple[int, ...] | None = None) -> SparseDIAQArray:
-        from .sparsedia_qarray import SparseDIAQArray
+        from .sparsedia_qarray import SparseDIAQArray  # noqa: PLC0415
 
         offsets, diags = array_to_sparsedia(self.data, offsets)
         return SparseDIAQArray(self.dims, self.vectorized, offsets, diags)
@@ -206,7 +206,7 @@ class DenseQArray(QArray):
         return replace(self, data=data)
 
     def elmul(self, y: QArrayLike) -> QArray:
-        from .sparsedia_qarray import SparseDIAQArray
+        from .sparsedia_qarray import SparseDIAQArray  # noqa: PLC0415
 
         super().elmul(y)
 
