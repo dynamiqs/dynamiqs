@@ -681,7 +681,7 @@ class JumpMonteCarlo(_DEMethod):
     """
 
     keys: PRNGKeyArray
-    jsse_method: Method = Event()
+    jsse_method: Method
     jsse_nmaxclick: int = eqx.field(static=True, default=10_000)
 
     # dummy variable, the proper check of gradient support will be done by `jsse_method`
@@ -693,10 +693,7 @@ class JumpMonteCarlo(_DEMethod):
 
     # dummy init to have the signature in the documentation
     def __init__(
-        self,
-        keys: PRNGKeyArray,
-        jsse_method: Method = Event(),  # noqa: B008
-        jsse_nmaxclick: int = 10_000,
+        self, keys: PRNGKeyArray, jsse_method: Method, jsse_nmaxclick: int = 10_000
     ):
         self.keys = keys
         self.jsse_method = jsse_method
