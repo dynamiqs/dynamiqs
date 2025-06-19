@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from typing import ClassVar
 
 import equinox as eqx
@@ -601,13 +600,12 @@ class Event(_DEMethod):
     no-click integration until the subsequent sampled click time.
 
     Warning: Click times precision
-        By default, the click time precision is determined by the no-click integration
-        step size. This can lead to large imprecisions on the click times when the
-        no-click evolution is solved with adaptive step size solvers that can choose
-        to take large step sizes. We strongly recommend to
+        When using adaptive step size solvers for the no-click integration, you must
+        specify either `dtmax` or `root_finder` to control the precision of the click
+        times. Otherwise, the adaptive solver may choose to take very large step sizes,
+        which results in imprecise click times. You can either:
 
-        - specify `dtmax` to limit the maximum step size of the no-click evolution (and
-          thus set the minimum click time precision),
+        - specify `dtmax` to limit the maximum step size of the no-click evolution,
         - or use the `root_finder` argument to refine the exact click times to a chosen
           precision, see for example the
           [optimistix library Newton root finder](https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton).
@@ -676,12 +674,11 @@ class Event(_DEMethod):
             and self.root_finder is None
             and isinstance(self.noclick_method, _DEAdaptiveStep)
         ):
-            warnings.warn(
-                'We recommend specifying either `dtmax` or `root_finder` for the '
+            raise ValueError(
+                'You have to specify either `dtmax` or `root_finder` for the '
                 '`Event` method to control the click times precision when using '
                 'adaptive step size solvers for the no-click integration. See the '
-                '`Event` method documentation for more details.',
-                stacklevel=1,
+                '`Event` method documentation for more details.'
             )
 
 
