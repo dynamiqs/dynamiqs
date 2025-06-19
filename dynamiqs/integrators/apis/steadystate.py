@@ -5,17 +5,15 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
-from jax import Array
-from jaxtyping import ArrayLike
 
-from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
+from ..._checks import check_hermitian, check_qarray_is_dense, check_shape
 from ...gradient import Gradient
 from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import SteadyStateResult
-from ...time_qarray import TimeQArray
+from ...time_qarray import ConstantTimeQArray, TimeQArray
 from .._utils import (
     assert_method_supported,
     astimeqarray,
@@ -24,20 +22,19 @@ from .._utils import (
     multi_vmap,
 )
 from ..core.diffrax_integrator import (
-    mesteadystate_dopri5_integrator_constructor,
-    mesteadystate_dopri8_integrator_constructor,
-    mesteadystate_euler_integrator_constructor,
-    mesteadystate_kvaerno3_integrator_constructor,
-    mesteadystate_kvaerno5_integrator_constructor,
-    mesteadystate_tsit5_integrator_constructor,
+    steadystate_dopri5_integrator_constructor,
+    steadystate_dopri8_integrator_constructor,
+    steadystate_euler_integrator_constructor,
+    steadystate_kvaerno3_integrator_constructor,
+    steadystate_kvaerno5_integrator_constructor,
+    steadystate_tsit5_integrator_constructor,
 )
 
 
-def mesteadystate(
-    H: QArrayLike | TimeQArray,
-    jump_ops: list[QArrayLike | TimeQArray],
+def steadystate(
+    H: QArrayLike | ConstantTimeQArray,
+    jump_ops: list[QArrayLike | ConstantTimeQArray],
     rho0: QArrayLike,
-    tsave: ArrayLike,
     *,
     exp_ops: list[QArrayLike] | None = None,
     method: Method = Tsit5(),  # noqa: B008
@@ -51,14 +48,12 @@ def mesteadystate(
     H = astimeqarray(H)
     Ls = [astimeqarray(L) for L in jump_ops]
     rho0 = asqarray(rho0)
-    tsave = jnp.asarray(tsave)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_steadystate_args(H, Ls, rho0, exp_ops)
-    tsave = check_times(tsave, 'tsave')
-    check_options(options, 'mesteadystate')
+    check_options(options, 'steadystate')
     options = options.initialise()
 
     # === convert rho0 to density matrix
@@ -67,18 +62,15 @@ def mesteadystate(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
-    return _vectorized_mesteadystate(
-        H, Ls, rho0, tsave, exp_ops, method, gradient, options
-    )
+    return _vectorized_steadystate(H, Ls, rho0, exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('gradient', 'options'))
-def _vectorized_mesteadystate(
+def _vectorized_steadystate(
     H: TimeQArray,
     Ls: list[TimeQArray],
     rho0: QArray,
-    tsave: Array,
     exp_ops: list[QArray] | None,
     method: Method,
     gradient: Gradient | None,
@@ -90,7 +82,7 @@ def _vectorized_mesteadystate(
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0.ndim - 2, 0, 0, 0, 0, 0)
-        f = cartesian_vmap(_mesteadystate, in_axes, out_axes, nvmap)
+        f = cartesian_vmap(_steadystate, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, rho0]])
         nvmap = len(bshape)
@@ -100,16 +92,15 @@ def _vectorized_mesteadystate(
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
         rho0 = rho0.broadcast_to(*bshape, n, n)
         # vectorize the function
-        f = multi_vmap(_mesteadystate, in_axes, out_axes, nvmap)
+        f = multi_vmap(_steadystate, in_axes, out_axes, nvmap)
 
-    return f(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
+    return f(H, Ls, rho0, exp_ops, method, gradient, options)
 
 
-def _mesteadystate(
+def _steadystate(
     H: TimeQArray,
     Ls: list[TimeQArray],
     rho0: QArray,
-    tsave: Array,
     exp_ops: list[QArray] | None,
     method: Method,
     gradient: Gradient | None,
@@ -117,12 +108,12 @@ def _mesteadystate(
 ) -> SteadyStateResult:
     # === select integrator constructor
     integrator_constructors = {
-        Euler: mesteadystate_euler_integrator_constructor,
-        Dopri5: mesteadystate_dopri5_integrator_constructor,
-        Dopri8: mesteadystate_dopri8_integrator_constructor,
-        Tsit5: mesteadystate_tsit5_integrator_constructor,
-        Kvaerno3: mesteadystate_kvaerno3_integrator_constructor,
-        Kvaerno5: mesteadystate_kvaerno5_integrator_constructor,
+        Euler: steadystate_euler_integrator_constructor,
+        Dopri5: steadystate_dopri5_integrator_constructor,
+        Dopri8: steadystate_dopri8_integrator_constructor,
+        Tsit5: steadystate_tsit5_integrator_constructor,
+        Kvaerno3: steadystate_kvaerno3_integrator_constructor,
+        Kvaerno5: steadystate_kvaerno5_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
     integrator_constructor = integrator_constructors[type(method)]
@@ -132,7 +123,7 @@ def _mesteadystate(
 
     # === init integrator
     integrator = integrator_constructor(
-        ts=tsave,
+        ts=jnp.array([0.0, jnp.inf]),
         y0=rho0,
         method=method,
         gradient=gradient,

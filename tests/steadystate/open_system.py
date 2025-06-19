@@ -28,43 +28,43 @@ class OpenSystemSteadyState(OpenSystem):
         Ls = self.Ls(params)
         y0 = self.y0(params)
         Es = self.Es(params)
-        return dq.mesteadystate(
-            H,
-            Ls,
-            y0,
-            self.tsave,
-            exp_ops=Es,
-            method=method,
-            gradient=gradient,
-            options=options,
+        return dq.steadystate(
+            H, Ls, y0, exp_ops=Es, method=method, gradient=gradient, options=options
         )
 
 
 class OCavitySteadyState(OCavity, OpenSystemSteadyState):
-    pass
+    def __init__(
+        self, *, n: int, delta: float, alpha0: float, kappa: float, layout: dq.Layout
+    ):
+        super().__init__(
+            n=n,
+            delta=delta,
+            alpha0=alpha0,
+            kappa=kappa,
+            tsave=np.array([jnp.inf]),
+            layout=layout,
+        )
 
 
 class OTDQubitSteadyState(OTDQubit, OpenSystemSteadyState):
-    pass
+    def __init__(self, *, eps: float, omega: float, gamma: float):
+        super().__init__(eps=eps, omega=omega, gamma=gamma, tsave=np.array([jnp.inf]))
 
 
 # # we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null
 # # gradients
 Hz = 2 * jnp.pi
-tsave = np.linspace(0.0, 0.3, 11)
 dense_ocavity = OCavitySteadyState(
-    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dense
+    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, layout=dense
 )
 dia_ocavity = OCavitySteadyState(
-    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dq.dia
+    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, layout=dq.dia
 )
 
-tsave = np.linspace(0.0, 1.0, 11)
-otdqubit = OTDQubitSteadyState(eps=3.0, omega=10.0, gamma=1.0, tsave=tsave)
+otdqubit = OTDQubitSteadyState(eps=3.0, omega=10.0, gamma=1.0)
 
 # steady state solutions
-tsave_steady = np.logspace(-3.0, 5.0, num=11)
-# tsave_steady = np.linspace(0.0, 1e5, 11)
 dense_ocavity_steady = OCavitySteadyState(
-    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave_steady, layout=dense
+    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, layout=dense
 )

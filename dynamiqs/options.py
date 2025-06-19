@@ -96,7 +96,7 @@ def check_options(options: Options, solver_name: str):
         'dssesolve': ('save_states', 'cartesian_batching', 'save_extra'),
         'jsmesolve': ('save_states', 'cartesian_batching', 'save_extra', 'nmaxclick'),
         'dsmesolve': ('save_states', 'cartesian_batching', 'save_extra'),
-        'mesteadystate': (
+        'steadystate': (
             'save_states',
             'cartesian_batching',
             'progress_meter',

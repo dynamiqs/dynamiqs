@@ -309,17 +309,14 @@ mepropagator_kvaerno5_integrator_constructor = partial(
 )
 
 
-class MESteadyStateDiffraxIntegrator(
-    MEDiffraxIntegrator, SolveSaveMixin, SolveInterface
-):
+class SteadyStateDiffraxIntegrator(MEDiffraxIntegrator, SolveSaveMixin, SolveInterface):
     """Diffrax Integrator that stops early upon reaching a steady state condition."""
 
     def run(self) -> Result:
         # === prepare diffrax arguments
         fn = lambda t, y, args: self.save(y)  # noqa: ARG005
-        subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
-        subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-        saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+        subsaveat_a = dx.SubSaveAt(steps=True, fn=fn)  # save solver steps
+        saveat = dx.SaveAt(subs=[subsaveat_a])
 
         steady_state_event = dx.steady_state_event(atol=1e-5, rtol=1e-5)
         event = dx.Event(steady_state_event)  # terminate at steady state
@@ -328,12 +325,12 @@ class MESteadyStateDiffraxIntegrator(
         solution = self.diffeqsolve(self.t0, self.t1, self.y0, saveat, event=event)
 
         # === collect and return results
-        saved = self.postprocess_saved(*solution.ys)
+        saved = self.postprocess_saved(*solution.ys, None)
 
         # if we reached a steady state event, diffrax will return
         # infs for all times and states after the event triggers
-        # Find valid indices where ts is finite (before event triggers)
-        finite_mask = jnp.isfinite(solution.ts[0])
+        # Find valid indices (before event triggers)
+        finite_mask = jnp.isfinite(saved.ysave.to_jax())
         filled = fill_invalid(saved.ysave.to_jax(), finite_mask)
         filled = asqarray(filled)
         saved = eqx.tree_at(lambda x: x.ysave, saved, filled)
@@ -341,21 +338,21 @@ class MESteadyStateDiffraxIntegrator(
         return self.result(saved, infos=self.infos(solution.stats))
 
 
-mesteadystate_euler_integrator_constructor = partial(
-    MESteadyStateDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
+steadystate_euler_integrator_constructor = partial(
+    SteadyStateDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
 )
-mesteadystate_dopri5_integrator_constructor = partial(
-    MESteadyStateDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+steadystate_dopri5_integrator_constructor = partial(
+    SteadyStateDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
 )
-mesteadystate_dopri8_integrator_constructor = partial(
-    MESteadyStateDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+steadystate_dopri8_integrator_constructor = partial(
+    SteadyStateDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
 )
-mesteadystate_tsit5_integrator_constructor = partial(
-    MESteadyStateDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+steadystate_tsit5_integrator_constructor = partial(
+    SteadyStateDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
 )
-mesteadystate_kvaerno3_integrator_constructor = partial(
-    MESteadyStateDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+steadystate_kvaerno3_integrator_constructor = partial(
+    SteadyStateDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
 )
-mesteadystate_kvaerno5_integrator_constructor = partial(
-    MESteadyStateDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+steadystate_kvaerno5_integrator_constructor = partial(
+    SteadyStateDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
 )
