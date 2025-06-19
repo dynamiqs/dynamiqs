@@ -242,7 +242,7 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
          [0. 0. 0. 0. 1. 0.]
          [0. 0. 0. 0. 0. 1.]]
     """  # noqa: E501
-    from .._checks import check_shape
+    from .._checks import check_shape  # noqa: PLC0415
 
     if isinstance(x, Qobj):
         return x
