@@ -592,18 +592,23 @@ class Kvaerno5(_DEAdaptiveStep):
 
 
 class Event(_DEMethod):
-    """Event method for the jump SSE and SME.
+    """Event method for the jump SSE.
 
     This method uses the [Diffrax](https://docs.kidger.site/diffrax/) library event
     handling to interrupt the no-click integration at the next sampled click time,
     apply the corresponding measurement backaction to the state, and continue the
     no-click integration until the subsequent sampled click time.
 
-    Note: Click times precision
-        By default, the click time precision is determined by the integration step size.
-        The exact click time can be refined to a chosen precision by specifying the
-        `root_finder` argument, see for example the
-        [optimistix library Newton root finder](https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton).
+    Warning: Click times precision
+        When using adaptive step size solvers for the no-click integration, you must
+        specify either `dtmax` or `root_finder` to control the precision of the click
+        times. Otherwise, the adaptive solver may choose to take very large step sizes,
+        which results in imprecise click times. You can either:
+
+        - specify `dtmax` to limit the maximum step size of the no-click evolution,
+        - or use the `root_finder` argument to refine the exact click times to a chosen
+          precision, see for example the
+          [optimistix library Newton root finder](https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton).
 
     Args:
         noclick_method: Method for the no-click evolution. Defaults to
@@ -613,6 +618,7 @@ class Event(_DEMethod):
             [`Kvaerno3`][dynamiqs.method.Kvaerno3],
             [`Kvaerno5`][dynamiqs.method.Kvaerno5],
             [`Euler`][dynamiqs.method.Euler]).
+        dtmax: Maximum step size for the no-click evolution, defaults to `None`.
         root_finder: Root finder to refine the click times, defaults to `None`
             (precision determined by the integration step size).
         smart_sampling: If `True`, the no-click trajectory is sampled only once, and
@@ -634,6 +640,7 @@ class Event(_DEMethod):
     """
 
     noclick_method: Method = Tsit5()
+    dtmax: float | None = eqx.field(static=True, default=None)
     root_finder: AbstractRootFinder | None = eqx.field(static=True, default=None)
     smart_sampling: bool = eqx.field(static=True, default=False)
 
@@ -647,12 +654,32 @@ class Event(_DEMethod):
     def __init__(
         self,
         noclick_method: Method = Tsit5(),  # noqa: B008
+        dtmax: float | None = None,
         root_finder: AbstractRootFinder | None = None,
         smart_sampling: bool = False,
     ):
         self.noclick_method = noclick_method
+        self.dtmax = dtmax
         self.root_finder = root_finder
         self.smart_sampling = smart_sampling
+
+        if self.dtmax is not None and isinstance(self.noclick_method, _DEFixedStep):
+            raise ValueError(
+                'Setting `dtmax` is not compatible with fixed step size methods to '
+                'solve the no-click evolution for the `Event` method.'
+            )
+
+        if (
+            self.dtmax is None
+            and self.root_finder is None
+            and isinstance(self.noclick_method, _DEAdaptiveStep)
+        ):
+            raise ValueError(
+                'You have to specify either `dtmax` or `root_finder` for the '
+                '`Event` method to control the click times precision when using '
+                'adaptive step size solvers for the no-click integration. See the '
+                '`Event` method documentation for more details.'
+            )
 
 
 class JumpMonteCarlo(_DEMethod):

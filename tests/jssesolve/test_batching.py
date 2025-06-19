@@ -32,7 +32,8 @@ def test_cartesian_batching(nH, npsi0, nL):
     H, Ls, psi0, Es, kmc = rand_jssesolve_args(n, nH, nLs, npsi0, nEs)
     keys = jax.random.split(kmc, num=ntrajs)
     tsave = jnp.linspace(0.0, 0.1, ntsave)
-    result = dq.jssesolve(H, Ls, psi0, tsave, keys=keys, exp_ops=Es)
+    method = dq.method.Event(dtmax=1e-1)
+    result = dq.jssesolve(H, Ls, psi0, tsave, keys=keys, exp_ops=Es, method=method)
 
     # check result shape
     assert result.states.shape == (*nH, *nL, *npsi0, ntrajs, ntsave, n, 1)
@@ -57,7 +58,10 @@ def test_flat_batching(nL1, npsi0, ntrajs):
     keys = jax.random.split(kmc, num=ntrajs)
     tsave = jnp.linspace(0.0, 0.1, ntsave)
     options = dq.Options(cartesian_batching=False)
-    result = dq.jssesolve(H, Ls, psi0, tsave, keys=keys, exp_ops=Es, options=options)
+    method = dq.method.Event(dtmax=1e-1)
+    result = dq.jssesolve(
+        H, Ls, psi0, tsave, keys=keys, exp_ops=Es, options=options, method=method
+    )
 
     # check result shape
     broadcast_shape = jnp.broadcast_shapes(nH, nL1, npsi0)
