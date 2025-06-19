@@ -214,12 +214,6 @@ class MESolveAdaptiveRouchonIntegrator(MESolveDiffraxIntegrator):
     adaptive Rouchon method.
     """
 
-
-class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
-    """Integrator computing the time evolution of the Lindblad master equation using the
-    adaptive Rouchon 1-2 method.
-    """
-
     @property
     def stepsize_controller(self) -> dx.AbstractStepSizeController:
         # todo: can we do better?
@@ -227,6 +221,12 @@ class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
         # fix incorrect default linear interpolation by stepping exactly at all times
         # in tsave, so interpolation is bypassed
         return replace(stepsize_controller, step_ts=self.ts)
+
+
+class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
+    """Integrator computing the time evolution of the Lindblad master equation using the
+    adaptive Rouchon 1-2 method.
+    """
 
     @property
     def terms(self) -> dx.AbstractTerm:
