@@ -241,11 +241,17 @@ def mesolve(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
-    return _vectorized_mesolve(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
+    f = _vectorized_mesolve
+    if isinstance(method, DiffusiveMonteCarlo):
+        tsave = tuple(tsave.tolist())  # todo: fix static tsave
+        f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
+    else:
+        f = jax.jit(f, static_argnames=('gradient', 'options'))
+
+    return f(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_mesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
