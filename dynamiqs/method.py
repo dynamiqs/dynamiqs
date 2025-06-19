@@ -17,6 +17,7 @@ __all__ = [
     'EulerMaruyama',
     'Expm',
     'JumpMonteCarlo',
+    'DiffusiveMonteCarlo',
     'Kvaerno3',
     'Kvaerno5',
     'Rouchon1',
@@ -701,3 +702,42 @@ class JumpMonteCarlo(_DEMethod):
         self.keys = keys
         self.jsse_method = jsse_method
         self.jsse_nmaxclick = jsse_nmaxclick
+
+
+class DiffusiveMonteCarlo(_DEMethod):
+    """Diffusive Monte Carlo method for the Lindblad master equation.
+
+    This method calls [`dq.dssesolve()`][dynamiqs.dssesolve] to compute stochastic
+    trajectories of the unit-efficiency diffusive unraveling of the Lindblad master
+    equation (ME). These trajectories are then averaged to obtain an approximation of
+    the ME solution.
+
+    Note:
+        This method is solely a wrapper around [`dq.dssesolve()`][dynamiqs.dssesolve].
+        If you are looking for direct access to individual trajectories, use
+        [`dq.dssesolve()`][dynamiqs.dssesolve] instead.
+
+    Args:
+        keys _(list of PRNG keys)_: PRNG keys used for the diffusive SSE solver. See
+            [`dq.dssesolve()`][dynamiqs.dssesolve] for more details.
+        dsse_method: Method used for the diffusive SSE solver. See
+            [`dq.dssesolve()`][dynamiqs.dssesolve] for more details.
+
+    Note-: Supported gradients
+        See the documentation of the chosen `jsse_method`.
+    """
+
+    keys: PRNGKeyArray
+    dsse_method: Method
+
+    # dummy variable, the proper check of gradient support will be done by `jsse_method`
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
+        Autograd,
+        CheckpointAutograd,
+        ForwardAutograd,
+    )
+
+    # dummy init to have the signature in the documentation
+    def __init__(self, keys: PRNGKeyArray, dsse_method: Method):
+        self.keys = keys
+        self.dsse_method = dsse_method

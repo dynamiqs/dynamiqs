@@ -259,6 +259,16 @@ class DiffusiveSolveResult(StochasticSolveResult):
         d = super()._str_parts()
         return d | {'Measurements': _array_str(self.measurements)}
 
+    def mean_states(self) -> QArray:
+        # todo: document
+        return self.states.todm().mean(axis=-4)
+
+    def mean_expects(self) -> Array | None:
+        # todo: document
+        if self.expects is None:
+            return None
+        return self.expects.mean(axis=-3)
+
 
 class DSSESolveResult(DiffusiveSolveResult):
     pass

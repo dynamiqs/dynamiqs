@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import warnings
-from functools import partial
 
 import jax
 import jax.numpy as jnp
@@ -11,6 +10,7 @@ from jaxtyping import ArrayLike
 from ..._checks import check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
 from ...method import (
+    DiffusiveMonteCarlo,
     Dopri5,
     Dopri8,
     Euler,
@@ -45,7 +45,10 @@ from ..core.diffrax_integrator import (
     mesolve_tsit5_integrator_constructor,
 )
 from ..core.expm_integrator import mesolve_expm_integrator_constructor
-from ..core.montecarlo_integrator import mesolve_jumpmontecarlo_integrator_constructor
+from ..core.montecarlo_integrator import (
+    mesolve_diffusivemontecarlo_integrator_constructor,
+    mesolve_jumpmontecarlo_integrator_constructor,
+)
 from ..core.rouchon_integrator import (
     mesolve_rouchon1_integrator_constructor,
     mesolve_rouchon2_integrator_constructor,
@@ -107,7 +110,8 @@ def mesolve(
             [`Rouchon2`][dynamiqs.method.Rouchon2],
             [`Rouchon3`][dynamiqs.method.Rouchon3],
             [`Expm`][dynamiqs.method.Expm],
-            [`JumpMonteCarlo`][dynamiqs.method.JumpMonteCarlo]).
+            [`JumpMonteCarlo`][dynamiqs.method.JumpMonteCarlo],
+            [`DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
@@ -306,6 +310,7 @@ def _mesolve(
         Kvaerno5: mesolve_kvaerno5_integrator_constructor,
         Expm: mesolve_expm_integrator_constructor,
         JumpMonteCarlo: mesolve_jumpmontecarlo_integrator_constructor,
+        DiffusiveMonteCarlo: mesolve_diffusivemontecarlo_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
     integrator_constructor = integrator_constructors[type(method)]
