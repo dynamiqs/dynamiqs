@@ -5720,6 +5720,7 @@
 </h1>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">Event</span><span class="p">(</span>
     <span class="n">noclick_method</span><span class="p">:</span> <span class="n">Method</span> <span class="o">=</span> <span class="n">Tsit5</span><span class="p">(),</span>
+    <span class="n">dtmax</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">root_finder</span><span class="p">:</span> <span class="n">AbstractRootFinder</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">smart_sampling</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span>
@@ -5728,19 +5729,25 @@
     <div class="doc doc-contents first">
 
 
-        <p>Event method for the jump <abbr title="stochastic Schrödinger equation">SSE</abbr> and <abbr title="stochastic master equation">SME</abbr>.</p>
+        <p>Event method for the jump <abbr title="stochastic Schrödinger equation">SSE</abbr>.</p>
 <p>This method uses the <a href="https://docs.kidger.site/diffrax/">Diffrax</a> library event
 handling to interrupt the no-click integration at the next sampled click time,
 apply the corresponding measurement backaction to the state, and continue the
 no-click integration until the subsequent sampled click time.</p>
 
-<details class="note"
+<details class="warning"
  open >
   <summary>Click times precision</summary>
-  <p>By default, the click time precision is determined by the integration step size.
-The exact click time can be refined to a chosen precision by specifying the
-<code>root_finder</code> argument, see for example the
-<a href="https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton">optimistix library Newton root finder</a>.</p>
+  <p>When using adaptive step size solvers for the no-click integration, you must
+specify either <code>dtmax</code> or <code>root_finder</code> to control the precision of the click
+times. Otherwise, the adaptive solver may choose to take very large step sizes,
+which results in imprecise click times. You can either:</p>
+<ul>
+<li>specify <code>dtmax</code> to limit the maximum step size of the no-click evolution,</li>
+<li>or use the <code>root_finder</code> argument to refine the exact click times to a chosen
+  precision, see for example the
+  <a href="https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton">optimistix library Newton root finder</a>.</li>
+</ul>
 </details>
     <!-- <p>Parameters:</p> -->
     <p>
@@ -5757,6 +5764,11 @@ The exact click time can be refined to a chosen precision by specifying the
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Kvaerno3&lt;/span&gt;" href="Kvaerno3.html#dynamiqs.method.Kvaerno3"><code>Kvaerno3</code></a>,
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Kvaerno5&lt;/span&gt;" href="Kvaerno5.html#dynamiqs.method.Kvaerno5"><code>Kvaerno5</code></a>,
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Euler&lt;/span&gt;" href="Euler.html#dynamiqs.method.Euler"><code>Euler</code></a>).</p>
+        </li>
+        <li class="field-body">
+          <b>dtmax</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Maximum step size for the no-click evolution, defaults to <code>None</code>.</p>
         </li>
         <li class="field-body">
           <b>root_finder</b>

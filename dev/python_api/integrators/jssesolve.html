@@ -5831,7 +5831,7 @@
     <span class="n">keys</span><span class="p">:</span> <span class="n">PRNGKeyArray</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">exp_ops</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">QArrayLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">method</span><span class="p">:</span> <span class="n">Method</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(),</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">Method</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">gradient</span><span class="p">:</span> <span class="n">Gradient</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">options</span><span class="p">:</span> <span class="n">Options</span> <span class="o">=</span> <span class="n">Options</span><span class="p">()</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSSESolveResult</span>
@@ -5945,9 +5945,8 @@ operators for which the expectation value is computed.</p>
         <li class="field-body">
           <b>method</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Method for the integration. Defaults to
-<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Event&lt;/span&gt;" href="../method/Event.html#dynamiqs.method.Event"><code>dq.method.Event</code></a> (supported:
-<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Event&lt;/span&gt;" href="../method/Event.html#dynamiqs.method.Event"><code>Event</code></a>,
+          – <p>Method for the integration. No defaults for now, you have to specify a
+method (supported: <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Event&lt;/span&gt;" href="../method/Event.html#dynamiqs.method.Event"><code>Event</code></a>,
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.EulerJump&lt;/span&gt;" href="../method/EulerJump.html#dynamiqs.method.EulerJump"><code>EulerJump</code></a>).</p>
         </li>
         <li class="field-body">
