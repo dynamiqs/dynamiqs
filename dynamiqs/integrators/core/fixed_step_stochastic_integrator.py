@@ -113,21 +113,30 @@ class StochasticSolveFixedStepIntegrator(
         pass
 
     def integrate(
-        self, t0: float, y0: SDEState, key: PRNGKeyArray, nsteps: int
+        self,
+        t0: float,
+        y0: SDEState,
+        key: PRNGKeyArray,
+        nsteps: int,
+        maxsteps: int | None = None,
     ) -> tuple[float, SDEState]:
         # integrate the SDE for nsteps of length dt
+        # in case nsteps is non-static integer, maxsteps should be specified
 
-        # sample random variable driving the SME
-        dXs = self.sample_rv(key, nsteps)
+        # sample random variable driving the SME for nsteps
+        # if maxsteps is specified, sample for maxsteps instead
+        dXs = self.sample_rv(key, nsteps if maxsteps is None else maxsteps)
 
         # iterate over the fixed step size dt
-        def step(carry, dX):  # noqa: ANN001, ANN202
+        def step(i, carry):  # noqa: ANN001, ANN202
             t, y = carry
-            y = self.forward(t, y, dX)
+            y = self.forward(t, y, dXs[i])
             t = t + self.dt
-            return (t, y), None
+            return t, y
 
-        (t, y), _ = jax.lax.scan(step, (t0, y0), dXs)
+        # if nsteps is static, this will be compiled to a lax.scan
+        # if nsteps is non-static, this will be compiled to a lax.while_loop
+        t, y = jax.lax.fori_loop(0, nsteps, step, (t0, y0))
 
         return t, y
 
@@ -141,19 +150,20 @@ class StochasticSolveFixedStepIntegrator(
         nchunks = round(nsteps / nsteps_per_chunk)
 
         # iterate over each chunk
-        def step(carry, key):  # noqa: ANN001, ANN202
-            t, y = carry
-            t, y = self.integrate(t, y, key, nsteps_per_chunk)
-            return (t, y), None
+        def step(_, carry):  # noqa: ANN001, ANN202
+            t, y, key = carry
+            key, chunk_key = jax.random.split(key)
+            t, y = self.integrate(t, y, chunk_key, nsteps_per_chunk)
+            return t, y, key
 
-        # split the key for each chunk
+        # integrate in chunks
+        # because nchunks is traced, the lax.fori_loop is compiled to a lax.while_loop
         key, lastkey = jax.random.split(key)
-        keys = jax.random.split(key, (nchunks,))
-        (t, y), _ = jax.lax.scan(step, (t0, y0), keys)
+        t, y, _ = jax.lax.fori_loop(0, nchunks, step, (t0, y0, key))
 
         # integrate for the remaining number of steps (< nsubsteps)
         nremaining = nsteps % nsteps_per_chunk
-        t, y = self.integrate(t, y, lastkey, nremaining)
+        t, y = self.integrate(t, y, lastkey, nremaining, nsteps_per_chunk)
 
         return t, y
 
