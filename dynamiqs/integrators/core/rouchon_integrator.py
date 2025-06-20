@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from dataclasses import replace
 from itertools import product
 
 import diffrax as dx
@@ -208,7 +209,21 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
         )
 
 
-class MESolveAdaptiveRouchon2Integrator(MESolveDiffraxIntegrator):
+class MESolveAdaptiveRouchonIntegrator(MESolveDiffraxIntegrator):
+    """Integrator computing the time evolution of the Lindblad master equation using an
+    adaptive Rouchon method.
+    """
+
+    @property
+    def stepsize_controller(self) -> dx.AbstractStepSizeController:
+        # todo: can we do better?
+        stepsize_controller = super().stepsize_controller
+        # fix incorrect default linear interpolation by stepping exactly at all times
+        # in tsave, so interpolation is bypassed
+        return replace(stepsize_controller, step_ts=self.ts)
+
+
+class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using the
     adaptive Rouchon 1-2 method.
     """
@@ -237,7 +252,7 @@ class MESolveAdaptiveRouchon2Integrator(MESolveDiffraxIntegrator):
         return AbstractRouchonTerm(kraus_map)
 
 
-class MESolveAdaptiveRouchon3Integrator(MESolveDiffraxIntegrator):
+class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using the
     adaptive Rouchon 2-3 method.
     """

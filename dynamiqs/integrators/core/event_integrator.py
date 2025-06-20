@@ -101,6 +101,7 @@ class JSSESolveEventIntegrator(
             self.discontinuity_ts,
             event=event,
             save=save,
+            dtmax=self.method.dtmax,
         )
 
     def save(self, y: PyTree) -> Saved:

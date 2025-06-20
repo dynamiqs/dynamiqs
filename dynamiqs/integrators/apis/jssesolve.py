@@ -36,7 +36,7 @@ def jssesolve(
     keys: PRNGKeyArray,
     *,
     exp_ops: list[QArrayLike] | None = None,
-    method: Method = Event(),  # noqa: B008
+    method: Method | None = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> JSSESolveResult:
@@ -100,9 +100,8 @@ def jssesolve(
             trajectories.
         exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
-        method: Method for the integration. Defaults to
-            [`dq.method.Event`][dynamiqs.method.Event] (supported:
-            [`Event`][dynamiqs.method.Event],
+        method: Method for the integration. No defaults for now, you have to specify a
+            method (supported: [`Event`][dynamiqs.method.Event],
             [`EulerJump`][dynamiqs.method.EulerJump]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
@@ -240,6 +239,9 @@ def jssesolve(
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'jssesolve')
     options = options.initialise()
+
+    if method is None:
+        raise ValueError('Argument `method` must be specified.')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
