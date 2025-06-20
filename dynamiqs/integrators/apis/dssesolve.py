@@ -241,14 +241,13 @@ def dssesolve(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    tsave = tuple(tsave.tolist())  # todo: fix static tsave
     return _vectorized_dssesolve(
         H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options
     )
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('tsave', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_dssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
