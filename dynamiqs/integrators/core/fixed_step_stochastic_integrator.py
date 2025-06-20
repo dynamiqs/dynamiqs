@@ -132,7 +132,7 @@ class StochasticSolveFixedStepIntegrator(
         maxsteps: int | None = None,
     ) -> tuple[float, SDEState]:
         # integrate the SDE for nsteps of length dt
-        # in case nsteps is non-static integer, maxsteps should be specified
+        # in case nsteps is a non-static integer, maxsteps should be specified
 
         # sample random variable driving the SME for nsteps
         # if maxsteps is specified, sample for maxsteps instead
@@ -174,7 +174,7 @@ class StochasticSolveFixedStepIntegrator(
 
         # integrate for the remaining number of steps (< nsubsteps)
         nremaining = nsteps % nsteps_per_chunk
-        t, y = self.integrate(t, y, lastkey, nremaining, nsteps_per_chunk)
+        t, y = self.integrate(t, y, lastkey, nremaining, maxsteps=nsteps_per_chunk)
 
         return t, y
 
@@ -186,7 +186,7 @@ class StochasticSolveFixedStepIntegrator(
         # number of save interval
         nsave = len(self.ts) - 1
         # number of steps per save interval
-        nsteps_per_save = round(self.total_nsteps / nsave)
+        nsteps_per_save = jnp.round(self.total_nsteps / nsave).astype(int)
 
         # === initial state
         # define initial SDE state
