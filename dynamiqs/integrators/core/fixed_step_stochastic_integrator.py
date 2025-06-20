@@ -104,7 +104,7 @@ class StochasticSolveFixedStepIntegrator(
         return self.method.dt
 
     @property
-    def total_nsteps(self) -> int:
+    def total_nsteps(self) -> Array:
         # total number of steps of length dt
         return round((self.t1 - self.t0) / self.dt)
 
@@ -128,7 +128,7 @@ class StochasticSolveFixedStepIntegrator(
         t0: float,
         y0: SDEState,
         key: PRNGKeyArray,
-        nsteps: int,
+        nsteps: Array | int,
         maxsteps: int | None = None,
     ) -> tuple[float, SDEState]:
         # integrate the SDE for nsteps of length dt
@@ -152,7 +152,7 @@ class StochasticSolveFixedStepIntegrator(
         return t, y
 
     def integrate_by_chunks(
-        self, t0: float, y0: SDEState, key: PRNGKeyArray, nsteps: int
+        self, t0: float, y0: SDEState, key: PRNGKeyArray, nsteps: Array
     ) -> tuple[float, SDEState]:
         # integrate the SDE for nsteps of length dt, splitting the integration in
         # chunks of 1000 dts to ensure a fixed memory usage
