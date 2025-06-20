@@ -203,6 +203,16 @@ class StochasticSolveResult(SolveResult):
     def out_axes(cls) -> SolveResult:
         return cls(None, None, None, None, 0, 0, None)
 
+    def mean_states(self) -> QArray:
+        # todo: document
+        return self.states.todm().mean(axis=-4)
+
+    def mean_expects(self) -> Array | None:
+        # todo: document
+        if self.expects is None:
+            return None
+        return self.expects.mean(axis=-3)
+
 
 class JumpSolveResult(StochasticSolveResult):
     @property
@@ -218,7 +228,6 @@ class JumpSolveResult(StochasticSolveResult):
         return d | {'Clicktimes': _array_str(self.clicktimes)}
 
     def mean_states(self) -> QArray:
-        # todo: document
         if self.method.smart_sampling:
             noclick_prob = self.infos.noclick_prob[..., None, None, None]
             return unit(
@@ -226,10 +235,9 @@ class JumpSolveResult(StochasticSolveResult):
                 + (1 - noclick_prob) * self.states.todm().mean(axis=-4)
             )
         else:
-            return self.states.todm().mean(axis=-4)
+            return super().mean_states()
 
     def mean_expects(self) -> Array | None:
-        # todo: document
         if self.expects is None:
             return None
 
@@ -239,7 +247,7 @@ class JumpSolveResult(StochasticSolveResult):
                 1 - noclick_prob
             ) * self.expects.mean(axis=-3)
         else:
-            return self.expects.mean(axis=-3)
+            return super().mean_expects()
 
 
 class JSSESolveResult(JumpSolveResult):
@@ -258,16 +266,6 @@ class DiffusiveSolveResult(StochasticSolveResult):
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {'Measurements': _array_str(self.measurements)}
-
-    def mean_states(self) -> QArray:
-        # todo: document
-        return self.states.todm().mean(axis=-4)
-
-    def mean_expects(self) -> Array | None:
-        # todo: document
-        if self.expects is None:
-            return None
-        return self.expects.mean(axis=-3)
 
 
 class DSSESolveResult(DiffusiveSolveResult):
