@@ -3,7 +3,6 @@ from __future__ import annotations
 from abc import abstractmethod
 
 import equinox as eqx
-import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PRNGKeyArray, PyTree, Scalar
 
@@ -64,7 +63,6 @@ class StochasticBaseIntegrator(BaseIntegrator):
     key: PRNGKeyArray
 
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        ts = jnp.asarray(self.ts)  # todo: fix static tsave
         return self.result_class(
-            ts, self.method, self.gradient, self.options, saved, infos, self.key
+            self.ts, self.method, self.gradient, self.options, saved, infos, self.key
         )
