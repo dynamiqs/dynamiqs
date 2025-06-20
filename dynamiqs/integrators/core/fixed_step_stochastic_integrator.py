@@ -219,10 +219,14 @@ class JumpState(SDEState):
     """State for the jump SSE/SME fixed step integrators."""
 
     state: QArray  # state (integrated from initial to current time)
-    # click indicator of shape (self.total_nsteps): 0 = no click, i + 1 = click of the
-    # i-th jump operator
-    clicks: Array
     step_idx: int  # step index
+    clicktimes: Array  # click times of shape (nLs, nmaxclick)
+    clickindices: Array  # last click time indices of shape (nLs,)
+
+    def new_click(self, idx: int, t: float) -> tuple[Array, Array]:
+        clicktimes = self.clicktimes.at[idx, self.clickindices[idx]].set(t)
+        clickindices = self.clickindices.at[idx].add(1)
+        return clicktimes, clickindices
 
 
 class JumpSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
@@ -234,8 +238,9 @@ class JumpSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
         pass
 
     def sde_y0(self) -> SDEState:
-        clicks = jnp.full(self.total_nsteps, jnp.nan)
-        return JumpState(self.y0, clicks, 0)
+        clicktimes = jnp.full((len(self.Ls), self.options.nmaxclick), jnp.nan)
+        clickindices = jnp.zeros(len(self.Ls), dtype=int)
+        return JumpState(self.y0, 0, clicktimes, clickindices)
 
     def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> PyTree:
         # Sample a tuple of uniform between 0 and 1 for each step. The first value is
@@ -248,19 +253,7 @@ class JumpSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
 
     def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
         saved = super().postprocess_saved(saved, ylast.state[None, :])
-
-        # convert array of click indicators at each step to array of clicktimes, for
-        # example:
-        #   times = [0, 10, 20, 30, 40, 50]
-        #   clicks = [0, 1, 0, 1, 0, 2]
-        #   => clicktimes = [[10, 30, nan, ...], [50, nan, nan, ...]]
-        clicktimes = jnp.full((self.nmeas, self.options.nmaxclick), jnp.nan)
-        for jump_idx in jnp.arange(self.nmeas):
-            times = self.t0 + jnp.arange(self.total_nsteps) * self.dt
-            times = jnp.where(ylast.clicks == jump_idx + 1, times, jnp.nan).sort()
-            ncopy = min(len(times), clicktimes.shape[1])
-            clicktimes = clicktimes.at[jump_idx, :ncopy].set(times[:ncopy])
-
+        clicktimes = ylast.clicktimes
         return JumpSolveSaved(saved.ysave, saved.extra, saved.Esave, clicktimes)
 
 
@@ -314,10 +307,11 @@ class JSSESolveEulerJumpIntegrator(JSSESolveFixedStepIntegrator):
         psi = dN * psi_click + (1 - dN) * psi_noclick
 
         # === update click record
-        # 0 for no click, i + 1 for click of the i-th jump operator
-        clicks = y.clicks.at[y.step_idx].set(dN * (jump_idx + 1))
+        clicktimes, clickindices = y.new_click(jump_idx, t)
+        clicktimes = jax.lax.select(dN == 1, clicktimes, y.clicktimes)
+        clickindices = jax.lax.select(dN == 1, clickindices, y.clickindices)
 
-        return JumpState(psi, clicks, y.step_idx + 1)
+        return JumpState(psi, y.step_idx + 1, clicktimes, clickindices)
 
 
 jssesolve_euler_jump_integrator_constructor = JSSESolveEulerJumpIntegrator
@@ -387,10 +381,11 @@ class JSMESolveEulerJumpIntegrator(JSMESolveFixedStepIntegrator):
         rho = dN * rho_click + (1 - dN) * rho_noclick
 
         # === update click record
-        # 0 for no click, i + 1 for click of the i-th jump operator
-        clicks = y.clicks.at[y.step_idx].set(dN * (jump_idx + 1))
+        clicktimes, clickindices = y.new_click(jump_idx, t)
+        clicktimes = jax.lax.select(dN == 1, clicktimes, y.clicktimes)
+        clickindices = jax.lax.select(dN == 1, clickindices, y.clickindices)
 
-        return JumpState(rho, clicks, y.step_idx + 1)
+        return JumpState(rho, y.step_idx + 1, clicktimes, clickindices)
 
 
 jsmesolve_euler_jump_integrator_constructor = JSMESolveEulerJumpIntegrator

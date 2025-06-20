@@ -38,14 +38,14 @@ class JumpState(eqx.Module):
     t: float  # current time
     key: PRNGKeyArray  # active key
     clicktimes: Array  # click times of shape (nLs, nmaxclick)
-    indices: Array  # last click time indices of shape (nLs,)
+    clickindices: Array  # last click time indices of shape (nLs,)
     saved: SolveSaved  # saved states, expectation values and extras
     save_index: int
 
     def new_click(self, idx: int, t: float) -> tuple[Array, Array]:
-        clicktimes = self.clicktimes.at[idx, self.indices[idx]].set(t)
-        indices = self.indices.at[idx].add(1)
-        return clicktimes, indices
+        clicktimes = self.clicktimes.at[idx, self.clickindices[idx]].set(t)
+        clickindices = self.clickindices.at[idx].add(1)
+        return clicktimes, clickindices
 
     def new_save(self, new: SolveSaved) -> JumpState:
         idx = self.save_index
@@ -150,7 +150,7 @@ class JSSESolveEventIntegrator(
                 # minval = noclick_prob to ensure that all trajectories are sampled
                 # with at least one click
                 minval = jax.lax.cond(
-                    jnp.any(y.indices > 0), lambda: 0.0, lambda: noclick_prob
+                    jnp.any(y.clickindices > 0), lambda: 0.0, lambda: noclick_prob
                 )
             rand = jax.random.uniform(key_click, minval=minval)
 
@@ -174,19 +174,21 @@ class JSSESolveEventIntegrator(
                 psi = L[idx] @ psi / jnp.sqrt(exp_LdL[idx])
 
                 # update click time and index
-                clicktimes, indices = y.new_click(idx, y.t)
+                clicktimes, clickindices = y.new_click(idx, y.t)
 
-                return replace(y, psi=psi, clicktimes=clicktimes, indices=indices)
+                return replace(
+                    y, psi=psi, clicktimes=clicktimes, clickindices=clickindices
+                )
 
             skip = lambda y: y
             return jax.lax.cond(click_occurred, click, skip, y)
 
         # === prepare the initial state to loop over
         clicktimes = jnp.full((len(self.Ls), self.options.nmaxclick), jnp.nan)
-        indices = jnp.zeros(len(self.Ls), dtype=int)
+        clickindices = jnp.zeros(len(self.Ls), dtype=int)
         y = stack([self.y0] * len(self.ts))
         saved = self.reorder_Esave(self.save(y))
-        y0 = JumpState(self.y0, self.t0, key, clicktimes, indices, saved, 0)
+        y0 = JumpState(self.y0, self.t0, key, clicktimes, clickindices, saved, 0)
 
         # === loop over no-click evolutions until the final time is reached
         loop_condition = lambda y: y.t < self.t1
