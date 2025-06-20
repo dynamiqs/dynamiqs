@@ -185,6 +185,7 @@ nav:
               - Expm: python_api/method/Expm.md
               - Event: python_api/method/Event.md
               - JumpMonteCarlo: python_api/method/JumpMonteCarlo.md
+              - DiffusiveMonteCarlo: python_api/method/DiffusiveMonteCarlo.md
           - Gradients (dq.gradient):
               - Autograd: python_api/gradient/Autograd.md
               - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md
