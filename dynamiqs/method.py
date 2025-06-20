@@ -724,13 +724,13 @@ class DiffusiveMonteCarlo(_DEMethod):
             [`dq.dssesolve()`][dynamiqs.dssesolve] for more details.
 
     Note-: Supported gradients
-        See the documentation of the chosen `jsse_method`.
+        See the documentation of the chosen `dsse_method`.
     """
 
     keys: PRNGKeyArray
     dsse_method: Method
 
-    # dummy variable, the proper check of gradient support will be done by `jsse_method`
+    # dummy variable, the proper check of gradient support will be done by `dsse_method`
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
         Autograd,
         CheckpointAutograd,
