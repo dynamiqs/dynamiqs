@@ -6,7 +6,7 @@ from jax import Array
 from jaxtyping import PRNGKeyArray, PyTree
 
 from .gradient import Gradient
-from .method import Method
+from .method import Event, Method
 from .options import Options
 from .qarrays.qarray import QArray
 from .qarrays.utils import to_jax
@@ -228,26 +228,31 @@ class JumpSolveResult(StochasticSolveResult):
         return d | {'Clicktimes': _array_str(self.clicktimes)}
 
     def mean_states(self) -> QArray:
-        if self.method.smart_sampling:
+        mean_states = super().mean_states()
+
+        if isinstance(self.method, Event) and self.method.smart_sampling:
             noclick_prob = self.infos.noclick_prob[..., None, None, None]
             return unit(
                 noclick_prob * self.infos.noclick_states.todm()
-                + (1 - noclick_prob) * self.states.todm().mean(axis=-4)
+                + (1 - noclick_prob) * mean_states
             )
         else:
-            return super().mean_states()
+            return mean_states
 
     def mean_expects(self) -> Array | None:
         if self.expects is None:
             return None
 
-        if self.method.smart_sampling:
+        mean_expect = super().mean_expects()
+
+        if isinstance(self.method, Event) and self.method.smart_sampling:
             noclick_prob = self.infos.noclick_prob[..., None, None]
-            return noclick_prob * self.infos.noclick_expects + (
-                1 - noclick_prob
-            ) * self.expects.mean(axis=-3)
+            return (
+                noclick_prob * self.infos.noclick_expects
+                + (1 - noclick_prob) * mean_expect
+            )
         else:
-            return super().mean_expects()
+            return mean_expect
 
 
 class JSSESolveResult(JumpSolveResult):
