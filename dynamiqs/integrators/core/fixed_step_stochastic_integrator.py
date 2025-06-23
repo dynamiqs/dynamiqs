@@ -124,30 +124,27 @@ class StochasticSolveFixedStepIntegrator(
         pass
 
     def integrate(
-        self,
-        t0: float,
-        y0: SDEState,
-        key: PRNGKeyArray,
-        nsteps: Array | int,
-        maxsteps: int | None = None,
+        self, t0: float, y0: SDEState, key: PRNGKeyArray, nsteps: Array | int
     ) -> tuple[float, SDEState]:
         # integrate the SDE for nsteps of length dt
         # in case nsteps is a non-static integer, maxsteps should be specified
 
-        # sample random variable driving the SME for nsteps
-        # if maxsteps is specified, sample for maxsteps instead
-        dXs = self.sample_rv(key, nsteps if maxsteps is None else maxsteps)
-
         # iterate over the fixed step size dt
         def step(i, carry):  # noqa: ANN001, ANN202
-            t, y = carry
-            y = self.forward(t, y, dXs[i])
+            t, y, key = carry
+
+            # sample a random variable for the current step
+            key, newkey = jax.random.split(key)
+            dX = self.sample_rv(key, 1)[0]
+
+            # iterate the SDE forward
+            y = self.forward(t, y, dX)
             t = t + self.dt
-            return t, y
+            return t, y, newkey
 
         # if nsteps is static, this will be compiled to a lax.scan
         # if nsteps is non-static, this will be compiled to a lax.while_loop
-        t, y = jax.lax.fori_loop(0, nsteps, step, (t0, y0))
+        t, y, _ = jax.lax.fori_loop(0, nsteps, step, (t0, y0, key))
 
         return t, y
 
@@ -174,7 +171,7 @@ class StochasticSolveFixedStepIntegrator(
 
         # integrate for the remaining number of steps (< nsubsteps)
         nremaining = nsteps % nsteps_per_chunk
-        t, y = self.integrate(t, y, lastkey, nremaining, maxsteps=nsteps_per_chunk)
+        t, y = self.integrate(t, y, lastkey, nremaining)
 
         return t, y
 
