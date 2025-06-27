@@ -88,7 +88,7 @@ def dssesolve(
     returned measurement values for each detector is `len(tsave)-1`.
 
     Warning:
-        For now, `dssesolve()` only supports linearly spaced `tsave` with values that
+        For now, `dssesolve()` only supports `tsave` with values that
         are exact multiples of the method fixed step size `dt`.
 
     Args:

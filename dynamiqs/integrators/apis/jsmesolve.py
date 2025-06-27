@@ -84,7 +84,7 @@ def jsmesolve(
     $I_k = \{t \in [t_0, t_\text{end}[ \,|\, \dd N_k(t)=1\}$.
 
     Warning:
-        For now, `jsmesolve()` only supports linearly spaced `tsave` with values that
+        For now, `jsmesolve()` only supports `tsave` with values that
         are exact multiples of the method fixed step size `dt`.
 
     Args:

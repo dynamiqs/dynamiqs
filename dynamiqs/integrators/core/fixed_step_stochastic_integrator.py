@@ -64,17 +64,6 @@ class StochasticSolveFixedStepIntegrator(
             ),
         )
 
-        # check that tsave is linearly spaced
-        self = eqx.tree_at(  # noqa: PLW0642
-            lambda x: x.ts,
-            self,
-            eqx.error_if(
-                self.ts,
-                jnp.logical_not(_is_linearly_spaced(self.ts)),
-                'Argument `tsave` should be linearly spaced.',
-            ),
-        )
-
         # check that options.t0 is not used
         if self.options.t0 is not None:
             raise ValueError(
@@ -109,7 +98,7 @@ class StochasticSolveFixedStepIntegrator(
         return round((self.t1 - self.t0) / self.dt)
 
     @abstractmethod
-    def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> PyTree:
+    def sample_rv(self, key: PRNGKeyArray) -> PyTree:
         pass
 
     @abstractmethod
@@ -124,55 +113,29 @@ class StochasticSolveFixedStepIntegrator(
         pass
 
     def integrate(
-        self, t0: float, y0: SDEState, key: PRNGKeyArray, nsteps: Array | int
+        self, t0: float, y0: SDEState, save_idx: int, key: PRNGKeyArray
     ) -> tuple[float, SDEState]:
         # integrate the SDE for nsteps of length dt
         # in case nsteps is a non-static integer, maxsteps should be specified
 
         # iterate over the fixed step size dt
-        def step(i, carry):  # noqa: ANN001, ANN202
+        def cond(carry):  # noqa: ANN001, ANN202
+            t, y, key = carry
+            return t < self.ts[save_idx + 1]
+
+        def step(carry):  # noqa: ANN001, ANN202
             t, y, key = carry
 
             # sample a random variable for the current step
             key, newkey = jax.random.split(key)
-            dX = self.sample_rv(key, 1)[0]
+            dX = self.sample_rv(key)
 
             # iterate the SDE forward
             y = self.forward(t, y, dX)
             t = t + self.dt
             return t, y, newkey
 
-        # if nsteps is static, this will be compiled to a lax.scan
-        # if nsteps is non-static, this will be compiled to a lax.while_loop
-        t, y, _ = jax.lax.fori_loop(0, nsteps, step, (t0, y0, key))
-
-        return t, y
-
-    def integrate_by_chunks(
-        self, t0: float, y0: SDEState, key: PRNGKeyArray, nsteps: Array
-    ) -> tuple[float, SDEState]:
-        # integrate the SDE for nsteps of length dt, splitting the integration in
-        # chunks of 1000 dts to ensure a fixed memory usage
-
-        nsteps_per_chunk = 1000
-        nchunks = round(nsteps / nsteps_per_chunk)
-
-        # iterate over each chunk
-        def step(_, carry):  # noqa: ANN001, ANN202
-            t, y, key = carry
-            key, chunk_key = jax.random.split(key)
-            t, y = self.integrate(t, y, chunk_key, nsteps_per_chunk)
-            return t, y, key
-
-        # integrate in chunks
-        # because nchunks is traced, the lax.fori_loop is compiled to a lax.while_loop
-        key, lastkey = jax.random.split(key)
-        t, y, _ = jax.lax.fori_loop(0, nchunks, step, (t0, y0, key))
-
-        # integrate for the remaining number of steps (< nsubsteps)
-        nremaining = nsteps % nsteps_per_chunk
-        t, y = self.integrate(t, y, lastkey, nremaining)
-
+        t, y, _ = jax.lax.while_loop(cond, step, (t0, y0, key))
         return t, y
 
     def run(self) -> Result:
@@ -182,26 +145,23 @@ class StochasticSolveFixedStepIntegrator(
         # === define variables
         # number of save interval
         nsave = len(self.ts) - 1
-        # number of steps per save interval
-        nsteps_per_save = jnp.round(self.total_nsteps / nsave).astype(int)
 
         # === initial state
         # define initial SDE state
-        sde_y0 = self.sde_y0()
+        y0 = self.sde_y0()
         # save initial SDE state at time 0
-        saved0 = self.save(sde_y0)
+        saved0 = self.save(y0)
 
         # === run the simulation
         # integrate the SSE/SME for each save interval
         def outer_step(carry, key):  # noqa: ANN001, ANN202
-            t, y = carry
-            t, y = self.integrate_by_chunks(t, y, key, nsteps_per_save)
-            return (t, y), self.save(y)
+            t, y, save_idx = carry
+            t, y = self.integrate(t, y, save_idx, key)
+            return (t, y, save_idx + 1), self.save(y)
 
         # split the key for each save interval
         keys = jax.random.split(self.key, nsave)
-        ylast, saved = jax.lax.scan(outer_step, (self.t0, sde_y0), keys)
-        ylast = ylast[1]
+        (tlast, ylast, _), saved = jax.lax.scan(outer_step, (self.t0, y0, 0), keys)
 
         # === collect and format results
         # insert the initial saved result
@@ -239,11 +199,11 @@ class JumpSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
         clickindices = jnp.zeros(len(self.Ls), dtype=int)
         return JumpState(self.y0, 0, clicktimes, clickindices)
 
-    def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> PyTree:
+    def sample_rv(self, key: PRNGKeyArray) -> PyTree:
         # Sample a tuple of uniform between 0 and 1 for each step. The first value is
         # used to sample a click or no click, the second value is used to sample one of
         # the jump operator when a click occurs.
-        return jax.random.uniform(key, (nsteps, 2))
+        return jax.random.uniform(key, 2)
 
     def save(self, y: PyTree) -> Saved:
         return super().save(y.state)
@@ -407,8 +367,8 @@ class DiffusiveSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
         # define initial SDE state (state, Y) = (state0, 0)
         return DiffusiveState(self.y0, jnp.zeros(self.nmeas))
 
-    def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> PyTree:
-        return jnp.sqrt(self.dt) * jax.random.normal(key, (nsteps, self.nmeas))
+    def sample_rv(self, key: PRNGKeyArray) -> PyTree:
+        return jnp.sqrt(self.dt) * jax.random.normal(key, self.nmeas)
 
     def save(self, y: PyTree) -> Saved:
         saved = super().save(y.state)
