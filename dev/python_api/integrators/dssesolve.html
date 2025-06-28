@@ -1758,6 +1758,8 @@
       
         
       
+        
+      
     
     
     
@@ -2106,6 +2108,29 @@
   
   <span class="md-ellipsis">
     JumpMonteCarlo
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../method/DiffusiveMonteCarlo.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    DiffusiveMonteCarlo
     
   </span>
   
@@ -5890,6 +5915,13 @@ returned measurement values for each detector is <code>len(tsave)-1</code>.</p>
   <summary>Warning</summary>
   <p>For now, <code>dssesolve()</code> only supports linearly spaced <code>tsave</code> with values that
 are exact multiples of the method fixed step size <code>dt</code>.</p>
+</details>
+<details class="note"
+ open >
+  <summary>Note</summary>
+  <p>If you are only interested in simulating trajectories to solve the Lindblad
+master equation, consider using <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.mesolve&lt;/span&gt;" href="mesolve.html#dynamiqs.integrators.mesolve"><code>dq.mesolve()</code></a> with the
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.DiffusiveMonteCarlo&lt;/span&gt;" href="../method/DiffusiveMonteCarlo.html#dynamiqs.method.DiffusiveMonteCarlo"><code>dq.method.DiffusiveMonteCarlo</code></a> method.</p>
 </details>
     <!-- <p>Parameters:</p> -->
     <p>
