@@ -14,6 +14,7 @@ from ...method import (
     Dopri5,
     Dopri8,
     Euler,
+    EulerJump,
     Expm,
     JumpMonteCarlo,
     Kvaerno3,
@@ -246,7 +247,9 @@ def mesolve(
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
     f = _vectorized_mesolve
-    if isinstance(method, DiffusiveMonteCarlo):
+    if isinstance(method, DiffusiveMonteCarlo) or (
+        isinstance(method, JumpMonteCarlo) and isinstance(method.jsse_method, EulerJump)
+    ):
         tsave = tuple(tsave.tolist())  # todo: fix static tsave
         f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
     else:
