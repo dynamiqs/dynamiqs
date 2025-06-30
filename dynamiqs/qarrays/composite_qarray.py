@@ -251,10 +251,25 @@ class CompositeQArray(QArray):
         return NotImplemented
 
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
-        # TODO: not sure about the implementation
         out = super().__matmul__(y)
         if out is NotImplemented:
             return NotImplemented
+
+        if isinstance(y, CompositeQArray):
+            terms = []
+            for terms_a in self.terms:
+                for terms_b in y.terms:
+                    if len(terms_a) != len(terms_b):
+                        raise ValueError(
+                            'The two `CompositeQArray`s are not compatible.'
+                        )
+
+                    term = tuple(
+                        term_a @ term_b
+                        for term_a, term_b in zip(terms_a, terms_b, strict=False)
+                    )
+                    terms.append(term)
+            return replace(self, terms=terms)
 
         warnings.warn(
             'A `CompositeQArray` has been converted to a `DenseQArray` while attempting'
