@@ -7,6 +7,7 @@ import jax.numpy as jnp
 from jax import Array
 
 from .._checks import check_hermitian, check_shape
+from ..qarrays.composite_qarray import CompositeQArray
 from ..qarrays.qarray import QArray, QArrayLike
 from ..qarrays.utils import asqarray, to_jax
 
@@ -335,7 +336,7 @@ def ptrace(
     return x.ptrace(*keep)
 
 
-def tensor(*args: QArrayLike) -> QArray:
+def tensor(*args: QArrayLike) -> CompositeQArray:
     r"""Returns the tensor product of multiple kets, bras, density matrices or
     operators.
 
@@ -353,8 +354,8 @@ def tensor(*args: QArrayLike) -> QArray:
             Variable length argument list of kets, bras, density matrices or operators.
 
     Returns:
-        _(qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n))_ Tensor product of
-            the input qarrays.
+        _(qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n))_ CompositeQArray
+            containing the tensor product of the input qarrays.
 
     Examples:
         >>> psi = dq.tensor(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
@@ -362,6 +363,12 @@ def tensor(*args: QArrayLike) -> QArray:
         (60, 1)
     """  # noqa: E501
     args = [asqarray(arg) for arg in args]
+
+    if not isinstance(args[0], CompositeQArray):
+        args[0] = CompositeQArray(
+            dims=args[0].dims, vectorized=args[0].vectorized, terms=[(args[0],)]
+        )
+
     return reduce(lambda x, y: x & y, args)  # TODO: (guilmin) use jax.lax.reduce
 
 
