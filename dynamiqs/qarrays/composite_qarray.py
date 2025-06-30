@@ -124,12 +124,9 @@ class CompositeQArray(QArray):
         return replace(self, dims=new_dims, terms=terms)
 
     def powm(self, n: int) -> QArray:
-        warnings.warn(
-            'A `CompositeQArray` has been converted to a `DenseQArray` while attempting'
-            ' to compute its matrix power.',
-            stacklevel=2,
-        )
-        return self.asdense().powm(n=n)
+        if n == 1:
+            return replace(self)
+        return self @ self.powm(n - 1)
 
     def expm(self, *, max_squarings: int = 16) -> QArray:
         warnings.warn(

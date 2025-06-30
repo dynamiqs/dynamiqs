@@ -92,6 +92,12 @@ class TestCompositeQArray:
                 qarray.ptrace(*keep).asdense().data, qarray.asdense().ptrace(*keep).data
             )
 
+    def test_powm(self):
+        actual = self.qarray.powm(3)
+        assert isinstance(actual, CompositeQArray)
+        expected = self.qarray.asdense().powm(3)
+        assert jnp.array_equal(actual.asdense().data, expected.data)
+
     def test_trace(self):
         qarray = CompositeQArray((2, 2), False, [(self.qarray_44, self.qarray_244)])
         assert qarray.trace().shape == (2,)
