@@ -276,6 +276,10 @@ class CompositeQArray(QArray):
     def __and__(self, y: QArray) -> QArray:
         super().__and__(y)
 
+        if isinstance(y, CompositeQArray):
+            terms = [terms_a + terms_b for terms_a in self.terms for terms_b in y.terms]
+            return replace(self, dims=self.dims + y.dims, terms=terms)
+
         dims = self.dims + y.dims
         terms = [(*term, y) for term in self.terms]
         return replace(self, dims=dims, terms=terms)
