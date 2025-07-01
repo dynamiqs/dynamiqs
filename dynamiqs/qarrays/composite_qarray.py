@@ -125,7 +125,7 @@ class CompositeQArray(QArray):
 
     def powm(self, n: int) -> QArray:
         if n == 1:
-            return replace(self)
+            return self
         return self @ self.powm(n - 1)
 
     def expm(self, *, max_squarings: int = 16) -> QArray:
