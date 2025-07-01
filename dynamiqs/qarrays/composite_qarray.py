@@ -256,11 +256,6 @@ class CompositeQArray(QArray):
             terms = []
             for term_a in self.terms:
                 for term_b in y.terms:
-                    if len(term_a) != len(term_b):
-                        raise ValueError(
-                            'The two `CompositeQArray`s are not compatible.'
-                        )
-
                     term = tuple(
                         factor_a @ factor_b
                         for factor_a, factor_b in zip(term_a, term_b, strict=False)
