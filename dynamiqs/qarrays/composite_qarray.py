@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import replace
+from functools import reduce
 from math import prod
 from typing import get_args
 
@@ -201,17 +202,17 @@ class CompositeQArray(QArray):
         return self.asdense().__array__(dtype=dtype, copy=copy)
 
     def asdense(self) -> DenseQArray:
-        from ..utils.general import tensor
-
+        # TODO: (guilmin) use jax.lax.reduce
         return sum(
-            tensor(*(factor.asdense() for factor in term)) for term in self.terms
+            reduce(lambda x, y: x & y, (factor.asdense() for factor in term))
+            for term in self.terms
         )
 
     def assparsedia(self) -> SparseDIAQArray:
-        from ..utils.general import tensor
-
+        # TODO: (guilmin) use jax.lax.reduce
         return sum(
-            tensor(*(factor.assparsedia() for factor in term)) for term in self.terms
+            reduce(lambda x, y: x & y, (factor.assparsedia() for factor in term))
+            for term in self.terms
         )
 
     def block_until_ready(self) -> QArray:
