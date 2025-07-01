@@ -191,20 +191,16 @@ class TestCompositeQArray:
         assert jnp.array_equal(actual.asdense().data, jnp.array([0, 1j, 0, -1]))
 
     def test__and__(self):
-        # \sigma_x + \sigma_z
-        qarray = CompositeQArray((2,), False, [(sigmax(),), (sigmaz(),)])
-
-        # (\sigma_x ⊗ \sigma_y) + (\sigma_z ⊗ \sigma_y)
-        actual = qarray & sigmay()
+        actual = self.qarray & self.qarray
         assert isinstance(actual, CompositeQArray)
+        assert len(actual.terms) == 4
+        # Ensure the terms of the other `CompositeQArray` are flatly added, not nested.
+        assert len(actual.terms[0]) == 4
+        assert not isinstance(actual.terms[0][-1], CompositeQArray)
 
-        assert jnp.array_equal(
-            actual.asdense().data,
-            jnp.array(
-                [[0, -1j, 0, -1j], [1j, 0, 1j, 0], [0, -1j, 0, 1j], [1j, 0, -1j, 0]]
-            ),
-        )
-        assert actual.dims == (2, 2)
+        expected = self.qarray.asdense() & self.qarray.asdense()
+
+        assert jnp.array_equal(actual.asdense().data, expected.data)
 
     def test_addscalar(self):
         actual = self.qarray.addscalar(4)

@@ -282,9 +282,13 @@ class CompositeQArray(QArray):
 
     def __and__(self, y: QArray) -> QArray:
         super().__and__(y)
-
         dims = self.dims + y.dims
-        terms = [(*term, y) for term in self.terms]
+
+        if isinstance(y, CompositeQArray):
+            terms = [terms_a + terms_b for terms_a in self.terms for terms_b in y.terms]
+        else:
+            terms = [(*term, y) for term in self.terms]
+
         return replace(self, dims=dims, terms=terms)
 
     def addscalar(self, y: ArrayLike) -> QArray:
