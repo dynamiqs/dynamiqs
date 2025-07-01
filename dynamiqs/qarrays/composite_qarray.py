@@ -254,16 +254,16 @@ class CompositeQArray(QArray):
 
         if isinstance(y, CompositeQArray):
             terms = []
-            for terms_a in self.terms:
-                for terms_b in y.terms:
-                    if len(terms_a) != len(terms_b):
+            for term_a in self.terms:
+                for term_b in y.terms:
+                    if len(term_a) != len(term_b):
                         raise ValueError(
                             'The two `CompositeQArray`s are not compatible.'
                         )
 
                     term = tuple(
-                        term_a @ term_b
-                        for term_a, term_b in zip(terms_a, terms_b, strict=False)
+                        factor_a @ factor_b
+                        for factor_a, factor_b in zip(term_a, term_b, strict=False)
                     )
                     terms.append(term)
             return replace(self, terms=terms)
