@@ -92,6 +92,12 @@ class TestCompositeQArray:
                 qarray.ptrace(*keep).asdense().data, qarray.asdense().ptrace(*keep).data
             )
 
+    def test_powm(self):
+        actual = self.qarray.powm(3)
+        assert isinstance(actual, CompositeQArray)
+        expected = self.qarray.asdense().powm(3)
+        assert jnp.array_equal(actual.asdense().data, expected.data)
+
     def test_trace(self):
         qarray = CompositeQArray((2, 2), False, [(self.qarray_44, self.qarray_244)])
         assert qarray.trace().shape == (2,)
@@ -166,7 +172,19 @@ class TestCompositeQArray:
             ),
         )
 
-    def test__matmul__(self):
+    def test__matmul__composite(self):
+        q1 = CompositeQArray(
+            (2, 2), False, [(sigmax(), sigmay()), (sigmaz(), sigmax())]
+        )
+        q2 = CompositeQArray(
+            (2, 2), False, [(sigmaz(), sigmax()), (sigmax(), sigmay())]
+        )
+        actual = q1 @ q2 @ q1
+        assert isinstance(actual, CompositeQArray)
+        expected = q1.asdense() @ q2.asdense() @ q1.asdense()
+        assert jnp.array_equal(actual.asdense().data, expected.data)
+
+    def test__matmul__dense(self):
         actual = self.qarray @ jnp.array([0, 0, 1, 0])
         assert isinstance(actual, DenseQArray)
         assert actual.shape == (4,)
