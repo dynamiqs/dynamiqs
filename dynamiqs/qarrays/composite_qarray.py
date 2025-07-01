@@ -124,6 +124,9 @@ class CompositeQArray(QArray):
         return replace(self, dims=new_dims, terms=terms)
 
     def powm(self, n: int) -> QArray:
+        if n == 0:
+            terms = [tuple(factor.powm(0) for factor in self._first_term)]
+            return replace(self, terms=terms)
         if n == 1:
             return self
         return self @ self.powm(n - 1)
