@@ -53,16 +53,13 @@ class StochasticSolveFixedStepIntegrator(
 
     def __check_init__(self):
         # check that all tsave values are exact multiples of dt
-        self = eqx.tree_at(  # noqa: PLW0642
-            lambda x: x.ts,
-            self,
-            eqx.error_if(
-                self.ts,
-                jnp.logical_not(_is_multiple_of(self.ts, self.dt)),
-                'Argument `tsave` should only contain exact multiples of the method '
-                'fixed step size `dt`.',
-            ),
+        ts = eqx.error_if(
+            self.ts,
+            jnp.logical_not(_is_multiple_of(self.ts, self.dt)),
+            'Argument `tsave` should only contain exact multiples of the method '
+            'fixed step size `dt`.',
         )
+        object.__setattr__(self, 'ts', ts)
 
         # check that options.t0 is not used
         if self.options.t0 is not None:
