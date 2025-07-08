@@ -91,6 +91,11 @@ def dssesolve(
         For now, `dssesolve()` only supports `tsave` with values that
         are exact multiples of the method fixed step size `dt`.
 
+    Note:
+        If you are only interested in simulating trajectories to solve the Lindblad
+        master equation, consider using [`dq.mesolve()`][dynamiqs.mesolve] with the
+        [`dq.method.DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo] method.
+
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
