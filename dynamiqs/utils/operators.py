@@ -402,9 +402,6 @@ def fdestroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray,
         _(qarray or tuple of qarrays, each of shape (n, n))_ Annihilation
         operator(s), with _n = prod(dims)_.
 
-    Raises:
-        ValueError: If any of the dimensions in `dims` is not 2.
-
     Examples:
         Single-mode $c$:
         >>> dq.fdestroy(2)
@@ -472,9 +469,6 @@ def fcreate(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, 
         _(qarray or tuple of qarrays, each of shape (n, n))_ Creation
         operator(s), with _n = prod(dims)_.
 
-    Raises:
-        ValueError: If any of the dimensions in `dims` is not 2.
-
     Examples:
         Single-mode $c^\dag$:
         >>> dq.fcreate(2)
@@ -500,9 +494,6 @@ def fcreate(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, 
     """
     layout = get_layout(layout)
 
-    # The adjoint of fdestroy() gives fcreate()
-    # We can get the single operator by calling destroy and taking the adjoint,
-    # but it's cleaner to define it directly or use the bosonic create(2).
     def create_single(dim: int) -> QArray:
         # Equivalent to bosonic create(dim)
         diag = jnp.sqrt(jnp.arange(1, dim, dtype=cdtype()))
