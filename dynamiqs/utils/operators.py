@@ -408,29 +408,25 @@ def fdestroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray,
     Examples:
         Single-mode $c$:
         >>> dq.fdestroy(2)
-        QArray(shape=(2, 2), dims=(2,)):
-        [[0.+0.j 1.+0.j]
-         [0.+0.j 0.+0.j]]
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[  ⋅    1.+0.j]
+         [  ⋅      ⋅   ]]
 
         Multi-mode $c_1 = c \otimes I$ and $c_2 = \sigma_z \otimes c$:
         >>> c1, c2 = dq.fdestroy(2, 2)
         >>> c1
-        QArray(shape=(4, 4), dims=(2, 2)):
-        [[0.+0.j 0.+0.j 1.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 1.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]]
+        QArray: shape=(4, 4), dims=(2, 2), dtype=complex64, layout=dia, ndiags=1
+        [[  ⋅      ⋅    1.+0.j   ⋅   ]
+         [  ⋅      ⋅      ⋅    1.+0.j]
+         [  ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅   ]]
         >>> c2
-        QArray(shape=(4, 4), dims=(2, 2)):
+        QArray: shape=(4, 4), dims=(2, 2), dtype=complex64, layout=dense
         [[ 0.+0.j  1.+0.j  0.+0.j  0.+0.j]
          [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]
-         [ 0.+0.j  0.+0.j  0.+0.j -1.+0.j]
-         [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]]
+         [ 0.+0.j  0.+0.j -0.+0.j -1.+0.j]
+         [ 0.+0.j  0.+0.j -0.+0.j -0.+0.j]]
     """
-    if not all(d == 2 for d in dims):
-        raise ValueError(
-            f'All dimensions for fermionic operators must be 2, but received {dims}.'
-        )
     layout = get_layout(layout)
 
     # For a single fermionic mode, the annihilation operator is destroy(2)
@@ -502,10 +498,6 @@ def fcreate(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, 
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j -1.+0.j 0.+0.j]]
     """
-    if not all(d == 2 for d in dims):
-        raise ValueError(
-            f'All dimensions for fermionic operators must be 2, but received {dims}.'
-        )
     layout = get_layout(layout)
 
     # The adjoint of fdestroy() gives fcreate()
