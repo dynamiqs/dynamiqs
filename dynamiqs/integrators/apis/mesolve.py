@@ -180,6 +180,31 @@ def mesolve(
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
 
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a
+        jump_ops = [a]
+        psi0 = dq.coherent(n, 1.0)
+        tsave = jnp.linspace(0, 1.0, 11)
+
+        result = dq.mesolve(H, jump_ops, psi0, tsave)
+        print(result)
+        ```
+
+        ```text title="Output"
+        |██████████| 100.0% ◆ elapsed 1.13ms ◆ remaining 0.00ms
+        ==== MESolveResult ====
+        Method : Tsit5
+        Infos  : 9 steps (9 accepted, 0 rejected)
+        States : QArray complex64 (11, 16, 16) | 22.0 Kb
+        ```
+
     # Advanced use-cases
 
     ## Defining a time-dependent Hamiltonian or jump operator

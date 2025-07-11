@@ -115,6 +115,32 @@ def floquet(
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
 
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+
+        n = 16
+        a = dq.destroy(n)
+
+        f = lambda t: jnp.cos(2 * jnp.pi * t)
+        H = dq.modulated(f, dq.sigmax())
+        T = 1.0
+        tsave = jnp.linspace(0, 1.0, 11)
+
+        result = dq.floquet(H, T, tsave)
+        print(result)
+        ```
+
+        ```text title="Output"
+        |██████████| 100.0% ◆ elapsed 0.89ms ◆ remaining 0.00ms
+        ==== FloquetResult ====
+        Method        : Tsit5
+        Infos         : 11 steps (10 accepted, 1 rejected)
+        Modes         : QArray complex64 (11, 2, 2, 1) | 0.3 Kb
+        Quasienergies : Array float32 (2,) | 0.0 Kb
+        ```
+
     # Advanced use-cases
 
     ## Running multiple simulations concurrently

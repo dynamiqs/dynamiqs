@@ -176,6 +176,34 @@ def dssesolve(
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
 
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+        import jax
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a
+        jump_ops = [a]
+        psi0 = dq.coherent(n, 1.0)
+        tsave = jnp.linspace(0, 1.0, 11)
+        keys = jax.random.split(jax.random.key(42), 100)
+
+        method = dq.method.EulerMaruyama(dt=1e-3)
+        result = dq.dssesolve(H, jump_ops, psi0, tsave, keys, method=method)
+        print(result)
+        ```
+
+        ```text title="Output"
+        ==== DSSESolveResult ====
+        Method       : EulerMaruyama
+        Infos        : 1000 steps | infos shape (100,)
+        States       : QArray complex64 (100, 11, 16, 1) | 137.5 Kb
+        Measurements : Array float32 (100, 1, 10) | 3.9 Kb
+        ```
+
     # Advanced use-cases
 
     ## Defining a time-dependent Hamiltonian or jump operator
