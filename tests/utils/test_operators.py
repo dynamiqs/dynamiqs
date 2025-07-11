@@ -144,6 +144,60 @@ def test_create():
 
 
 @pytest.mark.run(order=TEST_INSTANT)
+def test_fdestroy():
+    """Test the fermionic annihilation operator function."""
+    # prepare inputs
+    dims_1 = (2,)
+    dims_2 = (2, 2)
+
+    # check that no error is raised while tracing the function
+    _jit_static_layout(dq.fdestroy, static_argnums=(0,)).trace(*dims_1, layout=dq.dense)
+    _jit_static_layout(dq.fdestroy, static_argnums=(0, 1)).trace(
+        *dims_2, layout=dq.dense
+    )
+    _jit_static_layout(dq.fdestroy, static_argnums=(0,)).trace(*dims_1, layout=dq.dia)
+    _jit_static_layout(dq.fdestroy, static_argnums=(0, 1)).trace(*dims_2, layout=dq.dia)
+
+    # test operators dispatch
+    assert jnp.allclose(
+        dq.fdestroy(*dims_2, layout=dq.dense)[0].to_jax(),
+        dq.fdestroy(*dims_2, layout=dq.dia)[0].to_jax(),
+    )
+
+    assert jnp.allclose(
+        dq.fdestroy(*dims_2, layout=dq.dense)[1].to_jax(),
+        dq.fdestroy(*dims_2, layout=dq.dia)[1].to_jax(),
+    )
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_fcreate():
+    """Test the fermionic creation operator function."""
+    # prepare inputs
+    dims_1 = (2,)
+    dims_2 = (2, 2)
+
+    # check that no error is raised while tracing the function
+    _jit_static_layout(dq.fcreate, static_argnums=(0,)).trace(*dims_1, layout=dq.dense)
+    _jit_static_layout(dq.fcreate, static_argnums=(0, 1)).trace(
+        *dims_2, layout=dq.dense
+    )
+    _jit_static_layout(dq.fcreate, static_argnums=(0,)).trace(*dims_1, layout=dq.dia)
+    _jit_static_layout(dq.fcreate, static_argnums=(0, 1)).trace(*dims_2, layout=dq.dia)
+
+    # test operators dispatch
+    assert jnp.allclose(
+        dq.fcreate(*dims_2, layout=dq.dense)[0].to_jax(),
+        dq.fcreate(*dims_2, layout=dq.dia)[0].to_jax(),
+    )
+
+    assert jnp.allclose(
+        dq.fcreate(*dims_2, layout=dq.dense)[1].to_jax(),
+        dq.fcreate(*dims_2, layout=dq.dia)[1].to_jax(),
+    )
+
+
+@pytest.mark.run(order=TEST_INSTANT)
 def test_number():
     # prepare inputs
     dim = 4
