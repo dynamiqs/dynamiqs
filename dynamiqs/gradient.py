@@ -30,7 +30,7 @@ class Direct(Gradient):
 
 
 class BackwardCheckpointed(Gradient):
-    """Checkpointed automatic differentiation.
+    """Checkpointed backward-mode automatic differentiation.
 
     With this option, the gradient is computed by automatically differentiating
     through the internals of the solver. The difference with the standard automatic
