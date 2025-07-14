@@ -12,7 +12,7 @@ from jaxtyping import PyTree, Scalar
 
 from ..._checks import check_hermitian
 from ..._utils import obj_type_str
-from ...gradient import Autograd, CheckpointAutograd, ForwardAutograd, Gradient
+from ...gradient import BackwardCheckpointed, Direct, Forward, Gradient
 from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options
 from ...result import Result, Saved
@@ -89,11 +89,11 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
     def adjoint(self) -> dx.AbstractAdjoint:
         if self.gradient is None:
             return dx.RecursiveCheckpointAdjoint()
-        elif isinstance(self.gradient, CheckpointAutograd):
+        elif isinstance(self.gradient, BackwardCheckpointed):
             return dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
-        elif isinstance(self.gradient, ForwardAutograd):
+        elif isinstance(self.gradient, Forward):
             return dx.ForwardMode()
-        elif isinstance(self.gradient, Autograd):
+        elif isinstance(self.gradient, Direct):
             return dx.DirectAdjoint()
         else:
             raise TypeError(f'Unknown gradient type {obj_type_str(self.gradient)}.')
