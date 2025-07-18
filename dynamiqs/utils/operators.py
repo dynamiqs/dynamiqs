@@ -435,7 +435,10 @@ def fdestroy(n: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...
     I = eye(2, layout=layout)  # identity operator
     # Pauli-Z for the Jordan-Wigner string
     diag_z = jnp.array([1.0, -1.0], dtype=cdtype())
-    Z = sparsedia_from_dict({0: diag_z})
+    if layout is dense:
+        Z = asqarray(jnp.diag(diag_z))
+    else:
+        Z = sparsedia_from_dict({0: diag_z})
 
     # Construct operators with Jordan-Wigner strings
     operators = [
@@ -510,7 +513,10 @@ def fcreate(n: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]
     I = eye(2, layout=layout)  # identity operator
     # Pauli-Z for the Jordan-Wigner string
     diag_z = jnp.array([1.0, -1.0], dtype=cdtype())
-    Z = sparsedia_from_dict({0: diag_z})
+    if layout is dense:
+        Z = asqarray(jnp.diag(diag_z))
+    else:
+        Z = sparsedia_from_dict({0: diag_z})
 
     # Construct operators with Jordan-Wigner strings
     operators = [
