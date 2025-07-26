@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import numpy as np
 
 from .._checks import check_shape
@@ -9,17 +11,17 @@ from .general import dag
 from .operators import eye
 
 __all__ = [
-    'operator_to_vector',
+    'vectorize',
     'sdissipator',
     'slindbladian',
     'spost',
     'spre',
     'sprepost',
-    'vector_to_operator',
+    'unvectorize',
 ]
 
 
-def operator_to_vector(x: QArrayLike) -> QArray:
+def vectorize(x: QArrayLike) -> QArray:
     r"""Returns the vectorized version of an operator.
 
     The vectorized column vector $\kett{A}$ (shape $n^2\times 1$) is obtained by
@@ -41,7 +43,7 @@ def operator_to_vector(x: QArrayLike) -> QArray:
         >>> A
         Array([[1.+1.j, 2.+2.j],
                [3.+3.j, 4.+4.j]], dtype=complex64)
-        >>> dq.operator_to_vector(A)
+        >>> dq.vectorize(A)
         QArray: shape=(4, 1), dims=(2,), dtype=complex64, layout=dense, vectorized=True
         [[1.+1.j]
          [3.+3.j]
@@ -52,10 +54,10 @@ def operator_to_vector(x: QArrayLike) -> QArray:
     check_shape(x, 'x', '(..., n, n)')
     bshape = x.shape[:-2]
     x = x.mT._reshape_unchecked(*bshape, -1, 1)
-    return x._replace(vectorized=True)
+    return replace(x, vectorized=True)
 
 
-def vector_to_operator(x: QArrayLike) -> QArray:
+def unvectorize(x: QArrayLike) -> QArray:
     r"""Returns the operator version of a vectorized operator.
 
     The matrix $A$ (shape $n\times n$) is obtained by stacking horizontally next to
@@ -80,7 +82,7 @@ def vector_to_operator(x: QArrayLike) -> QArray:
                [2.+2.j],
                [3.+3.j],
                [4.+4.j]], dtype=complex64)
-        >>> dq.vector_to_operator(Avec)
+        >>> dq.unvectorize(Avec)
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
         [[1.+1.j 3.+3.j]
          [2.+2.j 4.+4.j]]
@@ -89,9 +91,9 @@ def vector_to_operator(x: QArrayLike) -> QArray:
     check_shape(x, 'x', '(..., n^2, 1)')
     bshape = x.shape[:-2]
     n = int(np.sqrt(x.shape[-2]))
-    x = x._replace(dims=(n,))
+    x = replace(x, dims=(n,))
     x = x._reshape_unchecked(*bshape, n, n).mT
-    return x._replace(vectorized=False)
+    return replace(x, vectorized=False)
 
 
 def spre(x: QArrayLike) -> QArray:
@@ -117,7 +119,7 @@ def spre(x: QArrayLike) -> QArray:
     check_shape(x, 'x', '(..., n, n)')
     n = x.shape[-1]
     xpre = eye(n) & x
-    return xpre._replace(dims=x.dims, vectorized=True)
+    return replace(xpre, dims=x.dims, vectorized=True)
 
 
 def spost(x: QArrayLike) -> QArray:
@@ -143,7 +145,7 @@ def spost(x: QArrayLike) -> QArray:
     check_shape(x, 'x', '(..., n, n)')
     n = x.shape[-1]
     xpost = x.mT & eye(n)
-    return xpost._replace(dims=x.dims, vectorized=True)
+    return replace(xpost, dims=x.dims, vectorized=True)
 
 
 def sprepost(x: QArrayLike, y: QArrayLike) -> QArray:
@@ -171,7 +173,7 @@ def sprepost(x: QArrayLike, y: QArrayLike) -> QArray:
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
     xyprepost = y.mT & x
-    return xyprepost._replace(dims=x.dims, vectorized=True)
+    return replace(xyprepost, dims=x.dims, vectorized=True)
 
 
 def sdissipator(L: QArrayLike) -> QArray:

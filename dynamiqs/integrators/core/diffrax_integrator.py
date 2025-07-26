@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from abc import abstractmethod
+from dataclasses import replace
 from functools import partial
 
 import diffrax as dx
@@ -10,10 +11,14 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
-from ..._utils import fill_invalid, obj_type_str
-from ...gradient import Autograd, CheckpointAutograd, ForwardAutograd
+from ..._checks import check_hermitian
+from ..._utils import obj_type_str, fill_invalid
+from ...gradient import Autograd, CheckpointAutograd, ForwardAutograd, Gradient
+from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
+from ...options import Options
+from ...result import Result, Saved
 from ...qarrays.utils import asqarray
-from ...result import Result
+
 from ...utils.vectorization import slindbladian
 from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
@@ -103,10 +108,16 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         y0: PyTree,
         saveat: dx.SaveAt,
         event: dx.Event | None = None,
+        dtmax: float | None = None,
     ) -> dx.Solution:
         with warnings.catch_warnings():
             # TODO: remove once complex support is stabilized in diffrax
             warnings.simplefilter('ignore', UserWarning)
+
+            # === prepare stepsize controller
+            stepsize_controller = self.stepsize_controller
+            if dtmax is not None:
+                stepsize_controller = replace(stepsize_controller, dtmax=dtmax)
 
             # === solve differential equation with diffrax
             return dx.diffeqsolve(
@@ -117,7 +128,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                 dt0=self.dt0,
                 y0=y0,
                 saveat=saveat,
-                stepsize_controller=self.stepsize_controller,
+                stepsize_controller=stepsize_controller,
                 adjoint=self.adjoint,
                 event=event,
                 max_steps=self.max_steps,
@@ -147,6 +158,67 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                 stats['num_accepted_steps'],
                 stats['num_rejected_steps'],
             )
+
+
+def call_diffeqsolve(
+    ts: Array,
+    y0: PyTree,
+    terms: dx.AbstractTerm,
+    method: Method,
+    gradient: Gradient,
+    options: Options,
+    discontinuity_ts: Array,
+    event: dx.Event | None = None,
+    save: callable | None = None,
+    dtmax: float | None = None,
+) -> dx.Solution:
+    # === define custom diffrax integrator
+    class BasicDiffraxIntegrator(DiffraxIntegrator):
+        @property
+        def terms(self) -> dx.AbstractTerm:
+            return terms
+
+        @property
+        def discontinuity_ts(self) -> Array:
+            return discontinuity_ts
+
+        def save(self, y: PyTree) -> Saved:
+            pass
+
+        def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
+            pass
+
+    # === set Diffrax solver
+    diffrax_solver, fixed_step = {
+        Euler: (dx.Euler(), True),
+        Dopri5: (dx.Dopri5(), False),
+        Dopri8: (dx.Dopri8(), False),
+        Tsit5: (dx.Tsit5(), False),
+        Kvaerno3: (dx.Kvaerno3(), False),
+        Kvaerno5: (dx.Kvaerno5(), False),
+    }[type(method)]
+
+    # === init integrator
+    integrator = BasicDiffraxIntegrator(
+        ts=ts,
+        y0=y0,
+        method=method,
+        gradient=gradient,
+        result_class=None,
+        options=options,
+        diffrax_solver=diffrax_solver,
+        fixed_step=fixed_step,
+    )
+
+    if save is None:
+        save = lambda y: y
+    fn = lambda t, y, args: save(y)  # noqa: ARG005
+    subsaveat_a = dx.SubSaveAt(ts=ts, fn=fn)  # save solution regularly
+    subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
+    saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+
+    # === run integrator
+    return integrator.diffeqsolve(ts[0], ts[-1], y0, saveat, event=event, dtmax=dtmax)
 
 
 class SEDiffraxIntegrator(DiffraxIntegrator, SEInterface):
@@ -248,6 +320,11 @@ class MESolveDiffraxIntegrator(MEDiffraxIntegrator, SolveSaveMixin, SolveInterfa
     """Integrator computing the time evolution of the Lindblad master equation using the
     Diffrax library.
     """
+
+    def __post_init__(self):
+        # convert y0 to a density matrix
+        self.y0 = self.y0.todm()
+        self.y0 = check_hermitian(self.y0, 'y0')
 
 
 mesolve_euler_integrator_constructor = partial(

@@ -1,24 +1,28 @@
 from __future__ import annotations
 
 import warnings
-from functools import partial
 
 import jax
 import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
+from ..._checks import check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
 from ...method import (
+    DiffusiveMonteCarlo,
     Dopri5,
     Dopri8,
     Euler,
+    EulerJump,
     Expm,
+    JumpMonteCarlo,
     Kvaerno3,
     Kvaerno5,
     Method,
     Rouchon1,
+    Rouchon2,
+    Rouchon3,
     Tsit5,
 )
 from ...options import Options, check_options
@@ -42,7 +46,15 @@ from ..core.diffrax_integrator import (
     mesolve_tsit5_integrator_constructor,
 )
 from ..core.expm_integrator import mesolve_expm_integrator_constructor
-from ..core.rouchon_integrator import mesolve_rouchon1_integrator_constructor
+from ..core.montecarlo_integrator import (
+    mesolve_diffusivemontecarlo_integrator_constructor,
+    mesolve_jumpmontecarlo_integrator_constructor,
+)
+from ..core.rouchon_integrator import (
+    mesolve_rouchon1_integrator_constructor,
+    mesolve_rouchon2_integrator_constructor,
+    mesolve_rouchon3_integrator_constructor,
+)
 
 
 def mesolve(
@@ -96,7 +108,11 @@ def mesolve(
             [`Kvaerno5`][dynamiqs.method.Kvaerno5],
             [`Euler`][dynamiqs.method.Euler],
             [`Rouchon1`][dynamiqs.method.Rouchon1],
-            [`Expm`][dynamiqs.method.Expm]).
+            [`Rouchon2`][dynamiqs.method.Rouchon2],
+            [`Rouchon3`][dynamiqs.method.Rouchon3],
+            [`Expm`][dynamiqs.method.Expm],
+            [`JumpMonteCarlo`][dynamiqs.method.JumpMonteCarlo],
+            [`DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
@@ -228,17 +244,21 @@ def mesolve(
     check_options(options, 'mesolve')
     options = options.initialise()
 
-    # === convert rho0 to density matrix
-    rho0 = rho0.todm()
-    rho0 = check_hermitian(rho0, 'rho0')
-
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
-    return _vectorized_mesolve(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
+    f = _vectorized_mesolve
+    if isinstance(method, DiffusiveMonteCarlo) or (
+        isinstance(method, JumpMonteCarlo) and isinstance(method.jsse_method, EulerJump)
+    ):
+        tsave = tuple(tsave.tolist())  # todo: fix static tsave
+        f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
+    else:
+        f = jax.jit(f, static_argnames=('gradient', 'options'))
+
+    return f(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_mesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
@@ -263,7 +283,7 @@ def _vectorized_mesolve(
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
-        rho0 = rho0.broadcast_to(*bshape, n, n)
+        rho0 = rho0.broadcast_to(*bshape, *rho0.shape[-2:])
         # vectorize the function
         f = multi_vmap(_mesolve, in_axes, out_axes, nvmap)
 
@@ -284,12 +304,16 @@ def _mesolve(
     integrator_constructors = {
         Euler: mesolve_euler_integrator_constructor,
         Rouchon1: mesolve_rouchon1_integrator_constructor,
+        Rouchon2: mesolve_rouchon2_integrator_constructor,
+        Rouchon3: mesolve_rouchon3_integrator_constructor,
         Dopri5: mesolve_dopri5_integrator_constructor,
         Dopri8: mesolve_dopri8_integrator_constructor,
         Tsit5: mesolve_tsit5_integrator_constructor,
         Kvaerno3: mesolve_kvaerno3_integrator_constructor,
         Kvaerno5: mesolve_kvaerno5_integrator_constructor,
         Expm: mesolve_expm_integrator_constructor,
+        JumpMonteCarlo: mesolve_jumpmontecarlo_integrator_constructor,
+        DiffusiveMonteCarlo: mesolve_diffusivemontecarlo_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
     integrator_constructor = integrator_constructors[type(method)]

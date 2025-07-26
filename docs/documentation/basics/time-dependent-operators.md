@@ -5,6 +5,9 @@ This tutorial explains how to define time-dependent Hamiltonians – and more ge
 ```python
 import dynamiqs as dq
 import jax.numpy as jnp
+from matplotlib import pyplot as plt
+
+dq.plot.mplstyle(dpi=150)  # set custom matplotlib style
 ```
 
 ## The [`TimeQArray`][dynamiqs.TimeQArray] type
@@ -151,6 +154,15 @@ The returned object can be called at different times:
      [  ⋅      ⋅   ]]
     ```
 
+We can use [`dq.plot.pwc_pulse()`][dynamiqs.plot.pwc_pulse] to plot the PWC pulse values at different times:
+```python
+dq.plot.pwc_pulse(H.times, H.values)
+plt.gca().set(xlabel='Time $t$')
+renderfig('tqarray_plot_pwc_pulse')
+```
+
+![tqarray_plot_pwc_pulse](../../figs_docs/tqarray_plot_pwc_pulse.png){.fig}
+
 !!! Note
     The argument `times` must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time-qarray at time $t$, the returned qarray is the operator $c_k\ O_0$ corresponding to the interval $[t_k, t_{k+1}[$ in which the time $t$ falls. If $t$ does not belong to any time intervals, the returned qarray is null.
 
@@ -200,6 +212,16 @@ The returned object can be called at different times:
     [[  ⋅    1.+0.j]
      [1.+0.j   ⋅   ]]
     ```
+
+We can use the `prefactor()` method to plot $f(t)$ at different times:
+```python
+ts = jnp.linspace(-1.0, 1.0, 501)
+plt.plot(ts, H.prefactor(ts))
+plt.gca().set(xlabel='Time $t$', ylabel='$f(t)$')
+renderfig('tqarray_plot_modulated')
+```
+
+![tqarray_plot_modulated](../../figs_docs/tqarray_plot_modulated.png){.fig}
 
 ??? Note "Batching modulated operators"
     The batching of the returned time-qarray is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H(t)=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
@@ -291,3 +313,38 @@ The returned object can be called at different times:
     If there is a discontinuous jump in the function values, you should use the optional
     argument `discontinuity_ts` to enforce adaptive step size methods to stop at these
     times (i.e., right before, and right after the jump).
+
+## Clipping a time-qarray
+
+Time-dependent operators can be clipped to a given time interval, outside which the
+returned qarray is null. For example:
+```pycon
+>>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
+>>> H = dq.modulated(f, dq.sigmax())
+>>> H(2.0)
+QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
+[[  ⋅    1.+0.j]
+ [1.+0.j   ⋅   ]]
+>>> H_clipped = H.clip(0, 1)  # clip to 0 <= t < 1
+>>> H_clipped(2.0)
+QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
+[[  ⋅      ⋅   ]
+ [  ⋅      ⋅   ]]
+```
+
+We can plot the resulting prefactor values after clipping:
+```python
+_, axs = dq.plot.grid(2, w=4, h=3, sharexy=True)
+ax0, ax1 = list(axs)
+
+ts = jnp.linspace(-2.0, 2.0, 501)
+
+ax0.plot(ts, H.prefactor(ts))
+ax0.set(xlabel='Time $t$', ylabel='$f(t)$', title='H')
+
+ax1.plot(ts, H_clipped.prefactor(ts))
+ax1.set(xlabel='Time $t$', title='H.clip(0, 1)')
+renderfig('tqarray_plot_clip')
+```
+
+![tqarray_plot_clip](../../figs_docs/tqarray_plot_clip.png){.fig}

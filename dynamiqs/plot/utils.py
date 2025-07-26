@@ -136,7 +136,8 @@ def grid(
         nrows, ncols, figsize=figsize, constrained_layout=True, **kwargs
     )
 
-    return fig, iter(axs.flatten())
+    axs_list = axs.flatten() if nrows != 1 or ncols != 1 else [axs]
+    return fig, iter(axs_list)
 
 
 colors = {

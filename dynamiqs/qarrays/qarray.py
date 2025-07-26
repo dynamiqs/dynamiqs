@@ -236,18 +236,6 @@ class QArray(eqx.Module):
     # similar behaviour to __array_priority__ but for qarray matmul
     __qarray_matmul_priority__ = 0
 
-    def _replace(
-        self,
-        dims: tuple[int, ...] | None = None,
-        vectorized: bool | None = None,
-        **kwargs,
-    ) -> QArray:
-        if dims is None:
-            dims = self.dims
-        if vectorized is None:
-            vectorized = self.vectorized
-        return type(self)(dims=dims, vectorized=vectorized, **kwargs)
-
     def __check_init__(self):
         # === ensure dims is a tuple of ints
         if not isinstance(self.dims, tuple) or not all(
@@ -349,25 +337,25 @@ class QArray(eqx.Module):
         pass
 
     def cosm(self) -> QArray:
-        from ..utils import cosm
+        from ..utils import cosm  # noqa: PLC0415
 
         return cosm(self)
 
     def sinm(self) -> QArray:
-        from ..utils import sinm
+        from ..utils import sinm  # noqa: PLC0415
 
         return sinm(self)
 
     def signm(self) -> QArray:
-        from ..utils import signm
+        from ..utils import signm  # noqa: PLC0415
 
         return signm(self)
 
-    def unit(self) -> QArray:
-        return self / self.norm()[..., None, None]
+    def unit(self, *, psd: bool = True) -> QArray:
+        return self / self.norm(psd=psd)[..., None, None]
 
     @abstractmethod
-    def norm(self) -> Array:
+    def norm(self, *, psd: bool = True) -> Array:
         pass
 
     @abstractmethod
@@ -416,22 +404,22 @@ class QArray(eqx.Module):
         pass
 
     def isket(self) -> bool:
-        from ..utils import isket
+        from ..utils import isket  # noqa: PLC0415
 
         return isket(self)
 
     def isbra(self) -> bool:
-        from ..utils import isbra
+        from ..utils import isbra  # noqa: PLC0415
 
         return isbra(self)
 
     def isdm(self) -> bool:
-        from ..utils import isdm
+        from ..utils import isdm  # noqa: PLC0415
 
         return isdm(self)
 
     def isop(self) -> bool:
-        from ..utils import isop
+        from ..utils import isop  # noqa: PLC0415
 
         return isop(self)
 
@@ -440,22 +428,22 @@ class QArray(eqx.Module):
         pass
 
     def toket(self) -> QArray:
-        from ..utils import toket
+        from ..utils import toket  # noqa: PLC0415
 
         return toket(self)
 
     def tobra(self) -> QArray:
-        from ..utils import tobra
+        from ..utils import tobra  # noqa: PLC0415
 
         return tobra(self)
 
     def todm(self) -> QArray:
-        from ..utils import todm
+        from ..utils import todm  # noqa: PLC0415
 
         return todm(self)
 
     def proj(self) -> QArray:
-        from ..utils import proj
+        from ..utils import proj  # noqa: PLC0415
 
         return proj(self)
 
@@ -489,8 +477,14 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def assparsedia(self) -> SparseDIAQArray:
+    def assparsedia(self, offsets: tuple[int, ...] | None = None) -> SparseDIAQArray:
         """Converts to a sparse diagonal layout.
+
+        Args:
+            offsets: Offsets of the stored diagonals. If `None`, offsets are determined
+                automatically from the matrix structure. This argument can also be
+                explicitly specified to ensure compatibility with JAX transformations,
+                which require static offset values.
 
         Returns:
             A `SparseDIAQArray`.
@@ -568,8 +562,10 @@ class QArray(eqx.Module):
         if isinstance(y, QArray):
             check_compatible_dims(self.dims, y.dims)
 
-        if is_batched_scalar(y):  # noqa: RET503
+        if is_batched_scalar(y):
             raise TypeError('Attempted matrix product between a scalar and a qarray.')
+
+        return None
 
     @abstractmethod
     def __rmatmul__(self, y: QArrayLike) -> QArray:
