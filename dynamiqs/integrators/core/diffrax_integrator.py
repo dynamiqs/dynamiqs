@@ -12,13 +12,12 @@ from jax import Array
 from jaxtyping import PyTree, Scalar
 
 from ..._checks import check_hermitian
-from ..._utils import obj_type_str, fill_invalid
+from ..._utils import fill_invalid, obj_type_str
 from ...gradient import Autograd, CheckpointAutograd, ForwardAutograd, Gradient
 from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options
-from ...result import Result, Saved
 from ...qarrays.utils import asqarray
-
+from ...result import Result, Saved
 from ...utils.vectorization import slindbladian
 from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
