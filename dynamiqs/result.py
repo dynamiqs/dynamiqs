@@ -279,3 +279,7 @@ class DSSESolveResult(DiffusiveSolveResult):
 
 class DSMESolveResult(DiffusiveSolveResult):
     pass
+
+
+class SteadyStateResult(SolveResult):
+    pass
