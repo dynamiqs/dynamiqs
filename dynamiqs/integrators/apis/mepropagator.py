@@ -142,6 +142,29 @@ def mepropagator(
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
 
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a
+        jump_ops = [a]
+        tsave = jnp.linspace(0, 1.0, 11)
+
+        result = dq.mepropagator(H, jump_ops, tsave)
+        print(result)
+        ```
+
+        ```text title="Output"
+        ==== MEPropagatorResult ====
+        Method      : Expm
+        Infos       : 10 steps
+        Propagators : QArray complex64 (11, 256, 256) | 5.5 Mb
+        ```
+
     # Advanced use-cases
 
     ## Defining a time-dependent Hamiltonian or jump operator
