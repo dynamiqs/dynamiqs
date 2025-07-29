@@ -187,9 +187,9 @@ nav:
               - JumpMonteCarlo: python_api/method/JumpMonteCarlo.md
               - DiffusiveMonteCarlo: python_api/method/DiffusiveMonteCarlo.md
           - Gradients (dq.gradient):
-              - Autograd: python_api/gradient/Autograd.md
-              - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md
-              - ForwardAutograd: python_api/gradient/ForwardAutograd.md
+              - Direct: python_api/gradient/Direct.md
+              - BackwardCheckpointed: python_api/gradient/BackwardCheckpointed.md
+              - Forward: python_api/gradient/Forward.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md

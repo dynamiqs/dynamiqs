@@ -4,7 +4,7 @@ import equinox as eqx
 
 from ._utils import tree_str_inline
 
-__all__ = ['Autograd', 'CheckpointAutograd', 'ForwardAutograd']
+__all__ = ['Direct', 'BackwardCheckpointed', 'Forward']
 
 
 class Gradient(eqx.Module):
@@ -12,7 +12,7 @@ class Gradient(eqx.Module):
         return tree_str_inline(self)
 
 
-class Autograd(Gradient):
+class Direct(Gradient):
     """Standard automatic differentiation of JAX.
 
     With this option, the gradient is computed by automatically differentiating
@@ -29,12 +29,12 @@ class Autograd(Gradient):
         pass
 
 
-class CheckpointAutograd(Gradient):
-    """Checkpointed automatic differentiation.
+class BackwardCheckpointed(Gradient):
+    """Checkpointed backward-mode automatic differentiation.
 
     With this option, the gradient is computed by automatically differentiating
     through the internals of the solver. The difference with the standard automatic
-    differentiation (see [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd]) is
+    differentiation (see [`dq.gradient.Direct`][dynamiqs.gradient.Direct]) is
     that a checkpointing scheme is used to reduce the memory usage of the
     backpropagation.
 
@@ -45,7 +45,7 @@ class CheckpointAutograd(Gradient):
     Warning:
         This cannot be forward-mode autodifferentiated (e.g. using
         [`jax.jvp`](https://jax.readthedocs.io/en/latest/_autosummary/jax.jvp.html)
-        ). Try using [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] if that
+        ). Try using [`dq.gradient.Direct`][dynamiqs.gradient.Direct] if that
         is something you need.
 
     Note:
@@ -72,7 +72,7 @@ class CheckpointAutograd(Gradient):
         self.ncheckpoints = ncheckpoints
 
 
-class ForwardAutograd(Gradient):
+class Forward(Gradient):
     """Forward-mode automatic differentiation.
 
     Enables support for forward-mode automatic differentiation
@@ -90,8 +90,8 @@ class ForwardAutograd(Gradient):
         This cannot be backward-mode autodifferentiated (e.g. using
         [`jax.jacrev`](https://docs.jax.dev/en/latest/_autosummary/jax.jacrev.html)).
         Try using
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd] if that
-        is something you need.
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed] if
+        that is something you need.
 
     Warning:
         By default

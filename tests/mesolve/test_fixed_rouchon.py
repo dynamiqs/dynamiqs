@@ -1,6 +1,6 @@
 import pytest
 
-from dynamiqs.gradient import Autograd, CheckpointAutograd, ForwardAutograd
+from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
 from dynamiqs.method import Rouchon1, Rouchon2, Rouchon3
 
 from ..integrator_tester import IntegratorTester
@@ -27,9 +27,7 @@ class TestMESolveFixedRouchon(IntegratorTester):
         ('method_class', 'dt'), [(Rouchon1, 1e-4), (Rouchon2, 1e-3), (Rouchon3, 1e-2)]
     )
     @pytest.mark.parametrize('system', [dense_ocavity, otdqubit])
-    @pytest.mark.parametrize(
-        'gradient', [Autograd(), CheckpointAutograd(), ForwardAutograd()]
-    )
+    @pytest.mark.parametrize('gradient', [Direct(), BackwardCheckpointed(), Forward()])
     def test_gradient(self, method_class, dt, system, gradient):
         method = method_class(dt=dt)
         self._test_gradient(system, method, gradient)

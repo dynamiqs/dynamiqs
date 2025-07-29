@@ -1,6 +1,6 @@
 import pytest
 
-from dynamiqs.gradient import Autograd, CheckpointAutograd, ForwardAutograd
+from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
 from dynamiqs.method import Tsit5
 
 from ..integrator_tester import IntegratorTester
@@ -17,8 +17,6 @@ class TestMESolveAdaptive(IntegratorTester):
         self._test_correctness(system, Tsit5())
 
     @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
-    @pytest.mark.parametrize(
-        'gradient', [Autograd(), CheckpointAutograd(), ForwardAutograd()]
-    )
+    @pytest.mark.parametrize('gradient', [Direct(), BackwardCheckpointed(), Forward()])
     def test_gradient(self, system, gradient):
         self._test_gradient(system, Tsit5(), gradient)
