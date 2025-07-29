@@ -8,10 +8,10 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/gradient/ForwardAutograd.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/gradient/Forward.html">
 
 
-    <link rel="prev" href="CheckpointAutograd.html">
+    <link rel="prev" href="BackwardCheckpointed.html">
 
 
     <link rel="next" href="../utils/operators/eye.html">
@@ -22,7 +22,7 @@
 
     
       
-        <title>ForwardAutograd - Dynamiqs</title>
+        <title>Forward - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.gradient.ForwardAutograd" class="md-skip">
+        <a href="#dynamiqs.gradient.Forward" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                ForwardAutograd
+                Forward
               
             </span>
           </div>
@@ -2132,12 +2132,12 @@
   
   
     <li class="md-nav__item">
-      <a href="Autograd.html" class="md-nav__link">
+      <a href="Direct.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Autograd
+    Direct
     
   </span>
   
@@ -2155,12 +2155,12 @@
   
   
     <li class="md-nav__item">
-      <a href="CheckpointAutograd.html" class="md-nav__link">
+      <a href="BackwardCheckpointed.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    CheckpointAutograd
+    BackwardCheckpointed
     
   </span>
   
@@ -2187,12 +2187,12 @@
         
       
       
-      <a href="ForwardAutograd.html" class="md-nav__link md-nav__link--active">
+      <a href="Forward.html" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
-    ForwardAutograd
+    Forward
     
   </span>
   
@@ -5738,12 +5738,12 @@
 
 
 
-<h1 id="dynamiqs.gradient.ForwardAutograd" class="doc doc-heading">
-  <span class="doc doc-object-name doc-class-name">dq.gradient.ForwardAutograd</span>
+<h1 id="dynamiqs.gradient.Forward" class="doc doc-heading">
+  <span class="doc doc-object-name doc-class-name">dq.gradient.Forward</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">ForwardAutograd</span><span class="p">()</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Forward</span><span class="p">()</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5769,8 +5769,8 @@ times).</p>
   <p>This cannot be backward-mode autodifferentiated (e.g. using
 <a href="https://docs.jax.dev/en/latest/_autosummary/jax.jacrev.html"><code>jax.jacrev</code></a>).
 Try using
-<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.gradient.CheckpointAutograd&lt;/span&gt;" href="CheckpointAutograd.html#dynamiqs.gradient.CheckpointAutograd"><code>dq.gradient.CheckpointAutograd</code></a> if that
-is something you need.</p>
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.gradient.BackwardCheckpointed&lt;/span&gt;" href="BackwardCheckpointed.html#dynamiqs.gradient.BackwardCheckpointed"><code>dq.gradient.BackwardCheckpointed</code></a> if
+that is something you need.</p>
 </details>
 <details class="warning"
  open >

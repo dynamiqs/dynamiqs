@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/gradient/Autograd.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/gradient/BackwardCheckpointed.html">
 
 
-    <link rel="prev" href="../method/DiffusiveMonteCarlo.html">
+    <link rel="prev" href="Direct.html">
 
 
-    <link rel="next" href="CheckpointAutograd.html">
+    <link rel="next" href="Forward.html">
 
 <link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>Autograd - Dynamiqs</title>
+        <title>BackwardCheckpointed - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.gradient.Autograd" class="md-skip">
+        <a href="#dynamiqs.gradient.BackwardCheckpointed" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                Autograd
+                BackwardCheckpointed
               
             </span>
           </div>
@@ -2129,6 +2129,29 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="Direct.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Direct
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -2141,12 +2164,12 @@
         
       
       
-      <a href="Autograd.html" class="md-nav__link md-nav__link--active">
+      <a href="BackwardCheckpointed.html" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
-    Autograd
+    BackwardCheckpointed
     
   </span>
   
@@ -2165,35 +2188,12 @@
   
   
     <li class="md-nav__item">
-      <a href="CheckpointAutograd.html" class="md-nav__link">
+      <a href="Forward.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    CheckpointAutograd
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="ForwardAutograd.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    ForwardAutograd
+    Forward
     
   </span>
   
@@ -5738,28 +5738,65 @@
 
 
 
-<h1 id="dynamiqs.gradient.Autograd" class="doc doc-heading">
-  <span class="doc doc-object-name doc-class-name">dq.gradient.Autograd</span>
+<h1 id="dynamiqs.gradient.BackwardCheckpointed" class="doc doc-heading">
+  <span class="doc doc-object-name doc-class-name">dq.gradient.BackwardCheckpointed</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Autograd</span><span class="p">()</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">BackwardCheckpointed</span><span class="p">(</span><span class="n">ncheckpoints</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
 
-        <p>Standard automatic differentiation of JAX.</p>
+        <p>Checkpointed backward-mode automatic differentiation.</p>
 <p>With this option, the gradient is computed by automatically differentiating
-through the internals of the solver.</p>
+through the internals of the solver. The difference with the standard automatic
+differentiation (see <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.gradient.Direct&lt;/span&gt;" href="Direct.html#dynamiqs.gradient.Direct"><code>dq.gradient.Direct</code></a>) is
+that a checkpointing scheme is used to reduce the memory usage of the
+backpropagation.</p>
 
 <details class="note"
  open >
   <summary>Note</summary>
+  <p>For most problems this is the preferred technique for backpropagating
+through the solvers.</p>
+</details>
+<details class="warning"
+ open >
+  <summary>Warning</summary>
+  <p>This cannot be forward-mode autodifferentiated (e.g. using
+<a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.jvp.html"><code>jax.jvp</code></a>
+). Try using <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.gradient.Direct&lt;/span&gt;" href="Direct.html#dynamiqs.gradient.Direct"><code>dq.gradient.Direct</code></a> if that
+is something you need.</p>
+</details>
+<details class="note"
+ open >
+  <summary>Note</summary>
   <p>For Diffrax-based methods, this falls back to the
-<a href="https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint"><code>diffrax.DirectAdjoint</code></a>
+<a href="https://docs.kidger.site/diffrax/api/adjoints/#diffrax.RecursiveCheckpointAdjoint"><code>diffrax.RecursiveCheckpointAdjoint</code></a>
 option.</p>
 </details>
+    <!-- <p>Parameters:</p> -->
+    <p>
+      <strong>Parameters</strong>
+    </p>
+    <ul>
+        <li class="field-body">
+          <b>ncheckpoints</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Number of checkpoints to use. The amount of memory used by
+the differential equation solve will be roughly equal to the number of
+checkpoints multiplied by the size of the state. You can speed up
+backpropagation by allocating more checkpoints, so it makes sense to
+set as many checkpoints as you have memory for. This value is set to
+<code>None</code> by default, in which case it will be set to <code>log(max_steps)</code>,
+for which a theoretical result is available guaranteeing that
+backpropagation will take <code>O(n_steps log(n_steps))</code> time in the number
+of steps <code>n_steps &lt;= max_steps</code>.</p>
+        </li>
+    </ul>
+
 
 
 
