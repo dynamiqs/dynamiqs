@@ -221,10 +221,15 @@ class CompositeQArray(QArray):
     def __repr__(self) -> str:
         # create string representation, e.g. O = Oa1 ⊗ Ob1 + Oa2 ⊗ Ob2
         alphabet = 'abcdefghijklmnopqrstuvwxyz'
-        factor_str = lambda idx_term: [
+        factors_str = lambda idx_term: [
             f'O{alphabet[i]}{idx_term + 1}' for i in range(len(self.dims))
         ]
-        terms_str = ' + '.join([' ⊗ '.join(factor_str(i)) for i in range(self.nterms)])
+        terms_str_list = [' ⊗ '.join(factors_str(i)) for i in range(self.nterms)]
+        if len(self.terms) <= 4:
+            terms_str = 'O = ' + ' + '.join(terms_str_list)
+        else:
+            terms_str = f'O = {terms_str_list[0]} + ... + {terms_str_list[-1]}'
+
         data_str = f'O = {terms_str}'
 
         return (
