@@ -7,7 +7,7 @@ import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
 
-from dynamiqs.gradient import ForwardAutograd, Gradient
+from dynamiqs.gradient import Forward, Gradient
 from dynamiqs.method import Method
 from dynamiqs.options import Options
 
@@ -71,7 +71,7 @@ class IntegratorTester:
             return system.loss_state(res.states[-1])
 
         # jax.grad uses reverse mode by default
-        if isinstance(gradient, ForwardAutograd):
+        if isinstance(gradient, Forward):
             jax_grad, jax_jac = jax.jacfwd, jax.jacfwd
         else:
             jax_grad, jax_jac = jax.grad, jax.jacrev

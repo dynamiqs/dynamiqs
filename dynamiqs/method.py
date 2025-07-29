@@ -7,7 +7,7 @@ from jaxtyping import PRNGKeyArray
 from optimistix import AbstractRootFinder
 
 from ._utils import tree_str_inline
-from .gradient import Autograd, CheckpointAutograd, ForwardAutograd, Gradient
+from .gradient import BackwardCheckpointed, Direct, Forward, Gradient
 
 __all__ = [
     'Dopri5',
@@ -94,10 +94,10 @@ class Expm(Method):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] (default).
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct] (default).
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Direct,)
 
     # dummy init to have the signature in the documentation
     def __init__(self):
@@ -137,16 +137,16 @@ class Euler(_DEFixedStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
     )
 
     # dummy init to have the signature in the documentation
@@ -162,10 +162,10 @@ class EulerJump(_DEFixedStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] (default).
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct] (default).
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Direct,)
 
     # todo: fix static dt (similar issue as static tsave in dssesolve)
     dt: float = eqx.field(static=True)
@@ -186,10 +186,10 @@ class EulerMaruyama(_DEFixedStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] (default).
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct] (default).
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Direct,)
 
     # todo: fix static dt (similar issue as static tsave in dssesolve)
     dt: float = eqx.field(static=True)
@@ -213,16 +213,16 @@ class Rouchon1(_DEFixedStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
     )
 
     # todo: fix static dt (similar issue as static tsave in dssesolve)
@@ -265,16 +265,16 @@ class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
     )
 
     normalize: bool = eqx.field(static=True, default=True)
@@ -329,16 +329,16 @@ class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
     )
 
     normalize: bool = eqx.field(static=True, default=True)
@@ -381,16 +381,16 @@ class Dopri5(_DEAdaptiveStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
     )
 
     # dummy init to have the signature in the documentation
@@ -422,16 +422,16 @@ class Dopri8(_DEAdaptiveStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
     )
 
     # dummy init to have the signature in the documentation
@@ -463,16 +463,16 @@ class Tsit5(_DEAdaptiveStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
     )
 
     # dummy init to have the signature in the documentation
@@ -515,16 +515,16 @@ class Kvaerno3(_DEAdaptiveStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
     )
 
     # dummy init to have the signature in the documentation
@@ -567,16 +567,16 @@ class Kvaerno5(_DEAdaptiveStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
     )
 
     # dummy init to have the signature in the documentation
@@ -636,7 +636,7 @@ class Event(_DEMethod):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default).
     """
 
@@ -646,9 +646,9 @@ class Event(_DEMethod):
     smart_sampling: bool = eqx.field(static=True, default=False)
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
     )
 
     # dummy init to have the signature in the documentation
@@ -714,9 +714,9 @@ class JumpMonteCarlo(_DEMethod):
 
     # dummy variable, the proper check of gradient support will be done by `jsse_method`
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
     )
 
     # dummy init to have the signature in the documentation
@@ -756,9 +756,9 @@ class DiffusiveMonteCarlo(_DEMethod):
 
     # dummy variable, the proper check of gradient support will be done by `dsse_method`
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
     )
 
     # dummy init to have the signature in the documentation

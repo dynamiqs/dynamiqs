@@ -1,6 +1,6 @@
 import pytest
 
-from dynamiqs.gradient import Autograd
+from dynamiqs.gradient import Direct
 from dynamiqs.method import Rouchon2, Rouchon3
 
 from ..integrator_tester import IntegratorTester
@@ -22,6 +22,6 @@ class TestMESolveAdaptiveRouchon(IntegratorTester):
 
     @pytest.mark.parametrize('method_class', [Rouchon2])
     @pytest.mark.parametrize('system', [dense_ocavity, otdqubit])
-    @pytest.mark.parametrize('gradient', [Autograd()])
+    @pytest.mark.parametrize('gradient', [Direct()])
     def test_gradient(self, method_class, system, gradient):
         self._test_gradient(system, method_class(), gradient)
