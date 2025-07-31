@@ -144,7 +144,7 @@ colors = {
     'blue': '#0c5dA5',
     'red': '#ff6b6b',
     'turquoise': '#2ec4b6',
-    'lightgrey': '#b1b6b4',
+    'grey': '#b1b6b4',
     'darkgrey': '#3f565c',
     'purple': '#bd3a68',
     'lightblue': '#64aee3',
