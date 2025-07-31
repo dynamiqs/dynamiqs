@@ -144,12 +144,12 @@ colors = {
     'blue': '#0c5dA5',
     'red': '#ff6b6b',
     'turquoise': '#2ec4b6',
-    'yellow': '#ffc463',
-    'grey': '#9e9e9e',
-    'purple': '#845b97',
-    'brown': '#c0675c',
-    'darkgreen': '#20817d',
-    'darkgrey': '#666666',
+    'lightgrey': '#b1b6b4',
+    'darkgrey': '#3f565c',
+    'purple': '#bd3a68',
+    'lightblue': '#64aee3',
+    'yellow': '#f2c46f',
+    'orange': '#e37d52',
 }
 
 
