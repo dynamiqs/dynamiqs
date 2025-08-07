@@ -219,9 +219,21 @@ class CompositeQArray(QArray):
         return self
 
     def __repr__(self) -> str:
+        # create string representation, e.g. O = Oa1 ⊗ Ob1 + Oa2 ⊗ Ob2
+        alphabet = 'abcdefghijklmnopqrstuvwxyz'
+        term_to_str = lambda idx: ' ⊗ '.join(
+            f'O{alphabet[i]}{idx + 1}' for i in range(len(self.dims))
+        )
+        if len(self.terms) <= 4:
+            terms_str = ' + '.join(term_to_str(i) for i in range(self.nterms))
+        else:
+            terms_str = f'{term_to_str(0)} + ... + {term_to_str(self.nterms - 1)}'
+
+        data_str = f'O = {terms_str}'
+
         return (
             f'QArray: shape={self.shape}, dims={self.dims}, dtype={self.dtype}, '
-            f'type=composite, nterms={self.nterms}'
+            f'type=composite, nterms={self.nterms}\n{data_str}'
         )
 
     def __mul__(self, y: ArrayLike) -> QArray:
