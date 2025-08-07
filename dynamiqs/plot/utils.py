@@ -255,6 +255,10 @@ def integer_ticks(axis: Axis, n: int, all: bool = True):  # noqa: A002
     # format major ticks as integer
     axis.set_major_formatter(lambda x, _: f'{int(x)}')
 
+    # if grid is on for this axis, set it to minor ticks to align with integer ticks
+    if any(line.get_visible() for line in axis.get_gridlines()):
+        axis.grid(which='minor', visible=True)
+
 
 def ket_ticks(axis: Axis):
     # fix ticks location
