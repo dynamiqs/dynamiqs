@@ -134,6 +134,7 @@ contour = plt.pcolormesh(nbar0s, kappas / K, amp_revivals)
 cbar = plt.colorbar(contour, label=r'$|\langle a(T) \rangle / \langle a(0) \rangle |$')
 plt.xlabel(r'Initial coherent state amplitude, $\bar{n}_0 = |\alpha_0|^2$')
 plt.ylabel(r'Loss rate, $\kappa / K$')
+plt.grid(False)
 renderfig('amplitude-revivals-kerr-oscillator')
 ```
 
@@ -268,6 +269,7 @@ plt.pcolormesh(sigmas, Ts, jnp.log10(1-fidelities), cmap='Blues_r')
 plt.xlabel('Pulse width')
 plt.ylabel('Gate duration')
 plt.colorbar(label='log10(1 - Fidelity)')
+plt.grid(False)
 renderfig('pipulse-kerr-oscillator')
 ```
 
