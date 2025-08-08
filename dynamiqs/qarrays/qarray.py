@@ -99,7 +99,9 @@ def get_dims(x: QArrayLike) -> tuple[int, ...] | None:
             dims = np.max(x.dims, axis=0)
         else:
             # Use the longer dimension list (typically the ket space)
-            dims = np.array(x.dims[0] if len(x.dims[0]) >= len(x.dims[1]) else x.dims[1])
+            dims = np.array(
+                x.dims[0] if len(x.dims[0]) >= len(x.dims[1]) else x.dims[1]
+            )
         return tuple(dims.tolist())
     else:
         return None

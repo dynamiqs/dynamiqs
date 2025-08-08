@@ -98,7 +98,7 @@ def test_conversions(layout):
 @pytest.mark.run(order=TEST_INSTANT)
 def test_qutip_tensor_compatibility():
     """Test compatibility with qutip v5.2.0 auto_tidyup_dims.
-    
+
     In qutip v5.2.0, tensor products with trivial dimensions are automatically
     simplified, e.g., [[3, 2], [1, 1]] -> [[3, 2], [1]]. This test ensures
     that asqarray handles such cases correctly.
@@ -108,19 +108,19 @@ def test_qutip_tensor_compatibility():
     result = dq.asqarray(basis_state)
     assert result.shape == (3, 1)
     assert result.dims == (3,)
-    
+
     # Test tensor product (the problematic case)
     tensor_state = qt.tensor(qt.basis(3, 0), qt.basis(2, 1))
     result = dq.asqarray(tensor_state)
     assert result.shape == (6, 1)
     assert result.dims == (3, 2)
-    
+
     # Test more complex tensor product
     complex_tensor = qt.tensor(qt.basis(2, 0), qt.basis(3, 1), qt.basis(2, 0))
     result = dq.asqarray(complex_tensor)
     assert result.shape == (12, 1)
     assert result.dims == (2, 3, 2)
-    
+
     # Test that the tensor product has correct values
     tensor_result = dq.asqarray(qt.tensor(qt.basis(3, 0), qt.basis(2, 1)))
     expected_tensor = jnp.zeros((6, 1), dtype=complex)
