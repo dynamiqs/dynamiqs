@@ -93,16 +93,9 @@ def get_dims(x: QArrayLike) -> tuple[int, ...] | None:
     if isinstance(x, QArray):
         return x.dims
     elif isinstance(x, Qobj):
-        # Handle qutip v5.2.0 auto_tidyup_dims that can create unequal length dims
-        # e.g., [[3, 2], [1, 1]] -> [[3, 2], [1]]
-        if len(x.dims[0]) == len(x.dims[1]):
-            dims = np.max(x.dims, axis=0)
-        else:
-            # Use the longer dimension list (typically the ket space)
-            dims = np.array(
-                x.dims[0] if len(x.dims[0]) >= len(x.dims[1]) else x.dims[1]
-            )
-        return tuple(dims.tolist())
+        # handle [[3, 2], [1, 1]] or [[1, 1], [3, 2]] when `auto_tidyup_dims=False`
+        # or [[3, 2], [1]] or [[1], [3, 2]] when `auto_tidyup_dims=True`
+        return tuple(next(dims for dims in x.dims if set(dims) != {1}))
     else:
         return None
 
