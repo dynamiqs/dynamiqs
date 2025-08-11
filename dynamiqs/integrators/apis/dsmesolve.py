@@ -89,7 +89,7 @@ def dsmesolve(
     returned measurement values for each detector is `len(tsave)-1`.
 
     Warning:
-        For now, `dsmesolve()` only supports linearly spaced `tsave` with values that
+        For now, `dsmesolve()` only supports `tsave` with values that
         are exact multiples of the method fixed step size `dt`.
 
     Args:
@@ -288,14 +288,13 @@ def dsmesolve(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    tsave = tuple(tsave.tolist())  # todo: fix static tsave
     return _vectorized_dsmesolve(
         H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, method, gradient, options
     )
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('tsave', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_dsmesolve(
     H: TimeQArray,
     Lcs: list[TimeQArray],
