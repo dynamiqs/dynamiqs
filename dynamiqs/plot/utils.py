@@ -149,7 +149,7 @@ colors = {
     'yellow': '#f2c46f',
     'lightblue': '#64aee3',
     'green': '#1C875C',
-    'brown': '#A35D40',
+    'brown': '#A17E33',
 }
 
 
