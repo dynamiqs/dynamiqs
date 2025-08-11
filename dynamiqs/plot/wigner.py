@@ -70,6 +70,9 @@ def wigner_data(
         extent=[-xmax, xmax, -ymax, ymax],
     )
 
+    # remove grid by default
+    ax.grid(False)
+
     # axis label
     ax.set(xlabel=r'$\mathrm{Re}(\alpha)$', ylabel=r'$\mathrm{Im}(\alpha)$')
 
@@ -83,7 +86,6 @@ def wigner_data(
         ax.axvline(0.0, color=colors['grey'], ls='-', lw=0.7, alpha=0.8)
 
     if clear:
-        ax.grid(False)
         ax.axis(False)
 
 

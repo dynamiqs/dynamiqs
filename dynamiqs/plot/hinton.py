@@ -99,6 +99,7 @@ def _plot_hinton(
     ax.set(xlim=(-0.5, n - 1 + 0.5), ylim=(-0.5, n - 1 + 0.5))
     ax.invert_yaxis()
     ax.xaxis.tick_top()
+    ax.grid(False)
     integer_ticks(ax.xaxis, n, all=allticks)
     integer_ticks(ax.yaxis, n, all=allticks)
 
