@@ -91,16 +91,17 @@ class TestDenseQArray:
         assert jnp.array_equal((self.qother @ self.qarray).data, self.other @ self.data)
 
     def test_and(self):
+        other = self.other.astype(jnp.complex128)
         t = self.qarray & self.qother
 
-        assert jnp.array_equal(t.data, tensor(self.data, self.other).data)
+        assert jnp.array_equal(t.data, tensor(self.data, other).asdense().data)
         assert t.dims == (2, 2, 2, 2)
 
-        other = jnp.arange(9).reshape(3, 3)
+        other = jnp.arange(9).reshape(3, 3).astype(jnp.complex128)
         qother = asqarray(other)
         t = self.qarray & qother
 
-        assert jnp.array_equal(t.data, tensor(self.data, other).data)
+        assert jnp.array_equal(t.data, tensor(self.data, other).asdense().data)
         assert t.dims == (2, 2, 3)
 
     def test_powm(self):
