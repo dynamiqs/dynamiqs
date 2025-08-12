@@ -11,7 +11,7 @@ from .._checks import check_shape
 from ..qarrays.qarray import QArrayLike
 from ..qarrays.utils import asqarray, to_jax
 from ..utils import wigner as compute_wigner
-from .utils import add_colorbar, colors, gif_indices, gifit, grid, optional_ax
+from .utils import add_colorbar, gif_indices, gifit, grid, optional_ax
 
 __all__ = ['wigner_data', 'wigner', 'wigner_gif', 'wigner_mosaic']
 
@@ -70,6 +70,9 @@ def wigner_data(
         extent=[-xmax, xmax, -ymax, ymax],
     )
 
+    # remove grid by default
+    ax.grid(False)
+
     # axis label
     ax.set(xlabel=r'$\mathrm{Re}(\alpha)$', ylabel=r'$\mathrm{Im}(\alpha)$')
 
@@ -79,11 +82,11 @@ def wigner_data(
             cax.set_yticks([vmin, 0.0, vmax], labels=[r'$-2/\pi$', r'$0$', r'$2/\pi$'])
 
     if cross:
-        ax.axhline(0.0, color=colors['grey'], ls='-', lw=0.7, alpha=0.8)
-        ax.axvline(0.0, color=colors['grey'], ls='-', lw=0.7, alpha=0.8)
+        color = '#9e9e9e'
+        ax.axhline(0.0, color=color, ls='-', lw=0.7, alpha=0.8)
+        ax.axvline(0.0, color=color, ls='-', lw=0.7, alpha=0.8)
 
     if clear:
-        ax.grid(False)
         ax.axis(False)
 
 
