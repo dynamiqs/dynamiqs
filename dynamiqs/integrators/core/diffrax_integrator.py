@@ -16,7 +16,7 @@ from ...gradient import BackwardCheckpointed, Direct, Forward, Gradient
 from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options
 from ...result import Result, Saved
-from ...utils.vectorization import slindbladian
+from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
@@ -308,18 +308,34 @@ class MESolveDiffraxIntegrator(
         # and is thus more efficient numerically with only a negligible numerical error
         # induced on the dynamics.
 
-        def vector_field(t, y, _):  # noqa: ANN001, ANN202
+        def vector_field_unvec(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
             Hnh = -1j * H + sum([-0.5 * _L.dag() @ _L for _L in L])
             tmp = Hnh @ y + sum([0.5 * _L @ y @ _L.dag() for _L in L])
             return tmp + tmp.dag()
 
-        return dx.ODETerm(vector_field)
+        def vector_field_vec(t, y, _):  # noqa: ANN001, ANN202
+            L, H = self.L(t), self.H(t)
+            return slindbladian(H, L) @ y
+
+        return dx.ODETerm(
+            vector_field_unvec if not self.options.vectorized else vector_field_vec
+        )
 
     def __post_init__(self):
         # convert y0 to a density matrix
         self.y0 = self.y0.todm()
         self.y0 = check_hermitian(self.y0, 'y0')
+
+        if self.options.vectorized:
+            self.y0 = vectorize(self.y0)  # (n^2, 1)
+
+    def save(self, y: PyTree) -> Saved:
+        # TODO: implement bexpect for vectorized operators and convert at the end
+        # instead of at each step
+        if self.options.vectorized:
+            y = unvectorize(y)
+        return super().save(y)
 
 
 mesolve_euler_integrator_constructor = partial(
