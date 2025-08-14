@@ -127,6 +127,7 @@ def mesolve(
                     progress_meter: AbstractProgressMeter | bool | None = None,
                     t0: ScalarLike | None = None,
                     save_extra: callable[[Array], PyTree] | None = None,
+                    vectorized: bool = False,
                 )
                 ```
 
@@ -152,6 +153,11 @@ def mesolve(
                     `f(QArray) -> PyTree` that takes a state as input and returns a
                     PyTree. This can be used to save additional arbitrary data
                     during the integration, accessible in `result.extra`.
+                - **vectorized** - If `True`, the master equation is solved by
+                    vectorizing the density matrix and Liouvillian. This is usually
+                    more efficient for small Hilbert spaces but less efficient for
+                    large Hilbert spaces. This option is only supported for
+                    Diffrax-based ODE methods.
 
     Returns:
         `dq.MESolveResult` object holding the result of the
