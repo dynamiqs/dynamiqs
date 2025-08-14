@@ -280,8 +280,12 @@ sesolve_kvaerno5_integrator_constructor = partial(
 )
 
 
-class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
-    """Integrator solving the Lindblad master equation with Diffrax."""
+class MESolveDiffraxIntegrator(
+    DiffraxIntegrator, MEInterface, SolveSaveMixin, SolveInterface
+):
+    """Integrator computing the time evolution of the Lindblad master equation using the
+    Diffrax library.
+    """
 
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -311,12 +315,6 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
             return tmp + tmp.dag()
 
         return dx.ODETerm(vector_field)
-
-
-class MESolveDiffraxIntegrator(MEDiffraxIntegrator, SolveSaveMixin, SolveInterface):
-    """Integrator computing the time evolution of the Lindblad master equation using the
-    Diffrax library.
-    """
 
     def __post_init__(self):
         # convert y0 to a density matrix
