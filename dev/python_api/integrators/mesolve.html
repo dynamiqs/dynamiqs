@@ -5964,6 +5964,7 @@ details.</p>
     progress_meter: AbstractProgressMeter | bool | None = None,
     t0: ScalarLike | None = None,
     save_extra: callable[[Array], PyTree] | None = None,
+    vectorized: bool = False,
 )
 </code></pre></div>
 <p><strong>Parameters</strong></p>
@@ -5988,6 +5989,11 @@ details.</p>
     <code>f(QArray) -&gt; PyTree</code> that takes a state as input and returns a
     PyTree. This can be used to save additional arbitrary data
     during the integration, accessible in <code>result.extra</code>.</li>
+<li><strong>vectorized</strong> - If <code>True</code>, the master equation is solved by
+    vectorizing the density matrix and Liouvillian. This is usually
+    more efficient for small Hilbert spaces but less efficient for
+    large Hilbert spaces. This option is only supported for
+    Diffrax-based ODE methods.</li>
 </ul>
 </details>
         </li>
