@@ -351,7 +351,7 @@ class JSMESolveEulerJumpIntegrator(JSMESolveFixedStepIntegrator):
         rho_click = Ccal_rho[jump_idx] * normalisation
 
         # === no click
-        # compute Lcal(rho), see `MEDiffraxIntegrator` in
+        # compute Lcal(rho), see `MESolveDiffraxIntegrator` in
         # `integrators/core/diffrax_integrator.py`
         Hnh = -1j * H - 0.5 * sum(L.dag() @ L)
         tmp = Hnh @ rho + 0.5 * sum(Lm_rho_Lmdag)
@@ -540,7 +540,7 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
         LdL = sum([_L.dag() @ _L for _L in L])
 
         # === Lcal(rho)
-        # (see MEDiffraxIntegrator in `integrators/core/diffrax_integrator.py`)
+        # (see MESolveDiffraxIntegrator in `integrators/core/diffrax_integrator.py`)
         Hnh = -1j * H - 0.5 * LdL
         tmp = Hnh @ rho + sum([0.5 * _L @ rho @ _L.dag() for _L in L])
         Lcal_rho = tmp + tmp.dag()
