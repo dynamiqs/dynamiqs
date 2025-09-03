@@ -5,6 +5,7 @@ from dataclasses import replace
 import numpy as np
 
 from .._checks import check_shape
+from ..qarrays.layout import dense
 from ..qarrays.qarray import QArray, QArrayLike
 from ..qarrays.utils import asqarray
 from .general import dag
@@ -50,7 +51,7 @@ def vectorize(x: QArrayLike) -> QArray:
          [2.+2.j]
          [4.+4.j]]
     """
-    x = asqarray(x)
+    x = asqarray(x, layout=dense)
     check_shape(x, 'x', '(..., n, n)')
     bshape = x.shape[:-2]
     x = x.mT._reshape_unchecked(*bshape, -1, 1)
@@ -87,10 +88,10 @@ def unvectorize(x: QArrayLike) -> QArray:
         [[1.+1.j 3.+3.j]
          [2.+2.j 4.+4.j]]
     """
-    x = asqarray(x)
+    x = asqarray(x, layout=dense)
     check_shape(x, 'x', '(..., n^2, 1)')
     bshape = x.shape[:-2]
-    n = int(np.sqrt(x.shape[-2]))
+    n = round(np.sqrt(x.shape[-2]))
     x = replace(x, dims=(n,))
     x = x._reshape_unchecked(*bshape, n, n).mT
     return replace(x, vectorized=False)
