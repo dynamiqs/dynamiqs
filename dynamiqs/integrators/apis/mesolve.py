@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import warnings
+from functools import partial
 
 import jax
 import jax.numpy as jnp
@@ -14,7 +15,6 @@ from ...method import (
     Dopri5,
     Dopri8,
     Euler,
-    EulerJump,
     Expm,
     JumpMonteCarlo,
     Kvaerno3,
@@ -277,19 +277,11 @@ def mesolve(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
-    f = _vectorized_mesolve
-    if isinstance(method, DiffusiveMonteCarlo) or (
-        isinstance(method, JumpMonteCarlo) and isinstance(method.jsse_method, EulerJump)
-    ):
-        tsave = tuple(tsave.tolist())  # todo: fix static tsave
-        f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
-    else:
-        f = jax.jit(f, static_argnames=('gradient', 'options'))
-
-    return f(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
+    return _vectorized_mesolve(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error
+@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_mesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],

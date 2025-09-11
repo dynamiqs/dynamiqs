@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from functools import partial
+
 import jax
 import jax.numpy as jnp
 from jax import Array
@@ -271,16 +273,13 @@ def jssesolve(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    f = _vectorized_jssesolve
-    if isinstance(method, EulerJump):
-        tsave = tuple(tsave.tolist())  # todo: fix static tsave
-        f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
-    else:
-        f = jax.jit(f, static_argnames=('gradient', 'options'))
-    return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
+    return _vectorized_jssesolve(
+        H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options
+    )
 
 
 @catch_xla_runtime_error
+@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_jssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],

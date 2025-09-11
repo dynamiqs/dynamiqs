@@ -84,7 +84,7 @@ def jsmesolve(
     $I_k = \{t \in [t_0, t_\text{end}[ \,|\, \dd N_k(t)=1\}$.
 
     Warning:
-        For now, `jsmesolve()` only supports linearly spaced `tsave` with values that
+        For now, `jsmesolve()` only supports `tsave` with values that
         are exact multiples of the method fixed step size `dt`.
 
     Args:
@@ -290,14 +290,13 @@ def jsmesolve(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    tsave = tuple(tsave.tolist())  # todo: fix static tsave
     return _vectorized_jsmesolve(
         H, Lcs, Lms, thetas, etas, rho0, tsave, keys, exp_ops, method, gradient, options
     )
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('tsave', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_jsmesolve(
     H: TimeQArray,
     Lcs: list[TimeQArray],
