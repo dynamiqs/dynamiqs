@@ -4,7 +4,6 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
-from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray
 
 from ..._checks import check_shape, check_times
@@ -104,7 +103,8 @@ def dssesolve(
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`. Measurements are time-averaged and saved over each interval
-            defined by `tsave`.
+            defined by `tsave`. If jitting is used, `tsave` is a static argument and
+            must be passed as a tuple.
         keys _(list of PRNG keys)_: PRNG keys used to sample the Wiener processes.
             The number of elements defines the number of sampled stochastic
             trajectories.
@@ -258,35 +258,37 @@ def dssesolve(
     H = astimeqarray(H)
     Ls = [astimeqarray(L) for L in jump_ops]
     psi0 = asqarray(psi0)
-    tsave = jnp.asarray(tsave)
     keys = jnp.asarray(keys)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_dssesolve_args(H, Ls, psi0, exp_ops)
-    tsave = check_times(tsave, 'tsave')
-    check_options(options, 'dssesolve')
+    check_times(jnp.asarray(tsave), "tsave")  # keep?
+    check_options(options, "dssesolve")
     options = options.initialise()
 
+    # allows ArrayLike objects when non jitted
+    if not isinstance(tsave, tuple):
+        tsave = tuple(tsave.tolist())
+
     if method is None:
-        raise ValueError('Argument `method` must be specified.')
+        raise ValueError("Argument `method` must be specified.")
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    tsave = tuple(tsave.tolist())  # todo: fix static tsave
     return _vectorized_dssesolve(
         H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options
     )
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('tsave', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=("tsave", "gradient", "options"))
 def _vectorized_dssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
     psi0: QArray,
-    tsave: Array,
+    tsave: tuple[float],
     keys: PRNGKeyArray,
     exp_ops: list[QArray] | None,
     method: Method,
@@ -318,7 +320,7 @@ def _dssesolve_many_trajectories(
     H: TimeQArray,
     Ls: list[TimeQArray],
     psi0: QArray,
-    tsave: Array,
+    tsave: tuple[float],
     keys: PRNGKeyArray,
     exp_ops: list[QArray] | None,
     method: Method,
@@ -336,7 +338,7 @@ def _dssesolve_single_trajectory(
     H: TimeQArray,
     Ls: list[TimeQArray],
     psi0: QArray,
-    tsave: Array,
+    tsave: tuple[float],
     key: PRNGKeyArray,
     exp_ops: list[QArray] | None,
     method: Method,
@@ -379,22 +381,22 @@ def _check_dssesolve_args(
     H: TimeQArray, Ls: list[TimeQArray], psi0: QArray, exp_ops: list[QArray] | None
 ):
     # === check H shape
-    check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
+    check_shape(H, "H", "(..., n, n)", subs={"...": "...H"})
 
     # === check Ls shape
     for i, L in enumerate(Ls):
-        check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
+        check_shape(L, f"jump_ops[{i}]", "(..., n, n)", subs={"...": f"...L{i}"})
 
     if len(Ls) == 0:
         raise ValueError(
-            'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
-            ' solve the Schrödinger equation.'
+            "Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to"
+            " solve the Schrödinger equation."
         )
 
     # === check psi0 shape
-    check_shape(psi0, 'psi0', '(..., n, 1)', subs={'...': '...psi0'})
+    check_shape(psi0, "psi0", "(..., n, 1)", subs={"...": "...psi0"})
 
     # === check exp_ops shape
     if exp_ops is not None:
         for i, E in enumerate(exp_ops):
-            check_shape(E, f'exp_ops[{i}]', '(n, n)')
+            check_shape(E, f"exp_ops[{i}]", "(n, n)")
