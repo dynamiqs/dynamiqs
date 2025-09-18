@@ -264,8 +264,8 @@ def dssesolve(
 
     # === check arguments
     _check_dssesolve_args(H, Ls, psi0, exp_ops)
-    check_times(jnp.asarray(tsave), "tsave")  # keep?
-    check_options(options, "dssesolve")
+    check_times(jnp.asarray(tsave), 'tsave')  # keep?
+    check_options(options, 'dssesolve')
     options = options.initialise()
 
     # allows ArrayLike objects when non jitted
@@ -273,7 +273,7 @@ def dssesolve(
         tsave = tuple(tsave.tolist())
 
     if method is None:
-        raise ValueError("Argument `method` must be specified.")
+        raise ValueError('Argument `method` must be specified.')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
@@ -283,7 +283,7 @@ def dssesolve(
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=("tsave", "gradient", "options"))
+@partial(jax.jit, static_argnames=('tsave', 'gradient', 'options'))
 def _vectorized_dssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
@@ -381,22 +381,22 @@ def _check_dssesolve_args(
     H: TimeQArray, Ls: list[TimeQArray], psi0: QArray, exp_ops: list[QArray] | None
 ):
     # === check H shape
-    check_shape(H, "H", "(..., n, n)", subs={"...": "...H"})
+    check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
     # === check Ls shape
     for i, L in enumerate(Ls):
-        check_shape(L, f"jump_ops[{i}]", "(..., n, n)", subs={"...": f"...L{i}"})
+        check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
 
     if len(Ls) == 0:
         raise ValueError(
-            "Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to"
-            " solve the Schrödinger equation."
+            'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
+            ' solve the Schrödinger equation.'
         )
 
     # === check psi0 shape
-    check_shape(psi0, "psi0", "(..., n, 1)", subs={"...": "...psi0"})
+    check_shape(psi0, 'psi0', '(..., n, 1)', subs={'...': '...psi0'})
 
     # === check exp_ops shape
     if exp_ops is not None:
         for i, E in enumerate(exp_ops):
-            check_shape(E, f"exp_ops[{i}]", "(n, n)")
+            check_shape(E, f'exp_ops[{i}]', '(n, n)')
