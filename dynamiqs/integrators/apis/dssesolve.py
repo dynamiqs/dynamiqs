@@ -6,7 +6,7 @@ import jax
 import jax.numpy as jnp
 from jaxtyping import ArrayLike, PRNGKeyArray
 
-from ..._checks import check_shape, check_times, check_times_static
+from ..._checks import check_shape, check_times_static
 from ...gradient import Gradient
 from ...method import EulerMaruyama, Method, Rouchon1
 from ...options import Options, check_options
