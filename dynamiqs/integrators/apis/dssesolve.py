@@ -6,7 +6,7 @@ import jax
 import jax.numpy as jnp
 from jaxtyping import ArrayLike, PRNGKeyArray
 
-from ..._checks import check_shape, check_times
+from ..._checks import check_shape, check_times, check_times_static
 from ...gradient import Gradient
 from ...method import EulerMaruyama, Method, Rouchon1
 from ...options import Options, check_options
@@ -263,14 +263,13 @@ def dssesolve(
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
-    _check_dssesolve_args(H, Ls, psi0, exp_ops)
-    check_times(jnp.asarray(tsave), 'tsave')  # keep?
-    check_options(options, 'dssesolve')
-    options = options.initialise()
-
-    # allows ArrayLike objects when non jitted
+     # allows ArrayLike objects when non jitted
     if not isinstance(tsave, tuple):
         tsave = tuple(tsave.tolist())
+    check_times_static(tsave, 'tsave')
+    _check_dssesolve_args(H, Ls, psi0, exp_ops) 
+    check_options(options, 'dssesolve')
+    options = options.initialise()
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
