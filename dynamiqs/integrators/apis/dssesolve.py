@@ -7,7 +7,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray
 
-from ..._checks import check_shape, check_times_static
+from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...method import EulerMaruyama, Method, Rouchon1
 from ...options import Options, check_options
@@ -265,13 +265,17 @@ def dssesolve(
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
-     # allows ArrayLike objects when non jitted
-    if not isinstance(tsave, tuple):
-        tsave = tuple(tsave.tolist())
-    check_times_static(tsave, 'tsave')
-    _check_dssesolve_args(H, Ls, psi0, exp_ops) 
+    _check_dssesolve_args(H, Ls, psi0, exp_ops)
     check_options(options, 'dssesolve')
     options = options.initialise()
+
+    # todo: fix static tsave
+    # this condition allows the user to pass a tuple for tsave to bypass this bit of
+    # code (e.g., to JIT-compile this function)
+    if not isinstance(tsave, tuple):
+        tsave = jnp.asarray(tsave)
+        tsave = check_times(tsave, 'tsave')
+        tsave = tuple(tsave.tolist())
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
