@@ -105,8 +105,7 @@ def dssesolve(
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`. Measurements are time-averaged and saved over each interval
-            defined by `tsave`. If jitting is used, `tsave` is a static argument and
-            must be passed as a tuple.
+            defined by `tsave`.
         keys _(list of PRNG keys)_: PRNG keys used to sample the Wiener processes.
             The number of elements defines the number of sampled stochastic
             trajectories.
