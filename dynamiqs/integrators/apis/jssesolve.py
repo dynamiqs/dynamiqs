@@ -85,6 +85,12 @@ def jssesolve(
     Note:
         This function is the Dynamiqs counterpart of QuTiP's `mcsolve()` function.
 
+    Warning:
+        For now, `jssesolve()` only supports linearly spaced `tsave` with values that
+        are exact multiples of the method fixed step size `dt` for the
+        [`EulerJump`][dynamiqs.method.EulerJump] method. Moreover, to JIT-compile code
+        using `jssesolve()`, `tsave` must be passed as tuple.
+
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
@@ -255,16 +261,23 @@ def jssesolve(
     H = astimeqarray(H)
     Ls = [astimeqarray(L) for L in jump_ops]
     psi0 = asqarray(psi0)
-    tsave = jnp.asarray(tsave)
     keys = jnp.asarray(keys)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_jssesolve_args(H, Ls, psi0, exp_ops)
-    tsave = check_times(tsave, 'tsave')
     check_options(options, 'jssesolve')
     options = options.initialise()
+
+    # todo: fix static tsave
+    # this condition allows the user to pass a tuple for tsave to bypass this bit of
+    # code (e.g., to JIT-compile this function)
+    if not isinstance(tsave, tuple):
+        tsave = jnp.asarray(tsave)
+        tsave = check_times(tsave, 'tsave')
+        if isinstance(method, EulerJump):
+            tsave = tuple(tsave.tolist())
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
@@ -273,7 +286,6 @@ def jssesolve(
     # objects (which are not JIT-compatible) to JAX arrays
     f = _vectorized_jssesolve
     if isinstance(method, EulerJump):
-        tsave = tuple(tsave.tolist())  # todo: fix static tsave
         f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
     else:
         f = jax.jit(f, static_argnames=('gradient', 'options'))
