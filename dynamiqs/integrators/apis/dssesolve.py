@@ -4,6 +4,7 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
+from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray
 
 from ..._checks import check_shape, check_times_static
@@ -287,7 +288,7 @@ def _vectorized_dssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
     psi0: QArray,
-    tsave: tuple[float],
+    tsave: Array,
     keys: PRNGKeyArray,
     exp_ops: list[QArray] | None,
     method: Method,
@@ -319,7 +320,7 @@ def _dssesolve_many_trajectories(
     H: TimeQArray,
     Ls: list[TimeQArray],
     psi0: QArray,
-    tsave: tuple[float],
+    tsave: Array,
     keys: PRNGKeyArray,
     exp_ops: list[QArray] | None,
     method: Method,
@@ -337,7 +338,7 @@ def _dssesolve_single_trajectory(
     H: TimeQArray,
     Ls: list[TimeQArray],
     psi0: QArray,
-    tsave: tuple[float],
+    tsave: Array,
     key: PRNGKeyArray,
     exp_ops: list[QArray] | None,
     method: Method,
