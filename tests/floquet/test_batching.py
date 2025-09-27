@@ -15,7 +15,7 @@ def test_batching(nH, H_type):
     T = 1.0
     tsave = jnp.linspace(0.0, T, 5)
     key = jax.random.PRNGKey(84)
-    key_1, key_2, key_3 = jax.random.split(key, 3)
+    key_1, key_2 = jax.random.split(key, 2)
     if H_type == 'constant':
         H = dq.random.herm(key_1, (*nH, n, n))
     elif H_type == 'modulated':
