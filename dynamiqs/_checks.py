@@ -115,22 +115,3 @@ def check_qarray_is_dense(x: QArray, argname: str):
             f'Argument {argname} must have layout `dense` but has layout '
             f'{argname}.layout={x.layout}.'
         )
-
-def check_times_static(x: tuple[float, ...], argname: str, allow_empty: bool = False) -> tuple[float, ...]:
-    # check that a tuple of times is valid (must be sorted strictly ascending)
-
-    if not isinstance(x, tuple):
-        raise TypeError(f"Argument {argname} must be a tuple, but got {type(x)}.")
-
-    if not all(isinstance(v, (int, float)) for v in x):
-        raise TypeError(f"All elements of {argname} must be int or float.")
-
-    if not allow_empty and len(x) == 0:
-        raise ValueError(f"Argument {argname} must contain at least one element.")
-
-    if any(x[i] >= x[i+1] for i in range(len(x)-1)):
-        raise ValueError(
-            f"Argument {argname} must be sorted in strictly ascending order."
-        )
-
-    return x
