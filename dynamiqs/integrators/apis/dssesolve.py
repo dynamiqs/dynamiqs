@@ -89,7 +89,8 @@ def dssesolve(
 
     Warning:
         For now, `dssesolve()` only supports linearly spaced `tsave` with values that
-        are exact multiples of the method fixed step size `dt`.
+        are exact multiples of the method fixed step size `dt`. Moreover, to JIT-compile
+        code using `dssesolve()`, `tsave` must be passed as tuple.
 
     Note:
         If you are only interested in simulating trajectories to solve the Lindblad
