@@ -89,7 +89,8 @@ def dssesolve(
 
     Warning:
         For now, `dssesolve()` only supports linearly spaced `tsave` with values that
-        are exact multiples of the method fixed step size `dt`.
+        are exact multiples of the method fixed step size `dt`. Moreover, to JIT-compile
+        code using `dssesolve()`, `tsave` must be passed as tuple.
 
     Note:
         If you are only interested in simulating trajectories to solve the Lindblad
@@ -258,23 +259,28 @@ def dssesolve(
     H = astimeqarray(H)
     Ls = [astimeqarray(L) for L in jump_ops]
     psi0 = asqarray(psi0)
-    tsave = jnp.asarray(tsave)
     keys = jnp.asarray(keys)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_dssesolve_args(H, Ls, psi0, exp_ops)
-    tsave = check_times(tsave, 'tsave')
     check_options(options, 'dssesolve')
     options = options.initialise()
+
+    # todo: fix static tsave
+    # this condition allows the user to pass a tuple for tsave to bypass this bit of
+    # code (e.g., to JIT-compile this function)
+    if not isinstance(tsave, tuple):
+        tsave = jnp.asarray(tsave)
+        tsave = check_times(tsave, 'tsave')
+        tsave = tuple(tsave.tolist())
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    tsave = tuple(tsave.tolist())  # todo: fix static tsave
     return _vectorized_dssesolve(
         H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options
     )

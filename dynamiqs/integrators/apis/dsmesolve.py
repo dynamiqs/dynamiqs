@@ -90,7 +90,8 @@ def dsmesolve(
 
     Warning:
         For now, `dsmesolve()` only supports linearly spaced `tsave` with values that
-        are exact multiples of the method fixed step size `dt`.
+        are exact multiples of the method fixed step size `dt`. Moreover, to JIT-compile
+        code using `dsmesolve()`, `tsave` must be passed as tuple.
 
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
@@ -262,7 +263,6 @@ def dsmesolve(
     Ls = [astimeqarray(L) for L in jump_ops]
     etas = jnp.asarray(etas)
     rho0 = asqarray(rho0)
-    tsave = jnp.asarray(tsave)
     keys = jnp.asarray(keys)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
@@ -272,6 +272,14 @@ def dsmesolve(
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'dsmesolve')
     options = options.initialise()
+
+    # todo: fix static tsave
+    # this condition allows the user to pass a tuple for tsave to bypass this bit of
+    # code (e.g., to JIT-compile this function)
+    if not isinstance(tsave, tuple):
+        tsave = jnp.asarray(tsave)
+        tsave = check_times(tsave, 'tsave')
+        tsave = tuple(tsave.tolist())
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
@@ -288,7 +296,6 @@ def dsmesolve(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    tsave = tuple(tsave.tolist())  # todo: fix static tsave
     return _vectorized_dsmesolve(
         H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, method, gradient, options
     )
