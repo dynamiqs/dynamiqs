@@ -5911,6 +5911,13 @@ master equation, consider using <a class="autorefs autorefs-internal" title="<sp
   <summary>Note</summary>
   <p>This function is the Dynamiqs counterpart of QuTiP's <code>mcsolve()</code> function.</p>
 </details>
+<details class="warning" open>
+  <summary>Warning</summary>
+  <p>For now, <code>jssesolve()</code> only supports linearly spaced <code>tsave</code> with values that
+are exact multiples of the method fixed step size <code>dt</code> for the
+<a class="autorefs autorefs-internal" title="<span class=&quot;doc doc-object-name doc-class-name&quot;>dq.method.EulerJump</span>" href="../method/EulerJump.html#dynamiqs.method.EulerJump"><code>EulerJump</code></a> method. Moreover, to JIT-compile code
+using <code>jssesolve()</code>, <code>tsave</code> must be passed as tuple.</p>
+</details>
     <!-- <p>Parameters:</p> -->
     <p>
       <strong>Parameters</strong>

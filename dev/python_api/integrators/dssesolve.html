@@ -5911,7 +5911,8 @@ returned measurement values for each detector is <code>len(tsave)-1</code>.</p>
 <details class="warning" open>
   <summary>Warning</summary>
   <p>For now, <code>dssesolve()</code> only supports linearly spaced <code>tsave</code> with values that
-are exact multiples of the method fixed step size <code>dt</code>.</p>
+are exact multiples of the method fixed step size <code>dt</code>. Moreover, to JIT-compile
+code using <code>dssesolve()</code>, <code>tsave</code> must be passed as tuple.</p>
 </details>
 <details class="note" open>
   <summary>Note</summary>

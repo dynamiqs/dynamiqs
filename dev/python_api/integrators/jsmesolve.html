@@ -5909,7 +5909,8 @@ solver returns the times at which the detector clicked,
 <details class="warning" open>
   <summary>Warning</summary>
   <p>For now, <code>jsmesolve()</code> only supports linearly spaced <code>tsave</code> with values that
-are exact multiples of the method fixed step size <code>dt</code>.</p>
+are exact multiples of the method fixed step size <code>dt</code>. Moreover, to JIT-compile
+code using <code>jsmesolve()</code>, <code>tsave</code> must be passed as tuple.</p>
 </details>
     <!-- <p>Parameters:</p> -->
     <p>
