@@ -16,7 +16,7 @@ doc_sections = {
     'time_qarray': (['dynamiqs/time_qarray.py'], 'dq'),
     'method': (['dynamiqs/method.py'], 'dq.method'),
     'gradient': (['dynamiqs/gradient.py'], 'dq.gradient'),
-    'hermitian_conjugate': (['dynamiqs/hermitian_conjugate.py'], 'dq'),
+    'helpers': (['dynamiqs/helpers.py'], 'dq'),
     'utils/operators': (['dynamiqs/utils/operators.py'], 'dq'),
     'utils/states': (['dynamiqs/utils/states.py'], 'dq'),
     'utils/general': (
