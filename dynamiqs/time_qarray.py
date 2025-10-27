@@ -932,8 +932,7 @@ class BatchedCallable(eqx.Module):
 
     @property
     def layout(self) -> Layout:
-        out0 = jax.eval_shape(lambda t: self(t), 0.0)
-        return out0.layout
+        return jax.eval_shape(lambda t: self(t), 0.0).layout
 
     def reshape(self, *shape: int) -> BatchedCallable:
         f = lambda t: self.f(t).reshape(*shape)
