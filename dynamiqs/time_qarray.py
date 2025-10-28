@@ -923,7 +923,7 @@ class BatchedCallable(eqx.Module):
             return self.f(t)[tuple(self.indices)]
 
     @property
-    def dtype(self):
+    def dtype(self) -> jnp.dtype:
         return jax.eval_shape(lambda t: self(t), 0.0).dtype
 
     @property
