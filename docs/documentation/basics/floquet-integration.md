@@ -27,22 +27,20 @@ propagator
 $$
     |\Psi_{m}(t+T)\rangle=U(0,T)|\Psi_{m}(t)\rangle.
 $$
-Thus we find that the Floquet modes satisfy an eigenvalue equation
+Thus we find that the Floquet modes at $t=0$ satisfy an eigenvalue equation
 $$
-    U(0,T)|\phi_{m}(0)\rangle=e^{-i\epsilon_{m}T}|\phi_{m}(0)\rangle
+    U(0,T)|\phi_{m}(0)\rangle=e^{-i\epsilon_{m}T}|\phi_{m}(0)\rangle,
 $$
-where the eigenvalues are exponentials of the quasienergies. Thus to obtain the Floquet modes and associated
-quasienergies, one only has to diagonalize the propagator. The Floquet modes at times that are not integer
-multiples of the drive period can then be immediately obtained from the Floquet modes at $t=0$
+where the eigenvalues are exponentials of the quasienergies. Therefore, one means of obtaining the $t=0$ Floquet modes and associated
+quasienergies is to diagonalize the propagator. The Floquet modes at other times can then be immediately obtained from the Floquet modes at $t=0$ by noting that
 $$
-    |\Psi_{m}(t)\rangle = e^{-i\epsilon_{m}t}|\phi_{m}(t)\rangle=U(0,t)|\Psi_{m}(0)\rangle=U(0,t)|\phi_{m}(0)\rangle,
+    |\Psi_{m}(t)\rangle = e^{-i\epsilon_{m}t}|\phi_{m}(t)\rangle=U(0,t)|\Psi_{m}(0)\rangle=U(0,t)|\phi_{m}(0)\rangle.
 $$
-therefore
+From the second and the last equality we then obtain
 $$
     |\phi_{m}(t)\rangle=e^{i\epsilon_{m}t}U(0,t)|\phi_{m}(0)\rangle.
 $$
-In many cases, the diagonalization of the propagator is best done numerically. However, there are some examples 
-that are amenable to an analytic treatment that help to build intuition.
+Oftentimes, this procedure must be done numerically if the Hamiltonian is time dependent. However, there are simple cases that can be treated analytically, one of which we explore below to demonstrate the technique and build intuition.
 
 ## Driven qubit
 
@@ -59,13 +57,13 @@ $$
 where $\delta\omega=\omega-\omega_{d}$. This is a time-independent Hamiltonian, for which we can obtain the propagator immediately by exponentiation. The
 propagator in this frame after one period of the drive is
 $$
-    U'(0,T) = \cos(\frac{\Omega t}{2})I-i\frac{\sin(\frac{\Omega t}{2})}{\Omega}\left(-\delta\omega\sigma_{z} + A\sigma_{x}\right),
+    U'(0,T) = \cos\left(\frac{\Omega t}{2}\right)I-i\frac{\sin(\frac{\Omega t}{2})}{\Omega}\left(-\delta\omega\sigma_{z} + A\sigma_{x}\right),
 $$
-where $\Omega=\sqrt{\delta\omega^2+A^2}.$ To obtain the Floquet modes and quasienergies, we need to diagonalize this propagator. We can obtain straightforwardly that the eigenvalues and eigenvectors are
+where $\Omega=\sqrt{\delta\omega^2+A^2}.$ To obtain the Floquet modes and quasienergies, we need to diagonalize this propagator. This 2x2 matrix can be diagonalized by hand, or with symbolic algebra software, yielding the eigenvalues
 $$
 \eta_{\pm} = e^{-i(\pm\Omega T/2)},
 $$
-and
+and associated (unnormalized) eigenvectors
 $$
 |\epsilon_{\pm}\rangle = \left( 
 \begin{matrix}
@@ -73,7 +71,7 @@ $$
 \end{matrix}
 \right).
 $$
-Using the above eigenvalue relation, we thus obtain that the quasienergies are $\epsilon_{\pm} = \pm \Omega/2$.
+The quasienergies are thus $\epsilon_{\pm} = \pm \Omega/2$.
 We can simplify the form of the eigenvectors by using some trig identities: we first define $\delta\omega/\Omega = \cos(\theta), \epsilon/\Omega = \sin(\theta)$. We then multiply the eigenvectors by successive constants to simplify them: for instance, for $|\epsilon_{+}\rangle$ we obtain
 $$
 |\epsilon_{+}\rangle = \left( 
@@ -114,7 +112,7 @@ $$
 \end{matrix}
 \right).
 $$
-This example that can be solved analytically is used as a test for the Floquet functionality of Dynamiqs.
+This example is used as an analytical test for the Floquet functionality of Dynamiqs.
 
 ## Finding Floquet modes and quasienergies using Dynamiqs
 
