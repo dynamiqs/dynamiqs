@@ -54,117 +54,96 @@ where $\sigma_{+}=|1\rangle\langle0|$. We can straightforwardly solve for the pr
 Hamiltonian by first moving into a rotating frame (also called the interaction frame) defined by the unitary 
 transformation $U_{r}(t)=\exp(i\omega_{d}t\sigma_{z}/2)$. The Hamiltonian in the rotating frame is
 $$
-    H'(t)=U_{r}^{\dagger} H(t)U_{r}-iU_{r}^{\dagger}\dot{U_{r}} =-\frac{\delta\omega}{2}\sigma_{z}+\frac{A}{2}(\sigma_{+} + {\rm H.~c.~}),
+    H'(t)=U_{r}^{\dagger} H(t)U_{r}-iU_{r}^{\dagger}\dot{U_{r}} =-\frac{\delta\omega}{2}\sigma_{z}+\frac{A}{2}\sigma_{x},
 $$
 where $\delta\omega=\omega-\omega_{d}$. This is a time-independent Hamiltonian, for which we can obtain the propagator immediately by exponentiation. The
 propagator in this frame after one period of the drive is
 $$
-    U'(0,T) = \cos(\Omega_{R}t)I-i\frac{\sin(\Omega_{R}t)}{\Omega_{R}}\left(-\frac{\delta\omega}{2}\sigma_{z} + \frac{A}{2}\sigma_{x}\right),
+    U'(0,T) = \cos(\frac{\Omega t}{2})I-i\frac{\sin(\frac{\Omega t}{2})}{\Omega}\left(-\delta\omega\sigma_{z} + A\sigma_{x}\right),
 $$
-where $\Omega_{r}=\sqrt{}$
-CONTINUE HERE XXXXXXXXXX
-!!! Example "Example for a two-level system"
-    For a two-level system, $\ket\psi=\begin{pmatrix}\alpha_0\\\alpha_1\end{pmatrix}$ with $|\alpha_0|^2+|\alpha_1|^2=1$.
-
-Numerically, each coefficient of the state is stored as a complex number represented by two real numbers (the real and the imaginary parts), stored either
-
-- in single precision: the `complex64` type which uses two `float32`,
-- in double precision: the `complex128` type which uses two `float64`.
-
-A greater precision will give a more accurate result, but will also take longer to calculate.
-
-## The Schrödinger equation
-
-The state evolution is described by the **Schrödinger equation**:
+where $\Omega=\sqrt{\delta\omega^2+A^2}.$ To obtain the Floquet modes and quasienergies, we need to diagonalize this propagator. We can obtain straightforwardly that the eigenvalues and eigenvectors are
 $$
-    i\hbar\frac{\dd\ket{\psi(t)}}{\dt}=H\ket{\psi(t)},
+\eta_{\pm} = e^{-i(\pm\Omega T/2)},
 $$
-where $H$ is a linear operator called the **Hamiltonian**, a matrix of size $n\times n$. This equation is a *first-order (linear and homogeneous) ordinary differential equation* (ODE). To simplify notations, we set $\hbar=1$. In this tutorial we consider a constant Hamiltonian, but note that it can also be time-dependent $H(t)$.
-
-!!! Example "Example for a two-level system"
-    The Hamiltonian of a two-level system with energy difference $\omega$ is $H=\frac{\omega}{2}\sigma_z=\begin{pmatrix}\omega/2&0\\0&-\omega/2\end{pmatrix}$.
-
-## Solving the Schrödinger equation numerically
-
-There are two common ideas for solving the Schrödinger equation.
-
-### Computing the propagator
-
-The state at time $t$ is given by $\ket{\psi(t)}=e^{-iHt}\ket{\psi(0)}$, where $\psi(0)$ is the state at time $t=0$. The operator $U(t)=e^{-iHt}$ is called the **propagator**, a matrix of size $n\times n$.
-
-??? Note "Solution for a time-dependent Hamiltonian"
-    For a time-dependent Hamiltonian $H(t)$, the solution at time $t$ is
-    $$
-        \ket{\psi(t)} = \mathscr{T}\exp\left(-i\int_0^tH(t')\dt'\right)\ket{\psi(0)},
-    $$
-    where $\mathscr{T}$ is the time-ordering symbol, which indicates the time-ordering of the Hamiltonians upon expansion of the matrix exponential (Hamiltonians at different times do not commute).
-
-The first idea is to explicitly compute the propagator to evolve the state up to time $t$. There are various ways to compute the matrix exponential, such as exact diagonalization of the Hamiltonian or approximate methods such as truncated Taylor series expansions.
-
-^^Space complexity^^: $O(n^2)$ (storing the Hamiltonian).
-
-^^Time complexity^^: $O(n^3)$ (complexity of computing the matrix exponential(1)).
-{ .annotate }
-
-1. Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
-
-!!! Example "Example for a two-level system"
-    For $H=\frac{\omega}{2}\sigma_z$, the propagator is straighforward to compute:
-    $$
-        U(t) = e^{-iHt} = \begin{pmatrix}e^{-i\omega t/2} & 0 \\\\ 0 & e^{i\omega t/2}\end{pmatrix}.
-    $$
-
-### Integrating the ODE
-
-The Schrödinger equation is an ODE, for which a wide variety of solvers have been developed. The simplest approach is the Euler method, a first-order ODE solver with a fixed step size which we describe shortly. Let us write the Taylor series expansion of the state at time $t+\dt$ up to first order:
+and
 $$
-    \begin{aligned}
-        \ket{\psi(t+\dt)} &= \ket{\psi(t)}+\dt\frac{\dd\ket{\psi(t)}}{\dt}+\mathcal{O}(\dt^2) \\\\
-        &\approx \ket{\psi(t)}-iH\dt\ket{\psi(t)},
-    \end{aligned}
+|\epsilon_{\pm}\rangle = \left( 
+\begin{matrix}
+1 \\ \frac{\epsilon}{\delta\omega\pm\Omega}
+\end{matrix}
+\right).
 $$
-where we used the Schrödinger equation to replace the time derivative of the state. By choosing a sufficiently small step size $\dt$ and starting from $\ket{\psi(0)}$, the state is then iteratively evolved to a final time using the previous equation.
+Using the above eigenvalue relation, we thus obtain that the quasienergies are $\epsilon_{\pm} = \pm \Omega/2$.
+We can simplify the form of the eigenvectors by using some trig identities: we first define $\delta\omega/\Omega = \cos(\theta), \epsilon/\Omega = \sin(\theta)$. We then multiply the eigenvectors by successive constants to simplify them: for instance, for $|\epsilon_{+}\rangle$ we obtain
+$$
+|\epsilon_{+}\rangle = \left( 
+\begin{matrix}
+1 \\ \frac{\epsilon}{\delta\omega+\Omega}
+\end{matrix}
+\right) \rightarrow 
+\left( 
+\begin{matrix}
+\delta\omega + \Omega \\ \epsilon
+\end{matrix}
+\right)
+\rightarrow
+\left( 
+\begin{matrix}
+\delta\omega/\Omega + 1 \\ \epsilon/\Omega
+\end{matrix}
+\right)
+=\left( 
+\begin{matrix}
+\cos\theta + 1 \\ \sin\theta
+\end{matrix}
+\right).
+$$
+Normalizing and noting that $\cos\theta+1=2\cos^2\tfrac{\theta}{2}$ and $\sin\theta=2\sin\tfrac{\theta}{2}\cos\tfrac{\theta}{2}$, we obtain
+$$
+|\epsilon_{+}\rangle = \left( 
+\begin{matrix}
+\cos\tfrac{\theta}{2} \\ \sin\tfrac{\theta}{2}
+\end{matrix}
+\right).
+$$
+By a similar analysis, we find for the other eigenvector
+$$
+|\epsilon_{-}\rangle = \left( 
+\begin{matrix}
+\sin\tfrac{\theta}{2} \\ -\cos\tfrac{\theta}{2}
+\end{matrix}
+\right).
+$$
+This example that can be solved analytically is used as a test for the Floquet functionality of Dynamiqs.
 
-There are two main types of ODE solvers:
+## Finding Floquet modes and quasienergies using Dynamiqs
 
-- **Fixed step size**: as with the Euler method, the step size $\dt$ is fixed during the simulation. The best known higher order methods are the *Runge-Kutta methods*. It is important for all these methods that the time step is sufficiently small to ensure the accuracy of the solution.
-- **Adaptive step size**: the step size is automatically adjusted during the simulation, at each time step. A well-known method is the *Dormand-Prince method*.
-
-^^Space complexity^^: $O(n^2)$ (storing the Hamiltonian).
-
-^^Time complexity^^: $O(n^2\times\text{number of time steps})$ (complexity of the matrix-vector product at each time step).
-
-## Using dynamiqs
-
-You can create the state and Hamiltonian using any array-like object. Let's take the example of a two-level system with a simple Hamiltonian:
+Let us now consider a truly time-dependent example for which there is no analytical solution: the Rabi model of a driven two-level system.
 
 ```python
 import jax.numpy as jnp
 import dynamiqs as dq
 
-psi0 = dq.ground()                # initial state
-H = dq.sigmaz()                   # Hamiltonian
-tsave = jnp.linspace(0, 1.0, 11)  # saving times
-res = dq.sesolve(H, psi0, tsave)  # run the simulation
-print(res.states[-1])             # print the final state
+jnp.set_printoptions(precision=3, suppress=True)  # set custom array print style
+
+T = 1.0                             # drive period
+omega_d = 2 * jnp.pi / T            # drive frequency
+H0 = 0.1 * dq.sigmaz()              # drift Hamiltonian
+f = lambda t: jnp.cos(omega_d * t)  # time-dependent drive
+H1 = dq.modulated(f, dq.sigmax())   # drive Hamiltonian
+tsave = jnp.linspace(0, T, 11)      # saving times
+res = dq.floquet(H0 + H1, T, tsave)  # run the simulation
+print(res.quasienergies)            # print the quasienergies
+print(res.modes[-1])                # print the final floquet modes
 ```
 
 ```text title="Output"
-|██████████| 100.0% ◆ elapsed 2.52ms ◆ remaining 0.00ms
-Array([[0.  +0.j   ],
-       [0.54+0.841j]], dtype=complex64)
-```
+|██████████| 100.0% ◆ elapsed 1.99ms ◆ remaining 0.00ms
+[ 0.972 -0.972]
+QArray: shape=(2, 2, 1), dims=(2,), dtype=complex64, layout=dense
+[[[ 0.998+0.j]
+  [-0.055-0.j]]
 
-If you want to know more about the available solvers or the different options, head to the [`dq.sesolve()`][dynamiqs.sesolve] API documentation.
-
-You can also directly compute the propagator with the [`dq.sepropagator()`][dynamiqs.sepropagator] solver. Continuing the last example:
-
-```python
-res = dq.sepropagator(H, tsave)
-print(res.propagators[-1])  # print the final propagator
-```
-
-```text title="Output"
-Array([[0.54-0.841j 0.  +0.j   ]
-       [0.  +0.j    0.54+0.841j]], dtype=complex64)
+ [[ 0.055-0.j]
+  [ 0.998+0.j]]]
 ```
