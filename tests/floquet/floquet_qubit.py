@@ -72,7 +72,7 @@ class FloquetQubit(System):
         w0 = jnp.cos(0.5 * theta) * basis(2, 0) + jnp.exp(
             -1j * self.omega_d * t
         ) * jnp.sin(0.5 * theta) * basis(2, 1)
-        w1 = jnp.sin(0.5 * theta) * basis(2, 0) - jnp.exp(
+        w1 = -jnp.sin(0.5 * theta) * basis(2, 0) + jnp.exp(
             -1j * self.omega_d * t
         ) * jnp.cos(0.5 * theta) * basis(2, 1)
         return stack([w0, w1])
