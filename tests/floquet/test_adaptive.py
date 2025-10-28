@@ -2,7 +2,6 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-jax.config.update("jax_disable_jit", True)
 from dynamiqs.method import Tsit5
 from dynamiqs.utils.general import fidelity
 
