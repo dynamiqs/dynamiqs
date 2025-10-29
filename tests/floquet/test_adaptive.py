@@ -8,7 +8,6 @@ from dynamiqs.utils.general import fidelity
 from ..order import TEST_LONG
 from .floquet_qubit import FloquetQubit
 
-
 EPS = 1e-6
 
 
@@ -31,6 +30,8 @@ class TestFloquet:
         idxs = jnp.argmin(
             jnp.abs(quasienergies - true_quasienergies[..., None]), axis=1
         )
-        mode_infid = 1 - jnp.average(fidelity(true_modes, floquet_result.modes[:, idxs]))
+        mode_infid = 1 - jnp.average(
+            fidelity(true_modes, floquet_result.modes[:, idxs])
+        )
         assert jnp.allclose(quasienergies[idxs], true_quasienergies, atol=ysave_atol)
         assert 0 - EPS <= mode_infid < ysave_atol + EPS

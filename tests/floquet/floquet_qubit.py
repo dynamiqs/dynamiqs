@@ -66,7 +66,7 @@ class FloquetQubit(System):
         H0 = 0.5 * (params.omega - params.omega_d) * sigmaz()
         return H0 + 0.5 * params.amp * sigmax()
 
-    def state(self, t: float) -> Array:
+    def state(self, _t: float) -> Array:
         delta_Omega = self.omega - self.omega_d
         theta = jnp.arctan(self.amp / delta_Omega)
         w0 = jnp.cos(0.5 * theta) * basis(2, 0) + jnp.sin(0.5 * theta) * basis(2, 1)
