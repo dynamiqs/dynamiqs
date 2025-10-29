@@ -6,13 +6,13 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
 
-from dynamiqs import basis, sigmam, sigmaz, stack, sigmax
+from dynamiqs import basis, sigmax, sigmaz, stack
 from dynamiqs.gradient import Gradient
 from dynamiqs.integrators.apis.floquet import floquet
 from dynamiqs.method import Method
 from dynamiqs.options import Options
 from dynamiqs.result import FloquetResult
-from dynamiqs.time_qarray import CallableTimeQArray, modulated
+from dynamiqs.time_qarray import CallableTimeQArray
 
 from ..system import System
 
