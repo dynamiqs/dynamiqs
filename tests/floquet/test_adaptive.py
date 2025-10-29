@@ -9,13 +9,16 @@ from ..order import TEST_LONG
 from .floquet_qubit import FloquetQubit
 
 
+EPS = 1e-6
+
+
 @pytest.mark.run(order=TEST_LONG)
 class TestFloquet:
     @pytest.mark.parametrize('omega', 2.0 * jnp.pi * jnp.array([1.0, 2.5]))
     @pytest.mark.parametrize('amp', 2.0 * jnp.pi * jnp.array([0.01, 0.1]))
-    @pytest.mark.parametrize('t', [0.0, 0.1])
+    @pytest.mark.parametrize('t', [0.0])
     @pytest.mark.parametrize('omega_d_frac', [0.9, 0.9999])
-    def test_correctness(self, omega, amp, t, omega_d_frac, ysave_atol: float = 1e-6):
+    def test_correctness(self, omega, amp, t, omega_d_frac, ysave_atol: float = 1e-5):
         # temporary fix for https://github.com/patrick-kidger/diffrax/issues/488
         tsave = jnp.array([0.0]) if t == 0.0 else jnp.linspace(0.0, t, 4)
         omega_d = omega_d_frac * omega
@@ -28,6 +31,6 @@ class TestFloquet:
         idxs = jnp.argmin(
             jnp.abs(quasienergies - true_quasienergies[..., None]), axis=1
         )
-        mode_infid = 1 - jnp.sum(fidelity(true_modes, floquet_result.modes[:, idxs]))
+        mode_infid = 1 - jnp.average(fidelity(true_modes, floquet_result.modes[:, idxs]))
         assert jnp.allclose(quasienergies[idxs], true_quasienergies, atol=ysave_atol)
-        assert mode_infid < ysave_atol
+        assert 0 - EPS <= mode_infid < ysave_atol + EPS

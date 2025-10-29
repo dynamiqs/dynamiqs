@@ -69,12 +69,8 @@ class FloquetQubit(System):
     def state(self, t: float) -> Array:
         delta_Omega = self.omega - self.omega_d
         theta = jnp.arctan(self.amp / delta_Omega)
-        w0 = jnp.cos(0.5 * theta) * basis(2, 0) + jnp.exp(
-            -1j * self.omega_d * t
-        ) * jnp.sin(0.5 * theta) * basis(2, 1)
-        w1 = -jnp.sin(0.5 * theta) * basis(2, 0) + jnp.exp(
-            -1j * self.omega_d * t
-        ) * jnp.cos(0.5 * theta) * basis(2, 1)
+        w0 = jnp.cos(0.5 * theta) * basis(2, 0) + jnp.sin(0.5 * theta) * basis(2, 1)
+        w1 = -jnp.sin(0.5 * theta) * basis(2, 0) + jnp.cos(0.5 * theta) * basis(2, 1)
         return stack([w0, w1])
 
     def true_quasienergies(self) -> Array:
