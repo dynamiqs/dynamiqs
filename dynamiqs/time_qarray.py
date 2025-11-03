@@ -923,16 +923,16 @@ class BatchedCallable(eqx.Module):
             return self.f(t)[tuple(self.indices)]
 
     @property
-    def dtype(self) -> tuple[int, ...]:
-        return jax.eval_shape(self.f, 0.0).dtype
+    def dtype(self) -> jnp.dtype:
+        return jax.eval_shape(lambda t: self(t), 0.0).dtype
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return jax.eval_shape(self.f, 0.0).shape
+        return jax.eval_shape(lambda t: self(t), 0.0).shape
 
     @property
     def layout(self) -> Layout:
-        return jax.eval_shape(self.f, 0.0).layout
+        return jax.eval_shape(lambda t: self(t), 0.0).layout
 
     def reshape(self, *shape: int) -> BatchedCallable:
         f = lambda t: self.f(t).reshape(*shape)
