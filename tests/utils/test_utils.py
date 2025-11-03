@@ -7,7 +7,7 @@ from jax import Array
 import dynamiqs as dq
 from dynamiqs._utils import cdtype
 
-from ..order import TEST_INSTANT
+from ..order import TEST_INSTANT, TEST_SHORT
 
 
 def qobj_to_array(x: qt.Qobj) -> Array:
@@ -184,12 +184,13 @@ def test_entropy_relative_doc_examples():
     val = dq.entropy_relative(maximally_mixed, psi).item()
     assert jnp.isposinf(val)
 
-    # 3) Pure |0⟩ vs diagonal σ with eigenvalue 1/√2 on |0⟩:
-    #    S = -log(1/√2) = log √2 = 0.5 * log 2
-    w0 = 2 ** (-0.5)  # 1/sqrt(2)
-    sigma = w0 * dq.fock_dm(2, 0) + (1.0 - w0) * dq.fock_dm(2, 1)
-    val = dq.entropy_relative(dq.fock_dm(2, 0), sigma).item()
-    assert val == pytest.approx(0.5 * jnp.log(2.0), rel=1e-12, abs=1e-12)
+    # 3) Pure |0⟩ vs diagonal sigma with eigenvalue 0.3 on |0⟩:
+    #    S = -log(0.3)
+    w = 0.3  # 1/sqrt(2)
+    rho = dq.fock_dm(2, 0)
+    sigma = w * dq.fock_dm(2, 0) + (1.0 - w) * dq.fock_dm(2, 1)
+    val = dq.entropy_relative(rho, sigma).item()
+    assert val == pytest.approx(-jnp.log(w), rel=1e-12, abs=1e-12)
 
     # 4) Orthogonal pure states: S(|1><1| || |0><0|) = +inf
     rho = dq.fock_dm(2, 1)

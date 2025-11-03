@@ -1059,44 +1059,45 @@ def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
         _(array of shape (...))_ Real-valued quantum relative entropy.
 
     Examples:
-    1) Identity case (always zero):
+        State with respect to itself:
         >>> rho = dq.fock_dm(2, 0)  # |0><0|
         >>> dq.entropy_relative(rho, rho)
-        Array(0., dtype=float64)
+        Array(0., dtype=float32)
 
-    2) Pure vs maximally mixed (dimension d=2 => S = log 2):
-        >>> psi = dq.fock_dm(2, 0)  # |0><0|
+        Pure state with respect to a maximally mixed state, and vice versa:
+        >>> pure = dq.fock_dm(2, 0)  # |0><0|
         >>> maximally_mixed = (dq.fock_dm(2, 0) + dq.fock_dm(2, 1)).unit()  # I/2
-        >>> dq.entropy_relative(psi, maximally_mixed)  # ln 2 ~= 0.69314718056
-        Array(0.69314718, dtype=float64)
-        >>> dq.entropy_relative(maximally_mixed, psi)  # support mismatch => +∞
-        Array(inf, dtype=float64)
+        >>> dq.entropy_relative(pure, maximally_mixed)  # ln 2 ~= 0.693
+        Array(0.693, dtype=float32)
+        >>> dq.entropy_relative(maximally_mixed, pure)  # support mismatch -> +∞
+        Array(inf, dtype=float32)
 
-    3) Pure vs diagonal sigma with eigenvalue 1/sqrt(2) on |0> (=> S = log sqrt(2)):
-        >>> w0 = 2 ** (-0.5)  # 1/sqrt(2)
-        >>> sigma = w0 * dq.fock_dm(2, 0) + (1 - w0) * dq.fock_dm(2, 1)
-        >>> dq.entropy_relative(dq.fock_dm(2, 0), sigma)  # ln sqrt(2) ~= 0.34657359
-        Array(0.34657359, dtype=float64)
+        Pure state with respect to diagonal state in same basis:
+        >>> rho = dq.fock_dm(2, 0)  # |0><0|
+        >>> w = 0.3
+        >>> sigma = w * dq.fock_dm(2, 0) + (1 - w) * dq.fock_dm(2, 1)
+        >>> dq.entropy_relative(rho, sigma)
+        Array(1.204, dtype=float32)
+        >>> -jnp.log(w)
+        Array(1.204, dtype=float32, weak_type=True)
 
-    4) Orthogonal pure states (support disjoint => +∞):
+        Orthogonal pure states:
         >>> rho = dq.fock_dm(2, 1)  # |1><1|
         >>> sigma = dq.fock_dm(2, 0)  # |0><0|
         >>> dq.entropy_relative(rho, sigma)
-        Array(inf, dtype=float64)
-    """  # noqa: E501
-    # Convert inputs to internal array type and validate shapes
+        Array(inf, dtype=float32)
+    """
+    # convert inputs to internal array type and validate shapes
     rho = asqarray(rho)
     sigma = asqarray(sigma)
     check_shape(rho, 'x', '(..., n, 1)', '(..., n, n)')
     check_shape(sigma, 'x', '(..., n, 1)', '(..., n, n)')
 
-    # Promote kets |ψ⟩ to density operators |ψ⟩⟨ψ|
-    if isket(rho):
-        rho = todm(rho)
-    if isket(sigma):
-        sigma = todm(sigma)
+    # promote kets to density operators
+    rho = todm(rho)
+    sigma = todm(sigma)
 
-    # Spectral decompositions:
+    # spectral decompositions:
     #   rho  = Σ_i r_i |r_i⟩⟨r_i|
     #   sigma= Σ_j s_j |s_j⟩⟨s_j|
     # rvals/svals: eigenvalues r_i, s_j  (last axis)
@@ -1104,27 +1105,25 @@ def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
     svals, svecs = sigma._eigh()
     rvals, rvecs = rho._eigh()
 
-    # Overlap probabilities between eigenbases:
-    #   P_{ij} = |⟨r_i|s_j⟩|^2
-    # We form the matrix of overlaps ⟨r_i|s_j⟩ as rvecs† svecs.
-    # Using .mT (matrix transpose) with a conjugate on svecs is equivalent up to a global conjugation,
-    # and taking |·|^2 removes that phase anyway.
+    # overlap probabilities between eigenbases: P_{ij} = |⟨r_i|s_j⟩|^2
+    # we form the matrix of overlaps ⟨r_i|s_j⟩ as rvecs† svecs.
+    # using .mT (matrix transpose) with a conjugate on svecs is equivalent
+    # up to a global conjugation, and taking |·|^2 removes that phase anyway.
     P = jnp.abs(rvecs.mT @ svecs.conj()) ** 2  # shape (..., n, n)
 
-    # Clip tiny negative eigenvalues (from Hermitian eigensolvers) to 0.
-    # This preserves positivity and prevents spurious log of negative numbers.
+    # clip tiny negative eigenvalues (from Hermitian eigensolvers) to 0.
+    # this preserves positivity and prevents spurious log of negative numbers.
     nrvals = jnp.where(rvals < 0, 0, rvals)
     nsvals = jnp.where(svals < 0, 0, svals)
 
-    # Compute the inner expectation term E_i = Σ_j P_{ij} log s_j
+    # compute the inner expectation term E_i = Σ_j P_{ij} log s_j
     # by broadcasting log(nsvals) over the last axis of P and summing over j.
     E = (P * jnp.expand_dims(jnp.log(nsvals), (-2))).sum(-1)  # shape (..., n)
 
-    # Implement the formula:
-    #   S_i = r_i [ log r_i  -  E_i].
+    # implement the formula: S_i = r_i [ log r_i  -  E_i].
     terms = nrvals * (jnp.log(nrvals) - E)  # shape (..., n)
 
-    # Sum and replace NaNs from 0*inf with 0, keep ±inf for support mismatches.
+    # sum and replace NaNs from 0*inf with 0, keep ±inf for support mismatches.
     return jnp.nan_to_num(terms, posinf=jnp.inf, neginf=-jnp.inf).sum(
         -1
     )  # shape (...,)

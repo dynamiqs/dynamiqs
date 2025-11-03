@@ -568,7 +568,7 @@ class QArray(eqx.Module):
         if isinstance(y, QArray):
             check_compatible_dims(self.dims, y.dims)
 
-        if is_batched_scalar(y):  # noqa: RET503
+        if is_batched_scalar(y):
             raise TypeError('Attempted matrix product between a scalar and a qarray.')
 
     @abstractmethod
