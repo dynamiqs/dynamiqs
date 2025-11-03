@@ -145,6 +145,7 @@ nav:
           - Open systems: documentation/basics/open-systems.md
           - Batching simulations: documentation/basics/batching-simulations.md
           - Computing gradients: documentation/basics/computing-gradients.md
+          - Floquet integration: documentation/basics/floquet-integration.md
       - Advanced examples:
           - Driven-dissipative Kerr oscillator: documentation/advanced_examples/kerr-oscillator.md
           - Continuous jump measurement: documentation/advanced_examples/continuous-jump-measurement.md
