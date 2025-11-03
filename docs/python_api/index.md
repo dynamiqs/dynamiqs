@@ -61,10 +61,15 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - Kvaerno3
         - Kvaerno5
         - Euler
+        - EulerJump
         - EulerMaruyama
         - Rouchon1
+        - Rouchon2
+        - Rouchon3
         - Expm
         - Event
+        - JumpMonteCarlo
+        - DiffusiveMonteCarlo
 
 ### Gradients (dq.gradient)
 
@@ -72,9 +77,9 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
         members:
-        - Autograd
-        - CheckpointAutograd
-        - ForwardAutograd
+        - Direct
+        - BackwardCheckpointed
+        - Forward
 
 ## Utilities
 
@@ -100,6 +105,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - sigmax
         - sigmay
         - sigmaz
+        - xyz
         - sigmap
         - sigmam
         - hadamard
@@ -125,7 +131,10 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - coherent
         - coherent_dm
         - ground
+        - ground_dm
         - excited
+        - excited_dm
+        - thermal_dm
 
 
 ### Quantum utilities
@@ -202,8 +211,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
         members:
-        - operator_to_vector
-        - vector_to_operator
+        - vectorize
+        - unvectorize
         - spre
         - spost
         - sprepost
@@ -244,6 +253,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - wigner
         - wigner_mosaic
         - wigner_gif
+        - wigner_data
         - pwc_pulse
         - fock
         - fock_evolution

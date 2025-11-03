@@ -9,7 +9,7 @@ from jaxtyping import Array, ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...method import Expm, Method
+from ...method import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options, check_options
 from ...qarrays.dense_qarray import DenseQArray
 from ...qarrays.qarray import QArrayLike
@@ -20,7 +20,16 @@ from .._utils import (
     astimeqarray,
     cartesian_vmap,
     catch_xla_runtime_error,
+    ispwc,
     multi_vmap,
+)
+from ..core.diffrax_integrator import (
+    mepropagator_dopri5_integrator_constructor,
+    mepropagator_dopri8_integrator_constructor,
+    mepropagator_euler_integrator_constructor,
+    mepropagator_kvaerno3_integrator_constructor,
+    mepropagator_kvaerno5_integrator_constructor,
+    mepropagator_tsit5_integrator_constructor,
 )
 from ..core.expm_integrator import mepropagator_expm_integrator_constructor
 
@@ -30,7 +39,7 @@ def mepropagator(
     jump_ops: list[QArrayLike | TimeQArray],
     tsave: ArrayLike,
     *,
-    method: Method = Expm(),  # noqa: B008
+    method: Method | None = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> MEPropagatorResult:
@@ -45,9 +54,10 @@ def mepropagator(
     Liouvillian. The formula simplifies to $\mathcal{U}(t)=e^{t\mathcal{L}}$ if the
     Liouvillian does not depend on time.
 
-    Warning:
-        This function only supports constant or piecewise constant Hamiltonians and jump
-        operators. Support for arbitrary time dependence will be added soon.
+    If the Liouvillian is constant or piecewise constant, the propagator is
+    computed by directly exponentiating the Liouvillian. Otherwise, the
+    propagator is computed by solving the Lindblad master equation with an ODE
+    method.
 
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
@@ -56,19 +66,28 @@ def mepropagator(
         tsave _(array-like of shape (ntsave,))_: Times at which the propagators are
             saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or from `t0`
             to `tsave[-1]` if `t0` is specified in `options`.
-        method: Method for the integration. Defaults to
-            [`dq.method.Expm`][dynamiqs.method.Expm] (explicit matrix exponentiation),
-            which is the only supported method for now.
+        method: Method for the integration. Defaults to `None` which redirects
+            to [`dq.method.Expm`][dynamiqs.method.Expm] (explicit matrix
+            exponentiation) or [`dq.method.Tsit5`][dynamiqs.method.Tsit5]
+            depending on the Liouvillian type (supported:
+            [`Expm`][dynamiqs.method.Expm],
+            [`Tsit5`][dynamiqs.method.Tsit5],
+            [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8],
+            [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5],
+            [`Euler`][dynamiqs.method.Euler]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
         options: Generic options (supported: `save_propagators`, `cartesian_batching`,
-            `t0`, `save_extra`).
+            `progress_meter`, `t0`, `save_extra`).
             ??? "Detailed options API"
                 ```
                 dq.Options(
                     save_propagators: bool = True,
                     cartesian_batching: bool = True,
+                    progress_meter: AbstractProgressMeter | bool | None = None,
                     t0: ScalarLike | None = None,
                     save_extra: callable[[Array], PyTree] | None = None,
                 )
@@ -81,6 +100,15 @@ def mepropagator(
                 - **cartesian_batching** - If `True`, batched arguments are treated as
                     separated batch dimensions, otherwise the batching is performed over
                     a single shared batched dimension.
+                - **progress_meter** - Progress meter indicating how far the solve has
+                    progressed. Defaults to `None` which uses the global default
+                    progress meter (see
+                    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
+                    `True` for a [tqdm](https://github.com/tqdm/tqdm) progress meter,
+                    and `False` for no output. See other options in
+                    [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
+                    If gradients are computed, the progress meter only displays during
+                    the forward pass.
                 - **t0** - Initial time. If `None`, defaults to the first time in
                     `tsave`.
                 - **save_extra** _(function, optional)_ - A function with signature
@@ -114,6 +142,29 @@ def mepropagator(
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
 
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a
+        jump_ops = [a]
+        tsave = jnp.linspace(0, 1.0, 11)
+
+        result = dq.mepropagator(H, jump_ops, tsave)
+        print(result)
+        ```
+
+        ```text title="Output"
+        ==== MEPropagatorResult ====
+        Method      : Expm
+        Infos       : 10 steps
+        Propagators : QArray complex64 (11, 256, 256) | 5.5 Mb
+        ```
+
     # Advanced use-cases
 
     ## Defining a time-dependent Hamiltonian or jump operator
@@ -143,7 +194,7 @@ def mepropagator(
         - `H` has shape _(2, 3, n, n)_,
         - `jump_ops = [L0, L1]` has shape _[(4, 5, n, n), (6, n, n)]_,
 
-        then `result.propagators` has shape _(2, 3, 4, 5, 6, ntsave, n, n)_.
+        then `result.propagators` has shape _(2, 3, 4, 5, 6, ntsave, n^2, n^2)_.
     === "If `cartesian_batching = False`"
         The results leading dimensions are
         ```
@@ -154,7 +205,7 @@ def mepropagator(
         - `H` has shape _(2, 3, n, n)_,
         - `jump_ops = [L0, L1]` has shape _[(3, n, n), (2, 1, n, n)]_,
 
-        then `result.propagators` has shape _(2, 3, ntsave, n, n)_.
+        then `result.propagators` has shape _(2, 3, ntsave, n^2, n^2)_.
 
     See the
     [Batching simulations](../../documentation/basics/batching-simulations.md)
@@ -177,7 +228,7 @@ def mepropagator(
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('method', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_mepropagator(
     H: TimeQArray,
     Ls: list[TimeQArray],
@@ -215,7 +266,18 @@ def _mepropagator(
     options: Options,
 ) -> MEPropagatorResult:
     # === select integrator constructor
-    integrator_constructors = {Expm: mepropagator_expm_integrator_constructor}
+    if method is None:  # default method
+        method = Expm() if all(ispwc(x) for x in [H, *Ls]) else Tsit5()
+
+    integrator_constructors = {
+        Expm: mepropagator_expm_integrator_constructor,
+        Euler: mepropagator_euler_integrator_constructor,
+        Dopri5: mepropagator_dopri5_integrator_constructor,
+        Dopri8: mepropagator_dopri8_integrator_constructor,
+        Tsit5: mepropagator_tsit5_integrator_constructor,
+        Kvaerno3: mepropagator_kvaerno3_integrator_constructor,
+        Kvaerno5: mepropagator_kvaerno5_integrator_constructor,
+    }
     assert_method_supported(method, integrator_constructors.keys())
     integrator_constructor = integrator_constructors[type(method)]
 
@@ -225,8 +287,7 @@ def _mepropagator(
     # === init integrator
     # todo: replace with vectorized utils constructor for eye
     data = jnp.eye(H.shape[-1] ** 2, dtype=H.dtype)
-    # todo: timeqarray should expose dims without having to call at specific time
-    y0 = DenseQArray(H(0.0).dims, True, data)
+    y0 = DenseQArray(H.dims, True, data)
     integrator = integrator_constructor(
         ts=tsave,
         y0=y0,

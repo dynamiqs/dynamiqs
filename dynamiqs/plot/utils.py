@@ -136,19 +136,20 @@ def grid(
         nrows, ncols, figsize=figsize, constrained_layout=True, **kwargs
     )
 
-    return fig, iter(axs.flatten())
+    axs_list = axs.flatten() if nrows != 1 or ncols != 1 else [axs]
+    return fig, iter(axs_list)
 
 
 colors = {
     'blue': '#0c5dA5',
     'red': '#ff6b6b',
     'turquoise': '#2ec4b6',
-    'yellow': '#ffc463',
-    'grey': '#9e9e9e',
-    'purple': '#845b97',
-    'brown': '#c0675c',
-    'darkgreen': '#20817d',
-    'darkgrey': '#666666',
+    'violet': '#8E6DB0',
+    'purple': '#AB3A62',
+    'yellow': '#f2c46f',
+    'lightblue': '#64aee3',
+    'green': '#1C875C',
+    'brown': '#A17E33',
 }
 
 
@@ -195,29 +196,35 @@ def mplstyle(*, usetex: bool = False, dpi: int = 72):
             'xtick.major.size': 4.5,
             'xtick.minor.size': 2.5,
             'xtick.major.width': 1.0,
-            'xtick.labelsize': 12,
+            'xtick.labelsize': 10,
             'xtick.minor.visible': True,
             # ytick
             'ytick.direction': 'in',
             'ytick.major.size': 4.5,
             'ytick.minor.size': 2.5,
             'ytick.major.width': 1.0,
-            'ytick.labelsize': 12,
+            'ytick.labelsize': 10,
             'ytick.minor.visible': True,
             # axes
             'axes.facecolor': 'white',
-            'axes.grid': False,
+            'axes.grid': True,
             'axes.titlesize': 12,
             'axes.labelsize': 12,
             'axes.linewidth': 1.0,
             'axes.prop_cycle': cycler('color', colors.values()),
+            'axes.xmargin': 0.03,
             # grid
             'grid.color': 'gray',
-            'grid.linestyle': '--',
+            'grid.linestyle': ':',
             'grid.alpha': 0.3,
             # legend
             'legend.frameon': False,
-            'legend.fontsize': 12,
+            'legend.fontsize': 10,
+            'legend.title_fontsize': 10,
+            'legend.labelspacing': 0.4,
+            'legend.handlelength': 1.5,
+            'legend.columnspacing': 1.5,
+            'legend.borderpad': 0.8,
             # figure
             'figure.facecolor': 'white',
             'figure.dpi': dpi,
@@ -247,6 +254,10 @@ def integer_ticks(axis: Axis, n: int, all: bool = True):  # noqa: A002
 
     # format major ticks as integer
     axis.set_major_formatter(lambda x, _: f'{int(x)}')
+
+    # if grid is on for this axis, set it to minor ticks to align with integer ticks
+    if any(line.get_visible() for line in axis.get_gridlines()):
+        axis.grid(which='minor', visible=True)
 
 
 def ket_ticks(axis: Axis):

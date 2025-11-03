@@ -1,6 +1,6 @@
 import pytest
 
-from dynamiqs.gradient import Autograd
+from dynamiqs.gradient import Direct
 from dynamiqs.method import Expm
 
 from ..integrator_tester import IntegratorTester
@@ -14,4 +14,4 @@ class TestSESolveExpm(IntegratorTester):
         self._test_correctness(dense_cavity, Expm())
 
     def test_gradient(self):
-        self._test_gradient(dense_cavity, Expm(), Autograd())
+        self._test_gradient(dense_cavity, Expm(), Direct())

@@ -90,7 +90,8 @@ def dsmesolve(
 
     Warning:
         For now, `dsmesolve()` only supports linearly spaced `tsave` with values that
-        are exact multiples of the method fixed step size `dt`.
+        are exact multiples of the method fixed step size `dt`. Moreover, to JIT-compile
+        code using `dsmesolve()`, `tsave` must be passed as tuple.
 
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
@@ -176,6 +177,35 @@ def dsmesolve(
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
 
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+        import jax
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a
+        jump_ops = [a]
+        etas = [0.5]
+        psi0 = dq.coherent(n, 1.0)
+        tsave = jnp.linspace(0, 1.0, 11)
+        keys = jax.random.split(jax.random.key(42), 100)
+
+        method = dq.method.EulerMaruyama(dt=1e-3)
+        result = dq.dsmesolve(H, jump_ops, etas, psi0, tsave, keys, method=method)
+        print(result)
+        ```
+
+        ```text title="Output"
+        ==== DSMESolveResult ====
+        Method       : EulerMaruyama
+        Infos        : 1000 steps | infos shape (100,)
+        States       : QArray complex64 (100, 11, 16, 16) | 2.1 Mb
+        Measurements : Array float32 (100, 1, 10) | 3.9 Kb
+        ```
+
     # Advanced use-cases
 
     ## Defining a time-dependent Hamiltonian or jump operator
@@ -233,7 +263,6 @@ def dsmesolve(
     Ls = [astimeqarray(L) for L in jump_ops]
     etas = jnp.asarray(etas)
     rho0 = asqarray(rho0)
-    tsave = jnp.asarray(tsave)
     keys = jnp.asarray(keys)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
@@ -243,6 +272,14 @@ def dsmesolve(
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'dsmesolve')
     options = options.initialise()
+
+    # todo: fix static tsave
+    # this condition allows the user to pass a tuple for tsave to bypass this bit of
+    # code (e.g., to JIT-compile this function)
+    if not isinstance(tsave, tuple):
+        tsave = jnp.asarray(tsave)
+        tsave = check_times(tsave, 'tsave')
+        tsave = tuple(tsave.tolist())
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
@@ -259,14 +296,13 @@ def dsmesolve(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    tsave = tuple(tsave.tolist())  # todo: fix static tsave
     return _vectorized_dsmesolve(
         H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, method, gradient, options
     )
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('tsave', 'method', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('tsave', 'gradient', 'options'))
 def _vectorized_dsmesolve(
     H: TimeQArray,
     Lcs: list[TimeQArray],
@@ -280,22 +316,13 @@ def _vectorized_dsmesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSMESolveResult:
-    f = _dsmesolve_single_trajectory
-
-    # === vectorize function over stochastic trajectories
-    # the input is vectorized over `key`
-    in_axes = (None, None, None, None, None, None, 0, None, None, None, None)
-    # the result is vectorized over `_saved`, `infos` and `keys`
-    out_axes = DSMESolveResult.out_axes()
-    f = jax.vmap(f, in_axes, out_axes)
-
-    # === vectorize function
     # vectorize input over H and rho0
-    in_axes = (H.in_axes, None, None, None, 0, None, None, None, None, None, None)
+    in_axes = (H.in_axes, None, None, None, 0, *(None,) * 6)
+    out_axes = DSMESolveResult.out_axes()
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, 0, 0, 0, rho0.ndim - 2, 0, 0, 0, 0, 0, 0)
-        f = cartesian_vmap(f, in_axes, out_axes, nvmap)
+        f = cartesian_vmap(_dsmesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
         nvmap = len(bshape)
@@ -304,9 +331,28 @@ def _vectorized_dsmesolve(
         H = H.broadcast_to(*bshape, n, n)
         rho0 = rho0.broadcast_to(*bshape, n, n)
         # vectorize the function
-        f = multi_vmap(f, in_axes, out_axes, nvmap)
+        f = multi_vmap(_dsmesolve_many_trajectories, in_axes, out_axes, nvmap)
 
-    # === apply vectorized function
+    return f(H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, method, gradient, options)
+
+
+def _dsmesolve_many_trajectories(
+    H: TimeQArray,
+    Lcs: list[TimeQArray],
+    Lms: list[TimeQArray],
+    etas: Array,
+    rho0: QArray,
+    tsave: Array,
+    keys: PRNGKeyArray,
+    exp_ops: list[QArray] | None,
+    method: Method,
+    gradient: Gradient | None,
+    options: Options,
+) -> DSMESolveResult:
+    # vectorize input over keys
+    in_axes = (None, None, None, None, None, None, 0, None, None, None, None)
+    out_axes = DSMESolveResult(None, None, None, None, 0, 0, 0)
+    f = jax.vmap(_dsmesolve_single_trajectory, in_axes, out_axes)
     return f(H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, method, gradient, options)
 
 

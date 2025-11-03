@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from functools import partial
-
 import jax
 import jax.numpy as jnp
 from jax import Array
@@ -9,7 +7,7 @@ from jaxtyping import ArrayLike, PRNGKeyArray
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...method import Dopri5, Dopri8, Euler, Event, Kvaerno3, Kvaerno5, Method, Tsit5
+from ...method import EulerJump, Event, Method
 from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
@@ -22,13 +20,9 @@ from .._utils import (
     catch_xla_runtime_error,
     multi_vmap,
 )
-from ..core.event_integrator import (
-    jssesolve_event_dopri5_integrator_constructor,
-    jssesolve_event_dopri8_integrator_constructor,
-    jssesolve_event_euler_integrator_constructor,
-    jssesolve_event_kvaerno3_integrator_constructor,
-    jssesolve_event_kvaerno5_integrator_constructor,
-    jssesolve_event_tsit5_integrator_constructor,
+from ..core.event_integrator import jssesolve_event_integrator_constructor
+from ..core.fixed_step_stochastic_integrator import (
+    jssesolve_euler_jump_integrator_constructor,
 )
 
 
@@ -40,7 +34,7 @@ def jssesolve(
     keys: PRNGKeyArray,
     *,
     exp_ops: list[QArrayLike] | None = None,
-    method: Method = Event(),  # noqa: B008
+    method: Method | None = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> JSSESolveResult:
@@ -83,6 +77,20 @@ def jssesolve(
     solver returns the times at which the detector clicked,
     $I_k = \{t \in [t_0, t_\text{end}[ \,|\, \dd N_k(t)=1\}$.
 
+    Note:
+        If you are only interested in simulating trajectories to solve the Lindblad
+        master equation, consider using [`dq.mesolve()`][dynamiqs.mesolve] with the
+        [`dq.method.JumpMonteCarlo`][dynamiqs.method.JumpMonteCarlo] method.
+
+    Note:
+        This function is the Dynamiqs counterpart of QuTiP's `mcsolve()` function.
+
+    Warning:
+        For now, `jssesolve()` only supports linearly spaced `tsave` with values that
+        are exact multiples of the method fixed step size `dt` for the
+        [`EulerJump`][dynamiqs.method.EulerJump] method. Moreover, to JIT-compile code
+        using `jssesolve()`, `tsave` must be passed as tuple.
+
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
@@ -96,9 +104,9 @@ def jssesolve(
             trajectories.
         exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
-        method: Method for the integration. Defaults to
-            [`dq.method.Event`][dynamiqs.method.Event] (supported:
-            [`Event`][dynamiqs.method.Event]).
+        method: Method for the integration. No defaults for now, you have to specify a
+            method (supported: [`Event`][dynamiqs.method.Event],
+            [`EulerJump`][dynamiqs.method.EulerJump]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
@@ -156,15 +164,9 @@ def jssesolve(
                     expectation values, if specified by `exp_ops`.
                 - **clicktimes** _(array of shape (..., ntrajs, len(jump_ops), nmaxclick))_ - Times
                     at which the detectors clicked. Variable-length array padded with
-                    `None` up to `nmaxclick`.
+                    `jnp.nan` up to `nmaxclick`.
                 - **nclicks** _(array of shape (..., ntrajs, len(jump_ops))_ - Number
                     of clicks for each jump operator.
-                - **noclick_states** _(array of shape (..., nsave, n, 1))_ - Saved states
-                    for the no-click trajectory. Only for the
-                    [`Event`][dynamiqs.method.Event] method with `smart_sampling=True`.
-                - **noclick_prob** _(array of shape (..., nsave))_ - Probability of the
-                    no-click trajectory. Only for the [`Event`][dynamiqs.method.Event]
-                    method with `smart_sampling=True`.
                 - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
                     specified in `options`.
                 - **keys** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
@@ -176,6 +178,34 @@ def jssesolve(
                 - **method** _(Method)_ - Method used.
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
+
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+        import jax
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a
+        jump_ops = [a]
+        psi0 = dq.coherent(n, 1.0)
+        tsave = jnp.linspace(0, 1.0, 11)
+        keys = jax.random.split(jax.random.key(42), 100)
+
+        method = dq.method.EulerJump(dt=1e-3)
+        result = dq.jssesolve(H, jump_ops, psi0, tsave, keys, method=method)
+        print(result)
+        ```
+
+        ```text title="Output"
+        ==== JSSESolveResult ====
+        Method     : EulerJump
+        Infos      : 1000 steps | infos shape (100,)
+        States     : QArray complex64 (100, 11, 16, 1) | 137.5 Kb
+        Clicktimes : Array float32 (100, 1, 10000) | 3.8 Mb
+        ```
 
     # Advanced use-cases
 
@@ -231,27 +261,71 @@ def jssesolve(
     H = astimeqarray(H)
     Ls = [astimeqarray(L) for L in jump_ops]
     psi0 = asqarray(psi0)
-    tsave = jnp.asarray(tsave)
     keys = jnp.asarray(keys)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_jssesolve_args(H, Ls, psi0, exp_ops)
-    tsave = check_times(tsave, 'tsave')
     check_options(options, 'jssesolve')
     options = options.initialise()
 
+    # todo: fix static tsave
+    # this condition allows the user to pass a tuple for tsave to bypass this bit of
+    # code (e.g., to JIT-compile this function)
+    if not isinstance(tsave, tuple):
+        tsave = jnp.asarray(tsave)
+        tsave = check_times(tsave, 'tsave')
+        if isinstance(method, EulerJump):
+            tsave = tuple(tsave.tolist())
+
+    if method is None:
+        raise ValueError('Argument `method` must be specified.')
+
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    return _vectorized_jssesolve(
-        H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options
-    )
+    f = _vectorized_jssesolve
+    if isinstance(method, EulerJump):
+        f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
+    else:
+        f = jax.jit(f, static_argnames=('gradient', 'options'))
+    return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('method', 'gradient', 'options'))
 def _vectorized_jssesolve(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    psi0: QArray,
+    tsave: Array,
+    keys: PRNGKeyArray,
+    exp_ops: list[QArray] | None,
+    method: Method,
+    gradient: Gradient | None,
+    options: Options,
+) -> JSSESolveResult:
+    # vectorize input over H, Ls and psi0
+    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, *(None,) * 6)
+    out_axes = JSSESolveResult.out_axes()
+
+    if options.cartesian_batching:
+        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, 0, 0, 0, 0, 0, 0)
+        f = cartesian_vmap(_jssesolve_many_trajectories, in_axes, out_axes, nvmap)
+    else:
+        bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
+        nvmap = len(bshape)
+        # broadcast all vectorized input to same shape
+        n = H.shape[-1]
+        H = H.broadcast_to(*bshape, n, n)
+        Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
+        psi0 = psi0.broadcast_to(*bshape, n, 1)
+        # vectorize the function
+        f = multi_vmap(_jssesolve_many_trajectories, in_axes, out_axes, nvmap)
+
+    return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
+
+
+def _jssesolve_many_trajectories(
     H: TimeQArray,
     Ls: list[TimeQArray],
     psi0: QArray,
@@ -264,30 +338,14 @@ def _vectorized_jssesolve(
 ) -> JSSESolveResult:
     f = _jssesolve_single_trajectory
 
-    # === vectorize function over stochastic trajectories
-    # the input is vectorized over `key`
-    in_axes = (None, None, None, None, 0, None, None, None, None)
-    # the result is vectorized over `_saved`, `infos` and `keys`
-    out_axes = JSSESolveResult.out_axes()
-    f = jax.vmap(f, in_axes, out_axes)
-
-    # === vectorize function
-    # vectorize input over H, Ls and psi0
-    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, *(None,) * 6)
-
-    if options.cartesian_batching:
-        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, 0, 0, 0, 0, 0, 0)
-        f = cartesian_vmap(f, in_axes, out_axes, nvmap)
+    if isinstance(method, Event):
+        # vectorization over keys is handled by the integrator
+        pass
     else:
-        bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
-        nvmap = len(bshape)
-        # broadcast all vectorized input to same shape
-        n = H.shape[-1]
-        H = H.broadcast_to(*bshape, n, n)
-        Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
-        psi0 = psi0.broadcast_to(*bshape, n, 1)
-        # vectorize the function
-        f = multi_vmap(f, in_axes, out_axes, nvmap)
+        # vectorize input over keys
+        in_axes = (None, None, None, None, 0, None, None, None, None)
+        out_axes = JSSESolveResult(None, None, None, None, 0, 0, 0)
+        f = jax.vmap(f, in_axes, out_axes)
 
     return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
@@ -304,21 +362,12 @@ def _jssesolve_single_trajectory(
     options: Options,
 ) -> JSSESolveResult:
     # === select integrator constructor
-    supported_methods = (Event,)
-    assert_method_supported(method, supported_methods)
-    if isinstance(method, Event):
-        integrator_constructors = {
-            Euler: jssesolve_event_euler_integrator_constructor,
-            Dopri5: jssesolve_event_dopri5_integrator_constructor,
-            Dopri8: jssesolve_event_dopri8_integrator_constructor,
-            Tsit5: jssesolve_event_tsit5_integrator_constructor,
-            Kvaerno3: jssesolve_event_kvaerno3_integrator_constructor,
-            Kvaerno5: jssesolve_event_kvaerno5_integrator_constructor,
-        }
-        integrator_constructor = integrator_constructors[type(method.noclick_method)]
-    else:
-        # temporary until we implement other methods
-        raise NotImplementedError
+    integrator_constructors = {
+        EulerJump: jssesolve_euler_jump_integrator_constructor,
+        Event: jssesolve_event_integrator_constructor,
+    }
+    assert_method_supported(method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method)]
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)

@@ -9,7 +9,7 @@ from jaxtyping import ArrayLike, PRNGKeyArray
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...method import EulerMaruyama, Method
+from ...method import EulerMaruyama, Method, Rouchon1
 from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
@@ -24,6 +24,7 @@ from .._utils import (
 )
 from ..core.fixed_step_stochastic_integrator import (
     dssesolve_euler_maruyama_integrator_constructor,
+    dssesolve_rouchon1_integrator_constructor,
 )
 
 
@@ -88,7 +89,13 @@ def dssesolve(
 
     Warning:
         For now, `dssesolve()` only supports linearly spaced `tsave` with values that
-        are exact multiples of the method fixed step size `dt`.
+        are exact multiples of the method fixed step size `dt`. Moreover, to JIT-compile
+        code using `dssesolve()`, `tsave` must be passed as tuple.
+
+    Note:
+        If you are only interested in simulating trajectories to solve the Lindblad
+        master equation, consider using [`dq.mesolve()`][dynamiqs.mesolve] with the
+        [`dq.method.DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo] method.
 
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
@@ -105,7 +112,8 @@ def dssesolve(
         exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
         method: Method for the integration. No defaults for now, you have to specify a
-            method (supported: [`EulerMaruyama`][dynamiqs.method.EulerMaruyama]).
+            method (supported: [`EulerMaruyama`][dynamiqs.method.EulerMaruyama],
+            [`Rouchon1`][dynamiqs.method.Rouchon1]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
@@ -169,6 +177,34 @@ def dssesolve(
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
 
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+        import jax
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a
+        jump_ops = [a]
+        psi0 = dq.coherent(n, 1.0)
+        tsave = jnp.linspace(0, 1.0, 11)
+        keys = jax.random.split(jax.random.key(42), 100)
+
+        method = dq.method.EulerMaruyama(dt=1e-3)
+        result = dq.dssesolve(H, jump_ops, psi0, tsave, keys, method=method)
+        print(result)
+        ```
+
+        ```text title="Output"
+        ==== DSSESolveResult ====
+        Method       : EulerMaruyama
+        Infos        : 1000 steps | infos shape (100,)
+        States       : QArray complex64 (100, 11, 16, 1) | 137.5 Kb
+        Measurements : Array float32 (100, 1, 10) | 3.9 Kb
+        ```
+
     # Advanced use-cases
 
     ## Defining a time-dependent Hamiltonian or jump operator
@@ -223,30 +259,35 @@ def dssesolve(
     H = astimeqarray(H)
     Ls = [astimeqarray(L) for L in jump_ops]
     psi0 = asqarray(psi0)
-    tsave = jnp.asarray(tsave)
     keys = jnp.asarray(keys)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_dssesolve_args(H, Ls, psi0, exp_ops)
-    tsave = check_times(tsave, 'tsave')
     check_options(options, 'dssesolve')
     options = options.initialise()
+
+    # todo: fix static tsave
+    # this condition allows the user to pass a tuple for tsave to bypass this bit of
+    # code (e.g., to JIT-compile this function)
+    if not isinstance(tsave, tuple):
+        tsave = jnp.asarray(tsave)
+        tsave = check_times(tsave, 'tsave')
+        tsave = tuple(tsave.tolist())
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    tsave = tuple(tsave.tolist())  # todo: fix static tsave
     return _vectorized_dssesolve(
         H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options
     )
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('tsave', 'method', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('tsave', 'gradient', 'options'))
 def _vectorized_dssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
@@ -258,22 +299,13 @@ def _vectorized_dssesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSSESolveResult:
-    f = _dssesolve_single_trajectory
-
-    # === vectorize function over stochastic trajectories
-    # the input is vectorized over `key`
-    in_axes = (None, None, None, None, 0, None, None, None, None)
-    # the result is vectorized over `_saved`, `infos` and `keys`
-    out_axes = DSSESolveResult.out_axes()
-    f = jax.vmap(f, in_axes, out_axes)
-
-    # === vectorize function
-    # vectorize input over H, Ls and psi0
+    # vectorize input over H, Ls and rho0
     in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, *(None,) * 6)
+    out_axes = DSSESolveResult.out_axes()
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, 0, 0, 0, 0, 0, 0)
-        f = cartesian_vmap(f, in_axes, out_axes, nvmap)
+        f = cartesian_vmap(_dssesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
         nvmap = len(bshape)
@@ -283,9 +315,26 @@ def _vectorized_dssesolve(
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
         psi0 = psi0.broadcast_to(*bshape, n, 1)
         # vectorize the function
-        f = multi_vmap(f, in_axes, out_axes, nvmap)
+        f = multi_vmap(_dssesolve_many_trajectories, in_axes, out_axes, nvmap)
 
-    # === apply vectorized function
+    return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
+
+
+def _dssesolve_many_trajectories(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    psi0: QArray,
+    tsave: Array,
+    keys: PRNGKeyArray,
+    exp_ops: list[QArray] | None,
+    method: Method,
+    gradient: Gradient | None,
+    options: Options,
+) -> DSSESolveResult:
+    # vectorize input over keys
+    in_axes = (None, None, None, None, 0, None, None, None, None)
+    out_axes = DSSESolveResult(None, None, None, None, 0, 0, 0)
+    f = jax.vmap(_dssesolve_single_trajectory, in_axes, out_axes)
     return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
 
@@ -302,7 +351,8 @@ def _dssesolve_single_trajectory(
 ) -> DSSESolveResult:
     # === select integrator constructor
     integrator_constructors = {
-        EulerMaruyama: dssesolve_euler_maruyama_integrator_constructor
+        EulerMaruyama: dssesolve_euler_maruyama_integrator_constructor,
+        Rouchon1: dssesolve_rouchon1_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
     integrator_constructor = integrator_constructors[type(method)]

@@ -4,16 +4,10 @@ from abc import abstractmethod
 
 import equinox as eqx
 import jax.numpy as jnp
-from jaxtyping import Array, PyTree
+from jaxtyping import PyTree
 
-from ...result import (
-    DiffusiveSolveSaved,
-    JumpSolveSaved,
-    PropagatorSaved,
-    Saved,
-    SolveSaved,
-)
-from ...utils.general import expect, unit
+from ...result import PropagatorSaved, Saved, SolveSaved
+from ...utils.general import expect
 from .interfaces import OptionsInterface
 
 
@@ -72,34 +66,3 @@ class SolveSaveMixin(AbstractSaveMixin):
                 lambda x: x.ysave, saved, ylast, is_leaf=lambda x: x is None
             )
         return self.reorder_Esave(saved)
-
-
-class JumpSolveSaveMixin(SolveSaveMixin):
-    """Mixin to assist jump SSE/SME integrators computing time evolution with data
-    saving.
-    """
-
-    def save(self, y: PyTree) -> Saved:
-        # force state normalisation before saving
-        return super().save(unit(y))
-
-    def postprocess_saved(self, saved: SolveSaved, clicktimes: Array) -> JumpSolveSaved:
-        ylast = saved.ysave[-1]
-        saved = super().postprocess_saved(saved, ylast)
-        return JumpSolveSaved(saved.ysave, saved.extra, saved.Esave, clicktimes)
-
-
-class DiffusiveSolveSaveMixin(SolveSaveMixin):
-    """Mixin to assist diffusive SSE/SME integrators computing time evolution with data
-    saving.
-    """
-
-    def save(self, y: PyTree) -> Saved:
-        saved = super().save(y.state)
-        return DiffusiveSolveSaved(saved.ysave, saved.extra, saved.Esave, y.Y)
-
-    def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
-        saved = super().postprocess_saved(saved, ylast.state)
-        # reorder Isave after jax.lax.scan stacking (ntsave, nLm) -> (nLm, ntsave)
-        Isave = saved.Isave.swapaxes(-1, -2)
-        return eqx.tree_at(lambda x: x.Isave, saved, Isave)

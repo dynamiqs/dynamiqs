@@ -134,6 +134,28 @@ def sepropagator(
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
 
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a
+        tsave = jnp.linspace(0, 1.0, 11)
+
+        result = dq.sepropagator(H, tsave)
+        print(result)
+        ```
+
+        ```text title="Output"
+        ==== SEPropagatorResult ====
+        Method      : Expm
+        Infos       : 10 steps
+        Propagators : QArray complex64 (11, 16, 16) | 22.0 Kb
+        ```
+
     # Advanced use-cases
 
     ## Defining a time-dependent Hamiltonian
@@ -172,7 +194,7 @@ def sepropagator(
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('method', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_sepropagator(
     H: TimeQArray,
     tsave: Array,

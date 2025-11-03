@@ -140,6 +140,30 @@ def sesolve(
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
 
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a
+        psi0 = dq.coherent(n, 1.0)
+        tsave = jnp.linspace(0, 1.0, 11)
+
+        result = dq.sesolve(H, psi0, tsave)
+        print(result)
+        ```
+
+        ```text title="Output"
+        |██████████| 100.0% ◆ elapsed 1.50ms ◆ remaining 0.00ms
+        ==== SESolveResult ====
+        Method : Tsit5
+        Infos  : 11 steps (11 accepted, 0 rejected)
+        States : QArray complex64 (11, 16, 1) | 1.4 Kb
+        ```
+
     # Advanced use-cases
 
     ## Defining a time-dependent Hamiltonian
@@ -205,7 +229,7 @@ def sesolve(
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('method', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_sesolve(
     H: TimeQArray,
     psi0: QArray,

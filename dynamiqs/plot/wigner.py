@@ -11,13 +11,13 @@ from .._checks import check_shape
 from ..qarrays.qarray import QArrayLike
 from ..qarrays.utils import asqarray, to_jax
 from ..utils import wigner as compute_wigner
-from .utils import add_colorbar, colors, gif_indices, gifit, grid, optional_ax
+from .utils import add_colorbar, gif_indices, gifit, grid, optional_ax
 
-__all__ = ['wigner', 'wigner_gif', 'wigner_mosaic']
+__all__ = ['wigner_data', 'wigner', 'wigner_gif', 'wigner_mosaic']
 
 
 @optional_ax
-def _plot_wigner_data(
+def wigner_data(
     wigner: ArrayLike,
     xmax: float,
     ymax: float,
@@ -30,8 +30,27 @@ def _plot_wigner_data(
     cross: bool = False,
     clear: bool = False,
 ):
+    r"""Plot a pre-computed Wigner function.
+
+    Warning:
+        Documentation redaction in progress.
+
+    Note:
+        Choose a diverging colormap `cmap` for better results.
+
+    See also:
+        - [`dq.wigner()`][dynamiqs.wigner]: compute the Wigner distribution of a ket or
+            density matrix.
+        - [`dq.plot.wigner()`][dynamiqs.plot.wigner]: plot the Wigner function of a
+            state.
+    """
     w = to_jax(wigner)
     check_shape(w, 'wigner', '(n, n)')
+    if w.dtype not in (jnp.float32, jnp.float64):
+        raise TypeError(
+            f'Wigner data must be of type `float`, not `{w.dtype}`. Consider using'
+            f' `dq.plot.wigner(x)` to plot the Wigner function of a quantum state `x`.'
+        )
 
     # set plot norm
     vmin = -vmax
@@ -51,6 +70,9 @@ def _plot_wigner_data(
         extent=[-xmax, xmax, -ymax, ymax],
     )
 
+    # remove grid by default
+    ax.grid(False)
+
     # axis label
     ax.set(xlabel=r'$\mathrm{Re}(\alpha)$', ylabel=r'$\mathrm{Im}(\alpha)$')
 
@@ -60,11 +82,11 @@ def _plot_wigner_data(
             cax.set_yticks([vmin, 0.0, vmax], labels=[r'$-2/\pi$', r'$0$', r'$2/\pi$'])
 
     if cross:
-        ax.axhline(0.0, color=colors['grey'], ls='-', lw=0.7, alpha=0.8)
-        ax.axvline(0.0, color=colors['grey'], ls='-', lw=0.7, alpha=0.8)
+        color = '#9e9e9e'
+        ax.axhline(0.0, color=color, ls='-', lw=0.7, alpha=0.8)
+        ax.axvline(0.0, color=color, ls='-', lw=0.7, alpha=0.8)
 
     if clear:
-        ax.grid(False)
         ax.axis(False)
 
 
@@ -95,6 +117,12 @@ def wigner(
         The axis scaling is chosen so that a coherent state $\ket{\alpha}$ lies at the
         coordinates $(x,y)=(\mathrm{Re}(\alpha),\mathrm{Im}(\alpha))$, which is
         different from the default behaviour of `qutip.plot_wigner()`.
+
+    See also:
+        - [`dq.wigner()`][dynamiqs.wigner]: compute the Wigner distribution of a ket or
+            density matrix.
+        - [`dq.plot.wigner_data()`][dynamiqs.plot.wigner_data]: plot a pre-computed
+            Wigner function.
 
     Examples:
         >>> psi = dq.coherent(16, 2.0)
@@ -127,7 +155,7 @@ def wigner(
     ymax = xmax if ymax is None else ymax
     _, _, w = compute_wigner(state, xmax, ymax, npixels)
 
-    _plot_wigner_data(
+    wigner_data(
         w,
         xmax,
         ymax,
@@ -216,7 +244,7 @@ def wigner_mosaic(
 
     # plot individual wigner
     for i, ax in enumerate(axs):
-        _plot_wigner_data(
+        wigner_data(
             wig[i],
             ax=ax,
             xmax=xmax,
@@ -288,7 +316,7 @@ def wigner_gif(
     indices = gif_indices(len(states), nframes)
     _, _, wig = compute_wigner(states[indices], xmax, ymax, npixels)
 
-    return gifit(_plot_wigner_data)(
+    return gifit(wigner_data)(
         wig,
         w=w,
         h=ymax / xmax * w,

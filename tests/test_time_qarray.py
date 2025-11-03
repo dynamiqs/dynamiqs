@@ -50,9 +50,9 @@ class TestConstantTimeQArray:
         assert_equal(x(0.0), [[[0, 1], [2, 3]], [[0, 1], [2, 3]]])
 
     def test_conj(self):
-        x = ConstantTimeQArray(jnp.array([1 + 1j, 2 + 2j]))
+        x = ConstantTimeQArray(jnp.array([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]]))
         x = x.conj()
-        assert_equal(x(0.0), [1 - 1j, 2 - 2j])
+        assert_equal(x(0.0), [[1 - 1j, 2 - 2j], [3 - 3j, 4 - 4j]])
 
     def test_neg(self):
         x = -self.x
@@ -116,10 +116,10 @@ class TestCallableTimeQArray:
         assert_equal(x(1.0), [[[0, 1], [2, 3]], [[0, 1], [2, 3]]])
 
     def test_conj(self):
-        f = lambda t: t * jnp.array([1 + 1j, 2 + 2j])
+        f = lambda t: t * jnp.array([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]])
         x = timecallable(f)
         x = x.conj()
-        assert_equal(x(1.0), [1 - 1j, 2 - 2j])
+        assert_equal(x(1.0), [[1 - 1j, 2 - 2j], [3 - 3j, 4 - 4j]])
 
     def test_neg(self):
         x = -self.x
