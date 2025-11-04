@@ -1071,8 +1071,10 @@ def entropy_vn(x: QArrayLike) -> Array:
 def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
     r"""Returns the quantum relative entropy between two kets or density matrices.
 
-    It is defined by $S_{KL}(\rho || sigma) = \tr{\rho (\ln \rho - \ln sigma)}$.
-    Note: The relative entropy is not symmetric.
+    It is defined by $S_{KL}(\rho || \sigma) = \tr{\rho (\ln \rho - \ln \sigma)}$.
+
+    Note:
+        The relative entropy is not symmetric.
 
     Args:
         rho _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
