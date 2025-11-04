@@ -145,6 +145,7 @@ nav:
           - Open systems: documentation/basics/open-systems.md
           - Batching simulations: documentation/basics/batching-simulations.md
           - Computing gradients: documentation/basics/computing-gradients.md
+          - Floquet integration: documentation/basics/floquet-integration.md
       - Advanced examples:
           - Driven-dissipative Kerr oscillator: documentation/advanced_examples/kerr-oscillator.md
           - Continuous jump measurement: documentation/advanced_examples/continuous-jump-measurement.md
@@ -309,8 +310,10 @@ nav:
               - gifit: python_api/plot/gifit.md
               - grid: python_api/plot/grid.md
               - mplstyle: python_api/plot/mplstyle.md
-          - Magic helpers:
-            - hc: python_api/hermitian_conjugate/hc.md
+          - Helpers:
+            - hc: python_api/helpers/hc.md
+            - clicktimes_sse_to_sme: python_api/helpers/clicktimes_sse_to_sme.md
+            - measurements_sse_to_sme: python_api/helpers/measurements_sse_to_sme.md
   - Community:
       - community/index.md
       - Contributing: community/contributing.md

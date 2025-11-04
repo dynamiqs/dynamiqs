@@ -263,10 +263,12 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - grid
         - mplstyle
 
-### Magic helpers
+### Helpers
 
-::: dynamiqs.hermitian_conjugate
+::: dynamiqs.helpers
     options:
         table: true
         members:
         - hc
+        - clicktimes_sse_to_sme
+        - measurements_sse_to_sme
