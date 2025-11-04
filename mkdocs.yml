@@ -309,8 +309,10 @@ nav:
               - gifit: python_api/plot/gifit.md
               - grid: python_api/plot/grid.md
               - mplstyle: python_api/plot/mplstyle.md
-          - Magic helpers:
-            - hc: python_api/hermitian_conjugate/hc.md
+          - Helpers:
+            - hc: python_api/helpers/hc.md
+            - clicktimes_sse_to_sme: python_api/helpers/clicktimes_sse_to_sme.md
+            - measurements_sse_to_sme: python_api/helpers/measurements_sse_to_sme.md
   - Community:
       - community/index.md
       - Contributing: community/contributing.md

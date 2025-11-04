@@ -37,7 +37,7 @@ class SEFloquetIntegrator(FloquetIntegrator, SEInterface):
 
         # extract quasienergies
         # minus sign and divide by T to account for e^{-i\epsilon T}
-        quasienergies = jnp.angle(-evals) / self.T
+        quasienergies = -jnp.angle(evals) / self.T
         # quasienergies are only defined modulo 2pi / T. Usual convention is to
         # normalize quasienergies to the region -pi/T, pi/T
         omega = 2.0 * jnp.pi / self.T

@@ -6,13 +6,13 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
 
-from dynamiqs import basis, sigmam, sigmaz, stack
+from dynamiqs import basis, sigmax, sigmaz, stack
 from dynamiqs.gradient import Gradient
 from dynamiqs.integrators.apis.floquet import floquet
 from dynamiqs.method import Method
 from dynamiqs.options import Options
 from dynamiqs.result import FloquetResult
-from dynamiqs.time_qarray import CallableTimeQArray, modulated
+from dynamiqs.time_qarray import CallableTimeQArray
 
 from ..system import System
 
@@ -63,31 +63,20 @@ class FloquetQubit(System):
         )
 
     def H(self, params: PyTree) -> CallableTimeQArray:
-        H0 = -0.5 * params.omega * sigmaz()
-        fn = lambda t: jnp.exp(-1j * params.omega_d * t)
-        H1 = modulated(fn, 0.5 * params.amp * sigmam())
-        H1 += H1.dag()
-        return H0 + H1
+        H0 = 0.5 * (params.omega - params.omega_d) * sigmaz()
+        return H0 + 0.5 * params.amp * sigmax()
 
-    def state(self, t: float) -> Array:
+    def state(self, _t: float) -> Array:
         delta_Omega = self.omega - self.omega_d
         theta = jnp.arctan(self.amp / delta_Omega)
-        w0 = jnp.cos(0.5 * theta) * basis(2, 0) - jnp.exp(
-            -1j * self.omega_d * t
-        ) * jnp.sin(0.5 * theta) * basis(2, 1)
-        w1 = jnp.sin(0.5 * theta) * basis(2, 0) + jnp.exp(
-            -1j * self.omega_d * t
-        ) * jnp.cos(0.5 * theta) * basis(2, 1)
+        w0 = jnp.cos(0.5 * theta) * basis(2, 0) + jnp.sin(0.5 * theta) * basis(2, 1)
+        w1 = -jnp.sin(0.5 * theta) * basis(2, 0) + jnp.cos(0.5 * theta) * basis(2, 1)
         return stack([w0, w1])
 
     def true_quasienergies(self) -> Array:
         delta_Omega = self.omega - self.omega_d
         Omega_R = jnp.sqrt(delta_Omega**2 + self.amp**2)
-        quasi_es = jnp.asarray([0.5 * Omega_R, -0.5 * Omega_R])
-        quasi_es = jnp.mod(quasi_es, self.omega_d)
-        return jnp.where(
-            quasi_es > 0.5 * self.omega_d, quasi_es - self.omega_d, quasi_es
-        )
+        return jnp.asarray([0.5 * Omega_R, -0.5 * Omega_R])
 
     def y0(self, params: PyTree) -> Array:
         raise NotImplementedError
