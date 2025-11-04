@@ -2,6 +2,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 import qutip as qt
+from jax import Array
 
 import dynamiqs as dq
 
@@ -238,6 +239,72 @@ def test_entropy_vn(a, x):
     # check that no error is raised while tracing the function
     jax.jit(dq.entropy_vn).trace(a)
     jax.jit(dq.entropy_vn).trace(x)
+
+
+def qobj_to_array(x: qt.Qobj) -> Array:
+    # todo: support QuTiP >= 5.0, remove once https://github.com/qutip/qutip/pull/2533
+    # is merged, and use `jnp.asarray` instead
+    if isinstance(x, list):
+        return jnp.asarray([qobj_to_array(y) for y in x])
+    return jnp.asarray(x.full())
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_entropy_relative(a, b, x, y):
+    # === check that no error is raised while tracing the function
+    jax.jit(dq.entropy_relative).trace(a, b)  # ket vs ket
+    jax.jit(dq.entropy_relative).trace(x, y)  # dm vs dm
+    jax.jit(dq.entropy_relative).trace(a, x)  # ket vs dm
+    jax.jit(dq.entropy_relative).trace(x, b)  # dm vs ket
+
+    # === check correctness against qutip
+    n = 8
+
+    # --- ket vs ket
+    psi_qt = qt.rand_ket(n, seed=42)
+    phi_qt = qt.rand_ket(n, seed=43)
+    qt_val = qt.entropy_relative(psi_qt, phi_qt)
+
+    psi = qobj_to_array(psi_qt)
+    phi = qobj_to_array(phi_qt)
+    dq_val = dq.entropy_relative(psi, phi).item()
+    assert qt_val == pytest.approx(dq_val, rel=1e-6, abs=1e-6)
+
+    # --- dm vs dm
+    rho_qt = qt.rand_dm(n, n, seed=44)
+    sigma_qt = qt.rand_dm(n, n, seed=45)
+    qt_val = qt.entropy_relative(rho_qt, sigma_qt)
+
+    rho = qobj_to_array(rho_qt)
+    sigma = qobj_to_array(sigma_qt)
+    dq_val = dq.entropy_relative(rho, sigma).item()
+    assert qt_val == pytest.approx(dq_val, rel=1e-5, abs=1e-5)
+
+    # --- ket vs dm and dm vs ket
+    psi_qt = qt.rand_ket(n, seed=46)
+    rho_qt = qt.rand_dm(n, n, seed=47)
+    qt_ket_dm = qt.entropy_relative(psi_qt, rho_qt)
+    qt_dm_ket = qt.entropy_relative(rho_qt, psi_qt)
+
+    psi = qobj_to_array(psi_qt)
+    rho = qobj_to_array(rho_qt)
+    dq_ket_dm = dq.entropy_relative(psi, rho).item()
+    dq_dm_ket = dq.entropy_relative(rho, psi).item()
+
+    assert qt_ket_dm == pytest.approx(dq_ket_dm, rel=1e-6, abs=1e-6)
+    assert qt_dm_ket == pytest.approx(dq_dm_ket, rel=1e-6, abs=1e-6)
+
+    # === check batching
+    b1, b2 = 3, 5
+
+    # same batching trick used for fidelity
+    batch = lambda X: dq.asqarray(jnp.tile(X.to_jax(), (b1, b2, 1, 1)))
+
+    # ket vs ket, dm vs dm, ket vs dm, dm vs ket
+    assert dq.entropy_relative(batch(a), batch(b)).shape == (b1, b2)
+    assert dq.entropy_relative(batch(x), batch(y)).shape == (b1, b2)
+    assert dq.entropy_relative(batch(a), batch(x)).shape == (b1, b2)
+    assert dq.entropy_relative(batch(x), batch(b)).shape == (b1, b2)
 
 
 @pytest.mark.run(order=TEST_INSTANT)

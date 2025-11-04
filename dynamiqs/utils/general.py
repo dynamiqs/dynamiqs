@@ -18,6 +18,7 @@ __all__ = [
     'dag',
     'dissipator',
     'entropy_vn',
+    'entropy_relative',
     'expect',
     'expm',
     'fidelity',
@@ -1065,6 +1066,91 @@ def entropy_vn(x: QArrayLike) -> Array:
     # we set small negative or null eigenvalues to 1.0 to avoid `nan` propagation
     w = jnp.where(w <= 0, 1.0, w)
     return -(w * jnp.log(w)).sum(-1)
+
+
+def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
+    r"""Returns the quantum relative entropy between two kets or density matrices.
+
+    It is defined by $S_{KL}(\rho || sigma) = \tr{\rho (\ln \rho - \ln sigma)}$.
+    Note: The relative entropy is not symmetric.
+
+    Args:
+        rho _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        sigma _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density
+            matrix.
+
+    Returns:
+        _(array of shape (...))_ Real-valued quantum relative entropy.
+
+    Examples:
+        State with respect to itself:
+        >>> rho = dq.fock_dm(2, 0)  # |0><0|
+        >>> dq.entropy_relative(rho, rho)
+        Array(0., dtype=float32)
+
+        Pure state with respect to a maximally mixed state, and vice versa:
+        >>> pure = dq.fock_dm(2, 0)  # |0><0|
+        >>> maximally_mixed = (dq.fock_dm(2, 0) + dq.fock_dm(2, 1)).unit()  # I/2
+        >>> dq.entropy_relative(pure, maximally_mixed)  # ln 2 ~= 0.693
+        Array(0.693, dtype=float32)
+        >>> dq.entropy_relative(maximally_mixed, pure)  # support mismatch -> +∞
+        Array(inf, dtype=float32)
+
+        Pure state with respect to diagonal state in same basis:
+        >>> rho = dq.fock_dm(2, 0)  # |0><0|
+        >>> w = 0.3
+        >>> sigma = w * dq.fock_dm(2, 0) + (1 - w) * dq.fock_dm(2, 1)
+        >>> dq.entropy_relative(rho, sigma)
+        Array(1.204, dtype=float32)
+        >>> -jnp.log(w)
+        Array(1.204, dtype=float32, weak_type=True)
+
+        Orthogonal pure states:
+        >>> rho = dq.fock_dm(2, 1)  # |1><1|
+        >>> sigma = dq.fock_dm(2, 0)  # |0><0|
+        >>> dq.entropy_relative(rho, sigma)
+        Array(inf, dtype=float32)
+    """
+    # convert inputs to internal array type and validate shapes
+    rho = asqarray(rho)
+    sigma = asqarray(sigma)
+    check_shape(rho, 'x', '(..., n, 1)', '(..., n, n)')
+    check_shape(sigma, 'x', '(..., n, 1)', '(..., n, n)')
+
+    # promote kets to density operators
+    rho = todm(rho)
+    sigma = todm(sigma)
+
+    # spectral decompositions:
+    #   rho  = Σ_i r_i |r_i⟩⟨r_i|
+    #   sigma= Σ_j s_j |s_j⟩⟨s_j|
+    # rvals/svals: eigenvalues r_i, s_j  (last axis)
+    # rvecs/svecs: eigenvectors |r_i⟩, |s_j⟩ as columns (last two axes form matrices)
+    svals, svecs = sigma._eigh()
+    rvals, rvecs = rho._eigh()
+
+    # overlap probabilities between eigenbases: P_{ij} = |⟨r_i|s_j⟩|^2
+    # we form the matrix of overlaps ⟨r_i|s_j⟩ as rvecs† svecs.
+    # using .mT (matrix transpose) with a conjugate on svecs is equivalent
+    # up to a global conjugation, and taking |·|^2 removes that phase anyway.
+    P = jnp.abs(rvecs.mT @ svecs.conj()) ** 2  # shape (..., n, n)
+
+    # clip tiny negative eigenvalues (from Hermitian eigensolvers) to 0.
+    # this preserves positivity and prevents spurious log of negative numbers.
+    nrvals = jnp.where(rvals < 0, 0, rvals)
+    nsvals = jnp.where(svals < 0, 0, svals)
+
+    # compute the inner expectation term E_i = Σ_j P_{ij} log s_j
+    # by broadcasting log(nsvals) over the last axis of P and summing over j.
+    E = (P * jnp.expand_dims(jnp.log(nsvals), (-2))).sum(-1)  # shape (..., n)
+
+    # implement the formula: S_i = r_i [ log r_i  -  E_i].
+    terms = nrvals * (jnp.log(nrvals) - E)  # shape (..., n)
+
+    # sum and replace NaNs from 0*inf with 0, keep ±inf for support mismatches.
+    return jnp.nan_to_num(terms, posinf=jnp.inf, neginf=-jnp.inf).sum(
+        -1
+    )  # shape (...,)
 
 
 def bloch_coordinates(x: QArrayLike) -> Array:
