@@ -93,6 +93,22 @@ def dsmesolve(
         are exact multiples of the method fixed step size `dt`. Moreover, to JIT-compile
         code using `dsmesolve()`, `tsave` must be passed as tuple.
 
+    Note: Simulating the measurement record only
+        If you are only interested in the measurement record and not the state, you
+        should use [`dq.dssesolve()`][dynamiqs.dssesolve] instead, and post-process the
+        SSE measurement record to obtain the SME measurement record. You can use the
+        helper function
+        [`dq.measurements_sse_to_sme()`][dynamiqs.measurements_sse_to_sme]
+        to do this:
+        ```
+        result_sse = dq.dssesolve(H, jump_ops, psi0, tsave, keys)
+        key = jax.random.key(42)
+        measurements_sme = dq.measurements_sse_to_sme(
+            result_sse.measurements, tsave, etas, key
+        )
+        ```
+        This results in a significant speedup for large systems.
+
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         jump_ops _(list of qarray-like or time-qarray, each of shape (n, n))_: List of
