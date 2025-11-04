@@ -5,13 +5,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/hermitian_conjugate/hc.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/helpers/clicktimes_sse_to_sme.html">
 
 
-    <link rel="prev" href="../plot/mplstyle.html">
+    <link rel="prev" href="hc.html">
 
 
-    <link rel="next" href="../../community/index.html">
+    <link rel="next" href="measurements_sse_to_sme.html">
 
 <link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
@@ -19,7 +19,7 @@
 
     
       
-        <title>hc - Dynamiqs</title>
+        <title>clicktimes_sse_to_sme - Dynamiqs</title>
       
     
     
@@ -112,7 +112,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.hermitian_conjugate.hc" class="md-skip">
+        <a href="#dynamiqs.helpers.clicktimes_sse_to_sme" class="md-skip">
           Skip to content
         </a>
       
@@ -162,7 +162,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                hc
+                clicktimes_sse_to_sme
               
             </span>
           </div>
@@ -661,6 +661,8 @@
       
         
       
+        
+      
     
     
     
@@ -825,6 +827,29 @@
   
   <span class="md-ellipsis">
     Computing gradients
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../documentation/basics/floquet-integration.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Floquet integration
     
   </span>
   
@@ -3401,6 +3426,8 @@
       
         
       
+        
+      
     
     
     
@@ -4094,6 +4121,29 @@
   
   <span class="md-ellipsis">
     entropy_vn
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils/general/entropy_relative.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    entropy_relative
     
   </span>
   
@@ -5464,6 +5514,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -5485,7 +5539,7 @@
   
   
   <span class="md-ellipsis">
-    Magic helpers
+    Helpers
     
   </span>
   
@@ -5496,9 +5550,32 @@
         <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_4_10_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_4_10">
             <span class="md-nav__icon md-icon"></span>
-            Magic helpers
+            Helpers
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="hc.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    hc
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -5516,18 +5593,41 @@
         
       
       
-      <a href="hc.html" class="md-nav__link md-nav__link--active">
+      <a href="clicktimes_sse_to_sme.html" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
-    hc
+    clicktimes_sse_to_sme
     
   </span>
   
 
       </a>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="measurements_sse_to_sme.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    measurements_sse_to_sme
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -5732,62 +5832,81 @@
   
 
 
-<div class="doc doc-object doc-attribute">
+<div class="doc doc-object doc-function">
 
 
-
-<h1 id="dynamiqs.hermitian_conjugate.hc" class="doc doc-heading">
-            <span class="doc doc-object-name doc-attribute-name">hc</span>
+<h1 id="dynamiqs.helpers.clicktimes_sse_to_sme" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.clicktimes_sse_to_sme</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="n">hc</span> <span class="o">=</span> <span class="n">HermitianConjugate</span><span class="p">()</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">clicktimes_sse_to_sme</span><span class="p">(</span>
+    <span class="n">clicktimes</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">tsave</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">thetas</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">etas</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">key</span><span class="p">:</span> <span class="n">PRNGKeyArray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>This symbol can be used as a shortcut to sum a qarray or a time-qarray with its
-Hermitian conjugate.</p>
+        <p>Post-process click times from a jump <abbr title="stochastic Schrödinger equation">SSE</abbr> simulation to obtain click times for a
+jump <abbr title="stochastic master equation">SME</abbr> simulation.</p>
+<p>The <abbr title="stochastic master equation">SME</abbr> click times are obtained from the <abbr title="stochastic Schrödinger equation">SSE</abbr> click times by adding false clicks
+with rate <span class="arithmatex">\(\theta\)</span> and removing actual clicks with probability <span class="arithmatex">\(1-\eta\)</span>.</p>
 
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
-    <p>For a linear drive with amplitude <code>omega</code>:
-</p><div class="highlight"><pre><span></span><code><span class="gd">- H = a.dag() @ a + omega * a + omega.conj() * a.dag()</span>
-<span class="gi">+ H = a.dag() @ a + (omega * a + dq.hc)</span>
-</code></pre></div><p></p>
-<p>For two linear drives on two different modes:
-</p><div class="highlight"><pre><span></span><code><span class="gd">- H = omega_a * a + omega_a.conj() * a.dag() + omega_b * b + omega_b.conj() * b</span>
-<span class="gi">+ H = (omega_a * a + dq.hc) + (omega_b * b + dq.hc)</span>
-</code></pre></div><p></p>
-<p>For a time-dependent linear drive:
-</p><div class="highlight"><pre><span></span><code>omega = lambda t: jnp.cos(2.0 * jnp.pi * t)
-<span class="gd">- H = dq.modulated(omega, a)</span>
-<span class="gd">- H += H.dag()</span>
-<span class="gi">+ H = dq.modulated(omega, a) + dq.hc</span>
-</code></pre></div><p></p>
+    <!-- <p>Parameters:</p> -->
+    <p>
+      <strong>Parameters</strong>
+    </p>
+    <ul>
+        <li class="field-body">
+          <b>clicktimes</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>See result of <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.jssesolve&lt;/span&gt;" href="../integrators/jssesolve.html#dynamiqs.integrators.jssesolve"><code>dq.jssesolve()</code></a>.</p>
+        </li>
+        <li class="field-body">
+          <b>tsave</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>See <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.jssesolve&lt;/span&gt;" href="../integrators/jssesolve.html#dynamiqs.integrators.jssesolve"><code>dq.jssesolve()</code></a>.</p>
+        </li>
+        <li class="field-body">
+          <b>thetas</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>See <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.jsmesolve&lt;/span&gt;" href="../integrators/jsmesolve.html#dynamiqs.integrators.jsmesolve"><code>dq.jsmesolve()</code></a>.</p>
+        </li>
+        <li class="field-body">
+          <b>etas</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>See <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.jsmesolve&lt;/span&gt;" href="../integrators/jsmesolve.html#dynamiqs.integrators.jsmesolve"><code>dq.jsmesolve()</code></a>.</p>
+        </li>
+        <li class="field-body">
+          <b>key</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p><abbr title="pseudorandom number generator">PRNG</abbr> key used to sample the added noise for the post-processing.</p>
+        </li>
+    </ul>
 
-<details class="warning" open>
-  <summary>Warning</summary>
-  <p>The only valid operation with this symbol is right-addition to a qarray or a
-time-qarray. Any other operation will raise a <code>TypeError</code>.</p>
-</details>
-<details class="warning" open>
-  <summary>Warning</summary>
-  <p>The symbol applies on all terms present in the left-hand side of the addition. If
-you want to apply it to a single term, you should use parentheses to isolate it:</p>
-<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">sx</span><span class="p">,</span> <span class="n">sz</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">(),</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sz</span> <span class="o">+</span> <span class="p">(</span><span class="n">sx</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">hc</span><span class="p">)</span>
-<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=3</span>
-<span class="go">[[ 1.+0.j  2.+0.j]</span>
-<span class="go"> [ 2.+0.j -1.+0.j]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sz</span> <span class="o">+</span> <span class="n">sx</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">hc</span>
-<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=3</span>
-<span class="go">[[ 2.+0.j  2.+0.j]</span>
-<span class="go"> [ 2.+0.j -2.+0.j]]</span>
-</code></pre></div>
-</details>
+    <!-- <p>Returns:</p> -->
+    <p>
+      <strong>Returns</strong>
+    </p>
+    <!-- <ul>
+      <li class="field-body">
+            <code><span title="jax.Array">Array</span></code>
+        – <p><em>(array of shape (...))</em> <abbr title="stochastic master equation">SME</abbr> click times. The shape is the same as
+<code>clicktimes</code>, except that the dimension corresponding to the number of
+jump operators measured may be smaller, if the corresponding efficiency is
+null.</p>
+      </li>
+  </ul> -->
+      <span class="field-body"><p><em>(array of shape (...))</em> <abbr title="stochastic master equation">SME</abbr> click times. The shape is the same as
+<code>clicktimes</code>, except that the dimension corresponding to the number of
+jump operators measured may be smaller, if the corresponding efficiency is
+null.</p></span>
+
+
     </div>
 
 </div>
