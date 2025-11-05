@@ -110,8 +110,8 @@ def dsmesolve(
         This results in a significant speedup for large systems.
 
     Args:
-        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of qarray-like or time-qarray, each of shape (n, n))_: List of
+        H _(qarray-like or timeqarray of shape (...H, n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like or timeqarray, each of shape (n, n))_: List of
             jump operators.
         etas _(array-like of shape (len(jump_ops),))_: Measurement efficiency for each
             loss channel with values between 0 (purely dissipative) and 1 (perfectly

@@ -98,8 +98,8 @@ def dssesolve(
         [`dq.method.DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo] method.
 
     Args:
-        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
+        H _(qarray-like or timeqarray of shape (...H, n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like or timeqarray, each of shape (...Lk, n, n))_:
             List of jump operators.
         psi0 _(qarray-like of shape (...psi0, n, 1))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and

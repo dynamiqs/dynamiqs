@@ -57,7 +57,7 @@ def sepropagator(
     propagator is computed by solving the Schrödinger equation with an ODE method.
 
     Args:
-        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
+        H _(qarray-like or timeqarray of shape (...H, n, n))_: Hamiltonian.
         tsave _(array-like of shape (ntsave,))_: Times at which the propagators
             are saved. The equation is solved from `tsave[0]` to `tsave[-1]`,
             or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
@@ -160,7 +160,7 @@ def sepropagator(
 
     ## Defining a time-dependent Hamiltonian
 
-    If the Hamiltonian depends on time, it can be converted to a time-qarray using
+    If the Hamiltonian depends on time, it can be converted to a timeqarray using
     [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
     [`dq.timecallable()`][dynamiqs.timecallable]. See the
     [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)

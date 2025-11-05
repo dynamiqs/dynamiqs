@@ -59,7 +59,7 @@ def sesolve(
         - $H\to H(t)$
 
     Args:
-        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
+        H _(qarray-like or timeqarray of shape (...H, n, n))_: Hamiltonian.
         psi0 _(qarray-like of shape (...psi0, n, 1))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
@@ -168,7 +168,7 @@ def sesolve(
 
     ## Defining a time-dependent Hamiltonian
 
-    If the Hamiltonian depends on time, it can be converted to a time-qarray using
+    If the Hamiltonian depends on time, it can be converted to a timeqarray using
     [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
     [`dq.timecallable()`][dynamiqs.timecallable]. See the
     [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)

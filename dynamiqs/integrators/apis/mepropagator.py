@@ -60,8 +60,8 @@ def mepropagator(
     method.
 
     Args:
-        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
+        H _(qarray-like or timeqarray of shape (...H, n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like or timeqarray, each of shape (...Lk, n, n))_:
             List of jump operators.
         tsave _(array-like of shape (ntsave,))_: Times at which the propagators are
             saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or from `t0`
