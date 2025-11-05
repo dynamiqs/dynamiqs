@@ -135,7 +135,7 @@ We use [Google-style docstrings](https://google.github.io/styleguide/pyguide.htm
 - Headers can include (in this order and with these names): `Args`, `Returns`, `Raises`, `Examples`, `See also`.
 - You can use the admonitions (colored blocks in the documentation) `Note` and `Warning` if relevant.
 - Avoid using `The` in arguments description, for example change `x: The quantum state.` to `x: Quantum state.`.
-- Specify arguments type in `_(...)_` after the argument name and _only if it is necessary_. Adding a type can for example be useful to add a shape information for a qarray or an array, or because the argument typing in the function signature is opaque.
+- Specify arguments type in `(...)` after the argument name and _only if it is necessary_. Adding a type can for example be useful to add a shape information for a qarray or an array, or because the argument typing in the function signature is opaque.
 
 ### Documentation
 
