@@ -57,8 +57,8 @@ def sepropagator(
     propagator is computed by solving the Schrödinger equation with an ODE method.
 
     Args:
-        H _(qarray-like or timeqarray of shape (...H, n, n))_: Hamiltonian.
-        tsave _(array-like of shape (ntsave,))_: Times at which the propagators
+        H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
+        tsave (array-like of shape (ntsave,)): Times at which the propagators
             are saved. The equation is solved from `tsave[0]` to `tsave[-1]`,
             or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
         method: Method for the integration. Defaults to `None` which redirects
@@ -87,11 +87,11 @@ def sepropagator(
                 )
                 ```
 
-                **Parameters**
+                **Parameters:**
 
-                - **save_propagators** - If `True`, the propagator is saved at every
+                - **`save_propagators`** - If `True`, the propagator is saved at every
                     time in `tsave`, otherwise only the final propagator is returned.
-                - **progress_meter** - Progress meter indicating how far the solve has
+                - **`progress_meter`** - Progress meter indicating how far the solve has
                     progressed. Defaults to `None` which uses the global default
                     progress meter (see
                     [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
@@ -100,9 +100,9 @@ def sepropagator(
                     [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
                     If gradients are computed, the progress meter only displays during
                     the forward pass.
-                - **t0** - Initial time. If `None`, defaults to the first time in
+                - **`t0`** - Initial time. If `None`, defaults to the first time in
                     `tsave`.
-                - **save_extra** _(function, optional)_ - A function with signature
+                - **`save_extra`** _(function, optional)_ - A function with signature
                     `f(QArray) -> PyTree` that takes a propagator as input and returns
                     a PyTree. This can be used to save additional arbitrary data
                     during the integration, accessible in `result.extra`.
@@ -117,22 +117,22 @@ def sepropagator(
                 dq.SEPropagatorResult
                 ```
 
-                **Attributes**
+                **Attributes:**
 
-                - **propagators** _(qarray of shape (..., nsave, n, n))_ - Saved
+                - **`propagators`** _(qarray of shape (..., nsave, n, n))_ - Saved
                     propagators with `nsave = ntsave`, or `nsave = 1` if
                     `options.save_propagators=False`.
-                - **final_propagator** _(qarray of shape (..., n, n))_ - Saved final
+                - **`final_propagator`** _(qarray of shape (..., n, n))_ - Saved final
                     propagator.
-                - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
-                    specified in `options`.
-                - **infos** _(PyTree or None)_ - Method-dependent information on the
+                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
+                    if specified in `options`.
+                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
-                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
-                    saved.
-                - **method** _(Method)_ - Method used.
-                - **gradient** _(Gradient)_ - Gradient used.
-                - **options** _(Options)_ - Options used.
+                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
+                    were saved.
+                - **`method`** _(Method)_ - Method used.
+                - **`gradient`** _(Gradient)_ - Gradient used.
+                - **`options`** _(Options)_ - Options used.
 
     Examples:
         ```python

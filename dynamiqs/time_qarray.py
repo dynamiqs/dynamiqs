@@ -27,10 +27,10 @@ def constant(qarray: QArrayLike) -> ConstantTimeQArray:
     constant qarray.
 
     Args:
-        qarray _(qarray-like of shape (..., n, n))_: Constant qarray $O_0$.
+        qarray (qarray-like of shape (..., n, n)): Constant qarray $O_0$.
 
     Returns:
-        _(timeqarray of shape (..., n, n) when called)_ Callable returning $O_0$ for
+        (timeqarray of shape (..., n, n) when called): Callable returning $O_0$ for
             any time $t$.
 
     Examples:
@@ -69,14 +69,14 @@ def pwc(times: ArrayLike, values: ArrayLike, qarray: QArrayLike) -> PWCTimeQArra
         any time intervals, the returned qarray is null.
 
     Args:
-        times _(array-like of shape (N+1,))_: Time points $t_k$ defining the boundaries
+        times (array-like of shape (N+1,)): Time points $t_k$ defining the boundaries
             of the time intervals, where _N_ is the number of time intervals.
-        values _(array-like of shape (..., N))_: Constant values $c_k$ for each time
+        values (array-like of shape (..., N)): Constant values $c_k$ for each time
             interval.
-        qarray _(qarray-like of shape (n, n))_: Constant qarray $O_0$.
+        qarray (qarray-like of shape (n, n)): Constant qarray $O_0$.
 
     Returns:
-        _(timeqarray of shape (..., n, n) when called)_ Callable returning $O(t)$ for
+        (timeqarray of shape (..., n, n) when called): Callable returning $O(t)$ for
             any time $t$.
 
     Examples:
@@ -134,15 +134,15 @@ def modulated(
     shape _(...)_ for any time $t$.
 
     Args:
-        f _(function returning scalar or array of shape (...))_: Function with signature
+        f (function returning scalar or array of shape (...)): Function with signature
             `f(t: float) -> Scalar | Array` that returns the modulating factor
             $f(t)$.
-        qarray _(qarray-like of shape (n, n))_: Constant qarray $O_0$.
-        discontinuity_ts _(array-like, optional)_: Times at which there is a
+        qarray (qarray-like of shape (n, n)): Constant qarray $O_0$.
+        discontinuity_ts (array-like, optional): Times at which there is a
             discontinuous jump in the function values.
 
     Returns:
-        _(timeqarray of shape (..., n, n) when called)_ Callable returning $O(t)$ for
+        (timeqarray of shape (..., n, n) when called): Callable returning $O(t)$ for
             any time $t$.
 
     Examples:
@@ -196,13 +196,13 @@ def timecallable(
         conversions at every time step of the numerical integration.
 
     Args:
-        f _(function returning qarray of shape (..., n, n))_: Function with
+        f (function returning qarray of shape (..., n, n)): Function with
             signature `(t: float) -> QArray` that returns the qarray $f(t)$.
-        discontinuity_ts _(array-like, optional)_: Times at which there is a
+        discontinuity_ts (array-like, optional): Times at which there is a
             discontinuous jump in the function values.
 
     Returns:
-        _(timeqarray of shape (..., n, n) when called)_ Callable returning $O(t)$ for
+        (timeqarray of shape (..., n, n) when called): Callable returning $O(t)$ for
             any time $t$.
 
     Examples:
@@ -243,21 +243,21 @@ class TimeQArray(eqx.Module):
     used to define time-dependent operators for Dynamiqs solvers.
 
     Attributes:
-        dtype _(numpy.dtype)_: Data type.
-        shape _(tuple of int)_: Shape.
-        ndim _(int)_: Number of dimensions in the shape.
-        layout _(Layout)_: Data layout, either `dq.dense` or `dq.dia`.
-        dims _(tuple of ints)_: Hilbert space dimension of each subsystem.
-        mT _(timeqarray)_: Returns the timeqarray transposed over its last two
+        dtype (numpy.dtype): Data type.
+        shape (tuple of int): Shape.
+        ndim (int): Number of dimensions in the shape.
+        layout (Layout): Data layout, either `dq.dense` or `dq.dia`.
+        dims (tuple of ints): Hilbert space dimension of each subsystem.
+        mT (timeqarray): Returns the timeqarray transposed over its last two
             dimensions.
-        vectorized _(bool)_: Whether the underlying qarray is non-vectorized (ket, bra
+        vectorized (bool): Whether the underlying qarray is non-vectorized (ket, bra
             or operator) or vectorized (operator in vector form or superoperator in
             matrix form).
-        tstart _(float | None)_: The returned qarray is null for all times
+        tstart (float | None): The returned qarray is null for all times
             $t < t_{start}$ (ignored if `None`).
-        tend _(float | None)_: The returned qarray is null for all times
+        tend (float | None): The returned qarray is null for all times
             $t \geq t_{end}$ (ignored if `None`).
-        discontinuity_ts _(Array)_: Times at which there is a discontinuous jump
+        discontinuity_ts (Array): Times at which there is a discontinuous jump
             in the timeqarray values (the array is always sorted, but does not
             necessarily contain unique values).
 
@@ -421,10 +421,10 @@ class TimeQArray(eqx.Module):
         """Returns the timeqarray prefactor at specific times.
 
         Args:
-            ts _(array-like of shape (...))_: Times at which to evaluate the prefactor.
+            ts (array-like of shape (...)): Times at which to evaluate the prefactor.
 
         Returns:
-            _(array of shape (...))_ Prefactor values at times `ts`.
+            (array of shape (...)): Prefactor values at times `ts`.
         """
         ts = jnp.asarray(ts)
         return jnp.vectorize(self._prefactor)(ts)

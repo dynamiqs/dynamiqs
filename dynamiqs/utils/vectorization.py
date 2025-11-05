@@ -34,10 +34,10 @@ def vectorize(x: QArrayLike) -> QArray:
     $$
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Operator.
+        x (qarray-like of shape (..., n, n)): Operator.
 
     Returns:
-        _(qarray of shape (..., n^2, 1))_ Vectorized operator.
+        (qarray of shape (..., n^2, 1)): Vectorized operator.
 
     Examples:
         >>> A = jnp.array([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]])
@@ -71,10 +71,10 @@ def unvectorize(x: QArrayLike) -> QArray:
     $$
 
     Args:
-        x _(qarray-like of shape (..., n^2, 1))_: Vectorized operator.
+        x (qarray-like of shape (..., n^2, 1)): Vectorized operator.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Operator.
+        (qarray of shape (..., n, n)): Operator.
 
     Examples:
         >>> Avec = jnp.array([[1 + 1j], [2 + 2j], [3 + 3j], [4 + 4j]])
@@ -107,10 +107,10 @@ def spre(x: QArrayLike) -> QArray:
     $$
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Operator.
+        x (qarray-like of shape (..., n, n)): Operator.
 
     Returns:
-        _(qarray of shape (..., n^2, n^2))_ Pre-multiplication superoperator.
+        (qarray of shape (..., n^2, n^2)): Pre-multiplication superoperator.
 
     Examples:
         >>> dq.spre(dq.destroy(3)).shape
@@ -133,10 +133,10 @@ def spost(x: QArrayLike) -> QArray:
     $$
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Operator.
+        x (qarray-like of shape (..., n, n)): Operator.
 
     Returns:
-        _(qarray of shape (..., n^2, n^2))_ Post-multiplication superoperator.
+        (qarray of shape (..., n^2, n^2)): Post-multiplication superoperator.
 
     Examples:
         >>> dq.spost(dq.destroy(3)).shape
@@ -159,11 +159,11 @@ def sprepost(x: QArrayLike, y: QArrayLike) -> QArray:
     $$
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Operator for pre-multiplication.
-        y _(qarray-like of shape (..., n, n))_: Operator for post-multiplication.
+        x (qarray-like of shape (..., n, n)): Operator for pre-multiplication.
+        y (qarray-like of shape (..., n, n)): Operator for post-multiplication.
 
     Returns:
-        _(Qarray of shape (..., n^2, n^2))_ Pre- and post-multiplication superoperator.
+        (Qarray of shape (..., n^2, n^2)): Pre- and post-multiplication superoperator.
 
     Examples:
         >>> dq.sprepost(dq.destroy(3), dq.create(3)).shape
@@ -194,10 +194,10 @@ def sdissipator(L: QArrayLike) -> QArray:
     $$
 
     Args:
-        L _(qarray-like of shape (..., n, n))_: Jump operator.
+        L (qarray-like of shape (..., n, n)): Jump operator.
 
     Returns:
-        _(qarray of shape (..., n^2, n^2))_ Dissipation superoperator.
+        (qarray of shape (..., n^2, n^2)): Dissipation superoperator.
 
     See also:
         - [`dq.dissipator()`][dynamiqs.dissipator]: applies the dissipation
@@ -235,12 +235,12 @@ def slindbladian(H: QArrayLike, jump_ops: list[QArrayLike]) -> QArray:
         This superoperator is also sometimes called *Liouvillian*.
 
     Args:
-        H _(qarray-like of shape (..., n, n))_: Hamiltonian.
-        jump_ops _(list of qarray-like, each of shape (..., n, n))_: List of jump
+        H (qarray-like of shape (..., n, n)): Hamiltonian.
+        jump_ops (list of qarray-like, each of shape (..., n, n)): List of jump
             operators.
 
     Returns:
-        _(qarray of shape (..., n^2, n^2))_ Lindbladian superoperator.
+        (qarray of shape (..., n^2, n^2)): Lindbladian superoperator.
 
     See also:
         - [`dq.lindbladian()`][dynamiqs.lindbladian]: applies the Lindbladian

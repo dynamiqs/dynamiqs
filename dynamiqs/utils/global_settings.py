@@ -30,7 +30,7 @@ def set_device(device: Literal['cpu', 'gpu', 'tpu'], index: int = 0):
     See [JAX documentation on devices](https://jax.readthedocs.io/en/latest/faq.html#faq-data-placement).
 
     Args:
-        device _(string 'cpu', 'gpu', or 'tpu')_: Default device.
+        device (string 'cpu', 'gpu', or 'tpu'): Default device.
         index: Index of the device to use, defaults to 0.
     """
     jax.config.update('jax_default_device', jax.devices(device)[index])
@@ -55,7 +55,7 @@ def set_precision(precision: Literal['single', 'double']):
          See [JAX documentation on double precision](https://jax.readthedocs.io/en/latest/notebooks/Common_Gotchas_in_JAX.html#double-64bit-precision).
 
     Args:
-        precision _(string 'single' or 'double')_: Default precision.
+        precision (string 'single' or 'double'): Default precision.
     """
     if precision == 'single':
         jax.config.update('jax_enable_x64', False)
@@ -90,7 +90,7 @@ def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest']):
         and [JAX documentation on the different available options](https://jax.readthedocs.io/en/latest/jax.lax.html#jax.lax.Precision).
 
     Args:
-        matmul_precision _(string 'low', 'high', or 'highest')_: Default precision
+        matmul_precision (string 'low', 'high', or 'highest'): Default precision
             for matrix multiplications on GPUs and TPUs.
     """
     if matmul_precision == 'low':
@@ -119,7 +119,7 @@ def set_layout(layout: Literal['dense', 'dia']):
         The default layout upon importing dynamiqs is `'dia'`.
 
     Args:
-        layout _(string 'dense' or 'dia')_: Default matrix layout for operators.
+        layout (string 'dense' or 'dia'): Default matrix layout for operators.
 
     Examples:
         >>> dq.eye(4)

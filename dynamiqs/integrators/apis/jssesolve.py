@@ -92,17 +92,17 @@ def jssesolve(
         using `jssesolve()`, `tsave` must be passed as tuple.
 
     Args:
-        H _(qarray-like or timeqarray of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of qarray-like or timeqarray, each of shape (...Lk, n, n))_:
+        H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
+        jump_ops (list of qarray-like or timeqarray, each of shape (...Lk, n, n)):
             List of jump operators.
-        psi0 _(qarray-like of shape (...psi0, n, 1))_: Initial state.
-        tsave _(array-like of shape (ntsave,))_: Times at which the states and
+        psi0 (qarray-like of shape (...psi0, n, 1)): Initial state.
+        tsave (array-like of shape (ntsave,)): Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`.
-        keys _(list of PRNG keys)_: PRNG keys used to sample the point processes.
+        keys (list of PRNG keys): PRNG keys used to sample the point processes.
             The number of elements defines the number of sampled stochastic
             trajectories.
-        exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
+        exp_ops (list of array-like, each of shape (n, n), optional): List of
             operators for which the expectation value is computed.
         method: Method for the integration. No defaults for now, you have to specify a
             method (supported: [`Event`][dynamiqs.method.Event],
@@ -123,21 +123,21 @@ def jssesolve(
                 )
                 ```
 
-                **Parameters**
+                **Parameters:**
 
-                - **save_states** - If `True`, the state is saved at every time in
+                - **`save_states`** - If `True`, the state is saved at every time in
                     `tsave`, otherwise only the final state is returned.
-                - **cartesian_batching** - If `True`, batched arguments are treated as
+                - **`cartesian_batching`** - If `True`, batched arguments are treated as
                     separated batch dimensions, otherwise the batching is performed over
                     a single shared batched dimension.
-                - **t0** - Initial time. If `None`, defaults to the first time in
+                - **`t0`** - Initial time. If `None`, defaults to the first time in
                     `tsave`.
-                - **save_extra** _(function, optional)_ - A function with signature
+                - **`save_extra`** _(function, optional)_ - A function with signature
                     `f(QArray) -> PyTree` that takes a state as input and returns a
                     PyTree. This can be used to save additional arbitrary data
                     during the integration, accessible in `result.extra`.
-                - **nmaxclick** - Maximum buffer size for `result.clicktimes`, should be
-                    set higher than the expected maximum number of clicks.
+                - **`nmaxclick`** - Maximum buffer size for `result.clicktimes`, should
+                    be set higher than the expected maximum number of clicks.
 
     Returns:
         `dq.JSSESolveResult` object holding the result of the jump SSE integration. Use
@@ -153,31 +153,31 @@ def jssesolve(
                 For the shape indications we define `ntrajs` as the number of
                 trajectories (`ntrajs = len(keys)`).
 
-                **Attributes**
+                **Attributes:**
 
-                - **states** _(qarray of shape (..., ntrajs, nsave, n, 1))_ - Saved
+                - **`states`** _(qarray of shape (..., ntrajs, nsave, n, 1))_ - Saved
                     states with `nsave = ntsave`, or `nsave = 1` if
                     `options.save_states=False`.
-                - **final_state** _(qarray of shape (..., ntrajs, n, 1))_ - Saved final
-                    state.
-                - **expects** _(array of shape (..., ntrajs, len(exp_ops), ntsave) or None)_ - Saved
-                    expectation values, if specified by `exp_ops`.
-                - **clicktimes** _(array of shape (..., ntrajs, len(jump_ops), nmaxclick))_ - Times
-                    at which the detectors clicked. Variable-length array padded with
-                    `jnp.nan` up to `nmaxclick`.
-                - **nclicks** _(array of shape (..., ntrajs, len(jump_ops))_ - Number
+                - **`final_state`** _(qarray of shape (..., ntrajs, n, 1))_ - Saved
+                    final state.
+                - **`expects`** _(array of shape (..., ntrajs, len(exp_ops), ntsave) or
+                    None)_ - Saved expectation values, if specified by `exp_ops`.
+                - **`clicktimes`** _(array of shape (..., ntrajs, len(jump_ops),
+                    nmaxclick))_ - Times at which the detectors clicked. Variable-length
+                    array padded with `jnp.nan` up to `nmaxclick`.
+                - **`nclicks`** _(array of shape (..., ntrajs, len(jump_ops))_ - Number
                     of clicks for each jump operator.
-                - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
-                    specified in `options`.
-                - **keys** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
+                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
+                    if specified in `options`.
+                - **`keys`** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
                     sample the point processes.
-                - **infos** _(PyTree or None)_ - Method-dependent information on the
+                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
-                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
-                    saved.
-                - **method** _(Method)_ - Method used.
-                - **gradient** _(Gradient)_ - Gradient used.
-                - **options** _(Options)_ - Options used.
+                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
+                    were saved.
+                - **`method`** _(Method)_ - Method used.
+                - **`gradient`** _(Gradient)_ - Gradient used.
+                - **`options`** _(Options)_ - Options used.
 
     Examples:
         ```python
@@ -256,7 +256,7 @@ def jssesolve(
     See the
     [Batching simulations](../../documentation/basics/batching-simulations.md)
     tutorial for more details.
-    """  # noqa: E501
+    """
     # === convert arguments
     H = astimeqarray(H)
     Ls = [astimeqarray(L) for L in jump_ops]

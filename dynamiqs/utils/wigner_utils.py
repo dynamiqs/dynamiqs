@@ -29,25 +29,23 @@ def wigner(
     The Wigner distribution is computed on a grid of coordinates $(x, y)$.
 
     Args:
-        state _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density
+        state (qarray-like of shape (..., n, 1) or (..., n, n)): Ket or density
             matrix.
         xmax: Maximum absolute value of the $x$ coordinate.
         ymax: Maximum absolute value of the $y$ coordinate.
         npixels: Number of pixels in each direction.
-        xvec _(array-like of shape (nxvec,), optional)_: $x$ coordinates. If `None`,
+        xvec (array-like of shape (nxvec,), optional): $x$ coordinates. If `None`,
             defaults to `xvec = jnp.linspace(-xmax, xmax, npixels)`.
-        yvec _(array-like of shape (nyvec,), optional)_: $y$ coordinates. If `None`,
+        yvec (array-like of shape (nyvec,), optional): $y$ coordinates. If `None`,
             defaults to `yvec = jnp.linspace(-ymax, ymax, npixels)`.
         g: Scaling factor of Wigner quadratures, such that $a = g(x + iy)/2$.
 
     Returns:
-        A tuple `(xvec, yvec, w)` where
-
-            - **xvec** _(array of shape (npixels,) or (nxvec,))_ -- $x$ coordinates, or
-                `xvec` if specified.
-            - **yvec** _(array of shape (npixels,) or (nyvec,))_ -- $y$ coordinates, or
-                `yvec` if specified.
-            - **w** _(array of shape (..., npixels, npixels) or (..., nyvec, nxvec))_ -- Wigner distribution.
+        xvec (array of shape (npixels,) or (nxvec,)): $x$ coordinates, or
+            `xvec` if specified.
+        yvec (array of shape (npixels,) or (nyvec,)): $y$ coordinates, or
+            `yvec` if specified.
+        w (array of shape (..., npixels, npixels) or (..., nyvec, nxvec)): Wigner distribution.
 
     See also:
         - [`dq.plot.wigner()`][dynamiqs.plot.wigner]: plot the Wigner function of a

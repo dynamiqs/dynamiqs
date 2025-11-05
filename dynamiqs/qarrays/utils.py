@@ -42,10 +42,10 @@ def asqarray(
 
     Args:
         x: Object to convert.
-        dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
+        dims (tuple of ints or None): Dimensions of each subsystem in the composite
             system Hilbert space tensor product. Defaults to `None` (`x.dims` if
             available, single Hilbert space `dims=(n,)` otherwise).
-        layout _(dq.dense, dq.dia or None)_: Matrix layout. If `None`, the default
+        layout (dq.dense, dq.dia or None): Matrix layout. If `None`, the default
             layout is `dq.dense`, except for qarrays that are directly returned.
         offsets: Offsets of the stored diagonals if `layout==dq.dia`. If `None`, offsets
             are determined automatically from the matrix structure. This argument can
@@ -201,9 +201,9 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
     r"""Convert a qarray-like into a QuTiP Qobj or list of Qobjs.
 
     Args:
-        x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
+        x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Ket, bra,
             density matrix or operator.
-        dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
+        dims (tuple of ints or None): Dimensions of each subsystem in the composite
             system Hilbert space tensor product. Defaults to `None` (`x.dims` if
             available, single Hilbert space `dims=(n,)` otherwise).
 
@@ -268,7 +268,7 @@ def sparsedia_from_dict(
     Args:
         offsets_diags: Dictionary where keys are offsets and values are diagonals of
             shapes _(..., n-|offset|)_ with a common batch shape between all diagonals.
-        dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
+        dims (tuple of ints or None): Dimensions of each subsystem in the composite
             system Hilbert space tensor product. Defaults to `None` (single Hilbert
             space `dims=(n,)`).
         dtype: Data type of the qarray. If `None`, the data type is inferred from the

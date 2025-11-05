@@ -52,11 +52,11 @@ def floquet(
     $$
 
     Args:
-        H _(qarray-like or timeqarray of shape (...H, n, n))_: Hamiltonian.
+        H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
         T: Period of the Hamiltonian. If the Hamiltonian is batched, the period should
             be common over all elements in the batch. To batch over different periods,
             wrap the call to `floquet` in a `jax.vmap`, see above.
-        tsave _(array-like of shape (ntsave,))_: Times at which to compute floquet
+        tsave (array-like of shape (ntsave,)): Times at which to compute floquet
             modes. The specified times should be ordered, strictly ascending, and such
             that `tsave[-1] - tsave[0] <= T`.
         method: Method for the integration. Defaults to
@@ -77,9 +77,9 @@ def floquet(
                 )
                 ```
 
-                **Parameters**
+                **Parameters:**
 
-                - **progress_meter** - Progress meter indicating how far the solve has
+                - **`progress_meter`** - Progress meter indicating how far the solve has
                     progressed. Defaults to `None` which uses the global default
                     progress meter (see
                     [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
@@ -88,7 +88,7 @@ def floquet(
                     [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
                     If gradients are computed, the progress meter only displays during
                     the forward pass.
-                - **t0** - Initial time. If `None`, defaults to the first time in
+                - **`t0`** - Initial time. If `None`, defaults to the first time in
                     `tsave`.
 
     Returns:
@@ -101,19 +101,19 @@ def floquet(
                 dq.FloquetResult
                 ```
 
-                **Attributes**
+                **Attributes:**
 
-                - **modes** _(qarray of shape (..., ntsave, n, n, 1))_ - Saved Floquet
+                - **`modes`** _(qarray of shape (..., ntsave, n, n, 1))_ - Saved Floquet
                     modes.
-                - **quasienergies** _(array of shape (..., n))_ - Saved quasienergies
-                - **T** _(float)_ - Drive period
-                - **infos** _(PyTree or None)_ - Method-dependent information on the
+                - **`quasienergies`** _(array of shape (..., n))_ - Saved quasienergies
+                - **`T`** _(float)_ - Drive period
+                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
-                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
-                    saved.
-                - **method** _(Method)_ - Method used.
-                - **gradient** _(Gradient)_ - Gradient used.
-                - **options** _(Options)_ - Options used.
+                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
+                    were saved.
+                - **`method`** _(Method)_ - Method used.
+                - **`gradient`** _(Gradient)_ - Gradient used.
+                - **`options`** _(Options)_ - Options used.
 
     Examples:
         ```python

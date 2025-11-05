@@ -105,22 +105,22 @@ def jsmesolve(
         This results in a significant speedup for large systems.
 
     Args:
-        H _(qarray-like or timeqarray of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of qarray-like or timeqarray, each of shape (n, n))_: List of
+        H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
+        jump_ops (list of qarray-like or timeqarray, each of shape (n, n)): List of
             jump operators.
-        thetas _(array-like of shape (len(jump_ops),))_: Dark count rate for each
+        thetas (array-like of shape (len(jump_ops),)): Dark count rate for each
             loss channel.
-        etas _(array-like of shape (len(jump_ops),))_: Measurement efficiency for each
+        etas (array-like of shape (len(jump_ops),)): Measurement efficiency for each
             loss channel with values between 0 (purely dissipative) and 1 (perfectly
             measured). No measurement is returned for purely dissipative loss channels.
-        rho0 _(qarray-like of shape (...rho0, n, 1) or (...rho0, n, n))_: Initial state.
-        tsave _(array-like of shape (ntsave,))_: Times at which the states and
+        rho0 (qarray-like of shape (...rho0, n, 1) or (...rho0, n, n)): Initial state.
+        tsave (array-like of shape (ntsave,)): Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`.
-        keys _(list of PRNG keys)_: PRNG keys used to sample the point processes.
+        keys (list of PRNG keys): PRNG keys used to sample the point processes.
             The number of elements defines the number of sampled stochastic
             trajectories.
-        exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
+        exp_ops (list of array-like, each of shape (n, n), optional): List of
             operators for which the expectation value is computed.
         method: Method for the integration. No defaults for now, you have to specify a
             method (supported: [`EulerJump`][dynamiqs.method.EulerJump]).
@@ -139,19 +139,19 @@ def jsmesolve(
                 )
                 ```
 
-                **Parameters**
+                **Parameters:**
 
-                - **save_states** - If `True`, the state is saved at every time in
+                - **`save_states`** - If `True`, the state is saved at every time in
                     `tsave`, otherwise only the final state is returned.
-                - **cartesian_batching** - If `True`, batched arguments are treated as
+                - **`cartesian_batching`** - If `True`, batched arguments are treated as
                     separated batch dimensions, otherwise the batching is performed over
                     a single shared batched dimension.
-                - **save_extra** _(function, optional)_ - A function with signature
+                - **`save_extra`** _(function, optional)_ - A function with signature
                     `f(QArray) -> PyTree` that takes a state as input and returns a
                     PyTree. This can be used to save additional arbitrary data
                     during the integration, accessible in `result.extra`.
-                - **nmaxclick** - Maximum buffer size for `result.clicktimes`, should be
-                    set higher than the expected maximum number of clicks.
+                - **`nmaxclick`** - Maximum buffer size for `result.clicktimes`, should
+                    be set higher than the expected maximum number of clicks.
 
     Returns:
         `dq.JSMESolveResult` object holding the result of the jump SME integration. Use
@@ -168,29 +168,29 @@ def jsmesolve(
                 trajectories (`ntrajs = len(keys)`) and `nLm` as the number of measured
                 loss channels (those for which the measurement efficiency is not zero).
 
-                **Attributes**
+                **Attributes:**
 
-                - **states** _(qarray of shape (..., ntrajs, nsave, n, n))_ - Saved
+                - **`states`** _(qarray of shape (..., ntrajs, nsave, n, n))_ - Saved
                     states with `nsave = ntsave`, or `nsave = 1` if
                     `options.save_states=False`.
-                - **final_state** _(qarray of shape (..., ntrajs, n, n))_ - Saved final
-                    state.
-                - **expects** _(array of shape (..., ntrajs, len(exp_ops), ntsave) or None)_ - Saved
-                    expectation values, if specified by `exp_ops`.
-                - **clicktimes** _(array of shape (..., ntrajs, nLm, nmaxclick))_ - Times
-                    at which the detectors clicked. Variable-length array padded with
-                    `jnp.nan` up to `nmaxclick`.
-                - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
-                    specified in `options`.
-                - **keys** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
+                - **`final_state`** _(qarray of shape (..., ntrajs, n, n))_ - Saved
+                    final state.
+                - **`expects`** _(array of shape (..., ntrajs, len(exp_ops), ntsave)
+                    or None)_ - Saved expectation values, if specified by `exp_ops`.
+                - **`clicktimes`** _(array of shape (..., ntrajs, nLm, nmaxclick))_ -
+                    Times at which the detectors clicked. Variable-length array padded
+                    with `jnp.nan` up to `nmaxclick`.
+                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
+                    if specified in `options`.
+                - **`keys`** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
                     sample the point processes.
-                - **infos** _(PyTree or None)_ - Method-dependent information on the
+                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
-                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
-                    saved.
-                - **method** _(Method)_ - Method used.
-                - **gradient** _(Gradient)_ - Gradient used.
-                - **options** _(Options)_ - Options used.
+                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
+                    were saved.
+                - **`method`** _(Method)_ - Method used.
+                - **`gradient`** _(Gradient)_ - Gradient used.
+                - **`options`** _(Options)_ - Options used.
 
     Examples:
         ```python

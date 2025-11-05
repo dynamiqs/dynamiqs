@@ -60,10 +60,10 @@ def mepropagator(
     method.
 
     Args:
-        H _(qarray-like or timeqarray of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of qarray-like or timeqarray, each of shape (...Lk, n, n))_:
+        H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
+        jump_ops (list of qarray-like or timeqarray, each of shape (...Lk, n, n)):
             List of jump operators.
-        tsave _(array-like of shape (ntsave,))_: Times at which the propagators are
+        tsave (array-like of shape (ntsave,)): Times at which the propagators are
             saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or from `t0`
             to `tsave[-1]` if `t0` is specified in `options`.
         method: Method for the integration. Defaults to `None` which redirects
@@ -93,14 +93,14 @@ def mepropagator(
                 )
                 ```
 
-                **Parameters**
+                **Parameters:**
 
-                - **save_propagators** - If `True`, the propagator is saved at every
+                - **`save_propagators`** - If `True`, the propagator is saved at every
                     time in `tsave`, otherwise only the final propagator is returned.
-                - **cartesian_batching** - If `True`, batched arguments are treated as
+                - **`cartesian_batching`** - If `True`, batched arguments are treated as
                     separated batch dimensions, otherwise the batching is performed over
                     a single shared batched dimension.
-                - **progress_meter** - Progress meter indicating how far the solve has
+                - **`progress_meter`** - Progress meter indicating how far the solve has
                     progressed. Defaults to `None` which uses the global default
                     progress meter (see
                     [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
@@ -109,9 +109,9 @@ def mepropagator(
                     [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
                     If gradients are computed, the progress meter only displays during
                     the forward pass.
-                - **t0** - Initial time. If `None`, defaults to the first time in
+                - **`t0`** - Initial time. If `None`, defaults to the first time in
                     `tsave`.
-                - **save_extra** _(function, optional)_ - A function with signature
+                - **`save_extra`** _(function, optional)_ - A function with signature
                     `f(QArray) -> PyTree` that takes a propagator as input and returns
                     a PyTree. This can be used to save additional arbitrary data
                     during the integration, accessible in `result.extra`.
@@ -125,22 +125,22 @@ def mepropagator(
                 dq.MEPropagatorResult
                 ```
 
-                **Attributes**
+                **Attributes:**
 
-                - **propagators** _(qarray of shape (..., nsave, n^2, n^2))_ - Saved
+                - **`propagators`** _(qarray of shape (..., nsave, n^2, n^2))_ - Saved
                     propagators with `nsave = ntsave`, or `nsave = 1` if
                     `options.save_propagators=False`.
-                - **final_propagator** _(qarray of shape (..., n^2, n^2))_ - Saved final
-                    propagator.
-                - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
-                    specified in `options`.
-                - **infos** _(PyTree or None)_ - Method-dependent information on the
+                - **`final_propagator`** _(qarray of shape (..., n^2, n^2))_ - Saved
+                    final propagator.
+                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
+                    if specified in `options`.
+                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
-                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
-                    saved.
-                - **method** _(Method)_ - Method used.
-                - **gradient** _(Gradient)_ - Gradient used.
-                - **options** _(Options)_ - Options used.
+                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
+                    were saved.
+                - **`method`** _(Method)_ - Method used.
+                - **`gradient`** _(Gradient)_ - Gradient used.
+                - **`options`** _(Options)_ - Options used.
 
     Examples:
         ```python
