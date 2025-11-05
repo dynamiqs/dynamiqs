@@ -8,10 +8,8 @@
       <li class="doc-section-item field-body">
         {% if returns.name %}<b><code>{{ returns.name }}</code></b>{% endif %}
         {% if returns.annotation is string %}
-          {% with expression = returns.annotation, backlink_type = "returned-by" %}
-            {% if returns.name %} ({% endif %}
+          {% with expression = returns.annotation %}
             (<i>{% include "expression"|get_template with context %}</i>)
-            {% if returns.name %}){% endif %}
           {% endwith %}
           –
         {% endif %}
