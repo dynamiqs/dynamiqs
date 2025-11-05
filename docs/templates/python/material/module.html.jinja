@@ -12,7 +12,7 @@
     {% endif %}
     {% if not root or config.show_root_heading %}
       {% with module_name = module.path if show_full_path else module.name %}
-        {% if not config.table %}
+        {% if not config.extra.table %}
           {% if config.show_symbol_type_heading %}
             <code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>
           {% endif %}
@@ -44,7 +44,7 @@
       {% with obj = module %}
         {% set root = False %}
         {% set heading_level = heading_level + 1 %}
-        {% if config.table %}
+        {% if config.extra.table %}
           {% include "table"|get_template with context %}
         {% else %}
           {% include "children"|get_template with context %}

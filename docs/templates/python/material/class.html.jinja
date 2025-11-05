@@ -1,7 +1,7 @@
 {% extends "_base/class.html.jinja" %}
 {% block heading scoped %}
-  {% if config.namespace %}
-    {% set class_full_name = config.namespace + "." + class_name %}
+  {% if config.extra.namespace %}
+    {% set class_full_name = config.extra.namespace + "." + class_name %}
   {% else %}
     {% set class_full_name = class_name %}
   {% endif %}

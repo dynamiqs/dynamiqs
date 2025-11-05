@@ -24,8 +24,8 @@
           {% if not method.is_explicitely_exported %}
             <tr>
               <td class="fixed_height">
-                {% if config.namespace is defined %}
-                  <a href={{ "./" ~ config.namespace ~ method.name ~ ".html" }}>
+                {% if config.extra.namespace is defined %}
+                  <a href={{ "./" ~ config.extra.namespace ~ method.name ~ ".html" }}>
                 {% else %}
                   <a href={{ "./" ~ (method.path | replace('dynamiqs.', '') | replace(".", "/")) ~ ".html" }}>
                 {% endif %}
