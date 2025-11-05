@@ -1,27 +1,5 @@
 {% extends "_base/docstring/attributes.html.jinja" %}
 
-{# {% block list_style %}
-  <p>
-    <strong>{{ section.title or "Attributes" }}</strong>
-  </p>
-  <ul>
-    {% for attribute in section.value %}
-      <li class="field-body">
-        <b>{{ attribute.name }}</b>
-        {% if attribute.annotation is iterable and attribute.annotation[0] == "_" %}
-          {% set annotation = attribute.annotation|join("") %}
-          {% with expression = annotation[1:-1] %}
-            <i>
-              {% include "expression.html" with context %}
-            </i>
-          {% endwith %}
-        {% endif %}
-        – {{ attribute.description|convert_markdown(heading_level, html_id) }}
-      </li>
-    {% endfor %}
-  </ul>
-{% endblock list_style %} #}
-
 {% block list_style scoped %}
   {#- Block for the `list` section style. -#}
   <p><span class="doc-section-title">{{ section.title or lang.t("Attributes:") }}</span></p>
