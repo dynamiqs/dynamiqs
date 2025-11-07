@@ -27,7 +27,7 @@ QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
 (2, 2)
 ```
 
-Time-qarrays support common arithmetic operations with scalars, qarray-likes and other time-qarrays. For example to define the Hamiltonian
+Timeqarrays support common arithmetic operations with scalars, qarray-likes and other timeqarrays. For example to define the Hamiltonian
 $$
     H(t) = \sigma_z + 2 H_x(t) - \sin(\pi t) \sigma_y
 $$
@@ -41,7 +41,7 @@ QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=3
  [ 2.+0.j -1.+0.j]]
 ```
 
-Finally, time-qarrays also support common utility functions, such as `.conj()`, or `.reshape()`. More details can be found in the [`TimeQArray`][dynamiqs.TimeQArray] API page.
+Finally, timeqarrays also support common utility functions, such as `.conj()`, or `.reshape()`. More details can be found in the [`TimeQArray`][dynamiqs.TimeQArray] API page.
 
 ## Defining a timeqarray
 
@@ -51,7 +51,7 @@ A constant operator is defined by
 $$
     O(t) = O_0
 $$
-for any time $t$, where $O_0$ is an arbitrary operator. The most practical way to define constant operators is using qarray-likes. They can also be instantiated as time-qarrays using the [`dq.constant()`][dynamiqs.constant] function. For instance, to define the Pauli operator $H = \sigma_z$, you can use any of the following syntaxes:
+for any time $t$, where $O_0$ is an arbitrary operator. The most practical way to define constant operators is using qarray-likes. They can also be instantiated as timeqarrays using the [`dq.constant()`][dynamiqs.constant] function. For instance, to define the Pauli operator $H = \sigma_z$, you can use any of the following syntaxes:
 
 === "Dynamiqs utilities"
     ```python

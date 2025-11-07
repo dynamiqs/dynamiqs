@@ -262,8 +262,8 @@ class TimeQArray(eqx.Module):
             necessarily contain unique values).
 
     Note: Arithmetic operation support
-        Time-qarrays support basic arithmetic operations `-, +, *` with other
-        qarray-likes or time-qarrays.
+        Timeqarrays support basic arithmetic operations `-, +, *` with other
+        qarray-likes or timeqarrays.
     """
 
     # Subclasses should implement:
@@ -808,9 +808,9 @@ class SummedTimeQArray(TimeQArray):
     ):
         super().__init__(tstart=None, tend=None)
         if check:
-            # verify all time-qarrays of the sum are broadcast compatible
+            # verify all timeqarrays of the sum are broadcast compatible
             shape = jnp.broadcast_shapes(*[tqarray.shape for tqarray in timeqarrays])
-            # ensure all time-qarrays can be jointly vmapped over (as specified by the
+            # ensure all timeqarrays can be jointly vmapped over (as specified by the
             # `in_axes` property)
             timeqarrays = [tqarray.broadcast_to(*shape) for tqarray in timeqarrays]
 
