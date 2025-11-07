@@ -221,7 +221,7 @@ def hinton(
         # x: 2D array with complex data
 
         # cyclic colormap for the phase
-        cmap = 'cmr_copper' if cmap is None else cmap
+        cmap = 'cmasher:copper' if cmap is None else cmap
 
         # areas: magnitude of x
         magnitude = jnp.abs(x)

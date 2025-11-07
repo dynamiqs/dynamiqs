@@ -30,7 +30,7 @@ dependencies = [
     "equinox",
     "optimistix",  # for typing of root-finding in Event method
     "pillow",
-    "cmasher>=1.8.0",  # avoid matplotlib colormaps deprecation warning
+    "cmap",
     "ipython",
     "tqdm",
 ]
