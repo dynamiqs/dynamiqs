@@ -6875,45 +6875,54 @@ $$</p>
 <p>where <span class="arithmatex">\(H\)</span> is the system Hamiltonian, <span class="arithmatex">\(\{L_k\}\)</span> is a set of <span class="arithmatex">\(N\)</span> jump operators
 (arbitrary operators) and <span class="arithmatex">\(\mathcal{D}[L]\)</span> is the Lindblad dissipation superoperator
 (see <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.dissipator&lt;/span&gt;" href="dissipator.html#dynamiqs.utils.general.dissipator"><code>dq.dissipator()</code></a>).</p>
+  
 
 <details class="note" open>
   <summary>Note</summary>
   <p>This superoperator is also sometimes called <em>Liouvillian</em>.</p>
 </details>
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>H _(qarray-like of shape (..., n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Hamiltonian.</p>
-        </li>
-        <li class="field-body">
-          <b>jump_ops _(list of qarray-like, each of shape (, ..., n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>List of jump
-operators.</p>
-        </li>
-        <li class="field-body">
-          <b>rho _(qarray-like of shape (..., n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Density matrix.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.QArray&lt;/span&gt; (&lt;code&gt;dynamiqs.qarrays.qarray.QArray&lt;/code&gt;)" href="../../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p><em>(qarray of shape (..., n, n))</em> Resulting operator (it is not a density matrix).</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>H</code></b>
+            (<i>qarray-like of shape (..., n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Hamiltonian.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><em>(qarray of shape (..., n, n))</em> Resulting operator (it is not a density matrix).</p></span>
+      <li class="doc-section-item field-body">
+          <b><code>jump_ops</code></b>
+            (<i>list of qarray-like, each of shape (, ..., n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>List of jump
+operators.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>rho</code></b>
+            (<i>qarray-like of shape (..., n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Density matrix.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+            (<i>qarray of shape (..., n, n)</i>)
+          –
+        <div class="doc-md-description">
+          <p>Resulting operator (it is not a density matrix).</p>
+        </div>
+      </li>
+  </ul>
+  
 
 <details class="see-also" open>
   <summary>See also</summary>
@@ -6922,10 +6931,8 @@ operators.</p>
     superoperator in matrix form (vectorized).</li>
 </ul>
 </details>
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">()</span> <span class="o">@</span> <span class="n">a</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">L</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">()</span> <span class="o">@</span> <span class="n">a</span><span class="p">]</span>

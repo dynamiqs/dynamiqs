@@ -6873,6 +6873,7 @@
 for a diffusive <abbr title="stochastic master equation">SME</abbr> simulation.</p>
 <p>The <abbr title="stochastic master equation">SME</abbr> measurements are obtained from the <abbr title="stochastic Schrödinger equation">SSE</abbr> measurements by adding additional
 Gaussian noise.</p>
+  
 
 <details class="note" open>
   <summary>Note</summary>
@@ -6894,50 +6895,53 @@ $$
 where <span class="arithmatex">\(\Delta t_n=t_{n+1}-t_n\)</span> and <span class="arithmatex">\(\Delta W\sim \mathcal{N}(0, 1)\)</span> is
 a standard Gaussian random variable.</p>
 </details>
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>measurements</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>See result of <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.dssesolve&lt;/span&gt;" href="../integrators/dssesolve.html#dynamiqs.integrators.dssesolve"><code>dq.dssesolve()</code></a>.</p>
-        </li>
-        <li class="field-body">
-          <b>tsave</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>See <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.dssesolve&lt;/span&gt;" href="../integrators/dssesolve.html#dynamiqs.integrators.dssesolve"><code>dq.dssesolve()</code></a>.</p>
-        </li>
-        <li class="field-body">
-          <b>etas</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>See <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.dsmesolve&lt;/span&gt;" href="../integrators/dsmesolve.html#dynamiqs.integrators.dsmesolve"><code>dq.dsmesolve()</code></a>.</p>
-        </li>
-        <li class="field-body">
-          <b>key</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p><abbr title="pseudorandom number generator">PRNG</abbr> key used to sample the added noise for the post-processing.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (...))</em> <abbr title="stochastic master equation">SME</abbr> measurements. The shape is the same as
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>measurements</code></b>
+        –
+        <div class="doc-md-description">
+          <p>See result of <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.dssesolve&lt;/span&gt;" href="../integrators/dssesolve.html#dynamiqs.integrators.dssesolve"><code>dq.dssesolve()</code></a>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>tsave</code></b>
+        –
+        <div class="doc-md-description">
+          <p>See <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.dssesolve&lt;/span&gt;" href="../integrators/dssesolve.html#dynamiqs.integrators.dssesolve"><code>dq.dssesolve()</code></a>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>etas</code></b>
+        –
+        <div class="doc-md-description">
+          <p>See <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.dsmesolve&lt;/span&gt;" href="../integrators/dsmesolve.html#dynamiqs.integrators.dsmesolve"><code>dq.dsmesolve()</code></a>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>key</code></b>
+        –
+        <div class="doc-md-description">
+          <p><abbr title="pseudorandom number generator">PRNG</abbr> key used to sample the added noise for the post-processing.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+            (<i>array of shape (...)</i>)
+          –
+        <div class="doc-md-description">
+          <p><abbr title="stochastic master equation">SME</abbr> measurements. The shape is the same as
 <code>measurements</code>, except that the dimension corresponding to the number of
 jump operators measured may be smaller, if the corresponding efficiency is
 null.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><em>(array of shape (...))</em> <abbr title="stochastic master equation">SME</abbr> measurements. The shape is the same as
-<code>measurements</code>, except that the dimension corresponding to the number of
-jump operators measured may be smaller, if the corresponding efficiency is
-null.</p></span>
+  </ul>
 
 
     </div>

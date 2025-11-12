@@ -6874,6 +6874,7 @@
 <p>Enables support for forward-mode automatic differentiation
 (like <a href="https://docs.jax.dev/en/latest/_autosummary/jax.jvp.html"><code>jax.jvp</code></a>
   or <a href="https://docs.jax.dev/en/latest/_autosummary/jax.jacfwd.html"><code>jax.jacfwd</code></a>).</p>
+  
 
 <details class="note" open>
   <summary>Note</summary>
@@ -6882,7 +6883,8 @@ instance, it's the preferred method when simulating a Lindbladian parameterized
 with a few values and computing the Jacobian of a function returning the
 expectation values of many observables (or the same observable at many different
 times).</p>
-</details>
+</details>  
+
 <details class="warning" open>
   <summary>Warning</summary>
   <p>This cannot be backward-mode autodifferentiated (e.g. using
@@ -6890,14 +6892,16 @@ times).</p>
 Try using
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.gradient.BackwardCheckpointed&lt;/span&gt;" href="BackwardCheckpointed.html#dynamiqs.gradient.BackwardCheckpointed"><code>dq.gradient.BackwardCheckpointed</code></a> if
 that is something you need.</p>
-</details>
+</details>  
+
 <details class="warning" open>
   <summary>Warning</summary>
   <p>By default
  <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.grad.html"><code>jax.grad</code></a>
 uses reverse mode. Use <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.jacfwd.html"><code>jax.jacfwd</code></a>
 to compute the gradient in forward mode.</p>
-</details>
+</details>  
+
 <details class="note" open>
   <summary>Note</summary>
   <p>For Diffrax-based methods, this falls back to the

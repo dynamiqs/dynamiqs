@@ -6868,6 +6868,7 @@
     <div class="doc doc-contents first">
 
         <p>Configure the default device.</p>
+  
 
 <details class="note">
   <summary>Equivalent JAX syntax</summary>
@@ -6876,22 +6877,25 @@
 </code></pre></div><p></p>
 </details>        <p>See <a href="https://jax.readthedocs.io/en/latest/faq.html#faq-data-placement">JAX documentation on devices</a>.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>device _(string 'cpu', 'gpu', or 'tpu')_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Default device.</p>
-        </li>
-        <li class="field-body">
-          <b>index</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Index of the device to use, defaults to 0.</p>
-        </li>
-    </ul>
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>device</code></b>
+            (<i>string 'cpu', 'gpu', or 'tpu'</i>)
+        –
+        <div class="doc-md-description">
+          <p>Default device.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>index</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Index of the device to use, defaults to 0.</p>
+        </div>
+      </li>
+  </ul>
 
 
     </div>

@@ -7039,17 +7039,20 @@ $$</p>
 <p>The continuous-time measurements are defined by the point processes <span class="arithmatex">\(\dd N_k\)</span>. The
 solver returns the times at which the detector clicked,
 <span class="arithmatex">\(I_k = \{t \in [t_0, t_\text{end}[ \,|\, \dd N_k(t)=1\}\)</span>.</p>
+  
 
 <details class="note" open>
   <summary>Note</summary>
   <p>If you are only interested in simulating trajectories to solve the Lindblad
 master equation, consider using <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.mesolve&lt;/span&gt;" href="mesolve.html#dynamiqs.integrators.mesolve"><code>dq.mesolve()</code></a> with the
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.JumpMonteCarlo&lt;/span&gt;" href="../method/JumpMonteCarlo.html#dynamiqs.method.JumpMonteCarlo"><code>dq.method.JumpMonteCarlo</code></a> method.</p>
-</details>
+</details>  
+
 <details class="note" open>
   <summary>Note</summary>
   <p>This function is the Dynamiqs counterpart of QuTiP's <code>mcsolve()</code> function.</p>
-</details>
+</details>  
+
 <details class="warning" open>
   <summary>Warning</summary>
   <p>For now, <code>jssesolve()</code> only supports linearly spaced <code>tsave</code> with values that
@@ -7057,64 +7060,85 @@ are exact multiples of the method fixed step size <code>dt</code> for the
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.EulerJump&lt;/span&gt;" href="../method/EulerJump.html#dynamiqs.method.EulerJump"><code>EulerJump</code></a> method. Moreover, to JIT-compile code
 using <code>jssesolve()</code>, <code>tsave</code> must be passed as tuple.</p>
 </details>
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>H _(qarray-like or time-qarray of shape (...H, n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Hamiltonian.</p>
-        </li>
-        <li class="field-body">
-          <b>jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>List of jump operators.</p>
-        </li>
-        <li class="field-body">
-          <b>psi0 _(qarray-like of shape (...psi0, n, 1))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Initial state.</p>
-        </li>
-        <li class="field-body">
-          <b>tsave _(array-like of shape (ntsave,))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Times at which the states and
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>H</code></b>
+            (<i>qarray-like or timeqarray of shape (...H, n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Hamiltonian.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>jump_ops</code></b>
+            (<i>list of qarray-like or timeqarray, each of shape (...Lk, n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>List of jump operators.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>psi0</code></b>
+            (<i>qarray-like of shape (...psi0, n, 1)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Initial state.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>tsave</code></b>
+            (<i>array-like of shape (ntsave,)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Times at which the states and
 expectation values are saved. The equation is solved from <code>tsave[0]</code> to
 <code>tsave[-1]</code>.</p>
-        </li>
-        <li class="field-body">
-          <b>keys _(list of PRNG keys)_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p><abbr title="pseudorandom number generator">PRNG</abbr> keys used to sample the point processes.
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>keys</code></b>
+            (<i>list of PRNG keys</i>)
+        –
+        <div class="doc-md-description">
+          <p><abbr title="pseudorandom number generator">PRNG</abbr> keys used to sample the point processes.
 The number of elements defines the number of sampled stochastic
 trajectories.</p>
-        </li>
-        <li class="field-body">
-          <b>exp_ops _(list of array-like, each of shape (n, n), optional)_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>List of
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>exp_ops</code></b>
+            (<i>list of array-like, each of shape (n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>List of
 operators for which the expectation value is computed.</p>
-        </li>
-        <li class="field-body">
-          <b>method</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Method for the integration. No defaults for now, you have to specify a
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>method</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Method for the integration. No defaults for now, you have to specify a
 method (supported: <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Event&lt;/span&gt;" href="../method/Event.html#dynamiqs.method.Event"><code>Event</code></a>,
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.EulerJump&lt;/span&gt;" href="../method/EulerJump.html#dynamiqs.method.EulerJump"><code>EulerJump</code></a>).</p>
-        </li>
-        <li class="field-body">
-          <b>gradient</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Algorithm used to compute the gradient. The default is
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>gradient</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Algorithm used to compute the gradient. The default is
 method-dependent, refer to the documentation of the chosen method for more
 details.</p>
-        </li>
-        <li class="field-body">
-          <b>options</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Generic options (supported: <code>save_states</code>, <code>cartesian_batching</code>, <code>t0</code>,
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>options</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Generic options (supported: <code>save_states</code>, <code>cartesian_batching</code>, <code>t0</code>,
 <code>save_extra</code>, <code>nmaxclick</code>).</p>
 <details>
 <summary>Detailed options API</summary>
@@ -7126,73 +7150,33 @@ details.</p>
     nmaxclick: int = 10_000,
 )
 </code></pre></div>
-<p><strong>Parameters</strong></p>
+<p><strong>Parameters:</strong></p>
 <ul>
-<li><strong>save_states</strong> - If <code>True</code>, the state is saved at every time in
+<li><strong><code>save_states</code></strong> - If <code>True</code>, the state is saved at every time in
     <code>tsave</code>, otherwise only the final state is returned.</li>
-<li><strong>cartesian_batching</strong> - If <code>True</code>, batched arguments are treated as
+<li><strong><code>cartesian_batching</code></strong> - If <code>True</code>, batched arguments are treated as
     separated batch dimensions, otherwise the batching is performed over
     a single shared batched dimension.</li>
-<li><strong>t0</strong> - Initial time. If <code>None</code>, defaults to the first time in
+<li><strong><code>t0</code></strong> - Initial time. If <code>None</code>, defaults to the first time in
     <code>tsave</code>.</li>
-<li><strong>save_extra</strong> <em>(function, optional)</em> - A function with signature
+<li><strong><code>save_extra</code></strong> <em>(function, optional)</em> - A function with signature
     <code>f(QArray) -&gt; PyTree</code> that takes a state as input and returns a
     PyTree. This can be used to save additional arbitrary data
     during the integration, accessible in <code>result.extra</code>.</li>
-<li><strong>nmaxclick</strong> - Maximum buffer size for <code>result.clicktimes</code>, should be
-    set higher than the expected maximum number of clicks.</li>
+<li><strong><code>nmaxclick</code></strong> - Maximum buffer size for <code>result.clicktimes</code>, should
+    be set higher than the expected maximum number of clicks.</li>
 </ul>
 </details>
-        </li>
-    </ul>
-
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="dynamiqs.result.JSSESolveResult">JSSESolveResult</span></code>
-        – <p><code>dq.JSSESolveResult</code> object holding the result of the jump <abbr title="stochastic Schrödinger equation">SSE</abbr> integration. Use
-<code>result.states</code> to access the saved states, <code>result.expects</code> to access the
-saved expectation values and <code>result.clicktimes</code> to access the detector
-click times.</p>
-<details>
-<summary>Detailed result API</summary>
-<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">JSSESolveResult</span>
-</code></pre></div>
-<p>For the shape indications we define <code>ntrajs</code> as the number of
-trajectories (<code>ntrajs = len(keys)</code>).</p>
-<p><strong>Attributes</strong></p>
-<ul>
-<li><strong>states</strong> <em>(qarray of shape (..., ntrajs, nsave, n, 1))</em> - Saved
-    states with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
-    <code>options.save_states=False</code>.</li>
-<li><strong>final_state</strong> <em>(qarray of shape (..., ntrajs, n, 1))</em> - Saved final
-    state.</li>
-<li><strong>expects</strong> <em>(array of shape (..., ntrajs, len(exp_ops), ntsave) or None)</em> - Saved
-    expectation values, if specified by <code>exp_ops</code>.</li>
-<li><strong>clicktimes</strong> <em>(array of shape (..., ntrajs, len(jump_ops), nmaxclick))</em> - Times
-    at which the detectors clicked. Variable-length array padded with
-    <code>jnp.nan</code> up to <code>nmaxclick</code>.</li>
-<li><strong>nclicks</strong> <em>(array of shape (..., ntrajs, len(jump_ops))</em> - Number
-    of clicks for each jump operator.</li>
-<li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
-    specified in <code>options</code>.</li>
-<li><strong>keys</strong> <em>(<abbr title="pseudorandom number generator">PRNG</abbr> key array of shape (ntrajs,))</em> - <abbr title="pseudorandom number generator">PRNG</abbr> keys used to
-    sample the point processes.</li>
-<li><strong>infos</strong> <em>(PyTree or None)</em> - Method-dependent information on the
-    resolution.</li>
-<li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
-    saved.</li>
-<li><strong>method</strong> <em>(Method)</em> - Method used.</li>
-<li><strong>gradient</strong> <em>(Gradient)</em> - Gradient used.</li>
-<li><strong>options</strong> <em>(Options)</em> - Options used.</li>
-</ul>
-</details>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><code>dq.JSSESolveResult</code> object holding the result of the jump <abbr title="stochastic Schrödinger equation">SSE</abbr> integration. Use
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p><code>dq.JSSESolveResult</code> object holding the result of the jump <abbr title="stochastic Schrödinger equation">SSE</abbr> integration. Use
 <code>result.states</code> to access the saved states, <code>result.expects</code> to access the
 saved expectation values and <code>result.clicktimes</code> to access the detector
 click times.</p>
@@ -7202,38 +7186,39 @@ click times.</p>
 </code></pre></div>
 <p>For the shape indications we define <code>ntrajs</code> as the number of
 trajectories (<code>ntrajs = len(keys)</code>).</p>
-<p><strong>Attributes</strong></p>
+<p><strong>Attributes:</strong></p>
 <ul>
-<li><strong>states</strong> <em>(qarray of shape (..., ntrajs, nsave, n, 1))</em> - Saved
+<li><strong><code>states</code></strong> <em>(qarray of shape (..., ntrajs, nsave, n, 1))</em> - Saved
     states with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
     <code>options.save_states=False</code>.</li>
-<li><strong>final_state</strong> <em>(qarray of shape (..., ntrajs, n, 1))</em> - Saved final
-    state.</li>
-<li><strong>expects</strong> <em>(array of shape (..., ntrajs, len(exp_ops), ntsave) or None)</em> - Saved
-    expectation values, if specified by <code>exp_ops</code>.</li>
-<li><strong>clicktimes</strong> <em>(array of shape (..., ntrajs, len(jump_ops), nmaxclick))</em> - Times
-    at which the detectors clicked. Variable-length array padded with
-    <code>jnp.nan</code> up to <code>nmaxclick</code>.</li>
-<li><strong>nclicks</strong> <em>(array of shape (..., ntrajs, len(jump_ops))</em> - Number
+<li><strong><code>final_state</code></strong> <em>(qarray of shape (..., ntrajs, n, 1))</em> - Saved
+    final state.</li>
+<li><strong><code>expects</code></strong> <em>(array of shape (..., ntrajs, len(exp_ops), ntsave) or
+    None)</em> - Saved expectation values, if specified by <code>exp_ops</code>.</li>
+<li><strong><code>clicktimes</code></strong> <em>(array of shape (..., ntrajs, len(jump_ops),
+    nmaxclick))</em> - Times at which the detectors clicked. Variable-length
+    array padded with <code>jnp.nan</code> up to <code>nmaxclick</code>.</li>
+<li><strong><code>nclicks</code></strong> <em>(array of shape (..., ntrajs, len(jump_ops))</em> - Number
     of clicks for each jump operator.</li>
-<li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
-    specified in <code>options</code>.</li>
-<li><strong>keys</strong> <em>(<abbr title="pseudorandom number generator">PRNG</abbr> key array of shape (ntrajs,))</em> - <abbr title="pseudorandom number generator">PRNG</abbr> keys used to
+<li><strong><code>extra</code></strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code>
+    if specified in <code>options</code>.</li>
+<li><strong><code>keys</code></strong> <em>(<abbr title="pseudorandom number generator">PRNG</abbr> key array of shape (ntrajs,))</em> - <abbr title="pseudorandom number generator">PRNG</abbr> keys used to
     sample the point processes.</li>
-<li><strong>infos</strong> <em>(PyTree or None)</em> - Method-dependent information on the
+<li><strong><code>infos</code></strong> <em>(PyTree or None)</em> - Method-dependent information on the
     resolution.</li>
-<li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
-    saved.</li>
-<li><strong>method</strong> <em>(Method)</em> - Method used.</li>
-<li><strong>gradient</strong> <em>(Gradient)</em> - Gradient used.</li>
-<li><strong>options</strong> <em>(Options)</em> - Options used.</li>
+<li><strong><code>tsave</code></strong> <em>(array of shape (ntsave,))</em> - Times for which results
+    were saved.</li>
+<li><strong><code>method</code></strong> <em>(Method)</em> - Method used.</li>
+<li><strong><code>gradient</code></strong> <em>(Gradient)</em> - Gradient used.</li>
+<li><strong><code>options</code></strong> <em>(Options)</em> - Options used.</li>
 </ul>
-</details></span>
+</details>
+        </div>
+      </li>
+  </ul>
 
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynamiqs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dq</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>

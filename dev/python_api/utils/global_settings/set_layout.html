@@ -6874,27 +6874,27 @@ the <a href="/python_api/index.html#operators">Python API</a>)):</p>
 <li><code>'dense'</code>: JAX native dense layout,</li>
 <li><code>'dia'</code>: dynamiqs sparse diagonal layout, only non-zero diagonals are stored.</li>
 </ul>
+  
 
 <details class="note" open>
   <summary>Note</summary>
   <p>The default layout upon importing dynamiqs is <code>'dia'</code>.</p>
 </details>
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>layout _(string 'dense' or 'dia')_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Default matrix layout for operators.</p>
-        </li>
-    </ul>
 
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>layout</code></b>
+            (<i>string 'dense' or 'dia'</i>)
+        –
+        <div class="doc-md-description">
+          <p>Default matrix layout for operators.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
 <span class="go">QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1</span>
 <span class="go">[[1.+0.j   ⋅      ⋅      ⋅   ]</span>

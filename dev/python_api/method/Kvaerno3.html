@@ -6884,6 +6884,7 @@ for instance the case with problems involving high-order polynomials of the boso
 annihilation and creation operators, in large dimensions.</p>
 <p>This method is implemented by the <a href="https://docs.kidger.site/diffrax/">Diffrax</a>
 library, see <a href="https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Kvaerno3"><code>diffrax.Kvaerno3</code></a>.</p>
+  
 
 <details class="warning" open>
   <summary>Warning</summary>
@@ -6892,42 +6893,53 @@ consider switching to double-precision with
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.set_precision&lt;/span&gt;" href="../utils/global_settings/set_precision.html#dynamiqs.utils.global_settings.set_precision"><code>dq.set_precision('double')</code></a>. See more details in
 <a href="../../documentation/getting_started/sharp-bits.html">The sharp bits 🔪</a> tutorial.</p>
 </details>
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>rtol</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Relative tolerance.</p>
-        </li>
-        <li class="field-body">
-          <b>atol</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Absolute tolerance.</p>
-        </li>
-        <li class="field-body">
-          <b>safety_factor</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Safety factor for adaptive step sizing.</p>
-        </li>
-        <li class="field-body">
-          <b>min_factor</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Minimum factor for adaptive step sizing.</p>
-        </li>
-        <li class="field-body">
-          <b>max_factor</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Maximum factor for adaptive step sizing.</p>
-        </li>
-        <li class="field-body">
-          <b>max_steps</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Maximum number of steps.</p>
-        </li>
-    </ul>
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>rtol</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Relative tolerance.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>atol</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Absolute tolerance.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>safety_factor</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Safety factor for adaptive step sizing.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>min_factor</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Minimum factor for adaptive step sizing.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>max_factor</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Maximum factor for adaptive step sizing.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>max_steps</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Maximum number of steps.</p>
+        </div>
+      </li>
+  </ul>
+  
 
 <details class="note">
   <summary>Supported gradients</summary>

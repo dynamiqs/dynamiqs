@@ -111,7 +111,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.plot.wigner.wigner_data" class="md-skip">
+        <a href="#dynamiqs.plot.wigner.wigner" class="md-skip">
           Skip to content
         </a>
       
@@ -6145,24 +6145,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    wigner
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
       
       <a href="wigner.html" class="md-nav__link md-nav__link--active">
         
@@ -6180,67 +6164,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.plot.wigner.wigner_data" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        wigner_data
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.plot.wigner.wigner" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        wigner
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.plot.wigner.wigner_mosaic" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        wigner_mosaic
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.plot.wigner.wigner_gif" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        wigner_gif
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -6911,58 +6834,8 @@
   
   
   
+    
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.plot.wigner.wigner_data" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        wigner_data
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.plot.wigner.wigner" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        wigner
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.plot.wigner.wigner_mosaic" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        wigner_mosaic
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.plot.wigner.wigner_gif" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        wigner_gif
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
   
 </nav>
                   </div>
@@ -6981,81 +6854,14 @@
   
 
 
-  <h1>wigner</h1>
-
-<div class="doc doc-object doc-module">
-            <span class="doc doc-object-name doc-module-name">wigner</span>
-    <div class="doc doc-contents first">
-
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
 <div class="doc doc-object doc-function">
 
 
-<h2 id="dynamiqs.plot.wigner.wigner_data" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">wigner.wigner_data</span>
+<h1 id="dynamiqs.plot.wigner.wigner" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.plot.wigner</span>
 
 
-</h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">wigner_data</span><span class="p">(</span>
-    <span class="n">wigner</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
-    <span class="n">xmax</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">ymax</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">vmax</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
-    <span class="n">cmap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"dq"</span><span class="p">,</span>
-    <span class="n">interpolation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"bilinear"</span><span class="p">,</span>
-    <span class="n">colorbar</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">cross</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">clear</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="p">)</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Plot a pre-computed Wigner function.</p>
-
-<details class="warning" open>
-  <summary>Warning</summary>
-  <p>Documentation redaction in progress.</p>
-</details>
-<details class="note" open>
-  <summary>Note</summary>
-  <p>Choose a diverging colormap <code>cmap</code> for better results.</p>
-</details>
-<details class="see-also" open>
-  <summary>See also</summary>
-  <ul>
-<li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.wigner&lt;/span&gt;" href="../utils/general/wigner.html#dynamiqs.utils.wigner_utils.wigner"><code>dq.wigner()</code></a>: compute the Wigner distribution of a ket or
-    density matrix.</li>
-<li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;wigner.wigner&lt;/span&gt;" href="#dynamiqs.plot.wigner.wigner"><code>dq.plot.wigner()</code></a>: plot the Wigner function of a
-    state.</li>
-</ul>
-</details>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="dynamiqs.plot.wigner.wigner" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">wigner.wigner</span>
-
-
-</h2>
+</h1>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">wigner</span><span class="p">(</span>
     <span class="n">state</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -7072,37 +6878,39 @@
 <span class="p">)</span>
 </code></pre></div>
 
-    <div class="doc doc-contents ">
+    <div class="doc doc-contents first">
 
         <p>Plot the Wigner function of a state.</p>
+  
 
 <details class="warning" open>
   <summary>Warning</summary>
   <p>Documentation redaction in progress.</p>
-</details>
+</details>  
+
 <details class="note" open>
   <summary>Note</summary>
   <p>Choose a diverging colormap <code>cmap</code> for better results.</p>
-</details>
+</details>  
+
 <details class="warning" open>
   <summary>Warning</summary>
   <p>The axis scaling is chosen so that a coherent state <span class="arithmatex">\(\ket{\alpha}\)</span> lies at the
 coordinates <span class="arithmatex">\((x,y)=(\mathrm{Re}(\alpha),\mathrm{Im}(\alpha))\)</span>, which is
 different from the default behaviour of <code>qutip.plot_wigner()</code>.</p>
-</details>
+</details>  
+
 <details class="see-also" open>
   <summary>See also</summary>
   <ul>
 <li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.wigner&lt;/span&gt;" href="../utils/general/wigner.html#dynamiqs.utils.wigner_utils.wigner"><code>dq.wigner()</code></a>: compute the Wigner distribution of a ket or
     density matrix.</li>
-<li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.plot.wigner_data&lt;/span&gt;" href="wigner_data.html#dynamiqs.plot.wigner_data"><code>dq.plot.wigner_data()</code></a>: plot a pre-computed
+<li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.plot.wigner_data&lt;/span&gt;" href="wigner_data.html#dynamiqs.plot.wigner.wigner_data"><code>dq.plot.wigner_data()</code></a>: plot a pre-computed
     Wigner function.</li>
 </ul>
 </details>
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">coherent</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">wigner</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
 </code></pre></div>
@@ -7123,146 +6931,6 @@ different from the default behaviour of <code>qutip.plot_wigner()</code>.</p>
 
     </div>
 
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="dynamiqs.plot.wigner.wigner_mosaic" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">wigner.wigner_mosaic</span>
-
-
-</h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">wigner_mosaic</span><span class="p">(</span>
-    <span class="n">states</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
-    <span class="n">nrows</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="n">w</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span>
-    <span class="n">h</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">xmax</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">,</span>
-    <span class="n">ymax</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">vmax</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
-    <span class="n">npixels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">101</span><span class="p">,</span>
-    <span class="n">cmap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"dq"</span><span class="p">,</span>
-    <span class="n">interpolation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"bilinear"</span><span class="p">,</span>
-    <span class="n">cross</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="p">)</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Plot the Wigner function of multiple states in a mosaic arrangement.</p>
-
-<details class="warning" open>
-  <summary>Warning</summary>
-  <p>Documentation redaction in progress.</p>
-</details>        <p>See <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;wigner.wigner&lt;/span&gt;" href="#dynamiqs.plot.wigner.wigner"><code>dq.plot.wigner()</code></a> for more details.</p>
-
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">psis</span> <span class="o">=</span> <span class="p">[</span><span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">wigner_mosaic</span><span class="p">(</span><span class="n">psis</span><span class="p">)</span>
-</code></pre></div>
-    <p><a class="glightbox" data-type="image" data-width="70%" data-height="auto" href="../../figs_code/plot_wigner_mosaic_fock.png" data-desc-position="bottom"><img alt="plot_wigner_mosaic_fock" class="fig" src="../../figs_code/plot_wigner_mosaic_fock.png"></a></p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">16</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">jump_ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="o">@</span> <span class="n">a</span> <span class="o">-</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>  <span class="c1"># cat state inflation</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">psi0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">coherent</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">tsave</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">mesolve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">jump_ops</span><span class="p">,</span> <span class="n">psi0</span><span class="p">,</span> <span class="n">tsave</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">wigner_mosaic</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">states</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">ymax</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
-</code></pre></div>
-    <p><a class="glightbox" data-type="image" data-width="70%" data-height="auto" href="../../figs_code/plot_wigner_mosaic_cat.png" data-desc-position="bottom"><img alt="plot_wigner_mosaic_cat" class="fig" src="../../figs_code/plot_wigner_mosaic_cat.png"></a></p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">16</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">()</span> <span class="o">@</span> <span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">()</span> <span class="o">@</span> <span class="n">a</span> <span class="o">@</span> <span class="n">a</span>  <span class="c1"># Kerr Hamiltonian</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">psi0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">coherent</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">tsave</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sesolve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">psi0</span><span class="p">,</span> <span class="n">tsave</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">wigner_mosaic</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">states</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">nrows</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="mf">4.0</span><span class="p">)</span>
-</code></pre></div>
-    <p><a class="glightbox" data-type="image" data-width="70%" data-height="auto" href="../../figs_code/plot_wigner_mosaic_kerr.png" data-desc-position="bottom"><img alt="plot_wigner_mosaic_kerr" class="fig" src="../../figs_code/plot_wigner_mosaic_kerr.png"></a></p>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="dynamiqs.plot.wigner.wigner_gif" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">wigner.wigner_gif</span>
-
-
-</h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">wigner_gif</span><span class="p">(</span>
-    <span class="n">states</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">gif_duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">,</span>
-    <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
-    <span class="n">w</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">,</span>
-    <span class="n">xmax</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">,</span>
-    <span class="n">ymax</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">vmax</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
-    <span class="n">npixels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">101</span><span class="p">,</span>
-    <span class="n">cmap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"dq"</span><span class="p">,</span>
-    <span class="n">interpolation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"bilinear"</span><span class="p">,</span>
-    <span class="n">cross</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">clear</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Image</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Plot a GIF of the Wigner function of multiple states.</p>
-
-<details class="warning" open>
-  <summary>Warning</summary>
-  <p>Documentation redaction in progress.</p>
-</details>        <p>See <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;wigner.wigner&lt;/span&gt;" href="#dynamiqs.plot.wigner.wigner"><code>dq.plot.wigner()</code></a> and
-<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.plot.gifit&lt;/span&gt;" href="gifit.html#dynamiqs.plot.gifit"><code>dq.plot.gifit()</code></a> for more details.</p>
-
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">16</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">jump_ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="o">@</span> <span class="n">a</span> <span class="o">-</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>  <span class="c1"># cat state inflation</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">psi0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">coherent</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">tsave</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">1001</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">mesolve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">jump_ops</span><span class="p">,</span> <span class="n">psi0</span><span class="p">,</span> <span class="n">tsave</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gif</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">wigner_gif</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">states</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">ymax</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
-</code></pre></div>
-    <p><a class="glightbox" data-type="image" data-width="70%" data-height="auto" href="../../figs_code/wigner-cat.gif" data-desc-position="bottom"><img alt="plot_wigner_gif_cat" class="fig" src="../../figs_code/wigner-cat.gif"></a></p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">16</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">()</span> <span class="o">@</span> <span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">()</span> <span class="o">@</span> <span class="n">a</span> <span class="o">@</span> <span class="n">a</span>  <span class="c1"># Kerr Hamiltonian</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">psi0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">coherent</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">tsave</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">1001</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sesolve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">psi0</span><span class="p">,</span> <span class="n">tsave</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gif</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">wigner_gif</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">result</span><span class="o">.</span><span class="n">states</span><span class="p">,</span> <span class="n">gif_duration</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">clear</span><span class="o">=</span><span class="kc">True</span>
-<span class="gp">... </span><span class="p">)</span>
-</code></pre></div>
-    <p><a class="glightbox" data-type="image" data-width="70%" data-height="auto" href="../../figs_code/wigner-kerr.gif" data-desc-position="bottom"><img alt="plot_wigner_gif_kerr" class="fig-half" src="../../figs_code/wigner-kerr.gif"></a></p>
-
-
-    </div>
-
-</div>
-
-
-
-  </div>
-
-    </div>
 </div>
 
 

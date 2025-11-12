@@ -6883,40 +6883,46 @@ $$
         - \frac{1}{2} (L_k^\mathrm{T} L_k^* \otimes I_n)
     \right).
 $$</p>
+  
 
 <details class="note" open>
   <summary>Note</summary>
   <p>This superoperator is also sometimes called <em>Liouvillian</em>.</p>
 </details>
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>H _(qarray-like of shape (..., n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Hamiltonian.</p>
-        </li>
-        <li class="field-body">
-          <b>jump_ops _(list of qarray-like, each of shape (..., n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>List of jump
-operators.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.QArray&lt;/span&gt; (&lt;code&gt;dynamiqs.qarrays.qarray.QArray&lt;/code&gt;)" href="../../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p><em>(qarray of shape (..., n^2, n^2))</em> Lindbladian superoperator.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>H</code></b>
+            (<i>qarray-like of shape (..., n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Hamiltonian.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><em>(qarray of shape (..., n^2, n^2))</em> Lindbladian superoperator.</p></span>
+      <li class="doc-section-item field-body">
+          <b><code>jump_ops</code></b>
+            (<i>list of qarray-like, each of shape (..., n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>List of jump
+operators.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+            (<i>qarray of shape (..., n^2, n^2)</i>)
+          –
+        <div class="doc-md-description">
+          <p>Lindbladian superoperator.</p>
+        </div>
+      </li>
+  </ul>
+  
 
 <details class="see-also" open>
   <summary>See also</summary>

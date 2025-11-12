@@ -6873,6 +6873,7 @@
 <li><code>'single'</code> sets default precision to <code>float32</code> and <code>complex64</code> (default setting),</li>
 <li><code>'double'</code> sets default precision to <code>float64</code> and <code>complex128</code>.</li>
 </ul>
+  
 
 <details class="note">
   <summary>Equivalent JAX syntax</summary>
@@ -6884,17 +6885,18 @@ elif precision == 'double':
 </code></pre></div>
  See <a href="https://jax.readthedocs.io/en/latest/notebooks/Common_Gotchas_in_JAX.html#double-64bit-precision">JAX documentation on double precision</a>.<p></p>
 </details>
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>precision _(string 'single' or 'double')_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Default precision.</p>
-        </li>
-    </ul>
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>precision</code></b>
+            (<i>string 'single' or 'double'</i>)
+        –
+        <div class="doc-md-description">
+          <p>Default precision.</p>
+        </div>
+      </li>
+  </ul>
 
 
     </div>

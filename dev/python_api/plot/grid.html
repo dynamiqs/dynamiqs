@@ -6876,20 +6876,20 @@
     <div class="doc doc-contents first">
 
         <p>Returns a figure and an iterator of subplots organised in a grid.</p>
+  
 
 <details class="warning" open>
   <summary>Warning</summary>
   <p>Documentation redaction in progress.</p>
-</details>
+</details>  
+
 <details class="note" open>
   <summary>Note</summary>
   <p>This method is a shortcut to Matplotlib
 <a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots"><code>plt.subplots()</code></a>.</p>
 </details>
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Examples:</span></p>
     <p>For example, to plot six different curves:</p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ys</span> <span class="o">=</span> <span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">f</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)]</span>  <span class="c1"># (6, 101)</span>

@@ -6869,45 +6869,48 @@
 
         <p>Returns the quantum relative entropy between two kets or density matrices.</p>
 <p>It is defined by <span class="arithmatex">\(S_{KL}(\rho || \sigma) = \tr{\rho (\ln \rho - \ln \sigma)}\)</span>.</p>
+  
 
 <details class="note" open>
   <summary>Note</summary>
   <p>The relative entropy is not symmetric.</p>
 </details>
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>rho _(qarray-like of shape (..., n, 1) or (..., n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Ket or density matrix.</p>
-        </li>
-        <li class="field-body">
-          <b>sigma _(qarray-like of shape (..., n, 1) or (..., n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Ket or density
-matrix.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (...))</em> Real-valued quantum relative entropy.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>rho</code></b>
+            (<i>qarray-like of shape (..., n, 1) or (..., n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Ket or density matrix.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><em>(array of shape (...))</em> Real-valued quantum relative entropy.</p></span>
+      <li class="doc-section-item field-body">
+          <b><code>sigma</code></b>
+            (<i>qarray-like of shape (..., n, 1) or (..., n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Ket or density
+matrix.</p>
+        </div>
+      </li>
+  </ul>
 
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+            (<i>array of shape (...)</i>)
+          –
+        <div class="doc-md-description">
+          <p>Real-valued quantum relative entropy.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
     <p>State with respect to itself:</p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">rho</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># |0&gt;&lt;0|</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">entropy_relative</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">rho</span><span class="p">)</span>

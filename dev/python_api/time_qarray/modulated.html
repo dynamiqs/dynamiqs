@@ -6872,55 +6872,58 @@
 
     <div class="doc doc-contents first">
 
-        <p>Instantiate a modulated time-qarray.</p>
-<p>A modulated time-qarray is defined by <span class="arithmatex">\(O(t) = f(t) O_0\)</span> where <span class="arithmatex">\(f(t)\)</span> is a
+        <p>Instantiate a modulated timeqarray.</p>
+<p>A modulated timeqarray is defined by <span class="arithmatex">\(O(t) = f(t) O_0\)</span> where <span class="arithmatex">\(f(t)\)</span> is a
 time-dependent scalar. The function <span class="arithmatex">\(f\)</span> is defined by passing a Python function
 with signature <code>f(t: float) -&gt; Scalar | Array</code> that returns a scalar or an array of
 shape <em>(...)</em> for any time <span class="arithmatex">\(t\)</span>.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>f _(function returning scalar or array of shape (...))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Function with signature
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>f</code></b>
+            (<i>function returning scalar or array of shape (...)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Function with signature
 <code>f(t: float) -&gt; Scalar | Array</code> that returns the modulating factor
 <span class="arithmatex">\(f(t)\)</span>.</p>
-        </li>
-        <li class="field-body">
-          <b>qarray _(qarray-like of shape (n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Constant qarray <span class="arithmatex">\(O_0\)</span>.</p>
-        </li>
-        <li class="field-body">
-          <b>discontinuity_ts _(array-like, optional)_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Times at which there is a
-discontinuous jump in the function values.</p>
-        </li>
-    </ul>
-
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="dynamiqs.time_qarray.ModulatedTimeQArray">ModulatedTimeQArray</span></code>
-        – <p><em>(time-qarray of shape (..., n, n) when called)</em> Callable returning <span class="arithmatex">\(O(t)\)</span> for
-any time <span class="arithmatex">\(t\)</span>.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><em>(time-qarray of shape (..., n, n) when called)</em> Callable returning <span class="arithmatex">\(O(t)\)</span> for
-any time <span class="arithmatex">\(t\)</span>.</p></span>
+      <li class="doc-section-item field-body">
+          <b><code>qarray</code></b>
+            (<i>qarray-like of shape (n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Constant qarray <span class="arithmatex">\(O_0\)</span>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>discontinuity_ts</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Times at which there is a
+discontinuous jump in the function values.</p>
+        </div>
+      </li>
+  </ul>
 
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+            (<i>timeqarray of shape (..., n, n) when called</i>)
+          –
+        <div class="doc-md-description">
+          <p>Callable returning <span class="arithmatex">\(O(t)\)</span> for
+any time <span class="arithmatex">\(t\)</span>.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">modulated</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>

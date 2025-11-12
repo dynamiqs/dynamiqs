@@ -6874,6 +6874,7 @@ or density matrix.</p>
 <li>as <span class="arithmatex">\(\braket{O}=\braket{\psi|O|\psi}\)</span> if <code>x</code> is a ket <span class="arithmatex">\(\ket\psi\)</span> or bra <span class="arithmatex">\(\bra\psi\)</span>,</li>
 <li>as <span class="arithmatex">\(\braket{O}=\tr{O\rho}\)</span> if <code>x</code> is a density matrix <span class="arithmatex">\(\rho\)</span>.</li>
 </ul>
+  
 
 <details class="warning" open>
   <summary>Warning</summary>
@@ -6882,41 +6883,43 @@ physical observable, it is Hermitian: <span class="arithmatex">\(O^\dag=O\)</spa
 is real. One can then keep only the real values of the returned array using
 <code>dq.expect(O, x).real</code>.</p>
 </details>
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>O _(qarray-like of shape (nO?, n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Arbitrary operator or list of <em>nO</em>
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>O</code></b>
+            (<i>qarray-like of shape (nO?, n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Arbitrary operator or list of <em>nO</em>
 operators.</p>
-        </li>
-        <li class="field-body">
-          <b>x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Ket,
-bra or density matrix.</p>
-        </li>
-    </ul>
-
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (nO?, ...))</em> Complex-valued expectation value.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><em>(array of shape (nO?, ...))</em> Complex-valued expectation value.</p></span>
+      <li class="doc-section-item field-body">
+          <b><code>x</code></b>
+            (<i>qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Ket,
+bra or density matrix.</p>
+        </div>
+      </li>
+  </ul>
 
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+            (<i>array of shape (nO?, ...)</i>)
+          –
+        <div class="doc-md-description">
+          <p>Complex-valued expectation value.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">number</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">coherent</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">psi</span><span class="p">)</span>

@@ -6877,37 +6877,41 @@ where <span class="arithmatex">\(\lambda_i\)</span> are the eigenvalues of <span
 <code>psd=True</code>), for example for a density matrix, the expression reduces to
 <span class="arithmatex">\(\|A\|_1 =\tr{A}\)</span>.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Ket, bra,
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>x</code></b>
+            (<i>qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Ket, bra,
 density matrix, or Hermitian matrix.</p>
-        </li>
-        <li class="field-body">
-          <b>psd</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Whether <code>x</code> is a positive semi-definite matrix. If <code>True</code>, returns the
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>psd</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Whether <code>x</code> is a positive semi-definite matrix. If <code>True</code>, returns the
 trace of <code>x</code>, otherwise computes the eigenvalues of <code>x</code> to evaluate the
 norm.</p>
-        </li>
-    </ul>
-
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (...))</em> Real-valued norm of <code>x</code>.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><em>(array of shape (...))</em> Real-valued norm of <code>x</code>.</p></span>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+            (<i>array of shape (...)</i>)
+          –
+        <div class="doc-md-description">
+          <p>Real-valued norm of <code>x</code>.</p>
+        </div>
+      </li>
+  </ul>
+  
 
 <details class="see-also" open>
   <summary>See also</summary>
@@ -6916,10 +6920,8 @@ norm.</p>
     Hermitian matrix to unit norm.</li>
 </ul>
 </details>
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Examples:</span></p>
     <p>For a ket:</p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>

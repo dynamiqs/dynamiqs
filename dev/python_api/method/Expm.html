@@ -6891,22 +6891,26 @@ problem is vectorized and the propagator from time <span class="arithmatex">\(t_
 $$
     \mathcal{U}(t_0, t_1) = \exp((t_1 - t_0)\mathcal{L}).
 $$</p>
+  
 
 <details class="warning" open>
   <summary>Warning</summary>
   <p>If the Hamiltonian or jump operators are sparse qarrays, they will be silently
 converted to dense qarrays before computing their matrix exponentials.</p>
-</details>
+</details>  
+
 <details class="warning" open>
   <summary>Warning</summary>
   <p>This method is not recommended for open systems of large dimension, due to
 the <span class="arithmatex">\(\mathcal{O}(n^6)\)</span> scaling of computing the Liouvillian exponential.</p>
-</details>
+</details>  
+
 <details class="warning" open>
   <summary>Warning</summary>
   <p>This method only supports constant or piecewise constant Hamiltonian and jump
 operators.</p>
-</details>
+</details>  
+
 <details class="note">
   <summary>Supported gradients</summary>
   <p>This method supports differentiation with

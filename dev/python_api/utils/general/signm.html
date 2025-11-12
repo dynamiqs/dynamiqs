@@ -6876,39 +6876,39 @@ $$
 $$
 where <span class="arithmatex">\(\mathrm{sign}(x)\)</span> is the sign of <span class="arithmatex">\(x\in\R\)</span>.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>x _(qarray-like of shape (..., n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Square Hermitian matrix.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.QArray&lt;/span&gt; (&lt;code&gt;dynamiqs.qarrays.qarray.QArray&lt;/code&gt;)" href="../../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p><em>(qarray of shape (..., n, n))</em> Operator sign function of <code>x</code>.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>x</code></b>
+            (<i>qarray-like of shape (..., n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Square Hermitian matrix.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><em>(qarray of shape (..., n, n))</em> Operator sign function of <code>x</code>.</p></span>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+            (<i>qarray of shape (..., n, n)</i>)
+          –
+        <div class="doc-md-description">
+          <p>Operator sign function of <code>x</code>.</p>
+        </div>
+      </li>
+  </ul>
+  
 
 <details class="note" open>
   <summary>Note</summary>
   <p>The operator sign is generally dense, and is different from the element-wise
 sign of the operator.</p>
 </details>
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">signm</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
 <span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense</span>
 <span class="go">[[0.+0.j 1.+0.j]</span>

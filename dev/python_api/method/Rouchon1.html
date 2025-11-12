@@ -6872,31 +6872,36 @@
 
         <p>First-order Rouchon method (fixed step size ODE/SDE method).</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>dt</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Fixed time step.</p>
-        </li>
-        <li class="field-body">
-          <b>normalize</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>If True, the scheme is trace-preserving to machine precision, which
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>dt</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Fixed time step.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>normalize</code></b>
+        –
+        <div class="doc-md-description">
+          <p>If True, the scheme is trace-preserving to machine precision, which
 is the recommended option because it is much more stable. Otherwise, it is
 only trace-preserving to the scheme order in <span class="arithmatex">\(\dt\)</span>.</p>
-        </li>
-        <li class="field-body">
-          <b>exact_expm</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>If True, the scheme uses the exact matrix exponential internally (at
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>exact_expm</code></b>
+        –
+        <div class="doc-md-description">
+          <p>If True, the scheme uses the exact matrix exponential internally (at
 the cost of losing sparsity), otherwise it uses a Taylor expansion up to
 the scheme order.</p>
-        </li>
-    </ul>
+        </div>
+      </li>
+  </ul>
+  
 
 <details class="note">
   <summary>Supported gradients</summary>

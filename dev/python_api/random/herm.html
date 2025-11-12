@@ -6869,39 +6869,40 @@
 
         <p>Returns a random complex Hermitian matrix.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>key</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>A <abbr title="pseudorandom number generator">PRNG</abbr> key used as the random key.</p>
-        </li>
-        <li class="field-body">
-          <b>shape _(shape of the form (..., n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Shape of the returned qarray.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.QArray&lt;/span&gt; (&lt;code&gt;dynamiqs.qarrays.qarray.QArray&lt;/code&gt;)" href="../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p><em>(qarray of shape (*shape))</em> Random complex Hermitian matrix.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>key</code></b>
+        –
+        <div class="doc-md-description">
+          <p>A <abbr title="pseudorandom number generator">PRNG</abbr> key used as the random key.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><em>(qarray of shape (*shape))</em> Random complex Hermitian matrix.</p></span>
+      <li class="doc-section-item field-body">
+          <b><code>shape</code></b>
+            (<i>shape of the form (..., n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Shape of the returned qarray.</p>
+        </div>
+      </li>
+  </ul>
 
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+            (<i>qarray of shape (*shape)</i>)
+          –
+        <div class="doc-md-description">
+          <p>Random complex Hermitian matrix.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">herm</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 <span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense</span>

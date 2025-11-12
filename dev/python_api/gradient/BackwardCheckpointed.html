@@ -6876,34 +6876,36 @@ through the internals of the solver. The difference with the standard automatic
 differentiation (see <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.gradient.Direct&lt;/span&gt;" href="Direct.html#dynamiqs.gradient.Direct"><code>dq.gradient.Direct</code></a>) is
 that a checkpointing scheme is used to reduce the memory usage of the
 backpropagation.</p>
+  
 
 <details class="note" open>
   <summary>Note</summary>
   <p>For most problems this is the preferred technique for backpropagating
 through the solvers.</p>
-</details>
+</details>  
+
 <details class="warning" open>
   <summary>Warning</summary>
   <p>This cannot be forward-mode autodifferentiated (e.g. using
 <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.jvp.html"><code>jax.jvp</code></a>
 ). Try using <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.gradient.Direct&lt;/span&gt;" href="Direct.html#dynamiqs.gradient.Direct"><code>dq.gradient.Direct</code></a> if that
 is something you need.</p>
-</details>
+</details>  
+
 <details class="note" open>
   <summary>Note</summary>
   <p>For Diffrax-based methods, this falls back to the
 <a href="https://docs.kidger.site/diffrax/api/adjoints/#diffrax.RecursiveCheckpointAdjoint"><code>diffrax.RecursiveCheckpointAdjoint</code></a>
 option.</p>
 </details>
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>ncheckpoints</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Number of checkpoints to use. The amount of memory used by
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>ncheckpoints</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Number of checkpoints to use. The amount of memory used by
 the differential equation solve will be roughly equal to the number of
 checkpoints multiplied by the size of the state. You can speed up
 backpropagation by allocating more checkpoints, so it makes sense to
@@ -6912,8 +6914,9 @@ set as many checkpoints as you have memory for. This value is set to
 for which a theoretical result is available guaranteeing that
 backpropagation will take <code>O(n_steps log(n_steps))</code> time in the number
 of steps <code>n_steps &lt;= max_steps</code>.</p>
-        </li>
-    </ul>
+        </div>
+      </li>
+  </ul>
 
 
 

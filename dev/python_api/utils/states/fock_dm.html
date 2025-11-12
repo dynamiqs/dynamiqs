@@ -6869,43 +6869,43 @@
 
         <p>Returns the density matrix of a Fock state or a tensor product of Fock states.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>dim</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Hilbert space dimension of each mode.</p>
-        </li>
-        <li class="field-body">
-          <b>number _(array-like of shape (...) or (..., len(dim)))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Fock state number
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>dim</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Hilbert space dimension of each mode.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>number</code></b>
+            (<i>array-like of shape (...) or (..., len(dim))</i>)
+        –
+        <div class="doc-md-description">
+          <p>Fock state number
 for each mode, of integer type. If <code>dim</code> is a tuple, the last dimension of
 <code>number</code> should match the length of <code>dim</code>.</p>
-        </li>
-    </ul>
-
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.QArray&lt;/span&gt; (&lt;code&gt;dynamiqs.qarrays.qarray.QArray&lt;/code&gt;)" href="../../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p><em>(qarray of shape (..., n, n))</em> Density matrix of the Fock state or tensor
-product of Fock states, with <em>n = prod(dims)</em>.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><em>(qarray of shape (..., n, n))</em> Density matrix of the Fock state or tensor
-product of Fock states, with <em>n = prod(dims)</em>.</p></span>
+  </ul>
 
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+            (<i>qarray of shape (..., n, n)</i>)
+          –
+        <div class="doc-md-description">
+          <p>Density matrix of the Fock state or tensor
+product of Fock states, with <em>n = prod(dims)</em>.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
     <p>Single-mode Fock state <span class="arithmatex">\(\ket{1}\bra{1}\)</span>:</p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="go">QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dense</span>

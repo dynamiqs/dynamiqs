@@ -6867,67 +6867,73 @@
 
     <div class="doc doc-contents first">
 
-        <p>Instantiate a piecewise constant (<abbr title="piecewise constant">PWC</abbr>) time-qarray.</p>
-<p>A <abbr title="piecewise constant">PWC</abbr> time-qarray takes constant values over some time intervals. It is defined by
+        <p>Instantiate a piecewise constant (<abbr title="piecewise constant">PWC</abbr>) timeqarray.</p>
+<p>A <abbr title="piecewise constant">PWC</abbr> timeqarray takes constant values over some time intervals. It is defined by
 $$
     O(t) = \left(\sum_{k=0}^{N-1} c_k\; \Omega_{[t_k, t_{k+1}[}(t)\right) O_0
 $$
 where <span class="arithmatex">\(c_k\)</span> are constant values, <span class="arithmatex">\(\Omega_{[t_k, t_{k+1}[}\)</span> is the rectangular
 window function defined by <span class="arithmatex">\(\Omega_{[t_a, t_b[}(t) = 1\)</span> if <span class="arithmatex">\(t \in [t_a, t_b[\)</span> and
 <span class="arithmatex">\(\Omega_{[t_a, t_b[}(t) = 0\)</span> otherwise, and <span class="arithmatex">\(O_0\)</span> is a constant qarray.</p>
+  
 
 <details class="note" open>
   <summary>Note</summary>
   <p>The argument <code>times</code> must be sorted in ascending order, but does not
 need to be evenly spaced.</p>
-</details>
+</details>  
+
 <details class="note" open>
   <summary>Note</summary>
-  <p>If the returned time-qarray is called for a time <span class="arithmatex">\(t\)</span> which does not belong to
+  <p>If the returned timeqarray is called for a time <span class="arithmatex">\(t\)</span> which does not belong to
 any time intervals, the returned qarray is null.</p>
 </details>
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>times _(array-like of shape (N+1,))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Time points <span class="arithmatex">\(t_k\)</span> defining the boundaries
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>times</code></b>
+            (<i>array-like of shape (N+1,)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Time points <span class="arithmatex">\(t_k\)</span> defining the boundaries
 of the time intervals, where <em>N</em> is the number of time intervals.</p>
-        </li>
-        <li class="field-body">
-          <b>values _(array-like of shape (..., N))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Constant values <span class="arithmatex">\(c_k\)</span> for each time
-interval.</p>
-        </li>
-        <li class="field-body">
-          <b>qarray _(qarray-like of shape (n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Constant qarray <span class="arithmatex">\(O_0\)</span>.</p>
-        </li>
-    </ul>
-
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="dynamiqs.time_qarray.PWCTimeQArray">PWCTimeQArray</span></code>
-        – <p><em>(time-qarray of shape (..., n, n) when called)</em> Callable returning <span class="arithmatex">\(O(t)\)</span> for
-any time <span class="arithmatex">\(t\)</span>.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><em>(time-qarray of shape (..., n, n) when called)</em> Callable returning <span class="arithmatex">\(O(t)\)</span> for
-any time <span class="arithmatex">\(t\)</span>.</p></span>
+      <li class="doc-section-item field-body">
+          <b><code>values</code></b>
+            (<i>array-like of shape (..., N)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Constant values <span class="arithmatex">\(c_k\)</span> for each time
+interval.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>qarray</code></b>
+            (<i>qarray-like of shape (n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Constant qarray <span class="arithmatex">\(O_0\)</span>.</p>
+        </div>
+      </li>
+  </ul>
 
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+            (<i>timeqarray of shape (..., n, n) when called</i>)
+          –
+        <div class="doc-md-description">
+          <p>Callable returning <span class="arithmatex">\(O(t)\)</span> for
+any time <span class="arithmatex">\(t\)</span>.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">times</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">qarray</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">()</span>

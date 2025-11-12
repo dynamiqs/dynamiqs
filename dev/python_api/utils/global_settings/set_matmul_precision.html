@@ -6877,30 +6877,33 @@ multiplications (matmul). Three options are available:</p>
 <li><code>'highest'</code> keeps matmul precision to <code>float32</code> or <code>float64</code> as applicable
     (slowest but most accurate, default setting).</li>
 </ul>
+  
 
 <details class="note" open>
   <summary>Note</summary>
   <p>This setting applies only to single precision matrices (<code>float32</code> or
 <code>complex64</code>).</p>
-</details>
+</details>  
+
 <details class="note">
   <summary>Equivalent JAX syntax</summary>
   <p>This function is equivalent to setting <code>jax_default_matmul_precision</code> in
 <code>jax.config</code>. See <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.default_matmul_precision.html">JAX documentation on matmul precision</a>
 and <a href="https://jax.readthedocs.io/en/latest/jax.lax.html#jax.lax.Precision">JAX documentation on the different available options</a>.</p>
 </details>
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>matmul_precision _(string 'low', 'high', or 'highest')_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Default precision
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>matmul_precision</code></b>
+            (<i>string 'low', 'high', or 'highest'</i>)
+        –
+        <div class="doc-md-description">
+          <p>Default precision
 for matrix multiplications on GPUs and TPUs.</p>
-        </li>
-    </ul>
+        </div>
+      </li>
+  </ul>
 
 
     </div>

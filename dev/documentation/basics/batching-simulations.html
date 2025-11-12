@@ -1026,10 +1026,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#batching-over-a-time-qarray" class="md-nav__link">
+  <a href="#batching-over-a-timeqarray" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Batching over a time-qarray
+        Batching over a timeqarray
       
     </span>
   </a>
@@ -7091,10 +7091,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#batching-over-a-time-qarray" class="md-nav__link">
+  <a href="#batching-over-a-timeqarray" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Batching over a time-qarray
+        Batching over a timeqarray
       
     </span>
   </a>
@@ -7323,12 +7323,12 @@ where <code>... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)</code> is the broad
 </div>
 </div>
 </div>
-<h3 id="batching-over-a-time-qarray">Batching over a time-qarray</h3>
+<h3 id="batching-over-a-timeqarray">Batching over a timeqarray</h3>
 <p>We have seen how to batch over time-independent objects, but how about time-dependent ones? It's essentially the same, you have to pass a batched <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.TimeQArray&lt;/span&gt;" href="../../python_api/time_qarray/TimeQArray.html#dynamiqs.time_qarray.TimeQArray"><code>TimeQArray</code></a>, in short:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="5:3"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio"><input id="__tabbed_5_2" name="__tabbed_5" type="radio"><input id="__tabbed_5_3" name="__tabbed_5" type="radio"><div class="tabbed-labels"><label for="__tabbed_5_1">For a <code>PWCTimeQArray</code></label><label for="__tabbed_5_2">For a <code>ModulatedTimeQArray</code></label><label for="__tabbed_5_3">For a <code>CallableTimeQArray</code></label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<p>The batching of the returned time-qarray is specified by <code>values</code>. For example, to define a <abbr title="piecewise constant">PWC</abbr> operator batched over a parameter <span class="arithmatex">\(\theta\)</span>:
+<p>The batching of the returned timeqarray is specified by <code>values</code>. For example, to define a <abbr title="piecewise constant">PWC</abbr> operator batched over a parameter <span class="arithmatex">\(\theta\)</span>:
 </p><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">thetas</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>  <span class="c1"># (11,)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">times</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">values</span> <span class="o">=</span> <span class="n">thetas</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">3.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">])</span>  <span class="c1"># (11, 2)</span>
@@ -7339,7 +7339,7 @@ where <code>... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)</code> is the broad
 </code></pre></div><p></p>
 </div>
 <div class="tabbed-block">
-<p>The batching of the returned time-qarray is specified by the qarray returned by <code>f</code>. For example, to define a modulated Hamiltonian <span class="arithmatex">\(H(t)=\cos(\omega t)\sigma_x\)</span> batched over the parameter <span class="arithmatex">\(\omega\)</span>:
+<p>The batching of the returned timeqarray is specified by the qarray returned by <code>f</code>. For example, to define a modulated Hamiltonian <span class="arithmatex">\(H(t)=\cos(\omega t)\sigma_x\)</span> batched over the parameter <span class="arithmatex">\(\omega\)</span>:
 </p><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">omegas</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>  <span class="c1"># (11,)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omegas</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">modulated</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
@@ -7348,7 +7348,7 @@ where <code>... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)</code> is the broad
 </code></pre></div><p></p>
 </div>
 <div class="tabbed-block">
-<p>The batching of the returned time-qarray is specified by the qarray returned by <code>f</code>. For example, to define an arbitrary time-dependent operator batched over a parameter <span class="arithmatex">\(\theta\)</span>:
+<p>The batching of the returned timeqarray is specified by the qarray returned by <code>f</code>. For example, to define an arbitrary time-dependent operator batched over a parameter <span class="arithmatex">\(\theta\)</span>:
 </p><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">thetas</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>  <span class="c1"># (11,)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">thetas</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">asqarray</span><span class="p">([[</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">t</span><span class="p">]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">timecallable</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>

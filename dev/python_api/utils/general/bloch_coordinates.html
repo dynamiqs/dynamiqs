@@ -6879,34 +6879,33 @@ $$
 $$</p>
 <p>By convention, we choose <span class="arithmatex">\(\phi=0\)</span> if <span class="arithmatex">\(\theta=0\)</span>, and <span class="arithmatex">\(\theta=\phi=0\)</span> if <span class="arithmatex">\(r=0\)</span>.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>x _(qarray-like of shape (2, 1) or (2, 2))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Ket or density matrix.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (3,))</em> Spherical coordinates <span class="arithmatex">\((r, \theta, \phi)\)</span>.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>x</code></b>
+            (<i>qarray-like of shape (2, 1) or (2, 2)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Ket or density matrix.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><em>(array of shape (3,))</em> Spherical coordinates <span class="arithmatex">\((r, \theta, \phi)\)</span>.</p></span>
+  </ul>
 
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+            (<i>array of shape (3,)</i>)
+          –
+        <div class="doc-md-description">
+          <p>Spherical coordinates <span class="arithmatex">\((r, \theta, \phi)\)</span>.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
     <p>The state <span class="arithmatex">\(\ket0\)</span> is on the north pole at coordinates
 <span class="arithmatex">\((r,\theta,\phi) = (1,0,0)\)</span>:</p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>

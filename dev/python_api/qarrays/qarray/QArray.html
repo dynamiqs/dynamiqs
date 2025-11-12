@@ -7098,6 +7098,7 @@ methods.</p>
 <li><code>SparseDIAQArray</code>: Dynamiqs sparse diagonal format, storing only the non-zero
     diagonals.</li>
 </ul>
+  
 
 <details class="note" open>
   <summary>Constructing a new qarray from an other array type</summary>
@@ -7107,61 +7108,76 @@ methods.</p>
 <code>complex</code>), a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any nested
 sequence of these types. See also <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.isqarraylike&lt;/span&gt;" href="../utils/isqarraylike.html#dynamiqs.qarrays.utils.isqarraylike"><code>dq.isqarraylike()</code></a>.</p>
 </details>
-    <p>
-      <strong>Attributes</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>dtype</b>
-              <i>
-(numpy dtype)              </i>
-          – <p>Data type.</p>
-        </li>
-        <li class="field-body">
-          <b>shape</b>
-              <i>
-(tuple of ints)              </i>
-          – <p>Shape.</p>
-        </li>
-        <li class="field-body">
-          <b>ndim</b>
-              <i>
-(int)              </i>
-          – <p>Number of dimensions in the shape.</p>
-        </li>
-        <li class="field-body">
-          <b>layout</b>
-              <i>
-(Layout)              </i>
-          – <p>Data layout, either <code>dq.dense</code> or <code>dq.dia</code>.</p>
-        </li>
-        <li class="field-body">
-          <b>dims</b>
-              <i>
-(tuple of ints)              </i>
-          – <p>Hilbert space dimension of each subsystem.</p>
-        </li>
-        <li class="field-body">
-          <b>mT</b>
-              <i>
-(qarray)              </i>
-          – <p>Returns the qarray transposed over its last two dimensions.</p>
-        </li>
-        <li class="field-body">
-          <b>vectorized</b>
-              <i>
-(bool)              </i>
-          – <p>Whether the underlying object is non-vectorized (ket, bra
+
+<p><span class="doc-section-title">Attributes:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <b><code>dtype</code></b>
+            (<i>numpy.dtype</i>)
+        –
+        <div class="doc-md-description">
+          <p>Data type.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+        <b><code>shape</code></b>
+            (<i>tuple of ints</i>)
+        –
+        <div class="doc-md-description">
+          <p>Shape.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+        <b><code>ndim</code></b>
+            (<i>int</i>)
+        –
+        <div class="doc-md-description">
+          <p>Number of dimensions in the shape.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+        <b><code>layout</code></b>
+            (<i>Layout</i>)
+        –
+        <div class="doc-md-description">
+          <p>Data layout, either <code>dq.dense</code> or <code>dq.dia</code>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+        <b><code>dims</code></b>
+            (<i>tuple of ints</i>)
+        –
+        <div class="doc-md-description">
+          <p>Hilbert space dimension of each subsystem.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+        <b><code>mT</code></b>
+            (<i>qarray</i>)
+        –
+        <div class="doc-md-description">
+          <p>Returns the qarray transposed over its last two dimensions.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+        <b><code>vectorized</code></b>
+            (<i>bool</i>)
+        –
+        <div class="doc-md-description">
+          <p>Whether the underlying object is non-vectorized (ket, bra
 or operator) or vectorized (operator in vector form or superoperator in
 matrix form).</p>
-        </li>
-    </ul>
+        </div>
+      </li>
+  </ul>
+  
 
 <details class="note" open>
   <summary>Arithmetic operation support</summary>
   <p>Qarrays support basic arithmetic operations <code>-, +, *, /, @</code> with other
 <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-likes</abbr>.</p>
-</details>
+</details>  
+
 <details class="note" open>
   <summary>Shortcuts methods to use quantum utilities</summary>
   <p>Many functions of the library can be called directly on a qarray rather than
@@ -7346,17 +7362,15 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
 
         <p>Returns the element-wise complex conjugate of the qarray.</p>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.QArray&lt;/span&gt; (&lt;code&gt;dynamiqs.qarrays.qarray.QArray&lt;/code&gt;)" href="#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p>New qarray with element-wise complex conjuguated values.</p>
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>New qarray with element-wise complex conjuguated values.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>New qarray with element-wise complex conjuguated values.</p></span>
+  </ul>
 
 
     </div>
@@ -7378,29 +7392,27 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
 
         <p>Returns a reshaped copy of a qarray.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>*shape</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>New shape, which must match the original size.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.QArray&lt;/span&gt; (&lt;code&gt;dynamiqs.qarrays.qarray.QArray&lt;/code&gt;)" href="#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p>New qarray with the given shape.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>*shape</code></b>
+        –
+        <div class="doc-md-description">
+          <p>New shape, which must match the original size.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>New qarray with the given shape.</p></span>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>New qarray with the given shape.</p>
+        </div>
+      </li>
+  </ul>
 
 
     </div>
@@ -7422,29 +7434,27 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
 
         <p>Broadcasts a qarray to a new shape.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>*shape</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>New shape, which must be compatible with the original shape.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.QArray&lt;/span&gt; (&lt;code&gt;dynamiqs.qarrays.qarray.QArray&lt;/code&gt;)" href="#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p>New qarray with the given shape.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>*shape</code></b>
+        –
+        <div class="doc-md-description">
+          <p>New shape, which must be compatible with the original shape.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>New qarray with the given shape.</p></span>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>New qarray with the given shape.</p>
+        </div>
+      </li>
+  </ul>
 
 
     </div>
@@ -7466,17 +7476,15 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
 
         <p>Converts to a dense layout.</p>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="dynamiqs.qarrays.dense_qarray.DenseQArray">DenseQArray</span></code>
-        – <p>A <code>DenseQArray</code>.</p>
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>A <code>DenseQArray</code>.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>A <code>DenseQArray</code>.</p></span>
+  </ul>
 
 
     </div>
@@ -7498,32 +7506,30 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
 
         <p>Converts to a sparse diagonal layout.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>offsets</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Offsets of the stored diagonals. If <code>None</code>, offsets are determined
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>offsets</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Offsets of the stored diagonals. If <code>None</code>, offsets are determined
 automatically from the matrix structure. This argument can also be
 explicitly specified to ensure compatibility with JAX transformations,
 which require static offset values.</p>
-        </li>
-    </ul>
-
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="dynamiqs.qarrays.sparsedia_qarray.SparseDIAQArray">SparseDIAQArray</span></code>
-        – <p>A <code>SparseDIAQArray</code>.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>A <code>SparseDIAQArray</code>.</p></span>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>A <code>SparseDIAQArray</code>.</p>
+        </div>
+      </li>
+  </ul>
 
 
     </div>
@@ -7545,29 +7551,27 @@ which require static offset values.</p>
 
         <p>Adds a scalar.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>y</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Scalar to add, whose shape should be broadcastable with the qarray.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.QArray&lt;/span&gt; (&lt;code&gt;dynamiqs.qarrays.qarray.QArray&lt;/code&gt;)" href="#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p>New qarray resulting from the addition with the scalar.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>y</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Scalar to add, whose shape should be broadcastable with the qarray.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>New qarray resulting from the addition with the scalar.</p></span>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>New qarray resulting from the addition with the scalar.</p>
+        </div>
+      </li>
+  </ul>
 
 
     </div>
@@ -7589,29 +7593,27 @@ which require static offset values.</p>
 
         <p>Computes the element-wise multiplication.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>y</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p><abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">Qarray-like</abbr> to multiply with element-wise.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.QArray&lt;/span&gt; (&lt;code&gt;dynamiqs.qarrays.qarray.QArray&lt;/code&gt;)" href="#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p>New qarray resulting from the element-wise multiplication.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>y</code></b>
+        –
+        <div class="doc-md-description">
+          <p><abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">Qarray-like</abbr> to multiply with element-wise.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>New qarray resulting from the element-wise multiplication.</p></span>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>New qarray resulting from the element-wise multiplication.</p>
+        </div>
+      </li>
+  </ul>
 
 
     </div>
@@ -7633,29 +7635,27 @@ which require static offset values.</p>
 
         <p>Computes the element-wise power.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>power</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Power to raise to.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.QArray&lt;/span&gt; (&lt;code&gt;dynamiqs.qarrays.qarray.QArray&lt;/code&gt;)" href="#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p>New qarray with elements raised to the specified power.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>power</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Power to raise to.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>New qarray with elements raised to the specified power.</p></span>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>New qarray with elements raised to the specified power.</p>
+        </div>
+      </li>
+  </ul>
 
 
     </div>

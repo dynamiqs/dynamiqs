@@ -6869,33 +6869,30 @@
 
         <p>Returns True if the input is a <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-like</abbr>.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>x</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Any object.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="bool">bool</span></code>
-        – <p>True if <code>x</code> is a numeric types (<code>bool</code>, <code>int</code>, <code>float</code>, <code>complex</code>), a NumPy or
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>x</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Any object.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>True if <code>x</code> is a numeric types (<code>bool</code>, <code>int</code>, <code>float</code>, <code>complex</code>), a NumPy or
 JAX array, a Dynamiqs qarray, a QuTiP qobj, or any nested sequence of these
 types.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>True if <code>x</code> is a numeric types (<code>bool</code>, <code>int</code>, <code>float</code>, <code>complex</code>), a NumPy or
-JAX array, a Dynamiqs qarray, a QuTiP qobj, or any nested sequence of these
-types.</p></span>
+  </ul>
+  
 
 <details class="see-also" open>
   <summary>See also</summary>
@@ -6903,10 +6900,8 @@ types.</p></span>
 <li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.asqarray&lt;/span&gt;" href="asqarray.html#dynamiqs.qarrays.utils.asqarray"><code>dq.asqarray()</code></a>: converts a <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-like</abbr> into a qarray.</li>
 </ul>
 </details>
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isqarraylike</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="go">True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isqarraylike</span><span class="p">(</span><span class="n">qt</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>

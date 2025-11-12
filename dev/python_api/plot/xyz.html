@@ -6875,15 +6875,14 @@
 
         <p>Plot the expectation value of the Pauli operators of a qubit <span class="arithmatex">\(\sigma_x\)</span>,
 <span class="arithmatex">\(\sigma_y\)</span> and <span class="arithmatex">\(\sigma_z\)</span> as a function of time.</p>
+  
 
 <details class="warning" open>
   <summary>Warning</summary>
   <p>Documentation redaction in progress.</p>
 </details>
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">()</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmay</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">jump_ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmam</span><span class="p">()]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">psi0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">excited</span><span class="p">()</span>

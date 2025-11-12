@@ -6870,44 +6870,46 @@
         <p>Returns the matrix exponential of a qarray.</p>
 <p>The exponential is computed using the scaling-and-squaring approximation method.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>x _(qarray-like of shape (..., n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Square matrix.</p>
-        </li>
-        <li class="field-body">
-          <b>max_squarings</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Number of squarings.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.QArray&lt;/span&gt; (&lt;code&gt;dynamiqs.qarrays.qarray.QArray&lt;/code&gt;)" href="../../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p><em>(qarray of shape (..., n, n))</em> Matrix exponential of <code>x</code>.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>x</code></b>
+            (<i>qarray-like of shape (..., n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Square matrix.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><em>(qarray of shape (..., n, n))</em> Matrix exponential of <code>x</code>.</p></span>
+      <li class="doc-section-item field-body">
+          <b><code>max_squarings</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Number of squarings.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+            (<i>qarray of shape (..., n, n)</i>)
+          –
+        <div class="doc-md-description">
+          <p>Matrix exponential of <code>x</code>.</p>
+        </div>
+      </li>
+  </ul>
+  
 
 <details class="note">
   <summary>Equivalent JAX syntax</summary>
   <p>This function is equivalent to
 <code>jnp.scipy.linalg.expm(x, max_squarings=max_squarings)</code>.</p>
 </details>
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">expm</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">())</span>
 <span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense</span>
 <span class="go">[[2.718+0.j 0.   +0.j]</span>

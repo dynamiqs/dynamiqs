@@ -7013,38 +7013,49 @@ where <span class="arithmatex">\(H\)</span> is the system's Hamiltonian.</p>
 </li>
 </ol>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>H _(qarray-like or time-qarray of shape (...H, n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Hamiltonian.</p>
-        </li>
-        <li class="field-body">
-          <b>psi0 _(qarray-like of shape (...psi0, n, 1))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Initial state.</p>
-        </li>
-        <li class="field-body">
-          <b>tsave _(array-like of shape (ntsave,))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Times at which the states and
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>H</code></b>
+            (<i>qarray-like or timeqarray of shape (...H, n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Hamiltonian.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>psi0</code></b>
+            (<i>qarray-like of shape (...psi0, n, 1)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Initial state.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>tsave</code></b>
+            (<i>array-like of shape (ntsave,)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Times at which the states and
 expectation values are saved. The equation is solved from <code>tsave[0]</code> to
 <code>tsave[-1]</code>, or from <code>t0</code> to <code>tsave[-1]</code> if <code>t0</code> is specified in <code>options</code>.</p>
-        </li>
-        <li class="field-body">
-          <b>exp_ops _(list of qarray-like, each of shape (n, n), optional)_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>List of
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>exp_ops</code></b>
+            (<i>list of qarray-like, each of shape (n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>List of
 operators for which the expectation value is computed.</p>
-        </li>
-        <li class="field-body">
-          <b>method</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Method for the integration. Defaults to
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>method</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Method for the integration. Defaults to
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Tsit5&lt;/span&gt;" href="../method/Tsit5.html#dynamiqs.method.Tsit5"><code>dq.method.Tsit5</code></a> (supported:
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Tsit5&lt;/span&gt;" href="../method/Tsit5.html#dynamiqs.method.Tsit5"><code>Tsit5</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Dopri5&lt;/span&gt;" href="../method/Dopri5.html#dynamiqs.method.Dopri5"><code>Dopri5</code></a>,
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Dopri8&lt;/span&gt;" href="../method/Dopri8.html#dynamiqs.method.Dopri8"><code>Dopri8</code></a>,
@@ -7052,18 +7063,22 @@ operators for which the expectation value is computed.</p>
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Kvaerno5&lt;/span&gt;" href="../method/Kvaerno5.html#dynamiqs.method.Kvaerno5"><code>Kvaerno5</code></a>,
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Euler&lt;/span&gt;" href="../method/Euler.html#dynamiqs.method.Euler"><code>Euler</code></a>,
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Expm&lt;/span&gt;" href="../method/Expm.html#dynamiqs.method.Expm"><code>Expm</code></a>).</p>
-        </li>
-        <li class="field-body">
-          <b>gradient</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Algorithm used to compute the gradient. The default is
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>gradient</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Algorithm used to compute the gradient. The default is
 method-dependent, refer to the documentation of the chosen method for more
 details.</p>
-        </li>
-        <li class="field-body">
-          <b>options</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Generic options (supported: <code>save_states</code>, <code>cartesian_batching</code>,
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>options</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Generic options (supported: <code>save_states</code>, <code>cartesian_batching</code>,
 <code>progress_meter</code>, <code>t0</code>, <code>save_extra</code>).</p>
 <details>
 <summary>Detailed options API</summary>
@@ -7075,14 +7090,14 @@ details.</p>
     save_extra: callable[[Array], PyTree] | None = None,
 )
 </code></pre></div>
-<p><strong>Parameters</strong></p>
+<p><strong>Parameters:</strong></p>
 <ul>
-<li><strong>save_states</strong> - If <code>True</code>, the state is saved at every time in
+<li><strong><code>save_states</code></strong> - If <code>True</code>, the state is saved at every time in
     <code>tsave</code>, otherwise only the final state is returned.</li>
-<li><strong>cartesian_batching</strong> - If <code>True</code>, batched arguments are treated as
+<li><strong><code>cartesian_batching</code></strong> - If <code>True</code>, batched arguments are treated as
     separated batch dimensions, otherwise the batching is performed over
     a single shared batched dimension.</li>
-<li><strong>progress_meter</strong> - Progress meter indicating how far the solve has
+<li><strong><code>progress_meter</code></strong> - Progress meter indicating how far the solve has
     progressed. Defaults to <code>None</code> which uses the global default
     progress meter (see
     <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.set_progress_meter&lt;/span&gt;" href="../utils/global_settings/set_progress_meter.html#dynamiqs.utils.global_settings.set_progress_meter"><code>dq.set_progress_meter()</code></a>). Set to
@@ -7091,81 +7106,55 @@ details.</p>
     <a href="https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py">dynamiqs/progress_meter.py</a>.
     If gradients are computed, the progress meter only displays during
     the forward pass.</li>
-<li><strong>t0</strong> - Initial time. If <code>None</code>, defaults to the first time in
+<li><strong><code>t0</code></strong> - Initial time. If <code>None</code>, defaults to the first time in
     <code>tsave</code>.</li>
-<li><strong>save_extra</strong> <em>(function, optional)</em> - A function with signature
+<li><strong><code>save_extra</code></strong> <em>(function, optional)</em> - A function with signature
     <code>f(QArray) -&gt; PyTree</code> that takes a state as input and returns a
     PyTree. This can be used to save additional arbitrary data
     during the integration, accessible in <code>result.extra</code>.</li>
 </ul>
 </details>
-        </li>
-    </ul>
+        </div>
+      </li>
+  </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="dynamiqs.result.SESolveResult">SESolveResult</span></code>
-        – <p><code>dq.SESolveResult</code> object holding the result of the Schrödinger equation
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p><code>dq.SESolveResult</code> object holding the result of the Schrödinger equation
 integration.  Use <code>result.states</code> to access the saved states and
 <code>result.expects</code> to access the saved expectation values.</p>
 <details>
 <summary>Detailed result API</summary>
 <div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">SESolveResult</span>
 </code></pre></div>
-<p><strong>Attributes</strong></p>
+<p><strong>Attributes:</strong></p>
 <ul>
-<li><strong>states</strong> <em>(qarray of shape (..., nsave, n, 1))</em> - Saved states with
-    <code>nsave = ntsave</code>, or <code>nsave = 1</code> if <code>options.save_states=False</code>.</li>
-<li><strong>final_state</strong> <em>(qarray of shape (..., n, 1))</em> - Saved final state.</li>
-<li><strong>expects</strong> <em>(array of shape (..., len(exp_ops), ntsave) or None)</em> - Saved
-    expectation values, if specified by <code>exp_ops</code>.</li>
-<li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
-    specified in <code>options</code>.</li>
-<li><strong>infos</strong> <em>(PyTree or None)</em> - Method-dependent information on the
+<li><strong><code>states</code></strong> <em>(qarray of shape (..., nsave, n, 1))</em> - Saved states
+    with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
+    <code>options.save_states=False</code>.</li>
+<li><strong><code>final_state</code></strong> <em>(qarray of shape (..., n, 1))</em> - Saved final state.</li>
+<li><strong><code>expects</code></strong> <em>(array of shape (..., len(exp_ops), ntsave) or None)</em> -
+    Saved expectation values, if specified by <code>exp_ops</code>.</li>
+<li><strong><code>extra</code></strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code>
+    if specified in <code>options</code>.</li>
+<li><strong><code>infos</code></strong> <em>(PyTree or None)</em> - Method-dependent information on the
     resolution.</li>
-<li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
-    saved.</li>
-<li><strong>method</strong> <em>(Method)</em> - Method used.</li>
-<li><strong>gradient</strong> <em>(Gradient)</em> - Gradient used.</li>
-<li><strong>options</strong> <em>(Options)</em> - Options used.</li>
+<li><strong><code>tsave</code></strong> <em>(array of shape (ntsave,))</em> - Times for which results
+    were saved.</li>
+<li><strong><code>method</code></strong> <em>(Method)</em> - Method used.</li>
+<li><strong><code>gradient</code></strong> <em>(Gradient)</em> - Gradient used.</li>
+<li><strong><code>options</code></strong> <em>(Options)</em> - Options used.</li>
 </ul>
 </details>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><code>dq.SESolveResult</code> object holding the result of the Schrödinger equation
-integration.  Use <code>result.states</code> to access the saved states and
-<code>result.expects</code> to access the saved expectation values.</p>
-<details>
-<summary>Detailed result API</summary>
-<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">SESolveResult</span>
-</code></pre></div>
-<p><strong>Attributes</strong></p>
-<ul>
-<li><strong>states</strong> <em>(qarray of shape (..., nsave, n, 1))</em> - Saved states with
-    <code>nsave = ntsave</code>, or <code>nsave = 1</code> if <code>options.save_states=False</code>.</li>
-<li><strong>final_state</strong> <em>(qarray of shape (..., n, 1))</em> - Saved final state.</li>
-<li><strong>expects</strong> <em>(array of shape (..., len(exp_ops), ntsave) or None)</em> - Saved
-    expectation values, if specified by <code>exp_ops</code>.</li>
-<li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
-    specified in <code>options</code>.</li>
-<li><strong>infos</strong> <em>(PyTree or None)</em> - Method-dependent information on the
-    resolution.</li>
-<li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
-    saved.</li>
-<li><strong>method</strong> <em>(Method)</em> - Method used.</li>
-<li><strong>gradient</strong> <em>(Gradient)</em> - Gradient used.</li>
-<li><strong>options</strong> <em>(Options)</em> - Options used.</li>
-</ul>
-</details></span>
+  </ul>
 
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynamiqs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dq</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
 
@@ -7187,7 +7176,7 @@ States : QArray complex64 (11, 16, 1) | 1.4 Kb
 </code></pre></div>
         <h2 id="dynamiqs.integrators.sesolve--advanced-use-cases">Advanced use-cases</h2>
 <h3 id="dynamiqs.integrators.sesolve--defining-a-time-dependent-hamiltonian">Defining a time-dependent Hamiltonian</h3>
-<p>If the Hamiltonian depends on time, it can be converted to a time-qarray using
+<p>If the Hamiltonian depends on time, it can be converted to a timeqarray using
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.pwc&lt;/span&gt;" href="../time_qarray/pwc.html#dynamiqs.time_qarray.pwc"><code>dq.pwc()</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.modulated&lt;/span&gt;" href="../time_qarray/modulated.html#dynamiqs.time_qarray.modulated"><code>dq.modulated()</code></a>, or
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.timecallable&lt;/span&gt;" href="../time_qarray/timecallable.html#dynamiqs.time_qarray.timecallable"><code>dq.timecallable()</code></a>. See the
 <a href="../../documentation/basics/time-dependent-operators.html">Time-dependent operators</a>

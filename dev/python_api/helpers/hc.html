@@ -6868,13 +6868,11 @@
 
     <div class="doc doc-contents first">
 
-        <p>This symbol can be used as a shortcut to sum a qarray or a time-qarray with its
+        <p>This symbol can be used as a shortcut to sum a qarray or a timeqarray with its
 Hermitian conjugate.</p>
 
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Examples:</span></p>
     <p>For a linear drive with amplitude <code>omega</code>:
 </p><div class="highlight"><pre><span></span><code><span class="gd">- H = a.dag() @ a + omega * a + omega.conj() * a.dag()</span>
 <span class="gi">+ H = a.dag() @ a + (omega * a + dq.hc)</span>
@@ -6889,12 +6887,14 @@ Hermitian conjugate.</p>
 <span class="gd">- H += H.dag()</span>
 <span class="gi">+ H = dq.modulated(omega, a) + dq.hc</span>
 </code></pre></div><p></p>
+  
 
 <details class="warning" open>
   <summary>Warning</summary>
   <p>The only valid operation with this symbol is right-addition to a qarray or a
-time-qarray. Any other operation will raise a <code>TypeError</code>.</p>
-</details>
+timeqarray. Any other operation will raise a <code>TypeError</code>.</p>
+</details>  
+
 <details class="warning" open>
   <summary>Warning</summary>
   <p>The symbol applies on all terms present in the left-hand side of the addition. If

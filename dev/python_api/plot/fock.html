@@ -6285,24 +6285,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    fock
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
       
       <a href="fock.html" class="md-nav__link md-nav__link--active">
         
@@ -6320,45 +6304,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.plot.fock.fock" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        fock
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.plot.fock.fock_evolution" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        fock_evolution
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -6889,36 +6834,8 @@
   
   
   
+    
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.plot.fock.fock" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        fock
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.plot.fock.fock_evolution" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        fock_evolution
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
   
 </nav>
                   </div>
@@ -6937,32 +6854,14 @@
   
 
 
-  <h1>fock</h1>
-
-<div class="doc doc-object doc-module">
-            <span class="doc doc-object-name doc-module-name">fock</span>
-    <div class="doc doc-contents first">
-
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
 <div class="doc doc-object doc-function">
 
 
-<h2 id="dynamiqs.plot.fock.fock" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">fock.fock</span>
+<h1 id="dynamiqs.plot.fock.fock" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.plot.fock</span>
 
 
-</h2>
+</h1>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">fock</span><span class="p">(</span>
     <span class="n">state</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -6975,18 +6874,17 @@
 <span class="p">)</span>
 </code></pre></div>
 
-    <div class="doc doc-contents ">
+    <div class="doc doc-contents first">
 
         <p>Plot the photon number population of a state.</p>
+  
 
 <details class="warning" open>
   <summary>Warning</summary>
   <p>Documentation redaction in progress.</p>
 </details>
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">coherent</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
 </code></pre></div>
@@ -7004,65 +6902,6 @@
 
     </div>
 
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="dynamiqs.plot.fock.fock_evolution" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">fock.fock_evolution</span>
-
-
-</h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">fock_evolution</span><span class="p">(</span>
-    <span class="n">states</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">times</span><span class="p">:</span> <span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">cmap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Blues"</span><span class="p">,</span>
-    <span class="n">logscale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">logvmin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0001</span><span class="p">,</span>
-    <span class="n">colorbar</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">allyticks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="p">)</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Plot the photon number population of state as a function of time.</p>
-
-<details class="warning" open>
-  <summary>Warning</summary>
-  <p>Documentation redaction in progress.</p>
-</details>
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">16</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">psi0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">coherent</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">())</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">tsave</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sesolve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">psi0</span><span class="p">,</span> <span class="n">tsave</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">fock_evolution</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">states</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="n">tsave</span><span class="p">)</span>
-</code></pre></div>
-    <p><a class="glightbox" data-type="image" data-width="70%" data-height="auto" href="../../figs_code/plot_fock_evolution.png" data-desc-position="bottom"><img alt="plot_fock_evolution" class="fig" src="../../figs_code/plot_fock_evolution.png"></a></p>
-<p>Use the log scale option to visualise low populations:</p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">fock_evolution</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">states</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="n">tsave</span><span class="p">,</span> <span class="n">logscale</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</code></pre></div>
-    <p><a class="glightbox" data-type="image" data-width="70%" data-height="auto" href="../../figs_code/plot_fock_evolution_log.png" data-desc-position="bottom"><img alt="plot_fock_evolution_log" class="fig" src="../../figs_code/plot_fock_evolution_log.png"></a></p>
-
-
-    </div>
-
-</div>
-
-
-
-  </div>
-
-    </div>
 </div>
 
 

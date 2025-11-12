@@ -6875,6 +6875,7 @@
 trajectories of the unit-efficiency diffusive unraveling of the Lindblad master
 equation (ME). These trajectories are then averaged to obtain an approximation of
 the ME solution.</p>
+  
 
 <details class="note" open>
   <summary>Note</summary>
@@ -6882,24 +6883,28 @@ the ME solution.</p>
 If you are looking for direct access to individual trajectories, use
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.dssesolve&lt;/span&gt;" href="../integrators/dssesolve.html#dynamiqs.integrators.dssesolve"><code>dq.dssesolve()</code></a> instead.</p>
 </details>
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>keys _(list of PRNG keys)_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p><abbr title="pseudorandom number generator">PRNG</abbr> keys used for the diffusive <abbr title="stochastic Schrödinger equation">SSE</abbr> solver. See
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>keys</code></b>
+            (<i>list of PRNG keys</i>)
+        –
+        <div class="doc-md-description">
+          <p><abbr title="pseudorandom number generator">PRNG</abbr> keys used for the diffusive <abbr title="stochastic Schrödinger equation">SSE</abbr> solver. See
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.dssesolve&lt;/span&gt;" href="../integrators/dssesolve.html#dynamiqs.integrators.dssesolve"><code>dq.dssesolve()</code></a> for more details.</p>
-        </li>
-        <li class="field-body">
-          <b>dsse_method</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Method used for the diffusive <abbr title="stochastic Schrödinger equation">SSE</abbr> solver. See
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>dsse_method</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Method used for the diffusive <abbr title="stochastic Schrödinger equation">SSE</abbr> solver. See
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.dssesolve&lt;/span&gt;" href="../integrators/dssesolve.html#dynamiqs.integrators.dssesolve"><code>dq.dssesolve()</code></a> for more details.</p>
-        </li>
-    </ul>
+        </div>
+      </li>
+  </ul>
+  
 
 <details class="note">
   <summary>Supported gradients</summary>

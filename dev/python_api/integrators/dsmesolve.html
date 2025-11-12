@@ -7047,13 +7047,15 @@ $$
 $$
 The time intervals <span class="arithmatex">\([t_n, t_{n+1}[\)</span> are defined by <code>tsave</code>, so the number of
 returned measurement values for each detector is <code>len(tsave)-1</code>.</p>
+  
 
 <details class="warning" open>
   <summary>Warning</summary>
   <p>For now, <code>dsmesolve()</code> only supports linearly spaced <code>tsave</code> with values that
 are exact multiples of the method fixed step size <code>dt</code>. Moreover, to JIT-compile
 code using <code>dsmesolve()</code>, <code>tsave</code> must be passed as tuple.</p>
-</details>
+</details>  
+
 <details class="note" open>
   <summary>Simulating the measurement record only</summary>
   <p>If you are only interested in the measurement record and not the state, you
@@ -7070,73 +7072,97 @@ measurements_sme = dq.measurements_sse_to_sme(
 </code></pre></div>
 This results in a significant speedup for large systems.<p></p>
 </details>
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>H _(qarray-like or time-qarray of shape (...H, n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Hamiltonian.</p>
-        </li>
-        <li class="field-body">
-          <b>jump_ops _(list of qarray-like or time-qarray, each of shape (n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>List of
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>H</code></b>
+            (<i>qarray-like or timeqarray of shape (...H, n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Hamiltonian.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>jump_ops</code></b>
+            (<i>list of qarray-like or timeqarray, each of shape (n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>List of
 jump operators.</p>
-        </li>
-        <li class="field-body">
-          <b>etas _(array-like of shape (len(jump_ops),))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Measurement efficiency for each
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>etas</code></b>
+            (<i>array-like of shape (len(jump_ops),)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Measurement efficiency for each
 loss channel with values between 0 (purely dissipative) and 1 (perfectly
 measured). No measurement is returned for purely dissipative loss channels.</p>
-        </li>
-        <li class="field-body">
-          <b>rho0 _(qarray-like of shape (...rho0, n, 1) or (...rho0, n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Initial state.</p>
-        </li>
-        <li class="field-body">
-          <b>tsave _(array-like of shape (ntsave,))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Times at which the states and
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>rho0</code></b>
+            (<i>qarray-like of shape (...rho0, n, 1) or (...rho0, n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Initial state.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>tsave</code></b>
+            (<i>array-like of shape (ntsave,)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Times at which the states and
 expectation values are saved. The equation is solved from <code>tsave[0]</code> to
 <code>tsave[-1]</code>. Measurements are time-averaged and saved over each interval
 defined by <code>tsave</code>.</p>
-        </li>
-        <li class="field-body">
-          <b>keys _(list of PRNG keys)_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p><abbr title="pseudorandom number generator">PRNG</abbr> keys used to sample the Wiener processes.
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>keys</code></b>
+            (<i>list of PRNG keys</i>)
+        –
+        <div class="doc-md-description">
+          <p><abbr title="pseudorandom number generator">PRNG</abbr> keys used to sample the Wiener processes.
 The number of elements defines the number of sampled stochastic
 trajectories.</p>
-        </li>
-        <li class="field-body">
-          <b>exp_ops _(list of array-like, each of shape (n, n), optional)_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>List of
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>exp_ops</code></b>
+            (<i>list of array-like, each of shape (n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>List of
 operators for which the expectation value is computed.</p>
-        </li>
-        <li class="field-body">
-          <b>method</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Method for the integration. No defaults for now, you have to specify a
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>method</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Method for the integration. No defaults for now, you have to specify a
 method (supported: <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.EulerMaruyama&lt;/span&gt;" href="../method/EulerMaruyama.html#dynamiqs.method.EulerMaruyama"><code>EulerMaruyama</code></a>,
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Rouchon1&lt;/span&gt;" href="../method/Rouchon1.html#dynamiqs.method.Rouchon1"><code>Rouchon1</code></a>).</p>
-        </li>
-        <li class="field-body">
-          <b>gradient</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Algorithm used to compute the gradient. The default is
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>gradient</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Algorithm used to compute the gradient. The default is
 method-dependent, refer to the documentation of the chosen method for more
 details.</p>
-        </li>
-        <li class="field-body">
-          <b>options</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Generic options (supported: <code>save_states</code>, <code>cartesian_batching</code>,
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>options</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Generic options (supported: <code>save_states</code>, <code>cartesian_batching</code>,
 <code>save_extra</code>).</p>
 <details>
 <summary>Detailed options API</summary>
@@ -7146,30 +7172,29 @@ details.</p>
     save_extra: callable[[Array], PyTree] | None = None,
 )
 </code></pre></div>
-<p><strong>Parameters</strong></p>
+<p><strong>Parameters:</strong></p>
 <ul>
-<li><strong>save_states</strong> - If <code>True</code>, the state is saved at every time in
+<li><strong><code>save_states</code></strong> - If <code>True</code>, the state is saved at every time in
     <code>tsave</code>, otherwise only the final state is returned.</li>
-<li><strong>cartesian_batching</strong> - If <code>True</code>, batched arguments are treated as
+<li><strong><code>cartesian_batching</code></strong> - If <code>True</code>, batched arguments are treated as
     separated batch dimensions, otherwise the batching is performed over
     a single shared batched dimension.</li>
-<li><strong>save_extra</strong> <em>(function, optional)</em> - A function with signature
+<li><strong><code>save_extra</code></strong> <em>(function, optional)</em> - A function with signature
     <code>f(QArray) -&gt; PyTree</code> that takes a state as input and returns a
     PyTree. This can be used to save additional arbitrary data
     during the integration, accessible in <code>result.extra</code>.</li>
 </ul>
 </details>
-        </li>
-    </ul>
+        </div>
+      </li>
+  </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="dynamiqs.result.DSMESolveResult">DSMESolveResult</span></code>
-        – <p><code>dq.DSMESolveResult</code> object holding the result of the diffusive <abbr title="stochastic master equation">SME</abbr> integration.
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p><code>dq.DSMESolveResult</code> object holding the result of the diffusive <abbr title="stochastic master equation">SME</abbr> integration.
 Use <code>result.states</code> to access the saved states, <code>result.expects</code> to access
 the saved expectation values and <code>result.measurements</code> to access the
 detector measurements.</p>
@@ -7180,72 +7205,36 @@ detector measurements.</p>
 <p>For the shape indications we define <code>ntrajs</code> as the number of
 trajectories (<code>ntrajs = len(keys)</code>) and <code>nLm</code> as the number of measured
 loss channels (those for which the measurement efficiency is not zero).</p>
-<p><strong>Attributes</strong></p>
+<p><strong>Attributes:</strong></p>
 <ul>
-<li><strong>states</strong> <em>(qarray of shape (..., ntrajs, nsave, n, n))</em> - Saved
+<li><strong><code>states</code></strong> <em>(qarray of shape (..., ntrajs, nsave, n, n))</em> - Saved
     states with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
     <code>options.save_states=False</code>.</li>
-<li><strong>final_state</strong> <em>(qarray of shape (..., ntrajs, n, n))</em> - Saved final
-    state.</li>
-<li><strong>expects</strong> <em>(array of shape (..., ntrajs, len(exp_ops), ntsave) or None)</em> - Saved
-    expectation values, if specified by <code>exp_ops</code>.</li>
-<li><strong>measurements</strong> <em>(array of shape (..., ntrajs, nLm, nsave-1))</em> - Saved
-    measurements.</li>
-<li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
-    specified in <code>options</code>.</li>
-<li><strong>keys</strong> <em>(<abbr title="pseudorandom number generator">PRNG</abbr> key array of shape (ntrajs,))</em> - <abbr title="pseudorandom number generator">PRNG</abbr> keys used to
+<li><strong><code>final_state</code></strong> <em>(qarray of shape (..., ntrajs, n, n))</em> - Saved
+    final state.</li>
+<li><strong><code>expects</code></strong> <em>(array of shape (..., ntrajs, len(exp_ops), ntsave)
+    or None)</em> - Saved expectation values, if specified by <code>exp_ops</code>.</li>
+<li><strong><code>measurements</code></strong> <em>(array of shape (..., ntrajs, nLm, nsave-1))</em> -
+    Saved measurements.</li>
+<li><strong><code>extra</code></strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code>
+    if specified in <code>options</code>.</li>
+<li><strong><code>keys</code></strong> <em>(<abbr title="pseudorandom number generator">PRNG</abbr> key array of shape (ntrajs,))</em> - <abbr title="pseudorandom number generator">PRNG</abbr> keys used to
     sample the Wiener processes.</li>
-<li><strong>infos</strong> <em>(PyTree or None)</em> - Method-dependent information on the
+<li><strong><code>infos</code></strong> <em>(PyTree or None)</em> - Method-dependent information on the
     resolution.</li>
-<li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
-    saved.</li>
-<li><strong>method</strong> <em>(Method)</em> - Method used.</li>
-<li><strong>gradient</strong> <em>(Gradient)</em> - Gradient used.</li>
-<li><strong>options</strong> <em>(Options)</em> - Options used.</li>
+<li><strong><code>tsave</code></strong> <em>(array of shape (ntsave,))</em> - Times for which results
+    were saved.</li>
+<li><strong><code>method</code></strong> <em>(Method)</em> - Method used.</li>
+<li><strong><code>gradient</code></strong> <em>(Gradient)</em> - Gradient used.</li>
+<li><strong><code>options</code></strong> <em>(Options)</em> - Options used.</li>
 </ul>
 </details>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><code>dq.DSMESolveResult</code> object holding the result of the diffusive <abbr title="stochastic master equation">SME</abbr> integration.
-Use <code>result.states</code> to access the saved states, <code>result.expects</code> to access
-the saved expectation values and <code>result.measurements</code> to access the
-detector measurements.</p>
-<details>
-<summary>Detailed result API</summary>
-<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">DSMESolveResult</span>
-</code></pre></div>
-<p>For the shape indications we define <code>ntrajs</code> as the number of
-trajectories (<code>ntrajs = len(keys)</code>) and <code>nLm</code> as the number of measured
-loss channels (those for which the measurement efficiency is not zero).</p>
-<p><strong>Attributes</strong></p>
-<ul>
-<li><strong>states</strong> <em>(qarray of shape (..., ntrajs, nsave, n, n))</em> - Saved
-    states with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
-    <code>options.save_states=False</code>.</li>
-<li><strong>final_state</strong> <em>(qarray of shape (..., ntrajs, n, n))</em> - Saved final
-    state.</li>
-<li><strong>expects</strong> <em>(array of shape (..., ntrajs, len(exp_ops), ntsave) or None)</em> - Saved
-    expectation values, if specified by <code>exp_ops</code>.</li>
-<li><strong>measurements</strong> <em>(array of shape (..., ntrajs, nLm, nsave-1))</em> - Saved
-    measurements.</li>
-<li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
-    specified in <code>options</code>.</li>
-<li><strong>keys</strong> <em>(<abbr title="pseudorandom number generator">PRNG</abbr> key array of shape (ntrajs,))</em> - <abbr title="pseudorandom number generator">PRNG</abbr> keys used to
-    sample the Wiener processes.</li>
-<li><strong>infos</strong> <em>(PyTree or None)</em> - Method-dependent information on the
-    resolution.</li>
-<li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
-    saved.</li>
-<li><strong>method</strong> <em>(Method)</em> - Method used.</li>
-<li><strong>gradient</strong> <em>(Gradient)</em> - Gradient used.</li>
-<li><strong>options</strong> <em>(Options)</em> - Options used.</li>
-</ul>
-</details></span>
+  </ul>
 
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynamiqs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dq</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
@@ -7313,6 +7302,7 @@ For example if:<p></p>
 <p>See the
 <a href="../../documentation/basics/batching-simulations.html">Batching simulations</a>
 tutorial for more details.</p>
+  
 
 <details class="warning" open>
   <summary>Warning</summary>

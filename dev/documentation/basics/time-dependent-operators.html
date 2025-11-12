@@ -869,15 +869,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#defining-a-time-qarray" class="md-nav__link">
+  <a href="#defining-a-timeqarray" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Defining a time-qarray
+        Defining a timeqarray
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Defining a time-qarray">
+    <nav class="md-nav" aria-label="Defining a timeqarray">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -930,10 +930,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#clipping-a-time-qarray" class="md-nav__link">
+  <a href="#clipping-a-timeqarray" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Clipping a time-qarray
+        Clipping a timeqarray
       
     </span>
   </a>
@@ -6973,15 +6973,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#defining-a-time-qarray" class="md-nav__link">
+  <a href="#defining-a-timeqarray" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Defining a time-qarray
+        Defining a timeqarray
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Defining a time-qarray">
+    <nav class="md-nav" aria-label="Defining a timeqarray">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -7034,10 +7034,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#clipping-a-time-qarray" class="md-nav__link">
+  <a href="#clipping-a-timeqarray" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Clipping a time-qarray
+        Clipping a timeqarray
       
     </span>
   </a>
@@ -7077,7 +7077,7 @@ $$
     H_x(t)=\cos(2\pi t)\sigma_x
 $$
 </p><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">Hx</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">modulated</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>  <span class="c1"># initialize a modulated time-qarray</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Hx</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">modulated</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>  <span class="c1"># initialize a modulated timeqarray</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Hx</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
 <span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2</span>
 <span class="go">[[  ⋅    1.+0.j]</span>
@@ -7085,7 +7085,7 @@ $$
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Hx</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(2, 2)</span>
 </code></pre></div><p></p>
-<p>Time-qarrays support common arithmetic operations with scalars, <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-likes</abbr> and other time-qarrays. For example to define the Hamiltonian
+<p>Timeqarrays support common arithmetic operations with scalars, <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-likes</abbr> and other timeqarrays. For example to define the Hamiltonian
 $$
     H(t) = \sigma_z + 2 H_x(t) - \sin(\pi t) \sigma_y
 $$
@@ -7097,14 +7097,14 @@ $$
 <span class="go">[[ 1.+0.j  2.-0.j]</span>
 <span class="go"> [ 2.+0.j -1.+0.j]]</span>
 </code></pre></div><p></p>
-<p>Finally, time-qarrays also support common utility functions, such as <code>.conj()</code>, or <code>.reshape()</code>. More details can be found in the <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.TimeQArray&lt;/span&gt;" href="../../python_api/time_qarray/TimeQArray.html#dynamiqs.time_qarray.TimeQArray"><code>TimeQArray</code></a> API page.</p>
-<h2 id="defining-a-time-qarray">Defining a time-qarray</h2>
+<p>Finally, timeqarrays also support common utility functions, such as <code>.conj()</code>, or <code>.reshape()</code>. More details can be found in the <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.TimeQArray&lt;/span&gt;" href="../../python_api/time_qarray/TimeQArray.html#dynamiqs.time_qarray.TimeQArray"><code>TimeQArray</code></a> API page.</p>
+<h2 id="defining-a-timeqarray">Defining a timeqarray</h2>
 <h3 id="constant-operators">Constant operators</h3>
 <p>A constant operator is defined by
 $$
     O(t) = O_0
 $$
-for any time <span class="arithmatex">\(t\)</span>, where <span class="arithmatex">\(O_0\)</span> is an arbitrary operator. The most practical way to define constant operators is using <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-likes</abbr>. They can also be instantiated as time-qarrays using the <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.constant&lt;/span&gt;" href="../../python_api/time_qarray/constant.html#dynamiqs.time_qarray.constant"><code>dq.constant()</code></a> function. For instance, to define the Pauli operator <span class="arithmatex">\(H = \sigma_z\)</span>, you can use any of the following syntaxes:</p>
+for any time <span class="arithmatex">\(t\)</span>, where <span class="arithmatex">\(O_0\)</span> is an arbitrary operator. The most practical way to define constant operators is using <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-likes</abbr>. They can also be instantiated as timeqarrays using the <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.constant&lt;/span&gt;" href="../../python_api/time_qarray/constant.html#dynamiqs.time_qarray.constant"><code>dq.constant()</code></a> function. For instance, to define the Pauli operator <span class="arithmatex">\(H = \sigma_z\)</span>, you can use any of the following syntaxes:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:6"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><input id="__tabbed_1_3" name="__tabbed_1" type="radio"><input id="__tabbed_1_4" name="__tabbed_1" type="radio"><input id="__tabbed_1_5" name="__tabbed_1" type="radio"><input id="__tabbed_1_6" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">Dynamiqs utilities</label><label for="__tabbed_1_2">Dynamiqs qarray</label><label for="__tabbed_1_3">NumPy array</label><label for="__tabbed_1_4">JAX array</label><label for="__tabbed_1_5">QuTiP Qobj</label><label for="__tabbed_1_6">Python list</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
@@ -7154,7 +7154,7 @@ where <span class="arithmatex">\(c_k\)</span> are constant values, <span class="
 <li><code>values</code>: the constant values <span class="arithmatex">\((c_0, \ldots, c_{N-1})\)</span> for each time interval, of shape <em>(..., N)</em>,</li>
 <li><code>qarray</code>: the qarray defining the constant operator <span class="arithmatex">\(O_0\)</span>, of shape <em>(n, n)</em>.</li>
 </ul>
-<p>To construct a <abbr title="piecewise constant">PWC</abbr> operator, these three arguments must be passed to the <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.pwc&lt;/span&gt;" href="../../python_api/time_qarray/pwc.html#dynamiqs.time_qarray.pwc"><code>dq.pwc()</code></a> function, which returns a time-qarray. When called at some time <span class="arithmatex">\(t\)</span>, this object then returns a qarray with shape <em>(..., n, n)</em>. For example, let us define a <abbr title="piecewise constant">PWC</abbr> operator <span class="arithmatex">\(H(t)\)</span> with constant value <span class="arithmatex">\(3\sigma_z\)</span> for <span class="arithmatex">\(t\in[0, 1[\)</span> and <span class="arithmatex">\(-2\sigma_z\)</span> for <span class="arithmatex">\(t\in[1, 2[\)</span>:
+<p>To construct a <abbr title="piecewise constant">PWC</abbr> operator, these three arguments must be passed to the <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.pwc&lt;/span&gt;" href="../../python_api/time_qarray/pwc.html#dynamiqs.time_qarray.pwc"><code>dq.pwc()</code></a> function, which returns a timeqarray. When called at some time <span class="arithmatex">\(t\)</span>, this object then returns a qarray with shape <em>(..., n, n)</em>. For example, let us define a <abbr title="piecewise constant">PWC</abbr> operator <span class="arithmatex">\(H(t)\)</span> with constant value <span class="arithmatex">\(3\sigma_z\)</span> for <span class="arithmatex">\(t\in[0, 1[\)</span> and <span class="arithmatex">\(-2\sigma_z\)</span> for <span class="arithmatex">\(t\in[1, 2[\)</span>:
 </p><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">times</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">qarray</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">()</span>
@@ -7216,11 +7216,11 @@ where <span class="arithmatex">\(c_k\)</span> are constant values, <span class="
 <p><a class="glightbox" data-type="image" data-width="70%" data-height="auto" href="../../figs_docs/tqarray_plot_pwc_pulse.png" data-desc-position="bottom"><img alt="tqarray_plot_pwc_pulse" class="fig" src="../../figs_docs/tqarray_plot_pwc_pulse.png"></a></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The argument <code>times</code> must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time-qarray at time <span class="arithmatex">\(t\)</span>, the returned qarray is the operator <span class="arithmatex">\(c_k\ O_0\)</span> corresponding to the interval <span class="arithmatex">\([t_k, t_{k+1}[\)</span> in which the time <span class="arithmatex">\(t\)</span> falls. If <span class="arithmatex">\(t\)</span> does not belong to any time intervals, the returned qarray is null.</p>
+<p>The argument <code>times</code> must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting timeqarray at time <span class="arithmatex">\(t\)</span>, the returned qarray is the operator <span class="arithmatex">\(c_k\ O_0\)</span> corresponding to the interval <span class="arithmatex">\([t_k, t_{k+1}[\)</span> in which the time <span class="arithmatex">\(t\)</span> falls. If <span class="arithmatex">\(t\)</span> does not belong to any time intervals, the returned qarray is null.</p>
 </div>
 <details class="note">
 <summary>Batching <abbr title="piecewise constant">PWC</abbr> operators</summary>
-<p>The batching of the returned time-qarray is specified by <code>values</code>. For example, to define a <abbr title="piecewise constant">PWC</abbr> operator batched over a parameter <span class="arithmatex">\(\theta\)</span>:
+<p>The batching of the returned timeqarray is specified by <code>values</code>. For example, to define a <abbr title="piecewise constant">PWC</abbr> operator batched over a parameter <span class="arithmatex">\(\theta\)</span>:
 </p><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">thetas</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>  <span class="c1"># (11,)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">times</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">values</span> <span class="o">=</span> <span class="n">thetas</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">3.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">])</span>  <span class="c1"># (11, 2)</span>
@@ -7240,7 +7240,7 @@ where <span class="arithmatex">\(f(t)\)</span> is a time-dependent scalar. In Dy
 <li><code>f</code>: a Python function with signature <code>f(t: float) -&gt; Scalar | Array</code> that returns the modulating factor <span class="arithmatex">\(f(t)\)</span> for any time <span class="arithmatex">\(t\)</span>, as a scalar or an array of shape <em>(...)</em>,</li>
 <li><code>qarray</code>: the qarray defining the constant operator <span class="arithmatex">\(O_0\)</span>, of shape <em>(n, n)</em>.</li>
 </ul>
-<p>To construct a modulated operator, these two arguments must be passed to the <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.modulated&lt;/span&gt;" href="../../python_api/time_qarray/modulated.html#dynamiqs.time_qarray.modulated"><code>dq.modulated()</code></a> function, which returns a time-qarray. When called at some time <span class="arithmatex">\(t\)</span>, this object then returns a qarray with shape <em>(..., n, n)</em>. For example, let us define the modulated operator <span class="arithmatex">\(H(t)=\cos(2\pi t)\sigma_x\)</span>:
+<p>To construct a modulated operator, these two arguments must be passed to the <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.modulated&lt;/span&gt;" href="../../python_api/time_qarray/modulated.html#dynamiqs.time_qarray.modulated"><code>dq.modulated()</code></a> function, which returns a timeqarray. When called at some time <span class="arithmatex">\(t\)</span>, this object then returns a qarray with shape <em>(..., n, n)</em>. For example, let us define the modulated operator <span class="arithmatex">\(H(t)=\cos(2\pi t)\sigma_x\)</span>:
 </p><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">modulated</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span>
@@ -7273,7 +7273,7 @@ where <span class="arithmatex">\(f(t)\)</span> is a time-dependent scalar. In Dy
 <p><a class="glightbox" data-type="image" data-width="70%" data-height="auto" href="../../figs_docs/tqarray_plot_modulated.png" data-desc-position="bottom"><img alt="tqarray_plot_modulated" class="fig" src="../../figs_docs/tqarray_plot_modulated.png"></a></p>
 <details class="note">
 <summary>Batching modulated operators</summary>
-<p>The batching of the returned time-qarray is specified by the array returned by <code>f</code>. For example, to define a modulated Hamiltonian <span class="arithmatex">\(H(t)=\cos(\omega t)\sigma_x\)</span> batched over the parameter <span class="arithmatex">\(\omega\)</span>:
+<p>The batching of the returned timeqarray is specified by the array returned by <code>f</code>. For example, to define a modulated Hamiltonian <span class="arithmatex">\(H(t)=\cos(\omega t)\sigma_x\)</span> batched over the parameter <span class="arithmatex">\(\omega\)</span>:
 </p><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">omegas</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>  <span class="c1"># (11,)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omegas</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">modulated</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
@@ -7307,7 +7307,7 @@ where <span class="arithmatex">\(f(t)\)</span> is a time-dependent operator. In 
 <ul>
 <li><code>f</code>: a Python function with signature <code>f(t: float) -&gt; QArray</code> that returns the operator <span class="arithmatex">\(f(t)\)</span> for any time <span class="arithmatex">\(t\)</span>, as a qarray of shape <em>(..., n, n)</em>.</li>
 </ul>
-<p>To construct an arbitrary time-dependent operator, pass this argument to the <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.timecallable&lt;/span&gt;" href="../../python_api/time_qarray/timecallable.html#dynamiqs.time_qarray.timecallable"><code>dq.timecallable()</code></a> function, which returns a time-qarray. This object then returns a qarray with shape <em>(..., n, n)</em> when called at any time <span class="arithmatex">\(t\)</span>.</p>
+<p>To construct an arbitrary time-dependent operator, pass this argument to the <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.timecallable&lt;/span&gt;" href="../../python_api/time_qarray/timecallable.html#dynamiqs.time_qarray.timecallable"><code>dq.timecallable()</code></a> function, which returns a timeqarray. This object then returns a qarray with shape <em>(..., n, n)</em> when called at any time <span class="arithmatex">\(t\)</span>.</p>
 <p>For example, let us define the arbitrary time-dependent operator <span class="arithmatex">\(H(t)=\begin{pmatrix}t &amp; 0\\0 &amp; 1 - t\end{pmatrix}\)</span>:
 </p><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">dq</span><span class="o">.</span><span class="n">asqarray</span><span class="p">([[</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">t</span><span class="p">]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">timecallable</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
@@ -7339,7 +7339,7 @@ where <span class="arithmatex">\(f(t)\)</span> is a time-dependent operator. In 
 </div>
 <details class="note">
 <summary>Batching arbitrary time-dependent operators</summary>
-<p>The batching of the returned time-qarray is specified by the qarray returned by <code>f</code>. For example, to define an arbitrary time-dependent operator batched over a parameter <span class="arithmatex">\(\theta\)</span>:
+<p>The batching of the returned timeqarray is specified by the qarray returned by <code>f</code>. For example, to define an arbitrary time-dependent operator batched over a parameter <span class="arithmatex">\(\theta\)</span>:
 </p><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">thetas</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>  <span class="c1"># (11,)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">thetas</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">asqarray</span><span class="p">([[</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">t</span><span class="p">]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">timecallable</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
@@ -7364,7 +7364,7 @@ where <span class="arithmatex">\(f(t)\)</span> is a time-dependent operator. In 
 argument <code>discontinuity_ts</code> to enforce adaptive step size methods to stop at these
 times (i.e., right before, and right after the jump).</p>
 </details>
-<h2 id="clipping-a-time-qarray">Clipping a time-qarray</h2>
+<h2 id="clipping-a-timeqarray">Clipping a timeqarray</h2>
 <p>Time-dependent operators can be clipped to a given time interval, outside which the
 returned qarray is null. For example:
 </p><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>

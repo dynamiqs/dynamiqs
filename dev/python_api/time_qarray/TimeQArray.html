@@ -7070,86 +7070,106 @@
 
 
         <p>Base class for time-dependent qarrays.</p>
-<p>A time-qarray is a callable object that returns a qarray for any time <span class="arithmatex">\(t\)</span>. It is
+<p>A timeqarray is a callable object that returns a qarray for any time <span class="arithmatex">\(t\)</span>. It is
 used to define time-dependent operators for Dynamiqs solvers.</p>
 
-    <p>
-      <strong>Attributes</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>dtype</b>
-              <i>
-(numpy.dtype)              </i>
-          – <p>Data type.</p>
-        </li>
-        <li class="field-body">
-          <b>shape</b>
-              <i>
-(tuple of int)              </i>
-          – <p>Shape.</p>
-        </li>
-        <li class="field-body">
-          <b>ndim</b>
-              <i>
-(int)              </i>
-          – <p>Number of dimensions in the shape.</p>
-        </li>
-        <li class="field-body">
-          <b>layout</b>
-              <i>
-(Layout)              </i>
-          – <p>Data layout, either <code>dq.dense</code> or <code>dq.dia</code>.</p>
-        </li>
-        <li class="field-body">
-          <b>dims</b>
-              <i>
-(tuple of ints)              </i>
-          – <p>Hilbert space dimension of each subsystem.</p>
-        </li>
-        <li class="field-body">
-          <b>mT</b>
-              <i>
-(time-qarray)              </i>
-          – <p>Returns the time-qarray transposed over its last two
+
+<p><span class="doc-section-title">Attributes:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <b><code>dtype</code></b>
+            (<i>numpy.dtype</i>)
+        –
+        <div class="doc-md-description">
+          <p>Data type.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+        <b><code>shape</code></b>
+            (<i>tuple of int</i>)
+        –
+        <div class="doc-md-description">
+          <p>Shape.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+        <b><code>ndim</code></b>
+            (<i>int</i>)
+        –
+        <div class="doc-md-description">
+          <p>Number of dimensions in the shape.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+        <b><code>layout</code></b>
+            (<i>Layout</i>)
+        –
+        <div class="doc-md-description">
+          <p>Data layout, either <code>dq.dense</code> or <code>dq.dia</code>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+        <b><code>dims</code></b>
+            (<i>tuple of ints</i>)
+        –
+        <div class="doc-md-description">
+          <p>Hilbert space dimension of each subsystem.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+        <b><code>mT</code></b>
+            (<i>timeqarray</i>)
+        –
+        <div class="doc-md-description">
+          <p>Returns the timeqarray transposed over its last two
 dimensions.</p>
-        </li>
-        <li class="field-body">
-          <b>vectorized</b>
-              <i>
-(bool)              </i>
-          – <p>Whether the underlying qarray is non-vectorized (ket, bra
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+        <b><code>vectorized</code></b>
+            (<i>bool</i>)
+        –
+        <div class="doc-md-description">
+          <p>Whether the underlying qarray is non-vectorized (ket, bra
 or operator) or vectorized (operator in vector form or superoperator in
 matrix form).</p>
-        </li>
-        <li class="field-body">
-          <b>tstart</b>
-              <i>
-(float | None)              </i>
-          – <p>The returned qarray is null for all times
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+        <b><code>tstart</code></b>
+            (<i>float | None</i>)
+        –
+        <div class="doc-md-description">
+          <p>The returned qarray is null for all times
 <span class="arithmatex">\(t &lt; t_{start}\)</span> (ignored if <code>None</code>).</p>
-        </li>
-        <li class="field-body">
-          <b>tend</b>
-              <i>
-(float | None)              </i>
-          – <p>The returned qarray is null for all times
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+        <b><code>tend</code></b>
+            (<i>float | None</i>)
+        –
+        <div class="doc-md-description">
+          <p>The returned qarray is null for all times
 <span class="arithmatex">\(t \geq t_{end}\)</span> (ignored if <code>None</code>).</p>
-        </li>
-        <li class="field-body">
-          <b>discontinuity_ts</b>
-              <i>
-(Array)              </i>
-          – <p>Times at which there is a discontinuous jump
-in the time-qarray values (the array is always sorted, but does not
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+        <b><code>discontinuity_ts</code></b>
+            (<i>Array</i>)
+        –
+        <div class="doc-md-description">
+          <p>Times at which there is a discontinuous jump
+in the timeqarray values (the array is always sorted, but does not
 necessarily contain unique values).</p>
-        </li>
-    </ul>
+        </div>
+      </li>
+  </ul>
+  
 
 <details class="note" open>
   <summary>Arithmetic operation support</summary>
-  <p>Time-qarrays support basic arithmetic operations <code>-, +, *</code> with other
-<abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-likes</abbr> or time-qarrays.</p>
+  <p>Timeqarrays support basic arithmetic operations <code>-, +, *</code> with other
+<abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-likes</abbr> or timeqarrays.</p>
 </details>
 
 
@@ -7187,36 +7207,36 @@ necessarily contain unique values).</p>
 
         <p>Set the start and/or end time beyond which the returned qarray is null.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>tstart</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>The returned qarray is null for all times <span class="arithmatex">\(t &lt; t_{start}\)</span> (ignored
-if <code>None</code>).</p>
-        </li>
-        <li class="field-body">
-          <b>tend</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>The returned qarray is null for all times <span class="arithmatex">\(t \geq t_{end}\)</span> (ignored
-if <code>None</code>).</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.TimeQArray&lt;/span&gt; (&lt;code&gt;dynamiqs.time_qarray.TimeQArray&lt;/code&gt;)" href="#dynamiqs.time_qarray.TimeQArray">TimeQArray</a></code>
-        – <p>New time-qarray with the given time bounds.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>tstart</code></b>
+        –
+        <div class="doc-md-description">
+          <p>The returned qarray is null for all times <span class="arithmatex">\(t &lt; t_{start}\)</span> (ignored
+if <code>None</code>).</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>New time-qarray with the given time bounds.</p></span>
+      <li class="doc-section-item field-body">
+          <b><code>tend</code></b>
+        –
+        <div class="doc-md-description">
+          <p>The returned qarray is null for all times <span class="arithmatex">\(t \geq t_{end}\)</span> (ignored
+if <code>None</code>).</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>New timeqarray with the given time bounds.</p>
+        </div>
+      </li>
+  </ul>
 
 
     </div>
@@ -7236,31 +7256,29 @@ if <code>None</code>).</p>
 
     <div class="doc doc-contents ">
 
-        <p>Returns a reshaped copy of a time-qarray.</p>
+        <p>Returns a reshaped copy of a timeqarray.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>*shape</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>New shape, which must match the original size.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.TimeQArray&lt;/span&gt; (&lt;code&gt;dynamiqs.time_qarray.TimeQArray&lt;/code&gt;)" href="#dynamiqs.time_qarray.TimeQArray">TimeQArray</a></code>
-        – <p>New time-qarray with the given shape.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>*shape</code></b>
+        –
+        <div class="doc-md-description">
+          <p>New shape, which must match the original size.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>New time-qarray with the given shape.</p></span>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>New timeqarray with the given shape.</p>
+        </div>
+      </li>
+  </ul>
 
 
     </div>
@@ -7280,31 +7298,29 @@ if <code>None</code>).</p>
 
     <div class="doc doc-contents ">
 
-        <p>Broadcasts a time-qarray to a new shape.</p>
+        <p>Broadcasts a timeqarray to a new shape.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>*shape</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>New shape, which must be compatible with the original shape.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.TimeQArray&lt;/span&gt; (&lt;code&gt;dynamiqs.time_qarray.TimeQArray&lt;/code&gt;)" href="#dynamiqs.time_qarray.TimeQArray">TimeQArray</a></code>
-        – <p>New time-qarray with the given shape.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>*shape</code></b>
+        –
+        <div class="doc-md-description">
+          <p>New shape, which must be compatible with the original shape.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>New time-qarray with the given shape.</p></span>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>New timeqarray with the given shape.</p>
+        </div>
+      </li>
+  </ul>
 
 
     </div>
@@ -7324,19 +7340,17 @@ if <code>None</code>).</p>
 
     <div class="doc doc-contents ">
 
-        <p>Returns the element-wise complex conjugate of the time-qarray.</p>
+        <p>Returns the element-wise complex conjugate of the timeqarray.</p>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.TimeQArray&lt;/span&gt; (&lt;code&gt;dynamiqs.time_qarray.TimeQArray&lt;/code&gt;)" href="#dynamiqs.time_qarray.TimeQArray">TimeQArray</a></code>
-        – <p>New time-qarray with element-wise complex conjuguated values.</p>
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>New timeqarray with element-wise complex conjuguated values.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>New time-qarray with element-wise complex conjuguated values.</p></span>
+  </ul>
 
 
     </div>
@@ -7356,19 +7370,17 @@ if <code>None</code>).</p>
 
     <div class="doc doc-contents ">
 
-        <p>Returns the adjoint (complex conjugate transpose) of the time-qarray.</p>
+        <p>Returns the adjoint (complex conjugate transpose) of the timeqarray.</p>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.TimeQArray&lt;/span&gt; (&lt;code&gt;dynamiqs.time_qarray.TimeQArray&lt;/code&gt;)" href="#dynamiqs.time_qarray.TimeQArray">TimeQArray</a></code>
-        – <p>New time-qarray with adjoint values.</p>
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>New timeqarray with adjoint values.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>New time-qarray with adjoint values.</p></span>
+  </ul>
 
 
     </div>
@@ -7388,31 +7400,29 @@ if <code>None</code>).</p>
 
     <div class="doc doc-contents ">
 
-        <p>Squeezes a time-qarray.</p>
+        <p>Squeezes a timeqarray.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>axis</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Axis to squeeze. If <code>None</code>, all axes with dimension 1 are squeezed.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.TimeQArray&lt;/span&gt; (&lt;code&gt;dynamiqs.time_qarray.TimeQArray&lt;/code&gt;)" href="#dynamiqs.time_qarray.TimeQArray">TimeQArray</a></code>
-        – <p>New time-qarray with squeezed shape.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>axis</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Axis to squeeze. If <code>None</code>, all axes with dimension 1 are squeezed.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>New time-qarray with squeezed shape.</p></span>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>New timeqarray with squeezed shape.</p>
+        </div>
+      </li>
+  </ul>
 
 
     </div>
@@ -7432,31 +7442,32 @@ if <code>None</code>).</p>
 
     <div class="doc doc-contents ">
 
-        <p>Returns the time-qarray prefactor at specific times.</p>
+        <p>Returns the timeqarray prefactor at specific times.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>ts _(array-like of shape (...))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Times at which to evaluate the prefactor.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (...))</em> Prefactor values at times <code>ts</code>.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>ts</code></b>
+            (<i>array-like of shape (...)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Times at which to evaluate the prefactor.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><em>(array of shape (...))</em> Prefactor values at times <code>ts</code>.</p></span>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+            (<i>array of shape (...)</i>)
+          –
+        <div class="doc-md-description">
+          <p>Prefactor values at times <code>ts</code>.</p>
+        </div>
+      </li>
+  </ul>
 
 
     </div>

@@ -6878,83 +6878,101 @@
         <p>Compute the Wigner distribution of a ket or density matrix.</p>
 <p>The Wigner distribution is computed on a grid of coordinates <span class="arithmatex">\((x, y)\)</span>.</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>state _(qarray-like of shape (..., n, 1) or (..., n, n))_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Ket or density
-matrix.</p>
-        </li>
-        <li class="field-body">
-          <b>xmax</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Maximum absolute value of the <span class="arithmatex">\(x\)</span> coordinate.</p>
-        </li>
-        <li class="field-body">
-          <b>ymax</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Maximum absolute value of the <span class="arithmatex">\(y\)</span> coordinate.</p>
-        </li>
-        <li class="field-body">
-          <b>npixels</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Number of pixels in each direction.</p>
-        </li>
-        <li class="field-body">
-          <b>xvec _(array-like of shape (nxvec,), optional)_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p><span class="arithmatex">\(x\)</span> coordinates. If <code>None</code>,
-defaults to <code>xvec = jnp.linspace(-xmax, xmax, npixels)</code>.</p>
-        </li>
-        <li class="field-body">
-          <b>yvec _(array-like of shape (nyvec,), optional)_</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p><span class="arithmatex">\(y\)</span> coordinates. If <code>None</code>,
-defaults to <code>yvec = jnp.linspace(-ymax, ymax, npixels)</code>.</p>
-        </li>
-        <li class="field-body">
-          <b>g</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Scaling factor of Wigner quadratures, such that <span class="arithmatex">\(a = g(x + iy)/2\)</span>.</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="tuple">tuple</span>[<span title="jax.Array">Array</span>, <span title="jax.Array">Array</span>, <span title="jax.Array">Array</span>]</code>
-        – <p>A tuple <code>(xvec, yvec, w)</code> where</p>
-<ul>
-<li><strong>xvec</strong> <em>(array of shape (npixels,) or (nxvec,))</em> -- <span class="arithmatex">\(x\)</span> coordinates, or
-    <code>xvec</code> if specified.</li>
-<li><strong>yvec</strong> <em>(array of shape (npixels,) or (nyvec,))</em> -- <span class="arithmatex">\(y\)</span> coordinates, or
-    <code>yvec</code> if specified.</li>
-<li><strong>w</strong> <em>(array of shape (..., npixels, npixels) or (..., nyvec, nxvec))</em> -- Wigner distribution.</li>
-</ul>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>state</code></b>
+            (<i>qarray-like of shape (..., n, 1) or (..., n, n)</i>)
+        –
+        <div class="doc-md-description">
+          <p>Ket or density
+matrix.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p>A tuple <code>(xvec, yvec, w)</code> where</p>
-<ul>
-<li><strong>xvec</strong> <em>(array of shape (npixels,) or (nxvec,))</em> -- <span class="arithmatex">\(x\)</span> coordinates, or
-    <code>xvec</code> if specified.</li>
-<li><strong>yvec</strong> <em>(array of shape (npixels,) or (nyvec,))</em> -- <span class="arithmatex">\(y\)</span> coordinates, or
-    <code>yvec</code> if specified.</li>
-<li><strong>w</strong> <em>(array of shape (..., npixels, npixels) or (..., nyvec, nxvec))</em> -- Wigner distribution.</li>
-</ul></span>
+      <li class="doc-section-item field-body">
+          <b><code>xmax</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Maximum absolute value of the <span class="arithmatex">\(x\)</span> coordinate.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>ymax</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Maximum absolute value of the <span class="arithmatex">\(y\)</span> coordinate.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>npixels</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Number of pixels in each direction.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>xvec</code></b>
+            (<i>array-like of shape (nxvec,)</i>)
+        –
+        <div class="doc-md-description">
+          <p><span class="arithmatex">\(x\)</span> coordinates. If <code>None</code>,
+defaults to <code>xvec = jnp.linspace(-xmax, xmax, npixels)</code>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>yvec</code></b>
+            (<i>array-like of shape (nyvec,)</i>)
+        –
+        <div class="doc-md-description">
+          <p><span class="arithmatex">\(y\)</span> coordinates. If <code>None</code>,
+defaults to <code>yvec = jnp.linspace(-ymax, ymax, npixels)</code>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>g</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Scaling factor of Wigner quadratures, such that <span class="arithmatex">\(a = g(x + iy)/2\)</span>.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+<b><code>xvec</code></b>            (<i>array of shape (npixels,) or (nxvec,)</i>)
+          –
+        <div class="doc-md-description">
+          <p><span class="arithmatex">\(x\)</span> coordinates, or
+<code>xvec</code> if specified.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+<b><code>yvec</code></b>            (<i>array of shape (npixels,) or (nyvec,)</i>)
+          –
+        <div class="doc-md-description">
+          <p><span class="arithmatex">\(y\)</span> coordinates, or
+<code>yvec</code> if specified.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+<b><code>w</code></b>            (<i>array of shape (..., npixels, npixels) or (..., nyvec, nxvec)</i>)
+          –
+        <div class="doc-md-description">
+          <p>Wigner distribution.</p>
+        </div>
+      </li>
+  </ul>
+  
 
 <details class="see-also" open>
   <summary>See also</summary>
   <ul>
-<li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;wigner.wigner&lt;/span&gt;" href="../../plot/wigner.html#dynamiqs.plot.wigner.wigner"><code>dq.plot.wigner()</code></a>: plot the Wigner function of a
+<li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.plot.wigner&lt;/span&gt;" href="../../plot/wigner.html#dynamiqs.plot.wigner.wigner"><code>dq.plot.wigner()</code></a>: plot the Wigner function of a
     state.</li>
-<li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.plot.wigner_data&lt;/span&gt;" href="../../plot/wigner_data.html#dynamiqs.plot.wigner_data"><code>dq.plot.wigner_data()</code></a>: plot a pre-computed
+<li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.plot.wigner_data&lt;/span&gt;" href="../../plot/wigner_data.html#dynamiqs.plot.wigner.wigner_data"><code>dq.plot.wigner_data()</code></a>: plot a pre-computed
     Wigner function.</li>
 </ul>
 </details>

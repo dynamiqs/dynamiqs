@@ -6877,41 +6877,40 @@ $$
     A_k^\dag = I_{n_1} \otimes\dots\otimes a_{n_k}^\dag \otimes\dots\otimes I_{n_N}.
 $$</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>*dims</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Hilbert space dimension of each mode.</p>
-        </li>
-        <li class="field-body">
-          <b>layout</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Matrix layout (<code>dq.dense</code>, <code>dq.dia</code> or <code>None</code>).</p>
-        </li>
-    </ul>
 
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.QArray&lt;/span&gt; (&lt;code&gt;dynamiqs.qarrays.qarray.QArray&lt;/code&gt;)" href="../../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a> | <span title="tuple">tuple</span>[<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.QArray&lt;/span&gt; (&lt;code&gt;dynamiqs.qarrays.qarray.QArray&lt;/code&gt;)" href="../../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a>, ...]</code>
-        – <p><em>(qarray or tuple of qarrays, each of shape (n, n))</em> Creation operator(s), with
-<em>n = prod(dims)</em>.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>*dims</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Hilbert space dimension of each mode.</p>
+        </div>
       </li>
-  </ul> -->
-      <span class="field-body"><p><em>(qarray or tuple of qarrays, each of shape (n, n))</em> Creation operator(s), with
-<em>n = prod(dims)</em>.</p></span>
+      <li class="doc-section-item field-body">
+          <b><code>layout</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Matrix layout (<code>dq.dense</code>, <code>dq.dia</code> or <code>None</code>).</p>
+        </div>
+      </li>
+  </ul>
 
-<!-- <p><strong>Examples:</strong></p> -->
-<p>
-  <strong>Examples</strong>
-</p>
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+            (<i>qarray or tuple of qarrays, each of shape (n, n)</i>)
+          –
+        <div class="doc-md-description">
+          <p>Creation operator(s), with
+<em>n = prod(dims)</em>.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
     <p>Single-mode <span class="arithmatex">\(a^\dag\)</span>:</p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
 <span class="go">QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1</span>

@@ -6880,6 +6880,7 @@
 handling to interrupt the no-click integration at the next sampled click time,
 apply the corresponding measurement backaction to the state, and continue the
 no-click integration until the subsequent sampled click time.</p>
+  
 
 <details class="warning" open>
   <summary>Click times precision</summary>
@@ -6894,37 +6895,42 @@ which results in imprecise click times. You can either:</p>
   <a href="https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton">optimistix library Newton root finder</a>.</li>
 </ul>
 </details>
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>noclick_method</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Method for the no-click evolution. Defaults to
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>noclick_method</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Method for the no-click evolution. Defaults to
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Tsit5&lt;/span&gt;" href="Tsit5.html#dynamiqs.method.Tsit5"><code>dq.method.Tsit5</code></a> (supported:
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Tsit5&lt;/span&gt;" href="Tsit5.html#dynamiqs.method.Tsit5"><code>Tsit5</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Dopri5&lt;/span&gt;" href="Dopri5.html#dynamiqs.method.Dopri5"><code>Dopri5</code></a>,
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Dopri8&lt;/span&gt;" href="Dopri8.html#dynamiqs.method.Dopri8"><code>Dopri8</code></a>,
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Kvaerno3&lt;/span&gt;" href="Kvaerno3.html#dynamiqs.method.Kvaerno3"><code>Kvaerno3</code></a>,
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Kvaerno5&lt;/span&gt;" href="Kvaerno5.html#dynamiqs.method.Kvaerno5"><code>Kvaerno5</code></a>,
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Euler&lt;/span&gt;" href="Euler.html#dynamiqs.method.Euler"><code>Euler</code></a>).</p>
-        </li>
-        <li class="field-body">
-          <b>dtmax</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Maximum step size for the no-click evolution, defaults to <code>None</code>.</p>
-        </li>
-        <li class="field-body">
-          <b>root_finder</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Root finder to refine the click times, defaults to <code>None</code>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>dtmax</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Maximum step size for the no-click evolution, defaults to <code>None</code>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>root_finder</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Root finder to refine the click times, defaults to <code>None</code>
 (precision determined by the integration step size).</p>
-        </li>
-        <li class="field-body">
-          <b>smart_sampling</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>If <code>True</code>, the no-click trajectory is sampled only once, and
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>smart_sampling</code></b>
+        –
+        <div class="doc-md-description">
+          <p>If <code>True</code>, the no-click trajectory is sampled only once, and
 <code>result.states</code> contains only trajectories with one or more clicks.
 Information about the no-click trajectory are stored in <code>result.infos</code>:</p>
 <ul>
@@ -6936,8 +6942,10 @@ Information about the no-click trajectory are stored in <code>result.infos</code
     (..., len(exp_ops), ntsave) or None)</em> - No-click trajectory expectation
     values.</li>
 </ul>
-        </li>
-    </ul>
+        </div>
+      </li>
+  </ul>
+  
 
 <details class="note">
   <summary>Supported gradients</summary>
