@@ -28,7 +28,10 @@ doc_sections = {
     'utils/vectorization': (['dynamiqs/utils/vectorization.py'], 'dq'),
     'utils/optimal_control': (['dynamiqs/utils/optimal_control.py'], 'dq'),
     'random': (['dynamiqs/random/'], 'dq.random'),
-    'plot': (['dynamiqs/plot/'], 'dq.plot'),
+    'plot': (
+        ['dynamiqs/plot/', 'dynamiqs/plot/wigner.py', 'dynamiqs/plot/fock.py'],
+        'dq.plot',
+    ),
 }
 
 
