@@ -8,7 +8,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ::: dynamiqs.integrators
     options:
-        table: true
+        extra:
+            table: true
         members:
         - sesolve
         - mesolve
@@ -20,7 +21,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ::: dynamiqs.integrators
     options:
-        table: true
+        extra:
+            table: true
         members:
         - jssesolve
         - dssesolve
@@ -33,7 +35,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ::: dynamiqs.qarrays.qarray
     options:
-        table: true
+        extra:
+            table: true
         members:
         - QArray
 
@@ -41,7 +44,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ::: dynamiqs.time_qarray
     options:
-        table: true
+        extra:
+            table: true
         members:
         - TimeQArray
         - constant
@@ -53,7 +57,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ::: dynamiqs.method
     options:
-        table: true
+        extra:
+            table: true
         members:
         - Tsit5
         - Dopri5
@@ -75,7 +80,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ::: dynamiqs.gradient
     options:
-        table: true
+        extra:
+            table: true
         members:
         - Direct
         - BackwardCheckpointed
@@ -87,7 +93,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ::: dynamiqs.utils.operators
     options:
-        table: true
+        extra:
+            table: true
         members:
         - eye
         - eye_like
@@ -122,7 +129,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ::: dynamiqs.utils.states
     options:
-        table: true
+        extra:
+            table: true
         members:
         - fock
         - fock_dm
@@ -141,7 +149,9 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ::: dynamiqs.utils
     options:
-        table: true
+        extra:
+            table: true
+            namespace: utils/general/
         members:
         - dag
         - powm
@@ -175,14 +185,14 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - entropy_relative
         - bloch_coordinates
         - wigner
-        namespace: utils/general/
 
 
 ### QArray utilities
 
 ::: dynamiqs.qarrays.utils
     options:
-        table: true
+        extra:
+            table: true
         members:
         - asqarray
         - isqarraylike
@@ -196,7 +206,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ::: dynamiqs.utils.global_settings
     options:
-        table: true
+        extra:
+            table: true
         members:
         - set_device
         - set_precision
@@ -209,7 +220,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ::: dynamiqs.utils.vectorization
     options:
-        table: true
+        extra:
+            table: true
         members:
         - vectorize
         - unvectorize
@@ -224,7 +236,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ::: dynamiqs.utils.optimal_control
     options:
-        table: true
+        extra:
+            table: true
         members:
         - snap_gate
         - cd_gate
@@ -234,7 +247,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ::: dynamiqs.random
     options:
-        table: true
+        extra:
+            table: true
         members:
         - real
         - complex
@@ -248,7 +262,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ::: dynamiqs.plot
     options:
-        table: true
+        extra:
+            table: true
         members:
         - wigner
         - wigner_mosaic
@@ -267,7 +282,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ::: dynamiqs.helpers
     options:
-        table: true
+        extra:
+            table: true
         members:
         - hc
         - clicktimes_sse_to_sme
