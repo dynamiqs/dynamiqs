@@ -155,13 +155,13 @@ class QArray(eqx.Module):
         sequence of these types. See also [`dq.isqarraylike()`][dynamiqs.isqarraylike].
 
     Attributes:
-        dtype _(numpy dtype)_: Data type.
-        shape _(tuple of ints)_: Shape.
-        ndim _(int)_: Number of dimensions in the shape.
-        layout _(Layout)_: Data layout, either `dq.dense` or `dq.dia`.
-        dims _(tuple of ints)_: Hilbert space dimension of each subsystem.
-        mT _(qarray)_: Returns the qarray transposed over its last two dimensions.
-        vectorized _(bool)_: Whether the underlying object is non-vectorized (ket, bra
+        dtype (numpy.dtype): Data type.
+        shape (tuple of ints): Shape.
+        ndim (int): Number of dimensions in the shape.
+        layout (Layout): Data layout, either `dq.dense` or `dq.dia`.
+        dims (tuple of ints): Hilbert space dimension of each subsystem.
+        mT (qarray): Returns the qarray transposed over its last two dimensions.
+        vectorized (bool): Whether the underlying object is non-vectorized (ket, bra
             or operator) or vectorized (operator in vector form or superoperator in
             matrix form).
 

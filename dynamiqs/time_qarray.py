@@ -21,16 +21,16 @@ __all__ = ['TimeQArray', 'constant', 'modulated', 'pwc', 'timecallable']
 
 
 def constant(qarray: QArrayLike) -> ConstantTimeQArray:
-    r"""Instantiate a constant time-qarray.
+    r"""Instantiate a constant timeqarray.
 
-    A constant time-qarray is defined by $O(t) = O_0$ for any time $t$, where $O_0$ is a
+    A constant timeqarray is defined by $O(t) = O_0$ for any time $t$, where $O_0$ is a
     constant qarray.
 
     Args:
-        qarray _(qarray-like of shape (..., n, n))_: Constant qarray $O_0$.
+        qarray (qarray-like of shape (..., n, n)): Constant qarray $O_0$.
 
     Returns:
-        _(time-qarray of shape (..., n, n) when called)_ Callable returning $O_0$ for
+        (timeqarray of shape (..., n, n) when called): Callable returning $O_0$ for
             any time $t$.
 
     Examples:
@@ -50,9 +50,9 @@ def constant(qarray: QArrayLike) -> ConstantTimeQArray:
 
 
 def pwc(times: ArrayLike, values: ArrayLike, qarray: QArrayLike) -> PWCTimeQArray:
-    r"""Instantiate a piecewise constant (PWC) time-qarray.
+    r"""Instantiate a piecewise constant (PWC) timeqarray.
 
-    A PWC time-qarray takes constant values over some time intervals. It is defined by
+    A PWC timeqarray takes constant values over some time intervals. It is defined by
     $$
         O(t) = \left(\sum_{k=0}^{N-1} c_k\; \Omega_{[t_k, t_{k+1}[}(t)\right) O_0
     $$
@@ -65,18 +65,18 @@ def pwc(times: ArrayLike, values: ArrayLike, qarray: QArrayLike) -> PWCTimeQArra
         need to be evenly spaced.
 
     Note:
-        If the returned time-qarray is called for a time $t$ which does not belong to
+        If the returned timeqarray is called for a time $t$ which does not belong to
         any time intervals, the returned qarray is null.
 
     Args:
-        times _(array-like of shape (N+1,))_: Time points $t_k$ defining the boundaries
+        times (array-like of shape (N+1,)): Time points $t_k$ defining the boundaries
             of the time intervals, where _N_ is the number of time intervals.
-        values _(array-like of shape (..., N))_: Constant values $c_k$ for each time
+        values (array-like of shape (..., N)): Constant values $c_k$ for each time
             interval.
-        qarray _(qarray-like of shape (n, n))_: Constant qarray $O_0$.
+        qarray (qarray-like of shape (n, n)): Constant qarray $O_0$.
 
     Returns:
-        _(time-qarray of shape (..., n, n) when called)_ Callable returning $O(t)$ for
+        (timeqarray of shape (..., n, n) when called): Callable returning $O(t)$ for
             any time $t$.
 
     Examples:
@@ -126,23 +126,23 @@ def modulated(
     *,
     discontinuity_ts: ArrayLike | None = None,
 ) -> ModulatedTimeQArray:
-    r"""Instantiate a modulated time-qarray.
+    r"""Instantiate a modulated timeqarray.
 
-    A modulated time-qarray is defined by $O(t) = f(t) O_0$ where $f(t)$ is a
+    A modulated timeqarray is defined by $O(t) = f(t) O_0$ where $f(t)$ is a
     time-dependent scalar. The function $f$ is defined by passing a Python function
     with signature `f(t: float) -> Scalar | Array` that returns a scalar or an array of
     shape _(...)_ for any time $t$.
 
     Args:
-        f _(function returning scalar or array of shape (...))_: Function with signature
+        f (function returning scalar or array of shape (...)): Function with signature
             `f(t: float) -> Scalar | Array` that returns the modulating factor
             $f(t)$.
-        qarray _(qarray-like of shape (n, n))_: Constant qarray $O_0$.
-        discontinuity_ts _(array-like, optional)_: Times at which there is a
+        qarray (qarray-like of shape (n, n)): Constant qarray $O_0$.
+        discontinuity_ts (array-like, optional): Times at which there is a
             discontinuous jump in the function values.
 
     Returns:
-        _(time-qarray of shape (..., n, n) when called)_ Callable returning $O(t)$ for
+        (timeqarray of shape (..., n, n) when called): Callable returning $O(t)$ for
             any time $t$.
 
     Examples:
@@ -183,9 +183,9 @@ def modulated(
 def timecallable(
     f: callable[[float], QArray], *, discontinuity_ts: ArrayLike | None = None
 ) -> CallableTimeQArray:
-    r"""Instantiate a callable time-qarray.
+    r"""Instantiate a callable timeqarray.
 
-    A callable time-qarray is defined by $O(t) = f(t)$ where $f(t)$ is a
+    A callable timeqarray is defined by $O(t) = f(t)$ where $f(t)$ is a
     time-dependent operator. The function $f$ is defined by passing a Python function
     with signature `f(t: float) -> QArray` that returns a qarray of shape _(..., n, n)_
     for any time $t$.
@@ -196,13 +196,13 @@ def timecallable(
         conversions at every time step of the numerical integration.
 
     Args:
-        f _(function returning qarray of shape (..., n, n))_: Function with
+        f (function returning qarray of shape (..., n, n)): Function with
             signature `(t: float) -> QArray` that returns the qarray $f(t)$.
-        discontinuity_ts _(array-like, optional)_: Times at which there is a
+        discontinuity_ts (array-like, optional): Times at which there is a
             discontinuous jump in the function values.
 
     Returns:
-        _(time-qarray of shape (..., n, n) when called)_ Callable returning $O(t)$ for
+        (timeqarray of shape (..., n, n) when called): Callable returning $O(t)$ for
             any time $t$.
 
     Examples:
@@ -239,31 +239,31 @@ def timecallable(
 class TimeQArray(eqx.Module):
     r"""Base class for time-dependent qarrays.
 
-    A time-qarray is a callable object that returns a qarray for any time $t$. It is
+    A timeqarray is a callable object that returns a qarray for any time $t$. It is
     used to define time-dependent operators for Dynamiqs solvers.
 
     Attributes:
-        dtype _(numpy.dtype)_: Data type.
-        shape _(tuple of int)_: Shape.
-        ndim _(int)_: Number of dimensions in the shape.
-        layout _(Layout)_: Data layout, either `dq.dense` or `dq.dia`.
-        dims _(tuple of ints)_: Hilbert space dimension of each subsystem.
-        mT _(time-qarray)_: Returns the time-qarray transposed over its last two
+        dtype (numpy.dtype): Data type.
+        shape (tuple of int): Shape.
+        ndim (int): Number of dimensions in the shape.
+        layout (Layout): Data layout, either `dq.dense` or `dq.dia`.
+        dims (tuple of ints): Hilbert space dimension of each subsystem.
+        mT (timeqarray): Returns the timeqarray transposed over its last two
             dimensions.
-        vectorized _(bool)_: Whether the underlying qarray is non-vectorized (ket, bra
+        vectorized (bool): Whether the underlying qarray is non-vectorized (ket, bra
             or operator) or vectorized (operator in vector form or superoperator in
             matrix form).
-        tstart _(float | None)_: The returned qarray is null for all times
+        tstart (float | None): The returned qarray is null for all times
             $t < t_{start}$ (ignored if `None`).
-        tend _(float | None)_: The returned qarray is null for all times
+        tend (float | None): The returned qarray is null for all times
             $t \geq t_{end}$ (ignored if `None`).
-        discontinuity_ts _(Array)_: Times at which there is a discontinuous jump
-            in the time-qarray values (the array is always sorted, but does not
+        discontinuity_ts (Array): Times at which there is a discontinuous jump
+            in the timeqarray values (the array is always sorted, but does not
             necessarily contain unique values).
 
     Note: Arithmetic operation support
-        Time-qarrays support basic arithmetic operations `-, +, *` with other
-        qarray-likes or time-qarrays.
+        Timeqarrays support basic arithmetic operations `-, +, *` with other
+        qarray-likes or timeqarrays.
     """
 
     # Subclasses should implement:
@@ -344,56 +344,56 @@ class TimeQArray(eqx.Module):
                 if `None`).
 
         Returns:
-            New time-qarray with the given time bounds.
+            New timeqarray with the given time bounds.
         """
         return replace(self, tstart=tstart, tend=tend)
 
     @abstractmethod
     def reshape(self, *shape: int) -> TimeQArray:
-        """Returns a reshaped copy of a time-qarray.
+        """Returns a reshaped copy of a timeqarray.
 
         Args:
             *shape: New shape, which must match the original size.
 
         Returns:
-            New time-qarray with the given shape.
+            New timeqarray with the given shape.
         """
 
     @abstractmethod
     def broadcast_to(self, *shape: int) -> TimeQArray:
-        """Broadcasts a time-qarray to a new shape.
+        """Broadcasts a timeqarray to a new shape.
 
         Args:
             *shape: New shape, which must be compatible with the original shape.
 
         Returns:
-            New time-qarray with the given shape.
+            New timeqarray with the given shape.
         """
 
     @abstractmethod
     def conj(self) -> TimeQArray:
-        """Returns the element-wise complex conjugate of the time-qarray.
+        """Returns the element-wise complex conjugate of the timeqarray.
 
         Returns:
-            New time-qarray with element-wise complex conjuguated values.
+            New timeqarray with element-wise complex conjuguated values.
         """
 
     def dag(self) -> TimeQArray:
-        r"""Returns the adjoint (complex conjugate transpose) of the time-qarray.
+        r"""Returns the adjoint (complex conjugate transpose) of the timeqarray.
 
         Returns:
-            New time-qarray with adjoint values.
+            New timeqarray with adjoint values.
         """
         return self.mT.conj()
 
     def squeeze(self, axis: int | None = None) -> TimeQArray:
-        """Squeezes a time-qarray.
+        """Squeezes a timeqarray.
 
         Args:
             axis: Axis to squeeze. If `None`, all axes with dimension 1 are squeezed.
 
         Returns:
-            New time-qarray with squeezed shape.
+            New timeqarray with squeezed shape.
         """
         if axis is None:
             shape = self.shape
@@ -405,7 +405,7 @@ class TimeQArray(eqx.Module):
 
         if axis >= self.ndim:
             raise ValueError(
-                f'Cannot squeeze axis {axis} from a time-qarray with {self.ndim} axes.'
+                f'Cannot squeeze axis {axis} from a timeqarray with {self.ndim} axes.'
             )
         return self.reshape(*self.shape[:axis], *self.shape[axis + 1 :])
 
@@ -418,13 +418,13 @@ class TimeQArray(eqx.Module):
         return jax.lax.select(clip, jnp.array(0), jnp.array(1))
 
     def prefactor(self, ts: ArrayLike) -> Array:
-        """Returns the time-qarray prefactor at specific times.
+        """Returns the timeqarray prefactor at specific times.
 
         Args:
-            ts _(array-like of shape (...))_: Times at which to evaluate the prefactor.
+            ts (array-like of shape (...)): Times at which to evaluate the prefactor.
 
         Returns:
-            _(array of shape (...))_ Prefactor values at times `ts`.
+            (array of shape (...)): Prefactor values at times `ts`.
         """
         ts = jnp.asarray(ts)
         return jnp.vectorize(self._prefactor)(ts)
@@ -808,9 +808,9 @@ class SummedTimeQArray(TimeQArray):
     ):
         super().__init__(tstart=None, tend=None)
         if check:
-            # verify all time-qarrays of the sum are broadcast compatible
+            # verify all timeqarrays of the sum are broadcast compatible
             shape = jnp.broadcast_shapes(*[tqarray.shape for tqarray in timeqarrays])
-            # ensure all time-qarrays can be jointly vmapped over (as specified by the
+            # ensure all timeqarrays can be jointly vmapped over (as specified by the
             # `in_axes` property)
             timeqarrays = [tqarray.broadcast_to(*shape) for tqarray in timeqarrays]
 

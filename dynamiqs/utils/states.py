@@ -35,12 +35,12 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
 
     Args:
         dim: Hilbert space dimension of each mode.
-        number _(array-like of shape (...) or (..., len(dim)))_: Fock state number
+        number (array-like of shape (...) or (..., len(dim))): Fock state number
             for each mode, of integer type. If `dim` is a tuple, the last dimension of
             `number` should match the length of `dim`.
 
     Returns:
-        _(qarray of shape (..., n, 1))_ Ket of the Fock state or tensor product of Fock
+        (qarray of shape (..., n, 1)): Ket of the Fock state or tensor product of Fock
             states, with _n = prod(dims)_.
 
     Examples:
@@ -132,12 +132,12 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
 
     Args:
         dim: Hilbert space dimension of each mode.
-        number _(array-like of shape (...) or (..., len(dim)))_: Fock state number
+        number (array-like of shape (...) or (..., len(dim))): Fock state number
             for each mode, of integer type. If `dim` is a tuple, the last dimension of
             `number` should match the length of `dim`.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Density matrix of the Fock state or tensor
+        (qarray of shape (..., n, n)): Density matrix of the Fock state or tensor
             product of Fock states, with _n = prod(dims)_.
 
     Examples:
@@ -198,7 +198,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
 
     Args:
         dim: Hilbert space dimension of each mode.
-        alpha _(array-like of shape (...) or (len(dim), ...))_: Coherent state
+        alpha (array-like of shape (...) or (len(dim), ...)): Coherent state
             amplitude for each mode. If `dim` is a tuple, the first dimension of
             `alpha` should match the length of `dim`.
 
@@ -206,7 +206,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
         If you provide argument `alpha` as a list, all elements must be broadcastable.
 
     Returns:
-        _(qarray of shape (..., n, 1))_ Ket of the coherent state or tensor product of
+        (qarray of shape (..., n, 1)): Ket of the coherent state or tensor product of
             coherent states, with _n = prod(dims)_.
 
     Examples:
@@ -270,12 +270,12 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
 
     Args:
         dim: Hilbert space dimension of each mode.
-        alpha _(array-like of shape (...) or (..., len(dim)))_: Coherent state
+        alpha (array-like of shape (...) or (..., len(dim))): Coherent state
             amplitude for each mode. If `dim` is a tuple, the last dimension of
             `alpha` should match the length of `dim`.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Density matrix of the coherent state or tensor
+        (qarray of shape (..., n, n)): Density matrix of the coherent state or tensor
             product of coherent states, with _n = prod(dims)_.
 
     Examples:
@@ -317,7 +317,7 @@ def ground() -> QArray:
         a two-level system with Hamiltonian $H=\omega \sigma_z$.
 
     Returns:
-        _(qarray of shape (2, 1))_ Ket $\ket{g}$.
+        (qarray of shape (2, 1)): Ket $\ket{g}$.
 
     Examples:
         >>> dq.ground()
@@ -339,7 +339,7 @@ def ground_dm() -> QArray:
         of a two-level system with Hamiltonian $H=\omega \sigma_z$.
 
     Returns:
-        _(qarray of shape (2, 2))_ Density matrix $\ket{g}\bra{g}$.
+        (qarray of shape (2, 2)): Density matrix $\ket{g}\bra{g}$.
 
     Examples:
         >>> dq.ground_dm()
@@ -360,7 +360,7 @@ def excited() -> QArray:
         a two-level-system with Hamiltonian $H=\omega \sigma_z$.
 
     Returns:
-        _(qarray of shape (2, 1))_ Ket $\ket{e}$.
+        (qarray of shape (2, 1)): Ket $\ket{e}$.
 
     Examples:
         >>> dq.excited()
@@ -382,7 +382,7 @@ def excited_dm() -> QArray:
         of a two-level-system with Hamiltonian $H=\omega \sigma_z$.
 
     Returns:
-        _(qarray of shape (2, 2))_ Density matrix $\ket{e}\bra{e}$.
+        (qarray of shape (2, 2)): Density matrix $\ket{e}\bra{e}$.
 
     Examples:
         >>> dq.excited_dm()
@@ -405,12 +405,12 @@ def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> QArray:
 
     Args:
         dim: Hilbert space dimension of each mode.
-        nth _(array-like of shape (...) or (..., len(dim)))_: Thermal photon number for
+        nth (array-like of shape (...) or (..., len(dim))): Thermal photon number for
             each mode. If `dim` is a tuple, the last dimension of `nth` should match the
             length of `dim`.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Density matrix of the thermal state or tensor
+        (qarray of shape (..., n, n)): Density matrix of the thermal state or tensor
             product of thermal states, with _n = prod(dims)_.
 
     Examples:

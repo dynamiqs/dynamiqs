@@ -91,14 +91,14 @@ def mesolve(
         - $L_k\to L_k(t)$
 
     Args:
-        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
+        H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
+        jump_ops (list of qarray-like or timeqarray, each of shape (...Lk, n, n)):
             List of jump operators.
-        rho0 _(qarray-like of shape (...rho0, n, 1) or (...rho0, n, n))_: Initial state.
-        tsave _(array-like of shape (ntsave,))_: Times at which the states and
+        rho0 (qarray-like of shape (...rho0, n, 1) or (...rho0, n, n)): Initial state.
+        tsave (array-like of shape (ntsave,)): Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        exp_ops _(list of qarray-like, each of shape (n, n), optional)_: List of
+        exp_ops (list of qarray-like, each of shape (n, n), optional): List of
             operators for which the expectation value is computed.
         method: Method for the integration. Defaults to
             [`dq.method.Tsit5`][dynamiqs.method.Tsit5] (supported:
@@ -131,14 +131,14 @@ def mesolve(
                 )
                 ```
 
-                **Parameters**
+                **Parameters:**
 
-                - **save_states** - If `True`, the state is saved at every time in
+                - **`save_states`** - If `True`, the state is saved at every time in
                     `tsave`, otherwise only the final state is returned.
-                - **cartesian_batching** - If `True`, batched arguments are treated as
+                - **`cartesian_batching`** - If `True`, batched arguments are treated as
                     separated batch dimensions, otherwise the batching is performed over
                     a single shared batched dimension.
-                - **progress_meter** - Progress meter indicating how far the solve has
+                - **`progress_meter`** - Progress meter indicating how far the solve has
                     progressed. Defaults to `None` which uses the global default
                     progress meter (see
                     [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
@@ -147,13 +147,13 @@ def mesolve(
                     [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
                     If gradients are computed, the progress meter only displays during
                     the forward pass.
-                - **t0** - Initial time. If `None`, defaults to the first time in
+                - **`t0`** - Initial time. If `None`, defaults to the first time in
                     `tsave`.
-                - **save_extra** _(function, optional)_ - A function with signature
+                - **`save_extra`** _(function, optional)_ - A function with signature
                     `f(QArray) -> PyTree` that takes a state as input and returns a
                     PyTree. This can be used to save additional arbitrary data
                     during the integration, accessible in `result.extra`.
-                - **vectorized** - If `True`, the master equation is solved by
+                - **`vectorized`** - If `True`, the master equation is solved by
                     vectorizing the density matrix and Liouvillian. This is usually
                     more efficient for small Hilbert spaces but less efficient for
                     large Hilbert spaces. This option is only supported for
@@ -169,22 +169,23 @@ def mesolve(
                 dq.MESolveResult
                 ```
 
-                **Attributes**
+                **Attributes:**
 
-                - **states** _(qarray of shape (..., nsave, n, n))_ - Saved states with
-                    `nsave = ntsave`, or `nsave = 1` if `options.save_states=False`.
-                - **final_state** _(qarray of shape (..., n, n))_ - Saved final state.
-                - **expects** _(array of shape (..., len(exp_ops), ntsave) or None)_ - Saved
-                    expectation values, if specified by `exp_ops`.
-                - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
-                    specified in `options`.
-                - **infos** _(PyTree or None)_ - Method-dependent information on the
+                - **`states`** _(qarray of shape (..., nsave, n, n))_ - Saved states
+                    with `nsave = ntsave`, or `nsave = 1` if
+                    `options.save_states=False`.
+                - **`final_state`** _(qarray of shape (..., n, n))_ - Saved final state.
+                - **`expects`** _(array of shape (..., len(exp_ops), ntsave) or None)_ -
+                    Saved expectation values, if specified by `exp_ops`.
+                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
+                    if specified in `options`.
+                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
-                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
-                    saved.
-                - **method** _(Method)_ - Method used.
-                - **gradient** _(Gradient)_ - Gradient used.
-                - **options** _(Options)_ - Options used.
+                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
+                    were saved.
+                - **`method`** _(Method)_ - Method used.
+                - **`gradient`** _(Gradient)_ - Gradient used.
+                - **`options`** _(Options)_ - Options used.
 
     Examples:
         ```python
@@ -216,7 +217,7 @@ def mesolve(
     ## Defining a time-dependent Hamiltonian or jump operator
 
     If the Hamiltonian or the jump operators depend on time, they can be converted to
-    time-qarrays using [`dq.pwc()`][dynamiqs.pwc],
+    timeqarrays using [`dq.pwc()`][dynamiqs.pwc],
     [`dq.modulated()`][dynamiqs.modulated], or
     [`dq.timecallable()`][dynamiqs.timecallable]. See the
     [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
@@ -260,7 +261,7 @@ def mesolve(
     See the
     [Batching simulations](../../documentation/basics/batching-simulations.md)
     tutorial for more details.
-    """  # noqa: E501
+    """
     # === convert arguments
     H = astimeqarray(H)
     Ls = [astimeqarray(L) for L in jump_ops]

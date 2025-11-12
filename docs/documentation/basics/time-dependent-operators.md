@@ -18,7 +18,7 @@ $$
 $$
 ```pycon
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
->>> Hx = dq.modulated(f, dq.sigmax())  # initialize a modulated time-qarray
+>>> Hx = dq.modulated(f, dq.sigmax())  # initialize a modulated timeqarray
 >>> Hx(1.0)
 QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
 [[  ⋅    1.+0.j]
@@ -27,7 +27,7 @@ QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
 (2, 2)
 ```
 
-Time-qarrays support common arithmetic operations with scalars, qarray-likes and other time-qarrays. For example to define the Hamiltonian
+Timeqarrays support common arithmetic operations with scalars, qarray-likes and other timeqarrays. For example to define the Hamiltonian
 $$
     H(t) = \sigma_z + 2 H_x(t) - \sin(\pi t) \sigma_y
 $$
@@ -41,9 +41,9 @@ QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=3
  [ 2.+0.j -1.+0.j]]
 ```
 
-Finally, time-qarrays also support common utility functions, such as `.conj()`, or `.reshape()`. More details can be found in the [`TimeQArray`][dynamiqs.TimeQArray] API page.
+Finally, timeqarrays also support common utility functions, such as `.conj()`, or `.reshape()`. More details can be found in the [`TimeQArray`][dynamiqs.TimeQArray] API page.
 
-## Defining a time-qarray
+## Defining a timeqarray
 
 ### Constant operators
 
@@ -51,7 +51,7 @@ A constant operator is defined by
 $$
     O(t) = O_0
 $$
-for any time $t$, where $O_0$ is an arbitrary operator. The most practical way to define constant operators is using qarray-likes. They can also be instantiated as time-qarrays using the [`dq.constant()`][dynamiqs.constant] function. For instance, to define the Pauli operator $H = \sigma_z$, you can use any of the following syntaxes:
+for any time $t$, where $O_0$ is an arbitrary operator. The most practical way to define constant operators is using qarray-likes. They can also be instantiated as timeqarrays using the [`dq.constant()`][dynamiqs.constant] function. For instance, to define the Pauli operator $H = \sigma_z$, you can use any of the following syntaxes:
 
 === "Dynamiqs utilities"
     ```python
@@ -100,7 +100,7 @@ In Dynamiqs, PWC operators are defined by:
 - `values`: the constant values $(c_0, \ldots, c_{N-1})$ for each time interval, of shape _(..., N)_,
 - `qarray`: the qarray defining the constant operator $O_0$, of shape _(n, n)_.
 
-To construct a PWC operator, these three arguments must be passed to the [`dq.pwc()`][dynamiqs.pwc] function, which returns a time-qarray. When called at some time $t$, this object then returns a qarray with shape _(..., n, n)_. For example, let us define a PWC operator $H(t)$ with constant value $3\sigma_z$ for $t\in[0, 1[$ and $-2\sigma_z$ for $t\in[1, 2[$:
+To construct a PWC operator, these three arguments must be passed to the [`dq.pwc()`][dynamiqs.pwc] function, which returns a timeqarray. When called at some time $t$, this object then returns a qarray with shape _(..., n, n)_. For example, let us define a PWC operator $H(t)$ with constant value $3\sigma_z$ for $t\in[0, 1[$ and $-2\sigma_z$ for $t\in[1, 2[$:
 ```pycon
 >>> times = [0.0, 1.0, 2.0]
 >>> values = [3.0, -2.0]
@@ -164,10 +164,10 @@ renderfig('tqarray_plot_pwc_pulse')
 ![tqarray_plot_pwc_pulse](../../figs_docs/tqarray_plot_pwc_pulse.png){.fig}
 
 !!! Note
-    The argument `times` must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time-qarray at time $t$, the returned qarray is the operator $c_k\ O_0$ corresponding to the interval $[t_k, t_{k+1}[$ in which the time $t$ falls. If $t$ does not belong to any time intervals, the returned qarray is null.
+    The argument `times` must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting timeqarray at time $t$, the returned qarray is the operator $c_k\ O_0$ corresponding to the interval $[t_k, t_{k+1}[$ in which the time $t$ falls. If $t$ does not belong to any time intervals, the returned qarray is null.
 
 ??? Note "Batching PWC operators"
-    The batching of the returned time-qarray is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:
+    The batching of the returned timeqarray is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
     >>> times = [0.0, 1.0, 2.0]
@@ -189,7 +189,7 @@ where $f(t)$ is a time-dependent scalar. In Dynamiqs, modulated operators are de
 - `f`: a Python function with signature `f(t: float) -> Scalar | Array` that returns the modulating factor $f(t)$ for any time $t$, as a scalar or an array of shape _(...)_,
 - `qarray`: the qarray defining the constant operator $O_0$, of shape _(n, n)_.
 
-To construct a modulated operator, these two arguments must be passed to the [`dq.modulated()`][dynamiqs.modulated] function, which returns a time-qarray. When called at some time $t$, this object then returns a qarray with shape _(..., n, n)_. For example, let us define the modulated operator $H(t)=\cos(2\pi t)\sigma_x$:
+To construct a modulated operator, these two arguments must be passed to the [`dq.modulated()`][dynamiqs.modulated] function, which returns a timeqarray. When called at some time $t$, this object then returns a qarray with shape _(..., n, n)_. For example, let us define the modulated operator $H(t)=\cos(2\pi t)\sigma_x$:
 ```pycon
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
 >>> H = dq.modulated(f, dq.sigmax())
@@ -224,7 +224,7 @@ renderfig('tqarray_plot_modulated')
 ![tqarray_plot_modulated](../../figs_docs/tqarray_plot_modulated.png){.fig}
 
 ??? Note "Batching modulated operators"
-    The batching of the returned time-qarray is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H(t)=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
+    The batching of the returned timeqarray is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H(t)=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
     ```pycon
     >>> omegas = jnp.linspace(0.0, 1.0, 11)  # (11,)
     >>> f = lambda t: jnp.cos(omegas * t)
@@ -259,7 +259,7 @@ where $f(t)$ is a time-dependent operator. In Dynamiqs, arbitrary time-dependent
 
 - `f`: a Python function with signature `f(t: float) -> QArray` that returns the operator $f(t)$ for any time $t$, as a qarray of shape _(..., n, n)_.
 
-To construct an arbitrary time-dependent operator, pass this argument to the [`dq.timecallable()`][dynamiqs.timecallable] function, which returns a time-qarray. This object then returns a qarray with shape _(..., n, n)_ when called at any time $t$.
+To construct an arbitrary time-dependent operator, pass this argument to the [`dq.timecallable()`][dynamiqs.timecallable] function, which returns a timeqarray. This object then returns a qarray with shape _(..., n, n)_ when called at any time $t$.
 
 For example, let us define the arbitrary time-dependent operator $H(t)=\begin{pmatrix}t & 0\\0 & 1 - t\end{pmatrix}$:
 ```pycon
@@ -289,7 +289,7 @@ The returned object can be called at different times:
     An error is raised if the function `f` does not return a qarray. This error concerns any other qarray-likes. This is enforced to avoid costly conversions at every time step of the numerical integration.
 
 ??? Note "Batching arbitrary time-dependent operators"
-    The batching of the returned time-qarray is specified by the qarray returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:
+    The batching of the returned timeqarray is specified by the qarray returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
     >>> f = lambda t: thetas[:, None, None] * dq.asqarray([[t, 0], [0, 1 - t]])
@@ -314,7 +314,7 @@ The returned object can be called at different times:
     argument `discontinuity_ts` to enforce adaptive step size methods to stop at these
     times (i.e., right before, and right after the jump).
 
-## Clipping a time-qarray
+## Clipping a timeqarray
 
 Time-dependent operators can be clipped to a given time interval, outside which the
 returned qarray is null. For example:

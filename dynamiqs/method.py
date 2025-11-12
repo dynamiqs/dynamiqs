@@ -697,7 +697,7 @@ class JumpMonteCarlo(_DEMethod):
         [`dq.jssesolve()`][dynamiqs.jssesolve] instead.
 
     Args:
-        keys _(list of PRNG keys)_: PRNG keys used for the jump SSE solver. See
+        keys (list of PRNG keys): PRNG keys used for the jump SSE solver. See
             [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
         jsse_method: Method used for the jump SSE solver. See
             [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
@@ -742,7 +742,7 @@ class DiffusiveMonteCarlo(_DEMethod):
         [`dq.dssesolve()`][dynamiqs.dssesolve] instead.
 
     Args:
-        keys _(list of PRNG keys)_: PRNG keys used for the diffusive SSE solver. See
+        keys (list of PRNG keys): PRNG keys used for the diffusive SSE solver. See
             [`dq.dssesolve()`][dynamiqs.dssesolve] for more details.
         dsse_method: Method used for the diffusive SSE solver. See
             [`dq.dssesolve()`][dynamiqs.dssesolve] for more details.

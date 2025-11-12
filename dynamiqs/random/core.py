@@ -24,12 +24,12 @@ def real(
 
     Args:
         key: A PRNG key used as the random key.
-        shape _(int or tuple of ints)_: Shape of the returned array.
+        shape (int or tuple of ints): Shape of the returned array.
         min: Minimum (inclusive) value.
         max: Maximum (exclusive) value.
 
     Returns:
-        _(array of shape (*shape))_ Random real number array.
+        (array of shape (*shape)): Random real number array.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
@@ -79,11 +79,11 @@ def complex(  # noqa: A001
 
     Args:
         key: A PRNG key used as the random key.
-        shape _(int or tuple of ints)_: Shape of the returned array.
+        shape (int or tuple of ints): Shape of the returned array.
         rmax: Maximum magnitude.
 
     Returns:
-        _(array of shape (*shape))_ Random complex number array.
+        (array of shape (*shape)): Random complex number array.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
@@ -102,10 +102,10 @@ def herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
 
     Args:
         key: A PRNG key used as the random key.
-        shape _(shape of the form (..., n, n))_: Shape of the returned qarray.
+        shape (shape of the form (..., n, n)): Shape of the returned qarray.
 
     Returns:
-        _(qarray of shape (*shape))_ Random complex Hermitian matrix.
+        (qarray of shape (*shape)): Random complex Hermitian matrix.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
@@ -127,10 +127,10 @@ def psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
 
     Args:
         key: A PRNG key used as the random key.
-        shape _(shape of the form (..., n, n))_: Shape of the returned qarray.
+        shape (shape of the form (..., n, n)): Shape of the returned qarray.
 
     Returns:
-        _(qarray of shape (*shape))_ Random complex positive semi-definite matrix.
+        (qarray of shape (*shape)): Random complex positive semi-definite matrix.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
@@ -154,10 +154,10 @@ def dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
 
     Args:
         key: A PRNG key used as the random key.
-        shape _(shape of the form (..., n, n))_: Shape of the returned qarray.
+        shape (shape of the form (..., n, n)): Shape of the returned qarray.
 
     Returns:
-        _(qarray of shape (*shape))_ Random density matrix.
+        (qarray of shape (*shape)): Random density matrix.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
@@ -179,10 +179,10 @@ def ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
 
     Args:
         key: A PRNG key used as the random key.
-        shape _(shape of the form (..., n, 1))_: Shape of the returned qarray.
+        shape (shape of the form (..., n, 1)): Shape of the returned qarray.
 
     Returns:
-        _(qarray of shape (*shape))_ Random ket.
+        (qarray of shape (*shape)): Random ket.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)

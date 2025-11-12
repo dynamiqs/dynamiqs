@@ -66,7 +66,7 @@ def test_timeqarray_batching():
     psi0 = dq.basis(4, 0)
     times = jnp.linspace(0.0, 1.0, 11)
 
-    # == constant time-qarray
+    # == constant timeqarray
     H_cte = dq.stack([H0, 2 * H0])
 
     result = dq.sesolve(H_cte, psi0, times)
@@ -74,7 +74,7 @@ def test_timeqarray_batching():
     result = dq.sesolve(H0 + H_cte, psi0, times)
     assert result.states.shape == (2, 11, 4, 1)
 
-    # == pwc time-qarray
+    # == pwc timeqarray
     values = jnp.arange(3 * 10).reshape(3, 10)
     H_pwc = dq.pwc(times, values, H0)
 
@@ -83,7 +83,7 @@ def test_timeqarray_batching():
     result = dq.sesolve(H0 + H_pwc, psi0, times)
     assert result.states.shape == (3, 11, 4, 1)
 
-    # == modulated time-qarray
+    # == modulated timeqarray
     deltas = jnp.linspace(0.0, 1.0, 4)
     H_mod = dq.modulated(lambda t: jnp.cos(t * deltas), H0)
 
@@ -92,7 +92,7 @@ def test_timeqarray_batching():
     result = dq.sesolve(H0 + H_mod, psi0, times)
     assert result.states.shape == (4, 11, 4, 1)
 
-    # == callable time-qarray
+    # == callable timeqarray
     omegas = jnp.linspace(0.0, 1.0, 5)
     H_cal = dq.timecallable(lambda t: jnp.cos(t * omegas[..., None, None]) * H0)
 

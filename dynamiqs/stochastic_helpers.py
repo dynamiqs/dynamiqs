@@ -27,7 +27,7 @@ def clicktimes_sse_to_sme(
         key: PRNG key used to sample the added noise for the post-processing.
 
     Returns:
-        _(array of shape (...))_ SME click times. The shape is the same as
+        (array of shape (...)): SME click times. The shape is the same as
             `clicktimes`, except that the dimension corresponding to the number of
             jump operators measured may be smaller, if the corresponding efficiency is
             null.
@@ -110,7 +110,7 @@ def measurements_sse_to_sme(
         key: PRNG key used to sample the added noise for the post-processing.
 
     Returns:
-        _(array of shape (...))_ SME measurements. The shape is the same as
+        (array of shape (...)): SME measurements. The shape is the same as
             `measurements`, except that the dimension corresponding to the number of
             jump operators measured may be smaller, if the corresponding efficiency is
             null.
