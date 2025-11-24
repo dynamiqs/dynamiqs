@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import functools as ft
 from abc import abstractmethod
+from collections.abc import Callable
 from dataclasses import replace
 
 import equinox as eqx
@@ -121,7 +122,7 @@ def pwc(times: ArrayLike, values: ArrayLike, qarray: QArrayLike) -> PWCTimeQArra
 
 
 def modulated(
-    f: callable[[float], Scalar | Array],
+    f: Callable[[float], Scalar | Array],
     qarray: QArrayLike,
     *,
     discontinuity_ts: ArrayLike | None = None,
@@ -181,7 +182,7 @@ def modulated(
 
 
 def timecallable(
-    f: callable[[float], QArray], *, discontinuity_ts: ArrayLike | None = None
+    f: Callable[[float], QArray], *, discontinuity_ts: ArrayLike | None = None
 ) -> CallableTimeQArray:
     r"""Instantiate a callable timeqarray.
 
@@ -903,10 +904,10 @@ class SummedTimeQArray(TimeQArray):
 class BatchedCallable(eqx.Module):
     # this class turns a callable into a PyTree that is vmap-compatible
 
-    f: callable[[float], QArrayLike]
+    f: Callable[[float], QArrayLike]
     indices: list[Array]
 
-    def __init__(self, f: callable[[float], QArrayLike]):
+    def __init__(self, f: Callable[[float], QArrayLike]):
         # make f a valid PyTree with `Partial` and convert its output to a qarray
         self.f = jtu.Partial(f)
         eval_shape = jax.eval_shape(f, 0.0)
