@@ -66,6 +66,7 @@ dev = [
     "flit",
     "mike",
     "optax",  # for gradient descent tutorials
+    "ty",
 ]
 
 [tool.ruff]
@@ -117,6 +118,21 @@ convention = "google"
 [tool.codespell]
 skip = ".git,*.ipynb"
 ignore-words-list = "ket, braket, SME"
+
+[tool.ty.src]
+exclude = [
+    "dynamiqs/integrators",
+    "dynamiqs/plot",
+    "dynamiqs/qarrays",
+    "dynamiqs/random",
+    "dynamiqs/utils",
+    "dynamiqs/time_qarray.py"
+]
+
+[tool.ty.rules]
+division-by-zero = "error"
+possibly-unresolved-reference = "error"
+unused-ignore-comment = "error"
 
 # === taskipy tasks definition ===
 
