@@ -12,7 +12,14 @@ from jaxtyping import ArrayLike
 from qutip import Qobj
 
 from .layout import Layout, dense
-from .qarray import QArray, QArrayLike, in_last_two_dims, isqarraylike, to_jax
+from .qarray import (
+    IndexType,
+    QArray,
+    QArrayLike,
+    in_last_two_dims,
+    isqarraylike,
+    to_jax,
+)
 from .sparsedia_primitives import array_to_sparsedia
 
 if TYPE_CHECKING:
@@ -220,7 +227,7 @@ class DenseQArray(QArray):
         data = self.data**power
         return replace(self, data=data)
 
-    def __getitem__(self, key: int | slice) -> QArray:
+    def __getitem__(self, key: IndexType) -> QArray:
         data = self.data[key]
         return replace(self, data=data)
 

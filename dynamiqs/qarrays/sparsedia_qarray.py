@@ -14,6 +14,7 @@ from qutip import Qobj
 from .dense_qarray import DenseQArray
 from .layout import Layout, dia
 from .qarray import (
+    IndexType,
     QArray,
     QArrayLike,
     in_last_two_dims,
@@ -337,7 +338,7 @@ class SparseDIAQArray(QArray):
         diags = self.diags**power
         return replace(self, diags=diags)
 
-    def __getitem__(self, key: int | slice | tuple) -> QArray:
+    def __getitem__(self, key: IndexType) -> QArray:
         if key in (slice(None, None, None), Ellipsis):
             return self
 
@@ -346,7 +347,7 @@ class SparseDIAQArray(QArray):
         return replace(self, diags=diags)
 
 
-def _check_key_in_batch_dims(key: int | slice | tuple, ndim: int):
+def _check_key_in_batch_dims(key: IndexType, ndim: int):
     full_slice = slice(None, None, None)
     valid_key = False
     if isinstance(key, int | slice):
