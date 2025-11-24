@@ -347,7 +347,7 @@ class TimeQArray(eqx.Module):
         Returns:
             New timeqarray with the given time bounds.
         """
-        return replace(self, tstart=tstart, tend=tend)
+        return replace(self, tstart=tstart, tend=tend)  # ty: ignore[invalid-argument-type]
 
     @abstractmethod
     def reshape(self, *shape: int) -> TimeQArray:
@@ -513,7 +513,7 @@ class ConstantTimeQArray(TimeQArray):
     @property
     def mT(self) -> TimeQArray:
         qarray = self.qarray.mT
-        return replace(self, qarray=qarray)
+        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
 
     @property
     def in_axes(self) -> PyTree[int | None]:
@@ -521,22 +521,22 @@ class ConstantTimeQArray(TimeQArray):
 
     def reshape(self, *shape: int) -> TimeQArray:
         qarray = self.qarray.reshape(*shape)
-        return replace(self, qarray=qarray)
+        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
 
     def broadcast_to(self, *shape: int) -> TimeQArray:
         qarray = self.qarray.broadcast_to(*shape)
-        return replace(self, qarray=qarray)
+        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
 
     def conj(self) -> TimeQArray:
         qarray = self.qarray.conj()
-        return replace(self, qarray=qarray)
+        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
 
     def _operator(self, t: ScalarLike) -> QArray:  # noqa: ARG002
         return self.qarray
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
         qarray = self.qarray * y
-        return replace(self, qarray=qarray)
+        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
 
     def __add__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
         # handle addition with a constant object as a special case
@@ -596,7 +596,7 @@ class PWCTimeQArray(TimeQArray):
     @property
     def mT(self) -> TimeQArray:
         qarray = self.qarray.mT
-        return replace(self, qarray=qarray)
+        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
 
     @property
     def in_axes(self) -> PyTree[int | None]:
@@ -609,17 +609,17 @@ class PWCTimeQArray(TimeQArray):
     def reshape(self, *shape: int) -> TimeQArray:
         shape = shape[:-2] + self.values.shape[-1:]  # (..., nv)
         values = self.values.reshape(*shape)
-        return replace(self, values=values)
+        return replace(self, values=values)  # ty: ignore[invalid-argument-type]
 
     def broadcast_to(self, *shape: int) -> TimeQArray:
         shape = shape[:-2] + self.values.shape[-1:]  # (..., nv)
         values = jnp.broadcast_to(self.values, shape)
-        return replace(self, values=values)
+        return replace(self, values=values)  # ty: ignore[invalid-argument-type]
 
     def conj(self) -> TimeQArray:
         values = self.values.conj()
         qarray = self.qarray.conj()
-        return replace(self, values=values, qarray=qarray)
+        return replace(self, values=values, qarray=qarray)  # ty: ignore[invalid-argument-type]
 
     def _prefactor(self, t: ScalarLike) -> Array:
         zero = jnp.zeros_like(self.values[..., 0])  # (...)
@@ -638,7 +638,7 @@ class PWCTimeQArray(TimeQArray):
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
         qarray = self.qarray * y
-        return replace(self, qarray=qarray)
+        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
 
 
 class ModulatedTimeQArray(TimeQArray):
@@ -687,7 +687,7 @@ class ModulatedTimeQArray(TimeQArray):
     @property
     def mT(self) -> TimeQArray:
         qarray = self.qarray.mT
-        return replace(self, qarray=qarray)
+        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
 
     @property
     def in_axes(self) -> PyTree[int | None]:
@@ -699,16 +699,16 @@ class ModulatedTimeQArray(TimeQArray):
 
     def reshape(self, *shape: int) -> TimeQArray:
         f = self.f.reshape(*shape[:-2])
-        return replace(self, f=f)
+        return replace(self, f=f)  # ty: ignore[invalid-argument-type]
 
     def broadcast_to(self, *shape: int) -> TimeQArray:
         f = self.f.broadcast_to(*shape[:-2])
-        return replace(self, f=f)
+        return replace(self, f=f)  # ty: ignore[invalid-argument-type]
 
     def conj(self) -> TimeQArray:
         f = self.f.conj()
         qarray = self.qarray.conj()
-        return replace(self, f=f, qarray=qarray)
+        return replace(self, f=f, qarray=qarray)  # ty: ignore[invalid-argument-type]
 
     def _prefactor(self, t: ScalarLike) -> Array:
         return super()._prefactor(t) * self.f(t)
@@ -718,7 +718,7 @@ class ModulatedTimeQArray(TimeQArray):
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
         qarray = self.qarray * y
-        return replace(self, qarray=qarray)
+        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
 
 
 class CallableTimeQArray(TimeQArray):
@@ -764,7 +764,7 @@ class CallableTimeQArray(TimeQArray):
     @property
     def mT(self) -> TimeQArray:
         f = jtu.Partial(lambda t: self.f(t).mT)
-        return replace(self, f=f)
+        return replace(self, f=f)  # ty: ignore[invalid-argument-type]
 
     @property
     def in_axes(self) -> PyTree[int | None]:
@@ -776,22 +776,22 @@ class CallableTimeQArray(TimeQArray):
 
     def reshape(self, *shape: int) -> TimeQArray:
         f = self.f.reshape(*shape)
-        return replace(self, f=f)
+        return replace(self, f=f)  # ty: ignore[invalid-argument-type]
 
     def broadcast_to(self, *shape: int) -> TimeQArray:
         f = self.f.broadcast_to(*shape)
-        return replace(self, f=f)
+        return replace(self, f=f)  # ty: ignore[invalid-argument-type]
 
     def conj(self) -> TimeQArray:
         f = self.f.conj()
-        return replace(self, f=f)
+        return replace(self, f=f)  # ty: ignore[invalid-argument-type]
 
     def _operator(self, t: ScalarLike) -> QArray:
         return self.f(t)
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
         f = self.f * y
-        return replace(self, f=f)
+        return replace(self, f=f)  # ty: ignore[invalid-argument-type]
 
 
 class SummedTimeQArray(TimeQArray):
