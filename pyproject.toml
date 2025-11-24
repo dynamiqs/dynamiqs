@@ -148,9 +148,13 @@ help = "auto-format the code (ruff)"
 cmd = 'echo "\n>>> codespell" && codespell tests dynamiqs'
 help = "check for misspellings (codespell)"
 
+[tool.taskipy.tasks.type]
+cmd = 'echo "\n>>> ty check dynamiqs" && ty check dynamiqs'
+help = "check types (ty)"
+
 [tool.taskipy.tasks.clean]
-cmd = 'task lint && task format && task codespell'
-help = "clean the code (ruff + codespell)"
+cmd = 'task lint && task format && task codespell && task type'
+help = "clean the code (ruff + codespell + ty)"
 
 [tool.taskipy.tasks.test]
 cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
@@ -178,12 +182,13 @@ help = "preview documentation website with hot-reloading"
 
 [tool.taskipy.tasks.all]
 cmd = 'task clean && task test && task doctest'
-help = "run all tasks before a commit (ruff + codespell + pytest + doctest)"
+help = "run all tasks before a commit (ruff + codespell + ty + pytest + doctest)"
 
 [tool.taskipy.tasks.ci]
 cmd = '''echo "\n>>> ruff check" && ruff check &&
          echo "\n>>> ruff format --check" && ruff format --check &&
          task codespell &&
+         task type &&
          task test &&
          task doctest &&
          task docbuild'''
