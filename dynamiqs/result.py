@@ -123,6 +123,8 @@ class Result(eqx.Module):
 
 
 class SolveResult(Result):
+    _saved: SolveSaved
+
     @property
     def states(self) -> QArray:
         return self._saved.ysave
@@ -144,6 +146,8 @@ class SolveResult(Result):
 
 
 class PropagatorResult(Result):
+    _saved: PropagatorSaved
+
     @property
     def propagators(self) -> QArray:
         return self._saved.ysave
@@ -158,6 +162,7 @@ class PropagatorResult(Result):
 
 
 class FloquetResult(Result):
+    _saved: FloquetSaved
     T: float
 
     @property
@@ -205,7 +210,7 @@ class StochasticSolveResult(SolveResult):
 
     def mean_states(self) -> QArray:
         # todo: document
-        return self.states.todm().mean(axis=-4)
+        return self.states.todm().mean(axis=-4)  # ty: ignore[invalid-return-type]
 
     def mean_expects(self) -> Array | None:
         # todo: document
@@ -215,6 +220,8 @@ class StochasticSolveResult(SolveResult):
 
 
 class JumpSolveResult(StochasticSolveResult):
+    _saved: JumpSolveSaved
+
     @property
     def clicktimes(self) -> Array:
         return self._saved.clicktimes
@@ -231,9 +238,9 @@ class JumpSolveResult(StochasticSolveResult):
         mean_states = super().mean_states()
 
         if isinstance(self.method, Event) and self.method.smart_sampling:
-            noclick_prob = self.infos.noclick_prob[..., None, None, None]
+            noclick_prob = self.infos.noclick_prob[..., None, None, None]  # ty: ignore[possibly-missing-attribute]
             return unit(
-                noclick_prob * self.infos.noclick_states.todm()
+                noclick_prob * self.infos.noclick_states.todm()  # ty: ignore[possibly-missing-attribute]
                 + (1 - noclick_prob) * mean_states,
                 psd=True,
             )
@@ -247,9 +254,9 @@ class JumpSolveResult(StochasticSolveResult):
         mean_expect = super().mean_expects()
 
         if isinstance(self.method, Event) and self.method.smart_sampling:
-            noclick_prob = self.infos.noclick_prob[..., None, None]
+            noclick_prob = self.infos.noclick_prob[..., None, None]  # ty: ignore[possibly-missing-attribute]
             return (
-                noclick_prob * self.infos.noclick_expects
+                noclick_prob * self.infos.noclick_expects  # ty: ignore[possibly-missing-attribute]
                 + (1 - noclick_prob) * mean_expect
             )
         else:
@@ -265,6 +272,8 @@ class JSMESolveResult(JumpSolveResult):
 
 
 class DiffusiveSolveResult(StochasticSolveResult):
+    _saved: DiffusiveSolveSaved
+
     @property
     def measurements(self) -> Array:
         return self._saved.Isave

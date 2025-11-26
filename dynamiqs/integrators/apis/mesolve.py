@@ -126,7 +126,7 @@ def mesolve(
                     cartesian_batching: bool = True,
                     progress_meter: AbstractProgressMeter | bool | None = None,
                     t0: ScalarLike | None = None,
-                    save_extra: callable[[Array], PyTree] | None = None,
+                    save_extra: Callable[[Array], PyTree] | None = None,
                     vectorized: bool = False,
                 )
                 ```

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Callable
 from dataclasses import replace
 from itertools import product
 
@@ -22,7 +23,7 @@ class AbstractRouchonTerm(dx.AbstractTerm):
     # this class bypasses the typical Diffrax term implementation, as Rouchon schemes
     # don't match the vf/contr/prod structure
 
-    kraus_map: callable[[RealScalarLike, RealScalarLike, Y], [Y, Y]]
+    kraus_map: Callable[[RealScalarLike, RealScalarLike, Y], [Y, Y]]
     # should be defined as `kraus_map(t0, t1, y0) -> y1, error`
 
     def vf(self, t, y, args):

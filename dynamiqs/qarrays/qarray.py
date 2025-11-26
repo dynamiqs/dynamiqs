@@ -3,7 +3,8 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Sequence
 from math import prod
-from typing import TYPE_CHECKING, Any, get_args
+from types import EllipsisType
+from typing import TYPE_CHECKING, Any, TypeAlias, get_args
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -21,6 +22,10 @@ if TYPE_CHECKING:
 from .layout import Layout
 
 __all__ = ['QArray']
+
+IndexType: TypeAlias = (
+    int | slice | EllipsisType | None | tuple[int | slice | EllipsisType | None, ...]
+)
 
 
 def isqarraylike(x: Any) -> bool:
@@ -627,7 +632,7 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def __getitem__(self, key: int | slice) -> QArray:
+    def __getitem__(self, key: IndexType) -> QArray:
         pass
 
 
