@@ -171,7 +171,7 @@ def dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
             f'Argument `shape` must be of the form (..., n, n), but is shape={shape}.'
         )
     x = psd(key, shape)
-    return unit(x)
+    return x / x.trace()[..., None, None]
 
 
 def ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:

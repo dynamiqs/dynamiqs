@@ -234,7 +234,8 @@ class JumpSolveResult(StochasticSolveResult):
             noclick_prob = self.infos.noclick_prob[..., None, None, None]
             return unit(
                 noclick_prob * self.infos.noclick_states.todm()
-                + (1 - noclick_prob) * mean_states
+                + (1 - noclick_prob) * mean_states,
+                psd=True,
             )
         else:
             return mean_states
