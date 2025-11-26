@@ -70,7 +70,7 @@ class DenseQArray(QArray):
         data = jax.scipy.linalg.expm(self.data, max_squarings=max_squarings)
         return replace(self, data=data)
 
-    def norm(self, *, psd: bool = True) -> Array:
+    def norm(self, *, psd: bool = False) -> Array:
         from ..utils.general import norm  # noqa: PLC0415
 
         return norm(self.data, psd=psd)
