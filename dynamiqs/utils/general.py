@@ -474,7 +474,7 @@ def _expect_single(O: QArray, x: QArray) -> Array:
         return tracemm(O, x)  # tr(Ox)
 
 
-def norm(x: QArrayLike, *, psd: bool = True) -> Array:
+def norm(x: QArrayLike, *, psd: bool = False) -> Array:
     r"""Returns the norm of a ket, bra, density matrix, or Hermitian matrix.
 
     For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a
@@ -525,7 +525,7 @@ def norm(x: QArrayLike, *, psd: bool = True) -> Array:
     return jnp.abs(eigvals).sum(-1)
 
 
-def unit(x: QArrayLike, *, psd: bool = True) -> QArray:
+def unit(x: QArrayLike, *, psd: bool = False) -> QArray:
     r"""Normalize a ket, bra, density matrix or Hermitian matrix to unit norm.
 
     The returned object is divided by its norm (see [`dq.norm()`][dynamiqs.norm]).

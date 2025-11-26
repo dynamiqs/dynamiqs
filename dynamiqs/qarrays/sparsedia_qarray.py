@@ -129,7 +129,7 @@ class SparseDIAQArray(QArray):
         expm_x = jax.scipy.linalg.expm(x, max_squarings=max_squarings)
         return DenseQArray(self.dims, self.vectorized, expm_x)
 
-    def norm(self, *, psd: bool = True) -> Array:
+    def norm(self, *, psd: bool = False) -> Array:
         if psd:
             return self.trace()
 
