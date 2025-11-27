@@ -131,7 +131,7 @@ def hinton(
     vmax: float | None = None,
     colorbar: bool = True,
     allticks: bool = False,
-    tickslabel: list[str] | None = None,
+    ticklabels: list[str] | None = None,
     ecolor: str = 'white',
     ewidth: float = 0.5,
     clear: bool = False,
@@ -156,7 +156,7 @@ def hinton(
         ![plot_hinton_hamiltonian](../../figs_code/plot_hinton_hamiltonian.png){.fig-half}
 
         >>> cnot = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]
-        >>> dq.plot.hinton(cnot, tickslabel=['00', '01', '10', '11'])
+        >>> dq.plot.hinton(cnot, ticklabels=['00', '01', '10', '11'])
         >>> renderfig('plot_hinton_cnot')
 
         ![plot_hinton_cnot](../../figs_code/plot_hinton_cnot.png){.fig-half}
@@ -236,7 +236,7 @@ def hinton(
     if clear:
         colorbar = False
 
-    if tickslabel is not None:
+    if ticklabels is not None:
         allticks = True
 
     _plot_hinton(
@@ -253,9 +253,9 @@ def hinton(
     )
 
     # set ticks label format
-    if tickslabel is not None:
-        ax.xaxis.set_ticklabels(tickslabel)
-        ax.yaxis.set_ticklabels(tickslabel)
+    if ticklabels is not None:
+        ax.xaxis.set_ticklabels(ticklabels)
+        ax.yaxis.set_ticklabels(ticklabels)
 
     ket_ticks(ax.xaxis)
     bra_ticks(ax.yaxis)
