@@ -347,7 +347,9 @@ class TimeQArray(eqx.Module):
         Returns:
             New timeqarray with the given time bounds.
         """
-        return replace(self, tstart=tstart, tend=tend)  # ty: ignore[invalid-argument-type]
+        return replace(
+            self, tstart=tstart, tend=tend
+        )  # ty: ignore[invalid-argument-type]
 
     @abstractmethod
     def reshape(self, *shape: int) -> TimeQArray:
@@ -619,7 +621,9 @@ class PWCTimeQArray(TimeQArray):
     def conj(self) -> TimeQArray:
         values = self.values.conj()
         qarray = self.qarray.conj()
-        return replace(self, values=values, qarray=qarray)  # ty: ignore[invalid-argument-type]
+        return replace(
+            self, values=values, qarray=qarray
+        )  # ty: ignore[invalid-argument-type]
 
     def _prefactor(self, t: ScalarLike) -> Array:
         zero = jnp.zeros_like(self.values[..., 0])  # (...)
@@ -818,7 +822,7 @@ class SummedTimeQArray(TimeQArray):
             dims = {t.dims for t in timeqarrays}
             if len(dims) > 1:
                 raise ValueError(
-                    f'All terms of a SummedTimeArray must have the'
+                    'All terms of a SummedTimeArray must have the'
                     f'same Hilbert space dimensions, got {dims}'
                 )
 
@@ -898,6 +902,8 @@ class SummedTimeQArray(TimeQArray):
     def __add__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
         if isqarraylike(y):
             y = ConstantTimeQArray(asqarray(y))
+        if isinstance(y, SummedTimeQArray):
+            return SummedTimeQArray([*self.timeqarrays, *y.timeqarrays])
         return SummedTimeQArray([*self.timeqarrays, y])
 
 
