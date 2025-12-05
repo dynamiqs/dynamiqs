@@ -818,7 +818,7 @@ class SummedTimeQArray(TimeQArray):
             dims = {t.dims for t in timeqarrays}
             if len(dims) > 1:
                 raise ValueError(
-                    f'All terms of a SummedTimeArray must have the'
+                    'All terms of a SummedTimeArray must have the'
                     f'same Hilbert space dimensions, got {dims}'
                 )
 
@@ -898,6 +898,8 @@ class SummedTimeQArray(TimeQArray):
     def __add__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
         if isqarraylike(y):
             y = ConstantTimeQArray(asqarray(y))
+        if isinstance(y, SummedTimeQArray):
+            return SummedTimeQArray([*self.timeqarrays, *y.timeqarrays])
         return SummedTimeQArray([*self.timeqarrays, y])
 
 
