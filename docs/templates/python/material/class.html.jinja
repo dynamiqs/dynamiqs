@@ -18,7 +18,7 @@
     {% with function = class.all_members["__init__"] %}
       {%+ filter highlight(language="python", inline=True) %}
         {{ class_full_name }}
-        {% include "signature"|get_template with context %}
+        {% include "signature.html.jinja" with context %}
       {% endfilter %}
     {% endwith %}
   {% else %}
