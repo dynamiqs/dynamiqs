@@ -9,7 +9,7 @@
         {% if returns.name %}<b><code>{{ returns.name }}</code></b>{% endif %}
         {% if returns.annotation is string %}
           {% with expression = returns.annotation %}
-            (<i>{% include "expression"|get_template with context %}</i>)
+            (<i>{% include "expression.html.jinja" with context %}</i>)
           {% endwith %}
           –
         {% endif %}
