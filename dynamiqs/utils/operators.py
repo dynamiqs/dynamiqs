@@ -101,9 +101,9 @@ def eye_like(
     Args:
         x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Ket, bra
             or operator.
-        dims (tuple of ints or None): Dimensions of each subsystem in the composite
-            system Hilbert space tensor product. Defaults to `None` (`x.dims` if
-            available, single Hilbert space `dims=(n,)` otherwise).
+        dims (tuple of ints or None): Hilbert space dimension of each subsystem.
+            Defaults to `None` (`x.dims` if available, individual system `dims=(n,)`
+            otherwise).
         layout (dq.dense, dq.dia or None): Overrides the returned matrix layout. If
             `None`, the layout is the same as `x`.
 
@@ -199,9 +199,9 @@ def zeros_like(
     Args:
         x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Ket, bra
             or operator.
-        dims (tuple of ints or None): Dimensions of each subsystem in the composite
-            system Hilbert space tensor product. Defaults to `None` (`x.dims` if
-            available, single Hilbert space `dims=(n,)` otherwise).
+        dims (tuple of ints or None): Hilbert space dimension of each subsystem.
+            Defaults to `None` (`x.dims` if available, individual system `dims=(n,)`
+            otherwise).
         layout (dq.dense, dq.dia or None): Overrides the returned matrix layout. If
             `None`, the layout is the same as `x`.
 
