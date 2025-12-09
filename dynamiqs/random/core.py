@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from math import prod
+
 import jax
 from jax import Array
 from jaxtyping import PRNGKeyArray
 
 from ..qarrays.qarray import QArray
-from ..utils.general import dag, unit
+from ..qarrays.utils import asqarray
+from ..utils.general import dag
 
 __all__ = ['complex', 'dm', 'herm', 'ket', 'psd', 'real']
 
@@ -174,26 +177,56 @@ def dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
     return x / x.trace()[..., None, None]
 
 
-def ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
-    """Returns a random ket with unit norm.
+def ket(
+    key: PRNGKeyArray, dims: int | tuple[int, ...], *, batch: int | tuple[int, ...] = ()
+) -> QArray:
+    r"""Returns a random ket with unit norm.
 
     Args:
         key: A PRNG key used as the random key.
-        shape (shape of the form (..., n, 1)): Shape of the returned qarray.
+        dims: Hilbert space dimension of each subsystem.
+        batch: Batch shape of the returned qarray.
 
     Returns:
-        (qarray of shape (*shape)): Random ket.
+        (qarray of shape (*batch, prod(dims), 1)): Random ket.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
-        >>> dq.random.ket(key, (2, 1))
+
+        Random ket for an individual system:
+        >>> dq.random.ket(key, 2)
         QArray: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
         [[0.563+0.107j]
          [0.027+0.819j]]
+
+        Batched random kets for an individual system:
+        >>> dq.random.ket(key, 2, batch=3)
+        QArray: shape=(3, 2, 1), dims=(2,), dtype=complex64, layout=dense
+        [[[ 0.563+0.107j]
+          [ 0.027+0.819j]]
+        <BLANKLINE>
+         [[-0.141+0.66j ]
+          [-0.731-0.101j]]
+        <BLANKLINE>
+         [[-0.489+0.465j]
+          [-0.107+0.73j ]]]
+
+        Random ket for a composite system:
+        >>> dq.random.ket(key, (2, 3))
+        QArray: shape=(6, 1), dims=(2, 3), dtype=complex64, layout=dense
+        [[ 0.18 +0.034j]
+         [ 0.009+0.262j]
+         [-0.091+0.425j]
+         [-0.471-0.065j]
+         [-0.339+0.323j]
+         [-0.074+0.508j]]
+
+        Batched random kets for a composite system:
+        >>> dq.random.ket(key, (2, 3), batch=(4, 5, 6, 7)).shape
+        (4, 5, 6, 7, 6, 1)
     """
-    if not len(shape) >= 2 or not shape[-1] == 1:
-        raise ValueError(
-            f'Argument `shape` must be of the form (..., n, 1), but is shape={shape}.'
-        )
-    x = complex(key, shape)
-    return unit(x)
+    dims = (dims,) if isinstance(dims, int) else dims
+    batch = (batch,) if isinstance(batch, int) else batch
+    shape = (*batch, prod(dims), 1)
+    x = asqarray(complex(key, shape), dims=dims)
+    return x.unit()

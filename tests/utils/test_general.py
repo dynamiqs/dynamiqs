@@ -11,8 +11,8 @@ from ..order import TEST_INSTANT, TEST_SHORT
 # prepare inputs
 key = jax.random.PRNGKey(42)
 k1, k2, k3, k4, k5 = jax.random.split(key, 5)
-a = pytest.fixture(lambda: dq.random.ket(k1, (4, 1)))
-b = pytest.fixture(lambda: dq.random.ket(k2, (4, 1)))
+a = pytest.fixture(lambda: dq.random.ket(k1, 4))
+b = pytest.fixture(lambda: dq.random.ket(k2, 4))
 x = pytest.fixture(lambda: dq.random.dm(k3, (4, 4)))
 y = pytest.fixture(lambda: dq.random.dm(k4, (4, 4)))
 z = pytest.fixture(lambda: dq.random.dm(k5, (4, 4)))
@@ -72,8 +72,8 @@ def test_ptrace():
     key = jax.random.PRNGKey(42)
     k1, k2, k3, k4 = jax.random.split(key, 4)
 
-    a = dq.random.ket(k1, (5, 1))
-    b = dq.random.ket(k2, (8, 1))
+    a = dq.random.ket(k1, 5)
+    b = dq.random.ket(k2, 8)
     x = dq.random.dm(k3, (5, 5))
     y = dq.random.dm(k4, (8, 8))
 
