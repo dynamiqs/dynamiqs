@@ -42,9 +42,9 @@ def asqarray(
 
     Args:
         x: Object to convert.
-        dims (tuple of ints or None): Dimensions of each subsystem in the composite
-            system Hilbert space tensor product. Defaults to `None` (`x.dims` if
-            available, single Hilbert space `dims=(n,)` otherwise).
+        dims (tuple of ints or None): Hilbert space dimension of each subsystem.
+            Defaults to `None` (`x.dims` if available, individual system `dims=(n,)`
+            otherwise).
         layout (dq.dense, dq.dia or None): Matrix layout. If `None`, the default
             layout is `dq.dense`, except for qarrays that are directly returned.
         offsets: Offsets of the stored diagonals if `layout==dq.dia`. If `None`, offsets
@@ -203,9 +203,9 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
     Args:
         x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Ket, bra,
             density matrix or operator.
-        dims (tuple of ints or None): Dimensions of each subsystem in the composite
-            system Hilbert space tensor product. Defaults to `None` (`x.dims` if
-            available, single Hilbert space `dims=(n,)` otherwise).
+        dims (tuple of ints or None): Hilbert space dimension of each subsystem.
+            Defaults to `None` (`x.dims` if available, individual system `dims=(n,)`
+            otherwise).
 
     Returns:
         QuTiP Qobj or list of QuTiP Qobj.
@@ -268,9 +268,9 @@ def sparsedia_from_dict(
     Args:
         offsets_diags: Dictionary where keys are offsets and values are diagonals of
             shapes _(..., n-|offset|)_ with a common batch shape between all diagonals.
-        dims (tuple of ints or None): Dimensions of each subsystem in the composite
-            system Hilbert space tensor product. Defaults to `None` (single Hilbert
-            space `dims=(n,)`).
+        dims (tuple of ints or None): Hilbert space dimension of each subsystem.
+            Defaults to `None` (`x.dims` if available, individual system `dims=(n,)`
+            otherwise).
         dtype: Data type of the qarray. If `None`, the data type is inferred from the
             diagonals.
 
