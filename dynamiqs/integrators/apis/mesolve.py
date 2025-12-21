@@ -128,6 +128,7 @@ def mesolve(
                     t0: ScalarLike | None = None,
                     save_extra: Callable[[Array], PyTree] | None = None,
                     vectorized: bool = False,
+                    allow_nh_rho: bool = False,
                 )
                 ```
 
@@ -158,6 +159,12 @@ def mesolve(
                     more efficient for small Hilbert spaces but less efficient for
                     large Hilbert spaces. This option is only supported for
                     Diffrax-based ODE methods.
+                - **`allow_nh_rho`** - If `True`, non-Hermitian rho's are allowed as input
+                    to `mesolve`. In practice, setting this option to `True` incurs a
+                    performance penalty of double the number of matrix multiplications
+                    over the algorithm used for evolving a strictly Hermitian rho. This
+                    option is only supported for Diffrax-based ODE methods. Note that if
+                    `vectorized=True`, this option is ignored.
 
     Returns:
         `dq.MESolveResult` object holding the result of the

@@ -14,9 +14,11 @@ from .open_system import dense_ocavity, dia_ocavity, otdqubit
 @pytest.mark.run(order=TEST_LONG)
 class TestMESolveAdaptive(IntegratorTester):
     @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
-    @pytest.mark.parametrize('vectorized', [True, False])
-    def test_correctness(self, system, vectorized):
-        options = Options(vectorized=vectorized)
+    @pytest.mark.parametrize(
+        ('vectorized', 'allow_nh_rho'), [(True, False), (False, True), (False, False)]
+    )
+    def test_correctness(self, system, vectorized, allow_nh_rho):
+        options = Options(vectorized=vectorized, allow_nh_rho=allow_nh_rho)
         self._test_correctness(system, Tsit5(), options=options)
 
     @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
