@@ -151,30 +151,66 @@ def psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
     return x @ dag(x)
 
 
-def dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
+def dm(
+    key: PRNGKeyArray, dims: int | tuple[int, ...], *, batch: int | tuple[int, ...] = ()
+) -> QArray:
     """Returns a random density matrix (hermitian, positive semi-definite, and unit
     trace).
 
     Args:
         key: A PRNG key used as the random key.
-        shape (shape of the form (..., n, n)): Shape of the returned qarray.
+        dims: Hilbert space dimension of each subsystem.
+        batch: Batch shape of the returned qarray.
 
     Returns:
-        (qarray of shape (*shape)): Random density matrix.
+        (qarray of shape (*batch, prod(dims), prod(dims))): Random density matrix.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
-        >>> dq.random.dm(key, (2, 2))
+
+        Random density matrix for an individual system:
+        >>> dq.random.dm(key, 2)
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
         [[ 0.198+0.j    -0.044-0.392j]
          [-0.044+0.392j  0.802+0.j   ]]
+
+        Batched random density matrices for an individual system:
+        >>> dq.random.dm(key, 2, batch=3)
+        QArray: shape=(3, 2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[[ 0.198+0.j    -0.044-0.392j]
+          [-0.044+0.392j  0.802+0.j   ]]
+        <BLANKLINE>
+         [[ 0.476+0.j     0.021+0.06j ]
+          [ 0.021-0.06j   0.524+0.j   ]]
+        <BLANKLINE>
+         [[ 0.473+0.j    -0.286-0.173j]
+          [-0.286+0.173j  0.527+0.j   ]]]
+
+        Random density matrix for a composite system:
+        >>> dq.random.dm(key, (2, 3))
+        QArray: shape=(6, 6), dims=(6,), dtype=complex64, layout=dense
+        [[ 0.178+0.j     0.012+0.021j -0.047+0.057j -0.007+0.072j -0.092-0.033j
+           0.033+0.002j]
+         [ 0.012-0.021j  0.16 +0.j    -0.019-0.036j  0.013-0.089j -0.003+0.031j
+          -0.118-0.052j]
+         [-0.047-0.057j -0.019+0.036j  0.137+0.j     0.024+0.012j  0.015+0.03j
+           0.041-0.007j]
+         [-0.007-0.072j  0.013+0.089j  0.024-0.012j  0.176+0.j     0.007+0.056j
+          -0.026-0.087j]
+         [-0.092+0.033j -0.003-0.031j  0.015-0.03j   0.007-0.056j  0.133+0.j
+          -0.05 -0.002j]
+         [ 0.033-0.002j -0.118+0.052j  0.041+0.007j -0.026+0.087j -0.05 +0.002j
+           0.216+0.j   ]]
+
+        Batched random density matrices for a composite system:
+        >>> dq.random.dm(key, (2, 3), batch=(4, 5, 6, 7)).shape
+        (4, 5, 6, 7, 6, 6)
     """
-    if not len(shape) >= 2 or not shape[-1] == shape[-2]:
-        raise ValueError(
-            f'Argument `shape` must be of the form (..., n, n), but is shape={shape}.'
-        )
-    x = psd(key, shape)
-    return x / x.trace()[..., None, None]
+    dims = (dims,) if isinstance(dims, int) else dims
+    batch = (batch,) if isinstance(batch, int) else batch
+    shape = (*batch, prod(dims), prod(dims))
+    x = asqarray(psd(key, shape), dims=dims)
+    return x.unit()
 
 
 def ket(

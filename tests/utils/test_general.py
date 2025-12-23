@@ -13,9 +13,9 @@ key = jax.random.PRNGKey(42)
 k1, k2, k3, k4, k5 = jax.random.split(key, 5)
 a = pytest.fixture(lambda: dq.random.ket(k1, 4))
 b = pytest.fixture(lambda: dq.random.ket(k2, 4))
-x = pytest.fixture(lambda: dq.random.dm(k3, (4, 4)))
-y = pytest.fixture(lambda: dq.random.dm(k4, (4, 4)))
-z = pytest.fixture(lambda: dq.random.dm(k5, (4, 4)))
+x = pytest.fixture(lambda: dq.random.dm(k3, 4))
+y = pytest.fixture(lambda: dq.random.dm(k4, 4))
+z = pytest.fixture(lambda: dq.random.dm(k5, 4))
 
 
 @pytest.mark.run(order=TEST_INSTANT)
@@ -74,8 +74,8 @@ def test_ptrace():
 
     a = dq.random.ket(k1, 5)
     b = dq.random.ket(k2, 8)
-    x = dq.random.dm(k3, (5, 5))
-    y = dq.random.dm(k4, (8, 8))
+    x = dq.random.dm(k3, 5)
+    y = dq.random.dm(k4, 8)
 
     # check that no error is raised while tracing the function
     jax.jit(dq.ptrace, static_argnums=(1,)).trace(a & b, 0)
@@ -311,8 +311,8 @@ def test_entropy_relative(a, b, x, y):
 def test_bloch_coordinates():
     # prepare inputs
     k1, k2 = jax.random.split(jax.random.PRNGKey(42), 2)
-    a = dq.random.ket(k1, (2, 1))
-    x = dq.random.dm(k2, (2, 2))
+    a = dq.random.ket(k1, 2)
+    x = dq.random.dm(k2, 2)
 
     # check that no error is raised while tracing the function
     jax.jit(dq.bloch_coordinates).trace(a)

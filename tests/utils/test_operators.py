@@ -48,7 +48,7 @@ def test_eye():
 def test_eye_like():
     # prepare inputs
     key = jax.random.PRNGKey(0)
-    x = dq.random.dm(key, (2, 2))
+    x = dq.random.dm(key, 2)
 
     # check that no error is raised while tracing the function
     _jit_static_layout(dq.eye_like).trace(x, layout=dq.dense)
@@ -82,7 +82,7 @@ def test_zeros():
 def test_zeros_like():
     # prepare inputs
     key = jax.random.PRNGKey(0)
-    x = dq.random.dm(key, (2, 2))
+    x = dq.random.dm(key, 2)
 
     # check that no error is raised while tracing the function
     _jit_static_layout(dq.zeros_like).trace(x, layout=dq.dense)
