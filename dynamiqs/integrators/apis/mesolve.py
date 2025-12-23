@@ -128,7 +128,7 @@ def mesolve(
                     t0: ScalarLike | None = None,
                     save_extra: Callable[[Array], PyTree] | None = None,
                     vectorized: bool = False,
-                    allow_nh_rho: bool = False,
+                    assume_hermitian: bool = True,
                 )
                 ```
 
@@ -159,12 +159,13 @@ def mesolve(
                     more efficient for small Hilbert spaces but less efficient for
                     large Hilbert spaces. This option is only supported for
                     Diffrax-based ODE methods.
-                - **`allow_nh_rho`** - If `True`, non-Hermitian rho's are allowed as
-                    input to `mesolve`. In practice, setting this option to `True`
-                    incurs a performance penalty of double the number of matrix
-                    multiplications over the algorithm used for evolving a strictly
-                    Hermitian rho. This option is only supported for Diffrax-based ODE
-                    methods. Note that if `vectorized=True`, this option is ignored.
+                - **`assume_hermitian`** - If `True`, the initial density matrix `rho0`
+                    is assumed to be Hermitian. This allows to halve the number of
+                    matrix multiplications during vector field evaluation since only
+                    the  hermitian part of `rho` is evolved. If `False`, the standard
+                    evolution is performed. This option is only compatible with
+                    Diffrax-based ODE methods and with `vectorized=False`. In other
+                    cases, no assumptions are made on the hermiticity of `rho0`.
 
     Returns:
         `dq.MESolveResult` object holding the result of the
