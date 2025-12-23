@@ -118,8 +118,8 @@ class Result(eqx.Module):
         return f'==== {self.__class__.__name__} ====\n' + parts_str
 
     @classmethod
-    def out_axes(cls) -> SolveResult:
-        return cls(None, None, None, None, 0, 0)
+    def out_axes(cls) -> Result:
+        return cls(None, None, None, None, 0, 0)  # ty: ignore[invalid-argument-type]
 
 
 class SolveResult(Result):
@@ -181,8 +181,8 @@ class FloquetResult(Result):
         }
 
     @classmethod
-    def out_axes(cls) -> SolveResult:
-        return cls(None, None, None, None, 0, 0, None)
+    def out_axes(cls) -> FloquetResult:
+        return cls(None, None, None, None, 0, 0, None)  # ty: ignore[invalid-argument-type]
 
 
 class SESolveResult(SolveResult):
@@ -205,8 +205,8 @@ class StochasticSolveResult(SolveResult):
     keys: PRNGKeyArray
 
     @classmethod
-    def out_axes(cls) -> SolveResult:
-        return cls(None, None, None, None, 0, 0, None)
+    def out_axes(cls) -> StochasticSolveResult:
+        return cls(None, None, None, None, 0, 0, None)  # ty: ignore[invalid-argument-type]
 
     def mean_states(self) -> QArray:
         # todo: document
