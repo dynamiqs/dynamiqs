@@ -9,7 +9,7 @@
         <b><code>{{ attribute.name }}</code></b>
         {% if attribute.annotation %}
           {% with expression = attribute.annotation|join("") %}
-            (<i>{% include "expression"|get_template with context %}</i>)
+            (<i>{% include "expression.html.jinja" with context %}</i>)
           {% endwith %}
         {% endif %}
         –

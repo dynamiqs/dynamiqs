@@ -24,7 +24,7 @@
         {% endif %}
       {% endwith %}
       {% with labels = module.labels %}
-        {% include "labels"|get_template with context %}
+        {% include "labels.html.jinja" with context %}
       {% endwith %}
     {% else %}
       {% if config.show_root_toc_entry %}
@@ -39,15 +39,15 @@
     {% endif %}
     <div class="doc doc-contents {% if root %}first{% endif %}">
       {% with docstring_sections = module.docstring.parsed %}
-        {% include "docstring"|get_template with context %}
+        {% include "docstring.html.jinja" with context %}
       {% endwith %}
       {% with obj = module %}
         {% set root = False %}
         {% set heading_level = heading_level + 1 %}
         {% if config.extra.table %}
-          {% include "table"|get_template with context %}
+          {% include "table.html.jinja" with context %}
         {% else %}
-          {% include "children"|get_template with context %}
+          {% include "children.html.jinja" with context %}
         {% endif %}
       {% endwith %}
     </div>

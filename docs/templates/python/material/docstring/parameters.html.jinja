@@ -22,7 +22,7 @@
         {% endif %}
         {% if parameter.annotation is string %}
           {% with expression = parameter.annotation %}
-            (<i>{% include "expression"|get_template with context %}</i>)
+            (<i>{% include "expression.html.jinja" with context %}</i>)
           {% endwith %}
         {% endif %}
         –
