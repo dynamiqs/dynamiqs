@@ -255,6 +255,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - herm
         - psd
         - dm
+        - operator
         - ket
 
 

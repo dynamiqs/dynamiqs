@@ -10,7 +10,7 @@ from ..qarrays.qarray import QArray
 from ..qarrays.utils import asqarray
 from ..utils.general import dag
 
-__all__ = ['complex', 'dm', 'herm', 'ket', 'psd', 'real']
+__all__ = ['complex', 'dm', 'herm', 'ket', 'operator', 'psd', 'real']
 
 
 def real(
@@ -211,6 +211,78 @@ def dm(
     shape = (*batch, prod(dims), prod(dims))
     x = asqarray(psd(key, shape), dims=dims)
     return x.unit()
+
+
+def operator(
+    key: PRNGKeyArray,
+    dims: int | tuple[int, ...],
+    hermitian: bool = True,
+    *,
+    batch: int | tuple[int, ...] = (),
+) -> QArray:
+    """Returns a random operator.
+
+    Args:
+        key: A PRNG key used as the random key.
+        dims: Hilbert space dimension of each subsystem.
+        hermitian: Whether to return a Hermitian operator.
+        batch: Batch shape of the returned qarray.
+
+    Returns:
+        (qarray of shape (*batch, prod(dims), prod(dims))): Random operator.
+
+    Examples:
+        >>> key = jax.random.PRNGKey(42)
+
+        Random Hermitian operator for an individual system:
+        >>> dq.random.operator(key, 2)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[ 0.323+0.j    -0.074-0.146j]
+         [-0.074+0.146j -0.844+0.j   ]]
+
+        Random non-Hermitian operator for an individual system:
+        >>> dq.random.operator(key, 2, hermitian=False)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[ 0.323+0.061j  0.016+0.47j ]
+         [-0.163+0.762j -0.844-0.116j]]
+
+        Batched random Hermitian operators for an individual system:
+        >>> dq.random.operator(key, 2, batch=3)
+        QArray: shape=(3, 2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[[ 0.323+0.j    -0.074-0.146j]
+          [-0.074+0.146j -0.844+0.j   ]]
+        <BLANKLINE>
+         [[-0.609+0.j    -0.082+0.881j]
+          [-0.082-0.881j  0.703+0.j   ]]
+        <BLANKLINE>
+         [[-0.06 +0.j    -0.12 +0.433j]
+          [-0.12 -0.433j -0.273+0.j   ]]]
+
+        Random Hermitian operator for a composite system:
+        >>> dq.random.operator(key, (2, 3))
+        QArray: shape=(6, 6), dims=(6,), dtype=complex64, layout=dense
+        [[ 0.323+0.j    -0.008+0.661j -0.254+0.501j  0.004+0.093j -0.581+0.114j
+          -0.359+0.114j]
+         [-0.008-0.661j  0.703+0.j    -0.381+0.178j -0.167-0.305j  0.245-0.401j
+          -0.597-0.076j]
+         [-0.254-0.501j -0.381-0.178j  0.469+0.j     0.143+0.173j  0.457+0.518j
+          -0.331-0.218j]
+         [ 0.004-0.093j -0.167+0.305j  0.143-0.173j  0.685+0.j     0.613+0.355j
+           0.201+0.151j]
+         [-0.581-0.114j  0.245+0.401j  0.457-0.518j  0.613-0.355j -0.215+0.j
+           0.269-0.797j]
+         [-0.359-0.114j -0.597+0.076j -0.331+0.218j  0.201-0.151j  0.269+0.797j
+           0.655+0.j   ]]
+
+        Random batched Hermitian operators for a composite system:
+        >>> dq.random.operator(key, (2, 3), batch=(4, 5, 6, 7)).shape
+        (4, 5, 6, 7, 6, 6)
+    """
+    dims = (dims,) if isinstance(dims, int) else dims
+    batch = (batch,) if isinstance(batch, int) else batch
+    shape = (*batch, prod(dims), prod(dims))
+    x = herm(key, shape) if hermitian else complex(key, shape)
+    return asqarray(x, dims=dims)
 
 
 def ket(
