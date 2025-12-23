@@ -119,3 +119,16 @@ To optimize a real-valued function of complex parameters $f:\mathbb{C}^p\to\math
 <!-- skip: end -->
 
 See the [JAX documentation](https://jax.readthedocs.io/en/latest/notebooks/autodiff_cookbook.html#complex-numbers-and-differentiation) and the [PyTorch documentation](https://pytorch.org/docs/stable/notes/autograd.html#autograd-for-complex-numbers) for detailed discussions on complex numbers and differentiation.
+
+## Reinstalling dynamiqs
+
+You may occasionally need to reinstall Dynamiqs, for instance when upgrading to a newer release. Although modern 
+package managers such as [`uv`](https://docs.astral.sh/uv/)￼handle upgrades and dependency resolution automatically, 
+this is not always true when using plain pip. In that case, uninstalling Dynamiqs alone can leave residual dependencies 
+from the previous installation, potentially causing version conflicts. To guarantee a clean reinstallation, 
+we recommend uninstalling Dynamiqs together with its main JAX dependencies:
+
+```bash
+pip uninstall jax jaxlib optax diffrax jaxtyping equinox dynamiqs
+pip install dynamiqs
+```
