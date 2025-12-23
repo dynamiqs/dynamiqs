@@ -291,9 +291,9 @@ def ptrace(
         x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Ket, bra
             or density matrix of a composite system.
         keep (int or tuple of ints): Dimensions to keep after partial trace.
-        dims (tuple of ints or None): Dimensions of each subsystem in the composite
-            system Hilbert space tensor product. Defaults to `None` (`x.dims` if
-            available, single Hilbert space `dims=(n,)` otherwise).
+        dims (tuple of ints or None): Hilbert space dimension of each subsystem.
+            Defaults to `None` (`x.dims` if available, individual system `dims=(n,)`
+            otherwise).
 
     Returns:
         (qarray of shape (..., m, m)): Density matrix (with `m <= n`).
@@ -474,7 +474,7 @@ def _expect_single(O: QArray, x: QArray) -> Array:
         return tracemm(O, x)  # tr(Ox)
 
 
-def norm(x: QArrayLike, *, psd: bool = True) -> Array:
+def norm(x: QArrayLike, *, psd: bool = False) -> Array:
     r"""Returns the norm of a ket, bra, density matrix, or Hermitian matrix.
 
     For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a
@@ -525,7 +525,7 @@ def norm(x: QArrayLike, *, psd: bool = True) -> Array:
     return jnp.abs(eigvals).sum(-1)
 
 
-def unit(x: QArrayLike, *, psd: bool = True) -> QArray:
+def unit(x: QArrayLike, *, psd: bool = False) -> QArray:
     r"""Normalize a ket, bra, density matrix or Hermitian matrix to unit norm.
 
     The returned object is divided by its norm (see [`dq.norm()`][dynamiqs.norm]).

@@ -480,4 +480,4 @@ def _single_thermal_dm(dim: int, nth: Array) -> QArray:
     rho = asqarray(bdiag(rho_diag), dims=(dim.item(),))
 
     # normalize the density matrix
-    return rho.unit()
+    return rho / rho.trace()

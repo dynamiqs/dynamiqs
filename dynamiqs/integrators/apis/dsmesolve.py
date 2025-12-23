@@ -139,7 +139,7 @@ def dsmesolve(
                 dq.Options(
                     save_states: bool = True,
                     cartesian_batching: bool = True,
-                    save_extra: callable[[Array], PyTree] | None = None,
+                    save_extra: Callable[[Array], PyTree] | None = None,
                 )
                 ```
 

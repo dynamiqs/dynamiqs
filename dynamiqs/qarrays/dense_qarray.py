@@ -12,7 +12,14 @@ from jaxtyping import ArrayLike
 from qutip import Qobj
 
 from .layout import Layout, dense
-from .qarray import QArray, QArrayLike, in_last_two_dims, isqarraylike, to_jax
+from .qarray import (
+    IndexType,
+    QArray,
+    QArrayLike,
+    in_last_two_dims,
+    isqarraylike,
+    to_jax,
+)
 from .sparsedia_primitives import array_to_sparsedia
 
 if TYPE_CHECKING:
@@ -43,19 +50,19 @@ class DenseQArray(QArray):
     @property
     def mT(self) -> QArray:
         data = self.data.mT
-        return replace(self, data=data)
+        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
     def conj(self) -> QArray:
         data = self.data.conj()
-        return replace(self, data=data)
+        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
     def _reshape_unchecked(self, *shape: int) -> QArray:
         data = jnp.reshape(self.data, shape)
-        return replace(self, data=data)
+        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
     def broadcast_to(self, *shape: int) -> QArray:
         data = jnp.broadcast_to(self.data, shape)
-        return replace(self, data=data)
+        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
     def ptrace(self, *keep: int) -> QArray:
         from ..utils.general import ptrace  # noqa: PLC0415
@@ -64,13 +71,13 @@ class DenseQArray(QArray):
 
     def powm(self, n: int) -> QArray:
         data = jnp.linalg.matrix_power(self.data, n)
-        return replace(self, data=data)
+        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
     def expm(self, *, max_squarings: int = 16) -> QArray:
         data = jax.scipy.linalg.expm(self.data, max_squarings=max_squarings)
-        return replace(self, data=data)
+        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def norm(self, *, psd: bool = True) -> Array:
+    def norm(self, *, psd: bool = False) -> Array:
         from ..utils.general import norm  # noqa: PLC0415
 
         return norm(self.data, psd=psd)
@@ -85,7 +92,7 @@ class DenseQArray(QArray):
         if in_last_two_dims(axis, self.ndim):
             return data
         else:
-            return replace(self, data=data)
+            return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
         data = self.data.squeeze(axis=axis)
@@ -94,11 +101,11 @@ class DenseQArray(QArray):
         if in_last_two_dims(axis, self.ndim):
             return data
         else:
-            return replace(self, data=data)
+            return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
     def _eig(self) -> tuple[Array, QArray]:
         evals, evecs = jax.lax.linalg.eig(self.data, compute_left_eigenvectors=False)
-        return evals, replace(self, data=evecs)
+        return evals, replace(self, data=evecs)  # ty: ignore[invalid-argument-type]
 
     def _eigh(self) -> tuple[Array, Array]:
         return jnp.linalg.eigh(self.data)
@@ -144,7 +151,7 @@ class DenseQArray(QArray):
         super().__mul__(y)
 
         data = y * self.data
-        return replace(self, data=data)
+        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
     def __add__(self, y: QArrayLike) -> QArray:
         if isinstance(y, int | float) and y == 0:
@@ -159,7 +166,7 @@ class DenseQArray(QArray):
         else:
             return NotImplemented
 
-        return replace(self, data=data)
+        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
         out = super().__matmul__(y)
@@ -176,7 +183,7 @@ class DenseQArray(QArray):
         if self.isbra() and y.isket():
             return data
 
-        return replace(self, data=data)
+        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
     def __rmatmul__(self, y: QArrayLike) -> QArray:
         super().__rmatmul__(y)
@@ -188,7 +195,7 @@ class DenseQArray(QArray):
         else:
             return NotImplemented
 
-        return replace(self, data=data)
+        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
     def __and__(self, y: QArray) -> QArray:
         super().__and__(y)
@@ -199,11 +206,11 @@ class DenseQArray(QArray):
         else:
             return NotImplemented
 
-        return replace(self, dims=dims, data=data)
+        return replace(self, dims=dims, data=data)  # ty: ignore[invalid-argument-type]
 
     def addscalar(self, y: ArrayLike) -> QArray:
         data = self.data + to_jax(y)
-        return replace(self, data=data)
+        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
     def elmul(self, y: QArrayLike) -> QArray:
         from .sparsedia_qarray import SparseDIAQArray  # noqa: PLC0415
@@ -214,15 +221,15 @@ class DenseQArray(QArray):
             return y.elmul(self)
 
         data = self.data * to_jax(y)
-        return replace(self, data=data)
+        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
     def elpow(self, power: int) -> QArray:
         data = self.data**power
-        return replace(self, data=data)
+        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def __getitem__(self, key: int | slice) -> QArray:
+    def __getitem__(self, key: IndexType) -> QArray:
         data = self.data[key]
-        return replace(self, data=data)
+        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
 
 def array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:

@@ -57,14 +57,15 @@ Here is a list of available tasks:
 lint         lint the code (ruff)
 format       auto-format the code (ruff)
 codespell    check for misspellings (codespell)
-clean        clean the code (ruff + codespell)
+type         check types (ty)
+clean        clean the code (ruff + codespell + ty)
 test         run the unit tests suite (pytest)
 doctest-code check code docstrings examples (doctest)
 doctest-docs check documentation examples (doctest)
 doctest      check all examples (doctest)
 docbuild     build the documentation website
 docserve     preview documentation website with hot-reloading
-all          run all tasks before a commit (ruff + codespell + pytest + doctest)
+all          run all tasks before a commit (ruff + codespell + ty + pytest + doctest)
 ci           run all the CI checks
 ```
 

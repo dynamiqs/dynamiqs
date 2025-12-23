@@ -3,7 +3,8 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Sequence
 from math import prod
-from typing import TYPE_CHECKING, Any, get_args
+from types import EllipsisType
+from typing import TYPE_CHECKING, Any, TypeAlias, get_args
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -21,6 +22,10 @@ if TYPE_CHECKING:
 from .layout import Layout
 
 __all__ = ['QArray']
+
+IndexType: TypeAlias = (
+    int | slice | EllipsisType | None | tuple[int | slice | EllipsisType | None, ...]
+)
 
 
 def isqarraylike(x: Any) -> bool:
@@ -178,7 +183,7 @@ class QArray(eqx.Module):
 
     | Method                                                   | Description                                                    |
     |----------------------------------------------------------|----------------------------------------------------------------|
-    | [`x.conj()`][dynamiqs.QArray.conj]                       | Returns the element-wise complex conjugate of the qarray.      |
+    | [`x.conj()`][dynamiqs.qarrays.qarray.QArray.conj]        | Returns the element-wise complex conjugate of the qarray.      |
     | `x.dag()`                                                | Alias of [`dq.dag(x)`][dynamiqs.dag].                          |
     | `x.powm()`                                               | Alias of [`dq.powm(x)`][dynamiqs.powm].                        |
     | `x.expm()`                                               | Alias of [`dq.expm(x)`][dynamiqs.expm].                        |
@@ -198,11 +203,11 @@ class QArray(eqx.Module):
     | `x.tobra()`                                              | Alias of [`dq.tobra(x)`][dynamiqs.tobra].                      |
     | `x.todm()`                                               | Alias of [`dq.todm(x)`][dynamiqs.todm].                        |
     | `x.proj()`                                               | Alias of [`dq.proj(x)`][dynamiqs.proj].                        |
-    | [`x.reshape(*shape)`][dynamiqs.QArray.reshape]           | Returns a reshaped copy of a qarray.                           |
-    | [`x.broadcast_to(*shape)`][dynamiqs.QArray.broadcast_to] | Broadcasts a qarray to a new shape.                            |
-    | [`x.addscalar(y)`][dynamiqs.QArray.addscalar]            | Adds a scalar.                                                 |
-    | [`x.elmul(y)`][dynamiqs.QArray.elmul]                    | Computes the element-wise multiplication.                      |
-    | [`x.elpow(power)`][dynamiqs.QArray.elpow]                | Computes the element-wise power.                               |
+    | [`x.reshape(*shape)`][dynamiqs.qarrays.qarray.QArray.reshape] | Returns a reshaped copy of a qarray.                           |
+    | [`x.broadcast_to(*shape)`][dynamiqs.qarrays.qarray.QArray.broadcast_to] | Broadcasts a qarray to a new shape.                            |
+    | [`x.addscalar(y)`][dynamiqs.qarrays.qarray.QArray.addscalar] | Adds a scalar.                                                 |
+    | [`x.elmul(y)`][dynamiqs.qarrays.qarray.QArray.elmul]     | Computes the element-wise multiplication.                      |
+    | [`x.elpow(power)`][dynamiqs.qarrays.qarray.QArray.elpow] | Computes the element-wise power.                               |
 
     There are also several conversion methods available:
 
@@ -211,8 +216,8 @@ class QArray(eqx.Module):
     | `x.to_qutip()`                                           | Alias of [`dq.to_qutip(x, dims=x.dims)`][dynamiqs.to_qutip].   |
     | `x.to_jax()`                                             | Alias of [`dq.to_jax(x)`][dynamiqs.to_jax].                    |
     | `x.to_numpy()`                                           | Alias of [`dq.to_numpy(x)`][dynamiqs.to_numpy].                |
-    | [`x.asdense()`][dynamiqs.QArray.asdense]                 | Converts to a dense layout.                                    |
-    | [`x.assparsedia()`][dynamiqs.QArray.assparsedia]         | Converts to a sparse diagonal layout.                          |
+    | [`x.asdense()`][dynamiqs.qarrays.qarray.QArray.asdense]  | Converts to a dense layout.                                    |
+    | [`x.assparsedia()`][dynamiqs.qarrays.qarray.QArray.assparsedia] | Converts to a sparse diagonal layout.                          |
     """  # noqa: E501
 
     # Subclasses should implement:
@@ -352,11 +357,11 @@ class QArray(eqx.Module):
 
         return signm(self)
 
-    def unit(self, *, psd: bool = True) -> QArray:
+    def unit(self, *, psd: bool = False) -> QArray:
         return self / self.norm(psd=psd)[..., None, None]
 
     @abstractmethod
-    def norm(self, *, psd: bool = True) -> Array:
+    def norm(self, *, psd: bool = False) -> Array:
         pass
 
     @abstractmethod
@@ -627,7 +632,7 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def __getitem__(self, key: int | slice) -> QArray:
+    def __getitem__(self, key: IndexType) -> QArray:
         pass
 
 

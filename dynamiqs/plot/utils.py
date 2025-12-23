@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from functools import wraps
 from io import BytesIO
 from math import ceil
@@ -311,8 +311,8 @@ def gif_indices(nitems: int, nframes: int) -> np.ndarray:
 
 
 def gifit(
-    plot_function: callable[[T, ...], None],
-) -> callable[[Sequence[T], ...], Image]:
+    plot_function: Callable[[T, ...], None],
+) -> Callable[[Sequence[T], ...], Image]:
     """Transform a plot function into a new function that returns an animated GIF.
 
     This function takes a plot function that normally operates on a single input and
