@@ -794,6 +794,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#reinstalling-dynamiqs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reinstalling dynamiqs
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -7022,6 +7033,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#reinstalling-dynamiqs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reinstalling dynamiqs
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -7153,6 +7175,15 @@
 <!-- skip: end -->
 
 <p>See the <a href="https://jax.readthedocs.io/en/latest/notebooks/autodiff_cookbook.html#complex-numbers-and-differentiation">JAX documentation</a> and the <a href="https://pytorch.org/docs/stable/notes/autograd.html#autograd-for-complex-numbers">PyTorch documentation</a> for detailed discussions on complex numbers and differentiation.</p>
+<h2 id="reinstalling-dynamiqs">Reinstalling dynamiqs</h2>
+<p>You may occasionally need to reinstall Dynamiqs, for instance when upgrading to a newer release. Although modern 
+package managers such as <a href="https://docs.astral.sh/uv/"><code>uv</code></a>￼handle upgrades and dependency resolution automatically, 
+this is not always true when using plain pip. In that case, uninstalling Dynamiqs alone can leave residual dependencies 
+from the previous installation, potentially causing version conflicts. To guarantee a clean reinstallation, 
+we recommend uninstalling Dynamiqs together with its main JAX dependencies:</p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>uninstall<span class="w"> </span>jax<span class="w"> </span>jaxlib<span class="w"> </span>optax<span class="w"> </span>diffrax<span class="w"> </span>jaxtyping<span class="w"> </span>equinox<span class="w"> </span>dynamiqs
+pip<span class="w"> </span>install<span class="w"> </span>dynamiqs
+</code></pre></div>
 
 
 
