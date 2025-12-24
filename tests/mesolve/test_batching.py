@@ -3,7 +3,6 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
-from dynamiqs import asqarray
 
 from ..order import TEST_LONG
 
