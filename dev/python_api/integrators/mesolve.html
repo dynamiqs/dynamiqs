@@ -7110,6 +7110,7 @@ details.</p>
     t0: ScalarLike | None = None,
     save_extra: Callable[[Array], PyTree] | None = None,
     vectorized: bool = False,
+    assume_hermitian: bool = True,
 )
 </code></pre></div>
 <p><strong>Parameters:</strong></p>
@@ -7139,6 +7140,13 @@ details.</p>
     more efficient for small Hilbert spaces but less efficient for
     large Hilbert spaces. This option is only supported for
     Diffrax-based ODE methods.</li>
+<li><strong><code>assume_hermitian</code></strong> - If <code>True</code>, the initial density matrix <code>rho0</code>
+    is assumed to be Hermitian. This allows to halve the number of
+    matrix multiplications during vector field evaluation since only
+    the  hermitian part of <code>rho</code> is evolved. If <code>False</code>, the standard
+    evolution is performed. This option is only compatible with
+    Diffrax-based ODE methods and with <code>vectorized=False</code>. In other
+    cases, no assumptions are made on the hermiticity of <code>rho0</code>.</li>
 </ul>
 </details>
         </div>
