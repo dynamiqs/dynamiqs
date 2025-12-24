@@ -8,7 +8,7 @@
     <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/random/ket.html">
 
 
-    <link rel="prev" href="dm.html">
+    <link rel="prev" href="operator.html">
 
 
     <link rel="next" href="../plot/wigner.html">
@@ -5833,6 +5833,8 @@
       
         
       
+        
+      
     
     
     
@@ -6005,6 +6007,34 @@
     
   
     dm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="operator.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    operator
   
 
     
@@ -6862,7 +6892,9 @@
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">ket</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="n">PRNGKeyArray</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">ket</span><span class="p">(</span>
+    <span class="n">key</span><span class="p">:</span> <span class="n">PRNGKeyArray</span><span class="p">,</span> <span class="n">dims</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -6880,11 +6912,17 @@
         </div>
       </li>
       <li class="doc-section-item field-body">
-          <b><code>shape</code></b>
-            (<i>shape of the form (..., n, 1)</i>)
+          <b><code>dims</code></b>
         –
         <div class="doc-md-description">
-          <p>Shape of the returned qarray.</p>
+          <p>Hilbert space dimension of each subsystem.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>batch</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Batch shape of the returned qarray.</p>
         </div>
       </li>
   </ul>
@@ -6893,7 +6931,7 @@
 <p><span class="doc-section-title">Returns:</span></p>
   <ul>
       <li class="doc-section-item field-body">
-            (<i>qarray of shape (*shape)</i>)
+            (<i>qarray of shape (*batch, prod(dims), 1)</i>)
           –
         <div class="doc-md-description">
           <p>Random ket.</p>
@@ -6904,10 +6942,38 @@
 
 <p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">ket</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</code></pre></div>
+    <p>Random ket for an individual system:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">ket</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 <span class="go">QArray: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense</span>
 <span class="go">[[0.563+0.107j]</span>
 <span class="go"> [0.027+0.819j]]</span>
+</code></pre></div>
+    <p>Batched random kets for an individual system:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">ket</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">QArray: shape=(3, 2, 1), dims=(2,), dtype=complex64, layout=dense</span>
+<span class="go">[[[ 0.563+0.107j]</span>
+<span class="go">  [ 0.027+0.819j]]</span>
+
+<span class="go"> [[-0.141+0.66j ]</span>
+<span class="go">  [-0.731-0.101j]]</span>
+
+<span class="go"> [[-0.489+0.465j]</span>
+<span class="go">  [-0.107+0.73j ]]]</span>
+</code></pre></div>
+    <p>Random ket for a composite system:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">ket</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">QArray: shape=(6, 1), dims=(2, 3), dtype=complex64, layout=dense</span>
+<span class="go">[[ 0.18 +0.034j]</span>
+<span class="go"> [ 0.009+0.262j]</span>
+<span class="go"> [-0.091+0.425j]</span>
+<span class="go"> [-0.471-0.065j]</span>
+<span class="go"> [-0.339+0.323j]</span>
+<span class="go"> [-0.074+0.508j]]</span>
+</code></pre></div>
+    <p>Batched random kets for a composite system:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">ket</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">batch</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(4, 5, 6, 7, 6, 1)</span>
 </code></pre></div>
 
 
