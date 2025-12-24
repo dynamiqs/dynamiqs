@@ -17,14 +17,14 @@ def test_batching(nH, H_type):
     key = jax.random.PRNGKey(84)
     key_1, key_2 = jax.random.split(key, 2)
     if H_type == 'constant':
-        H = dq.random.herm(key_1, (*nH, n, n))
+        H = dq.random.operator(key_1, n, batch=nH)
     elif H_type == 'modulated':
-        _H = dq.random.herm(key_1, (n, n))
+        _H = dq.random.operator(key_1, n)
         f_pref = dq.random.real(key_2, (*nH,))
         omega_d = 2.0 * jnp.pi / T
         H = dq.modulated(lambda t: f_pref * jnp.cos(omega_d * t), _H)
     else:  # timecallable
-        _H = dq.random.herm(key_1, (*nH, n, n))
+        _H = dq.random.operator(key_1, n, batch=nH)
         omega_d = 2.0 * jnp.pi / T
         H = dq.timecallable(lambda t: jnp.cos(omega_d * t)[..., None, None] * _H)
 

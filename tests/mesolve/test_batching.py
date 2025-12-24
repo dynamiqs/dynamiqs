@@ -11,11 +11,10 @@ from ..order import TEST_LONG
 def rand_mesolve_args(n, nH, nLs, npsi0, nEs):
     nkeys = len(nLs) + 3
     kH, *kLs, kpsi0, kEs = jax.random.split(jax.random.PRNGKey(42), nkeys)
-    H = dq.random.herm(kH, (*nH, n, n))
-    Ls = [dq.random.herm(kL, (*nL, n, n)) for kL, nL in zip(kLs, nLs, strict=True)]
+    H = dq.random.operator(kH, n, batch=nH)
+    Ls = [dq.random.operator(kL, n, batch=nL) for kL, nL in zip(kLs, nLs, strict=True)]
     psi0 = dq.random.ket(kpsi0, n, batch=npsi0)
-    Es = dq.random.complex(kEs, (nEs, n, n))
-    Es = [asqarray(E) for E in Es]
+    Es = dq.random.operator(kEs, n, hermitian=False, batch=nEs)
     return H, Ls, psi0, Es
 
 
