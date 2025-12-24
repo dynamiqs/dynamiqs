@@ -23,6 +23,7 @@ class Options(eqx.Module):
     save_extra: Callable[[QArray], PyTree] | None = None
     nmaxclick: int = 10_000
     vectorized: bool = False
+    assume_hermitian: bool = True
 
     def __init__(
         self,
@@ -34,6 +35,7 @@ class Options(eqx.Module):
         save_extra: Callable[[QArray], PyTree] | None = None,
         nmaxclick: int = 10_000,
         vectorized: bool = False,
+        assume_hermitian: bool = True,
     ):
         self.save_states = save_states
         self.save_propagators = save_propagators
@@ -42,6 +44,7 @@ class Options(eqx.Module):
         self.t0 = t0
         self.nmaxclick = nmaxclick
         self.vectorized = vectorized
+        self.assume_hermitian = assume_hermitian
 
         # make `save_extra` a valid Pytree with `Partial`
         self.save_extra = jtu.Partial(save_extra) if save_extra is not None else None
@@ -70,6 +73,7 @@ class Options(eqx.Module):
             save_extra=self.save_extra,
             nmaxclick=self.nmaxclick,
             vectorized=self.vectorized,
+            assume_hermitian=self.assume_hermitian,
         )
 
 
@@ -89,6 +93,7 @@ def check_options(options: Options, solver_name: str):
             't0',
             'save_extra',
             'vectorized',
+            'assume_hermitian',
         ),
         'sepropagator': ('save_propagators', 'progress_meter', 't0', 'save_extra'),
         'mepropagator': ('save_propagators', 'cartesian_batching', 't0', 'save_extra'),

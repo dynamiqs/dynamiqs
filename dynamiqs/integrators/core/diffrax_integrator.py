@@ -304,28 +304,42 @@ class MESolveDiffraxIntegrator(
         #  - if rho evolves according to (2), rho_s evolves closely to (1) up
         #    to a constant error that depends on rho_a (which is small up to numerical
         #    precision), while rho_a is strictly constant.
-        # In practice, we still use (2) because it involves less matrix multiplications,
-        # and is thus more efficient numerically with only a negligible numerical error
-        # induced on the dynamics.
+        # In practice, we use (2) if `options.assume_hermitian = True` because it
+        # involves fewer matrix multiplications, and is thus more efficient with only
+        # a negligible numerical error induced on the dynamics. If however
+        # `options.assume_hermitian = False`, we resort back to (1).
 
-        def vector_field_unvec(t, y, _):  # noqa: ANN001, ANN202
+        def vector_field_unvec_standard(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
-            Hnh = -1j * H + sum([-0.5 * _L.dag() @ _L for _L in L])
-            tmp = Hnh @ y + sum([0.5 * _L @ y @ _L.dag() for _L in L])
+            half_LdL = 0.5 * sum([_L.dag() @ _L for _L in L])
+            nojump_term = (-1j * H - half_LdL) @ y + y @ (1j * H - half_LdL)
+            jump_term = sum([_L @ y @ _L.dag() for _L in L])
+            return nojump_term + jump_term
+
+        def vector_field_unvec_hermitian(t, y, _):  # noqa: ANN001, ANN202
+            L, H = self.L(t), self.H(t)
+            Hnh = -1j * H - 0.5 * sum([_L.dag() @ _L for _L in L])
+            tmp = Hnh @ y + 0.5 * sum([_L @ y @ _L.dag() for _L in L])
             return tmp + tmp.dag()
 
         def vector_field_vec(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
             return slindbladian(H, L) @ y
 
-        return dx.ODETerm(
-            vector_field_unvec if not self.options.vectorized else vector_field_vec
-        )
+        if self.options.vectorized:
+            vector_field = vector_field_vec
+        elif self.options.assume_hermitian:
+            vector_field = vector_field_unvec_hermitian
+        else:
+            vector_field = vector_field_unvec_standard
+
+        return dx.ODETerm(vector_field)
 
     def __post_init__(self):
         # convert y0 to a density matrix
         self.y0 = self.y0.todm()
-        self.y0 = check_hermitian(self.y0, 'y0')
+        if self.options.assume_hermitian:
+            self.y0 = check_hermitian(self.y0, 'y0')
 
         if self.options.vectorized:
             self.y0 = vectorize(self.y0)  # (n^2, 1)
