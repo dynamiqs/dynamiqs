@@ -6,6 +6,7 @@ import pytest
 
 from dynamiqs import QArray, asqarray
 from dynamiqs.time_qarray import (
+    CallableTimeQArray,
     ConstantTimeQArray,
     SummedTimeQArray,
     constant,
@@ -335,3 +336,28 @@ class TestModulatedTimeQArray:
         x = y + self.x
         assert isinstance(x, SummedTimeQArray)
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
+
+
+@pytest.mark.run(order=TEST_SHORT)
+class TestSummedQArray:
+    def test_add(self):
+        f = lambda t: t * asqarray(jnp.arange(4).reshape(2, 2))
+        f = timecallable(f)
+
+        a = constant(jnp.ones_like(f))
+
+        x = f + a
+        assert isinstance(x, SummedTimeQArray)
+        assert_equal(x(1.0), [[1, 2], [3, 4]])
+
+        y = f + a
+        assert isinstance(x, SummedTimeQArray)
+        assert_equal(x(1.0), [[1, 2], [3, 4]])
+
+        z = x + y
+        assert isinstance(z, SummedTimeQArray)
+        assert isinstance(z.timeqarrays[0], CallableTimeQArray)
+        assert isinstance(z.timeqarrays[1], ConstantTimeQArray)
+        assert isinstance(z.timeqarrays[2], CallableTimeQArray)
+        assert isinstance(z.timeqarrays[3], ConstantTimeQArray)
+        assert_equal(z(1.0), [[2, 4], [6, 8]])
