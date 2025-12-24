@@ -3,7 +3,6 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
-from dynamiqs import asqarray
 
 from ..order import TEST_LONG
 
@@ -11,10 +10,9 @@ from ..order import TEST_LONG
 @pytest.mark.run(order=TEST_LONG)
 def rand_sesolve_args(n, nH, npsi0, nEs):
     kH, kpsi0, kEs = jax.random.split(jax.random.PRNGKey(42), 3)
-    H = dq.random.herm(kH, (*nH, n, n))
-    psi0 = dq.random.ket(kpsi0, (*npsi0, n, 1))
-    Es = dq.random.complex(kEs, (nEs, n, n))
-    Es = [asqarray(E) for E in Es]
+    H = dq.random.operator(kH, n, batch=nH)
+    psi0 = dq.random.ket(kpsi0, n, batch=npsi0)
+    Es = dq.random.operator(kEs, n, hermitian=False, batch=nEs)
     return H, psi0, Es
 
 

@@ -8,8 +8,8 @@ from ..order import TEST_INSTANT
 # prepare inputs
 key = jax.random.PRNGKey(42)
 k1, k2 = jax.random.split(key, 2)
-x = pytest.fixture(lambda: dq.random.dm(k1, (4, 4)))
-y = pytest.fixture(lambda: dq.random.dm(k2, (3, 4, 4)))
+x = pytest.fixture(lambda: dq.random.dm(k1, 4))
+y = pytest.fixture(lambda: dq.random.dm(k2, 4, batch=3))
 
 
 @pytest.mark.run(order=TEST_INSTANT)
