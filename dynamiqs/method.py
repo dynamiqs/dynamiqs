@@ -25,6 +25,7 @@ __all__ = [
     'Rouchon3',
     'Tsit5',
     'Event',
+    'Method',
 ]
 
 
