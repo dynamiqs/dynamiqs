@@ -4,7 +4,7 @@ import equinox as eqx
 
 from ._utils import tree_str_inline
 
-__all__ = ['Direct', 'BackwardCheckpointed', 'Forward']
+__all__ = ['Direct', 'BackwardCheckpointed', 'Forward', 'Gradient']
 
 
 class Gradient(eqx.Module):
