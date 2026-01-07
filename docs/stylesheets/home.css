@@ -3,12 +3,110 @@ File: home.css
 Description: CSS for the homepage
 */
 
-/* Background */
-.home-background {
-    z-index: -1;
+/* ============================= */
+/* Homepage Layout Overrides     */
+/* ============================= */
+
+/* Application header should be static for the landing page */
+.md-header {
+    position: initial;
+}
+
+/* Remove spacing, as we cannot hide it completely */
+.md-main__inner {
+    margin: 0;
+}
+
+/* Hide main content for now */
+.md-content {
+    display: none;
+}
+
+/* Hide table of contents */
+@media screen and (min-width: 60em) {
+    .md-sidebar--secondary {
+        display: none;
+    }
+}
+
+/* Hide navigation */
+@media screen and (min-width: 76.25em) {
+    .md-sidebar--primary {
+        display: none;
+    }
+}
+
+/* ============================= */
+/* Copy Button & Tooltip         */
+/* ============================= */
+
+.copy-button {
+    position: relative;
+}
+
+.copy-button .copy-tooltip {
     position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(5px);
+    background-color: var(--md-typeset-color);
+    color: var(--md-default-bg-color);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: var(--md-text-font-family), -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+    font-size: 0.55rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    margin-bottom: 4px;
+    z-index: 1000;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.copy-button.copied .copy-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.copy-button.copied .copy-icon {
+    display: none;
+}
+
+.copy-button.copied .check-icon {
+    display: block !important;
+    color: #4caf50;
+}
+
+.code-copy-button {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 0.4rem;
+}
+
+.code-copy-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ============================= */
+/* Background                    */
+/* ============================= */
+
+.tx-container {
+    position: relative;
+    z-index: 1;
+}
+
+.home-background {
+    z-index: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: 580px;
+    height: 650px;
     background-color: var(--md-primary-fg-color);
     background-image: var(--homepage-gradient);
     transition: 0.5s;
@@ -41,7 +139,13 @@ Description: CSS for the homepage
 
 @media screen and (min-width:60em) and (max-width:76.25em) {
     .home-background {
-        height: 480px;
+        height: 550px;
+    }
+}
+
+@media screen and (max-width: 60em) {
+    .home-background {
+        height: 700px;
     }
 }
 
@@ -53,35 +157,71 @@ Description: CSS for the homepage
 }
 
 .tx-hero h1 {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     color: currentColor;
     font-weight: 700;
-    font-size: 3em;
+    font-size: 1.75em;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    max-width: 380px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.15);
 }
 
-.tx-hero p {
-    font-size: 1.08em;
+.tx-hero__tagline {
+    font-size: 0.9rem;
+    font-weight: 400;
+    opacity: 0.95;
+    margin-bottom: 0.5rem;
+}
+
+.tx-hero__description {
+    font-size: 0.75rem;
     font-weight: 300;
+    opacity: 0.85;
+    max-width: 400px;
+    line-height: 1.45;
+}
+
+.tx-hero__buttons {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
 }
 
 .tx-hero__content {
     padding-bottom: 1rem;
-    margin-top: 3.5rem;
-    margin-bottom: 3.5rem;
+    margin-top: 3rem;
+    margin-bottom: 3rem;
     margin-left: 3rem;
     margin-right: auto;
 }
 
 .tx-hero__image {
-    width: 9rem;
-    height: 9rem;
+    width: 280px;
+    height: 280px;
     order: 0;
     margin-right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quantum-illustration {
+    width: 100%;
+    height: 100%;
 }
 
 @media screen and (max-width:30em) {
     .tx-hero h1 {
-        font-size: 1.4rem
+        font-size: 1.3rem;
+    }
+    .tx-hero__tagline {
+        font-size: 0.8em;
+    }
+    .tx-hero__image {
+        width: 200px;
+        height: 200px;
     }
 }
 
@@ -89,6 +229,8 @@ Description: CSS for the homepage
     .tx-hero__image {
         margin-right: 0 auto;
         margin: 0 auto;
+        width: 220px;
+        height: 220px;
     }
 
     .tx-hero__content {
@@ -99,6 +241,12 @@ Description: CSS for the homepage
 
     .tx-hero__content p {
         text-align: center;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .tx-hero__buttons {
+        justify-content: center;
     }
 }
 
@@ -110,47 +258,37 @@ Description: CSS for the homepage
     }
 
     .tx-hero__content {
-        max-width: 22rem;
-        margin-top: 3.5rem;
-        margin-bottom: 3.5rem;
+        max-width: 28rem;
+        margin-top: 3rem;
+        margin-bottom: 3rem;
         margin-left: 3rem;
         margin-right: auto;
         align-items: center;
     }
 }
 
-/* Feature items */
-.top-hr {
-    margin-top: 3rem;
-}
-
-@media screen and (min-width:76.25em) {
-    .top-hr {
-        width: 100%;
-        display: flex;
-        max-width: 61rem;
-        margin-right: auto;
-        margin-left: auto;
-        padding: 0 .2rem;
-    }
-
-    .feature-item {
-        flex: 1;
-        min-width: 0;
-    }
-}
-
 /* Buttons */
 .tx-hero .md-button {
     margin-top: .5rem;
-    margin-right: .5rem;
-    color: var(--md-primary-bg-color)
+    color: var(--md-primary-bg-color);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6em 1.2em;
+    font-weight: 500;
+    border-radius: 0.3rem;
+}
+
+.tx-hero .md-button .twemoji svg {
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
 }
 
 .tx-hero .md-button--primary {
     background-color: var(--md-primary-bg-color);
     color: var(--homepage-button-font-color);
-    border-color: var(--md-primary-bg-color)
+    border-color: var(--md-primary-bg-color);
 }
 
 .tx-hero .md-button:focus,
@@ -160,30 +298,366 @@ Description: CSS for the homepage
     border-color: var(--homepage-button-hover-color);
 }
 
-/* Feature boxes */
-.feature-item {
+/* ============================= */
+/* General Section Styles        */
+/* ============================= */
+
+.home-section {
+    position: relative;
+    z-index: 1;
+    padding: 3rem 1.5rem;
+}
+
+.section-container {
+    max-width: 61rem;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--md-typeset-color);
+    opacity: 0.85;
+}
+
+.section-subtitle {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--md-typeset-color);
+    opacity: 0.7;
+    margin-bottom: 2rem;
+}
+
+/* ============================= */
+/* Install Section               */
+/* ============================= */
+
+.install-section {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.install-box {
     background: var(--md-default-bg-header-color);
-    box-sizing: border-box;
-    padding: 20px 40px 30px 40px;
-    margin: 30px;
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    max-width: 500px;
+    margin: 0 auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
-.feature-item h3 {
-    font-size: 1rem;
-    line-height: 1rem;
-    text-transform: uppercase;
-    margin-bottom: 1.25rem;
-    font-family: 'Lato', sans-serif;
-    font-weight: 500;
+.install-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
 }
 
-.feature-item p {
+.install-icon {
+    display: flex;
+    align-items: center;
+    color: var(--md-primary-fg-color);
+}
+
+.install-header h3 {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--md-typeset-color);
+}
+
+.install-code {
+    background: var(--md-default-bg-color);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--md-code-font-family, monospace);
+    font-size: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.install-code code {
+    color: var(--md-code-fg-color);
+}
+
+.copy-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    color: var(--md-typeset-color);
+    opacity: 0.8;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.install-note {
+    margin-top: 0.6rem;
     font-size: 0.65rem;
-    line-height: 1.5em;
-    display: block;
+    color: var(--md-typeset-color);
+    opacity: 0.7;
+    text-align: center;
 }
 
-.feature-item p a {
+.install-note a {
     color: var(--md-accent-fg-color);
+}
+
+/* ============================= */
+/* Quickstart Section            */
+/* ============================= */
+
+.quickstart-section {
+    background: var(--md-default-bg-color);
+}
+
+.code-example {
+    position: relative;
+    max-width: 700px;
+    margin: 0 auto;
+    background: var(--md-default-bg-header-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.08);
+}
+
+.code-header {
+    background: var(--md-default-bg-header-color);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.code-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.code-dot.red { background: #f38ba8; }
+.code-dot.yellow { background: #f9e2af; }
+.code-dot.green { background: #a6e3a1; }
+
+.code-filename {
+    margin-left: 0.75rem;
+    color: var(--md-typeset-color);
+    opacity: 0.6;
+    font-size: 0.75rem;
+    font-family: var(--md-code-font-family, monospace);
+}
+
+.code-block {
+    margin: 0;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    font-size: 0.7rem;
+    line-height: 1.5;
+    color: var(--md-code-fg-color);
+}
+
+.code-block code {
+    font-family: var(--md-code-font-family, monospace);
+}
+
+/* Syntax highlighting */
+.code-block .kw { color: var(--md-code-hl-keyword-color); }   /* Keywords */
+.code-block .lib { color: var(--md-code-hl-constant-color); }  /* Libraries/modules */
+.code-block .fn { color: var(--md-code-hl-function-color); }   /* Functions */
+.code-block .num { color: var(--md-code-hl-number-color); }    /* Numbers */
+.code-block .cmt { color: var(--md-typeset-color); opacity: 0.5; }  /* Comments */
+.code-block .str { color: var(--md-code-hl-string-color); }    /* Strings */
+
+.quickstart-features {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.quickstart-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.7rem;
+    line-height: 1.4;
+    color: var(--md-typeset-color);
+}
+
+.feature-check {
+    color: var(--md-primary-fg-color);
     font-weight: bold;
+}
+
+/* ============================= */
+/* Features Section              */
+/* ============================= */
+
+.features-section {
+    background: var(--md-default-bg-header-color);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.feature-card {
+    background: var(--md-default-bg-color);
+    border-radius: 12px;
+    padding: 1.75rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.feature-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.feature-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--md-primary-fg-color);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.feature-icon svg {
+    fill: white;
+}
+
+.feature-card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--md-typeset-color);
+}
+
+.feature-card p {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.7rem;
+    line-height: 1.4;
+    color: var(--md-typeset-color);
+    opacity: 0.8;
+}
+
+.feature-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--md-accent-fg-color);
+    text-decoration: none;
+}
+
+.feature-link:hover {
+    text-decoration: underline;
+}
+
+/* ============================= */
+/* CTA Section                   */
+/* ============================= */
+
+.cta-section {
+    padding: 3rem 1.5rem 4rem;
+}
+
+.cta-box {
+    background: var(--homepage-gradient);
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    color: white;
+    gap: 1.5rem;
+}
+
+@media screen and (min-width: 60em) {
+    .cta-box {
+        flex-direction: row;
+        text-align: left;
+        padding: 2.5rem 3rem;
+        gap: 2rem;
+    }
+}
+
+.cta-content {
+    flex: 1;
+}
+
+.cta-box h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.cta-box p {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    opacity: 0.9;
+    max-width: 500px;
+}
+
+.cta-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+@media screen and (min-width: 60em) {
+    .cta-buttons {
+        flex-direction: column;
+        justify-content: center;
+    }
+}
+
+.cta-buttons .md-button {
+    color: white;
+    border-color: rgba(255,255,255,0.5);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    padding: 0.5em 1em;
+    white-space: nowrap;
+}
+
+.cta-buttons .md-button svg {
+    fill: currentColor;
+}
+
+.cta-buttons .md-button--primary {
+    background: white;
+    color: var(--md-primary-fg-color);
+    border-color: white;
+}
+
+.cta-buttons .md-button:hover {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border-color: rgba(255,255,255,0.8);
+}
+
+.cta-buttons .md-button--primary:hover {
+    background: rgba(255,255,255,0.9);
+    color: var(--md-primary-fg-color);
 }
