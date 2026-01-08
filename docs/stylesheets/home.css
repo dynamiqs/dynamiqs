@@ -42,6 +42,14 @@ Description: CSS for the homepage
 
 .copy-button {
     position: relative;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    color: var(--md-typeset-color);
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
 }
 
 .copy-button .copy-tooltip {
@@ -60,7 +68,7 @@ Description: CSS for the homepage
     pointer-events: none;
     margin-bottom: 4px;
     z-index: 1000;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    transition: opacity 0.3s, transform 0.3s;
 }
 
 .copy-button.copied .copy-tooltip {
@@ -121,8 +129,6 @@ Description: CSS for the homepage
 .waves {
     position: absolute;
     bottom: 0;
-    margin-left: auto;
-    margin-right: auto;
     width: 100%;
     min-width: 60em;
 }
@@ -151,9 +157,8 @@ Description: CSS for the homepage
 
 /* Hero text and image */
 .tx-hero {
-    margin: 32px 2.8rem 0 2.8rem;
+    margin: 32px 2.8rem 0;
     color: var(--md-primary-bg-color);
-    justify-content: center;
 }
 
 .tx-hero h1 {
@@ -165,13 +170,6 @@ Description: CSS for the homepage
     line-height: 1.15;
     max-width: 380px;
     text-shadow: 0 2px 12px rgba(0,0,0,0.15);
-}
-
-.tx-hero__tagline {
-    font-size: 0.9rem;
-    font-weight: 400;
-    opacity: 0.95;
-    margin-bottom: 0.5rem;
 }
 
 .tx-hero__description {
@@ -191,17 +189,12 @@ Description: CSS for the homepage
 
 .tx-hero__content {
     padding-bottom: 1rem;
-    margin-top: 3rem;
-    margin-bottom: 3rem;
-    margin-left: 3rem;
-    margin-right: auto;
+    margin: 3rem auto 3rem 3rem;
 }
 
 .tx-hero__image {
     width: 280px;
     height: 280px;
-    order: 0;
-    margin-right: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -216,9 +209,6 @@ Description: CSS for the homepage
     .tx-hero h1 {
         font-size: 1.3rem;
     }
-    .tx-hero__tagline {
-        font-size: 0.8em;
-    }
     .tx-hero__image {
         width: 200px;
         height: 200px;
@@ -227,7 +217,6 @@ Description: CSS for the homepage
 
 @media screen and (max-width:60em) {
     .tx-hero__image {
-        margin-right: 0 auto;
         margin: 0 auto;
         width: 220px;
         height: 220px;
@@ -235,14 +224,11 @@ Description: CSS for the homepage
 
     .tx-hero__content {
         text-align: center;
-        margin-left: auto;
-        margin-top: 1.5rem;
+        margin: 1.5rem auto 3rem;
     }
 
     .tx-hero__content p {
-        text-align: center;
-        margin-left: auto;
-        margin-right: auto;
+        margin: 0 auto;
     }
 
     .tx-hero__buttons {
@@ -259,11 +245,6 @@ Description: CSS for the homepage
 
     .tx-hero__content {
         max-width: 28rem;
-        margin-top: 3rem;
-        margin-bottom: 3rem;
-        margin-left: 3rem;
-        margin-right: auto;
-        align-items: center;
     }
 }
 
@@ -279,7 +260,7 @@ Description: CSS for the homepage
     border-radius: 0.3rem;
 }
 
-.tx-hero .md-button .twemoji svg {
+.tx-hero .md-button svg {
     width: 1em;
     height: 1em;
     fill: currentColor;
@@ -311,7 +292,6 @@ Description: CSS for the homepage
 .section-container {
     max-width: 61rem;
     margin: 0 auto;
-    padding: 0 1rem;
 }
 
 .section-title {
@@ -319,14 +299,12 @@ Description: CSS for the homepage
     font-size: 1.1rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
-    color: var(--md-typeset-color);
     opacity: 0.85;
 }
 
 .section-subtitle {
     text-align: center;
     font-size: 0.75rem;
-    color: var(--md-typeset-color);
     opacity: 0.7;
     margin-bottom: 2rem;
 }
@@ -336,8 +314,7 @@ Description: CSS for the homepage
 /* ============================= */
 
 .install-section {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+    padding: 2rem 1.5rem;
 }
 
 .install-box {
@@ -366,7 +343,6 @@ Description: CSS for the homepage
     margin: 0;
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--md-typeset-color);
 }
 
 .install-code {
@@ -385,22 +361,9 @@ Description: CSS for the homepage
     color: var(--md-code-fg-color);
 }
 
-.copy-button {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0.25rem;
-    color: var(--md-typeset-color);
-    opacity: 0.8;
-    transition: opacity 0.2s;
-    display: flex;
-    align-items: center;
-}
-
 .install-note {
     margin-top: 0.6rem;
     font-size: 0.65rem;
-    color: var(--md-typeset-color);
     opacity: 0.7;
     text-align: center;
 }
@@ -425,33 +388,6 @@ Description: CSS for the homepage
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
     border: 1px solid rgba(0,0,0,0.08);
-}
-
-.code-header {
-    background: var(--md-default-bg-header-color);
-    padding: 0.75rem 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    border-bottom: 1px solid rgba(0,0,0,0.08);
-}
-
-.code-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-}
-
-.code-dot.red { background: #f38ba8; }
-.code-dot.yellow { background: #f9e2af; }
-.code-dot.green { background: #a6e3a1; }
-
-.code-filename {
-    margin-left: 0.75rem;
-    color: var(--md-typeset-color);
-    opacity: 0.6;
-    font-size: 0.75rem;
-    font-family: var(--md-code-font-family, monospace);
 }
 
 .code-block {
@@ -488,8 +424,6 @@ Description: CSS for the homepage
     align-items: center;
     gap: 0.5rem;
     font-size: 0.7rem;
-    line-height: 1.4;
-    color: var(--md-typeset-color);
 }
 
 .feature-check {
@@ -541,27 +475,22 @@ Description: CSS for the homepage
 }
 
 .feature-card h3 {
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.5rem;
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--md-typeset-color);
 }
 
 .feature-card p {
-    margin: 0 0 0.75rem 0;
+    margin: 0 0 0.75rem;
     font-size: 0.7rem;
     line-height: 1.4;
-    color: var(--md-typeset-color);
     opacity: 0.8;
 }
 
 .feature-link {
-    display: inline-flex;
-    align-items: center;
     font-size: 0.7rem;
     font-weight: 500;
     color: var(--md-accent-fg-color);
-    text-decoration: none;
 }
 
 .feature-link:hover {
@@ -573,7 +502,7 @@ Description: CSS for the homepage
 /* ============================= */
 
 .cta-section {
-    padding: 3rem 1.5rem 4rem;
+    padding-bottom: 4rem;
 }
 
 .cta-box {
@@ -602,7 +531,7 @@ Description: CSS for the homepage
 }
 
 .cta-box h2 {
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.5rem;
     font-size: 1.1rem;
     font-weight: 600;
 }
