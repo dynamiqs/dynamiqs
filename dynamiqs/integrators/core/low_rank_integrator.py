@@ -112,6 +112,12 @@ def expval_from_m(m: Array, op: Array) -> Array:
     return jnp.sum(jnp.conj(m) * (op @ m))
 
 
+def chi_from_m(m: Array) -> Array:
+    gram = m.conj().T @ m
+    evals = jnp.linalg.eigvalsh(gram)
+    return jnp.abs(evals[0] / evals[-1])
+
+
 class MESolveLowRankDiffraxIntegrator(
     DiffraxIntegrator, MEInterface, SolveSaveMixin, SolveInterface
 ):
@@ -165,11 +171,22 @@ class MESolveLowRankDiffraxIntegrator(
         else:
             Esave = None
 
+        if self.options.save_low_rank_chi:
+            chisave = chi_from_m(m)
+        else:
+            chisave = None
+
         if self.options.save_states and save_factors_only:
             msave = m
         else:
             msave = None
-        return LowRankSolveSaved(ysave, extra, Esave, msave)
+        return LowRankSolveSaved(
+            ysave=ysave,
+            extra=extra,
+            Esave=Esave,
+            msave=msave,
+            chisave=chisave,
+        )
 
     def postprocess_saved(self, saved: LowRankSolveSaved, ylast: PyTree) -> LowRankSolveSaved:
         if not self.options.save_states:

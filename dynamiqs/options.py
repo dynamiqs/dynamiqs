@@ -18,6 +18,7 @@ class Options(eqx.Module):
     save_states: bool = True
     save_propagators: bool = True
     save_factors_only: bool = False
+    save_low_rank_chi: bool = False
     cartesian_batching: bool = True
     progress_meter: AbstractProgressMeter | bool | None = None
     t0: ScalarLike | None = None
@@ -38,10 +39,12 @@ class Options(eqx.Module):
         vectorized: bool = False,
         assume_hermitian: bool = True,
         save_factors_only: bool = False,
+        save_low_rank_chi: bool = False,
     ):
         self.save_states = save_states
         self.save_propagators = save_propagators
         self.save_factors_only = save_factors_only
+        self.save_low_rank_chi = save_low_rank_chi
         self.cartesian_batching = cartesian_batching
         self.progress_meter = progress_meter
         self.t0 = t0
@@ -71,6 +74,7 @@ class Options(eqx.Module):
             save_states=self.save_states,
             save_propagators=self.save_propagators,
             save_factors_only=self.save_factors_only,
+            save_low_rank_chi=self.save_low_rank_chi,
             cartesian_batching=self.cartesian_batching,
             progress_meter=get_progress_meter(self.progress_meter),
             t0=self.t0,
@@ -97,6 +101,7 @@ def check_options(options: Options, solver_name: str):
             't0',
             'save_extra',
             'save_factors_only',
+            'save_low_rank_chi',
         ),
         'mesolve': (
             'save_states',

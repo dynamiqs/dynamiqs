@@ -60,7 +60,8 @@ class SolveSaved(Saved):
 
 
 class LowRankSolveSaved(SolveSaved):
-    msave: Array | None
+    msave: Array | None = None
+    chisave: Array | None = None
 
 
 class JumpSolveSaved(SolveSaved):
@@ -209,9 +210,16 @@ class MESolveLRResult(SolveResult):
             return self._saved.ysave
         return None
 
+    @property
+    def chi(self) -> Array | None:
+        return self._saved.chisave
+
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
-        return d | {'Factors': _array_str(self.factors)}
+        return d | {
+            'Factors': _array_str(self.factors),
+            'Chi': _array_str(self.chi),
+        }
 
 
 class SEPropagatorResult(PropagatorResult):
