@@ -18,6 +18,7 @@ __all__ = [
     'JSSESolveResult',
     'DSSESolveResult',
     'JSMESolveResult',
+    'MESolveLRResult',
     'MESolveResult',
     'DSMESolveResult',
     'SEPropagatorResult',
@@ -56,6 +57,10 @@ class Saved(eqx.Module):
 
 class SolveSaved(Saved):
     Esave: Array | None
+
+
+class LowRankSolveSaved(SolveSaved):
+    msave: Array | None
 
 
 class JumpSolveSaved(SolveSaved):
@@ -191,6 +196,22 @@ class SESolveResult(SolveResult):
 
 class MESolveResult(SolveResult):
     pass
+
+
+class MESolveLRResult(SolveResult):
+    _saved: LowRankSolveSaved
+
+    @property
+    def factors(self) -> Array | None:
+        if self._saved.msave is not None:
+            return self._saved.msave
+        if getattr(self.options, 'save_factors_only', False):
+            return self._saved.ysave
+        return None
+
+    def _str_parts(self) -> dict[str, str | None]:
+        d = super()._str_parts()
+        return d | {'Factors': _array_str(self.factors)}
 
 
 class SEPropagatorResult(PropagatorResult):
