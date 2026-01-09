@@ -206,9 +206,8 @@ class MESolveLRResult(SolveResult):
     def factors(self) -> Array | None:
         if self._saved.msave is not None:
             return self._saved.msave
-        if getattr(self.options, 'save_factors_only', False):
-            return self._saved.ysave
-        return None
+        ysave = self._saved.ysave
+        return ysave if isinstance(ysave, Array) else None
 
     @property
     def chi(self) -> Array | None:

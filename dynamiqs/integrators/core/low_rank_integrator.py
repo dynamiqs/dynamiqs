@@ -110,6 +110,8 @@ class MESolveLowRankDiffraxIntegrator(
 ):
     normalize_each_eval: bool = eqx.field(static=True)
     gram_reg: float = eqx.field(static=True)
+    save_factors_only: bool = eqx.field(static=True)
+    save_low_rank_chi: bool = eqx.field(static=True)
     dims: tuple[int, ...] | None = eqx.field(static=True)
 
     @property
@@ -139,7 +141,7 @@ class MESolveLowRankDiffraxIntegrator(
 
     def save(self, y: PyTree) -> LowRankSolveSaved:
         m = normalize_m(y, eps=0.0)
-        save_factors_only = self.options.save_factors_only
+        save_factors_only = self.save_factors_only
 
         rho = None
         if (self.options.save_states and not save_factors_only) or (
@@ -158,7 +160,7 @@ class MESolveLowRankDiffraxIntegrator(
         else:
             Esave = None
 
-        if self.options.save_low_rank_chi:
+        if self.save_low_rank_chi:
             chisave = chi_from_m(m)
         else:
             chisave = None
@@ -176,14 +178,14 @@ class MESolveLowRankDiffraxIntegrator(
     ) -> LowRankSolveSaved:
         if not self.options.save_states:
             mlast = normalize_m(ylast, eps=0.0)
-            if self.options.save_factors_only:
+            if self.save_factors_only:
                 ylast_save = mlast
             else:
                 ylast_save = self._rho_from_m(mlast)
             saved = eqx.tree_at(
                 lambda x: x.ysave, saved, ylast_save, is_leaf=lambda x: x is None
             )
-            if not self.options.save_factors_only:
+            if not self.save_factors_only:
                 saved = eqx.tree_at(
                     lambda x: x.msave, saved, mlast, is_leaf=lambda x: x is None
                 )

@@ -45,6 +45,8 @@ def mesolve_lr(
     options: Options = Options(),  # noqa: B008
     normalize_each_eval: bool = True,
     gram_reg: float = 0.0,
+    save_factors_only: bool = False,
+    save_low_rank_chi: bool = False,
     eps_init: float | None = None,
     key: PRNGKeyArray | None = None,
 ) -> MESolveLRResult:
@@ -52,8 +54,9 @@ def mesolve_lr(
 
     This solver evolves a factor `m(t)` such that the density matrix is approximated by
     `rho(t) = m(t) m(t)^\dagger`, following the mesolve API. M indicates the rank. Set
-    `options.save_factors_only=True` to save `m(t)` in result.factors instead of `rho(t)`
-    in `result.states`.
+    `save_factors_only=True` to save `m(t)` in result.factors instead of `rho(t)` in
+    `result.states`. Set `save_low_rank_chi=True` to save the low-rank chi diagnostic
+    in `result.chi`.
     """
     # === convert arguments
     H = astimeqarray(H)
@@ -64,6 +67,8 @@ def mesolve_lr(
     except (TypeError, ValueError) as exc:
         raise TypeError('Argument `M` must be an int.') from exc
     gram_reg = float(gram_reg)
+    save_factors_only = bool(save_factors_only)
+    save_low_rank_chi = bool(save_low_rank_chi)
     if eps_init is not None:
         eps_init = float(eps_init)
     tsave = jnp.asarray(tsave)
@@ -90,6 +95,8 @@ def mesolve_lr(
             'M',
             'normalize_each_eval',
             'gram_reg',
+            'save_factors_only',
+            'save_low_rank_chi',
             'eps_init',
         ),
     )
@@ -105,6 +112,8 @@ def mesolve_lr(
         M,
         normalize_each_eval,
         gram_reg,
+        save_factors_only,
+        save_low_rank_chi,
         eps_init,
         key,
     )
@@ -123,15 +132,17 @@ def _vectorized_mesolve_lr(
     M: int,
     normalize_each_eval: bool,
     gram_reg: float,
+    save_factors_only: bool,
+    save_low_rank_chi: bool,
     eps_init: float | None,
     key: PRNGKeyArray | None,
 ) -> MESolveLRResult:
     # vectorize input over H, Ls and rho0
-    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, *(None,) * 10)
+    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, *(None,) * 12)
     out_axes = MESolveLRResult.out_axes()
 
     if options.cartesian_batching:
-        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0.ndim - 2, *(0,) * 10)
+        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0.ndim - 2, *(0,) * 12)
         f = cartesian_vmap(_mesolve_lr, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, rho0]])
@@ -156,6 +167,8 @@ def _vectorized_mesolve_lr(
         M,
         normalize_each_eval,
         gram_reg,
+        save_factors_only,
+        save_low_rank_chi,
         eps_init,
         key,
     )
@@ -173,6 +186,8 @@ def _mesolve_lr(
     M: int,
     normalize_each_eval: bool,
     gram_reg: float,
+    save_factors_only: bool,
+    save_low_rank_chi: bool,
     eps_init: float | None,
     key: PRNGKeyArray | None,
 ) -> MESolveLRResult:
@@ -212,6 +227,8 @@ def _mesolve_lr(
         Es=Es,
         normalize_each_eval=normalize_each_eval,
         gram_reg=gram_reg,
+        save_factors_only=save_factors_only,
+        save_low_rank_chi=save_low_rank_chi,
         dims=rho0.dims,
     )
 
