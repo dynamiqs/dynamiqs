@@ -51,10 +51,9 @@ def mesolve_lr(
     r"""Solve the Lindblad master equation with a low-rank factorization.
 
     This solver evolves a factor `m(t)` such that the density matrix is approximated by
-    `rho(t) = m(t) m(t)^\dagger`. It follows Dynamiqs conventions for time-dependent
-    operators, batching, and options, while using a low-rank internal state. Set
-    `options.save_factors_only=True` to save `m(t)` instead of `rho(t)` in
-    `result.states`.
+    `rho(t) = m(t) m(t)^\dagger`, following the mesolve API. M indicates the rank. Set
+    `options.save_factors_only=True` to save `m(t)` in result.factors instead of `rho(t)`
+    in `result.states`.
     """
     # === convert arguments
     H = astimeqarray(H)
@@ -132,12 +131,7 @@ def _vectorized_mesolve_lr(
     out_axes = MESolveLRResult.out_axes()
 
     if options.cartesian_batching:
-        nvmap = (
-            H.ndim - 2,
-            [L.ndim - 2 for L in Ls],
-            rho0.ndim - 2,
-            *(0,) * 10,
-        )
+        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0.ndim - 2, *(0,) * 10)
         f = cartesian_vmap(_mesolve_lr, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, rho0]])
@@ -256,9 +250,7 @@ def _check_mesolve_lr_args(
 
     n = rho0.shape[-2]
     if M > n:
-        raise ValueError(
-            f'Argument `M` must be <= n (got M={M} and n={n}).'
-        )
+        raise ValueError(f'Argument `M` must be <= n (got M={M} and n={n}).')
 
     if gram_reg < 0.0:
         raise ValueError('Argument `gram_reg` must be non-negative.')

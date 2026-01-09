@@ -1,3 +1,5 @@
+# Implementation of the low-rank method from Goutte, Savona (2025) arxiv:2508.18114
+# Original implementation in Julia: https://github.com/leogoutte/low_rank/blob/main/src/low_rank.jl
 from __future__ import annotations
 
 from functools import partial
@@ -17,14 +19,14 @@ from .save_mixin import SolveSaveMixin
 
 
 def normalize_m(m: Array, *, eps: float = 0.0) -> Array:
-    norm = jnp.sqrt(jnp.sum(jnp.abs(m) ** 2) + eps)
+    norm = jnp.sqrt(jnp.sum(jnp.abs(m) ** 2, axis=(-2, -1), keepdims=True) + eps)
     return m / norm
 
 
 def rho_from_m(m: Array) -> Array:
-    rho = m @ m.conj().T
-    tr = jnp.trace(rho)
-    return rho / tr
+    rho = m @ m.conj().swapaxes(-2, -1)
+    tr = jnp.trace(rho, axis1=-2, axis2=-1)
+    return rho / tr[..., None, None]
 
 def moore_penrose_left_inverse(m: Array, *, reg: float) -> Array:
     gram = m.conj().T @ m
@@ -118,16 +120,16 @@ class MESolveLowRankDiffraxIntegrator(
             if self.normalize_each_eval:
                 m = normalize_m(m, eps=0.0)
 
-            H = self.H(t).to_jax()
-            Ls = [L(t).to_jax() for L in self.Ls]
-            dm = (-1j) * (H @ m)
+            H = self.H(t)
+            Ls = [L(t) for L in self.Ls]
+            dm = (-1j) * (H @ m).to_jax()
 
             if len(Ls) > 0:
                 m_inv = moore_penrose_left_inverse(m, reg=self.gram_reg)
                 for L in Ls:
-                    Lm = L @ m
+                    Lm = (L @ m).to_jax()
                     tmp = m_inv @ Lm
-                    dm = dm + 0.5 * (Lm @ tmp.conj().T) - 0.5 * (L.conj().T @ Lm)
+                    dm = dm + 0.5 * (Lm @ tmp.conj().T) - 0.5 * (L.dag() @ Lm).to_jax()
 
             return dm
 
