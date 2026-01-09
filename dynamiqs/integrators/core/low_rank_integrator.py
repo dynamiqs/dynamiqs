@@ -8,6 +8,7 @@ import diffrax as dx
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+import lineax as lx
 from jax import Array
 from jaxtyping import PyTree
 
@@ -16,6 +17,17 @@ from ...result import LowRankSolveSaved
 from .diffrax_integrator import DiffraxIntegrator
 from .interfaces import MEInterface, SolveInterface
 from .save_mixin import SolveSaveMixin
+
+
+def lineax_solve(A: Array, B: Array) -> Array:
+    operator = lx.MatrixLinearOperator(A)
+
+    def solve_single(b: Array) -> Array:
+        x = lx.linear_solve(operator, b, throw=False, solver=lx.QR()).value
+        return x
+
+    x = jax.vmap(solve_single, in_axes=1, out_axes=1)(B)
+    return x
 
 
 def normalize_m(m: Array, *, eps: float = 0.0) -> Array:
@@ -28,17 +40,9 @@ def rho_from_m(m: Array) -> Array:
     tr = jnp.trace(rho, axis1=-2, axis2=-1)
     return rho / tr[..., None, None]
 
-def moore_penrose_left_inverse(m: Array, *, reg: float) -> Array:
-    gram = m.conj().T @ m
-    gram = gram + reg * jnp.eye(gram.shape[0], dtype=gram.dtype)
-    return jax.scipy.linalg.solve(gram, m.conj().T, assume_a='pos')
 
 def initialize_m0_from_ket(
-    psi0: Array,
-    M: int,
-    *,
-    eps: float,
-    key: Array | None,
+    psi0: Array, M: int, *, eps: float, key: Array | None
 ) -> Array:
     psi0 = jnp.asarray(psi0)
     if psi0.ndim == 2 and psi0.shape[1] == 1:
@@ -69,12 +73,7 @@ def initialize_m0_from_ket(
 
 
 def initialize_m0_from_dm(
-    rho0: Array,
-    M: int,
-    *,
-    eps: float,
-    key: Array | None,
-    eigval_tol: float = 1e-12,
+    rho0: Array, M: int, *, eps: float, key: Array | None, eigval_tol: float = 1e-12
 ) -> Array:
     rho0 = (rho0 + rho0.conj().T) / 2.0
     evals, evecs = jnp.linalg.eigh(rho0)
@@ -125,10 +124,10 @@ class MESolveLowRankDiffraxIntegrator(
             dm = (-1j) * (H @ m).to_jax()
 
             if len(Ls) > 0:
-                m_inv = moore_penrose_left_inverse(m, reg=self.gram_reg)
                 for L in Ls:
                     Lm = (L @ m).to_jax()
-                    tmp = m_inv @ Lm
+                    # tmp = m_inv @ Lm
+                    tmp = lineax_solve(m, Lm)
                     dm = dm + 0.5 * (Lm @ tmp.conj().T) - 0.5 * (L.dag() @ Lm).to_jax()
 
             return dm
@@ -169,14 +168,12 @@ class MESolveLowRankDiffraxIntegrator(
         else:
             msave = None
         return LowRankSolveSaved(
-            ysave=ysave,
-            extra=extra,
-            Esave=Esave,
-            msave=msave,
-            chisave=chisave,
+            ysave=ysave, extra=extra, Esave=Esave, msave=msave, chisave=chisave
         )
 
-    def postprocess_saved(self, saved: LowRankSolveSaved, ylast: PyTree) -> LowRankSolveSaved:
+    def postprocess_saved(
+        self, saved: LowRankSolveSaved, ylast: PyTree
+    ) -> LowRankSolveSaved:
         if not self.options.save_states:
             mlast = normalize_m(ylast, eps=0.0)
             if self.options.save_factors_only:
