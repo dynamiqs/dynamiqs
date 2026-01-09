@@ -26,12 +26,10 @@ def rho_from_m(m: Array) -> Array:
     tr = jnp.trace(rho)
     return rho / tr
 
-
 def moore_penrose_left_inverse(m: Array, *, reg: float) -> Array:
     gram = m.conj().T @ m
     gram = gram + reg * jnp.eye(gram.shape[0], dtype=gram.dtype)
-    return jnp.linalg.solve(gram, m.conj().T)
-
+    return jax.scipy.linalg.solve(gram, m.conj().T, assume_a='pos')
 
 def initialize_m0_from_ket(
     psi0: Array,
@@ -50,8 +48,9 @@ def initialize_m0_from_ket(
         key = jax.random.PRNGKey(0)
 
     psi0 = psi0 / jnp.linalg.norm(psi0)
+    psi0_unit = psi0
     if M > 1:
-        psi0 = psi0 * jnp.sqrt(jnp.maximum(1.0 - (M - 1) * (eps**2), 0.0))
+        psi0 = psi0_unit * jnp.sqrt(jnp.maximum(1.0 - (M - 1) * (eps**2), 0.0))
 
     if M == 1:
         return normalize_m(psi0[:, None])
@@ -61,17 +60,9 @@ def initialize_m0_from_ket(
     rand_i = jax.random.normal(key_i, (psi0.shape[0], M - 1), dtype=psi0.real.dtype)
     rand = (rand_r + 1j * rand_i) / jnp.sqrt(2.0)
 
-    m0 = jnp.concatenate([psi0[:, None], rand], axis=1)
-
-    cols = [m0[:, 0]]
-    for i in range(1, M):
-        v = m0[:, i]
-        for j in range(i):
-            v = v - jnp.vdot(cols[j], v) * cols[j]
-        v = v / (jnp.linalg.norm(v) + 1e-30)
-        v = v * eps
-        cols.append(v)
-    m0 = jnp.stack(cols, axis=1)
+    rand = rand - psi0_unit[:, None] * (psi0_unit.conj() @ rand)[None, :]
+    q, _ = jnp.linalg.qr(rand, mode='reduced')
+    m0 = jnp.concatenate([psi0[:, None], q * eps], axis=1)
     return normalize_m(m0)
 
 
@@ -85,14 +76,9 @@ def initialize_m0_from_dm(
 ) -> Array:
     rho0 = (rho0 + rho0.conj().T) / 2.0
     evals, evecs = jnp.linalg.eigh(rho0)
-
-    idx = jnp.argsort(evals)[::-1]
-    evals = evals[idx]
-    evecs = evecs[:, idx]
     evals = jnp.maximum(evals, 0.0)
-
-    evals_M = evals[:M]
-    cols = evecs[:, :M] * jnp.sqrt(evals_M)[None, :]
+    evals_M = evals[-M:][::-1]
+    cols = evecs[:, -M:][:, ::-1] * jnp.sqrt(evals_M)[None, :]
 
     if eps > 0.0:
         if key is None:
