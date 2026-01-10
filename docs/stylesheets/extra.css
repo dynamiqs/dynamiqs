@@ -27,6 +27,27 @@ Description: Extra CSS for the Dynamiqs documentation
   background-color: #0000001f;
 }
 
+/* Header background extension - ensures area above header matches header color */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background-color: var(--md-default-bg-header-color);
+  z-index: -1;
+}
+
+/* Footer background extension - ensures area below footer matches footer color */
+html {
+  background-color: var(--md-footer-bg-color);
+}
+
+.md-footer-meta {
+    background-color: transparent;
+}
+
 /* Site title and logo styling */
 .md-header__button:hover {
   opacity: 1.0;
