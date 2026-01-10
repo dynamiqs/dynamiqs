@@ -29,6 +29,9 @@ def lineax_solve(A: Array, B: Array) -> Array:
     x = jax.vmap(solve_single, in_axes=1, out_axes=1)(B)
     return x
 
+def cholesky_solve(A: Array, B: Array) -> Array:
+    A_pinv = jax.scipy.linalg.solve(A.conj().T @ A, A.conj().T, assume_a='pos')
+    return A_pinv @ B
 
 def normalize_m(m: Array, *, eps: float = 0.0) -> Array:
     norm = jnp.sqrt(jnp.sum(jnp.abs(m) ** 2, axis=(-2, -1), keepdims=True) + eps)
@@ -109,9 +112,9 @@ class MESolveLowRankDiffraxIntegrator(
     DiffraxIntegrator, MEInterface, SolveSaveMixin, SolveInterface
 ):
     normalize_each_eval: bool = eqx.field(static=True)
-    gram_reg: float = eqx.field(static=True)
     save_factors_only: bool = eqx.field(static=True)
     save_low_rank_chi: bool = eqx.field(static=True)
+    linear_solver: str = eqx.field(static=True)
     dims: tuple[int, ...] | None = eqx.field(static=True)
 
     @property
@@ -125,11 +128,13 @@ class MESolveLowRankDiffraxIntegrator(
             Ls = [L(t) for L in self.Ls]
             dm = (-1j) * (H @ m).to_jax()
 
+            solve = cholesky_solve if self.linear_solver == 'cholesky' else lineax_solve
+
             if len(Ls) > 0:
                 for L in Ls:
                     Lm = (L @ m).to_jax()
                     # tmp = m_inv @ Lm
-                    tmp = lineax_solve(m, Lm)
+                    tmp = solve(m, Lm)
                     dm = dm + 0.5 * (Lm @ tmp.conj().T) - 0.5 * (L.dag() @ Lm).to_jax()
 
             return dm

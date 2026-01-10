@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import warnings
+
 import jax
 import jax.numpy as jnp
 from jax import Array
@@ -44,19 +46,221 @@ def mesolve_lr(
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
     normalize_each_eval: bool = True,
-    gram_reg: float = 0.0,
+    linear_solver: str = 'lineax',
     save_factors_only: bool = False,
     save_low_rank_chi: bool = False,
     eps_init: float | None = None,
     key: PRNGKeyArray | None = None,
 ) -> MESolveLRResult:
-    r"""Solve the Lindblad master equation with a low-rank factorization.
+    r"""Solve the low rank Lindblad master equation.
 
-    This solver evolves a factor `m(t)` such that the density matrix is approximated by
-    `rho(t) = m(t) m(t)^\dagger`, following the mesolve API. M indicates the rank. Set
-    `save_factors_only=True` to save `m(t)` in result.factors instead of `rho(t)` in
-    `result.states`. Set `save_low_rank_chi=True` to save the low-rank chi diagnostic
-    in `result.chi`.
+    This function computes the evolution of the density matrix $\rho(t)=m(t)m(t)^\dagger$ at time $t$,
+    starting from an initial state $\rho_0$, according to the low rank Lindblad master
+    equation (with $\hbar=1$ and where time is implicit(1))
+    $$
+        \frac{\dd m}{\dt} = -iHm
+        + \frac{1}{2}\sum_{k=1}^N \left(
+            L_k m(m^{-1}L_k m)^\dag
+            - L_k^\dag L_k m
+        \right),
+    $$
+    where $H$ is the system's Hamiltonian and $\{L_k\}$ is a collection of jump
+    operators. Reference: Goutte, Savona (2025) arxiv:2508.18114
+    { .annotate }
+
+    1. With explicit time dependence:
+        - $\rho\to\rho(t)$
+        - $H\to H(t)$
+        - $L_k\to L_k(t)$
+
+    Args:
+        H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
+        jump_ops (list of qarray-like or timeqarray, each of shape (...Lk, n, n)):
+            List of jump operators.
+        rho0 (qarray-like of shape (...rho0, n, 1) or (...rho0, n, n)): Initial state.
+        tsave (array-like of shape (ntsave,)): Times at which the states and
+            expectation values are saved. The equation is solved from `tsave[0]` to
+            `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
+        M (int): Rank of the low-rank approximation, number of columns of m(t).
+        exp_ops (list of qarray-like, each of shape (n, n), optional): List of
+            operators for which the expectation value is computed.
+        method: Method for the integration. Defaults to
+            [`dq.method.Tsit5`][dynamiqs.method.Tsit5] (supported:
+            [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8],
+            [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5],
+            [`Euler`][dynamiqs.method.Euler],
+            [`Expm`][dynamiqs.method.Expm].
+        gradient: Algorithm used to compute the gradient. The default is
+            method-dependent, refer to the documentation of the chosen method for more
+            details.
+        options: Generic options (supported: `save_states`, `cartesian_batching`,
+            `progress_meter`, `t0`, `save_extra`).
+            ??? "Detailed options API"
+
+                ```
+                dq.Options(
+                    save_states: bool = True,
+                    cartesian_batching: bool = True,
+                    progress_meter: AbstractProgressMeter | bool | None = None,
+                    t0: ScalarLike | None = None,
+                    save_extra: Callable[[Array], PyTree] | None = None,
+                )
+                ```
+
+                **Parameters:**
+
+                - **`save_states`** - If `True`, the state is saved at every time in
+                    `tsave`, otherwise only the final state is returned.
+                - **`cartesian_batching`** - If `True`, batched arguments are treated as
+                    separated batch dimensions, otherwise the batching is performed over
+                    a single shared batched dimension.
+                - **`progress_meter`** - Progress meter indicating how far the solve has
+                    progressed. Defaults to `None` which uses the global default
+                    progress meter (see
+                    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
+                    `True` for a [tqdm](https://github.com/tqdm/tqdm) progress meter,
+                    and `False` for no output. See other options in
+                    [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
+                    If gradients are computed, the progress meter only displays during
+                    the forward pass.
+                - **`t0`** - Initial time. If `None`, defaults to the first time in
+                    `tsave`.
+                - **`save_extra`** _(function, optional)_ - A function with signature
+                    `f(QArray) -> PyTree` that takes a state as input and returns a
+                    PyTree. This can be used to save additional arbitrary data
+                    during the integration, accessible in `result.extra`.
+        normalize_each_eval (bool): If `True`, the low-rank factors `m(t)` are
+            normalized at each evaluation of the vector field. This may improve numerical
+            stability. Defaults to `True`.
+        linear_solver (str): Linear solver to use to solve the linear systems for
+            computing the low-rank evolution. Supported values are:
+            - `'lineax'`: Use the Lineax QR-based solver.
+            - `'cholesky'`: Use a Cholesky-based solver. This can be more efficient
+              for small ranks, but may fail if precision is set to single. Defaults to
+              `'lineax'`.
+        save_factors_only (bool): If `True`, only the low-rank factors `m(t)` are
+            saved instead of the full density matrix `rho(t)`. This saves memory when
+            `M << n`. Defaults to `False`.
+        save_low_rank_chi (bool): If `True`, the low-rank accuracy metric $\chi(t)$ is
+            saved at each time in `tsave`. Defaults to `False`.
+        eps_init (float, optional): Regularization parameter for the initialization
+            of the low-rank factors `m0`. When initializing from a pure state
+            `psi0`, the factors are initialized as `m0 = [psi0, v1, ..., v(M-1)]` where
+            `v1, ..., v(M-1)` are random orthonormal vectors scaled by `eps_init`.
+            When initializing from a mixed state `rho0`, the factors are initialized
+            from the leading `M` eigenvectors of `rho0 + eps_init * I`. If `None`,
+            a default value is used (`1e-4` for pure states, `1e-5` for mixed states).
+        key (PRNGKeyArray, optional): JAX PRNG key used for random initialization
+            of the low-rank factors `m0`. If `None`, a default key is used.
+
+    Returns:
+        `dq.MESolveLRResult` object holding the result of the low rank
+            Lindblad master equation integration. Use `result.states` to access the
+            saved states and `result.expects` to access the saved expectation values.
+
+            ??? "Detailed result API"
+                ```python
+                dq.MESolveLRResult
+                ```
+
+                **Attributes:**
+
+                - **`states`** _(qarray of shape (..., nsave, n, n))_ - Saved states
+                    with `nsave = ntsave`, or `nsave = 1` if
+                    `options.save_states=False`.
+                - **`final_state`** _(qarray of shape (..., n, n))_ - Saved final state.
+                - **`expects`** _(array of shape (..., len(exp_ops), ntsave) or None)_ -
+                    Saved expectation values, if specified by `exp_ops`.
+                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
+                    if specified in `options`.
+                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
+                    resolution.
+                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
+                    were saved.
+                - **`method`** _(Method)_ - Method used.
+                - **`gradient`** _(Gradient)_ - Gradient used.
+                - **`options`** _(Options)_ - Options used.
+                - **`factors`** _(array of shape (..., nsave, n, M))_ - Saved low-rank
+                    factors `m(t)`, if `save_factors_only=True`.
+                - **`low_rank_chi`** _(array of shape (..., ntsave))_ - Saved $\chi(t)$, if
+                    `save_low_rank_chi=True`.
+
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a
+        jump_ops = [a]
+        psi0 = dq.coherent(n, 1.0)
+        tsave = jnp.linspace(0, 1.0, 11)
+
+        result = dq.mesolve(H, jump_ops, psi0, tsave)
+        print(result)
+        ```
+
+        ```text title="Output"
+        |██████████| 100.0% ◆ elapsed 1.13ms ◆ remaining 0.00ms
+        ==== MESolveResult ====
+        Method : Tsit5
+        Infos  : 9 steps (9 accepted, 0 rejected)
+        States : QArray complex64 (11, 16, 16) | 22.0 Kb
+        ```
+
+    # Advanced use-cases
+
+    ## Defining a time-dependent Hamiltonian or jump operator
+
+    If the Hamiltonian or the jump operators depend on time, they can be converted to
+    timeqarrays using [`dq.pwc()`][dynamiqs.pwc],
+    [`dq.modulated()`][dynamiqs.modulated], or
+    [`dq.timecallable()`][dynamiqs.timecallable]. See the
+    [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
+    tutorial for more details.
+
+    ## Running multiple simulations concurrently
+
+    The Hamiltonian `H`, the jump operators `jump_ops` and the initial density matrix
+    `rho0` can be batched to solve multiple master equations concurrently. All other
+    arguments are common to every batch. The resulting states and expectation values
+    are batched according to the leading dimensions of `H`, `jump_ops` and  `rho0`. The
+    behaviour depends on the value of the `cartesian_batching` option.
+
+    === "If `cartesian_batching = True` (default value)"
+        The results leading dimensions are
+        ```
+        ... = ...H, ...L0, ...L1, (...), ...rho0
+        ```
+
+        For example if:
+
+        - `H` has shape _(2, 3, n, n)_,
+        - `jump_ops = [L0, L1]` has shape _[(4, 5, n, n), (6, n, n)]_,
+        - `rho0` has shape _(7, n, n)_,
+
+        then `result.states` has shape _(2, 3, 4, 5, 6, 7, ntsave, n, n)_.
+    === "If `cartesian_batching = False`"
+        The results leading dimensions are
+        ```
+        ... = ...H = ...L0 = ...L1 = (...) = ...rho0  # (once broadcasted)
+        ```
+
+        For example if:
+
+        - `H` has shape _(2, 3, n, n)_,
+        - `jump_ops = [L0, L1]` has shape _[(3, n, n), (2, 1, n, n)]_,
+        - `rho0` has shape _(3, n, n)_,
+
+        then `result.states` has shape _(2, 3, ntsave, n, n)_.
+
+    See the
+    [Batching simulations](../../documentation/basics/batching-simulations.md)
+    tutorial for more details.
     """
     # === convert arguments
     H = astimeqarray(H)
@@ -66,7 +270,9 @@ def mesolve_lr(
         M = int(M)
     except (TypeError, ValueError) as exc:
         raise TypeError('Argument `M` must be an int.') from exc
-    gram_reg = float(gram_reg)
+    if not isinstance(linear_solver, str):
+        raise TypeError('Argument `linear_solver` must be a string.')
+    linear_solver = linear_solver.lower()
     save_factors_only = bool(save_factors_only)
     save_low_rank_chi = bool(save_low_rank_chi)
     if eps_init is not None:
@@ -76,10 +282,18 @@ def mesolve_lr(
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
-    _check_mesolve_lr_args(H, Ls, rho0, exp_ops, M, gram_reg, eps_init)
+    _check_mesolve_lr_args(H, Ls, rho0, exp_ops, M, linear_solver, eps_init)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'mesolve_lr')
     options = options.initialise()
+
+    if linear_solver == 'cholesky' and not jax.config.read('jax_enable_x64'):
+        warnings.warn(
+            'Using the Cholesky linear solver with single-precision dtypes can be '
+            'numerically unstable; consider enabling double precision with '
+            "`dq.set_precision('double')`.",
+            stacklevel=2,
+        )
 
     if key is not None:
         key = jnp.asarray(key)
@@ -94,7 +308,7 @@ def mesolve_lr(
             'options',
             'M',
             'normalize_each_eval',
-            'gram_reg',
+            'linear_solver',
             'save_factors_only',
             'save_low_rank_chi',
             'eps_init',
@@ -111,7 +325,7 @@ def mesolve_lr(
         options,
         M,
         normalize_each_eval,
-        gram_reg,
+        linear_solver,
         save_factors_only,
         save_low_rank_chi,
         eps_init,
@@ -131,7 +345,7 @@ def _vectorized_mesolve_lr(
     options: Options,
     M: int,
     normalize_each_eval: bool,
-    gram_reg: float,
+    linear_solver: str,
     save_factors_only: bool,
     save_low_rank_chi: bool,
     eps_init: float | None,
@@ -166,7 +380,7 @@ def _vectorized_mesolve_lr(
         options,
         M,
         normalize_each_eval,
-        gram_reg,
+        linear_solver,
         save_factors_only,
         save_low_rank_chi,
         eps_init,
@@ -185,7 +399,7 @@ def _mesolve_lr(
     options: Options,
     M: int,
     normalize_each_eval: bool,
-    gram_reg: float,
+    linear_solver: str,
     save_factors_only: bool,
     save_low_rank_chi: bool,
     eps_init: float | None,
@@ -226,7 +440,7 @@ def _mesolve_lr(
         Ls=Ls,
         Es=Es,
         normalize_each_eval=normalize_each_eval,
-        gram_reg=gram_reg,
+        linear_solver=linear_solver,
         save_factors_only=save_factors_only,
         save_low_rank_chi=save_low_rank_chi,
         dims=rho0.dims,
@@ -241,7 +455,7 @@ def _check_mesolve_lr_args(
     rho0: QArray,
     exp_ops: list[QArray] | None,
     M: int,
-    gram_reg: float,
+    linear_solver: str,
     eps_init: float | None,
 ):
     # === check H shape
@@ -269,7 +483,11 @@ def _check_mesolve_lr_args(
     if M > n:
         raise ValueError(f'Argument `M` must be <= n (got M={M} and n={n}).')
 
-    if gram_reg < 0.0:
-        raise ValueError('Argument `gram_reg` must be non-negative.')
+    if linear_solver not in ('lineax', 'cholesky'):
+        raise ValueError(
+            "Argument `linear_solver` must be 'lineax' or 'cholesky', "
+            f'got {linear_solver!r}.'
+        )
     if eps_init is not None and eps_init < 0.0:
         raise ValueError('Argument `eps_init` must be non-negative.')
+
