@@ -190,20 +190,20 @@ def mesolve_lr(
 
     Examples:
         ```python
-           import dynamiqs as dq
-           import jax.numpy as jnp
+        import dynamiqs as dq
+        import jax.numpy as jnp
 
-            n = 16
-            M = 8
-            a = dq.destroy(n)
+        n = 16
+        M = 8
+        a = dq.destroy(n)
 
-            H = a.dag() @ a
-            jump_ops = [a]
-            psi0 = dq.coherent(n, 1.0)
-            tsave = jnp.linspace(0, 1.0, 11)
+        H = a.dag() @ a
+        jump_ops = [a]
+        psi0 = dq.coherent(n, 1.0)
+        tsave = jnp.linspace(0, 1.0, 11)
 
-            result = dq.mesolve_lr(H, jump_ops, psi0, tsave, M=M)
-            print(result)
+        result = dq.mesolve_lr(H, jump_ops, psi0, tsave, M=M)
+        print(result)
         ```
 
         ```text title="Output"
@@ -479,16 +479,18 @@ def _check_mesolve_lr_args(
     if not isinstance(M, int):
         raise TypeError('Argument `M` must be an int.')
     if M <= 0:
-        raise ValueError('Argument `M` must be a positive integer.')
+        raise ValueError(f'Argument `M` must be a positive integer, but is {M}.')
 
     n = rho0.shape[-2]
     if n < M:
-        raise ValueError(f'Argument `M` must be <= n (got M={M} and n={n}).')
+        raise ValueError(f'Argument `M` must be <= n, but is M={M} (n={n}).')
 
     if linear_solver not in ('lineax', 'cholesky'):
         raise ValueError(
             "Argument `linear_solver` must be 'lineax' or 'cholesky', "
-            f'got {linear_solver!r}.'
+            f'but is {linear_solver!r}.'
         )
     if eps_init is not None and eps_init < 0.0:
-        raise ValueError('Argument `eps_init` must be non-negative.')
+        raise ValueError(
+            f'Argument `eps_init` must be non-negative, but is {eps_init}.'
+        )

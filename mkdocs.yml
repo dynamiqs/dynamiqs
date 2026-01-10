@@ -155,6 +155,7 @@ nav:
       - Solvers:
           - sesolve: python_api/integrators/sesolve.md
           - mesolve: python_api/integrators/mesolve.md
+          - mesolve_lr: python_api/integrators/mesolve_lr.md
           - sepropagator: python_api/integrators/sepropagator.md
           - mepropagator: python_api/integrators/mepropagator.md
           - floquet: python_api/integrators/floquet.md
