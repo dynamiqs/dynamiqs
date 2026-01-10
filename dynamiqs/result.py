@@ -215,10 +215,7 @@ class MESolveLRResult(SolveResult):
 
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
-        return d | {
-            'Factors': _array_str(self.factors),
-            'Chi': _array_str(self.chi),
-        }
+        return d | {'Factors': _array_str(self.factors), 'Chi': _array_str(self.chi)}
 
 
 class SEPropagatorResult(PropagatorResult):

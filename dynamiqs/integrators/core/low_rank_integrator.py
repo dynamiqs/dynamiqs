@@ -23,15 +23,15 @@ def lineax_solve(A: Array, B: Array) -> Array:
     operator = lx.MatrixLinearOperator(A)
 
     def solve_single(b: Array) -> Array:
-        x = lx.linear_solve(operator, b, throw=False, solver=lx.QR()).value
-        return x
+        return lx.linear_solve(operator, b, throw=False, solver=lx.QR()).value
 
-    x = jax.vmap(solve_single, in_axes=1, out_axes=1)(B)
-    return x
+    return jax.vmap(solve_single, in_axes=1, out_axes=1)(B)
+
 
 def cholesky_solve(A: Array, B: Array) -> Array:
     A_pinv = jax.scipy.linalg.solve(A.conj().T @ A, A.conj().T, assume_a='pos')
     return A_pinv @ B
+
 
 def normalize_m(m: Array, *, eps: float = 0.0) -> Array:
     norm = jnp.sqrt(jnp.sum(jnp.abs(m) ** 2, axis=(-2, -1), keepdims=True) + eps)
@@ -165,15 +165,9 @@ class MESolveLowRankDiffraxIntegrator(
         else:
             Esave = None
 
-        if self.save_low_rank_chi:
-            chisave = chi_from_m(m)
-        else:
-            chisave = None
+        chisave = chi_from_m(m) if self.save_low_rank_chi else None
+        msave = m if self.options.save_states and save_factors_only else None
 
-        if self.options.save_states and save_factors_only:
-            msave = m
-        else:
-            msave = None
         return LowRankSolveSaved(
             ysave=ysave, extra=extra, Esave=Esave, msave=msave, chisave=chisave
         )
@@ -183,10 +177,7 @@ class MESolveLowRankDiffraxIntegrator(
     ) -> LowRankSolveSaved:
         if not self.options.save_states:
             mlast = normalize_m(ylast, eps=0.0)
-            if self.save_factors_only:
-                ylast_save = mlast
-            else:
-                ylast_save = self._rho_from_m(mlast)
+            ylast_save = mlast if self.save_factors_only else self._rho_from_m(mlast)
             saved = eqx.tree_at(
                 lambda x: x.ysave, saved, ylast_save, is_leaf=lambda x: x is None
             )

@@ -3,10 +3,11 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
-dq.set_precision('double') # needed for time dependent test
-jax.config.update("jax_enable_x64", True)
 
 from ..order import TEST_LONG
+
+dq.set_precision('double')  # needed for time dependent test
+jax.config.update('jax_enable_x64', True)
 
 
 def rand_mesolve_args(n, nH, nLs, npsi0, nEs):
@@ -84,6 +85,6 @@ def test_batching_boris():
 
     rho0 = dq.fock_dm(n, range(3))  # (3, 9, 9)
     jump_ops = [a]
-    result = dq.mesolve_lr(H, jump_ops, rho0, [0, 1], M=n//2)
+    result = dq.mesolve_lr(H, jump_ops, rho0, [0, 1], M=n // 2)
     assert result.states.shape == (7, 5, 3, 2, 9, 9)
     assert result.tsave is not None

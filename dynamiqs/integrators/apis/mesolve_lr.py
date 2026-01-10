@@ -54,9 +54,10 @@ def mesolve_lr(
 ) -> MESolveLRResult:
     r"""Solve the low rank Lindblad master equation.
 
-    This function computes the evolution of the density matrix $\rho(t)=m(t)m(t)^\dagger$ at time $t$,
-    starting from an initial state $\rho_0$, according to the low rank Lindblad master
-    equation (with $\hbar=1$ and where time is implicit(1))
+    This function computes the evolution of the density matrix
+    $\rho(t)=m(t)m(t)^\dagger$ at time $t$, starting from an initial state $\rho_0$,
+    according to the low rank Lindblad master equation (with $\hbar=1$ and where time is
+    implicit(1))
     $$
         \frac{\dd m}{\dt} = -iHm
         + \frac{1}{2}\sum_{k=1}^N \left(
@@ -132,8 +133,8 @@ def mesolve_lr(
                     PyTree. This can be used to save additional arbitrary data
                     during the integration, accessible in `result.extra`.
         normalize_each_eval (bool): If `True`, the low-rank factors `m(t)` are
-            normalized at each evaluation of the vector field. This may improve numerical
-            stability. Defaults to `True`.
+            normalized at each evaluation of the vector field. This may improve
+            numerical stability. Defaults to `True`.
         linear_solver (str): Linear solver to use to solve the linear systems for
             computing the low-rank evolution. Supported values are:
             - `'lineax'`: Use the Lineax QR-based solver.
@@ -184,32 +185,33 @@ def mesolve_lr(
                 - **`options`** _(Options)_ - Options used.
                 - **`factors`** _(array of shape (..., nsave, n, M))_ - Saved low-rank
                     factors `m(t)`, if `save_factors_only=True`.
-                - **`low_rank_chi`** _(array of shape (..., ntsave))_ - Saved $\chi(t)$, if
-                    `save_low_rank_chi=True`.
+                - **`low_rank_chi`** _(array of shape (..., ntsave))_ - Saved $\chi(t)$,
+                    if save_low_rank_chi=True`.
 
     Examples:
         ```python
-        import dynamiqs as dq
-        import jax.numpy as jnp
+           import dynamiqs as dq
+           import jax.numpy as jnp
 
-        n = 16
-        a = dq.destroy(n)
+            n = 16
+            M = 8
+            a = dq.destroy(n)
 
-        H = a.dag() @ a
-        jump_ops = [a]
-        psi0 = dq.coherent(n, 1.0)
-        tsave = jnp.linspace(0, 1.0, 11)
+            H = a.dag() @ a
+            jump_ops = [a]
+            psi0 = dq.coherent(n, 1.0)
+            tsave = jnp.linspace(0, 1.0, 11)
 
-        result = dq.mesolve(H, jump_ops, psi0, tsave)
-        print(result)
+            result = dq.mesolve_lr(H, jump_ops, psi0, tsave, M=M)
+            print(result)
         ```
 
         ```text title="Output"
-        |██████████| 100.0% ◆ elapsed 1.13ms ◆ remaining 0.00ms
-        ==== MESolveResult ====
-        Method : Tsit5
-        Infos  : 9 steps (9 accepted, 0 rejected)
-        States : QArray complex64 (11, 16, 16) | 22.0 Kb
+        |██████████| 100.0% ◆ elapsed 4.05ms ◆ remaining 0.00ms
+        ==== MESolveLRResult ====
+        Method :    Tsit5
+        Infos  :    59 steps (58 accepted, 1 rejected)
+        States :    QArray complex128 (11, 16, 16) | 44.0 Kb
         ```
 
     # Advanced use-cases
@@ -480,7 +482,7 @@ def _check_mesolve_lr_args(
         raise ValueError('Argument `M` must be a positive integer.')
 
     n = rho0.shape[-2]
-    if M > n:
+    if n < M:
         raise ValueError(f'Argument `M` must be <= n (got M={M} and n={n}).')
 
     if linear_solver not in ('lineax', 'cholesky'):
@@ -490,4 +492,3 @@ def _check_mesolve_lr_args(
         )
     if eps_init is not None and eps_init < 0.0:
         raise ValueError('Argument `eps_init` must be non-negative.')
-
