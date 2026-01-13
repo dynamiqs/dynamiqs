@@ -54,7 +54,6 @@ extra:
 extra_css:
   - stylesheets/extra.css
   - stylesheets/theme.css
-  - stylesheets/home.css
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css
 plugins:
   - search
