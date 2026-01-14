@@ -13,7 +13,7 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ...qarrays.utils import asqarray
-from ...result import LowRankSolveSaved
+from ...result import SolveSaved
 from .diffrax_integrator import DiffraxIntegrator
 from .interfaces import MEInterface, SolveInterface
 from .save_mixin import SolveSaveMixin
@@ -102,18 +102,11 @@ def expval_from_m(m: Array, op: Array) -> Array:
     return jnp.sum(jnp.conj(m) * (op @ m))
 
 
-def chi_from_m(m: Array) -> Array:
-    gram = m.conj().T @ m
-    evals = jnp.linalg.eigvalsh(gram)
-    return jnp.abs(evals[0] / evals[-1])
-
-
 class MESolveLowRankDiffraxIntegrator(
     DiffraxIntegrator, MEInterface, SolveSaveMixin, SolveInterface
 ):
     normalize_each_eval: bool = eqx.field(static=True)
     save_factors_only: bool = eqx.field(static=True)
-    save_low_rank_chi: bool = eqx.field(static=True)
     linear_solver: str = eqx.field(static=True)
     dims: tuple[int, ...] | None = eqx.field(static=True)
 
@@ -144,7 +137,7 @@ class MESolveLowRankDiffraxIntegrator(
     def _rho_from_m(self, m: Array):  # noqa: ANN202
         return asqarray(rho_from_m(m), dims=self.dims)
 
-    def save(self, y: PyTree) -> LowRankSolveSaved:
+    def save(self, y: PyTree) -> SolveSaved:
         m = normalize_m(y, eps=0.0)
         save_factors_only = self.save_factors_only
 
@@ -155,7 +148,7 @@ class MESolveLowRankDiffraxIntegrator(
             rho = self._rho_from_m(m)
 
         if self.options.save_states:
-            ysave = None if save_factors_only else rho
+            ysave = m if save_factors_only else rho
         else:
             ysave = None
         extra = self.options.save_extra(rho) if self.options.save_extra else None
@@ -165,26 +158,17 @@ class MESolveLowRankDiffraxIntegrator(
         else:
             Esave = None
 
-        chisave = chi_from_m(m) if self.save_low_rank_chi else None
-        msave = m if self.options.save_states and save_factors_only else None
-
-        return LowRankSolveSaved(
-            ysave=ysave, extra=extra, Esave=Esave, msave=msave, chisave=chisave
-        )
+        return SolveSaved(ysave=ysave, extra=extra, Esave=Esave)
 
     def postprocess_saved(
-        self, saved: LowRankSolveSaved, ylast: PyTree
-    ) -> LowRankSolveSaved:
+        self, saved: SolveSaved, ylast: PyTree
+    ) -> SolveSaved:
         if not self.options.save_states:
             mlast = normalize_m(ylast, eps=0.0)
             ylast_save = mlast if self.save_factors_only else self._rho_from_m(mlast)
             saved = eqx.tree_at(
                 lambda x: x.ysave, saved, ylast_save, is_leaf=lambda x: x is None
             )
-            if not self.save_factors_only:
-                saved = eqx.tree_at(
-                    lambda x: x.msave, saved, mlast, is_leaf=lambda x: x is None
-                )
 
         return self.reorder_Esave(saved)
 

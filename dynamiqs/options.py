@@ -86,13 +86,6 @@ def check_options(options: Options, solver_name: str):
             't0',
             'save_extra',
         ),
-        'mesolve_lr': (
-            'save_states',
-            'cartesian_batching',
-            'progress_meter',
-            't0',
-            'save_extra',
-        ),
         'mesolve': (
             'save_states',
             'cartesian_batching',

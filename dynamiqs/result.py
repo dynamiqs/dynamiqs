@@ -18,7 +18,6 @@ __all__ = [
     'JSSESolveResult',
     'DSSESolveResult',
     'JSMESolveResult',
-    'MESolveLRResult',
     'MESolveResult',
     'DSMESolveResult',
     'SEPropagatorResult',
@@ -51,17 +50,12 @@ def _array_str(x: Array | QArray | None) -> str | None:
 
 # the Saved object holds quantities saved during the equation integration
 class Saved(eqx.Module):
-    ysave: QArray
+    ysave: QArray | Array
     extra: PyTree | None
 
 
 class SolveSaved(Saved):
     Esave: Array | None
-
-
-class LowRankSolveSaved(SolveSaved):
-    msave: Array | None = None
-    chisave: Array | None = None
 
 
 class JumpSolveSaved(SolveSaved):
@@ -132,7 +126,7 @@ class SolveResult(Result):
     _saved: SolveSaved
 
     @property
-    def states(self) -> QArray:
+    def states(self) -> QArray | Array:
         return self._saved.ysave
 
     @property
@@ -197,25 +191,6 @@ class SESolveResult(SolveResult):
 
 class MESolveResult(SolveResult):
     pass
-
-
-class MESolveLRResult(SolveResult):
-    _saved: LowRankSolveSaved
-
-    @property
-    def factors(self) -> Array | None:
-        if self._saved.msave is not None:
-            return self._saved.msave
-        ysave = self._saved.ysave
-        return ysave if isinstance(ysave, Array) else None
-
-    @property
-    def chi(self) -> Array | None:
-        return self._saved.chisave
-
-    def _str_parts(self) -> dict[str, str | None]:
-        d = super()._str_parts()
-        return d | {'Factors': _array_str(self.factors), 'Chi': _array_str(self.chi)}
 
 
 class SEPropagatorResult(PropagatorResult):

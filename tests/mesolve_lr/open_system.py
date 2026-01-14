@@ -11,7 +11,7 @@ from jaxtyping import ArrayLike, PyTree
 import dynamiqs as dq
 from dynamiqs import QArray, asqarray, dense
 from dynamiqs.gradient import Gradient
-from dynamiqs.method import Method
+from dynamiqs.method import LowRank, Method
 from dynamiqs.options import Options
 from dynamiqs.qarrays.layout import Layout
 from dynamiqs.result import Result
@@ -38,14 +38,13 @@ class OpenSystem(System):
         Ls = self.Ls(params)
         y0 = self.y0(params)
         Es = self.Es(params)
-        return dq.mesolve_lr(
+        return dq.mesolve(
             H,
             Ls,
             y0,
             self.tsave,
-            M=self.M,
             exp_ops=Es,
-            method=method,
+            method=LowRank(M=self.M, ode_method=method),
             gradient=gradient,
             options=options,
         )

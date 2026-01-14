@@ -19,6 +19,7 @@ from ...method import (
     JumpMonteCarlo,
     Kvaerno3,
     Kvaerno5,
+    LowRank,
     Method,
     Rouchon1,
     Rouchon2,
@@ -46,6 +47,16 @@ from ..core.diffrax_integrator import (
     mesolve_tsit5_integrator_constructor,
 )
 from ..core.expm_integrator import mesolve_expm_integrator_constructor
+from ..core.low_rank_integrator import (
+    initialize_m0_from_dm,
+    initialize_m0_from_ket,
+    mesolve_lr_dopri5_integrator_constructor,
+    mesolve_lr_dopri8_integrator_constructor,
+    mesolve_lr_euler_integrator_constructor,
+    mesolve_lr_kvaerno3_integrator_constructor,
+    mesolve_lr_kvaerno5_integrator_constructor,
+    mesolve_lr_tsit5_integrator_constructor,
+)
 from ..core.montecarlo_integrator import (
     mesolve_diffusivemontecarlo_integrator_constructor,
     mesolve_jumpmontecarlo_integrator_constructor,
@@ -112,7 +123,8 @@ def mesolve(
             [`Rouchon3`][dynamiqs.method.Rouchon3],
             [`Expm`][dynamiqs.method.Expm],
             [`JumpMonteCarlo`][dynamiqs.method.JumpMonteCarlo],
-            [`DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo]).
+            [`DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo],
+            [`LowRank`][dynamiqs.method.LowRank]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
@@ -181,7 +193,9 @@ def mesolve(
 
                 - **`states`** _(qarray of shape (..., nsave, n, n))_ - Saved states
                     with `nsave = ntsave`, or `nsave = 1` if
-                    `options.save_states=False`.
+                    `options.save_states=False`. When using the low-rank method with
+                    `save_factors_only=True`, `states` contains the factors `m(t)` with
+                    shape (..., nsave, n, M).
                 - **`final_state`** _(qarray of shape (..., n, n))_ - Saved final state.
                 - **`expects`** _(array of shape (..., len(exp_ops), ntsave) or None)_ -
                     Saved expectation values, if specified by `exp_ops`.
@@ -280,9 +294,23 @@ def mesolve(
 
     # === check arguments
     _check_mesolve_args(H, Ls, rho0, exp_ops)
+    if isinstance(method, LowRank):
+        _check_mesolve_low_rank_args(rho0, method)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'mesolve')
     options = options.initialise()
+
+    if isinstance(method, LowRank):
+        method.ode_method.assert_supports_gradient(gradient)
+        if method.linear_solver == 'cholesky' and not jax.config.read(
+            'jax_enable_x64'
+        ):
+            warnings.warn(
+                'Using the Cholesky linear solver with single-precision dtypes can be '
+                'numerically unstable; consider enabling double precision with '
+                "`dq.set_precision('double')`.",
+                stacklevel=2,
+            )
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
@@ -340,6 +368,11 @@ def _mesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> MESolveResult:
+    if isinstance(method, LowRank):
+        return _mesolve_low_rank(
+            H, Ls, rho0, tsave, exp_ops, method, gradient, options
+        )
+
     # === select integrator constructor
     integrator_constructors = {
         Euler: mesolve_euler_integrator_constructor,
@@ -381,6 +414,59 @@ def _mesolve(
     return result  # noqa: RET504
 
 
+def _mesolve_low_rank(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    rho0: QArray,
+    tsave: Array,
+    exp_ops: list[QArray] | None,
+    method: LowRank,
+    gradient: Gradient | None,
+    options: Options,
+) -> MESolveResult:
+    integrator_constructors = {
+        Euler: mesolve_lr_euler_integrator_constructor,
+        Dopri5: mesolve_lr_dopri5_integrator_constructor,
+        Dopri8: mesolve_lr_dopri8_integrator_constructor,
+        Tsit5: mesolve_lr_tsit5_integrator_constructor,
+        Kvaerno3: mesolve_lr_kvaerno3_integrator_constructor,
+        Kvaerno5: mesolve_lr_kvaerno5_integrator_constructor,
+    }
+    assert_method_supported(method.ode_method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method.ode_method)]
+
+    method.ode_method.assert_supports_gradient(gradient)
+
+    if rho0.isket():
+        psi0 = rho0.to_jax()
+        eps = 1e-4 if method.eps_init is None else method.eps_init
+        m0 = initialize_m0_from_ket(psi0, method.M, eps=eps, key=method.key)
+    else:
+        rho0_dm = rho0.todm()
+        eps = 1e-5 if method.eps_init is None else method.eps_init
+        m0 = initialize_m0_from_dm(rho0_dm.to_jax(), method.M, eps=eps, key=method.key)
+
+    Es = [E.to_jax() for E in exp_ops] if exp_ops is not None else None
+
+    integrator = integrator_constructor(
+        ts=tsave,
+        y0=m0,
+        method=method.ode_method,
+        gradient=gradient,
+        result_class=MESolveResult,
+        options=options,
+        H=H,
+        Ls=Ls,
+        Es=Es,
+        normalize_each_eval=method.normalize_each_eval,
+        linear_solver=method.linear_solver,
+        save_factors_only=method.save_factors_only,
+        dims=rho0.dims,
+    )
+
+    return integrator.run()
+
+
 def _check_mesolve_args(
     H: TimeQArray, Ls: list[TimeQArray], rho0: QArray, exp_ops: list[QArray] | None
 ):
@@ -406,3 +492,11 @@ def _check_mesolve_args(
     if exp_ops is not None:
         for i, E in enumerate(exp_ops):
             check_shape(E, f'exp_ops[{i}]', '(n, n)')
+
+
+def _check_mesolve_low_rank_args(rho0: QArray, method: LowRank) -> None:
+    n = rho0.shape[-2]
+    if n < method.M:
+        raise ValueError(
+            f'Argument `M` must be <= n, but is M={method.M} (n={n}).'
+        )

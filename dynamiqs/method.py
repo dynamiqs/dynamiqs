@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import ClassVar
 
 import equinox as eqx
+import jax.numpy as jnp
 from jaxtyping import PRNGKeyArray
 from optimistix import AbstractRootFinder
 
@@ -18,6 +19,7 @@ __all__ = [
     'Expm',
     'JumpMonteCarlo',
     'DiffusiveMonteCarlo',
+    'LowRank',
     'Kvaerno3',
     'Kvaerno5',
     'Rouchon1',
@@ -766,3 +768,94 @@ class DiffusiveMonteCarlo(_DEMethod):
     def __init__(self, keys: PRNGKeyArray, dsse_method: Method):
         self.keys = keys
         self.dsse_method = dsse_method
+
+
+class LowRank(Method):
+    """Low-rank method for the Lindblad master equation.
+
+    This method solves the low-rank Lindblad master equation by evolving factors
+    `m(t)` such that `rho(t) = m(t) m(t)^\dagger`, following Goutte, Savona (2025)
+    arxiv:2508.18114. The low-rank method is available via [`dq.mesolve()`][dynamiqs.mesolve]
+    by passing `method=dq.method.LowRank(...)`.
+
+    Args:
+        M: Rank of the low-rank approximation (number of columns of `m(t)`).
+        ode_method: ODE solver used for the low-rank evolution (supported:
+            [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8], [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5], [`Euler`][dynamiqs.method.Euler]).
+        normalize_each_eval: If `True`, normalize `m(t)` at each vector field
+            evaluation. Defaults to `True`.
+        linear_solver: Linear solver used for the low-rank evolution. Supported values
+            are `'lineax'` and `'cholesky'`. Defaults to `'lineax'`.
+        save_factors_only: If `True`, `result.states` stores the low-rank factors
+            `m(t)` instead of density matrices. Defaults to `False`.
+        eps_init: Regularization parameter for the initialization of the low-rank
+            factors. If `None`, defaults to `1e-4` for pure states and `1e-5` for mixed
+            states.
+        key: PRNG key used for random initialization of the low-rank factors. If
+            `None`, a default key is used.
+
+    Note-: Supported gradients
+        This method supports the same gradients as the chosen `ode_method`.
+    """
+
+    ode_method: Method
+    M: int = eqx.field(static=True)
+    normalize_each_eval: bool = eqx.field(static=True, default=True)
+    linear_solver: str = eqx.field(static=True, default='lineax')
+    save_factors_only: bool = eqx.field(static=True, default=False)
+    eps_init: float | None = eqx.field(static=True, default=None)
+    key: PRNGKeyArray | None = None
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
+        Direct,
+        BackwardCheckpointed,
+        Forward,
+    )
+
+    # dummy init to have the signature in the documentation
+    def __init__(
+        self,
+        M: int,
+        ode_method: Method = Tsit5(),  # noqa: B008
+        normalize_each_eval: bool = True,
+        linear_solver: str = 'lineax',
+        save_factors_only: bool = False,
+        eps_init: float | None = None,
+        key: PRNGKeyArray | None = None,
+    ):
+        self.ode_method = ode_method
+
+        try:
+            M = int(M)
+        except (TypeError, ValueError) as exc:
+            raise TypeError('Argument `M` must be an int.') from exc
+        if M <= 0:
+            raise ValueError(f'Argument `M` must be a positive integer, but is {M}.')
+        self.M = M
+
+        if not isinstance(linear_solver, str):
+            raise TypeError('Argument `linear_solver` must be a string.')
+        linear_solver = linear_solver.lower()
+        if linear_solver not in ('lineax', 'cholesky'):
+            raise ValueError(
+                "Argument `linear_solver` must be 'lineax' or 'cholesky', "
+                f'but is {linear_solver!r}.'
+            )
+
+        self.normalize_each_eval = bool(normalize_each_eval)
+        self.linear_solver = linear_solver
+        self.save_factors_only = bool(save_factors_only)
+
+        if eps_init is not None:
+            eps_init = float(eps_init)
+            if eps_init < 0.0:
+                raise ValueError(
+                    f'Argument `eps_init` must be non-negative, but is {eps_init}.'
+                )
+        self.eps_init = eps_init
+
+        if key is not None:
+            key = jnp.asarray(key)
+        self.key = key
