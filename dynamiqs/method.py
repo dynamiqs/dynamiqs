@@ -771,12 +771,12 @@ class DiffusiveMonteCarlo(_DEMethod):
 
 
 class LowRank(Method):
-    """Low-rank method for the Lindblad master equation.
+    r"""Low-rank method for the Lindblad master equation.
 
     This method solves the low-rank Lindblad master equation by evolving factors
-    `m(t)` such that `rho(t) = m(t) m(t)^\dagger`, following Goutte, Savona (2025)
-    arxiv:2508.18114. The low-rank method is available via [`dq.mesolve()`][dynamiqs.mesolve]
-    by passing `method=dq.method.LowRank(...)`.
+    `m(t)` such that `$rho(t) = m(t) m(t)^\dagger$`, following Goutte, Savona (2025)
+    arxiv:2508.18114. The low-rank method is available via
+    [`dq.mesolve()`][dynamiqs.mesolve] by passing `method=dq.method.LowRank(...)`.
 
     Args:
         M: Rank of the low-rank approximation (number of columns of `m(t)`).
@@ -797,7 +797,19 @@ class LowRank(Method):
             `None`, a default key is used.
 
     Note-: Supported gradients
-        This method supports the same gradients as the chosen `ode_method`.
+        This method supports in principle the same gradients as the chosen `ode_method`.
+
+    Warning:
+        Differentiation may be unstable and return wrong results.
+
+    Warning:
+        The `'cholesky'` linear solver may lead to instabilities and the progress bar
+        getting stuck when using single precision.
+
+    Warning:
+        The low-rank method is more sensitive to time-step error. If the accuracy does
+        not improve when increasing the rank `M`, consider tightening the tolerances of
+        the chosen `ode_method`.
     """
 
     ode_method: Method

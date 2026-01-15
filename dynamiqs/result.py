@@ -50,7 +50,7 @@ def _array_str(x: Array | QArray | None) -> str | None:
 
 # the Saved object holds quantities saved during the equation integration
 class Saved(eqx.Module):
-    ysave: QArray | Array
+    ysave: QArray
     extra: PyTree | None
 
 
@@ -126,7 +126,7 @@ class SolveResult(Result):
     _saved: SolveSaved
 
     @property
-    def states(self) -> QArray | Array:
+    def states(self) -> QArray:
         return self._saved.ysave
 
     @property

@@ -70,9 +70,7 @@ def dag(x: QArrayLike) -> QArray:
     """
     x = asqarray(x)
     if islrdm(x):
-        raise NotImplementedError(
-            'dag() is not defined for low-rank density matrices.'
-        )
+        raise NotImplementedError('dag() is not defined for low-rank density matrices.')
     check_shape(x, 'x', '(..., m, n)')
     return x.mT.conj()
 
@@ -1002,6 +1000,43 @@ def braket(x: QArrayLike, y: QArrayLike) -> Array:
     return (dag(x) @ y).squeeze((-1, -2))
 
 
+def _overlap_lrdm_lrdm(x: QArray, y: QArray) -> Array:
+    mx = x.to_jax()
+    my = y.to_jax()
+    if mx.shape[-2] != my.shape[-2]:
+        raise ValueError(
+            'Arguments `x` and `y` must have compatible shapes, but got '
+            f'x.shape={x.shape} and y.shape={y.shape}.'
+        )
+    overlap = my.conj().swapaxes(-2, -1) @ mx
+    return (jnp.abs(overlap) ** 2).sum((-2, -1))
+
+
+def _overlap_lrdm_other(m: QArray, other: QArray, *, other_name: str) -> Array:
+    if isket(other):
+        vals = m.to_jax().conj().swapaxes(-2, -1) @ other.to_jax()
+        return (jnp.abs(vals) ** 2).sum((-2, -1))
+    check_shape(other, other_name, '(..., n, n)')
+    if other.shape[-1] != m.shape[-2]:
+        raise ValueError(
+            'Arguments `x` and `y` must have compatible shapes, but got '
+            f'x.shape={m.shape} and y.shape={other.shape}.'
+        )
+    mj = m.to_jax()
+    oj = other.to_jax()
+    return (jnp.conj(mj) * (oj @ mj)).sum((-2, -1)).real
+
+
+def _overlap_lrdm_case(x: QArray, y: QArray) -> Array | None:
+    if not (islrdm(x) or islrdm(y)):
+        return None
+    if islrdm(x) and islrdm(y):
+        return _overlap_lrdm_lrdm(x, y)
+    if islrdm(x):
+        return _overlap_lrdm_other(x, y, other_name='y')
+    return _overlap_lrdm_other(y, x, other_name='x')
+
+
 def overlap(x: QArrayLike, y: QArrayLike) -> Array:
     r"""Returns the overlap between two quantum states.
 
@@ -1031,57 +1066,19 @@ def overlap(x: QArrayLike, y: QArrayLike) -> Array:
     """
     x = asqarray(x)
     y = asqarray(y)
-    if islrdm(x) and islrdm(y):
-        mx = x.to_jax()
-        my = y.to_jax()
-        if mx.shape[-2] != my.shape[-2]:
-            raise ValueError(
-                'Arguments `x` and `y` must have compatible shapes, but got '
-                f'x.shape={x.shape} and y.shape={y.shape}.'
-            )
-        overlap = my.conj().swapaxes(-2, -1) @ mx
-        return (jnp.abs(overlap) ** 2).sum((-2, -1))
-    if islrdm(x):
-        if isket(y):
-            m = x.to_jax()
-            yj = y.to_jax()
-            vals = m.conj().swapaxes(-2, -1) @ yj
-            return (jnp.abs(vals) ** 2).sum((-2, -1))
-        check_shape(y, 'y', '(..., n, n)')
-        if y.shape[-1] != x.shape[-2]:
-            raise ValueError(
-                'Arguments `x` and `y` must have compatible shapes, but got '
-                f'x.shape={x.shape} and y.shape={y.shape}.'
-            )
-        m = x.to_jax()
-        yj = y.to_jax()
-        return (jnp.conj(m) * (yj @ m)).sum((-2, -1)).real
-    if islrdm(y):
-        if isket(x):
-            m = y.to_jax()
-            xj = x.to_jax()
-            vals = m.conj().swapaxes(-2, -1) @ xj
-            return (jnp.abs(vals) ** 2).sum((-2, -1))
-        check_shape(x, 'x', '(..., n, n)')
-        if x.shape[-1] != y.shape[-2]:
-            raise ValueError(
-                'Arguments `x` and `y` must have compatible shapes, but got '
-                f'x.shape={x.shape} and y.shape={y.shape}.'
-            )
-        m = y.to_jax()
-        xj = x.to_jax()
-        return (jnp.conj(m) * (xj @ m)).sum((-2, -1)).real
-    check_shape(x, 'x', '(..., n, 1)', '(..., n, n)')
-    check_shape(y, 'y', '(..., n, 1)', '(..., n, n)')
-
-    if isket(x) and isket(y):
-        return jnp.abs((dag(x) @ y).squeeze((-1, -2))) ** 2
-    elif isket(x):
-        return jnp.abs((dag(x) @ y @ x).squeeze((-1, -2)))
-    elif isket(y):
-        return jnp.abs((dag(y) @ x @ y).squeeze((-1, -2)))
-    else:
-        return tracemm(dag(x), y).real
+    result = _overlap_lrdm_case(x, y)
+    if result is None:
+        check_shape(x, 'x', '(..., n, 1)', '(..., n, n)')
+        check_shape(y, 'y', '(..., n, 1)', '(..., n, n)')
+        if isket(x) and isket(y):
+            result = jnp.abs((dag(x) @ y).squeeze((-1, -2))) ** 2
+        elif isket(x):
+            result = jnp.abs((dag(x) @ y @ x).squeeze((-1, -2)))
+        elif isket(y):
+            result = jnp.abs((dag(y) @ x @ y).squeeze((-1, -2)))
+        else:
+            result = tracemm(dag(x), y).real
+    return result
 
 
 def fidelity(x: QArrayLike, y: QArrayLike) -> Array:

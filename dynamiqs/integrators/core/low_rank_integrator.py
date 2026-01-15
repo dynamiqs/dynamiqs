@@ -148,7 +148,7 @@ class MESolveLowRankDiffraxIntegrator(
             rho = self._rho_from_m(m)
 
         if self.options.save_states:
-            ysave = m if save_factors_only else rho
+            ysave = asqarray(m, dims=self.dims) if save_factors_only else rho
         else:
             ysave = None
         extra = self.options.save_extra(rho) if self.options.save_extra else None
@@ -160,12 +160,14 @@ class MESolveLowRankDiffraxIntegrator(
 
         return SolveSaved(ysave=ysave, extra=extra, Esave=Esave)
 
-    def postprocess_saved(
-        self, saved: SolveSaved, ylast: PyTree
-    ) -> SolveSaved:
+    def postprocess_saved(self, saved: SolveSaved, ylast: PyTree) -> SolveSaved:
         if not self.options.save_states:
             mlast = normalize_m(ylast, eps=0.0)
-            ylast_save = mlast if self.save_factors_only else self._rho_from_m(mlast)
+            ylast_save = (
+                asqarray(mlast, dims=self.dims)
+                if self.save_factors_only
+                else self._rho_from_m(mlast)
+            )
             saved = eqx.tree_at(
                 lambda x: x.ysave, saved, ylast_save, is_leaf=lambda x: x is None
             )

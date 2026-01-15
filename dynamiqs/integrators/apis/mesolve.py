@@ -306,9 +306,7 @@ def mesolve(
 
     if isinstance(method, LowRank):
         method.ode_method.assert_supports_gradient(gradient)
-        if method.linear_solver == 'cholesky' and not jax.config.read(
-            'jax_enable_x64'
-        ):
+        if method.linear_solver == 'cholesky' and not jax.config.read('jax_enable_x64'):
             warnings.warn(
                 'Using the Cholesky linear solver with single-precision dtypes can be '
                 'numerically unstable; consider enabling double precision with '
@@ -373,9 +371,7 @@ def _mesolve(
     options: Options,
 ) -> MESolveResult:
     if isinstance(method, LowRank):
-        return _mesolve_low_rank(
-            H, Ls, rho0, tsave, exp_ops, method, gradient, options
-        )
+        return _mesolve_low_rank(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
 
     # === select integrator constructor
     integrator_constructors = {
@@ -492,9 +488,7 @@ def _check_mesolve_args(
 
     # === check rho0 shape and layout
     if not rho0.islrdm():
-        check_shape(
-            rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'}
-        )
+        check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'})
     check_qarray_is_dense(rho0, 'rho0')
 
     # === check exp_ops shape
@@ -511,6 +505,4 @@ def _check_mesolve_low_rank_args(rho0: QArray, method: LowRank) -> None:
             f'(..., {n}, {rho0.shape[-1]}) but method.M={method.M}.'
         )
     if n < method.M:
-        raise ValueError(
-            f'Argument `M` must be <= n, but is M={method.M} (n={n}).'
-        )
+        raise ValueError(f'Argument `M` must be <= n, but is M={method.M} (n={n}).')
