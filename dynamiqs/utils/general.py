@@ -27,6 +27,7 @@ __all__ = [
     'isdm',
     'isherm',
     'isket',
+    'islrdm',
     'isop',
     'lindbladian',
     'norm',
@@ -68,6 +69,10 @@ def dag(x: QArrayLike) -> QArray:
         [[1.-0.j 0.-0.j]]
     """
     x = asqarray(x)
+    if islrdm(x):
+        raise NotImplementedError(
+            'dag() is not defined for low-rank density matrices.'
+        )
     check_shape(x, 'x', '(..., m, n)')
     return x.mT.conj()
 
@@ -234,6 +239,9 @@ def trace(x: QArrayLike) -> Array:
         Array(3., dtype=float32)
     """
     x = asqarray(x)
+    if islrdm(x):
+        data = x.to_jax()
+        return (jnp.abs(data) ** 2).sum((-2, -1))
     check_shape(x, 'x', '(..., n, n)')
     return x.trace()
 
@@ -270,6 +278,36 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
     """
     x = asqarray(x)
     y = asqarray(y)
+    if islrdm(x) and islrdm(y):
+        mx = x.to_jax()
+        my = y.to_jax()
+        if mx.shape[-2] != my.shape[-2]:
+            raise ValueError(
+                'Arguments `x` and `y` must have compatible shapes, but got '
+                f'x.shape={x.shape} and y.shape={y.shape}.'
+            )
+        overlap = my.conj().swapaxes(-2, -1) @ mx
+        return (jnp.abs(overlap) ** 2).sum((-2, -1))
+    if islrdm(x):
+        check_shape(y, 'y', '(..., n, n)')
+        if y.shape[-1] != x.shape[-2]:
+            raise ValueError(
+                'Arguments `x` and `y` must have compatible shapes, but got '
+                f'x.shape={x.shape} and y.shape={y.shape}.'
+            )
+        m = x.to_jax()
+        yj = y.to_jax()
+        return (jnp.conj(m) * (yj @ m)).sum((-2, -1))
+    if islrdm(y):
+        check_shape(x, 'x', '(..., n, n)')
+        if x.shape[-1] != y.shape[-2]:
+            raise ValueError(
+                'Arguments `x` and `y` must have compatible shapes, but got '
+                f'x.shape={x.shape} and y.shape={y.shape}.'
+            )
+        m = y.to_jax()
+        xj = x.to_jax()
+        return (jnp.conj(m) * (xj @ m)).sum((-2, -1))
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
     # todo: fix perf
@@ -278,6 +316,8 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
 
 def _hdim(x: QArrayLike) -> int:
     x = asqarray(x)
+    if islrdm(x):
+        return x.shape[-2]
     return x.shape[-2] if isket(x) else x.shape[-1]
 
 
@@ -331,6 +371,9 @@ def ptrace(
          [0.  0.5]]
     """
     xdims = get_dims(x)
+    x = asqarray(x)
+    if islrdm(x):
+        x = todm(x)
     x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
@@ -435,8 +478,8 @@ def expect(O: QArrayLike, x: QArrayLike) -> Array:
     Args:
         O (qarray-like of shape (nO?, n, n)): Arbitrary operator or list of _nO_
             operators.
-        x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Ket,
-            bra or density matrix.
+        x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n) or
+            (..., n, m)): Ket, bra, density matrix, or low-rank density matrix.
 
     Returns:
         (array of shape (nO?, ...)): Complex-valued expectation value.
@@ -456,7 +499,14 @@ def expect(O: QArrayLike, x: QArrayLike) -> Array:
     O = asqarray(O)
     x = asqarray(x)
     check_shape(O, 'O', '(?, n, n)', subs={'?': 'nO?'})
-    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
+    if islrdm(x):
+        if O.shape[-1] != x.shape[-2]:
+            raise ValueError(
+                'Arguments `O` and `x` must have compatible shapes, but got '
+                f'O.shape={O.shape} and x.shape={x.shape}.'
+            )
+    else:
+        check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     f = _expect_single
     if O.ndim > 2:
@@ -466,6 +516,9 @@ def expect(O: QArrayLike, x: QArrayLike) -> Array:
 
 def _expect_single(O: QArray, x: QArray) -> Array:
     # O: (n, n), x: (..., n, m)
+    if islrdm(x):
+        m = x.to_jax()
+        return jnp.sum(jnp.conj(m) * (O.to_jax() @ m), axis=(-2, -1))
     if isket(x):
         return (dag(x) @ O @ x).squeeze((-1, -2))  # <x|O|x>
     elif isbra(x):
@@ -512,6 +565,9 @@ def norm(x: QArrayLike, *, psd: bool = False) -> Array:
         Array(3., dtype=float32)
     """
     x = asqarray(x)
+    if islrdm(x):
+        data = x.to_jax()
+        return (jnp.abs(data) ** 2).sum((-2, -1))
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     if isket(x) or isbra(x):
@@ -553,6 +609,10 @@ def unit(x: QArrayLike, *, psd: bool = False) -> QArray:
         Array(1., dtype=float32)
     """
     x = asqarray(x)
+    if islrdm(x):
+        data = x.to_jax()
+        scale = jnp.sqrt((jnp.abs(data) ** 2).sum((-2, -1)))
+        return x * (1.0 / scale)[..., None, None]
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
     return x / norm(x, psd=psd)[..., None, None]
 
@@ -589,6 +649,8 @@ def dissipator(L: QArrayLike, rho: QArrayLike) -> QArray:
     """
     L = asqarray(L)
     rho = asqarray(rho)
+    if islrdm(rho):
+        rho = todm(rho)
     check_shape(L, 'L', '(..., n, n)')
     check_shape(rho, 'rho', '(..., n, n)')
 
@@ -640,6 +702,8 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
     H = asqarray(H)
     jump_ops = [asqarray(L) for L in jump_ops]
     rho = asqarray(rho)
+    if islrdm(rho):
+        rho = todm(rho)
 
     # === check H shape
     check_shape(H, 'H', '(..., n, n)')
@@ -715,6 +779,31 @@ def isdm(x: QArrayLike) -> bool:
     """
     x = asqarray(x)
     return x.shape[-1] == x.shape[-2]
+
+
+def islrdm(x: QArrayLike) -> bool:
+    r"""Returns True if the qarray is a low-rank density matrix.
+
+    Args:
+        x (qarray-like of shape (...)): Qarray-like.
+
+    Returns:
+        True if the last two dimensions have shape (..., N, M) with 1 < M < N.
+
+    Examples:
+        >>> dq.islrdm(jnp.ones((4, 2)))
+        True
+        >>> dq.islrdm(jnp.ones((4, 4)))
+        False
+        >>> dq.islrdm(jnp.ones((4, 1)))
+        False
+    """
+    x = asqarray(x)
+    if x.ndim < 2:
+        return False
+    n = x.shape[-2]
+    m = x.shape[-1]
+    return (m > 1) and (n > m)
 
 
 def isop(x: QArrayLike) -> bool:
@@ -826,8 +915,8 @@ def todm(x: QArrayLike) -> QArray:
         density matrix, it is returned directly.
 
     Args:
-        x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Ket, bra
-            or density matrix.
+        x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n) or
+            (..., n, m)): Ket, bra, density matrix, or low-rank density matrix.
 
     Returns:
         (qarray of shape (..., n, n)): Density matrix.
@@ -846,12 +935,18 @@ def todm(x: QArrayLike) -> QArray:
          [0.+0.j 0.+0.j 0.+0.j]]
     """
     x = asqarray(x)
-    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
+    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)', '(..., m, n)')
 
     if isbra(x) or isket(x):
         return proj(x)
-    else:
+    if isdm(x):
         return x
+    if islrdm(x):
+        return x @ x.mT.conj()
+    raise ValueError(
+        'Argument `x` must be a ket, bra, density matrix, or low-rank density matrix '
+        f'but has shape x.shape={x.shape}.'
+    )
 
 
 def proj(x: QArrayLike) -> QArray:
@@ -936,6 +1031,46 @@ def overlap(x: QArrayLike, y: QArrayLike) -> Array:
     """
     x = asqarray(x)
     y = asqarray(y)
+    if islrdm(x) and islrdm(y):
+        mx = x.to_jax()
+        my = y.to_jax()
+        if mx.shape[-2] != my.shape[-2]:
+            raise ValueError(
+                'Arguments `x` and `y` must have compatible shapes, but got '
+                f'x.shape={x.shape} and y.shape={y.shape}.'
+            )
+        overlap = my.conj().swapaxes(-2, -1) @ mx
+        return (jnp.abs(overlap) ** 2).sum((-2, -1))
+    if islrdm(x):
+        if isket(y):
+            m = x.to_jax()
+            yj = y.to_jax()
+            vals = m.conj().swapaxes(-2, -1) @ yj
+            return (jnp.abs(vals) ** 2).sum((-2, -1))
+        check_shape(y, 'y', '(..., n, n)')
+        if y.shape[-1] != x.shape[-2]:
+            raise ValueError(
+                'Arguments `x` and `y` must have compatible shapes, but got '
+                f'x.shape={x.shape} and y.shape={y.shape}.'
+            )
+        m = x.to_jax()
+        yj = y.to_jax()
+        return (jnp.conj(m) * (yj @ m)).sum((-2, -1)).real
+    if islrdm(y):
+        if isket(x):
+            m = y.to_jax()
+            xj = x.to_jax()
+            vals = m.conj().swapaxes(-2, -1) @ xj
+            return (jnp.abs(vals) ** 2).sum((-2, -1))
+        check_shape(x, 'x', '(..., n, n)')
+        if x.shape[-1] != y.shape[-2]:
+            raise ValueError(
+                'Arguments `x` and `y` must have compatible shapes, but got '
+                f'x.shape={x.shape} and y.shape={y.shape}.'
+            )
+        m = y.to_jax()
+        xj = x.to_jax()
+        return (jnp.conj(m) * (xj @ m)).sum((-2, -1)).real
     check_shape(x, 'x', '(..., n, 1)', '(..., n, n)')
     check_shape(y, 'y', '(..., n, 1)', '(..., n, n)')
 
@@ -984,13 +1119,15 @@ def fidelity(x: QArrayLike, y: QArrayLike) -> Array:
     """
     x = asqarray(x)
     y = asqarray(y)
-    check_shape(x, 'x', '(..., n, 1)', '(..., n, n)')
-    check_shape(y, 'y', '(..., n, 1)', '(..., n, n)')
-
     if isket(x) or isket(y):
         return overlap(x, y)
-    else:
-        return _dm_fidelity(x, y)
+    if islrdm(x):
+        x = todm(x)
+    if islrdm(y):
+        y = todm(y)
+    check_shape(x, 'x', '(..., n, 1)', '(..., n, n)')
+    check_shape(y, 'y', '(..., n, 1)', '(..., n, n)')
+    return _dm_fidelity(x, y)
 
 
 def _dm_fidelity(x: QArray, y: QArray) -> Array:
@@ -1030,6 +1167,10 @@ def purity(x: QArrayLike) -> Array:
         Array(0.5, dtype=float32)
     """
     x = asqarray(x)
+    if islrdm(x):
+        m = x.to_jax()
+        gram = m.conj().swapaxes(-2, -1) @ m
+        return jnp.trace(gram @ gram, axis1=-2, axis2=-1).real
     check_shape(x, 'x', '(..., n, 1)', '(..., n, n)')
     if x.isket():
         return jnp.ones(x.shape[:-2])
@@ -1056,6 +1197,12 @@ def entropy_vn(x: QArrayLike) -> Array:
         (5,)
     """
     x = asqarray(x)
+    if islrdm(x):
+        m = x.to_jax()
+        gram = m.conj().swapaxes(-2, -1) @ m
+        w = jnp.linalg.eigvalsh(gram)
+        w = jnp.where(w <= 0, 1.0, w)
+        return -(w * jnp.log(w)).sum(-1)
     check_shape(x, 'x', '(..., n, 1)', '(..., n, n)')
 
     if isket(x):
@@ -1116,6 +1263,10 @@ def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
     # convert inputs to internal array type and validate shapes
     rho = asqarray(rho)
     sigma = asqarray(sigma)
+    if islrdm(rho):
+        rho = todm(rho)
+    if islrdm(sigma):
+        sigma = todm(sigma)
     check_shape(rho, 'x', '(..., n, 1)', '(..., n, n)')
     check_shape(sigma, 'x', '(..., n, 1)', '(..., n, n)')
 
@@ -1214,6 +1365,9 @@ def bloch_coordinates(x: QArrayLike) -> Array:
         >>> dq.bloch_coordinates(x)
         Array([0.5, 0. , 0. ], dtype=float32)
     """
+    x = asqarray(x)
+    if islrdm(x):
+        x = todm(x)
     x = to_jax(x)  # todo: temporary fix
     check_shape(x, 'x', '(2, 1)', '(2, 2)')
 

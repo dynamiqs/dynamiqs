@@ -197,6 +197,7 @@ class QArray(eqx.Module):
     | `x.isket()`                                              | Alias of [`dq.isket(x)`][dynamiqs.isket].                      |
     | `x.isbra()`                                              | Alias of [`dq.isbra(x)`][dynamiqs.isbra].                      |
     | `x.isdm()`                                               | Alias of [`dq.isdm(x)`][dynamiqs.isdm].                        |
+    | `x.islrdm()`                                             | Alias of [`dq.islrdm(x)`][dynamiqs.islrdm].                    |
     | `x.isop()`                                               | Alias of [`dq.isop(x)`][dynamiqs.isop].                        |
     | `x.isherm()`                                             | Alias of [`dq.isherm(x)`][dynamiqs.isherm].                    |
     | `x.toket()`                                              | Alias of [`dq.toket(x)`][dynamiqs.toket].                      |
@@ -294,6 +295,12 @@ class QArray(eqx.Module):
         """
 
     def dag(self) -> QArray:
+        from ..utils import islrdm  # noqa: PLC0415
+
+        if islrdm(self):
+            raise NotImplementedError(
+                'dag() is not defined for low-rank density matrices.'
+            )
         return self.mT.conj()
 
     def reshape(self, *shape: int) -> QArray:
@@ -423,6 +430,11 @@ class QArray(eqx.Module):
         from ..utils import isdm  # noqa: PLC0415
 
         return isdm(self)
+
+    def islrdm(self) -> bool:
+        from ..utils import islrdm  # noqa: PLC0415
+
+        return islrdm(self)
 
     def isop(self) -> bool:
         from ..utils import isop  # noqa: PLC0415

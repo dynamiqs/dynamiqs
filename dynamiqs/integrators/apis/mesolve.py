@@ -105,7 +105,9 @@ def mesolve(
         H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
         jump_ops (list of qarray-like or timeqarray, each of shape (...Lk, n, n)):
             List of jump operators.
-        rho0 (qarray-like of shape (...rho0, n, 1) or (...rho0, n, n)): Initial state.
+        rho0 (qarray-like of shape (...rho0, n, 1) or (...rho0, n, n), or
+            (...rho0, n, M) when using `LowRank`): Initial state. For low-rank factors
+            `m0`, `M` must match `method.M`.
         tsave (array-like of shape (ntsave,)): Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
@@ -288,6 +290,8 @@ def mesolve(
     H = astimeqarray(H)
     Ls = [astimeqarray(L) for L in jump_ops]
     rho0 = asqarray(rho0)
+    if rho0.islrdm() and not isinstance(method, LowRank):
+        rho0 = rho0.todm()
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
@@ -437,7 +441,9 @@ def _mesolve_low_rank(
 
     method.ode_method.assert_supports_gradient(gradient)
 
-    if rho0.isket():
+    if rho0.islrdm():
+        m0 = rho0.to_jax()
+    elif rho0.isket():
         psi0 = rho0.to_jax()
         eps = 1e-4 if method.eps_init is None else method.eps_init
         m0 = initialize_m0_from_ket(psi0, method.M, eps=eps, key=method.key)
@@ -485,7 +491,10 @@ def _check_mesolve_args(
         )
 
     # === check rho0 shape and layout
-    check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'})
+    if not rho0.islrdm():
+        check_shape(
+            rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'}
+        )
     check_qarray_is_dense(rho0, 'rho0')
 
     # === check exp_ops shape
@@ -496,6 +505,11 @@ def _check_mesolve_args(
 
 def _check_mesolve_low_rank_args(rho0: QArray, method: LowRank) -> None:
     n = rho0.shape[-2]
+    if rho0.islrdm() and rho0.shape[-1] != method.M:
+        raise ValueError(
+            'Argument `rho0` is a low-rank density matrix with shape '
+            f'(..., {n}, {rho0.shape[-1]}) but method.M={method.M}.'
+        )
     if n < method.M:
         raise ValueError(
             f'Argument `M` must be <= n, but is M={method.M} (n={n}).'
