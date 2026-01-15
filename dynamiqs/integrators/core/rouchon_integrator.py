@@ -268,20 +268,24 @@ class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
     def terms(self) -> dx.AbstractTerm:
         def kraus_map(t0, t1, y0):  # noqa: ANN202
             rho = y0
-            t = (t0 + t1) / 2
+            t = t0
             dt = t1 - t0
 
-            L, H = self.L(t), self.H(t)
+            L, H = self.L, self.H
 
             # === first order
-            Ms_1 = MESolveFixedRouchon1Integrator.Ms(H, L, dt, self.method.exact_expm)
-            rho_1 = cholesky_normalize(Ms_1, rho) if self.method.normalize else rho
-            rho_1 = sum([M @ rho_1 @ M.dag() for M in Ms_1])
+            Msss_1 = MESolveFixedRouchon1Integrator.Msss(
+                H, L, t, dt, self.method.exact_expm
+            )
+            rho_1 = cholesky_normalize(Msss_1, rho) if self.method.normalize else rho
+            rho_1 = sum([apply_nested_map(rho_1, Mss) for Mss in Msss_1])
 
             # === second order
-            Ms_2 = MESolveFixedRouchon2Integrator.Ms(H, L, dt, self.method.exact_expm)
-            rho_2 = cholesky_normalize(Ms_2, rho) if self.method.normalize else rho
-            rho_2 = sum([M @ rho_2 @ M.dag() for M in Ms_2])
+            Msss_2 = MESolveFixedRouchon2Integrator.Msss(
+                H, L, t, dt, self.method.exact_expm
+            )
+            rho_2 = cholesky_normalize(Msss_2, rho) if self.method.normalize else rho
+            rho_2 = sum([apply_nested_map(rho_2, Mss) for Mss in Msss_2])
 
             return rho_2, 0.5 * (rho_2 - rho_1)
 
@@ -297,21 +301,24 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
     def terms(self) -> dx.AbstractTerm:
         def kraus_map(t0, t1, y0):  # noqa: ANN202
             rho = y0
-            t = (t0 + t1) / 2
+            t = t0
             dt = t1 - t0
 
-            L, H = self.L(t), self.H(t)
+            L, H = self.L, self.H
 
             # === second order
-            Ms_2 = MESolveFixedRouchon2Integrator.Ms(H, L, dt, self.method.exact_expm)
-            rho_2 = cholesky_normalize(Ms_2, rho) if self.method.normalize else rho
-            rho_2 = sum([M @ rho_2 @ M.dag() for M in Ms_2])
+            Msss_2 = MESolveFixedRouchon2Integrator.Msss(
+                H, L, t, dt, self.method.exact_expm
+            )
+            rho_2 = cholesky_normalize(Msss_2, rho) if self.method.normalize else rho
+            rho_2 = sum([apply_nested_map(rho_2, Mss) for Mss in Msss_2])
 
             # === third order
-            Ms_3 = MESolveFixedRouchon3Integrator.Ms(H, L, dt, self.method.exact_expm)
-            rho_3 = cholesky_normalize(Ms_3, rho) if self.method.normalize else rho
-            rho_3 = sum([M @ rho_3 @ M.dag() for M in Ms_3])
-
+            Msss_3 = MESolveFixedRouchon3Integrator.Msss(
+                H, L, t, dt, self.method.exact_expm
+            )
+            rho_3 = cholesky_normalize(Msss_3, rho) if self.method.normalize else rho
+            rho_3 = sum([apply_nested_map(rho_3, Mss) for Mss in Msss_3])
             return rho_3, 0.5 * (rho_3 - rho_2)
 
         return AbstractRouchonTerm(kraus_map)
