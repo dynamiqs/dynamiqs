@@ -6,7 +6,6 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import replace
-from itertools import product
 
 import diffrax as dx
 import jax
@@ -60,6 +59,7 @@ class RouchonDXSolver(dx.AbstractSolver):
 class AdaptiveRouchonDXSolver(dx.AbstractAdaptiveSolver, RouchonDXSolver):
     pass
 
+
 def apply_nested_map(rho: QArray, Mss: Sequence[Sequence[QArray]]) -> QArray:
     """Applies the partial Kraus map defined by the operators
     Mss to the density matrix rho recursively.
@@ -69,12 +69,14 @@ def apply_nested_map(rho: QArray, Mss: Sequence[Sequence[QArray]]) -> QArray:
         res = sum([M @ res @ M.dag() for M in Ms])
     return res
 
+
 def compute_partial_S(rho: QArray, Mss: Sequence[Sequence[QArray]]) -> QArray:
     """Computes the corresponding operator S = Mk^† @ Mk for the Kraus operators Mss."""
     S = eye_like(rho)
     for Ms in Mss:
         S = sum([M.dag() @ S @ M for M in Ms])
     return S
+
 
 def cholesky_normalize(
     Msss: Sequence[Sequence[Sequence[QArray]]], rho: QArray
@@ -175,14 +177,13 @@ class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
         t: float,
         dt: float,
         exact_expm: bool,
-    ) -> Sequence[Sequence[Sequence[QArray]]]:        # M0 = I - (iH + 0.5 sum_k Lk^† @ Lk) dt
+    ) -> Sequence[Sequence[Sequence[QArray]]]:
         Lmid = L(t + dt / 2)
         Hmid = H(t + dt / 2)
-        # Mk = Lk sqrt(dt)
         LdL = sum([_L.dag() @ _L for _L in Lmid])
         Gmid = -1j * Hmid - 0.5 * LdL
         e1 = (dt * Gmid).expm() if exact_expm else _expm_taylor(dt * Gmid, 1)
-        return [[[e1]] ,[[jnp.sqrt(dt) * _L for _L in Lmid]]]
+        return [[[e1]], [[jnp.sqrt(dt) * _L for _L in Lmid]]]
 
 
 mesolve_rouchon1_integrator_constructor = (
@@ -205,15 +206,15 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
         dt: float,
         exact_expm: bool,
     ) -> Sequence[Sequence[Sequence[QArray]]]:
-        Lmid = L(t + dt/2)
-        Hmid = H(t + dt/2)
+        Lmid = L(t + dt / 2)
+        Hmid = H(t + dt / 2)
         LdL = sum([_L.dag() @ _L for _L in Lmid])
         Gmid = -1j * Hmid - 0.5 * LdL
         e1 = (dt * Gmid).expm() if exact_expm else _expm_taylor(dt * Gmid, 2)
-        J0 = [[[e1]]] # No jump kraus operator
-        J1a = [[[jnp.sqrt(dt / 2) * e1 @ _L for _L in Lmid]]] # 1 jump a
-        J1b = [[[jnp.sqrt(dt / 2) * _L @ e1 for _L in Lmid]]] # 1 jump b
-        J2 = [[[jnp.sqrt(dt**2 / 2) * _L1 for _L1 in Lmid], Lmid]] # 2 jumps
+        J0 = [[[e1]]]  # No jump kraus operator
+        J1a = [[[jnp.sqrt(dt / 2) * e1 @ _L for _L in Lmid]]]  # 1 jump a
+        J1b = [[[jnp.sqrt(dt / 2) * _L @ e1 for _L in Lmid]]]  # 1 jump b
+        J2 = [[[jnp.sqrt(dt**2 / 2) * _L1 for _L1 in Lmid], Lmid]]  # 2 jumps
         return [*J0, *J1a, *J1b, *J2]
 
 
@@ -240,7 +241,12 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
         J0 = [[[e3o3]]]  # No jump kraus operator
         J1a = [[[jnp.sqrt(3 * dt / 4) * e1o3 @ _L @ e2o3 for _L in Lmid]]]  # 1 jump a
         J1b = [[[jnp.sqrt(dt / 4) * e3o3 @ _L for _L in Lmid]]]  # 1 jump b
-        J2 = [[[jnp.sqrt(dt**2 / 2) * e1o3 @ _L1 for _L1 in Lmid], [e1o3 @ _L2 @ e1o3 for _L2 in Lmid]]]  # 2 jumps
+        J2 = [
+            [
+                [jnp.sqrt(dt**2 / 2) * e1o3 @ _L1 for _L1 in Lmid],
+                [e1o3 @ _L2 @ e1o3 for _L2 in Lmid],
+            ]
+        ]  # 2 jumps
         J3 = [[[jnp.sqrt(dt**3 / 6) * _L1 for _L1 in Lmid], Lmid, Lmid]]  # 3 jumps
         return [*J0, *J1a, *J1b, *J2, *J3]
 
