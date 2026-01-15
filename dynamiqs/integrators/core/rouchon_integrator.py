@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import replace
 from itertools import product
 
@@ -60,8 +60,25 @@ class RouchonDXSolver(dx.AbstractSolver):
 class AdaptiveRouchonDXSolver(dx.AbstractAdaptiveSolver, RouchonDXSolver):
     pass
 
+def apply_nested_map(rho: QArray, Mss: Sequence[Sequence[QArray]]) -> QArray:
+    """Applies the partial Kraus map defined by the operators
+    Mss to the density matrix rho recursively.
+    """
+    res = rho
+    for Ms in reversed(Mss):
+        res = sum([M @ res @ M.dag() for M in Ms])
+    return res
 
-def cholesky_normalize(Ms: list[QArray], rho: QArray) -> jax.Array:
+def compute_partial_S(rho: QArray, Mss: Sequence[Sequence[QArray]]) -> QArray:
+    """Computes the corresponding operator S = Mk^† @ Mk for the Kraus operators Mss."""
+    S = eye_like(rho)
+    for Ms in Mss:
+        S = sum([M.dag() @ S @ M for M in Ms])
+    return S
+
+def cholesky_normalize(
+    Msss: Sequence[Sequence[Sequence[QArray]]], rho: QArray
+) -> jax.Array:
     # To normalize the scheme, we compute
     #   S = sum_k Mk^† @ Mk
     # and replace
@@ -82,7 +99,7 @@ def cholesky_normalize(Ms: list[QArray], rho: QArray) -> jax.Array:
     # In practice we directly replace rho_k by T^{†(-1)} @ rho_k @ T^{-1} instead of
     # computing all ~Mks.
 
-    S = sum([M.dag() @ M for M in Ms])
+    S = sum([compute_partial_S(rho, Mss) for Mss in Msss])
     T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
 
     # we want T^{†(-1)} @ y0 @ T^{-1}
@@ -116,28 +133,33 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
         def kraus_map(t0, t1, y0):  # noqa: ANN202
             # The Rouchon update for a single loss channel is:
             #   rho_{k+1} = sum_k Mk @ rho_k @ Mk^†
-            # See comment of `cholesky_normalize()` for the normalisation.
+            # See comment of `cholesky_normalize()` for the normalization.
 
             rho = y0
-            t = (t0 + t1) / 2
+            t = t0
             dt = t1 - t0
-            Ms = self._kraus_ops(t, dt)
+            Msss = self._kraus_ops(t, dt)
 
             if self.method.normalize:
-                rho = cholesky_normalize(Ms, rho)
+                rho = cholesky_normalize(Msss, rho)
 
             # for fixed step size, we return None for the error estimate
-            return sum([M @ rho @ M.dag() for M in Ms]), None
+            return sum([apply_nested_map(rho, Mss) for Mss in Msss]), None
 
         return AbstractRouchonTerm(kraus_map)
 
-    def _kraus_ops(self, t: float, dt: float) -> list[QArray]:
-        L, H = self.L(t), self.H(t)
-        return self.Ms(H, L, dt, self.method.exact_expm)
+    def _kraus_ops(self, t: float, dt: float) -> Sequence[QArray]:
+        return self.Msss(self.H, self.L, t, dt, self.method.exact_expm)
 
     @staticmethod
     @abstractmethod
-    def Ms(H: QArray, L: list[QArray], dt: float, exact_expm: bool) -> list[QArray]:
+    def Msss(
+        H: Callable[[RealScalarLike], QArray],
+        L: Callable[[RealScalarLike], Sequence[QArray]],
+        t: float,
+        dt: float,
+        exact_expm: bool,
+    ) -> Sequence[QArray]:
         pass
 
 
@@ -147,13 +169,20 @@ class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
     """
 
     @staticmethod
-    def Ms(H: QArray, L: list[QArray], dt: float, exact_expm: bool) -> list[QArray]:
-        # M0 = I - (iH + 0.5 sum_k Lk^† @ Lk) dt
+    def Msss(
+        H: Callable[[RealScalarLike], QArray],
+        L: Callable[[RealScalarLike], Sequence[QArray]],
+        t: float,
+        dt: float,
+        exact_expm: bool,
+    ) -> Sequence[Sequence[Sequence[QArray]]]:        # M0 = I - (iH + 0.5 sum_k Lk^† @ Lk) dt
+        Lmid = L(t + dt / 2)
+        Hmid = H(t + dt / 2)
         # Mk = Lk sqrt(dt)
-        LdL = sum([_L.dag() @ _L for _L in L])
-        G = -1j * H - 0.5 * LdL
-        e1 = (dt * G).expm() if exact_expm else _expm_taylor(dt * G, 1)
-        return [e1] + [jnp.sqrt(dt) * _L for _L in L]
+        LdL = sum([_L.dag() @ _L for _L in Lmid])
+        Gmid = -1j * Hmid - 0.5 * LdL
+        e1 = (dt * Gmid).expm() if exact_expm else _expm_taylor(dt * Gmid, 1)
+        return [[[e1]] ,[[jnp.sqrt(dt) * _L for _L in Lmid]]]
 
 
 mesolve_rouchon1_integrator_constructor = (
@@ -169,17 +198,23 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
     """
 
     @staticmethod
-    def Ms(H: QArray, L: list[QArray], dt: float, exact_expm: bool) -> list[QArray]:
-        LdL = sum([_L.dag() @ _L for _L in L])
-        G = -1j * H - 0.5 * LdL
-        e1 = (dt * G).expm() if exact_expm else _expm_taylor(dt * G, 2)
-
-        return (
-            [e1]
-            + [jnp.sqrt(dt / 2) * e1 @ _L for _L in L]
-            + [jnp.sqrt(dt / 2) * _L @ e1 for _L in L]
-            + [jnp.sqrt(dt**2 / 2) * _L1 @ _L2 for _L1, _L2 in product(L, L)]
-        )
+    def Msss(
+        H: Callable[[RealScalarLike], QArray],
+        L: Callable[[RealScalarLike], Sequence[QArray]],
+        t: float,
+        dt: float,
+        exact_expm: bool,
+    ) -> Sequence[Sequence[Sequence[QArray]]]:
+        Lmid = L(t + dt/2)
+        Hmid = H(t + dt/2)
+        LdL = sum([_L.dag() @ _L for _L in Lmid])
+        Gmid = -1j * Hmid - 0.5 * LdL
+        e1 = (dt * Gmid).expm() if exact_expm else _expm_taylor(dt * Gmid, 2)
+        J0 = [[[e1]]] # No jump kraus operator
+        J1a = [[[jnp.sqrt(dt / 2) * e1 @ _L for _L in Lmid]]] # 1 jump a
+        J1b = [[[jnp.sqrt(dt / 2) * _L @ e1 for _L in Lmid]]] # 1 jump b
+        J2 = [[[jnp.sqrt(dt**2 / 2) * _L1 for _L1 in Lmid], Lmid]] # 2 jumps
+        return [*J0, *J1a, *J1b, *J2]
 
 
 class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
@@ -188,26 +223,26 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
     """
 
     @staticmethod
-    def Ms(H: QArray, L: list[QArray], dt: float, exact_expm: bool) -> list[QArray]:
-        LdL = sum([_L.dag() @ _L for _L in L])
-        G = -1j * H - 0.5 * LdL
-        e1o3 = (dt / 3 * G).expm() if exact_expm else _expm_taylor(dt / 3 * G, 3)
+    def Msss(
+        H: Callable[[RealScalarLike], QArray],
+        L: Callable[[RealScalarLike], Sequence[QArray]],
+        t: float,
+        dt: float,
+        exact_expm: bool,
+    ) -> Sequence[Sequence[Sequence[QArray]]]:
+        Lmid = L(t + dt / 2)
+        Hmid = H(t + dt / 2)
+        LdL = sum([_L.dag() @ _L for _L in Lmid])
+        Gmid = -1j * Hmid - 0.5 * LdL
+        e1o3 = (dt / 3 * Gmid).expm() if exact_expm else _expm_taylor(dt / 3 * Gmid, 3)
         e2o3 = e1o3 @ e1o3
         e3o3 = e2o3 @ e1o3
-
-        return (
-            [e3o3]
-            + [jnp.sqrt(3 * dt / 4) * e1o3 @ _L @ e2o3 for _L in L]
-            + [jnp.sqrt(dt / 4) * e3o3 @ _L for _L in L]
-            + [
-                jnp.sqrt(dt**2 / 2) * e1o3 @ _L1 @ e1o3 @ _L2 @ e1o3
-                for _L1, _L2 in product(L, L)
-            ]
-            + [
-                jnp.sqrt(dt**3 / 6) * _L1 @ _L2 @ _L3
-                for _L1, _L2, _L3 in product(L, L, L)
-            ]
-        )
+        J0 = [[[e3o3]]]  # No jump kraus operator
+        J1a = [[[jnp.sqrt(3 * dt / 4) * e1o3 @ _L @ e2o3 for _L in Lmid]]]  # 1 jump a
+        J1b = [[[jnp.sqrt(dt / 4) * e3o3 @ _L for _L in Lmid]]]  # 1 jump b
+        J2 = [[[jnp.sqrt(dt**2 / 2) * e1o3 @ _L1 for _L1 in Lmid], [e1o3 @ _L2 @ e1o3 for _L2 in Lmid]]]  # 2 jumps
+        J3 = [[[jnp.sqrt(dt**3 / 6) * _L1 for _L1 in Lmid], Lmid, Lmid]]  # 3 jumps
+        return [*J0, *J1a, *J1b, *J2, *J3]
 
 
 class MESolveAdaptiveRouchonIntegrator(MESolveDiffraxIntegrator):
