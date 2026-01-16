@@ -138,7 +138,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
             # See comment of `cholesky_normalize()` for the normalization.
 
             rho = y0
-            t = t0
+            t = (t0 + t1) / 2
             dt = t1 - t0
             Msss = self._kraus_ops(t, dt)
 
@@ -151,14 +151,14 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
         return AbstractRouchonTerm(kraus_map)
 
     def _kraus_ops(self, t: float, dt: float) -> Sequence[QArray]:
-        return self.Msss(self.H, self.L, t, dt, self.method.exact_expm)
+        L, H = self.L(t), self.H(t)
+        return self.Msss(H, L, dt, self.method.exact_expm)
 
     @staticmethod
     @abstractmethod
     def Msss(
-        H: Callable[[RealScalarLike], QArray],
-        L: Callable[[RealScalarLike], Sequence[QArray]],
-        t: float,
+        H: QArray,
+        L: Sequence[QArray],
         dt: float,
         exact_expm: bool,
     ) -> Sequence[QArray]:
@@ -172,18 +172,15 @@ class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
 
     @staticmethod
     def Msss(
-        H: Callable[[RealScalarLike], QArray],
-        L: Callable[[RealScalarLike], Sequence[QArray]],
-        t: float,
+        H: QArray,
+        L: Sequence[QArray],
         dt: float,
         exact_expm: bool,
     ) -> Sequence[Sequence[Sequence[QArray]]]:
-        Lmid = L(t + dt / 2)
-        Hmid = H(t + dt / 2)
-        LdL = sum([_L.dag() @ _L for _L in Lmid])
-        Gmid = -1j * Hmid - 0.5 * LdL
-        e1 = (dt * Gmid).expm() if exact_expm else _expm_taylor(dt * Gmid, 1)
-        return [[[e1]], [[jnp.sqrt(dt) * _L for _L in Lmid]]]
+        LdL = sum([_L.dag() @ _L for _L in L])
+        G = -1j * H - 0.5 * LdL
+        e1 = (dt * G).expm() if exact_expm else _expm_taylor(dt * G, 1)
+        return [[[e1]], [[jnp.sqrt(dt) * _L for _L in L]]]
 
 
 mesolve_rouchon1_integrator_constructor = (
@@ -200,21 +197,19 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
 
     @staticmethod
     def Msss(
-        H: Callable[[RealScalarLike], QArray],
-        L: Callable[[RealScalarLike], Sequence[QArray]],
-        t: float,
+        H: QArray,
+        L: Sequence[QArray],
         dt: float,
         exact_expm: bool,
     ) -> Sequence[Sequence[Sequence[QArray]]]:
-        Lmid = L(t + dt / 2)
-        Hmid = H(t + dt / 2)
-        LdL = sum([_L.dag() @ _L for _L in Lmid])
-        Gmid = -1j * Hmid - 0.5 * LdL
-        e1 = (dt * Gmid).expm() if exact_expm else _expm_taylor(dt * Gmid, 2)
+        
+        LdL = sum([_L.dag() @ _L for _L in L])
+        G = -1j * H - 0.5 * LdL
+        e1 = (dt * G).expm() if exact_expm else _expm_taylor(dt * G, 2)
         J0 = [[[e1]]]  # No jump kraus operator
-        J1a = [[[jnp.sqrt(dt / 2) * e1 @ _L for _L in Lmid]]]  # 1 jump a
-        J1b = [[[jnp.sqrt(dt / 2) * _L @ e1 for _L in Lmid]]]  # 1 jump b
-        J2 = [[[jnp.sqrt(dt**2 / 2) * _L1 for _L1 in Lmid], Lmid]]  # 2 jumps
+        J1a = [[[jnp.sqrt(dt / 2) * e1 @ _L for _L in L]]]  # 1 jump a
+        J1b = [[[jnp.sqrt(dt / 2) * _L @ e1 for _L in L]]]  # 1 jump b
+        J2 = [[[jnp.sqrt(dt**2 / 2) * _L1 for _L1 in L], L]]  # 2 jumps
         return [*J0, *J1a, *J1b, *J2]
 
 
@@ -225,29 +220,26 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
 
     @staticmethod
     def Msss(
-        H: Callable[[RealScalarLike], QArray],
-        L: Callable[[RealScalarLike], Sequence[QArray]],
-        t: float,
+        H: QArray,
+        L: Sequence[QArray],
         dt: float,
         exact_expm: bool,
     ) -> Sequence[Sequence[Sequence[QArray]]]:
-        Lmid = L(t + dt / 2)
-        Hmid = H(t + dt / 2)
-        LdL = sum([_L.dag() @ _L for _L in Lmid])
-        Gmid = -1j * Hmid - 0.5 * LdL
-        e1o3 = (dt / 3 * Gmid).expm() if exact_expm else _expm_taylor(dt / 3 * Gmid, 3)
+        LdL = sum([_L.dag() @ _L for _L in L])
+        G = -1j * H - 0.5 * LdL
+        e1o3 = (dt / 3 * G).expm() if exact_expm else _expm_taylor(dt / 3 * G, 3)
         e2o3 = e1o3 @ e1o3
         e3o3 = e2o3 @ e1o3
         J0 = [[[e3o3]]]  # No jump kraus operator
-        J1a = [[[jnp.sqrt(3 * dt / 4) * e1o3 @ _L @ e2o3 for _L in Lmid]]]  # 1 jump a
-        J1b = [[[jnp.sqrt(dt / 4) * e3o3 @ _L for _L in Lmid]]]  # 1 jump b
+        J1a = [[[jnp.sqrt(3 * dt / 4) * e1o3 @ _L @ e2o3 for _L in L]]]  # 1 jump a
+        J1b = [[[jnp.sqrt(dt / 4) * e3o3 @ _L for _L in L]]]  # 1 jump b
         J2 = [
             [
-                [jnp.sqrt(dt**2 / 2) * e1o3 @ _L1 for _L1 in Lmid],
-                [e1o3 @ _L2 @ e1o3 for _L2 in Lmid],
+                [jnp.sqrt(dt**2 / 2) * e1o3 @ _L1 for _L1 in L],
+                [e1o3 @ _L2 @ e1o3 for _L2 in L],
             ]
         ]  # 2 jumps
-        J3 = [[[jnp.sqrt(dt**3 / 6) * _L1 for _L1 in Lmid], Lmid, Lmid]]  # 3 jumps
+        J3 = [[[jnp.sqrt(dt**3 / 6) * _L1 for _L1 in L], L, L]]  # 3 jumps
         return [*J0, *J1a, *J1b, *J2, *J3]
 
 
@@ -274,21 +266,21 @@ class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
     def terms(self) -> dx.AbstractTerm:
         def kraus_map(t0, t1, y0):  # noqa: ANN202
             rho = y0
-            t = t0
+            t = (t0 + t1) / 2
             dt = t1 - t0
 
-            L, H = self.L, self.H
+            L, H = self.L(t), self.H(t)
 
             # === first order
             Msss_1 = MESolveFixedRouchon1Integrator.Msss(
-                H, L, t, dt, self.method.exact_expm
+                H, L, dt, self.method.exact_expm
             )
             rho_1 = cholesky_normalize(Msss_1, rho) if self.method.normalize else rho
             rho_1 = sum([apply_nested_map(rho_1, Mss) for Mss in Msss_1])
 
             # === second order
             Msss_2 = MESolveFixedRouchon2Integrator.Msss(
-                H, L, t, dt, self.method.exact_expm
+                H, L, dt, self.method.exact_expm
             )
             rho_2 = cholesky_normalize(Msss_2, rho) if self.method.normalize else rho
             rho_2 = sum([apply_nested_map(rho_2, Mss) for Mss in Msss_2])
@@ -307,21 +299,21 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
     def terms(self) -> dx.AbstractTerm:
         def kraus_map(t0, t1, y0):  # noqa: ANN202
             rho = y0
-            t = t0
+            t = (t0 + t1) / 2
             dt = t1 - t0
 
-            L, H = self.L, self.H
+            L, H = self.L(t), self.H(t)
 
             # === second order
             Msss_2 = MESolveFixedRouchon2Integrator.Msss(
-                H, L, t, dt, self.method.exact_expm
+                H, L, dt, self.method.exact_expm
             )
             rho_2 = cholesky_normalize(Msss_2, rho) if self.method.normalize else rho
             rho_2 = sum([apply_nested_map(rho_2, Mss) for Mss in Msss_2])
 
             # === third order
             Msss_3 = MESolveFixedRouchon3Integrator.Msss(
-                H, L, t, dt, self.method.exact_expm
+                H, L, dt, self.method.exact_expm
             )
             rho_3 = cholesky_normalize(Msss_3, rho) if self.method.normalize else rho
             rho_3 = sum([apply_nested_map(rho_3, Mss) for Mss in Msss_3])
