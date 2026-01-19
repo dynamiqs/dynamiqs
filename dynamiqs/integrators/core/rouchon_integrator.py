@@ -303,14 +303,18 @@ class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
             krausmap_1 = MESolveFixedRouchon1Integrator.build_kraus_map(
                 H, L, dt, self.method.exact_expm
             )
-            rho_1 = cholesky_normalize(krausmap_1, rho) if self.method.normalize else rho
+            rho_1 = (
+                cholesky_normalize(krausmap_1, rho) if self.method.normalize else rho
+            )
             rho_1 = krausmap_1(rho_1)
 
             # === second order
             krausmap_2 = MESolveFixedRouchon2Integrator.build_kraus_map(
                 H, L, dt, self.method.exact_expm
             )
-            rho_2 = cholesky_normalize(krausmap_2, rho) if self.method.normalize else rho
+            rho_2 = (
+                cholesky_normalize(krausmap_2, rho) if self.method.normalize else rho
+            )
             rho_2 = krausmap_2(rho_2)
 
             return rho_2, 0.5 * (rho_2 - rho_1)
@@ -336,14 +340,18 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
             krausmap_2 = MESolveFixedRouchon2Integrator.build_kraus_map(
                 H, L, dt, self.method.exact_expm
             )
-            rho_2 = cholesky_normalize(krausmap_2, rho) if self.method.normalize else rho
+            rho_2 = (
+                cholesky_normalize(krausmap_2, rho) if self.method.normalize else rho
+            )
             rho_2 = krausmap_2(rho_2)
 
             # === third order
             krausmap_3 = MESolveFixedRouchon3Integrator.build_kraus_map(
                 H, L, dt, self.method.exact_expm
             )
-            rho_3 = cholesky_normalize(krausmap_3, rho) if self.method.normalize else rho
+            rho_3 = (
+                cholesky_normalize(krausmap_3, rho) if self.method.normalize else rho
+            )
             rho_3 = krausmap_3(rho_3)
             return rho_3, 0.5 * (rho_3 - rho_2)
 
