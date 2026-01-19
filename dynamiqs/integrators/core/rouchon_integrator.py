@@ -8,6 +8,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import replace
 
 import diffrax as dx
+import equinox as eqx
 import jax
 import jax.numpy as jnp
 from diffrax._custom_types import RealScalarLike, Y
@@ -16,8 +17,6 @@ from diffrax._local_interpolation import LocalLinearInterpolation
 from ...qarrays.qarray import QArray
 from ...utils.operators import eye_like
 from .diffrax_integrator import MESolveDiffraxIntegrator
-import equinox as eqx
-
 
 
 class AbstractRouchonTerm(dx.AbstractTerm):
@@ -61,48 +60,50 @@ class RouchonDXSolver(dx.AbstractSolver):
 class AdaptiveRouchonDXSolver(dx.AbstractAdaptiveSolver, RouchonDXSolver):
     pass
 
-class KrausChannel(eqx.Module): 
+
+class KrausChannel(eqx.Module):
     operators: list[QArray]
 
     def __call__(self, rho) -> QArray:
         return sum([M @ rho @ M.dag() for M in self.operators])
-  
-    def apply_S(self, op) -> QArray: # computes S = sum(M† op M) for the channel
+
+    def apply_S(self, op) -> QArray:  # computes S = sum(M† op M) for the channel
         return sum([M.dag() @ op @ M for M in self.operators])
-   
-    def S(self) -> QArray: # computes S = sum(M†M) for the channel
+
+    def S(self) -> QArray:  # computes S = sum(M†M) for the channel
         return self.apply_S(eye_like(self.operators[0]))
-    
+
+
 class NestedKrausChannel(eqx.Module):
     channels: list[KrausChannel]
 
     @property
     def order(self) -> int:
         return len(self.channels)
-    
+
     def __call__(self, rho) -> QArray:
-        for channel in reversed(self.channels): 
+        for channel in reversed(self.channels):
             rho = channel(rho)
         return rho
-  
-    def S(self) -> QArray: # computes S = sum(M†M) for the nested channel
+
+    def S(self) -> QArray:  # computes S = sum(M†M) for the nested channel
         res = eye_like(self.channels[0].operators[0])
-        for channel in (self.channels):
+        for channel in self.channels:
             res = channel.apply_S(res)
         return res
+
 
 class KrausMap(eqx.Module):
     channels: list[NestedKrausChannel | KrausChannel]
 
     def __call__(self, rho) -> QArray:
         return sum([channel(rho) for channel in self.channels])
-    
-    def S(self) -> QArray: # computes S = sum(M†M) for the full map
+
+    def S(self) -> QArray:  # computes S = sum(M†M) for the full map
         return sum([channel.S() for channel in self.channels])
 
-def cholesky_normalize(
-    krausmap: KrausMap, rho: QArray
-) -> jax.Array:
+
+def cholesky_normalize(krausmap: KrausMap, rho: QArray) -> jax.Array:
     # To normalize the scheme, we compute
     #   S = sum_k Mk^† @ Mk
     # and replace
@@ -146,6 +147,7 @@ def _expm_taylor(A: QArray, order: int) -> QArray:
 
     return out
 
+
 class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using a
     fixed step Rouchon method.
@@ -168,6 +170,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
 
             # for fixed step size, we return None for the error estimate
             return krausmap(rho), None
+
         return AbstractRouchonTerm(kraus_map)
 
     def _kraus_map(self, t: float, dt: float) -> Sequence[QArray]:
@@ -177,10 +180,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
     @staticmethod
     @abstractmethod
     def build_kraus_map(
-        H: QArray,
-        L: Sequence[QArray],
-        dt: float,
-        exact_expm: bool,
+        H: QArray, L: Sequence[QArray], dt: float, exact_expm: bool
     ) -> KrausMap:
         pass
 
@@ -192,10 +192,7 @@ class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
 
     @staticmethod
     def build_kraus_map(
-        H: QArray,
-        L: Sequence[QArray],
-        dt: float,
-        exact_expm: bool,
+        H: QArray, L: Sequence[QArray], dt: float, exact_expm: bool
     ) -> KrausMap:
         LdL = sum([_L.dag() @ _L for _L in L])
         G = -1j * H - 0.5 * LdL
@@ -217,12 +214,8 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
 
     @staticmethod
     def build_kraus_map(
-        H: QArray,
-        L: Sequence[QArray],
-        dt: float,
-        exact_expm: bool,
+        H: QArray, L: Sequence[QArray], dt: float, exact_expm: bool
     ) -> KrausMap:
-        
         LdL = sum([_L.dag() @ _L for _L in L])
         G = -1j * H - 0.5 * LdL
         e1 = (dt * G).expm() if exact_expm else _expm_taylor(dt * G, 2)
@@ -231,10 +224,9 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
             + [jnp.sqrt(dt / 2) * e1 @ _L for _L in L]
             + [jnp.sqrt(dt / 2) * _L @ e1 for _L in L]
         )
-        channel_2 = NestedKrausChannel([
-            KrausChannel([jnp.sqrt(dt**2 / 2) * _L1 for _L1 in L]),
-            KrausChannel(L)
-        ])
+        channel_2 = NestedKrausChannel(
+            [KrausChannel([jnp.sqrt(dt**2 / 2) * _L1 for _L1 in L]), KrausChannel(L)]
+        )
         krausmap = KrausMap([channel_1, channel_2])
         return krausmap
 
@@ -246,10 +238,7 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
 
     @staticmethod
     def build_kraus_map(
-        H: QArray,
-        L: Sequence[QArray],
-        dt: float,
-        exact_expm: bool,
+        H: QArray, L: Sequence[QArray], dt: float, exact_expm: bool
     ) -> KrausMap:
         LdL = sum([_L.dag() @ _L for _L in L])
         G = -1j * H - 0.5 * LdL
@@ -261,15 +250,19 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
             + [jnp.sqrt(3 * dt / 4) * e1o3 @ _L @ e2o3 for _L in L]
             + [jnp.sqrt(dt / 4) * e3o3 @ _L for _L in L]
         )
-        channel_2 = NestedKrausChannel([
-            KrausChannel([jnp.sqrt(dt**2 / 2) * e1o3 @ _L1 for _L1 in L]),
-            KrausChannel([e1o3 @ _L2 @ e1o3 for _L2 in L])
-        ])
-        channel_3 = NestedKrausChannel([
-            KrausChannel([jnp.sqrt(dt**3 / 6) * _L1 for _L1 in L]),
-            KrausChannel(L),
-            KrausChannel(L)
-        ])
+        channel_2 = NestedKrausChannel(
+            [
+                KrausChannel([jnp.sqrt(dt**2 / 2) * e1o3 @ _L1 for _L1 in L]),
+                KrausChannel([e1o3 @ _L2 @ e1o3 for _L2 in L]),
+            ]
+        )
+        channel_3 = NestedKrausChannel(
+            [
+                KrausChannel([jnp.sqrt(dt**3 / 6) * _L1 for _L1 in L]),
+                KrausChannel(L),
+                KrausChannel(L),
+            ]
+        )
         krausmap = KrausMap([channel_1, channel_2, channel_3])
         return krausmap
 
