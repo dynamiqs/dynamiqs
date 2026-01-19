@@ -6,6 +6,8 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import replace
+from functools import reduce
+from itertools import product
 
 import diffrax as dx
 import equinox as eqx
@@ -75,6 +77,10 @@ class KrausChannel(eqx.Module):
         # computes S = sum(M†M) for the channel
         return sum([M.dag() @ M for M in self.operators])
 
+    def get_kraus_operators(self) -> list[QArray]:
+        # returns the list of Kraus operators in the channel.
+        return self.operators
+
 
 class NestedKrausChannel(eqx.Module):
     channels: list[KrausChannel]
@@ -97,6 +103,13 @@ class NestedKrausChannel(eqx.Module):
             out = channel.apply_conjugate(out)
         return out
 
+    def get_kraus_operators(self) -> list[QArray]:
+        # returns the list of all Kraus operators in the nested channel.
+        return [
+            reduce(lambda a, b: a @ b, x)  # product of all the operators
+            for x in product(*[ch.operators for ch in self.channels])
+        ]
+
 
 class KrausMap(eqx.Module):
     channels: list[NestedKrausChannel | KrausChannel]
@@ -110,6 +123,10 @@ class KrausMap(eqx.Module):
     def S(self) -> QArray:
         # computes S = sum(M†M) for the full map
         return sum([channel.S() for channel in self.channels])
+
+    def get_kraus_operators(self) -> list[QArray]:
+        # returns the list of all Kraus operators in the map.
+        return [op for c in self.channels for op in c.get_kraus_operators()]
 
 
 def cholesky_normalize(krausmap: KrausMap, rho: QArray) -> jax.Array:
