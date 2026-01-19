@@ -23,7 +23,7 @@ from .interfaces import (
     JSSEInterface,
     SolveInterface,
 )
-from .rouchon_integrator import MESolveFixedRouchon1Integrator, cholesky_normalize
+from .rouchon_integrator import MESolveFixedRouchon1Integrator, cholesky_normalize, KrausMap
 from .save_mixin import SolveSaveMixin
 
 
@@ -463,12 +463,12 @@ class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
         return DiffusiveState(psi + dpsi, y.Y + dY)
 
 
-def cholesky_normalize_ket(Ms: list[QArray], psi: QArray) -> jax.Array:
+def cholesky_normalize_ket(krausmap: KrausMap, psi: QArray) -> jax.Array:
     # See comment of `cholesky_normalize()`.
     # For a ket we compute ~M @ psi = M @ T^{†(-1)} @ psi, so we directly replace psi by
     # T^{†(-1)} @ psi.
 
-    S = sum([M.dag() @ M for M in Ms])
+    S = krausmap.S()
     T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
 
     psi = psi.to_jax()[:, 0]  # (n, 1) -> (n,)
@@ -500,11 +500,12 @@ class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
         dY = exp * self.dt + dW
 
         # === state psi
-        Ms_average = MESolveFixedRouchon1Integrator.Ms(
+        krausmap = MESolveFixedRouchon1Integrator.build_kraus_map(
             H, L, self.dt, self.method.exact_expm
         )
+        Ms_average = krausmap.channels[0].operators
         if self.method.normalize:
-            psi = cholesky_normalize_ket(Ms_average, psi)
+            psi = cholesky_normalize_ket(krausmap, psi)
 
         M_dY = Ms_average[0] + sum([_dY * _L for _dY, _L in zip(dY, L, strict=True)])
 
@@ -586,11 +587,12 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         dY = jnp.sqrt(self.etas) * trace * self.dt + dW  # (nLm,)
 
         # === state rho
-        Ms_average = MESolveFixedRouchon1Integrator.Ms(
+        kraus_map = MESolveFixedRouchon1Integrator.build_kraus_map(
             H, L, self.dt, self.method.exact_expm
         )
+        Ms_average = kraus_map.channels[0].operators
         if self.method.normalize:
-            rho = cholesky_normalize(Ms_average, rho)
+            rho = cholesky_normalize(kraus_map, rho)
 
         M_dY = Ms_average[0] + sum(
             [
