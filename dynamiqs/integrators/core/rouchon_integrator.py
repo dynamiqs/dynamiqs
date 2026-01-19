@@ -67,11 +67,13 @@ class KrausChannel(eqx.Module):
     def __call__(self, rho) -> QArray:
         return sum([M @ rho @ M.dag() for M in self.operators])
 
-    def apply_S(self, op) -> QArray:  # computes S = sum(M† op M) for the channel
+    def apply_conjugate(self, op) -> QArray:
+        # computes S = sum(M† op M) for the channel
         return sum([M.dag() @ op @ M for M in self.operators])
 
-    def S(self) -> QArray:  # computes S = sum(M†M) for the channel
-        return self.apply_S(eye_like(self.operators[0]))
+    def S(self) -> QArray:
+        # computes S = sum(M†M) for the channel
+        return sum([M.dag() @ M for M in self.operators])
 
 
 class NestedKrausChannel(eqx.Module):
@@ -86,11 +88,15 @@ class NestedKrausChannel(eqx.Module):
             rho = channel(rho)
         return rho
 
-    def S(self) -> QArray:  # computes S = sum(M†M) for the nested channel
-        res = eye_like(self.channels[0].operators[0])
-        for channel in self.channels:
-            res = channel.apply_S(res)
-        return res
+    def S(self) -> QArray:
+        # computes S = sum(M†M) for the nested channel
+        if len(self.channels) == 0:
+            return eye_like(self.channels[0].operators[0])
+
+        out = self.channels[0].S()
+        for channel in self.channels[1:]:
+            out = channel.apply_conjugate(out)
+        return out
 
 
 class KrausMap(eqx.Module):
@@ -99,7 +105,8 @@ class KrausMap(eqx.Module):
     def __call__(self, rho) -> QArray:
         return sum([channel(rho) for channel in self.channels])
 
-    def S(self) -> QArray:  # computes S = sum(M†M) for the full map
+    def S(self) -> QArray:
+        # computes S = sum(M†M) for the full map
         return sum([channel.S() for channel in self.channels])
 
 
