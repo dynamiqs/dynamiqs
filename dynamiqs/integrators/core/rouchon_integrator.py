@@ -155,7 +155,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
 
     @property
     def terms(self) -> dx.AbstractTerm:
-        def kraus_map(t0, t1, y0):  # noqa: ANN202
+        def rouchon_step(t0, t1, y0):  # noqa: ANN202
             # The Rouchon update for a single loss channel is:
             #   rho_{k+1} = sum_k Mk @ rho_k @ Mk^†
             # See comment of `cholesky_normalize()` for the normalization.
@@ -171,7 +171,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
             # for fixed step size, we return None for the error estimate
             return krausmap(rho), None
 
-        return AbstractRouchonTerm(kraus_map)
+        return AbstractRouchonTerm(rouchon_step)
 
     def _kraus_map(self, t: float, dt: float) -> Sequence[QArray]:
         L, H = self.L(t), self.H(t)
