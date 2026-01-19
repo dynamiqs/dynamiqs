@@ -79,9 +79,8 @@ class KrausChannel(eqx.Module):
 class NestedKrausChannel(eqx.Module):
     channels: list[KrausChannel]
 
-    @property
-    def order(self) -> int:
-        return len(self.channels)
+    def __init__(self, *channels: KrausChannel):
+        self.channels = list(channels)
 
     def __call__(self, rho) -> QArray:
         for channel in reversed(self.channels):
@@ -101,6 +100,9 @@ class NestedKrausChannel(eqx.Module):
 
 class KrausMap(eqx.Module):
     channels: list[NestedKrausChannel | KrausChannel]
+
+    def __init__(self, *channels: NestedKrausChannel | KrausChannel):
+        self.channels = list(channels)
 
     def __call__(self, rho) -> QArray:
         return sum([channel(rho) for channel in self.channels])
@@ -204,7 +206,8 @@ class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
         LdL = sum([_L.dag() @ _L for _L in L])
         G = -1j * H - 0.5 * LdL
         e1 = (dt * G).expm() if exact_expm else _expm_taylor(dt * G, 1)
-        return KrausMap([KrausChannel([e1] + [jnp.sqrt(dt) * _L for _L in L])])
+        channel = KrausChannel([e1] + [jnp.sqrt(dt) * _L for _L in L])
+        return KrausMap(channel)
 
 
 mesolve_rouchon1_integrator_constructor = (
@@ -232,10 +235,9 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
             + [jnp.sqrt(dt / 2) * _L @ e1 for _L in L]
         )
         channel_2 = NestedKrausChannel(
-            [KrausChannel([jnp.sqrt(dt**2 / 2) * _L1 for _L1 in L]), KrausChannel(L)]
+            KrausChannel([jnp.sqrt(dt**2 / 2) * _L1 for _L1 in L]), KrausChannel(L)
         )
-        krausmap = KrausMap([channel_1, channel_2])
-        return krausmap
+        return KrausMap(channel_1, channel_2)
 
 
 class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
@@ -258,20 +260,15 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
             + [jnp.sqrt(dt / 4) * e3o3 @ _L for _L in L]
         )
         channel_2 = NestedKrausChannel(
-            [
-                KrausChannel([jnp.sqrt(dt**2 / 2) * e1o3 @ _L1 for _L1 in L]),
-                KrausChannel([e1o3 @ _L2 @ e1o3 for _L2 in L]),
-            ]
+            KrausChannel([jnp.sqrt(dt**2 / 2) * e1o3 @ _L1 for _L1 in L]),
+            KrausChannel([e1o3 @ _L2 @ e1o3 for _L2 in L]),
         )
         channel_3 = NestedKrausChannel(
-            [
-                KrausChannel([jnp.sqrt(dt**3 / 6) * _L1 for _L1 in L]),
-                KrausChannel(L),
-                KrausChannel(L),
-            ]
+            KrausChannel([jnp.sqrt(dt**3 / 6) * _L1 for _L1 in L]),
+            KrausChannel(L),
+            KrausChannel(L),
         )
-        krausmap = KrausMap([channel_1, channel_2, channel_3])
-        return krausmap
+        return KrausMap(channel_1, channel_2, channel_3)
 
 
 class MESolveAdaptiveRouchonIntegrator(MESolveDiffraxIntegrator):
