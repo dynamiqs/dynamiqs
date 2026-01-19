@@ -161,7 +161,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
             rho = y0
             t = (t0 + t1) / 2
             dt = t1 - t0
-            krausmap = self._kraus_ops(t, dt)
+            krausmap = self._kraus_map(t, dt)
 
             if self.method.normalize:
                 rho = cholesky_normalize(krausmap, rho)
@@ -170,13 +170,13 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
             return krausmap(rho), None
         return AbstractRouchonTerm(kraus_map)
 
-    def _kraus_ops(self, t: float, dt: float) -> Sequence[QArray]:
+    def _kraus_map(self, t: float, dt: float) -> Sequence[QArray]:
         L, H = self.L(t), self.H(t)
-        return self.Msss(H, L, dt, self.method.exact_expm)
+        return self.build_kraus_map(H, L, dt, self.method.exact_expm)
 
     @staticmethod
     @abstractmethod
-    def Msss(
+    def build_kraus_map(
         H: QArray,
         L: Sequence[QArray],
         dt: float,
@@ -191,7 +191,7 @@ class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
     """
 
     @staticmethod
-    def Msss(
+    def build_kraus_map(
         H: QArray,
         L: Sequence[QArray],
         dt: float,
@@ -216,7 +216,7 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
     """
 
     @staticmethod
-    def Msss(
+    def build_kraus_map(
         H: QArray,
         L: Sequence[QArray],
         dt: float,
@@ -245,7 +245,7 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
     """
 
     @staticmethod
-    def Msss(
+    def build_kraus_map(
         H: QArray,
         L: Sequence[QArray],
         dt: float,
@@ -303,13 +303,13 @@ class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
             L, H = self.L(t), self.H(t)
 
             # === first order
-            krausmap = MESolveFixedRouchon1Integrator.Msss(
+            krausmap = MESolveFixedRouchon1Integrator.build_kraus_map(
                 H, L, dt, self.method.exact_expm
             )
             rho_1 = cholesky_normalize(krausmap, rho) if self.method.normalize else rho
             rho_1 = krausmap(rho_1)
             # === second order
-            krausmap = MESolveFixedRouchon2Integrator.Msss(
+            krausmap = MESolveFixedRouchon2Integrator.build_kraus_map(
                 H, L, dt, self.method.exact_expm
             )
             rho_2 = cholesky_normalize(krausmap, rho) if self.method.normalize else rho
@@ -334,14 +334,14 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
             L, H = self.L(t), self.H(t)
 
             # === second order
-            krausmap = MESolveFixedRouchon2Integrator.Msss(
+            krausmap = MESolveFixedRouchon2Integrator.build_kraus_map(
                 H, L, dt, self.method.exact_expm
             )
             rho_2 = cholesky_normalize(krausmap, rho) if self.method.normalize else rho
             rho_2 = krausmap(rho_2)
 
             # === third order
-            krausmap = MESolveFixedRouchon3Integrator.Msss(
+            krausmap = MESolveFixedRouchon3Integrator.build_kraus_map(
                 H, L, dt, self.method.exact_expm
             )
             rho_3 = cholesky_normalize(krausmap, rho) if self.method.normalize else rho
