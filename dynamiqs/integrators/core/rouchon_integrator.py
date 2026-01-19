@@ -16,6 +16,8 @@ from diffrax._local_interpolation import LocalLinearInterpolation
 from ...qarrays.qarray import QArray
 from ...utils.operators import eye_like
 from .diffrax_integrator import MESolveDiffraxIntegrator
+import equinox as eqx
+
 
 
 class AbstractRouchonTerm(dx.AbstractTerm):
@@ -59,27 +61,47 @@ class RouchonDXSolver(dx.AbstractSolver):
 class AdaptiveRouchonDXSolver(dx.AbstractAdaptiveSolver, RouchonDXSolver):
     pass
 
+class KrausChannel(eqx.Module): 
+    operators: list[QArray]
 
-def apply_nested_map(rho: QArray, Mss: Sequence[Sequence[QArray]]) -> QArray:
-    """Applies the partial Kraus map defined by the operators
-    Mss to the density matrix rho recursively.
-    """
-    res = rho
-    for Ms in reversed(Mss):
-        res = sum([M @ res @ M.dag() for M in Ms])
-    return res
+    def __call__(self, rho) -> QArray:
+        return sum([M @ rho @ M.dag() for M in self.operators])
+  
+    def apply_S(self, op) -> QArray: # computes S = sum(M† op M) for the channel
+        return sum([M.dag() @ op @ M for M in self.operators])
+   
+    def S(self) -> QArray: # computes S = sum(M†M) for the channel
+        return self.apply_S(eye_like(self.operators[0]))
+    
+class NestedKrausChannel(eqx.Module):
+    channels: list[KrausChannel]
 
+    @property
+    def order(self) -> int:
+        return len(self.channels)
+    
+    def __call__(self, rho) -> QArray:
+        for channel in reversed(self.channels): 
+            rho = channel(rho)
+        return rho
+  
+    def S(self) -> QArray: # computes S = sum(M†M) for the nested channel
+        res = eye_like(self.channels[0].operators[0])
+        for channel in (self.channels):
+            res = channel.apply_S(res)
+        return res
 
-def compute_partial_S(rho: QArray, Mss: Sequence[Sequence[QArray]]) -> QArray:
-    """Computes the corresponding operator S = Mk^† @ Mk for the Kraus operators Mss."""
-    S = eye_like(rho)
-    for Ms in Mss:
-        S = sum([M.dag() @ S @ M for M in Ms])
-    return S
+class KrausMap(eqx.Module):
+    channels: list[NestedKrausChannel | KrausChannel]
 
+    def __call__(self, rho) -> QArray:
+        return sum([channel(rho) for channel in self.channels])
+    
+    def S(self) -> QArray: # computes S = sum(M†M) for the full map
+        return sum([channel.S() for channel in self.channels])
 
 def cholesky_normalize(
-    Msss: Sequence[Sequence[Sequence[QArray]]], rho: QArray
+    krausmap: KrausMap, rho: QArray
 ) -> jax.Array:
     # To normalize the scheme, we compute
     #   S = sum_k Mk^† @ Mk
@@ -101,7 +123,7 @@ def cholesky_normalize(
     # In practice we directly replace rho_k by T^{†(-1)} @ rho_k @ T^{-1} instead of
     # computing all ~Mks.
 
-    S = sum([compute_partial_S(rho, Mss) for Mss in Msss])
+    S = krausmap.S()
     T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
 
     # we want T^{†(-1)} @ y0 @ T^{-1}
@@ -124,7 +146,6 @@ def _expm_taylor(A: QArray, order: int) -> QArray:
 
     return out
 
-
 class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using a
     fixed step Rouchon method.
@@ -140,14 +161,13 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
             rho = y0
             t = (t0 + t1) / 2
             dt = t1 - t0
-            Msss = self._kraus_ops(t, dt)
+            krausmap = self._kraus_ops(t, dt)
 
             if self.method.normalize:
-                rho = cholesky_normalize(Msss, rho)
+                rho = cholesky_normalize(krausmap, rho)
 
             # for fixed step size, we return None for the error estimate
-            return sum([apply_nested_map(rho, Mss) for Mss in Msss]), None
-
+            return krausmap(rho), None
         return AbstractRouchonTerm(kraus_map)
 
     def _kraus_ops(self, t: float, dt: float) -> Sequence[QArray]:
@@ -161,7 +181,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
         L: Sequence[QArray],
         dt: float,
         exact_expm: bool,
-    ) -> Sequence[QArray]:
+    ) -> KrausMap:
         pass
 
 
@@ -176,11 +196,11 @@ class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
         L: Sequence[QArray],
         dt: float,
         exact_expm: bool,
-    ) -> Sequence[Sequence[Sequence[QArray]]]:
+    ) -> KrausMap:
         LdL = sum([_L.dag() @ _L for _L in L])
         G = -1j * H - 0.5 * LdL
         e1 = (dt * G).expm() if exact_expm else _expm_taylor(dt * G, 1)
-        return [[[e1]], [[jnp.sqrt(dt) * _L for _L in L]]]
+        return KrausMap([KrausChannel([e1] + [jnp.sqrt(dt) * _L for _L in L])])
 
 
 mesolve_rouchon1_integrator_constructor = (
@@ -201,16 +221,22 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
         L: Sequence[QArray],
         dt: float,
         exact_expm: bool,
-    ) -> Sequence[Sequence[Sequence[QArray]]]:
+    ) -> KrausMap:
         
         LdL = sum([_L.dag() @ _L for _L in L])
         G = -1j * H - 0.5 * LdL
         e1 = (dt * G).expm() if exact_expm else _expm_taylor(dt * G, 2)
-        J0 = [[[e1]]]  # No jump kraus operator
-        J1a = [[[jnp.sqrt(dt / 2) * e1 @ _L for _L in L]]]  # 1 jump a
-        J1b = [[[jnp.sqrt(dt / 2) * _L @ e1 for _L in L]]]  # 1 jump b
-        J2 = [[[jnp.sqrt(dt**2 / 2) * _L1 for _L1 in L], L]]  # 2 jumps
-        return [*J0, *J1a, *J1b, *J2]
+        channel_1 = KrausChannel(
+            [e1]
+            + [jnp.sqrt(dt / 2) * e1 @ _L for _L in L]
+            + [jnp.sqrt(dt / 2) * _L @ e1 for _L in L]
+        )
+        channel_2 = NestedKrausChannel([
+            KrausChannel([jnp.sqrt(dt**2 / 2) * _L1 for _L1 in L]),
+            KrausChannel(L)
+        ])
+        krausmap = KrausMap([channel_1, channel_2])
+        return krausmap
 
 
 class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
@@ -224,23 +250,28 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
         L: Sequence[QArray],
         dt: float,
         exact_expm: bool,
-    ) -> Sequence[Sequence[Sequence[QArray]]]:
+    ) -> KrausMap:
         LdL = sum([_L.dag() @ _L for _L in L])
         G = -1j * H - 0.5 * LdL
         e1o3 = (dt / 3 * G).expm() if exact_expm else _expm_taylor(dt / 3 * G, 3)
         e2o3 = e1o3 @ e1o3
         e3o3 = e2o3 @ e1o3
-        J0 = [[[e3o3]]]  # No jump kraus operator
-        J1a = [[[jnp.sqrt(3 * dt / 4) * e1o3 @ _L @ e2o3 for _L in L]]]  # 1 jump a
-        J1b = [[[jnp.sqrt(dt / 4) * e3o3 @ _L for _L in L]]]  # 1 jump b
-        J2 = [
-            [
-                [jnp.sqrt(dt**2 / 2) * e1o3 @ _L1 for _L1 in L],
-                [e1o3 @ _L2 @ e1o3 for _L2 in L],
-            ]
-        ]  # 2 jumps
-        J3 = [[[jnp.sqrt(dt**3 / 6) * _L1 for _L1 in L], L, L]]  # 3 jumps
-        return [*J0, *J1a, *J1b, *J2, *J3]
+        channel_1 = KrausChannel(
+            [e3o3]
+            + [jnp.sqrt(3 * dt / 4) * e1o3 @ _L @ e2o3 for _L in L]
+            + [jnp.sqrt(dt / 4) * e3o3 @ _L for _L in L]
+        )
+        channel_2 = NestedKrausChannel([
+            KrausChannel([jnp.sqrt(dt**2 / 2) * e1o3 @ _L1 for _L1 in L]),
+            KrausChannel([e1o3 @ _L2 @ e1o3 for _L2 in L])
+        ])
+        channel_3 = NestedKrausChannel([
+            KrausChannel([jnp.sqrt(dt**3 / 6) * _L1 for _L1 in L]),
+            KrausChannel(L),
+            KrausChannel(L)
+        ])
+        krausmap = KrausMap([channel_1, channel_2, channel_3])
+        return krausmap
 
 
 class MESolveAdaptiveRouchonIntegrator(MESolveDiffraxIntegrator):
@@ -272,19 +303,17 @@ class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
             L, H = self.L(t), self.H(t)
 
             # === first order
-            Msss_1 = MESolveFixedRouchon1Integrator.Msss(
+            krausmap = MESolveFixedRouchon1Integrator.Msss(
                 H, L, dt, self.method.exact_expm
             )
-            rho_1 = cholesky_normalize(Msss_1, rho) if self.method.normalize else rho
-            rho_1 = sum([apply_nested_map(rho_1, Mss) for Mss in Msss_1])
-
+            rho_1 = cholesky_normalize(krausmap, rho) if self.method.normalize else rho
+            rho_1 = krausmap(rho_1)
             # === second order
-            Msss_2 = MESolveFixedRouchon2Integrator.Msss(
+            krausmap = MESolveFixedRouchon2Integrator.Msss(
                 H, L, dt, self.method.exact_expm
             )
-            rho_2 = cholesky_normalize(Msss_2, rho) if self.method.normalize else rho
-            rho_2 = sum([apply_nested_map(rho_2, Mss) for Mss in Msss_2])
-
+            rho_2 = cholesky_normalize(krausmap, rho) if self.method.normalize else rho
+            rho_2 = krausmap(rho_2)
             return rho_2, 0.5 * (rho_2 - rho_1)
 
         return AbstractRouchonTerm(kraus_map)
@@ -305,18 +334,18 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
             L, H = self.L(t), self.H(t)
 
             # === second order
-            Msss_2 = MESolveFixedRouchon2Integrator.Msss(
+            krausmap = MESolveFixedRouchon2Integrator.Msss(
                 H, L, dt, self.method.exact_expm
             )
-            rho_2 = cholesky_normalize(Msss_2, rho) if self.method.normalize else rho
-            rho_2 = sum([apply_nested_map(rho_2, Mss) for Mss in Msss_2])
+            rho_2 = cholesky_normalize(krausmap, rho) if self.method.normalize else rho
+            rho_2 = krausmap(rho_2)
 
             # === third order
-            Msss_3 = MESolveFixedRouchon3Integrator.Msss(
+            krausmap = MESolveFixedRouchon3Integrator.Msss(
                 H, L, dt, self.method.exact_expm
             )
-            rho_3 = cholesky_normalize(Msss_3, rho) if self.method.normalize else rho
-            rho_3 = sum([apply_nested_map(rho_3, Mss) for Mss in Msss_3])
+            rho_3 = cholesky_normalize(krausmap, rho) if self.method.normalize else rho
+            rho_3 = krausmap(rho_3)
             return rho_3, 0.5 * (rho_3 - rho_2)
 
         return AbstractRouchonTerm(kraus_map)
