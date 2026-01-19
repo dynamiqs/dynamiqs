@@ -173,7 +173,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
 
         return AbstractRouchonTerm(rouchon_step)
 
-    def _kraus_map(self, t: float, dt: float) -> Sequence[QArray]:
+    def _kraus_map(self, t: float, dt: float) -> KrausMap:
         L, H = self.L(t), self.H(t)
         return self.build_kraus_map(H, L, dt, self.method.exact_expm)
 
