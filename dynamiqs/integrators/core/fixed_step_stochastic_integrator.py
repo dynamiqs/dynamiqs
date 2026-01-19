@@ -23,7 +23,11 @@ from .interfaces import (
     JSSEInterface,
     SolveInterface,
 )
-from .rouchon_integrator import MESolveFixedRouchon1Integrator, cholesky_normalize, KrausMap
+from .rouchon_integrator import (
+    KrausMap,
+    MESolveFixedRouchon1Integrator,
+    cholesky_normalize,
+)
 from .save_mixin import SolveSaveMixin
 
 
