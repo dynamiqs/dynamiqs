@@ -43,7 +43,6 @@ def clicktimes_sse_to_sme(
     etas = etas[etas != 0]
 
     # for broadcasting later
-    thetas = thetas[:, None]
     etas = etas[:, None]
 
     nmaxclick = clicktimes.shape[-1]
