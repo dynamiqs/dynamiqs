@@ -17,7 +17,7 @@ from diffrax._custom_types import RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
 
 from ...qarrays.qarray import QArray
-from ...utils.operators import eye_like
+from ...utils.operators import asqarray, eye_like
 from .diffrax_integrator import MESolveDiffraxIntegrator
 
 
@@ -173,6 +173,56 @@ def _expm_taylor(A: QArray, order: int) -> QArray:
 
     return out
 
+def RK2_step(H: Callable[[RealScalarLike], QArray], 
+             L: Callable[[RealScalarLike], Sequence[QArray]],
+             t: float, dt: float) -> Callable[[float], Qarray]:
+    """Performs a single Runge-Kutta 2 step"""
+    G0 = -1j * H(t) - 0.5 * sum([_L.dag() @ _L for _L in L(t)])
+    Gmid = -1j * H(t + 0.5 * dt) - 0.5 * sum(
+        [_L.dag() @ _L for _L in L(t + 0.5 * dt)]
+    )
+    U0 = eye_like(G0)
+    k1 = U0 + G0 * dt /2
+    k2 = U0 + dt * Gmid @ (k1)
+    return k2
+    def interp(theta: float) -> Y:
+        """Linear interpolation between k1 and k2."""
+        return (1 - theta) * k1 + theta * k2
+    return interp
+
+def RK3_step_dense(H: Callable[[RealScalarLike], QArray], 
+             L: Callable[[RealScalarLike], Sequence[QArray]],
+             t: float, dt: float) -> Callable[[float], Qarray]:
+    """Performs a single Runge-Kutta 3 step and returns the dense output function"""
+    G0 = -1j * H(t) - 0.5 * sum([_L.dag() @ _L for _L in L(t)])
+    Gmid = -1j * H(t + dt / 2) - 0.5 * sum(
+        [_L.dag() @ _L for _L in L(t + dt / 2)]
+    )
+    G1 = -1j * H(t + dt) - 0.5 * sum([_L.dag() @ _L for _L in L(t + dt)])
+    U0 = eye_like(G0)
+    k1 = G0
+    k2 = Gmid @ (U0 + (dt / 2) * k1)
+    k3 = G1 @ (U0 - dt * k1 + 2 * dt * k2)
+    U1 = U0 + dt / 6 * (k1 + 4 * k2 + k3)
+    def interp(theta: float) -> Qarray:
+    # Quadratic Hermite interpolation: p(theta) = a0 + a1*theta + a2*theta^2
+    # Constraints: p(0)=U0, p(1)=U1, p'(0)=dt*f0
+        a0 = U0
+        a1 = dt * k1
+        a2 = U1 - U0 - dt * k1
+        return a0 + theta * a1 + theta**2 * a2
+    return interp
+
+def solve_propagator(U1, U2) -> QArray:
+    """Compute the no jump propagator from t2 to t1 using LU factorization.
+
+    U1: propagator from 0 to t1
+    U2: propagator from 0 to t2
+    Returns: propagator from t2 to t1
+    """
+    # U1 = U(t2->t1) @ U2, so U(t2->t1) = U1 @ U2^{-1}
+    # Compute U2^{-1} using LU factorization
+    return asqarray(jnp.linalg.solve(U2.to_jax().T, U1.to_jax().T).T, dims=U1.dims)
 
 class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using a
@@ -220,9 +270,9 @@ class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
         L: Callable[[RealScalarLike], Sequence[QArray]],
         t: RealScalarLike,
         dt: RealScalarLike,
-        time_independent: bool,
+        time_dependent: bool,
     ) -> KrausMap:
-        if time_independent:
+        if time_dependent:
             pass
         Lmid = L(t + dt / 2)
         LdL = sum([_L.dag() @ _L for _L in Lmid])
@@ -251,22 +301,19 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
         L: Callable[[RealScalarLike], Sequence[QArray]],
         t: RealScalarLike,
         dt: RealScalarLike,
-        time_independent: bool,
+        time_dependent: bool,
     ) -> KrausMap:
-        if time_independent:
+        if time_dependent:
             pass
-        Lmid = L(t + dt / 2)
-        LdL = sum([_L.dag() @ _L for _L in Lmid])
-        Gmid = -1j * H(t + dt / 2) - 0.5 * LdL
-        e1 = _expm_taylor(dt * Gmid, 2)
+        e1 = RK2_step(H, L, t, dt)
         channel_1 = KrausChannel(
             [e1]
-            + [jnp.sqrt(dt / 2) * e1 @ _L for _L in Lmid]
-            + [jnp.sqrt(dt / 2) * _L @ e1 for _L in Lmid]
+            + [jnp.sqrt(dt / 2) * e1 @ _L for _L in L(t)]
+            + [jnp.sqrt(dt / 2) * _L @ e1 for _L in L(t + dt)]
         )
         channel_2 = NestedKrausChannel(
-            KrausChannel([jnp.sqrt(dt**2 / 2) * _L1 for _L1 in Lmid]),
-            KrausChannel(Lmid),
+            KrausChannel([jnp.sqrt(dt**2 / 2) * _L1 for _L1 in L(t + 2*dt/3)]),
+            KrausChannel(L(t + dt/3)),
         )
         return KrausMap(channel_1, channel_2)
 
@@ -282,29 +329,37 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
         L: Callable[[RealScalarLike], Sequence[QArray]],
         t: RealScalarLike,
         dt: RealScalarLike,
-        time_independent: bool,
+        time_dependent: bool,
     ) -> KrausMap:
-        Lmid = L(t + dt / 2)
-        LdL = sum([_L.dag() @ _L for _L in Lmid])
-        Gmid = -1j * H(t + dt / 2) - 0.5 * LdL
-        e1o3 = _expm_taylor(dt / 3 * Gmid, 3)
-        e2o3 = e1o3 @ e1o3
-        e3o3 = e2o3 @ e1o3
-        if time_independent:
-            pass
+        interp = RK3_step_dense(H, L, t, dt)
+        e1o3 = interp(1.0 / 3.0)
+        e2o3 = interp(2.0 / 3.0)
+        e3o3 = interp(1.0)
+        L0o3 = L(t)
+        L1o3 = L(t + 1 / 3 * dt)
+        L2o3 = L(t + 2 / 3 * dt)
+        L1o4 = L(t + dt / 4)
+        L2o4 = L(t + dt / 2)
+        L3o4 = L(t + 3 * dt / 4)
+        # L3o3 = self.L(t+dt)
+
+        # Propagators between the intermediate steps
+        e2o3_to_e3o3 = solve_propagator(e3o3, e2o3) if time_dependent else e1o3
+        e1o3_to_e2o3 = solve_propagator(e2o3, e1o3) if time_dependent else e1o3
+
         channel_1 = KrausChannel(
             [e3o3]
-            + [jnp.sqrt(3 * dt / 4) * e1o3 @ _L @ e2o3 for _L in Lmid]
-            + [jnp.sqrt(dt / 4) * e3o3 @ _L for _L in Lmid]
+            + [(jnp.sqrt(3 * dt / 4) * e2o3_to_e3o3 @ _L @ e2o3) for _L in L2o3]
+            + [jnp.sqrt(dt / 4) * e3o3 @ _L for _L in L0o3]
         )
         channel_2 = NestedKrausChannel(
-            KrausChannel([jnp.sqrt(dt**2 / 2) * e1o3 @ _L1 for _L1 in Lmid]),
-            KrausChannel([e1o3 @ _L2 @ e1o3 for _L2 in Lmid]),
+            KrausChannel([jnp.sqrt(dt**2 / 2) * e2o3_to_e3o3 @ _L1 for _L1 in L2o3]),
+            KrausChannel([e1o3_to_e2o3 @ _L2 @ e1o3 for _L2 in L1o3]),
         )
         channel_3 = NestedKrausChannel(
-            KrausChannel([jnp.sqrt(dt**3 / 6) * _L1 for _L1 in Lmid]),
-            KrausChannel(Lmid),
-            KrausChannel(Lmid),
+            KrausChannel([jnp.sqrt(dt**3 / 6) * _L1 for _L1 in L3o4]),
+            KrausChannel(L2o4),
+            KrausChannel(L1o4),
         )
         return KrausMap(channel_1, channel_2, channel_3)
 
