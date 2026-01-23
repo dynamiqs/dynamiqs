@@ -163,55 +163,46 @@ def cholesky_normalize(kraus_map: KrausMap, rho: QArray) -> jax.Array:
     return jax.lax.linalg.triangular_solve(T, rho, lower=True, left_side=True)
 
 
-def _expm_taylor(A: QArray, order: int) -> QArray:
-    I = eye_like(A)
-    out = I
-    powers_of_A = I
-    for i in range(1, order + 1):
-        powers_of_A = A @ powers_of_A
-        out += 1 / jax.scipy.special.factorial(i) * powers_of_A
-
-    return out
-
-def RK2_step(H: Callable[[RealScalarLike], QArray], 
-             L: Callable[[RealScalarLike], Sequence[QArray]],
-             t: float, dt: float) -> Callable[[float], Qarray]:
-    """Performs a single Runge-Kutta 2 step"""
+def RK2_step(
+    H: Callable[[RealScalarLike], QArray],
+    L: Callable[[RealScalarLike], Sequence[QArray]],
+    t: float,
+    dt: float,
+) -> Callable[[float], QArray]:
+    """Performs a single Runge-Kutta 2 step."""
     G0 = -1j * H(t) - 0.5 * sum([_L.dag() @ _L for _L in L(t)])
-    Gmid = -1j * H(t + 0.5 * dt) - 0.5 * sum(
-        [_L.dag() @ _L for _L in L(t + 0.5 * dt)]
-    )
+    Gmid = -1j * H(t + 0.5 * dt) - 0.5 * sum([_L.dag() @ _L for _L in L(t + 0.5 * dt)])
     U0 = eye_like(G0)
-    k1 = U0 + G0 * dt /2
-    k2 = U0 + dt * Gmid @ (k1)
-    return k2
-    def interp(theta: float) -> Y:
-        """Linear interpolation between k1 and k2."""
-        return (1 - theta) * k1 + theta * k2
-    return interp
+    k1 = U0 + G0 * dt / 2
+    return U0 + dt * Gmid @ k1
 
-def RK3_step_dense(H: Callable[[RealScalarLike], QArray], 
-             L: Callable[[RealScalarLike], Sequence[QArray]],
-             t: float, dt: float) -> Callable[[float], Qarray]:
-    """Performs a single Runge-Kutta 3 step and returns the dense output function"""
+
+def RK3_step_dense(
+    H: Callable[[RealScalarLike], QArray],
+    L: Callable[[RealScalarLike], Sequence[QArray]],
+    t: float,
+    dt: float,
+) -> Callable[[float], QArray]:
+    """Performs a single Runge-Kutta 3 step and returns the dense output function."""
     G0 = -1j * H(t) - 0.5 * sum([_L.dag() @ _L for _L in L(t)])
-    Gmid = -1j * H(t + dt / 2) - 0.5 * sum(
-        [_L.dag() @ _L for _L in L(t + dt / 2)]
-    )
+    Gmid = -1j * H(t + dt / 2) - 0.5 * sum([_L.dag() @ _L for _L in L(t + dt / 2)])
     G1 = -1j * H(t + dt) - 0.5 * sum([_L.dag() @ _L for _L in L(t + dt)])
     U0 = eye_like(G0)
     k1 = G0
     k2 = Gmid @ (U0 + (dt / 2) * k1)
     k3 = G1 @ (U0 - dt * k1 + 2 * dt * k2)
     U1 = U0 + dt / 6 * (k1 + 4 * k2 + k3)
-    def interp(theta: float) -> Qarray:
-    # Quadratic Hermite interpolation: p(theta) = a0 + a1*theta + a2*theta^2
-    # Constraints: p(0)=U0, p(1)=U1, p'(0)=dt*f0
+
+    def interp(theta: float) -> QArray:
+        # Quadratic Hermite interpolation: p(theta) = a0 + a1*theta + a2*theta^2
+        # Constraints: p(0)=U0, p(1)=U1, p'(0)=dt*f0
         a0 = U0
         a1 = dt * k1
         a2 = U1 - U0 - dt * k1
         return a0 + theta * a1 + theta**2 * a2
+
     return interp
+
 
 def solve_propagator(U1, U2) -> QArray:
     """Compute the no jump propagator from t2 to t1 using LU factorization.
@@ -223,6 +214,7 @@ def solve_propagator(U1, U2) -> QArray:
     # U1 = U(t2->t1) @ U2, so U(t2->t1) = U1 @ U2^{-1}
     # Compute U2^{-1} using LU factorization
     return asqarray(jnp.linalg.solve(U2.to_jax().T, U1.to_jax().T).T, dims=U1.dims)
+
 
 class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using a
@@ -312,8 +304,8 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
             + [jnp.sqrt(dt / 2) * _L @ e1 for _L in L(t + dt)]
         )
         channel_2 = NestedKrausChannel(
-            KrausChannel([jnp.sqrt(dt**2 / 2) * _L1 for _L1 in L(t + 2*dt/3)]),
-            KrausChannel(L(t + dt/3)),
+            KrausChannel([jnp.sqrt(dt**2 / 2) * _L1 for _L1 in L(t + 2 * dt / 3)]),
+            KrausChannel(L(t + dt / 3)),
         )
         return KrausMap(channel_1, channel_2)
 

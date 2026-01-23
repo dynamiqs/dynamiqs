@@ -583,7 +583,7 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
 
         rho = y.state
         dW = dX
-        L, Lc, Lm, H = self.L(t), self.Lc(t), self.Lm(t), self.H(t)
+        Lc, Lm = self.Lc(t), self.Lm(t)
 
         # === measurement Y
         # dY_{k+1} = sqrt(eta) Tr[(L+Ld) @ rho_k)] dt + dW
