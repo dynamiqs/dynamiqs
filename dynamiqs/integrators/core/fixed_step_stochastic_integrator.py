@@ -478,7 +478,7 @@ def cholesky_normalize_ket(krausmap: KrausMap, psi: QArray) -> jax.Array:
     psi = psi.to_jax()[:, 0]  # (n, 1) -> (n,)
     # solve T^† @ x = psi => x = T^{†(-1)} @ psi
     return jax.lax.linalg.triangular_solve(
-        T, psi, lower=True, transpose_a=True, conjugate_a=True
+        T, psi, lower=True, transpose_a=True, conjugate_a=True, left_side=True
     )[:, None]  # (n,) -> (n, 1)
 
 
