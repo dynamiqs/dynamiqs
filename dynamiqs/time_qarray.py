@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import functools as ft
 from abc import abstractmethod
+from collections.abc import Callable
 from dataclasses import replace
 
 import equinox as eqx

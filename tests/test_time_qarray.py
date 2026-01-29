@@ -404,7 +404,7 @@ class TestSummedQArray:
 @pytest.mark.run(order=TEST_SHORT)
 class TestTimeQArrayShift:
     @pytest.mark.parametrize(
-        'factory, expected_type',
+        ('factory', 'expected_type'),
         SHIFT_FACTORIES,
         ids=['constant', 'pwc', 'modulated', 'callable', 'summed'],
     )
@@ -431,12 +431,7 @@ class TestTimeQArrayShift:
 
     def test_shift_updates_existing_tshift(self):
         qarray = asqarray(jnp.array([[1.0, 0.0], [0.0, 1.0]]))
-        operator = ConstantTimeQArray(
-            qarray,
-            tstart=0.25,
-            tend=1.25,
-            tshift=0.25,
-        )
+        operator = ConstantTimeQArray(qarray, tstart=0.25, tend=1.25, tshift=0.25)
 
         new_tshift = 0.75
         shifted = operator.shift(new_tshift)
