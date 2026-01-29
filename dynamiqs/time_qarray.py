@@ -953,6 +953,21 @@ class SummedTimeQArray(TimeQArray):
     def __add__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
         if isqarraylike(y):
             y = ConstantTimeQArray(asqarray(y))
+        if isinstance(y, SummedTimeQArray):
+            timeqarrays = y.timeqarrays
+            # If y has a tshift, it is pushed down into each of its child
+            # timeqarrays before flattening
+            if y.tshift is not None:
+                timeqarrays = [
+                    timeqarray.shift(
+                        (0.0 if timeqarray.tshift is None else timeqarray.tshift)
+                        + y.tshift
+                    )
+                    for timeqarray in timeqarrays
+                ]
+            return SummedTimeQArray(
+                [*self.timeqarrays, *timeqarrays], tshift=self.tshift
+            )
         return SummedTimeQArray([*self.timeqarrays, y], tshift=self.tshift)
 
 
