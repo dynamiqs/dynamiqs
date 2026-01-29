@@ -360,12 +360,12 @@ Use the `.shift()` method:
 ```pycon
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
 >>> H = dq.modulated(f, dq.sigmax())
->>> H_shift = H.shift(0.25)
->>> H_shift(1.0)
+>>> H_shift = H.shift(0.5)
+>>> H_shift(0.0) # == H(0.5)
 QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
 [[  ⋅    -1.+0.j]
  [-1.+0.j    ⋅   ]]
->>> H(0.75)
+>>> H(0.5)
 QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
 [[  ⋅    -1.+0.j]
  [-1.+0.j    ⋅   ]]
