@@ -357,7 +357,7 @@ class TimeQArray(eqx.Module):
         Returns:
             New timeqarray with the given time bounds.
         """
-        return replace(self, tstart=tstart, tend=tend)
+        return replace(self, tstart=tstart, tend=tend)  # ty: ignore[invalid-argument-type]
 
     def shift(self, tshift: float) -> TimeQArray:
         r"""Shift the time-dependent evaluation of a timeqarray.
@@ -658,7 +658,7 @@ class PWCTimeQArray(TimeQArray):
     def conj(self) -> TimeQArray:
         values = self.values.conj()
         qarray = self.qarray.conj()
-        return replace(self, values=values, qarray=qarray)
+        return replace(self, values=values, qarray=qarray)  # ty: ignore[invalid-argument-type]
 
     def _prefactor(self, t: ScalarLike) -> Array:
         zero = jnp.zeros_like(self.values[..., 0])  # (...)
