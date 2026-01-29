@@ -348,3 +348,28 @@ renderfig('tqarray_plot_clip')
 ```
 
 ![tqarray_plot_clip](../../figs_docs/tqarray_plot_clip.png){.fig}
+
+## Shifting a timeqarray
+
+You can shift the time dependence of any timeqarray without redefining it. A shifted
+timeqarray is defined by
+$$
+    O_{\text{shift}}(t) = O(t - t_{\text{shift}}).
+$$
+Use the `.shift()` method:
+```pycon
+>>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
+>>> H = dq.modulated(f, dq.sigmax())
+>>> H_shift = H.shift(0.25)
+>>> H_shift(1.0)
+QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
+[[  ⋅    -1.+0.j]
+ [-1.+0.j    ⋅   ]]
+>>> H(0.75)
+QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
+[[  ⋅    -1.+0.j]
+ [-1.+0.j    ⋅   ]]
+```
+
+If the timeqarray is clipped, shifting also moves the clipping window by the same
+amount.
