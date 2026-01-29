@@ -8,6 +8,8 @@ from dynamiqs import QArray, asqarray
 from dynamiqs.time_qarray import (
     CallableTimeQArray,
     ConstantTimeQArray,
+    ModulatedTimeQArray,
+    PWCTimeQArray,
     SummedTimeQArray,
     constant,
     modulated,
@@ -24,6 +26,42 @@ def assert_equal(x, y):
     if isinstance(y, QArray):
         y = y.to_jax()
     assert jnp.array_equal(x, y)
+
+
+def _make_constant_for_shift() -> ConstantTimeQArray:
+    qarray = jnp.array([[1.0, 0.0], [0.0, -1.0]])
+    return constant(qarray).clip(0.25, 1.25)
+
+
+def _make_pwc_for_shift() -> PWCTimeQArray:
+    times = jnp.array([0.0, 1.0, 2.0])
+    values = jnp.array([1.0, -1.0])
+    qarray = jnp.array([[1.0, 0.0], [0.0, -1.0]])
+    return pwc(times, values, qarray).clip(0.25, 1.25)
+
+
+def _make_modulated_for_shift() -> ModulatedTimeQArray:
+    f = lambda t: 1.0 + 2.0 * t
+    qarray = jnp.array([[1.0, 2.0], [3.0, 4.0]])
+    return modulated(f, qarray).clip(0.25, 1.25)
+
+
+def _make_callable_for_shift() -> CallableTimeQArray:
+    f = lambda t: asqarray(jnp.array([[t, 0.0], [0.0, 1.0 + t]]))
+    return timecallable(f).clip(0.25, 1.25)
+
+
+def _make_summed_for_shift() -> SummedTimeQArray:
+    return _make_modulated_for_shift() + _make_pwc_for_shift()
+
+
+SHIFT_FACTORIES = [
+    (_make_constant_for_shift, ConstantTimeQArray),
+    (_make_pwc_for_shift, PWCTimeQArray),
+    (_make_modulated_for_shift, ModulatedTimeQArray),
+    (_make_callable_for_shift, CallableTimeQArray),
+    (_make_summed_for_shift, SummedTimeQArray),
+]
 
 
 @pytest.mark.run(order=TEST_SHORT)
@@ -361,3 +399,54 @@ class TestSummedQArray:
         assert isinstance(z.timeqarrays[2], CallableTimeQArray)
         assert isinstance(z.timeqarrays[3], ConstantTimeQArray)
         assert_equal(z(1.0), [[2, 4], [6, 8]])
+
+
+@pytest.mark.run(order=TEST_SHORT)
+class TestTimeQArrayShift:
+    @pytest.mark.parametrize(
+        'factory, expected_type',
+        SHIFT_FACTORIES,
+        ids=['constant', 'pwc', 'modulated', 'callable', 'summed'],
+    )
+    def test_shift_evaluates_at_shifted_time(self, factory, expected_type):
+        operator = factory()
+        assert isinstance(operator, expected_type)
+
+        t_shift = 0.5
+        shifted = operator.shift(t_shift)
+        assert isinstance(shifted, expected_type)
+        assert shifted.tshift == t_shift
+
+        if operator.tstart is None:
+            assert shifted.tstart is None
+            assert shifted.tend is None
+        else:
+            assert shifted.tstart == operator.tstart + t_shift
+            assert shifted.tend == operator.tend + t_shift
+
+        t_inside = 1.0
+        t_edge = 0.5
+        assert_equal(shifted(t_inside), operator(t_inside - t_shift))
+        assert_equal(shifted(t_edge), operator(t_edge - t_shift))
+
+    def test_shift_updates_existing_tshift(self):
+        qarray = asqarray(jnp.array([[1.0, 0.0], [0.0, 1.0]]))
+        operator = ConstantTimeQArray(
+            qarray,
+            tstart=0.25,
+            tend=1.25,
+            tshift=0.25,
+        )
+
+        new_tshift = 0.75
+        shifted = operator.shift(new_tshift)
+
+        assert operator.tshift == 0.25
+        assert shifted.tshift == new_tshift
+        assert shifted.tstart == operator.tstart + 0.5
+        assert shifted.tend == operator.tend + 0.5
+
+        t_inside = 1.0
+        t_edge = 0.5
+        assert_equal(shifted(t_inside), operator(t_inside - 0.5))
+        assert_equal(shifted(t_edge), operator(t_edge - 0.5))
