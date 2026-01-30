@@ -843,10 +843,10 @@ class SummedTimeQArray(TimeQArray):
         timeqarrays: list[TimeQArray],
         check: bool = True,
         *,
-        tstart: float | None = None,  # noqa: ARG002
-        tend: float | None = None,  # noqa: ARG002
+        tstart: float | None = None,
+        tend: float | None = None,
     ):
-        super().__init__(tstart=None, tend=None)
+        super().__init__(tstart=tstart, tend=tend)
         if check:
             # verify all timeqarrays of the sum are broadcast compatible
             shape = jnp.broadcast_shapes(*[tqarray.shape for tqarray in timeqarrays])
@@ -926,7 +926,7 @@ class SummedTimeQArray(TimeQArray):
         )
 
     def __call__(self, t: ScalarLike) -> QArray:
-        return ft.reduce(
+        return self._prefactor(t)[..., None, None] * ft.reduce(
             lambda x, y: x + y, [tqarray(t) for tqarray in self.timeqarrays]
         )
 
