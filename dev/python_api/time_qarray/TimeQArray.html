@@ -1827,6 +1827,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#dynamiqs.time_qarray.TimeQArray.shift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shift
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#dynamiqs.time_qarray.TimeQArray.reshape" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6997,6 +7008,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#dynamiqs.time_qarray.TimeQArray.shift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shift
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#dynamiqs.time_qarray.TimeQArray.reshape" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7168,8 +7190,8 @@ matrix form).</p>
             (<i>float | None</i>)
         –
         <div class="doc-md-description">
-          <p>The returned qarray is null for all times
-<span class="arithmatex">\(t &lt; t_{start}\)</span> (ignored if <code>None</code>).</p>
+          <p>Start time such that the returned qarray is null for
+all times <code>t &lt; tstart</code> (ignored if <code>None</code>).</p>
         </div>
       </li>
       <li class="doc-section-item field-body">
@@ -7177,8 +7199,8 @@ matrix form).</p>
             (<i>float | None</i>)
         –
         <div class="doc-md-description">
-          <p>The returned qarray is null for all times
-<span class="arithmatex">\(t \geq t_{end}\)</span> (ignored if <code>None</code>).</p>
+          <p>End time such that the returned qarray is null for
+all times <code>t &gt;= tend</code> (ignored if <code>None</code>).</p>
         </div>
       </li>
       <li class="doc-section-item field-body">
@@ -7242,16 +7264,16 @@ necessarily contain unique values).</p>
           <b><code>tstart</code></b>
         –
         <div class="doc-md-description">
-          <p>The returned qarray is null for all times <span class="arithmatex">\(t &lt; t_{start}\)</span> (ignored
-if <code>None</code>).</p>
+          <p>Start time such that the returned qarray is null for
+all times <code>t &lt; tstart</code> (ignored if <code>None</code>).</p>
         </div>
       </li>
       <li class="doc-section-item field-body">
           <b><code>tend</code></b>
         –
         <div class="doc-md-description">
-          <p>The returned qarray is null for all times <span class="arithmatex">\(t \geq t_{end}\)</span> (ignored
-if <code>None</code>).</p>
+          <p>End time such that the returned qarray is null for
+all times <code>t &gt;= tend</code> (ignored if <code>None</code>).</p>
         </div>
       </li>
   </ul>
@@ -7262,6 +7284,49 @@ if <code>None</code>).</p>
       <li class="doc-section-item field-body">
         <div class="doc-md-description">
           <p>New timeqarray with the given time bounds.</p>
+        </div>
+      </li>
+  </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="dynamiqs.time_qarray.TimeQArray.shift" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">TimeQArray.shift</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">shift</span><span class="p">(</span><span class="n">tshift</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeQArray</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Shift the time-dependent evaluation of a timeqarray.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>tshift</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Shift in time such that the returned qarray is evaluated
+at time <code>t - tshift</code> when called at time <code>t</code>.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>New timeqarray with shifted time evaluation.</p>
         </div>
       </li>
   </ul>

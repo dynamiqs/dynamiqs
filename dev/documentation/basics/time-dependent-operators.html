@@ -938,6 +938,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#shifting-a-timeqarray" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shifting a timeqarray
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -7072,6 +7083,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#shifting-a-timeqarray" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shifting a timeqarray
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -7420,6 +7442,44 @@ returned qarray is null. For example:
 <span class="n">ax1</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">'Time $t$'</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">'H.clip(0, 1)'</span><span class="p">)</span>
 </code></pre></div><p></p>
 <p><a class="glightbox" data-type="image" data-width="70%" data-height="auto" href="../../figs_docs/tqarray_plot_clip.png" data-desc-position="bottom"><img alt="tqarray_plot_clip" class="fig" src="../../figs_docs/tqarray_plot_clip.png"></a></p>
+<h2 id="shifting-a-timeqarray">Shifting a timeqarray</h2>
+<p>You can shift the time dependence of any timeqarray without redefining it. A shifted
+timeqarray is defined by
+$$
+    O_{\text{shift}}(t) = O(t - t_{\text{shift}}).
+$$
+Use the <code>.shift()</code> method:
+</p><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">modulated</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H_shift</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H_shift</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span> <span class="c1"># == H(0.5)</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2</span>
+<span class="go">[[   ⋅    -1.+0.j]</span>
+<span class="go"> [-1.+0.j    ⋅   ]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2</span>
+<span class="go">[[   ⋅    -1.+0.j]</span>
+<span class="go"> [-1.+0.j    ⋅   ]]</span>
+</code></pre></div><p></p>
+<p>If the timeqarray is clipped, shifting it also moves the clipping window by the same
+amount. We can visualize the effect of shifting a clipped timeqarray:
+</p><div class="highlight"><pre><span></span><code><span class="n">H_clipped_shift</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+<span class="n">_</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">sharexy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">axs</span><span class="p">)</span>
+
+<span class="n">ts</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mi">501</span><span class="p">)</span>
+
+<span class="n">ax0</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="n">H</span><span class="o">.</span><span class="n">prefactor</span><span class="p">(</span><span class="n">ts</span><span class="p">))</span>
+<span class="n">ax0</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">ylabel</span><span class="o">=</span><span class="s1">'$f(t)$'</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">'H'</span><span class="p">)</span>
+
+<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="n">H_shift</span><span class="o">.</span><span class="n">prefactor</span><span class="p">(</span><span class="n">ts</span><span class="p">))</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">'H.shift(0.5)'</span><span class="p">)</span>
+
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="n">H_clipped_shift</span><span class="o">.</span><span class="n">prefactor</span><span class="p">(</span><span class="n">ts</span><span class="p">))</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">'Time $t$'</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">'H.clip(0, 1).shift(0.5)'</span><span class="p">)</span>
+</code></pre></div><p></p>
+<p><a class="glightbox" data-type="image" data-width="70%" data-height="auto" href="../../figs_docs/tqarray_plot_shift.png" data-desc-position="bottom"><img alt="tqarray_plot_shift" class="fig" src="../../figs_docs/tqarray_plot_shift.png"></a></p>
 
 
 
