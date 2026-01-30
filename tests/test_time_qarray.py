@@ -28,42 +28,6 @@ def assert_equal(x, y):
     assert jnp.array_equal(x, y)
 
 
-def _make_constant_for_shift() -> ConstantTimeQArray:
-    qarray = jnp.array([[1.0, 0.0], [0.0, -1.0]])
-    return constant(qarray).clip(0.25, 1.25)
-
-
-def _make_pwc_for_shift() -> PWCTimeQArray:
-    times = jnp.array([0.0, 1.0, 2.0])
-    values = jnp.array([1.0, -1.0])
-    qarray = jnp.array([[1.0, 0.0], [0.0, -1.0]])
-    return pwc(times, values, qarray).clip(0.25, 1.25)
-
-
-def _make_modulated_for_shift() -> ModulatedTimeQArray:
-    f = lambda t: 1.0 + 2.0 * t
-    qarray = jnp.array([[1.0, 2.0], [3.0, 4.0]])
-    return modulated(f, qarray).clip(0.25, 1.25)
-
-
-def _make_callable_for_shift() -> CallableTimeQArray:
-    f = lambda t: asqarray(jnp.array([[t, 0.0], [0.0, 1.0 + t]]))
-    return timecallable(f).clip(0.25, 1.25)
-
-
-def _make_summed_for_shift() -> SummedTimeQArray:
-    return _make_modulated_for_shift() + _make_pwc_for_shift()
-
-
-SHIFT_FACTORIES = [
-    (_make_constant_for_shift, ConstantTimeQArray),
-    (_make_pwc_for_shift, PWCTimeQArray),
-    (_make_modulated_for_shift, ModulatedTimeQArray),
-    (_make_callable_for_shift, CallableTimeQArray),
-    (_make_summed_for_shift, SummedTimeQArray),
-]
-
-
 @pytest.mark.run(order=TEST_SHORT)
 class TestConstantTimeQArray:
     @pytest.fixture(autouse=True)
@@ -403,45 +367,166 @@ class TestSummedQArray:
 
 @pytest.mark.run(order=TEST_SHORT)
 class TestTimeQArrayShift:
-    @pytest.mark.parametrize(
-        ('factory', 'expected_type'),
-        SHIFT_FACTORIES,
-        ids=['constant', 'pwc', 'modulated', 'callable', 'summed'],
-    )
-    def test_shift_evaluates_at_shifted_time(self, factory, expected_type):
-        operator = factory()
-        assert isinstance(operator, expected_type)
-
+    def test_shift_constant(self):
+        # test clipped operator
+        qarray = jnp.array([[1.0, 0.0], [0.0, -1.0]])
+        operator = constant(qarray).clip(0.25, 1.25)
         t_shift = 0.5
         shifted = operator.shift(t_shift)
-        assert isinstance(shifted, expected_type)
-        assert shifted.tshift == t_shift
+        assert isinstance(shifted, ConstantTimeQArray)
 
-        if operator.tstart is None:
-            assert shifted.tstart is None
-            assert shifted.tend is None
-        else:
-            assert shifted.tstart == operator.tstart + t_shift
-            assert shifted.tend == operator.tend + t_shift
+        assert shifted.tstart == operator.tstart + t_shift
+        assert shifted.tend == operator.tend + t_shift
 
         t_inside = 1.0
         t_edge = 0.5
         assert_equal(shifted(t_inside), operator(t_inside - t_shift))
         assert_equal(shifted(t_edge), operator(t_edge - t_shift))
 
-    def test_shift_updates_existing_tshift(self):
-        qarray = asqarray(jnp.array([[1.0, 0.0], [0.0, 1.0]]))
-        operator = ConstantTimeQArray(qarray, tstart=0.25, tend=1.25, tshift=0.25)
+        # test unclipped operator
+        operator = constant(qarray)
+        shifted = operator.shift(t_shift)
+        assert isinstance(shifted, ConstantTimeQArray)
+        assert shifted.tstart is None
+        assert shifted.tend is None
+        assert_equal(shifted(t_inside), operator(t_inside - t_shift))
+        assert_equal(shifted(t_edge), operator(t_edge - t_shift))
 
-        new_tshift = 0.75
-        shifted = operator.shift(new_tshift)
+    def test_shift_pwc(self):
+        # test clipped operator
+        times = jnp.array([0.0, 1.0, 2.0])
+        values = jnp.array([1.0, -1.0])
+        qarray = jnp.array([[1.0, 0.0], [0.0, -1.0]])
+        operator = pwc(times, values, qarray).clip(0.25, 1.25)
+        t_shift = 0.5
+        shifted = operator.shift(t_shift)
+        assert isinstance(shifted, PWCTimeQArray)
 
-        assert operator.tshift == 0.25
-        assert shifted.tshift == new_tshift
-        assert shifted.tstart == operator.tstart + 0.5
-        assert shifted.tend == operator.tend + 0.5
+        assert shifted.tstart == operator.tstart + t_shift
+        assert shifted.tend == operator.tend + t_shift
 
         t_inside = 1.0
         t_edge = 0.5
-        assert_equal(shifted(t_inside), operator(t_inside - 0.5))
-        assert_equal(shifted(t_edge), operator(t_edge - 0.5))
+        assert_equal(shifted(t_inside), operator(t_inside - t_shift))
+        assert_equal(shifted(t_edge), operator(t_edge - t_shift))
+
+        # test unclipped operator
+        operator = pwc(times, values, qarray)
+        shifted = operator.shift(t_shift)
+        assert isinstance(shifted, PWCTimeQArray)
+        assert shifted.tstart is None
+        assert shifted.tend is None
+        assert_equal(shifted(t_inside), operator(t_inside - t_shift))
+        assert_equal(shifted(t_edge), operator(t_edge - t_shift))
+
+    def test_shift_modulated(self):
+        # test clipped operator
+        f = lambda t: 1.0 + 2.0 * t
+        qarray = jnp.array([[1.0, 2.0], [3.0, 4.0]])
+        operator = modulated(f, qarray).clip(0.25, 1.25)
+        t_shift = 0.5
+        shifted = operator.shift(t_shift)
+        assert isinstance(shifted, ModulatedTimeQArray)
+
+        assert shifted.tstart == operator.tstart + t_shift
+        assert shifted.tend == operator.tend + t_shift
+
+        t_inside = 1.0
+        t_edge = 0.5
+        assert_equal(shifted(t_inside), operator(t_inside - t_shift))
+        assert_equal(shifted(t_edge), operator(t_edge - t_shift))
+
+        # test unclipped operator
+        operator = modulated(f, qarray)
+        shifted = operator.shift(t_shift)
+        assert isinstance(shifted, ModulatedTimeQArray)
+        assert shifted.tstart is None
+        assert shifted.tend is None
+        assert_equal(shifted(t_inside), operator(t_inside - t_shift))
+        assert_equal(shifted(t_edge), operator(t_edge - t_shift))
+
+    def test_shift_callable(self):
+        # test clipped operator
+        f = lambda t: asqarray(jnp.array([[t, 0.0], [0.0, 1.0 + t]]))
+        operator = timecallable(f).clip(0.25, 1.25)
+        t_shift = 0.5
+        shifted = operator.shift(t_shift)
+        assert isinstance(shifted, CallableTimeQArray)
+
+        assert shifted.tstart == operator.tstart + t_shift
+        assert shifted.tend == operator.tend + t_shift
+
+        t_inside = 1.0
+        t_edge = 0.5
+        assert_equal(shifted(t_inside), operator(t_inside - t_shift))
+        assert_equal(shifted(t_edge), operator(t_edge - t_shift))
+
+        # test unclipped operator
+        operator = timecallable(f)
+        shifted = operator.shift(t_shift)
+        assert isinstance(shifted, CallableTimeQArray)
+        assert shifted.tstart is None
+        assert shifted.tend is None
+        assert_equal(shifted(t_inside), operator(t_inside - t_shift))
+        assert_equal(shifted(t_edge), operator(t_edge - t_shift))
+
+    def test_shift_summed(self):
+        # test clipped operator
+        f = lambda t: 1.0 + 2.0 * t
+        qarray = jnp.array([[1.0, 2.0], [3.0, 4.0]])
+        modulated_op = modulated(f, qarray).clip(0.25, 1.25)
+
+        times = jnp.array([0.0, 1.0, 2.0])
+        values = jnp.array([1.0, -1.0])
+        pwc_qarray = jnp.array([[1.0, 0.0], [0.0, -1.0]])
+        pwc_op = pwc(times, values, pwc_qarray).clip(0.25, 1.25)
+
+        operator = modulated_op + pwc_op
+        t_shift = 0.5
+        shifted = operator.shift(t_shift)
+        assert isinstance(shifted, SummedTimeQArray)
+
+        t_inside = 1.0
+        t_edge = 0.5
+        assert_equal(shifted(t_inside), operator(t_inside - t_shift))
+        assert_equal(shifted(t_edge), operator(t_edge - t_shift))
+
+        # test unclipped operator
+        modulated_op = modulated(f, qarray)
+        pwc_op = pwc(times, values, pwc_qarray)
+        operator = modulated_op + pwc_op
+        shifted = operator.shift(t_shift)
+        assert isinstance(shifted, SummedTimeQArray)
+        assert shifted.tstart is None
+        assert shifted.tend is None
+        assert_equal(shifted(t_inside), operator(t_inside - t_shift))
+        assert_equal(shifted(t_edge), operator(t_edge - t_shift))
+
+    def test_shift_vmap_tshift(self):
+        times = jnp.array([0.0, 1.0, 2.0])
+        values = jnp.array([1.0, -1.0])
+        qarray = jnp.array([[1.0, 0.0], [0.0, -1.0]])
+        operator = pwc(times, values, qarray)
+
+        t = 0.8
+        t_shifts = jnp.array([0.0, 0.4, -0.6])
+
+        out = jax.vmap(lambda s: operator.shift(s)(t))(t_shifts)
+        expected = jax.vmap(lambda s: operator(t - s))(t_shifts)
+        assert out.shape == (t_shifts.shape[0], *operator(t).shape)
+        assert_equal(out, expected)
+
+    def test_shift_composes(self):
+        f = lambda t: asqarray(jnp.array([[t, 0.0], [0.0, 1.0 - t]]))
+        operator = timecallable(f).clip(0.0, 2.0)
+
+        shifted_twice = operator.shift(0.25).shift(0.5)
+        shifted_direct = operator.shift(0.75)
+
+        assert shifted_twice.tstart == shifted_direct.tstart
+        assert shifted_twice.tend == shifted_direct.tend
+
+        t_inside = 1.0
+        t_edge = 0.75
+        assert_equal(shifted_twice(t_inside), shifted_direct(t_inside))
+        assert_equal(shifted_twice(t_edge), shifted_direct(t_edge))
