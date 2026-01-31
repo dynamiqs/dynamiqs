@@ -1,10 +1,10 @@
 from .colormaps import *
-from .fock import *
-from .hinton import *
-from .misc import *
-from .qubit import *
+from .fock_plots import *
+from .hinton_plots import *
+from .misc_plots import *
+from .qubit_plots import *
 from .utils import *
-from .wigner import *
+from .wigner_plots import *
 
 __all__ = [
     'fock',
