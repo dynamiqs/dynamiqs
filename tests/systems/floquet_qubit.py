@@ -85,7 +85,7 @@ class FloquetQubit(System):
         raise NotImplementedError
 
 
-tsave = jnp.linspace(0.0, 2.0, 5)
+tsave = jnp.linspace(0.0, 1 / (2.0 * jnp.pi), 5)
 floquet_qubit = FloquetQubit(
     omega=2.0 * jnp.pi, omega_d=1.95 * jnp.pi, amp=0.1, tsave=tsave
 )

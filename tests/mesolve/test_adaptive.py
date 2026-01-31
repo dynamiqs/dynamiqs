@@ -6,7 +6,7 @@ from dynamiqs.method import Tsit5
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
-from .open_system import dense_ocavity, dia_ocavity, otdqubit
+from ..systems import dense_ocavity, dia_ocavity, otdqubit
 
 # we only test Tsit5 to keep the unit test suite fast
 
