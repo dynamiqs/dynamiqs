@@ -23,7 +23,11 @@ from .interfaces import (
     JSSEInterface,
     SolveInterface,
 )
-from .rouchon_integrator import MESolveFixedRouchon1Integrator, cholesky_normalize
+from .rouchon_integrator import (
+    KrausMap,
+    MESolveFixedRouchon1Integrator,
+    cholesky_normalize,
+)
 from .save_mixin import SolveSaveMixin
 
 
@@ -463,18 +467,18 @@ class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
         return DiffusiveState(psi + dpsi, y.Y + dY)
 
 
-def cholesky_normalize_ket(Ms: list[QArray], psi: QArray) -> jax.Array:
+def cholesky_normalize_ket(krausmap: KrausMap, psi: QArray) -> jax.Array:
     # See comment of `cholesky_normalize()`.
     # For a ket we compute ~M @ psi = M @ T^{†(-1)} @ psi, so we directly replace psi by
     # T^{†(-1)} @ psi.
 
-    S = sum([M.dag() @ M for M in Ms])
+    S = krausmap.S()
     T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
 
     psi = psi.to_jax()[:, 0]  # (n, 1) -> (n,)
     # solve T^† @ x = psi => x = T^{†(-1)} @ psi
     return jax.lax.linalg.triangular_solve(
-        T, psi, lower=True, transpose_a=True, conjugate_a=True
+        T, psi, lower=True, transpose_a=True, conjugate_a=True, left_side=True
     )[:, None]  # (n,) -> (n, 1)
 
 
@@ -484,7 +488,7 @@ class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
     def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
         psi = y.state
         dW = dX
-        L, H = self.L(t), self.H(t)
+        L = self.L(t)
         Lpsi = [_L @ psi for _L in L]
 
         # === measurement Y
@@ -500,11 +504,12 @@ class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
         dY = exp * self.dt + dW
 
         # === state psi
-        Ms_average = MESolveFixedRouchon1Integrator.Ms(
-            H, L, self.dt, self.method.exact_expm
+        krausmap = MESolveFixedRouchon1Integrator.build_kraus_map(
+            self.H, self.L, t, self.dt, self.method.time_dependent
         )
+        Ms_average = krausmap.get_kraus_operators()
         if self.method.normalize:
-            psi = cholesky_normalize_ket(Ms_average, psi)
+            psi = cholesky_normalize_ket(krausmap, psi)
 
         M_dY = Ms_average[0] + sum([_dY * _L for _dY, _L in zip(dY, L, strict=True)])
 
@@ -578,7 +583,7 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
 
         rho = y.state
         dW = dX
-        L, Lc, Lm, H = self.L(t), self.Lc(t), self.Lm(t), self.H(t)
+        Lc, Lm = self.Lc(t), self.Lm(t)
 
         # === measurement Y
         # dY_{k+1} = sqrt(eta) Tr[(L+Ld) @ rho_k)] dt + dW
@@ -586,11 +591,12 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         dY = jnp.sqrt(self.etas) * trace * self.dt + dW  # (nLm,)
 
         # === state rho
-        Ms_average = MESolveFixedRouchon1Integrator.Ms(
-            H, L, self.dt, self.method.exact_expm
+        kraus_map = MESolveFixedRouchon1Integrator.build_kraus_map(
+            self.H, self.L, t, self.dt, self.method.time_dependent
         )
+        Ms_average = kraus_map.get_kraus_operators()
         if self.method.normalize:
-            rho = cholesky_normalize(Ms_average, rho)
+            rho = cholesky_normalize(kraus_map, rho)
 
         M_dY = Ms_average[0] + sum(
             [
