@@ -7,7 +7,7 @@ from dynamiqs.method import Tsit5
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
-from ..sesolve.closed_system import dense_cavity, tdqubit
+from ..systems import dense_cavity, tdqubit
 
 
 @pytest.mark.run(order=TEST_LONG)

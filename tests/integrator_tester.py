@@ -11,7 +11,7 @@ from dynamiqs.gradient import Forward, Gradient
 from dynamiqs.method import Method
 from dynamiqs.options import Options
 
-from .system import System
+from .systems import System
 
 
 class IntegratorTester:

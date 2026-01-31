@@ -14,8 +14,8 @@ from dynamiqs import (
 )
 
 from ..integrator_tester import IntegratorTester
-from ..mesolve.open_system import dense_ocavity
 from ..order import TEST_LONG
+from ..systems import dense_ocavity
 from .mepropagator_utils import rand_mepropagator_args
 
 
