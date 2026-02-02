@@ -14,7 +14,7 @@ from dynamiqs.options import Options
 from dynamiqs.result import FloquetResult
 from dynamiqs.time_qarray import CallableTimeQArray
 
-from ..system import System
+from ._system import System
 
 
 class FloquetQubit(System):
@@ -83,3 +83,9 @@ class FloquetQubit(System):
 
     def Es(self, params: PyTree) -> Array:
         raise NotImplementedError
+
+
+tsave = jnp.linspace(0.0, 1 / (2.0 * jnp.pi), 5)
+floquet_qubit = FloquetQubit(
+    omega=2.0 * jnp.pi, omega_d=1.95 * jnp.pi, amp=0.1, tsave=tsave
+)

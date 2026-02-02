@@ -17,7 +17,7 @@ from dynamiqs.qarrays.layout import Layout
 from dynamiqs.result import Result
 from dynamiqs.time_qarray import TimeQArray
 
-from ..system import System
+from ._system import System
 
 
 class OpenSystem(System):
