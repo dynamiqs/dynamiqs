@@ -4,7 +4,7 @@ import pytest
 
 from dynamiqs import clicktimes_sse_to_sme, measurements_sse_to_sme
 
-from .order import TEST_SHORT
+from ..order import TEST_SHORT
 
 
 @pytest.mark.run(order=TEST_SHORT)
