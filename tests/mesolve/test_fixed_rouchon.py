@@ -5,7 +5,7 @@ from dynamiqs.method import Rouchon1, Rouchon2, Rouchon3
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
-from .open_system import dense_ocavity, otdqubit
+from ..systems import dense_ocavity, otdqubit
 
 # for speed we don't test all possible options:
 # - normalize: set to True

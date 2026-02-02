@@ -254,10 +254,10 @@ class TimeQArray(eqx.Module):
         vectorized (bool): Whether the underlying qarray is non-vectorized (ket, bra
             or operator) or vectorized (operator in vector form or superoperator in
             matrix form).
-        tstart (float | None): The returned qarray is null for all times
-            $t < t_{start}$ (ignored if `None`).
-        tend (float | None): The returned qarray is null for all times
-            $t \geq t_{end}$ (ignored if `None`).
+        tstart (float | None): Start time such that the returned qarray is null for
+            all times `t < tstart` (ignored if `None`).
+        tend (float | None): End time such that the returned qarray is null for
+            all times `t >= tend` (ignored if `None`).
         discontinuity_ts (Array): Times at which there is a discontinuous jump
             in the timeqarray values (the array is always sorted, but does not
             necessarily contain unique values).
@@ -339,15 +339,27 @@ class TimeQArray(eqx.Module):
         r"""Set the start and/or end time beyond which the returned qarray is null.
 
         Args:
-            tstart: The returned qarray is null for all times $t < t_{start}$ (ignored
-                if `None`).
-            tend: The returned qarray is null for all times $t \geq t_{end}$ (ignored
-                if `None`).
+            tstart: Start time such that the returned qarray is null for
+                all times `t < tstart` (ignored if `None`).
+            tend: End time such that the returned qarray is null for
+                all times `t >= tend` (ignored if `None`).
 
         Returns:
             New timeqarray with the given time bounds.
         """
         return replace(self, tstart=tstart, tend=tend)  # ty: ignore[invalid-argument-type]
+
+    @abstractmethod
+    def shift(self, tshift: float) -> TimeQArray:
+        r"""Shift the time-dependent evaluation of a timeqarray.
+
+        Args:
+            tshift: Shift in time such that the returned qarray is evaluated
+                at time `t - tshift` when called at time `t`.
+
+        Returns:
+            New timeqarray with shifted time evaluation.
+        """
 
     @abstractmethod
     def reshape(self, *shape: int) -> TimeQArray:
@@ -409,6 +421,11 @@ class TimeQArray(eqx.Module):
                 f'Cannot squeeze axis {axis} from a timeqarray with {self.ndim} axes.'
             )
         return self.reshape(*self.shape[:axis], *self.shape[axis + 1 :])
+
+    def _shift_bounds(self, tshift: float) -> tuple[float | None, float | None]:
+        tstart = None if self.tstart is None else self.tstart + tshift
+        tend = None if self.tend is None else self.tend + tshift
+        return tstart, tend
 
     def _prefactor(self, t: ScalarLike) -> Array:
         clip = False
@@ -519,6 +536,10 @@ class ConstantTimeQArray(TimeQArray):
     def in_axes(self) -> PyTree[int | None]:
         return ConstantTimeQArray(0, tstart=None, tend=None)
 
+    def shift(self, tshift: float) -> TimeQArray:
+        tstart, tend = self._shift_bounds(tshift)
+        return replace(self, tstart=tstart, tend=tend)  # ty: ignore[invalid-argument-type]
+
     def reshape(self, *shape: int) -> TimeQArray:
         qarray = self.qarray.reshape(*shape)
         return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
@@ -586,7 +607,7 @@ class PWCTimeQArray(TimeQArray):
         return self.qarray.ndiags
 
     @property
-    def vectorized(self) -> int:
+    def vectorized(self) -> bool:
         return self.qarray.vectorized
 
     @property
@@ -605,6 +626,10 @@ class PWCTimeQArray(TimeQArray):
     @property
     def discontinuity_ts(self) -> Array:
         return concatenate_sort(super().discontinuity_ts, self.times)
+
+    def shift(self, tshift: float) -> TimeQArray:
+        tstart, tend = self._shift_bounds(tshift)
+        return replace(self, times=self.times + tshift, tstart=tstart, tend=tend)  # ty: ignore[invalid-argument-type]
 
     def reshape(self, *shape: int) -> TimeQArray:
         shape = shape[:-2] + self.values.shape[-1:]  # (..., nv)
@@ -697,6 +722,13 @@ class ModulatedTimeQArray(TimeQArray):
     def discontinuity_ts(self) -> Array:
         return concatenate_sort(super().discontinuity_ts, self._disc_ts)
 
+    def shift(self, tshift: float) -> TimeQArray:
+        tstart, tend = self._shift_bounds(tshift)
+        f = BatchedCallable(lambda t: self.f(t - tshift))
+        return replace(
+            self, f=f, _disc_ts=self._disc_ts + tshift, tstart=tstart, tend=tend
+        )  # ty: ignore[invalid-argument-type]
+
     def reshape(self, *shape: int) -> TimeQArray:
         f = self.f.reshape(*shape[:-2])
         return replace(self, f=f)  # ty: ignore[invalid-argument-type]
@@ -774,6 +806,13 @@ class CallableTimeQArray(TimeQArray):
     def discontinuity_ts(self) -> Array:
         return concatenate_sort(super().discontinuity_ts, self._disc_ts)
 
+    def shift(self, tshift: float) -> TimeQArray:
+        tstart, tend = self._shift_bounds(tshift)
+        f = BatchedCallable(lambda t: self.f(t - tshift))
+        return replace(
+            self, f=f, _disc_ts=self._disc_ts + tshift, tstart=tstart, tend=tend
+        )  # ty: ignore[invalid-argument-type]
+
     def reshape(self, *shape: int) -> TimeQArray:
         f = self.f.reshape(*shape)
         return replace(self, f=f)  # ty: ignore[invalid-argument-type]
@@ -804,10 +843,10 @@ class SummedTimeQArray(TimeQArray):
         timeqarrays: list[TimeQArray],
         check: bool = True,
         *,
-        tstart: float | None = None,  # noqa: ARG002
-        tend: float | None = None,  # noqa: ARG002
+        tstart: float | None = None,
+        tend: float | None = None,
     ):
-        super().__init__(tstart=None, tend=None)
+        super().__init__(tstart=tstart, tend=tend)
         if check:
             # verify all timeqarrays of the sum are broadcast compatible
             shape = jnp.broadcast_shapes(*[tqarray.shape for tqarray in timeqarrays])
@@ -853,7 +892,7 @@ class SummedTimeQArray(TimeQArray):
     @property
     def mT(self) -> TimeQArray:
         timeqarrays = [tqarray.mT for tqarray in self.timeqarrays]
-        return SummedTimeQArray(timeqarrays)
+        return replace(self, timeqarrays=timeqarrays)  # ty: ignore[invalid-argument-type]
 
     @property
     def in_axes(self) -> PyTree[int | None]:
@@ -865,17 +904,21 @@ class SummedTimeQArray(TimeQArray):
         ts = [tqarray.discontinuity_ts for tqarray in self.timeqarrays]
         return concatenate_sort(*ts)
 
+    def shift(self, tshift: float) -> TimeQArray:
+        timeqarrays = [tqarray.shift(tshift) for tqarray in self.timeqarrays]
+        return replace(self, timeqarrays=timeqarrays)  # ty: ignore[invalid-argument-type]
+
     def reshape(self, *shape: int) -> TimeQArray:
         timeqarrays = [tqarray.reshape(*shape) for tqarray in self.timeqarrays]
-        return SummedTimeQArray(timeqarrays)
+        return replace(self, timeqarrays=timeqarrays)  # ty: ignore[invalid-argument-type]
 
     def broadcast_to(self, *shape: int) -> TimeQArray:
         timeqarrays = [tqarray.broadcast_to(*shape) for tqarray in self.timeqarrays]
-        return SummedTimeQArray(timeqarrays)
+        return replace(self, timeqarrays=timeqarrays)  # ty: ignore[invalid-argument-type]
 
     def conj(self) -> TimeQArray:
         timeqarrays = [tqarray.conj() for tqarray in self.timeqarrays]
-        return SummedTimeQArray(timeqarrays)
+        return replace(self, timeqarrays=timeqarrays)  # ty: ignore[invalid-argument-type]
 
     def prefactor(self, ts: ArrayLike) -> Array:
         raise NotImplementedError(
@@ -883,7 +926,7 @@ class SummedTimeQArray(TimeQArray):
         )
 
     def __call__(self, t: ScalarLike) -> QArray:
-        return ft.reduce(
+        return self._prefactor(t)[..., None, None] * ft.reduce(
             lambda x, y: x + y, [tqarray(t) for tqarray in self.timeqarrays]
         )
 
@@ -893,14 +936,24 @@ class SummedTimeQArray(TimeQArray):
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
         timeqarrays = [tqarray * y for tqarray in self.timeqarrays]
-        return SummedTimeQArray(timeqarrays)
+        return replace(self, timeqarrays=timeqarrays)  # ty: ignore[invalid-argument-type]
 
     def __add__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
         if isqarraylike(y):
             y = ConstantTimeQArray(asqarray(y))
         if isinstance(y, SummedTimeQArray):
-            return SummedTimeQArray([*self.timeqarrays, *y.timeqarrays])
-        return SummedTimeQArray([*self.timeqarrays, y])
+            # push clipping to internal timeqarrays before summing
+            self_timeqarrays = [
+                tqarray.clip(self.tstart, self.tend) for tqarray in self.timeqarrays
+            ]
+            y_timeqarrays = [
+                tqarray.clip(y.tstart, y.tend) for tqarray in y.timeqarrays
+            ]
+            return SummedTimeQArray(self_timeqarrays + y_timeqarrays)
+        self_timeqarrays = [
+            tqarray.clip(self.tstart, self.tend) for tqarray in self.timeqarrays
+        ]
+        return SummedTimeQArray([*self_timeqarrays, y])
 
 
 class BatchedCallable(eqx.Module):

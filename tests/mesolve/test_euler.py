@@ -5,7 +5,7 @@ from dynamiqs.method import Euler
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
-from .open_system import dense_ocavity, dia_ocavity, otdqubit
+from ..systems import dense_ocavity, dia_ocavity, otdqubit
 
 
 @pytest.mark.run(order=TEST_LONG)

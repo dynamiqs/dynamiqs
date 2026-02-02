@@ -28,15 +28,7 @@ doc_sections = {
     'utils/vectorization': (['dynamiqs/utils/vectorization.py'], 'dq'),
     'utils/optimal_control': (['dynamiqs/utils/optimal_control.py'], 'dq'),
     'random': (['dynamiqs/random/'], 'dq.random'),
-    'plot': (
-        [
-            'dynamiqs/plot/',
-            'dynamiqs/plot/wigner.py',
-            'dynamiqs/plot/fock.py',
-            'dynamiqs/plot/hinton.py',
-        ],
-        'dq.plot',
-    ),
+    'plot': (['dynamiqs/plot/'], 'dq.plot'),
 }
 
 
@@ -83,6 +75,9 @@ for section, (paths, namespace) in doc_sections.items():
             # create the function page
             with mkdocs_gen_files.open(doc_path_function, 'w') as f:
                 module = identifier.split('.')[0]
+                print('---', file=f)
+                print(f'title: {namespace}.{function}', file=f)
+                print('---', file=f)
                 print(f'::: {identifier}.{function}', file=f)
                 print('    options:', file=f)
                 print('        extra:', file=f)
