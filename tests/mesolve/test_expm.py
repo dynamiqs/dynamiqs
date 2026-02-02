@@ -5,7 +5,7 @@ from dynamiqs.method import Expm
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
-from .open_system import dense_ocavity
+from ..systems import dense_ocavity
 
 
 @pytest.mark.run(order=TEST_LONG)

@@ -4,8 +4,8 @@ import pytest
 from dynamiqs import mepropagator, unvectorize, vectorize
 
 from ..integrator_tester import IntegratorTester
-from ..mesolve.open_system import dense_ocavity, otdqubit
 from ..order import TEST_LONG
+from ..systems import dense_ocavity, otdqubit
 
 
 @pytest.mark.run(order=TEST_LONG)

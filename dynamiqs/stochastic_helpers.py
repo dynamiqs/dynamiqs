@@ -43,8 +43,7 @@ def clicktimes_sse_to_sme(
     etas = etas[etas != 0]
 
     # for broadcasting later
-    thetas = thetas[None, :]
-    etas = etas[None, :]
+    etas = etas[:, None]
 
     nmaxclick = clicktimes.shape[-1]
     shape = Ik_sse.shape[:-1]
@@ -125,7 +124,7 @@ def measurements_sse_to_sme(
     etas = etas[etas != 0]
 
     # for broadcasting later
-    etas = etas[None, :]
+    etas = etas[:, None]
 
     # \sqrt{\Delta}
     sDt = jnp.sqrt(jnp.diff(tsave))
