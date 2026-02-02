@@ -2,7 +2,8 @@ import jax.numpy as jnp
 import pytest
 
 from dynamiqs import QArray, dense, hc, sigmay
-from tests.order import TEST_INSTANT
+
+from ..order import TEST_INSTANT
 
 
 def assert_equal(x, y):
