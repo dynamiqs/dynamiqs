@@ -200,13 +200,13 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
         return AbstractRouchonTerm(rouchon_step)
 
     def _kraus_map(self, t: float, dt: float) -> KrausMap:
-        L, H = self.L(t), self.H(t)
-        return self.build_kraus_map(H, L, dt, self.method.exact_expm)
+        jump_ops, H = self.L(t), self.H(t)
+        return self.build_kraus_map(H, jump_ops, dt, self.method.exact_expm)
 
     @staticmethod
     @abstractmethod
     def build_kraus_map(
-        H: QArray, L: Sequence[QArray], dt: float, exact_expm: bool
+        H: QArray, jump_ops: Sequence[QArray], dt: float, exact_expm: bool
     ) -> KrausMap:
         pass
 
@@ -218,12 +218,12 @@ class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
 
     @staticmethod
     def build_kraus_map(
-        H: QArray, L: Sequence[QArray], dt: float, exact_expm: bool
+        H: QArray, jump_ops: Sequence[QArray], dt: float, exact_expm: bool
     ) -> KrausMap:
-        LdL = sum([_L.dag() @ _L for _L in L])
+        LdL = sum([jump_op.dag() @ jump_op for jump_op in jump_ops])
         G = -1j * H - 0.5 * LdL
         e1 = (dt * G).expm() if exact_expm else _expm_taylor(dt * G, 1)
-        channel = KrausChannel([e1] + [jnp.sqrt(dt) * _L for _L in L])
+        channel = KrausChannel([e1] + [jnp.sqrt(dt) * jump_op for jump_op in jump_ops])
         return KrausMap(channel)
 
 
@@ -241,18 +241,18 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
 
     @staticmethod
     def build_kraus_map(
-        H: QArray, L: Sequence[QArray], dt: float, exact_expm: bool
+        H: QArray, jump_ops: Sequence[QArray], dt: float, exact_expm: bool
     ) -> KrausMap:
-        LdL = sum([_L.dag() @ _L for _L in L])
+        LdL = sum([jump_op.dag() @ jump_op for jump_op in jump_ops])
         G = -1j * H - 0.5 * LdL
         e1 = (dt * G).expm() if exact_expm else _expm_taylor(dt * G, 2)
         channel_1 = KrausChannel(
             [e1]
-            + [jnp.sqrt(dt / 2) * e1 @ _L for _L in L]
-            + [jnp.sqrt(dt / 2) * _L @ e1 for _L in L]
+            + [jnp.sqrt(dt / 2) * e1 @ jump_op for jump_op in jump_ops]
+            + [jnp.sqrt(dt / 2) * jump_op @ e1 for jump_op in jump_ops]
         )
         channel_2 = NestedKrausChannel(
-            KrausChannel([jnp.sqrt(dt**2 / 2) * _L1 for _L1 in L]), KrausChannel(L)
+            KrausChannel([jnp.sqrt(dt**2 / 2) * jump_op1 for jump_op1 in jump_ops]), KrausChannel(jump_ops)
         )
         return KrausMap(channel_1, channel_2)
 
@@ -264,26 +264,26 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
 
     @staticmethod
     def build_kraus_map(
-        H: QArray, L: Sequence[QArray], dt: float, exact_expm: bool
+        H: QArray, jump_ops: Sequence[QArray], dt: float, exact_expm: bool
     ) -> KrausMap:
-        LdL = sum([_L.dag() @ _L for _L in L])
+        LdL = sum([jump_op.dag() @ jump_op for jump_op in jump_ops])
         G = -1j * H - 0.5 * LdL
         e1o3 = (dt / 3 * G).expm() if exact_expm else _expm_taylor(dt / 3 * G, 3)
         e2o3 = e1o3 @ e1o3
         e3o3 = e2o3 @ e1o3
         channel_1 = KrausChannel(
             [e3o3]
-            + [jnp.sqrt(3 * dt / 4) * e1o3 @ _L @ e2o3 for _L in L]
-            + [jnp.sqrt(dt / 4) * e3o3 @ _L for _L in L]
+            + [jnp.sqrt(3 * dt / 4) * e1o3 @ jump_op @ e2o3 for jump_op in jump_ops]
+            + [jnp.sqrt(dt / 4) * e3o3 @ jump_op for jump_op in jump_ops]
         )
         channel_2 = NestedKrausChannel(
-            KrausChannel([jnp.sqrt(dt**2 / 2) * e1o3 @ _L1 for _L1 in L]),
-            KrausChannel([e1o3 @ _L2 @ e1o3 for _L2 in L]),
+            KrausChannel([jnp.sqrt(dt**2 / 2) * e1o3 @ jump_op1 for jump_op1 in jump_ops]),
+            KrausChannel([e1o3 @ jump_op2 @ e1o3 for jump_op2 in jump_ops]),
         )
         channel_3 = NestedKrausChannel(
-            KrausChannel([jnp.sqrt(dt**3 / 6) * _L1 for _L1 in L]),
-            KrausChannel(L),
-            KrausChannel(L),
+            KrausChannel([jnp.sqrt(dt**3 / 6) * jump_op1 for jump_op1 in jump_ops]),
+            KrausChannel(jump_ops),
+            KrausChannel(jump_ops),
         )
         return KrausMap(channel_1, channel_2, channel_3)
 
@@ -314,11 +314,11 @@ class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
             t = (t0 + t1) / 2
             dt = t1 - t0
 
-            L, H = self.L(t), self.H(t)
+            jump_ops, H = self.L(t), self.H(t)
 
             # === first order
             krausmap_1 = MESolveFixedRouchon1Integrator.build_kraus_map(
-                H, L, dt, self.method.exact_expm
+                H, jump_ops, dt, self.method.exact_expm
             )
             rho_1 = (
                 cholesky_normalize(krausmap_1, rho) if self.method.normalize else rho
@@ -327,7 +327,7 @@ class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
 
             # === second order
             krausmap_2 = MESolveFixedRouchon2Integrator.build_kraus_map(
-                H, L, dt, self.method.exact_expm
+                H, jump_ops, dt, self.method.exact_expm
             )
             rho_2 = (
                 cholesky_normalize(krausmap_2, rho) if self.method.normalize else rho
@@ -351,11 +351,11 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
             t = (t0 + t1) / 2
             dt = t1 - t0
 
-            L, H = self.L(t), self.H(t)
+            jump_ops, H = self.L(t), self.H(t)
 
             # === second order
             krausmap_2 = MESolveFixedRouchon2Integrator.build_kraus_map(
-                H, L, dt, self.method.exact_expm
+                H, jump_ops, dt, self.method.exact_expm
             )
             rho_2 = (
                 cholesky_normalize(krausmap_2, rho) if self.method.normalize else rho
@@ -364,7 +364,7 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
 
             # === third order
             krausmap_3 = MESolveFixedRouchon3Integrator.build_kraus_map(
-                H, L, dt, self.method.exact_expm
+                H, jump_ops, dt, self.method.exact_expm
             )
             rho_3 = (
                 cholesky_normalize(krausmap_3, rho) if self.method.normalize else rho
