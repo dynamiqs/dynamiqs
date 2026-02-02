@@ -467,12 +467,12 @@ class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
         return DiffusiveState(psi + dpsi, y.Y + dY)
 
 
-def cholesky_normalize_ket(krausmap: KrausMap, psi: QArray) -> jax.Array:
+def cholesky_normalize_ket(kraus_map: KrausMap, psi: QArray) -> jax.Array:
     # See comment of `cholesky_normalize()`.
     # For a ket we compute ~M @ psi = M @ T^{†(-1)} @ psi, so we directly replace psi by
     # T^{†(-1)} @ psi.
 
-    S = krausmap.S()
+    S = kraus_map.S()
     T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
 
     psi = psi.to_jax()[:, 0]  # (n, 1) -> (n,)
@@ -504,12 +504,12 @@ class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
         dY = exp * self.dt + dW
 
         # === state psi
-        krausmap = MESolveFixedRouchon1Integrator.build_kraus_map(
+        kraus_map = MESolveFixedRouchon1Integrator.build_kraus_map(
             H, L, self.dt, self.method.exact_expm
         )
-        Ms_average = krausmap.get_kraus_operators()
+        Ms_average = kraus_map.get_kraus_operators()
         if self.method.normalize:
-            psi = cholesky_normalize_ket(krausmap, psi)
+            psi = cholesky_normalize_ket(kraus_map, psi)
 
         M_dY = Ms_average[0] + sum([_dY * _L for _dY, _L in zip(dY, L, strict=True)])
 
