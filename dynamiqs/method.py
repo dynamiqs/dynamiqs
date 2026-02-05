@@ -208,8 +208,6 @@ class Rouchon1(_DEFixedStep):
         normalize: If True, the scheme is trace-preserving to machine precision, which
             is the recommended option because it is much more stable. Otherwise, it is
             only trace-preserving to the scheme order in $\dt$.
-        time_dependent: If True, the scheme accounts for time-dependent Hamiltonian
-        and jump operators.
 
     Note-: Supported gradients
         This method supports differentiation with
@@ -228,13 +226,11 @@ class Rouchon1(_DEFixedStep):
     # todo: fix static dt (similar issue as static tsave in dssesolve)
     dt: float = eqx.field(static=True)
     normalize: bool = eqx.field(static=True, default=True)
-    time_dependent: bool = eqx.field(static=True, default=True)
 
     # dummy init to have the signature in the documentation
-    def __init__(self, dt: float, normalize: bool = True, time_dependent: bool = True):
+    def __init__(self, dt: float, normalize: bool = True):
         super().__init__(dt)
         self.normalize = normalize
-        self.time_dependent = time_dependent
 
 
 class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
@@ -259,8 +255,6 @@ class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
         normalize: If True, the scheme is trace-preserving to machine precision, which
             is the recommended option because it is much more stable. Otherwise, it is
             only trace-preserving to the scheme order in the numerical step size.
-        time_dependent: If True, the scheme accounts for time-dependent Hamiltonian
-        and jump operators.
 
     Note-: Supported gradients
         This method supports differentiation with
@@ -277,7 +271,6 @@ class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
     )
 
     normalize: bool = eqx.field(static=True, default=True)
-    time_dependent: bool = eqx.field(static=True, default=True)
 
     # dummy init to have the signature in the documentation
     def __init__(
@@ -290,14 +283,12 @@ class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
         max_steps: int = 100_000,
         dt: float | None = None,
         normalize: bool = True,
-        time_dependent: bool = True,
     ):
         _DEFixedStep.__init__(self, dt)  # ty: ignore[invalid-argument-type]
         _DEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
         self.normalize = normalize
-        self.time_dependent = time_dependent
 
 
 class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
@@ -322,8 +313,6 @@ class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
         normalize: If True, the scheme is trace-preserving to machine precision, which
             is the recommended option because it is much more stable. Otherwise, it is
             only trace-preserving to the scheme order in the numerical step size.
-        time_dependent: If True, the scheme accounts for time-dependent Hamiltonian
-        and jump operators.
 
     Note-: Supported gradients
         This method supports differentiation with
@@ -340,7 +329,6 @@ class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
     )
 
     normalize: bool = eqx.field(static=True, default=True)
-    time_dependent: bool = eqx.field(static=True, default=True)
 
     # dummy init to have the signature in the documentation
     def __init__(
@@ -353,14 +341,12 @@ class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
         max_steps: int = 100_000,
         dt: float | None = None,
         normalize: bool = True,
-        time_dependent: bool = True,
     ):
         _DEFixedStep.__init__(self, dt)  # ty: ignore[invalid-argument-type]
         _DEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
         self.normalize = normalize
-        self.time_dependent = time_dependent
 
 
 class Dopri5(_DEAdaptiveStep):

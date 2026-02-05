@@ -17,6 +17,7 @@ from diffrax._custom_types import RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
 
 from ...qarrays.qarray import QArray
+from ...time_qarray import ConstantTimeQArray
 from ...utils.operators import asqarray, eye_like
 from .diffrax_integrator import MESolveDiffraxIntegrator
 
@@ -222,6 +223,10 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
     """
 
     @property
+    def time_dependent(self) -> bool:
+        return not isinstance(self.H, ConstantTimeQArray)
+
+    @property
     def terms(self) -> dx.AbstractTerm:
         def rouchon_step(t0, t1, y0):  # noqa: ANN202
             # The Rouchon update for a single loss channel is:
@@ -241,7 +246,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
         return AbstractRouchonTerm(rouchon_step)
 
     def _build_kraus_map(self, t: float, dt: float) -> KrausMap:
-        return self.build_kraus_map(self.H, self.L, t, dt, self.method.time_dependent)
+        return self.build_kraus_map(self.H, self.L, t, dt, self.time_dependent)
 
     @staticmethod
     @abstractmethod
@@ -362,6 +367,10 @@ class MESolveAdaptiveRouchonIntegrator(MESolveDiffraxIntegrator):
     """
 
     @property
+    def time_dependent(self) -> bool:
+        return not isinstance(self.H, ConstantTimeQArray)
+
+    @property
     def stepsize_controller(self) -> dx.AbstractStepSizeController:
         # todo: can we do better?
         stepsize_controller = super().stepsize_controller
@@ -383,7 +392,7 @@ class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
 
             # === first order
             kraus_map_1 = MESolveFixedRouchon1Integrator.build_kraus_map(
-                self.H, self.L, t0, dt, self.method.time_dependent
+                self.H, self.L, t0, dt, self.time_dependent
             )
             rho_1 = (
                 cholesky_normalize(kraus_map_1, rho) if self.method.normalize else rho
@@ -392,7 +401,7 @@ class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
 
             # === second order
             kraus_map_2 = MESolveFixedRouchon2Integrator.build_kraus_map(
-                self.H, self.L, t0, dt, self.method.time_dependent
+                self.H, self.L, t0, dt, self.time_dependent
             )
             rho_2 = (
                 cholesky_normalize(kraus_map_2, rho) if self.method.normalize else rho
@@ -417,7 +426,7 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
 
             # === second order
             kraus_map_2 = MESolveFixedRouchon2Integrator.build_kraus_map(
-                self.H, self.L, t0, dt, self.method.time_dependent
+                self.H, self.L, t0, dt, self.time_dependent
             )
             rho_2 = (
                 cholesky_normalize(kraus_map_2, rho) if self.method.normalize else rho
@@ -426,7 +435,7 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
 
             # === third order
             kraus_map_3 = MESolveFixedRouchon3Integrator.build_kraus_map(
-                self.H, self.L, t0, dt, self.method.time_dependent
+                self.H, self.L, t0, dt, self.time_dependent
             )
             rho_3 = (
                 cholesky_normalize(kraus_map_3, rho) if self.method.normalize else rho
