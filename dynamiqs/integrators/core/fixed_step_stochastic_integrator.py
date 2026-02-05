@@ -440,9 +440,7 @@ class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
         #          = psi.dag() @ (L + Ld) @ psi
         #          = psi.dag() @ L @ psi + (psi.dag() @ L @ psi).dag()
         #          = 2 Re[psi.dag() @ Lpsi]
-        exp = jnp.stack(
-            [2 * (psi.dag() @ _Lpsi).squeeze((-1, -2)).real for _Lpsi in Lpsi]
-        )  # (nL)
+        exp = 2 * expect(L, psi).real  # (nL)
         dY = exp * self.dt + dW
 
         # === state psi
@@ -489,7 +487,6 @@ class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
         psi = y.state
         dW = dX
         L = self.L(t)
-        Lpsi = [_L @ psi for _L in L]
 
         # === measurement Y
         # dY = <L+Ld> dt + dW
@@ -498,9 +495,7 @@ class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
         #          = psi.dag() @ (L + Ld) @ psi
         #          = psi.dag() @ L @ psi + (psi.dag() @ L @ psi).dag()
         #          = 2 Re[psi.dag() @ Lpsi]
-        exp = jnp.stack(
-            [2 * (psi.dag() @ _Lpsi).squeeze((-1, -2)).real for _Lpsi in Lpsi]
-        )  # (nL)
+        exp = 2 * expect(L, psi).real  # (nL)
         dY = exp * self.dt + dW
 
         # === state psi
