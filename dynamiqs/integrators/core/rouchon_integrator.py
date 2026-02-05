@@ -164,13 +164,15 @@ def cholesky_normalize(kraus_map: KrausMap, rho: QArray) -> jax.Array:
     return jax.lax.linalg.triangular_solve(T, rho, lower=True, left_side=True)
 
 
-def RK2_step(
+def order2_nojump_evolution(
     H: Callable[[RealScalarLike], QArray],
     L: Callable[[RealScalarLike], Sequence[QArray]],
     t: float,
     dt: float,
 ) -> Callable[[float], QArray]:
-    """Performs a single Runge-Kutta 2 step."""
+    """Evaluates the no-jump evolution between t and t+dt
+    using the explicit midpoint method.
+    """
     G0 = -1j * H(t) - 0.5 * sum([_L.dag() @ _L for _L in L(t)])
     Gmid = -1j * H(t + 0.5 * dt) - 0.5 * sum([_L.dag() @ _L for _L in L(t + 0.5 * dt)])
     U0 = eye_like(G0)
@@ -178,13 +180,15 @@ def RK2_step(
     return U0 + dt * Gmid @ k1
 
 
-def RK3_step_dense(
+def order3_nojump_dense_evolution(
     H: Callable[[RealScalarLike], QArray],
     L: Callable[[RealScalarLike], Sequence[QArray]],
     t: float,
     dt: float,
 ) -> Callable[[float], QArray]:
-    """Performs a single Runge-Kutta 3 step and returns the dense output function."""
+    """Evaluates the no-jump evolution between t and t+dt
+    using Kutta's third order method with dense output.
+    """
     G0 = -1j * H(t) - 0.5 * sum([_L.dag() @ _L for _L in L(t)])
     Gmid = -1j * H(t + dt / 2) - 0.5 * sum([_L.dag() @ _L for _L in L(t + dt / 2)])
     G1 = -1j * H(t + dt) - 0.5 * sum([_L.dag() @ _L for _L in L(t + dt)])
@@ -194,9 +198,10 @@ def RK3_step_dense(
     k3 = G1 @ (U0 - dt * k1 + 2 * dt * k2)
     U1 = U0 + dt / 6 * (k1 + 4 * k2 + k3)
 
-    def interp(theta: float) -> QArray:
+    def interp(s: float) -> QArray:
         # Quadratic Hermite interpolation: p(theta) = a0 + a1*theta + a2*theta^2
         # Constraints: p(0)=U0, p(1)=U1, p'(0)=dt*f0
+        theta = (s - t) / dt
         a0 = U0
         a1 = dt * k1
         a2 = U1 - U0 - dt * k1
@@ -302,7 +307,7 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
     ) -> KrausMap:
         if time_dependent:
             pass
-        e1 = RK2_step(H, L, t, dt)
+        e1 = order2_nojump_evolution(H, L, t, dt)
         channel_1 = KrausChannel(
             [e1]
             + [jnp.sqrt(dt / 2) * e1 @ _L for _L in L(t)]
@@ -328,17 +333,16 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
         dt: RealScalarLike,
         time_dependent: bool,
     ) -> KrausMap:
-        interp = RK3_step_dense(H, L, t, dt)
-        e1o3 = interp(1.0 / 3.0)
-        e2o3 = interp(2.0 / 3.0)
-        e3o3 = interp(1.0)
+        interp = order3_nojump_dense_evolution(H, L, t, dt)
+        e1o3 = interp(t + dt / 3)
+        e2o3 = interp(t + 2 * dt / 3)
+        e3o3 = interp(t + dt)
         L0o3 = L(t)
         L1o3 = L(t + 1 / 3 * dt)
         L2o3 = L(t + 2 / 3 * dt)
         L1o4 = L(t + dt / 4)
         L2o4 = L(t + dt / 2)
         L3o4 = L(t + 3 * dt / 4)
-        # L3o3 = self.L(t+dt)
 
         # Propagators between the intermediate steps
         e2o3_to_e3o3 = solve_propagator(e3o3, e2o3) if time_dependent else e1o3
