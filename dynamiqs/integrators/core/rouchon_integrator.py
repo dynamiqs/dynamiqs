@@ -17,7 +17,6 @@ from diffrax._custom_types import RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
 
 from ...qarrays.qarray import QArray
-from ...time_qarray import ConstantTimeQArray
 from ...utils.operators import asqarray, eye_like
 from .diffrax_integrator import MESolveDiffraxIntegrator
 
@@ -229,7 +228,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
 
     @property
     def time_dependent(self) -> bool:
-        return not isinstance(self.H, ConstantTimeQArray)
+        return self.H.time_dependent or any(L.time_dependent for L in self.Ls)
 
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -260,7 +259,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
         L: Callable[[RealScalarLike], Sequence[QArray]],
         t: RealScalarLike,
         dt: RealScalarLike,
-        time_dependent: bool,
+        _time_dependent: bool,
     ) -> KrausMap:
         pass
 
@@ -276,10 +275,8 @@ class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
         L: Callable[[RealScalarLike], Sequence[QArray]],
         t: RealScalarLike,
         dt: RealScalarLike,
-        time_dependent: bool,
+        _time_dependent: bool,
     ) -> KrausMap:
-        if time_dependent:
-            pass
         Lmid = L(t + dt / 2)
         LdL = sum([_L.dag() @ _L for _L in Lmid])
         G = -1j * H(t + dt / 2) - 0.5 * LdL
@@ -307,10 +304,8 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
         L: Callable[[RealScalarLike], Sequence[QArray]],
         t: RealScalarLike,
         dt: RealScalarLike,
-        time_dependent: bool,
+        _time_dependent: bool,
     ) -> KrausMap:
-        if time_dependent:
-            pass
         e1 = order2_nojump_evolution(H, L, t, dt)
         channel_1 = KrausChannel(
             [e1]
@@ -335,7 +330,7 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
         L: Callable[[RealScalarLike], Sequence[QArray]],
         t: RealScalarLike,
         dt: RealScalarLike,
-        time_dependent: bool,
+        _time_dependent: bool,
     ) -> KrausMap:
         interp = order3_nojump_dense_evolution(H, L, t, dt)
         e1o3 = interp(t + dt / 3)
@@ -349,8 +344,8 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
         L3o4 = L(t + 3 * dt / 4)
 
         # Propagators between the intermediate steps
-        e2o3_to_e3o3 = solve_propagator(e3o3, e2o3) if time_dependent else e1o3
-        e1o3_to_e2o3 = solve_propagator(e2o3, e1o3) if time_dependent else e1o3
+        e2o3_to_e3o3 = solve_propagator(e3o3, e2o3) if _time_dependent else e1o3
+        e1o3_to_e2o3 = solve_propagator(e2o3, e1o3) if _time_dependent else e1o3
 
         channel_1 = KrausChannel(
             [e3o3]
@@ -376,7 +371,7 @@ class MESolveAdaptiveRouchonIntegrator(MESolveDiffraxIntegrator):
 
     @property
     def time_dependent(self) -> bool:
-        return not isinstance(self.H, ConstantTimeQArray)
+        return self.H.time_dependent or any(L.time_dependent for L in self.Ls)
 
     @property
     def stepsize_controller(self) -> dx.AbstractStepSizeController:

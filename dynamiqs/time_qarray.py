@@ -261,6 +261,7 @@ class TimeQArray(eqx.Module):
         discontinuity_ts (Array): Times at which there is a discontinuous jump
             in the timeqarray values (the array is always sorted, but does not
             necessarily contain unique values).
+        time_dependent (bool): Whether the timeqarray is time-dependent or not.
 
     Note: Arithmetic operation support
         Timeqarrays support basic arithmetic operations `-, +, *` with other
@@ -334,6 +335,17 @@ class TimeQArray(eqx.Module):
         if self.tend is not None:
             times += [self.tend]
         return jnp.array(times) if len(times) > 0 else jnp.empty(0)
+
+    @property
+    def time_dependent(self) -> bool:
+        if isinstance(self, ConstantTimeQArray):
+            return False
+        elif isinstance(self, SummedTimeQArray):
+            return any(not isinstance(c, ConstantTimeQArray) for c in self.timeqarrays)
+        elif isinstance(self, PWCTimeQArray):
+            return not len(self.values == 1)
+        else:
+            return True
 
     def clip(self, tstart: float | None, tend: float | None) -> TimeQArray:
         r"""Set the start and/or end time beyond which the returned qarray is null.
