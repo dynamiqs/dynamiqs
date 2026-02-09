@@ -256,7 +256,11 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
     @staticmethod
     @abstractmethod
     def build_kraus_map(
-        H: QArray, L: Sequence[QArray], dt: float, time_dependent: bool
+        H: Callable[[RealScalarLike], QArray],
+        L: Callable[[RealScalarLike], Sequence[QArray]],
+        t: RealScalarLike,
+        dt: RealScalarLike,
+        time_dependent: bool,
     ) -> KrausMap:
         pass
 
