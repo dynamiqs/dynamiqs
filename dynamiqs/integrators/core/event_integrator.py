@@ -87,8 +87,10 @@ class JSSESolveEventIntegrator(
         save: callable | None = None,
     ) -> dx.Solution:
         terms = dx.ODETerm(
-            lambda t, y, _: -1j * self.H(t) @ y
-            + sum([-0.5 * _L.dag() @ (_L @ y) for _L in self.L(t)])
+            lambda t, y, _: (
+                -1j * self.H(t) @ y
+                + sum([-0.5 * _L.dag() @ (_L @ y) for _L in self.L(t)])
+            )
         )
 
         return call_diffeqsolve(
