@@ -227,8 +227,8 @@ class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
         return KrausMap(channel)
 
 
-mesolve_rouchon1_integrator_constructor = (
-    lambda **kwargs: MESolveFixedRouchon1Integrator(
+mesolve_rouchon1_integrator_constructor = lambda **kwargs: (
+    MESolveFixedRouchon1Integrator(
         **kwargs, diffrax_solver=RouchonDXSolver(1), fixed_step=True
     )
 )
