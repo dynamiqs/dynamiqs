@@ -8,7 +8,7 @@ from .result import *
 from .time_qarray import *
 from .utils import *
 
-__version__ = '0.3.4'
+__version__ = '0.3.5'
 
 # set default matmul precision to 'highest'
 set_matmul_precision('highest')
