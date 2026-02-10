@@ -356,8 +356,6 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
         dt: RealScalarLike,
         _time_dependent: bool,
     ) -> KrausMap:
-        if time_dependent:
-            pass
         e1 = no_jump_propagator(t + dt)
         channel_1 = KrausChannel(
             [e1]
