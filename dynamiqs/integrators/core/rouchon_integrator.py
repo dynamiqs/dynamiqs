@@ -274,17 +274,23 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
             return self.G(t) @ y
         no_jump_propagator_flow = ODETerm(_no_jump_propagator_flow)
         def _no_jump_propagator(t, dt):
-            sol = diffeqsolve(
+            solver = self.no_jump_solver
+            solver_state = solver.init(no_jump_propagator_flow, t, t + dt, self.identity, None)
+            y1, error, dense_info, solver_state, result = solver.step(
                 no_jump_propagator_flow,
-                solver=self.no_jump_solver,
                 t0=t,
-                t1=t + dt,       # one step only
+                t1=t + dt,
                 y0=self.identity,
-                dt0=dt,
-                saveat=SaveAt(dense=True),
-                stepsize_controller=ConstantStepSize()    # force non-adaptive step
+                args=None,
+                solver_state=solver_state,
+                made_jump=False,
             )
-            return sol.interpolation.evaluate
+            interpolant = solver.interpolation_cls(
+                t0=t,
+                t1=t + dt,
+                **dense_info,
+            )
+            return interpolant.evaluate
         return _no_jump_propagator
 
     def _build_kraus_map(self, t: float, dt: float) -> KrausMap:
