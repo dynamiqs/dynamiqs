@@ -11,7 +11,7 @@ from jax import Array
 class BaseLyapunovEquation(eqx.Module):
     G: Array
 
-    def lyapu(self, X: Array, mu: float):
+    def lyapunov(self, X: Array, mu: float):
         """Apply the Lyapunov operator to a matrix X.
 
         Computes the right-hand side of the Lyapunov equation:
@@ -25,10 +25,10 @@ class BaseLyapunovEquation(eqx.Module):
             Result of applying the Lyapunov operator, shape (n, n).
             Equal to `G @ X + X @ G.H + mu * X.`
         """
-        G = self.G  # .astype(jnp.complex64)
+        G = self.G
         return G @ X + X @ G.conj().mT + mu * X
 
-    def lyapu_adjoint(self, X: Array, mu: float) -> Array:
+    def lyapunov_adjoint(self, X: Array, mu: float) -> Array:
         """Apply the adjoint Lyapunov operator to a matrix X.
 
         Computes the right-hand side of the adjoint Lyapunov equation:
@@ -42,10 +42,10 @@ class BaseLyapunovEquation(eqx.Module):
             Result of applying the adjoint Lyapunov operator, shape (n, n).
             Equal to `G.conj().T @ X + X @ G + mu * X.`
         """
-        G = self.G  # .astype(jnp.complex64)
+        G = self.G
         return G.conj().T @ X + X @ G + mu * X
 
-    def lyapu_transpose(self, X: Array, mu: float) -> Array:
+    def lyapunov_transpose(self, X: Array, mu: float) -> Array:
         """Apply the _transpose_ Lyapunov operator to a matrix X.
 
         Computes the right-hand side of the transpose Lyapunov equation:
@@ -63,7 +63,7 @@ class BaseLyapunovEquation(eqx.Module):
             Implemented for backward-mode automatic differentiation.
             Refer to `lyapu_adjoint` for the adjoint computation.
         """
-        G = self.G  # .astype(jnp.complex64)
+        G = self.G
         return G.T @ X + X @ G.conj() + mu * X
 
     @abstractmethod
@@ -79,20 +79,18 @@ class BaseLyapunovEquation(eqx.Module):
         pass
 
     def solve(self, Y: Array, mu: float) -> Array:
-        # assert Y.dtype == jnp.complex64
 
         return jax.lax.custom_linear_solve(
-            lambda X: self.lyapu(X, mu),
+            lambda X: self.lyapunov(X, mu),
             Y,
             solve=lambda _mv, Y: self._solve(Y, mu),
             transpose_solve=lambda _mvT, Y: self._solve_transpose(Y, mu),
         )
 
     def solve_transpose(self, Y: Array, mu: float) -> Array:
-        # assert Y.dtype == jnp.complex64
 
         return jax.lax.custom_linear_solve(
-            lambda X: self.lyapu_transpose(X, mu),
+            lambda X: self.lyapunov_transpose(X, mu),
             Y,
             solve=lambda _mv, Y: self._solve_transpose(Y, mu),
             transpose_solve=lambda _mvT, Y: self._solve(Y, mu),
