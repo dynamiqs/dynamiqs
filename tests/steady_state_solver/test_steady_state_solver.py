@@ -67,15 +67,21 @@ def lindbladian_residual(H, Ls, rho):
     return float(jnp.max(jnp.abs(L_rho.to_jax())))
 
 
-def assert_valid_dm(rho):
+def _dm_atol(precision):
+    """Return the absolute tolerance for density matrix checks."""
+    return 1e-8 if precision == 'double' else 1e-4
+
+
+def assert_valid_dm(rho, precision):
     """Check that rho is a valid density matrix (hermitian, trace 1, PSD)."""
+    atol = _dm_atol(precision)
     rho_jax = rho.to_jax()
-    assert jnp.allclose(rho_jax, rho_jax.conj().T, atol=1e-5), 'rho is not Hermitian'
-    assert jnp.isclose(jnp.trace(rho_jax), 1.0, atol=1e-5), (
+    assert jnp.allclose(rho_jax, rho_jax.conj().T, atol=atol), 'rho is not Hermitian'
+    assert jnp.isclose(jnp.trace(rho_jax), 1.0, atol=atol), (
         f'Tr(rho) = {jnp.trace(rho_jax)}, expected 1.0'
     )
     eigvals = jnp.linalg.eigvalsh(rho_jax)
-    assert jnp.all(eigvals > -1e-8), (
+    assert jnp.all(eigvals > -atol), (
         f'rho has negative eigenvalue: {float(jnp.min(eigvals))}'
     )
 
@@ -101,6 +107,7 @@ class TestTwoModes:
         )
         residual = lindbladian_residual(H, Ls, rho)
         assert residual < tol, f'Residual {residual:.2e} exceeds tol={tol:.0e}'
+        assert_valid_dm(rho, precision)
 
 
 # ---------------------------------------------------------------------------
@@ -123,7 +130,7 @@ class TestRandomSingleMode:
         )
         residual = lindbladian_residual(H, Ls, rho)
         assert residual < tol, f'Residual {residual:.2e} exceeds tol={tol:.0e}'
-        # assert_valid_dm(rho)
+        assert_valid_dm(rho, precision)
 
 
 # ---------------------------------------------------------------------------
@@ -152,6 +159,7 @@ class TestSimpleOscillator:
         )
         residual = lindbladian_residual(H, Ls, rho)
         assert residual < tol, f'Residual {residual:.2e} exceeds tol={tol:.0e}'
+        assert_valid_dm(rho, precision)
 
 
 # ---------------------------------------------------------------------------
