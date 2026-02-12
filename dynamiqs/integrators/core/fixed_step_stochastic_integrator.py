@@ -27,7 +27,7 @@ from .rouchon_integrator import (
     KrausMap,
     MESolveFixedRouchon1Integrator,
     cholesky_normalize,
-    euler_dense_step
+    euler_dense_step,
 )
 from .save_mixin import SolveSaveMixin
 
@@ -483,10 +483,11 @@ def cholesky_normalize_ket(kraus_map: KrausMap, psi: QArray) -> jax.Array:
 
 class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
     """Integrator solving the diffusive SSE with the Rouchon1 method."""
+
     @property
     def identity(self) -> QArray:
         return eye_like(self.H(0.0))
-    
+
     @property
     def solver(self) -> QArray:
         return eye_like(self.H(0.0))
@@ -576,7 +577,7 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
     @property
     def identity(self) -> QArray:
         return eye_like(self.H(0.0))
-    
+
     @property
     def solver(self) -> QArray:
         return eye_like(self.H(0.0))

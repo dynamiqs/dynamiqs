@@ -16,10 +16,10 @@ import jax.numpy as jnp
 from diffrax._custom_types import RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
 
+from ...qarrays.layout import dense
 from ...qarrays.qarray import QArray
 from ...utils.operators import asqarray, eye_like
 from .diffrax_integrator import MESolveDiffraxIntegrator
-from ...qarrays.layout import dense, dia
 
 
 class AbstractRouchonTerm(dx.AbstractTerm):
@@ -385,6 +385,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using a
     fixed step Rouchon method.
     """
+
     @property
     def order(self) -> int:
         pass
@@ -392,20 +393,28 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
     @property
     def time_dependent(self) -> bool:
         return self.H.time_dependent or any(L.time_dependent for L in self.Ls)
-    
+
     @property
     def layout(self):
         return dense if any(L.layout == dense for L in self.Ls) else self.H.layout
-    
+
     @property
-    def _solve_propagator(self):
+    def _solve_propagator(
+        self,
+    ) -> Callable[
+        [Callable[[RealScalarLike], QArray], RealScalarLike, RealScalarLike, int],
+        QArray,
+    ]:
         if self.layout == dense:
-            def __solve_propagator(propagator, t1, t2, _order):
+
+            def __solve_propagator(propagator, t1, t2, _order) -> QArray:
                 return solve_propagator(propagator(t1), propagator(t2))
         else:
-            def __solve_propagator(_propagator, t1, t2, order): 
+
+            def __solve_propagator(_propagator, t1, t2, order) -> QArray:
                 # order+1 is the solver order
-                return self.no_jump_propagator(t2, t1-t2, order)(t1)
+                return self.no_jump_propagator(t2, t1 - t2, order)(t1)
+
         return __solve_propagator
 
     @property
@@ -424,6 +433,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
     def no_jump_propagator(self):
         def _no_jump_propagator(t, dt, order) -> Callable[[RealScalarLike], QArray]:
             return self.no_jump_solvers[order](self.H, self.L, self.identity, t, dt)
+
         return _no_jump_propagator
 
     @property
@@ -451,12 +461,12 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
 
     def _build_kraus_map(self, t: float, dt: float) -> KrausMap:
         return self.build_kraus_map(
-            self.no_jump_propagator(t, dt, self.order-1), 
-            self.L, 
-            t, 
-            dt, 
-            self._solve_propagator, 
-            self.time_dependent
+            self.no_jump_propagator(t, dt, self.order - 1),
+            self.L,
+            t,
+            dt,
+            self._solve_propagator,
+            self.time_dependent,
         )
 
     @staticmethod
@@ -476,8 +486,10 @@ class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using the
     fixed step Rouchon 1 method.
     """
+
     @property
-    def order(self) -> int: return 1
+    def order(self) -> int:
+        return 1
 
     @staticmethod
     def build_kraus_map(
@@ -504,9 +516,11 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using the
     fixed step Rouchon 2 method.
     """
+
     @property
-    def order(self) -> int: return 2
-    
+    def order(self) -> int:
+        return 2
+
     @staticmethod
     def build_kraus_map(
         no_jump_propagator: Callable[[RealScalarLike], QArray],
@@ -537,7 +551,8 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
     """
 
     @property
-    def order(self) -> int: return 3
+    def order(self) -> int:
+        return 3
 
     @staticmethod
     def build_kraus_map(
@@ -559,14 +574,16 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
         L3o4 = L(t + 3 * dt / 4)
 
         # Propagators between the intermediate steps
-        e2o3_to_e3o3 = _solve_propagator(no_jump_propagator, 
-                                        t + dt,
-                                        t + 2 * dt / 3, 
-                                        1) if _time_dependent else e1o3
-        e1o3_to_e2o3 = _solve_propagator(no_jump_propagator, 
-                                        t + 2 * dt / 3, 
-                                        t + dt / 3, 
-                                        0) if _time_dependent else e1o3
+        e2o3_to_e3o3 = (
+            _solve_propagator(no_jump_propagator, t + dt, t + 2 * dt / 3, 1)
+            if _time_dependent
+            else e1o3
+        )
+        e1o3_to_e2o3 = (
+            _solve_propagator(no_jump_propagator, t + 2 * dt / 3, t + dt / 3, 0)
+            if _time_dependent
+            else e1o3
+        )
 
         channel_0 = KrausChannel([e3o3])
         channel_1a = NestedKrausChannel(
@@ -618,7 +635,7 @@ class MESolveAdaptiveRouchonIntegrator(MESolveDiffraxIntegrator):
         pass
 
     @property
-    def no_jump_sub_solvers(self): 
+    def no_jump_sub_solvers(self):
         return [euler_dense_step, midpoint_dense_step, kutta_dense_step]
 
     @property
@@ -628,24 +645,32 @@ class MESolveAdaptiveRouchonIntegrator(MESolveDiffraxIntegrator):
     @property
     def no_jump_propagators(self):
         return lambda t, dt: self.no_jump_solver(self.H, self.L, self.identity, t, dt)
-        
+
     @property
     def no_jump_sub_propagator(self):
         def _no_jump_sub_propagator(t, dt, order) -> Callable[[RealScalarLike], QArray]:
             return self.no_jump_sub_solvers[order](self.H, self.L, self.identity, t, dt)
+
         return _no_jump_sub_propagator
-    
+
     @property
-    def _solve_propagator(self):
+    def _solve_propagator(
+        self,
+    ) -> Callable[
+        [Callable[[RealScalarLike], QArray], RealScalarLike, RealScalarLike, int],
+        QArray,
+    ]:
         if self.layout == dense:
-            def __solve_propagator(propagator, t1, t2, _order):
+
+            def __solve_propagator(propagator, t1, t2, _order) -> QArray:
                 return solve_propagator(propagator(t1), propagator(t2))
         else:
-            def __solve_propagator(_propagator, t1, t2, order): 
-                # order is the difference with leading order
-                return self.no_jump_sub_propagator(t2, t1-t2, order)(t1)
-        return __solve_propagator
 
+            def __solve_propagator(_propagator, t1, t2, order) -> QArray:
+                # order is the difference with leading order
+                return self.no_jump_sub_propagator(t2, t1 - t2, order)(t1)
+
+        return __solve_propagator
 
     @property
     def stepsize_controller(self) -> dx.AbstractStepSizeController:
@@ -675,7 +700,12 @@ class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
             )
             # === first order
             kraus_map_1 = MESolveFixedRouchon1Integrator.build_kraus_map(
-                no_jump_propagator_low, self.L, t0, dt, self._solve_propagator, self.time_dependent
+                no_jump_propagator_low,
+                self.L,
+                t0,
+                dt,
+                self._solve_propagator,
+                self.time_dependent,
             )
             rho_1 = (
                 cholesky_normalize(kraus_map_1, rho) if self.method.normalize else rho
@@ -684,7 +714,12 @@ class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
 
             # === second order
             kraus_map_2 = MESolveFixedRouchon2Integrator.build_kraus_map(
-                no_jump_propagator_high, self.L, t0, dt, self._solve_propagator, self.time_dependent
+                no_jump_propagator_high,
+                self.L,
+                t0,
+                dt,
+                self._solve_propagator,
+                self.time_dependent,
             )
             rho_2 = (
                 cholesky_normalize(kraus_map_2, rho) if self.method.normalize else rho
@@ -706,7 +741,7 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
         return bosh3_dense_step
 
     @property
-    def no_jump_sub_solvers(self): 
+    def no_jump_sub_solvers(self):
         return [kutta_dense_step, midpoint_dense_step, euler_dense_step]
 
     @property
@@ -720,7 +755,12 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
             )
             # === second order
             kraus_map_2 = MESolveFixedRouchon2Integrator.build_kraus_map(
-                no_jump_propagator_low, self.L, t0, dt, self._solve_propagator, self.time_dependent
+                no_jump_propagator_low,
+                self.L,
+                t0,
+                dt,
+                self._solve_propagator,
+                self.time_dependent,
             )
             rho_2 = (
                 cholesky_normalize(kraus_map_2, rho) if self.method.normalize else rho
@@ -729,7 +769,12 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
 
             # === third order
             kraus_map_3 = MESolveFixedRouchon3Integrator.build_kraus_map(
-                no_jump_propagator_high, self.L, t0, dt, self._solve_propagator, self.time_dependent
+                no_jump_propagator_high,
+                self.L,
+                t0,
+                dt,
+                self._solve_propagator,
+                self.time_dependent,
             )
             rho_3 = (
                 cholesky_normalize(kraus_map_3, rho) if self.method.normalize else rho
