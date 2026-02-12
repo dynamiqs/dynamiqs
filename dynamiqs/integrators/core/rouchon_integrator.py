@@ -348,6 +348,7 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
     def no_jump_solver(self):
         return Midpoint()
 
+
     @staticmethod
     def build_kraus_map(
         no_jump_propagator: Callable[[RealScalarLike], QArray],
@@ -357,16 +358,17 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
         _time_dependent: bool,
     ) -> KrausMap:
         e1 = no_jump_propagator(t + dt)
-        channel_1 = KrausChannel(
-            [e1]
-            + [jnp.sqrt(dt / 2) * e1 @ _L for _L in L(t)]
-            + [jnp.sqrt(dt / 2) * _L @ e1 for _L in L(t + dt)]
-        )
+        channel_0 = KrausChannel(
+            [e1])
+        channel_1a = NestedKrausChannel(KrausChannel([jnp.sqrt(dt/2) * e1]), 
+                                        KrausChannel(L(t)))
+        channel_1b = NestedKrausChannel(KrausChannel(L(t + dt)),
+                                        KrausChannel([jnp.sqrt(dt/2) * e1]))
         channel_2 = NestedKrausChannel(
             KrausChannel([jnp.sqrt(dt**2 / 2) * _L1 for _L1 in L(t + 2 * dt / 3)]),
             KrausChannel(L(t + dt / 3)),
         )
-        return KrausMap(channel_1, channel_2)
+        return KrausMap(channel_0, channel_1a, channel_1b, channel_2)
 
 
 class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
@@ -400,21 +402,30 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
         e2o3_to_e3o3 = solve_propagator(e3o3, e2o3) if _time_dependent else e1o3
         e1o3_to_e2o3 = solve_propagator(e2o3, e1o3) if _time_dependent else e1o3
 
-        channel_1 = KrausChannel(
-            [e3o3]
-            + [(jnp.sqrt(3 * dt / 4) * e2o3_to_e3o3 @ _L @ e2o3) for _L in L2o3]
-            + [jnp.sqrt(dt / 4) * e3o3 @ _L for _L in L0o3]
+        channel_0 = KrausChannel(
+            [e3o3])
+        channel_1a = NestedKrausChannel(
+            KrausChannel([jnp.sqrt(3 * dt / 4) * e2o3_to_e3o3]),
+            KrausChannel(L2o3),
+            KrausChannel([e2o3 for _L in L2o3])
+        )
+        channel_1b = NestedKrausChannel(
+            KrausChannel([jnp.sqrt(dt / 4) * e3o3]),
+            KrausChannel(L0o3)
         )
         channel_2 = NestedKrausChannel(
-            KrausChannel([jnp.sqrt(dt**2 / 2) * e2o3_to_e3o3 @ _L1 for _L1 in L2o3]),
-            KrausChannel([e1o3_to_e2o3 @ _L2 @ e1o3 for _L2 in L1o3]),
+            KrausChannel([jnp.sqrt(dt**2 / 2) * e2o3_to_e3o3]),
+            KrausChannel(L2o3),
+            KrausChannel([e1o3_to_e2o3]),
+            KrausChannel(L1o3),
+            KrausChannel([e1o3]),
         )
         channel_3 = NestedKrausChannel(
             KrausChannel([jnp.sqrt(dt**3 / 6) * _L1 for _L1 in L3o4]),
             KrausChannel(L2o4),
             KrausChannel(L1o4),
         )
-        return KrausMap(channel_1, channel_2, channel_3)
+        return KrausMap(channel_0, channel_1a, channel_1b, channel_2, channel_3)
 
 
 class MESolveAdaptiveRouchonIntegrator(MESolveDiffraxIntegrator):
