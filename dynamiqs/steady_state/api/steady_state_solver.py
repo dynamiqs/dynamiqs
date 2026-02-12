@@ -34,11 +34,128 @@ def steady_state(
     I_normalized: bool = True,
     norm_type: str = 'max',
 ) -> tuple[dq.QArray, GMRESAuxInfo]:
-    """
-    Computes the steady state by preconditioning the deflated
-    steady-state equation with the lyapunov equation.
+    r"""Compute the steady state of the Lindblad master equation.
 
-    This differs from `solve` with the deflation, which allow to directly enforce the trace and positivity constraint of the steady state.
+    This function finds the density matrix $\rho_\mathrm{ss}$ satisfying
+    $$
+        \mathcal{L}(\rho_\mathrm{ss}) = -i[H, \rho_\mathrm{ss}]
+        + \sum_{k=1}^N \left(
+            L_k \rho_\mathrm{ss} L_k^\dag
+            - \frac{1}{2} L_k^\dag L_k \rho_\mathrm{ss}
+            - \frac{1}{2} \rho_\mathrm{ss} L_k^\dag L_k
+        \right) = 0,
+    $$
+    where $H$ is the system's Hamiltonian and $\{L_k\}$ is a collection of jump
+    operators.
+
+    The steady state is computed using a preconditioned GMRES algorithm. The
+    Lindbladian is deflated with a rank-1 update to enforce the trace constraint,
+    and the resulting linear system is preconditioned by a Lyapunov equation solver.
+    The returned density matrix is Hermitian with unit trace.
+
+    # Method
+
+    ## Deflated linear system
+
+    The Lindbladian superoperator $\mathcal{L}$ is singular (it has a zero
+    eigenvalue corresponding to the steady state). To obtain a non-singular system,
+    a rank-1 deflation is applied:
+    $$
+        \left(\mathcal{L} + \alpha \,
+        \mathrm{vec}(I)\,\mathrm{vec}(I)^\top\right)
+        \mathrm{vec}(\rho) = \alpha \, \mathrm{vec}(I),
+    $$
+    where $\alpha$ is the `rank1_coeff` (normalized by $n^2$ if `I_normalized` is
+    `True`), $I$ is the identity matrix, and $\mathrm{vec}(\cdot)$ denotes
+    column-major vectorization. This shift lifts the zero eigenvalue while
+    preserving the steady-state solution.
+
+    ## Lyapunov preconditioner
+
+    The preconditioner is built from the *non-recycling* part of the Lindbladian,
+    i.e. the Lyapunov superoperator $\mathcal{S}$ defined by
+    $$
+        \mathcal{S}(\rho) = G\rho + \rho G^\dag,
+    $$
+    where
+    $$
+        G = iH + \tfrac{1}{2}\sum_k L_k^\dag L_k.
+    $$
+    Note that $G$ captures both the Hamiltonian evolution and the decay terms, but
+    omits the recycling (or "quantum jump") terms $L_k \rho L_k^\dag$. Inverting
+    $\mathcal{S}$ amounts to solving a Lyapunov equation, which is done
+    analytically via eigendecomposition of $G$: given the decomposition
+    $G = U \Lambda U^{-1}$, the solution of $GX + XG^\dag + \mu X = Y$ is
+    $$
+        X = U \widetilde{X} U^{H}, \qquad
+        \widetilde{X}_{ij} = \frac{\widetilde{Y}_{ij}}
+        {\lambda_i + \bar\lambda_j + \mu},
+    $$
+    where $\widetilde{Y} = U^{-H} Y U^{-1}$.
+
+    When `use_rank_1_update` is `True`, the preconditioner is further corrected
+    to account for the rank-1 deflation using the Sherman-Morrison formula.
+
+    Args:
+        H (qarray of shape (n, n)): Hamiltonian.
+        Ls (list of qarray, each of shape (n, n)): List of jump operators.
+        tol: Tolerance for the stopping criterion. The solver stops when
+            $\|\mathcal{L}(\rho)\| < \mathrm{tol}$, where the norm is determined
+            by `norm_type`. Defaults to `1e-8`.
+        rank1_coeff: Coefficient $\alpha$ for the rank-1 deflation update. This
+            shifts the Lindbladian to make the linear system non-singular. Defaults
+            to `1.0`.
+        use_rank_1_update: If `True`, the preconditioner is updated using the
+            Sherman-Morrison formula to account for the rank-1 deflation. Defaults
+            to `True`.
+        initial_guess (qarray of shape (n, n), optional): Initial guess for the
+            density matrix. Defaults to `None`, which uses the vacuum state
+            $|0\rangle\langle 0|$.
+        max_iter: Maximum number of outer GMRES iterations. Defaults to `100`.
+        krylov_size: Size of the Krylov subspace used in each GMRES restart cycle.
+            Defaults to `32`.
+        recycling: Number of Krylov vectors to recycle between restarts. Defaults
+            to `5`.
+        exact_dm: If `True`, the final density matrix is projected onto the set of
+            valid density matrices (positive semi-definite with unit trace) by
+            diagonalizing and projecting the eigenvalues onto the simplex. If
+            `False`, only Hermitization and trace normalization are applied.
+            Defaults to `False`.
+        I_normalized: If `True`, the rank-1 coefficient is normalized by $n^2$
+            where $n$ is the Hilbert space dimension. Defaults to `True`.
+        norm_type: Norm used in the stopping criterion. Supported values:
+            `'max'` (element-wise maximum of $|\mathcal{L}(\rho)|$) and
+            `'norm2'` (Frobenius norm of $\mathcal{L}(\rho)$). Defaults to
+            `'max'`.
+
+    Returns:
+        A tuple `(rho_ss, info)` where:
+
+        - **`rho_ss`** _(qarray of shape (n, n))_ - The steady-state density matrix.
+        - **`info`** _(`GMRESAuxInfo`)_ - Informations about the solve.
+
+                **Attributes:**
+
+                - **`n_iteration`** _(int)_ - Number of outer GMRES iterations
+                    performed.
+                - **`success`** _(array or bool)_ - Whether the solver converged
+                    within the specified tolerance.
+                - **`recycling`** _(tuple[array, array])_ - Recycled Krylov vectors
+                    `(U, C)` that can be reused in subsequent solves.
+
+    Examples:
+    ```python
+        import dynamiqs as dq
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a
+        jump_ops = [a]
+
+        rho_ss, info = steady_state(H, jump_ops)
+        print(f"Converged: {info.success}, iterations: {info.n_iteration}")
+    ```
     """
     n = H.shape[-1]
     dims = H.dims
@@ -47,7 +164,7 @@ def steady_state(
     G = 1j * H.to_jax() + 1 / 2 * LdagL
     dtype = G.dtype
 
-    # The Schur decomposition called in the solver is not differentiable
+    # The Eigen decomposition called in the solver is not differentiable
     # On the other hand, we're differentiating the result of solve with
     # implicit differentiation: we don't need to differentiate through
     # the solver itself. Hence the stop_gradient here.
