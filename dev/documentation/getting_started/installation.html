@@ -614,6 +614,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="installation.html" class="md-nav__link md-nav__link--active">
         
   
@@ -630,6 +648,69 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#install-with-pip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install with pip
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-from-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install from source
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gpu-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GPU support
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reinstalling-dynamiqs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reinstalling dynamiqs
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -6863,6 +6944,58 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#install-with-pip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install with pip
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-from-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install from source
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gpu-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GPU support
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reinstalling-dynamiqs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reinstalling dynamiqs
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -6881,13 +7014,29 @@
 
 
 <h1 id="installation">Installation</h1>
-<p>You can install Dynamiqs with <code>pip</code>:</p>
+<h2 id="install-with-pip">Install with pip</h2>
+<p>Dynamiqs requires <strong>Python 3.11 or later</strong>. The recommended way to install Dynamiqs is with <code>pip</code>, or with a package manager such as <a href="https://docs.astral.sh/uv/"><code>uv</code></a> or <a href="https://pixi.prefix.dev/latest/"><code>pixi</code></a>. To install Dynamiqs with <code>pip</code>, simply run:</p>
 <div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>dynamiqs
 </code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If you're using a GPU, please refer to the <a href="https://jax.readthedocs.io/en/latest/installation.html">JAX installation</a> documentation page for detailed instructions on how to install JAX for your device.</p>
+<h2 id="install-from-source">Install from source</h2>
+<p>To install the latest development version directly from GitHub:</p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/dynamiqs/dynamiqs.git
+</code></pre></div>
+<h2 id="gpu-support">GPU support</h2>
+<p>Dynamiqs leverages <a href="https://jax.readthedocs.io/">JAX</a> for high-performance computing. By default, JAX is installed with CPU-only support. To enable <strong>GPU acceleration</strong>, you need to install a GPU-compatible version of JAX. Please refer to the <a href="https://jax.readthedocs.io/en/latest/installation.html">JAX installation guide</a> for detailed, platform-specific instructions on installing JAX with CUDA (NVIDIA) or other accelerator support.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Install the GPU-enabled version of JAX <strong>before</strong> installing Dynamiqs to avoid dependency conflicts.</p>
 </div>
+<h2 id="reinstalling-dynamiqs">Reinstalling dynamiqs</h2>
+<p>You may occasionally need to reinstall Dynamiqs, for instance when upgrading to a newer release. Although modern 
+package managers such as <a href="https://docs.astral.sh/uv/"><code>uv</code></a>￼ handle upgrades and dependency resolution automatically, 
+this is not always true when using plain pip. In that case, uninstalling Dynamiqs alone can leave residual dependencies 
+from the previous installation, potentially causing version conflicts. To guarantee a clean reinstallation, 
+we recommend uninstalling Dynamiqs together with its main JAX dependencies:</p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>uninstall<span class="w"> </span>jax<span class="w"> </span>jaxlib<span class="w"> </span>optax<span class="w"> </span>diffrax<span class="w"> </span>jaxtyping<span class="w"> </span>equinox<span class="w"> </span>dynamiqs
+pip<span class="w"> </span>install<span class="w"> </span>dynamiqs
+</code></pre></div>
 
 
 
