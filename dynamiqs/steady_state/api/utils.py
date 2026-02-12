@@ -5,6 +5,11 @@ from jax import Array
 
 
 def finalize_density_matrix(dm: Array, exact_dm: bool) -> Array:
+    """Projects the density matrix `rho` onto the set of density matrices with the following properties:
+    - Hermitian
+    - Positive semi-definite
+    - Trace equal to 1
+    """
     dm = (dm + dm.conj().mT) / 2
     if exact_dm:
         rank = dm.shape[0]
