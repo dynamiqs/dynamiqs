@@ -27,6 +27,7 @@ from .rouchon_integrator import (
     KrausMap,
     MESolveFixedRouchon1Integrator,
     cholesky_normalize,
+    euler_dense_step
 )
 from .save_mixin import SolveSaveMixin
 
@@ -482,6 +483,13 @@ def cholesky_normalize_ket(kraus_map: KrausMap, psi: QArray) -> jax.Array:
 
 class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
     """Integrator solving the diffusive SSE with the Rouchon1 method."""
+    @property
+    def identity(self) -> QArray:
+        return eye_like(self.H(0.0))
+    
+    @property
+    def solver(self) -> QArray:
+        return eye_like(self.H(0.0))
 
     def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
         psi = y.state
@@ -497,10 +505,10 @@ class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
         #          = 2 Re[psi.dag() @ Lpsi]
         exp = 2 * expect(L, psi).real  # (nL)
         dY = exp * self.dt + dW
-
+        no_jump_propagator = euler_dense_step(self.H, self.L, self.identity, t, self.dt)
         # === state psi
         kraus_map = MESolveFixedRouchon1Integrator.build_kraus_map(
-            self.H, self.L, t, self.dt, True
+            no_jump_propagator, self.L, t, self.dt, None, True
         )
         Ms_average = kraus_map.get_kraus_operators()
         if self.method.normalize:
@@ -565,6 +573,14 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
 class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
     """Integrator solving the diffusive SME with the Rouchon1 method."""
 
+    @property
+    def identity(self) -> QArray:
+        return eye_like(self.H(0.0))
+    
+    @property
+    def solver(self) -> QArray:
+        return eye_like(self.H(0.0))
+
     def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
         # The Rouchon update for a single loss channel is:
         #   rho_{k+1} = M_dY @ rho_k @ M_dY^\dag + M1 @ rho_k @ M1d / Tr[...]
@@ -586,8 +602,9 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         dY = jnp.sqrt(self.etas) * trace * self.dt + dW  # (nLm,)
 
         # === state rho
+        no_jump_propagator = euler_dense_step(self.H, self.L, self.identity, t, self.dt)
         kraus_map = MESolveFixedRouchon1Integrator.build_kraus_map(
-            self.H, self.L, t, self.dt, True
+            no_jump_propagator, self.L, t, self.dt, None, True
         )
         Ms_average = kraus_map.get_kraus_operators()
         if self.method.normalize:
