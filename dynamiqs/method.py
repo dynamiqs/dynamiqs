@@ -771,6 +771,44 @@ class DiffusiveMonteCarlo(_DEMethod):
 
 
 class LowRank(Method):
+    r"""Low-rank method for the Lindblad master equation.
+
+    This method solves the low-rank Lindblad master equation by evolving factors
+    `m(t)` such that `$rho(t) = m(t) m(t)^\dagger$`, following Goutte, Savona (2025)
+    arxiv:2508.18114. The low-rank method is available via
+    [`dq.mesolve()`][dynamiqs.mesolve] by passing `method=dq.method.LowRank(...)`.
+
+    Args:
+        M: Rank of the low-rank approximation (number of columns of `m(t)`).
+        ode_method: ODE solver used for the low-rank evolution (supported:
+            [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8], [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5], [`Euler`][dynamiqs.method.Euler]).
+        linear_solver: Linear solver used for the low-rank evolution. Supported values
+            are `'QR'` and `'cholesky'`. Defaults to `'QR'`.
+        save_lowrank_representation_only: If `True`, `result.states` stores the
+            low-rank factors `m(t)` instead of density matrices. Defaults to `False`.
+        eps_init: Regularization parameter for the initialization of the low-rank
+            factors. This introduces random orthonormalized states of probabilities
+            $p_j=\epsilon$ to avoid $m^\dag m$ being singular. Defaults to `1e-5`.
+        key: PRNG key used for random initialization of the low-rank factors. If
+            `None`, a default key is used.
+
+    Note: Supported gradients
+        This method supports in principle the same gradients as the chosen `ode_method`.
+
+    Warning:
+        Differentiation may be unstable and return wrong results.
+
+    Warning:
+        The `'cholesky'` linear solver may lead to instabilities and the progress bar
+        getting stuck when using single precision.
+
+    Warning:
+        The low-rank method is more sensitive to time-step error. If the accuracy does
+        not improve when increasing the rank `M`, consider tightening the tolerances of
+        the chosen `ode_method`.
+    """
 
     ode_method: Method
     M: int = eqx.field(static=True)
