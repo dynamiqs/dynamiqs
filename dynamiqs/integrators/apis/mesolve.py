@@ -7,7 +7,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from ..._checks import check_qarray_is_dense, check_shape, check_times
+from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
 from ...method import (
     DiffusiveMonteCarlo,
@@ -19,6 +19,7 @@ from ...method import (
     JumpMonteCarlo,
     Kvaerno3,
     Kvaerno5,
+    LowRank,
     Method,
     Rouchon1,
     Rouchon2,
@@ -46,6 +47,16 @@ from ..core.diffrax_integrator import (
     mesolve_tsit5_integrator_constructor,
 )
 from ..core.expm_integrator import mesolve_expm_integrator_constructor
+from ..core.low_rank_integrator import (
+    initialize_m0_from_dm,
+    initialize_m0_from_ket,
+    mesolve_lr_dopri5_integrator_constructor,
+    mesolve_lr_dopri8_integrator_constructor,
+    mesolve_lr_euler_integrator_constructor,
+    mesolve_lr_kvaerno3_integrator_constructor,
+    mesolve_lr_kvaerno5_integrator_constructor,
+    mesolve_lr_tsit5_integrator_constructor,
+)
 from ..core.montecarlo_integrator import (
     mesolve_diffusivemontecarlo_integrator_constructor,
     mesolve_jumpmontecarlo_integrator_constructor,
@@ -94,7 +105,9 @@ def mesolve(
         H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
         jump_ops (list of qarray-like or timeqarray, each of shape (...Lk, n, n)):
             List of jump operators.
-        rho0 (qarray-like of shape (...rho0, n, 1) or (...rho0, n, n)): Initial state.
+        rho0 (qarray-like of shape (...rho0, n, 1) or (...rho0, n, n), or
+            (...rho0, n, M) when using `LowRank`): Initial state. For low-rank factors
+            `m0`, `M` must match `method.M`.
         tsave (array-like of shape (ntsave,)): Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
@@ -112,7 +125,8 @@ def mesolve(
             [`Rouchon3`][dynamiqs.method.Rouchon3],
             [`Expm`][dynamiqs.method.Expm],
             [`JumpMonteCarlo`][dynamiqs.method.JumpMonteCarlo],
-            [`DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo]).
+            [`DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo],
+            [`LowRank`][dynamiqs.method.LowRank]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
@@ -181,7 +195,10 @@ def mesolve(
 
                 - **`states`** _(qarray of shape (..., nsave, n, n))_ - Saved states
                     with `nsave = ntsave`, or `nsave = 1` if
-                    `options.save_states=False`.
+                    `options.save_states=False`. When using the low-rank method with
+                    `save_lowrank_representation_only=True`, `states` contains the
+                    factors `m(t)` with
+                    shape (..., nsave, n, M).
                 - **`final_state`** _(qarray of shape (..., n, n))_ - Saved final state.
                 - **`expects`** _(array of shape (..., len(exp_ops), ntsave) or None)_ -
                     Saved expectation values, if specified by `exp_ops`.
@@ -274,12 +291,20 @@ def mesolve(
     H = astimeqarray(H)
     Ls = [astimeqarray(L) for L in jump_ops]
     rho0 = asqarray(rho0)
+    if rho0.islrdm() and not isinstance(method, LowRank):
+        raise ValueError(
+            'Argument `rho0` is a low-rank density matrix but method is not '
+            '`LowRank`. Use `method=dq.method.LowRank(...)` or convert `rho0` '
+            'to a full density matrix.'
+        )
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_mesolve_args(H, Ls, rho0, exp_ops)
+    if isinstance(method, LowRank):
+        rho0 = _check_mesolve_low_rank_args(rho0, method, options)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'mesolve')
     options = options.initialise()
@@ -340,6 +365,9 @@ def _mesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> MESolveResult:
+    if isinstance(method, LowRank):
+        return _mesolve_low_rank(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
+
     # === select integrator constructor
     integrator_constructors = {
         Euler: mesolve_euler_integrator_constructor,
@@ -381,6 +409,60 @@ def _mesolve(
     return result  # noqa: RET504
 
 
+def _mesolve_low_rank(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    rho0: QArray,
+    tsave: Array,
+    exp_ops: list[QArray] | None,
+    method: LowRank,
+    gradient: Gradient | None,
+    options: Options,
+) -> MESolveResult:
+    integrator_constructors = {
+        Euler: mesolve_lr_euler_integrator_constructor,
+        Dopri5: mesolve_lr_dopri5_integrator_constructor,
+        Dopri8: mesolve_lr_dopri8_integrator_constructor,
+        Tsit5: mesolve_lr_tsit5_integrator_constructor,
+        Kvaerno3: mesolve_lr_kvaerno3_integrator_constructor,
+        Kvaerno5: mesolve_lr_kvaerno5_integrator_constructor,
+    }
+    assert_method_supported(method.ode_method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method.ode_method)]
+
+    method.ode_method.assert_supports_gradient(gradient)
+
+    eps = method.eps_init
+
+    if rho0.islrdm():
+        m0 = rho0.to_jax()
+    elif rho0.isket():
+        psi0 = rho0.to_jax()
+        m0 = initialize_m0_from_ket(psi0, method.M, eps=eps, key=method.key)
+    else:
+        rho0_dm = rho0.todm()
+        m0 = initialize_m0_from_dm(rho0_dm.to_jax(), method.M, eps=eps, key=method.key)
+
+    Es = [E.to_jax() for E in exp_ops] if exp_ops is not None else None
+
+    integrator = integrator_constructor(
+        ts=tsave,
+        y0=m0,
+        method=method.ode_method,
+        gradient=gradient,
+        result_class=MESolveResult,
+        options=options,
+        H=H,
+        Ls=Ls,
+        Es=Es,
+        linear_solver=method.linear_solver,
+        save_lowrank_representation_only=method.save_lowrank_representation_only,
+        dims=rho0.dims,
+    )
+
+    return integrator.run()
+
+
 def _check_mesolve_args(
     H: TimeQArray, Ls: list[TimeQArray], rho0: QArray, exp_ops: list[QArray] | None
 ):
@@ -399,10 +481,44 @@ def _check_mesolve_args(
         )
 
     # === check rho0 shape and layout
-    check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'})
+    if not rho0.islrdm():
+        check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'})
     check_qarray_is_dense(rho0, 'rho0')
 
     # === check exp_ops shape
     if exp_ops is not None:
         for i, E in enumerate(exp_ops):
             check_shape(E, f'exp_ops[{i}]', '(n, n)')
+
+
+def _check_mesolve_low_rank_args(
+    rho0: QArray, method: LowRank, options: Options
+) -> QArray:
+    # check that assume_hermitian is True (required for the low-rank solver)
+    if not options.assume_hermitian:
+        raise ValueError(
+            'The low-rank solver requires `assume_hermitian=True` (the default). '
+            'Set `options=dq.Options(assume_hermitian=True)` or omit the option.'
+        )
+
+    # check hermiticity for density matrix inputs
+    if rho0.isdm():
+        rho0 = check_hermitian(rho0, 'rho0')
+
+    n = rho0.shape[-2]
+    if rho0.islrdm() and rho0.shape[-1] != method.M:
+        raise ValueError(
+            'Argument `rho0` is a low-rank density matrix with shape '
+            f'(..., {n}, {rho0.shape[-1]}) but method.M={method.M}.'
+        )
+    if n < method.M:
+        raise ValueError(f'Argument `M` must be <= n, but is M={method.M} (n={n}).')
+    if method.linear_solver == 'cholesky' and not jax.config.read('jax_enable_x64'):
+        warnings.warn(
+            'Using the Cholesky linear solver with single-precision dtypes can be '
+            'numerically unstable; consider enabling double precision with '
+            "`dq.set_precision('double')`.",
+            stacklevel=2,
+        )
+
+    return rho0
