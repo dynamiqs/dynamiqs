@@ -16,12 +16,23 @@ b = pytest.fixture(lambda: dq.random.ket(k2, 4))
 x = pytest.fixture(lambda: dq.random.dm(k3, 4))
 y = pytest.fixture(lambda: dq.random.dm(k4, 4))
 z = pytest.fixture(lambda: dq.random.dm(k5, 4))
+lr = pytest.fixture(
+    lambda: dq.asqarray(jnp.arange(8, dtype=jnp.complex64).reshape(4, 2))
+)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
 def test_dag(x):
     # check that no error is raised while tracing the function
     jax.jit(dq.dag).trace(x)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_dag_lrdm(lr):
+    with pytest.raises(NotImplementedError):
+        dq.dag(lr)
+    with pytest.raises(NotImplementedError):
+        lr.dag()
 
 
 @pytest.mark.run(order=TEST_INSTANT)
@@ -149,6 +160,15 @@ def test_isdm(x):
 
 
 @pytest.mark.run(order=TEST_INSTANT)
+def test_islrdm(a, x, lr):
+    # check that no error is raised while tracing the function
+    jax.jit(dq.islrdm).trace(lr)
+    assert dq.islrdm(lr)
+    assert not dq.islrdm(x)
+    assert not dq.islrdm(a)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
 def test_isop(x):
     # check that no error is raised while tracing the function
     jax.jit(dq.isop).trace(x)
@@ -173,10 +193,33 @@ def test_tobra(a):
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_todm(a, x):
+def test_todm(a, x, lr):
     # check that no error is raised while tracing the function
     jax.jit(dq.todm).trace(a)
     jax.jit(dq.todm).trace(x)
+    jax.jit(dq.todm).trace(lr)
+
+    m = lr.to_jax()
+    expected = m @ m.conj().T
+    assert jnp.allclose(dq.todm(lr).to_jax(), expected)
+
+    m_batch = jnp.arange(16, dtype=jnp.complex64).reshape(2, 4, 2)
+    lr_batch = dq.asqarray(m_batch)
+    expected_batch = m_batch @ m_batch.conj().swapaxes(-2, -1)
+    assert jnp.allclose(dq.todm(lr_batch).to_jax(), expected_batch)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_lrdm_state_utils(lr):
+    dm = dq.todm(lr)
+    O = dq.eye(dm.shape[-1])
+
+    assert jnp.allclose(dq.expect(O, lr), dq.expect(O, dm))
+    assert jnp.allclose(dq.norm(lr, psd=True), dq.norm(dm, psd=True))
+    assert jnp.allclose(dq.purity(lr), dq.purity(dm))
+    assert jnp.allclose(dq.entropy_vn(lr), dq.entropy_vn(dm))
+    assert jnp.allclose(dq.overlap(dm, lr), dq.overlap(dm, dm))
+    assert jnp.allclose(dq.fidelity(dm, lr), dq.fidelity(dm, dm))
 
 
 @pytest.mark.run(order=TEST_INSTANT)
