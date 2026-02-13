@@ -520,11 +520,18 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
     @property
     def order(self) -> int:
         return 2
-    
+
     @property
-    def _solve_propagator( self, ) -> Callable[ [Callable[[RealScalarLike], QArray], RealScalarLike, RealScalarLike, int], QArray, ]:
-        def __solve_propagator(propagator, t1, t2, order) -> QArray: 
-            return self.identity + self.G(t2) * (t1 - t2) # Euler is enough in Rouchon2 and cheaper
+    def _solve_propagator(
+        self,
+    ) -> Callable[
+        [Callable[[RealScalarLike], QArray], RealScalarLike, RealScalarLike, int],
+        QArray,
+    ]:
+        def __solve_propagator(propagator, t1, t2, order) -> QArray:
+            return self.identity + self.G(t2) * (t1 - t2)
+
+        # Euler is enough in Rouchon2 and cheaper
         return __solve_propagator
 
     @staticmethod
@@ -538,13 +545,17 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
     ) -> KrausMap:
         e1 = no_jump_propagator(t + dt)
         emid = no_jump_propagator(t + dt / 2)
-        emid_to_e1 = _solve_propagator(no_jump_propagator, t + dt, t + dt / 2, 0) if _time_dependent else emid
+        emid_to_e1 = (
+            _solve_propagator(no_jump_propagator, t + dt, t + dt / 2, 0)
+            if _time_dependent
+            else emid
+        )
 
         channel_0 = KrausChannel([e1])
         channel_1 = NestedKrausChannel(
             KrausChannel([jnp.sqrt(dt) * emid_to_e1]),
-            KrausChannel(L(t+dt/2)),
-            KrausChannel([emid])
+            KrausChannel(L(t + dt / 2)),
+            KrausChannel([emid]),
         )
         channel_2 = NestedKrausChannel(
             KrausChannel([jnp.sqrt(dt**2 / 2) * _L1 for _L1 in L(t + 2 * dt / 3)]),
@@ -751,11 +762,18 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
     @property
     def no_jump_sub_solvers(self):
         return [kutta_dense_step, midpoint_dense_step, euler_dense_step]
-    
+
     @property
-    def _solve_propagator( self, ) -> Callable[ [Callable[[RealScalarLike], QArray], RealScalarLike, RealScalarLike, int], QArray, ]:
-        def __solve_propagator(propagator, t1, t2, order) -> QArray: 
-            return self.identity + self.G(t2) * (t1 - t2) # Euler is enough in Rouchon21 and cheaper
+    def _solve_propagator(
+        self,
+    ) -> Callable[
+        [Callable[[RealScalarLike], QArray], RealScalarLike, RealScalarLike, int],
+        QArray,
+    ]:
+        def __solve_propagator(propagator, t1, t2, order) -> QArray:
+            return self.identity + self.G(t2) * (t1 - t2)
+            # Euler is enough in Rouchon21 and cheaper
+
         return __solve_propagator
 
     @property
