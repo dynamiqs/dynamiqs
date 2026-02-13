@@ -83,6 +83,10 @@ class DenseQArray(QArray):
         return norm(self.data, psd=psd)
 
     def trace(self) -> Array:
+        from ..utils.general import islrdm  # noqa: PLC0415
+
+        if islrdm(self):
+            return (jnp.abs(self.data) ** 2).sum((-2, -1))
         return self.data.trace(axis1=-1, axis2=-2)
 
     def sum(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
