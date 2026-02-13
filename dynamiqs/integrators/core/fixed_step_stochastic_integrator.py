@@ -27,6 +27,7 @@ from .rouchon_integrator import (
     KrausMap,
     MESolveFixedRouchon1Integrator,
     cholesky_normalize,
+    euler_dense_step,
 )
 from .save_mixin import SolveSaveMixin
 
@@ -440,9 +441,7 @@ class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
         #          = psi.dag() @ (L + Ld) @ psi
         #          = psi.dag() @ L @ psi + (psi.dag() @ L @ psi).dag()
         #          = 2 Re[psi.dag() @ Lpsi]
-        exp = jnp.stack(
-            [2 * (psi.dag() @ _Lpsi).squeeze((-1, -2)).real for _Lpsi in Lpsi]
-        )  # (nL)
+        exp = 2 * expect(L, psi).real  # (nL)
         dY = exp * self.dt + dW
 
         # === state psi
@@ -485,11 +484,18 @@ def cholesky_normalize_ket(kraus_map: KrausMap, psi: QArray) -> jax.Array:
 class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
     """Integrator solving the diffusive SSE with the Rouchon1 method."""
 
+    @property
+    def identity(self) -> QArray:
+        return eye_like(self.H(0.0))
+
+    @property
+    def solver(self) -> QArray:
+        return eye_like(self.H(0.0))
+
     def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
         psi = y.state
         dW = dX
-        L, H = self.L(t), self.H(t)
-        Lpsi = [_L @ psi for _L in L]
+        L = self.L(t)
 
         # === measurement Y
         # dY = <L+Ld> dt + dW
@@ -498,14 +504,12 @@ class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
         #          = psi.dag() @ (L + Ld) @ psi
         #          = psi.dag() @ L @ psi + (psi.dag() @ L @ psi).dag()
         #          = 2 Re[psi.dag() @ Lpsi]
-        exp = jnp.stack(
-            [2 * (psi.dag() @ _Lpsi).squeeze((-1, -2)).real for _Lpsi in Lpsi]
-        )  # (nL)
+        exp = 2 * expect(L, psi).real  # (nL)
         dY = exp * self.dt + dW
-
+        no_jump_propagator = euler_dense_step(self.H, self.L, self.identity, t, self.dt)
         # === state psi
         kraus_map = MESolveFixedRouchon1Integrator.build_kraus_map(
-            H, L, self.dt, self.method.exact_expm
+            no_jump_propagator, self.L, t, self.dt, None, True
         )
         Ms_average = kraus_map.get_kraus_operators()
         if self.method.normalize:
@@ -570,6 +574,14 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
 class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
     """Integrator solving the diffusive SME with the Rouchon1 method."""
 
+    @property
+    def identity(self) -> QArray:
+        return eye_like(self.H(0.0))
+
+    @property
+    def solver(self) -> QArray:
+        return eye_like(self.H(0.0))
+
     def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
         # The Rouchon update for a single loss channel is:
         #   rho_{k+1} = M_dY @ rho_k @ M_dY^\dag + M1 @ rho_k @ M1d / Tr[...]
@@ -583,7 +595,7 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
 
         rho = y.state
         dW = dX
-        L, Lc, Lm, H = self.L(t), self.Lc(t), self.Lm(t), self.H(t)
+        Lc, Lm = self.Lc(t), self.Lm(t)
 
         # === measurement Y
         # dY_{k+1} = sqrt(eta) Tr[(L+Ld) @ rho_k)] dt + dW
@@ -591,8 +603,9 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         dY = jnp.sqrt(self.etas) * trace * self.dt + dW  # (nLm,)
 
         # === state rho
+        no_jump_propagator = euler_dense_step(self.H, self.L, self.identity, t, self.dt)
         kraus_map = MESolveFixedRouchon1Integrator.build_kraus_map(
-            H, L, self.dt, self.method.exact_expm
+            no_jump_propagator, self.L, t, self.dt, None, True
         )
         Ms_average = kraus_map.get_kraus_operators()
         if self.method.normalize:
