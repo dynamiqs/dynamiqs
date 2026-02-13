@@ -476,7 +476,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
         L: Callable[[RealScalarLike], Sequence[QArray]],
         t: RealScalarLike,
         dt: RealScalarLike,
-        solve_propagator: Callable[[RealScalarLike, RealScalarLike], QArray],
+        _solve_propagator: Callable[[RealScalarLike, RealScalarLike], QArray],
         _time_dependent: bool,
     ) -> KrausMap:
         pass
@@ -520,6 +520,12 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
     @property
     def order(self) -> int:
         return 2
+    
+    @property
+    def _solve_propagator( self, ) -> Callable[ [Callable[[RealScalarLike], QArray], RealScalarLike, RealScalarLike, int], QArray, ]:
+        def __solve_propagator(propagator, t1, t2, order) -> QArray: 
+            return self.identity + self.G(t1) * (t1 - t2)
+        return __solve_propagator
 
     @staticmethod
     def build_kraus_map(
@@ -531,18 +537,20 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
         _time_dependent: bool,
     ) -> KrausMap:
         e1 = no_jump_propagator(t + dt)
+        emid = no_jump_propagator(t + dt / 2)
+        emid_to_e1 = _solve_propagator(no_jump_propagator, t + dt, t + dt / 2, 0) if _time_dependent else emid
+
         channel_0 = KrausChannel([e1])
-        channel_1a = NestedKrausChannel(
-            KrausChannel([jnp.sqrt(dt / 2) * e1]), KrausChannel(L(t))
-        )
-        channel_1b = NestedKrausChannel(
-            KrausChannel(L(t + dt)), KrausChannel([jnp.sqrt(dt / 2) * e1])
+        channel_1 = NestedKrausChannel(
+            KrausChannel([jnp.sqrt(dt) * emid_to_e1]),
+            KrausChannel(L(t+dt/2)),
+            KrausChannel([emid])
         )
         channel_2 = NestedKrausChannel(
             KrausChannel([jnp.sqrt(dt**2 / 2) * _L1 for _L1 in L(t + 2 * dt / 3)]),
             KrausChannel(L(t + dt / 3)),
         )
-        return KrausMap(channel_0, channel_1a, channel_1b, channel_2)
+        return KrausMap(channel_0, channel_1, channel_2)
 
 
 class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
