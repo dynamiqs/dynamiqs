@@ -171,6 +171,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - isket
         - isbra
         - isdm
+        - islrdm
         - isop
         - isherm
         - toket
