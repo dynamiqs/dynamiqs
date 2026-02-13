@@ -524,7 +524,7 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
     @property
     def _solve_propagator( self, ) -> Callable[ [Callable[[RealScalarLike], QArray], RealScalarLike, RealScalarLike, int], QArray, ]:
         def __solve_propagator(propagator, t1, t2, order) -> QArray: 
-            return self.identity + self.G(t1) * (t1 - t2)
+            return self.identity + self.G(t2) * (t1 - t2) # Euler is enough in Rouchon2 and cheaper
         return __solve_propagator
 
     @staticmethod
@@ -751,6 +751,12 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
     @property
     def no_jump_sub_solvers(self):
         return [kutta_dense_step, midpoint_dense_step, euler_dense_step]
+    
+    @property
+    def _solve_propagator( self, ) -> Callable[ [Callable[[RealScalarLike], QArray], RealScalarLike, RealScalarLike, int], QArray, ]:
+        def __solve_propagator(propagator, t1, t2, order) -> QArray: 
+            return self.identity + self.G(t2) * (t1 - t2) # Euler is enough in Rouchon21 and cheaper
+        return __solve_propagator
 
     @property
     def terms(self) -> dx.AbstractTerm:
