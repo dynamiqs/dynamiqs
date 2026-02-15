@@ -72,6 +72,12 @@ def _dm_atol(precision):
     return 1e-8 if precision == 'double' else 1e-4
 
 
+def _simple_oscillator_analytical_steady_state(n, epsilon_a, kappa):
+    """Analytical steady state for H=epsilon_a*(a+a^dagger), L=sqrt(kappa)*a."""
+    alpha_ss = -2j * epsilon_a / kappa
+    return dq.coherent_dm(n, alpha_ss)
+
+
 def assert_valid_dm(rho, precision):
     """Check that rho is a valid density matrix (hermitian, trace 1, PSD)."""
     atol = _dm_atol(precision)
@@ -160,6 +166,21 @@ class TestSimpleOscillator:
         residual = lindbladian_residual(H, Ls, rho)
         assert residual < tol, f'Residual {residual:.2e} exceeds tol={tol:.0e}'
         assert_valid_dm(rho, precision)
+
+        tol = 1e-8 if precision == 'double' else 1e-5
+        rho_num, info = steady_state(
+            H, Ls, tol=tol, max_iter=200, krylov_size=64, exact_dm=True
+        )
+        assert bool(info.success), (
+            f'Solver did not converge (n={n}, tol={tol:.0e}, iters={info.n_iteration})'
+        )
+        rho_analytical = _simple_oscillator_analytical_steady_state(n, epsilon_a, kappa)
+        fidelity = float(dq.fidelity(rho_num, rho_analytical))
+        fid_tol = 1e-10 if precision == 'double' else 1e-5
+        assert fidelity > 1 - fid_tol, (
+            f'Fidelity {fidelity:.8f} too low for analytical steady state '
+            f'(target > {1 - fid_tol:.8f})'
+        )
 
 
 # ---------------------------------------------------------------------------
