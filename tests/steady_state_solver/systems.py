@@ -3,6 +3,7 @@ import jax.numpy as jnp
 import dynamiqs as dq
 from math import pi
 
+
 def build_random_single_mode(n: int, seed: int = 0, gamma: float = 0.1):
     key = jax.random.PRNGKey(seed)
     key1, key2 = jax.random.split(key)
@@ -33,17 +34,17 @@ def build_single_mode(n_b: int):
     kappa_rad_ns = 0.5 * to_rad_ns
 
     d = int(n_b)
-    b = dq.destroy(d)  # type: ignore[assignment]
+    b = dq.destroy(d)
 
     H = (
-        detuning_rad_ns * (b.dag() @ b)  # type: ignore[attr-defined]
-        + drive_rad_ns * (b + b.dag())  # type: ignore[attr-defined]
-        + kerr_4_rad_ns / 2 * (dq.powm(b.dag(), 2) @ dq.powm(b, 2))  # type: ignore[attr-defined]
-        + kerr_6_rad_ns / 6 * (dq.powm(b.dag(), 3) @ dq.powm(b, 3))  # type: ignore[attr-defined]
+        detuning_rad_ns * (b.dag() @ b)
+        + drive_rad_ns * (b + b.dag())
+        + kerr_4_rad_ns / 2 * (dq.powm(b.dag(), 2) @ dq.powm(b, 2))
+        + kerr_6_rad_ns / 6 * (dq.powm(b.dag(), 3) @ dq.powm(b, 3))
     )
 
     # Dissipation: L = sqrt(kappa) * b
-    Ls = [jnp.sqrt(kappa_rad_ns) * b]  # type: ignore[operator]
+    Ls = [jnp.sqrt(kappa_rad_ns) * b]
 
     return H, Ls
 
@@ -53,6 +54,15 @@ ns, us = 1e-3, 1e0
 
 
 def eps_d_from_na(na: int, g2: float) -> float:
+    """
+    Choose a suitable drive parameter : eps_d, in order to maintain the truncature large enough :
+           Optimal truncature is choosen under the condition : $$ n_a > |\alpha|^2+15|alpha|$$ with $$\alpha = \sqrt(eps_d/ g_2)$$
+        Args :
+            na (int) : truncature of the memory mode
+            g2 (float) : coupling of memory and buffer mode
+        Output :
+            eps_d (float) drive on the buffer mode
+    """
     eps_map = {12: 1.0, 24: 2.0, 32: 7.0, 46: 12.0}
 
     if na in eps_map:
