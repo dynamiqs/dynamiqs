@@ -22,8 +22,8 @@ def finalize_density_matrix(dm: Array, exact_dm: bool) -> Array:
 def update_preconditioner(
     precond_fn: Callable[[Array], Array],
     identity_vectorized: Array,
-    coefficient: float,
     use_rank_1_update: bool,
+    coefficient: float = 1,
 ) -> Callable[[Array], Array]:
     """Updates a preconditioner `S` with the Sherman-Moorison formula.
     ```
@@ -49,7 +49,7 @@ def update_preconditioner(
     return precond_with_rank1
 
 
-def dp(A, B):
+def frobenius_dot_product(A, B):
     """Frobenius dot-product."""
     return (A.conj() * B).sum((-1, -2))
 
