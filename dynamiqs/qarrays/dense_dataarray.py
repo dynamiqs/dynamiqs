@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from functools import partial
-from typing import TYPE_CHECKING, get_args
+from typing import TYPE_CHECKING, ClassVar, get_args
 
 import jax
 import jax.numpy as jnp
@@ -11,29 +11,22 @@ from jax import Array, Device
 from jaxtyping import ArrayLike
 from qutip import Qobj
 
+from .dataarray import DataArray, IndexType, in_last_two_dims
 from .layout import Layout, dense
-from .qarray import (
-    IndexType,
-    QArray,
-    QArrayLike,
-    in_last_two_dims,
-    isqarraylike,
-    to_jax,
-)
 from .sparsedia_primitives import array_to_sparsedia
 
 if TYPE_CHECKING:
-    from .sparsedia_qarray import SparseDIAQArray
+    from .sparsedia_dataarray import SparseDIADataArray
 
-__all__ = ['DenseQArray']
+__all__ = ['DenseDataArray']
 
 
-class DenseQArray(QArray):
-    r"""A dense qarray is a qarray that uses JAX arrays as data storage."""
+class DenseDataArray(DataArray):
+    r"""A dense data array using JAX arrays as data storage."""
 
     data: Array
 
-    __qarray_matmul_priority__ = 0
+    _matmul_priority: ClassVar[int] = 0
 
     @property
     def dtype(self) -> jnp.dtype:
@@ -48,32 +41,27 @@ class DenseQArray(QArray):
         return self.data.shape
 
     @property
-    def mT(self) -> QArray:
+    def mT(self) -> DataArray:
         data = self.data.mT
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def conj(self) -> QArray:
+    def conj(self) -> DataArray:
         data = self.data.conj()
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def _reshape_unchecked(self, *shape: int) -> QArray:
+    def _reshape_unchecked(self, *shape: int) -> DataArray:
         data = jnp.reshape(self.data, shape)
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def broadcast_to(self, *shape: int) -> QArray:
+    def broadcast_to(self, *shape: int) -> DataArray:
         data = jnp.broadcast_to(self.data, shape)
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def ptrace(self, *keep: int) -> QArray:
-        from ..utils.general import ptrace  # noqa: PLC0415
-
-        return ptrace(self.data, keep, self.dims)
-
-    def powm(self, n: int) -> QArray:
+    def powm(self, n: int) -> DataArray:
         data = jnp.linalg.matrix_power(self.data, n)
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def expm(self, *, max_squarings: int = 16) -> QArray:
+    def expm(self, *, max_squarings: int = 16) -> DataArray:
         data = jax.scipy.linalg.expm(self.data, max_squarings=max_squarings)
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
@@ -85,25 +73,25 @@ class DenseQArray(QArray):
     def trace(self) -> Array:
         return self.data.trace(axis1=-1, axis2=-2)
 
-    def sum(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
+    def sum(self, axis: int | tuple[int, ...] | None = None) -> DataArray | Array:
         data = self.data.sum(axis=axis)
 
-        # return array if last two dimensions are modified, qarray otherwise
+        # return array if last two dimensions are modified, DataArray otherwise
         if in_last_two_dims(axis, self.ndim):
             return data
         else:
             return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
+    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> DataArray | Array:
         data = self.data.squeeze(axis=axis)
 
-        # return array if last two dimensions are modified, qarray otherwise
+        # return array if last two dimensions are modified, DataArray otherwise
         if in_last_two_dims(axis, self.ndim):
             return data
         else:
             return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def _eig(self) -> tuple[Array, QArray]:
+    def _eig(self) -> tuple[Array, DataArray]:
         evals, evecs = jax.lax.linalg.eig(self.data, compute_left_eigenvectors=False)
         return evals, replace(self, data=evecs)  # ty: ignore[invalid-argument-type]
 
@@ -122,117 +110,112 @@ class DenseQArray(QArray):
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         return jnp.allclose(self.data, self.data.mT.conj(), rtol=rtol, atol=atol)
 
-    def to_qutip(self) -> Qobj | list[Qobj]:
-        return array_to_qobj_list(self.to_jax(), self.dims)
-
     def to_jax(self) -> Array:
         return self.data
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         return np.asarray(self.data, dtype=dtype)
 
-    def asdense(self) -> DenseQArray:
+    def asdense(self) -> DenseDataArray:
         return self
 
-    def assparsedia(self, offsets: tuple[int, ...] | None = None) -> SparseDIAQArray:
-        from .sparsedia_qarray import SparseDIAQArray  # noqa: PLC0415
+    def assparsedia(
+        self, offsets: tuple[int, ...] | None = None
+    ) -> SparseDIADataArray:
+        from .sparsedia_dataarray import SparseDIADataArray  # noqa: PLC0415
 
         offsets, diags = array_to_sparsedia(self.data, offsets)
-        return SparseDIAQArray(self.dims, self.vectorized, offsets, diags)
+        return SparseDIADataArray(offsets, diags)
 
-    def block_until_ready(self) -> QArray:
+    def block_until_ready(self) -> DataArray:
         _ = self.data.block_until_ready()
         return self
 
-    def __repr__(self) -> str:
-        return super().__repr__() + f'\n{self.data}'
+    def _repr_extra(self) -> str:
+        return f'\n{self.data}'
 
-    def __mul__(self, y: ArrayLike) -> QArray:
-        super().__mul__(y)
-
+    def __mul__(self, y: ArrayLike) -> DataArray:
         data = y * self.data
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def __add__(self, y: QArrayLike) -> QArray:
+    def __add__(self, y: DataArray | ArrayLike) -> DataArray:
         if isinstance(y, int | float) and y == 0:
             return self
 
-        super().__add__(y)
-
-        if isinstance(y, DenseQArray):
+        if isinstance(y, DenseDataArray):
             data = self.data + y.data
         elif isinstance(y, get_args(ArrayLike)):
-            data = self.data + to_jax(y)
+            data = self.data + jnp.asarray(y)
         else:
             return NotImplemented
 
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def __matmul__(self, y: QArrayLike) -> QArray | Array:
-        out = super().__matmul__(y)
-        if out is NotImplemented:
+    def __matmul__(self, y: DataArray | ArrayLike) -> DataArray | Array:
+        if (
+            hasattr(y, '_matmul_priority')
+            and self._matmul_priority < y._matmul_priority
+        ):
             return NotImplemented
 
-        if isinstance(y, DenseQArray):
+        if isinstance(y, DenseDataArray):
             data = self.data @ y.data
-        elif isqarraylike(y):
-            data = self.data @ to_jax(y)
+        elif isinstance(y, get_args(ArrayLike)):
+            data = self.data @ jnp.asarray(y)
         else:
             return NotImplemented
 
-        if self.isbra() and y.isket():
-            return data
-
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def __rmatmul__(self, y: QArrayLike) -> QArray:
-        super().__rmatmul__(y)
-
-        if isinstance(y, DenseQArray):
+    def __rmatmul__(self, y: DataArray | ArrayLike) -> DataArray:
+        if isinstance(y, DenseDataArray):
             data = y.data @ self.data
-        elif isqarraylike(y):
-            data = to_jax(y) @ self.data
+        elif isinstance(y, get_args(ArrayLike)):
+            data = jnp.asarray(y) @ self.data
         else:
             return NotImplemented
 
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def __and__(self, y: QArray) -> QArray:
-        super().__and__(y)
-
-        if isinstance(y, DenseQArray):
-            dims = self.dims + y.dims
+    def __and__(self, y: DataArray) -> DataArray:
+        if isinstance(y, DenseDataArray):
             data = _bkron(self.data, y.data)
         else:
             return NotImplemented
 
-        return replace(self, dims=dims, data=data)  # ty: ignore[invalid-argument-type]
-
-    def addscalar(self, y: ArrayLike) -> QArray:
-        data = self.data + to_jax(y)
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def elmul(self, y: QArrayLike) -> QArray:
-        from .sparsedia_qarray import SparseDIAQArray  # noqa: PLC0415
+    def addscalar(self, y: ArrayLike) -> DataArray:
+        data = self.data + jnp.asarray(y)
+        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-        super().elmul(y)
+    def elmul(self, y: DataArray | ArrayLike) -> DataArray:
+        from .sparsedia_dataarray import SparseDIADataArray  # noqa: PLC0415
 
-        if isinstance(y, SparseDIAQArray):
+        if isinstance(y, SparseDIADataArray):
             return y.elmul(self)
 
-        data = self.data * to_jax(y)
+        if isinstance(y, DenseDataArray):
+            data = self.data * y.data
+        elif isinstance(y, get_args(ArrayLike)):
+            data = self.data * jnp.asarray(y)
+        else:
+            return NotImplemented
+
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def elpow(self, power: int) -> QArray:
+    def elpow(self, power: int) -> DataArray:
         data = self.data**power
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def __getitem__(self, key: IndexType) -> QArray:
+    def __getitem__(self, key: IndexType) -> DataArray:
         data = self.data[key]
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
 
 def array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:
+    import jax  # noqa: PLC0415
+
     # convert dims to qutip
     dims = list(dims)
     if x.shape[-1] == 1:  # [[3], [1]] or [[3, 4], [1, 1]]

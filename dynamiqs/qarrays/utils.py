@@ -8,7 +8,7 @@ import numpy as np
 from jaxtyping import ArrayLike, DTypeLike
 from qutip import Qobj
 
-from .dense_qarray import DenseQArray, array_to_qobj_list
+from .dense_dataarray import DenseDataArray, array_to_qobj_list
 from .layout import Layout, dense
 from .qarray import QArray, QArrayLike, get_dims, isqarraylike, to_jax, to_numpy
 from .sparsedia_primitives import (
@@ -18,7 +18,7 @@ from .sparsedia_primitives import (
     sparsedia_to_array,
     stack_sparsedia,
 )
-from .sparsedia_qarray import SparseDIAQArray
+from .sparsedia_dataarray import SparseDIADataArray
 
 __all__ = [
     'asqarray',
@@ -89,32 +89,39 @@ def asqarray(
         return _assparsedia(x, dims, offsets)
 
 
-def _asdense(x: QArrayLike, dims: tuple[int, ...] | None) -> DenseQArray:
-    if isinstance(x, DenseQArray):
-        return x
-    elif isinstance(x, SparseDIAQArray):
-        data = sparsedia_to_array(x.offsets, x.diags)
-        return DenseQArray(x.dims, False, data)
+def _asdense(x: QArrayLike, dims: tuple[int, ...] | None) -> QArray:
+    if isinstance(x, QArray):
+        if isinstance(x.data, DenseDataArray):
+            return x
+        else:
+            return x.asdense()
 
     xdims = get_dims(x)
     x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
-    return DenseQArray(dims, False, x)
+    return QArray(dims, False, DenseDataArray(x))
 
 
 def _assparsedia(
     x: QArrayLike, dims: tuple[int, ...] | None, offsets: tuple[int, ...] | None
-) -> SparseDIAQArray:
+) -> QArray:
     # TODO: improve this by directly extracting the diags and offsets in case
     # the Qobj is already in sparse DIA format (only for QuTiP 5)
-    if isinstance(x, SparseDIAQArray):
-        return x
+    if isinstance(x, QArray):
+        if isinstance(x.data, SparseDIADataArray):
+            return x
+        # convert dense to sparse
+        xdims = x.dims
+        x_jax = x.to_jax()
+        dims = init_dims(xdims, dims, x_jax.shape)
+        offsets, diags = array_to_sparsedia(x_jax, offsets)
+        return QArray(dims, False, SparseDIADataArray(offsets, diags))
 
     xdims = get_dims(x)
     x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
     offsets, diags = array_to_sparsedia(x, offsets)
-    return SparseDIAQArray(dims, False, offsets, diags)
+    return QArray(dims, False, SparseDIADataArray(offsets, diags))
 
 
 def init_dims(
@@ -144,8 +151,8 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
 
     Warning:
         All elements of the sequence `qarrays` must have identical types, shapes and
-        `dims` attributes. Additionally, when stacking qarrays of type
-        `SparseDIAQArray`, all elements must have identical `offsets` attributes.
+        `dims` attributes. Additionally, when stacking qarrays with sparse diagonal
+        data, all elements must have identical `offsets` attributes.
 
     Args:
         qarrays: Qarrays to stack.
@@ -180,20 +187,20 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
     if not all(qarray.shape == qarrays[0].shape for qarray in qarrays):
         raise ValueError('All input qarrays must have the same shape.')
 
-    # stack inputs depending on type
-    if all(isinstance(q, DenseQArray) for q in qarrays):
-        data = jnp.stack([q.data for q in qarrays], axis=axis)
-        return DenseQArray(dims, False, data)
-    elif all(isinstance(q, SparseDIAQArray) for q in qarrays):
+    # stack inputs depending on data type
+    if all(isinstance(q.data, DenseDataArray) for q in qarrays):
+        data = jnp.stack([q.data.data for q in qarrays], axis=axis)
+        return QArray(dims, False, DenseDataArray(data))
+    elif all(isinstance(q.data, SparseDIADataArray) for q in qarrays):
         offsets, diags = stack_sparsedia(
-            [qarrays.offsets for qarrays in qarrays],
-            [qarrays.diags for qarrays in qarrays],
+            [q.data.offsets for q in qarrays],
+            [q.data.diags for q in qarrays],
             axis=axis,
         )
-        return SparseDIAQArray(dims, False, offsets, diags)
+        return QArray(dims, False, SparseDIADataArray(offsets, diags))
     else:
         raise NotImplementedError(
-            'Stacking qarrays with different types is not implemented.'
+            'Stacking qarrays with different data types is not implemented.'
         )
 
 
@@ -246,10 +253,8 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
 
     if isinstance(x, Qobj):
         return x
-    elif isinstance(x, DenseQArray):
+    elif isinstance(x, QArray):
         return x.to_qutip()
-    elif isinstance(x, SparseDIAQArray):
-        return x.asdense().to_qutip()
 
     xdims = get_dims(x)
     x = to_jax(x)
@@ -262,8 +267,8 @@ def sparsedia_from_dict(
     offsets_diags: dict[int, ArrayLike],
     dims: tuple[int, ...] | None = None,
     dtype: DTypeLike | None = None,
-) -> SparseDIAQArray:
-    """Initialize a `SparseDIAQArray` from a dictionary of offsets and diagonals.
+) -> QArray:
+    """Initialize a sparse diagonal qarray from a dictionary of offsets and diagonals.
 
     Args:
         offsets_diags: Dictionary where keys are offsets and values are diagonals of
@@ -275,7 +280,7 @@ def sparsedia_from_dict(
             diagonals.
 
     Returns:
-        A `SparseDIAQArray` with non-zero diagonals at the specified offsets.
+        A sparse diagonal qarray with non-zero diagonals at the specified offsets.
 
     Examples:
         >>> dq.sparsedia_from_dict({0: [1, 2, 3], 1: [4, 5], -1: [6, 7]})
@@ -301,7 +306,7 @@ def sparsedia_from_dict(
     dims = (shape[-1],) if dims is None else dims
     _assert_dims_match_shape(dims, shape)
 
-    return SparseDIAQArray(dims, False, offsets, diags)
+    return QArray(dims, False, SparseDIADataArray(offsets, diags))
 
 
 def _assert_dims_match_shape(dims: tuple[int, ...], shape: tuple[int, ...]):
