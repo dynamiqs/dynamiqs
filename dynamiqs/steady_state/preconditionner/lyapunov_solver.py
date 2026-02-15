@@ -1,15 +1,20 @@
-import functools as ft
-import warnings
-from abc import abstractmethod
-
 import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jax import Array
 
 
-class BaseLyapunovEquation(eqx.Module):
+class LyapunovSolverEig(eqx.Module):
     G: Array
+    G_eigvals: Array
+    G_eigvecs: Array
+    G_eigvecs_inv: Array
+
+    def __init__(self, G: Array):
+        self.G = G
+
+        self.G_eigvals, self.G_eigvecs = jnp.linalg.eig(self.G)
+        self.G_eigvecs_inv = jnp.linalg.inv(self.G_eigvecs).mT.conj()
 
     def lyapunov(self, X: Array, mu: float):
         """Apply the Lyapunov operator to a matrix X.
@@ -66,17 +71,14 @@ class BaseLyapunovEquation(eqx.Module):
         G = self.G
         return G.T @ X + X @ G.conj() + mu * X
 
-    @abstractmethod
     def _solve(self, Y: Array, mu: float):
-        pass
+        """Solve the Lyapunov equation G X + X G.H + mu X = Y."""
+        u_, v_, w_ = (self.G_eigvecs, self.G_eigvecs_inv, self.G_eigvals)
 
-    @abstractmethod
-    def _solve_adjoint(self, Y: Array, mu: float) -> Array:
-        pass
-
-    @abstractmethod
-    def _solve_transpose(self, Y: Array, mu: float) -> Array:
-        pass
+        Y_tilde = v_.mT.conj() @ Y @ v_
+        X_tilde = Y_tilde / (w_[:, None] + w_[None, :].conj() + mu)
+        X = u_ @ X_tilde @ u_.mT.conj()
+        return X
 
     def solve(self, Y: Array, mu: float) -> Array:
 
@@ -95,44 +97,6 @@ class BaseLyapunovEquation(eqx.Module):
             solve=lambda _mv, Y: self._solve_transpose(Y, mu),
             transpose_solve=lambda _mvT, Y: self._solve(Y, mu),
         )
-
-
-class LyapuSolverEig(BaseLyapunovEquation):
-    G_eigvals: Array
-    G_eigvecs: Array
-    G_eigvecs_inv: Array
-
-    def __init__(self, G: Array):
-        # G = G.astype(jnp.complex64)
-        self.G = G
-
-        self.G_eigvals, self.G_eigvecs = jnp.linalg.eig(self.G)
-        self.G_eigvecs_inv = jnp.linalg.inv(self.G_eigvecs).mT.conj()
-
-    def _solve(self, Y: Array, mu: float):
-        """Solve the Lyapunov equation G X + X G.H + mu X = Y."""
-        u_, v_, w_ = (self.G_eigvecs, self.G_eigvecs_inv, self.G_eigvals)
-
-        Y_tilde = v_.mT.conj() @ Y @ v_
-        X_tilde = Y_tilde / (w_[:, None] + w_[None, :].conj() + mu)
-        X = u_ @ X_tilde @ u_.mT.conj()
-        return X
-
-    def _solve_adjoint(self, Y: Array, mu: float) -> Array:
-        """Solves the adjoint equation G.H X + X G + mu X = Y.
-
-        Notes:
-            Uses the flip trick to transform the adjoint problem.
-            The transformation uses:
-                Z_t = Z J
-                T_t = J T^H J
-        """
-        u_, v_, w_ = (self.G_eigvecs_inv, self.G_eigvecs, self.G_eigvals.conj())
-
-        Y_tilde = v_.mT.conj() @ Y @ v_
-        X_tilde = Y_tilde / (w_[:, None] + w_[None, :].conj() + mu)
-        X = u_ @ X_tilde @ u_.mT.conj()
-        return X
 
     def _solve_transpose(self, Y: Array, mu: float) -> Array:
         """Solves the _transpose_ equation G.T X + X G* + mu X = Y.
