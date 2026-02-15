@@ -9,8 +9,8 @@ import jax.numpy as jnp
 from jax import Array
 
 from ..linear_system.gmres import gmres
-from ..preconditionner.lyapunov_solver import LyapuSolverEig
-from .utils import finalize_density_matrix, dp, update_preconditioner
+from ..preconditionner.lyapunov_solver import LyapunovSolverEig
+from .utils import finalize_density_matrix, frobenius_dot_product, update_preconditioner
 
 
 class GMRESAuxInfo(eqx.Module):
@@ -24,14 +24,11 @@ def steady_state(
     Ls: list[dq.QArray],
     tol: float = 1e-8,
     *,
-    rank1_coeff: float = 1.0,
-    use_rank_1_update: bool = True,
     initial_guess: dq.QArray | None = None,
     max_iter: int = 100,
     krylov_size: int = 32,
     recycling: int = 5,
-    exact_dm: bool = False,
-    I_normalized: bool = True,
+    exact_dm: bool = True,
     norm_type: str = 'max',
 ) -> tuple[dq.QArray, GMRESAuxInfo]:
     r"""Compute the steady state of the Lindblad master equation.
@@ -61,12 +58,11 @@ def steady_state(
     eigenvalue corresponding to the steady state). To obtain a non-singular system,
     a rank-1 deflation is applied:
     $$
-        \left(\mathcal{L} + \alpha \,
+        \left(\mathcal{L} +  \,
         \mathrm{vec}(I)\,\mathrm{vec}(I)^\top\right)
-        \mathrm{vec}(\rho) = \alpha \, \mathrm{vec}(I),
+        \mathrm{vec}(\rho) = \, \mathrm{vec}(I),
     $$
-    where $\alpha$ is the `rank1_coeff` (normalized by $n^2$ if `I_normalized` is
-    `True`), $I$ is the identity matrix, and $\mathrm{vec}(\cdot)$ denotes
+    $I$ is the identity matrix, and $\mathrm{vec}(\cdot)$ denotes
     column-major vectorization. This shift lifts the zero eigenvalue while
     preserving the steady-state solution.
 
@@ -93,21 +89,12 @@ def steady_state(
     $$
     where $\widetilde{Y} = U^{-H} Y U^{-1}$.
 
-    When `use_rank_1_update` is `True`, the preconditioner is further corrected
-    to account for the rank-1 deflation using the Sherman-Morrison formula.
-
     Args:
         H (qarray of shape (n, n)): Hamiltonian.
         Ls (list of qarray, each of shape (n, n)): List of jump operators.
         tol: Tolerance for the stopping criterion. The solver stops when
             $\|\mathcal{L}(\rho)\| < \mathrm{tol}$, where the norm is determined
             by `norm_type`. Defaults to `1e-8`.
-        rank1_coeff: Coefficient $\alpha$ for the rank-1 deflation update. This
-            shifts the Lindbladian to make the linear system non-singular. Defaults
-            to `1.0`.
-        use_rank_1_update: If `True`, the preconditioner is updated using the
-            Sherman-Morrison formula to account for the rank-1 deflation. Defaults
-            to `True`.
         initial_guess (qarray of shape (n, n), optional): Initial guess for the
             density matrix. Defaults to `None`, which uses the vacuum state
             $|0\rangle\langle 0|$.
@@ -115,7 +102,7 @@ def steady_state(
         krylov_size: Size of the Krylov subspace used in each GMRES restart cycle.
             Defaults to `32`.
         recycling: Number of Krylov vectors to recycle between restarts. Defaults
-            to `5`.
+            to `5`, if the problem converges in a high number of iterations, this value can be increased, leading in a
         exact_dm: If `True`, the final density matrix is projected onto the set of
             valid density matrices (positive semi-definite with unit trace) by
             diagonalizing and projecting the eigenvalues onto the simplex. If
@@ -168,7 +155,7 @@ def steady_state(
     # On the other hand, we're differentiating the result of solve with
     # implicit differentiation: we don't need to differentiate through
     # the solver itself. Hence the stop_gradient here.
-    preconditioner = LyapuSolverEig(jax.lax.stop_gradient(G))
+    preconditioner = LyapunovSolverEig(jax.lax.stop_gradient(G))
 
     def from_matrix(x: Array) -> Array:
         return x.flatten(order='F')
@@ -187,35 +174,30 @@ def steady_state(
 
     x_0 = from_dm(initial_guess)
 
-    if I_normalized:
-        rank1_coeff_normalized = rank1_coeff / n**2
-    else:
-        rank1_coeff_normalized = rank1_coeff
-
     identity_vectorized = from_matrix(jnp.eye(n, dtype=dtype))
-    rhs = rank1_coeff_normalized * identity_vectorized
+    rhs = identity_vectorized
 
     def lindbladian(x: Array) -> Array:
         return from_dm(dq.lindbladian(H, Ls_q, to_dm(x)))
 
+    use_rank_1_update = True
+
+    # When `use_rank_1_update` is `True`, the preconditioner is further corrected
+    # to account for the rank-1 deflation using the Sherman-Morrison formula.
+
     def lindbladian_plus_rank1(x: Array) -> Array:
         return (
             lindbladian(x)
-            + rank1_coeff_normalized
             # dot do not perform any conjugation,
             # which is fine since identity is real
-            * identity_vectorized.dot(x)
-            * identity_vectorized
+            + identity_vectorized.dot(x) * identity_vectorized
         )
 
     def base_preconditioner(x: Array) -> Array:
         return -from_matrix(preconditioner.solve(to_matrix(x), mu=0.0))
 
     preconditioner_fn = update_preconditioner(
-        base_preconditioner,
-        identity_vectorized,
-        rank1_coeff_normalized,
-        use_rank_1_update,
+        base_preconditioner, identity_vectorized, use_rank_1_update
     )
 
     def stopping_criterion(x: Array) -> Array:
