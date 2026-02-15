@@ -6,10 +6,10 @@ import jax.numpy as jnp
 from jax.typing import ArrayLike
 
 from .._utils import cdtype
-from ..qarrays.dense_qarray import DenseQArray
+from ..qarrays.dense_dataarray import DenseDataArray
 from ..qarrays.layout import Layout, dense, get_layout
 from ..qarrays.qarray import QArray, QArrayLike, get_dims
-from ..qarrays.sparsedia_qarray import SparseDIAQArray
+from ..qarrays.sparsedia_dataarray import SparseDIADataArray
 from ..qarrays.utils import asqarray, init_dims, sparsedia_from_dict, stack, to_jax
 from .general import tensor
 
@@ -188,7 +188,7 @@ def zeros(*dims: int, layout: Layout | None = None) -> QArray:
         return asqarray(array, dims=dims)
     else:
         diags = jnp.zeros((0, dim), dtype=cdtype())
-        return SparseDIAQArray(dims, False, (), diags)
+        return QArray(dims, False, SparseDIADataArray((), diags))
 
 
 def zeros_like(
@@ -474,7 +474,7 @@ def parity(dim: int, *, layout: Layout | None = None) -> QArray:
         return sparsedia_from_dict({0: diag})
 
 
-def displace(dim: int, alpha: ArrayLike) -> DenseQArray:
+def displace(dim: int, alpha: ArrayLike) -> QArray:
     r"""Returns the displacement operator of complex amplitude $\alpha$.
 
     It is defined by
@@ -506,7 +506,7 @@ def displace(dim: int, alpha: ArrayLike) -> DenseQArray:
     return (alpha * a.dag() - alpha.conj() * a).expm()
 
 
-def squeeze(dim: int, z: ArrayLike) -> DenseQArray:
+def squeeze(dim: int, z: ArrayLike) -> QArray:
     r"""Returns the squeezing operator of complex squeezing amplitude $z$.
 
     It is defined by
