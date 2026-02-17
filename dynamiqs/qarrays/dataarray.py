@@ -95,7 +95,6 @@ class DataArray(eqx.Module):
     @abstractmethod
     def _reshape_unchecked(self, *shape: int) -> DataArray:
         """Does the heavy-lifting for `reshape` but skips all checks."""
-        pass
 
     @abstractmethod
     def broadcast_to(self, *shape: int) -> DataArray:
@@ -181,9 +180,7 @@ class DataArray(eqx.Module):
         """Converts to a dense layout."""
 
     @abstractmethod
-    def assparsedia(
-        self, offsets: tuple[int, ...] | None = None
-    ) -> SparseDIADataArray:
+    def assparsedia(self, offsets: tuple[int, ...] | None = None) -> SparseDIADataArray:
         """Converts to a sparse diagonal layout."""
 
     @abstractmethod

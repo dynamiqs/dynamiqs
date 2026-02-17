@@ -120,9 +120,7 @@ class DenseDataArray(DataArray):
     def asdense(self) -> DenseDataArray:
         return self
 
-    def assparsedia(
-        self, offsets: tuple[int, ...] | None = None
-    ) -> SparseDIADataArray:
+    def assparsedia(self, offsets: tuple[int, ...] | None = None) -> SparseDIADataArray:
         from .sparsedia_dataarray import SparseDIADataArray  # noqa: PLC0415
 
         offsets, diags = array_to_sparsedia(self.data, offsets)
@@ -211,8 +209,6 @@ class DenseDataArray(DataArray):
 
 
 def array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:
-    import jax  # noqa: PLC0415
-
     # convert dims to qutip
     dims = list(dims)
     if x.shape[-1] == 1:  # [[3], [1]] or [[3, 4], [1, 1]]

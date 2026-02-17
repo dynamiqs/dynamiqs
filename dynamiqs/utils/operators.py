@@ -6,7 +6,6 @@ import jax.numpy as jnp
 from jax.typing import ArrayLike
 
 from .._utils import cdtype
-from ..qarrays.dense_dataarray import DenseDataArray
 from ..qarrays.layout import Layout, dense, get_layout
 from ..qarrays.qarray import QArray, QArrayLike, get_dims
 from ..qarrays.sparsedia_dataarray import SparseDIADataArray

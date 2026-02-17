@@ -14,7 +14,7 @@ from jaxtyping import ArrayLike
 from qutip import Qobj
 
 from .._utils import is_batched_scalar
-from .dataarray import DataArray
+from .dataarray import DataArray, IndexType
 from .layout import Layout
 
 __all__ = ['QArray']
@@ -560,9 +560,10 @@ class QArray(eqx.Module):
 
         result = self.data @ y_data
         if result is NotImplemented:
-            # try reverse dispatch (e.g. dense @ sparse)
+            # try reverse dispatch
             if hasattr(y_data, '__rmatmul__'):
                 result = y_data.__rmatmul__(self.data)
+            # if still NotImplemented, raise it
             if result is NotImplemented:
                 return NotImplemented
 
@@ -571,10 +572,9 @@ class QArray(eqx.Module):
             isinstance(y, QArray)
             and self.isbra()
             and y.isket()
+            and isinstance(result, DataArray)
         ):
-            if isinstance(result, DataArray):
-                return result.to_jax()
-            return result
+            result = result.to_jax()
 
         if isinstance(result, DataArray):
             return replace(self, data=result)
@@ -614,6 +614,7 @@ class QArray(eqx.Module):
             # try reverse dispatch
             if hasattr(y.data, '__rand__'):
                 result = y.data.__rand__(self.data)
+            # if still NotImplemented, raise it
             if result is NotImplemented:
                 return NotImplemented
 
@@ -674,9 +675,9 @@ class QArray(eqx.Module):
         Returns:
             New qarray with elements raised to the specified power.
         """
-        return replace(self, data=self.data ** power)
+        return replace(self, data=self.data**power)
 
-    def __getitem__(self, key) -> QArray:
+    def __getitem__(self, key: IndexType) -> QArray:
         result = self.data[key]
         return replace(self, data=result)
 

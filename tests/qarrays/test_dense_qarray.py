@@ -27,16 +27,24 @@ class TestDenseQArray:
         assert ptrace.dims == (2,)
 
     def test_add(self):
-        assert jnp.array_equal((self.qarray + self.other).to_jax(), self.data + self.other)
-        assert jnp.array_equal((self.qarray + self.qother).to_jax(), self.data + self.other)
+        assert jnp.array_equal(
+            (self.qarray + self.other).to_jax(), self.data + self.other
+        )
+        assert jnp.array_equal(
+            (self.qarray + self.qother).to_jax(), self.data + self.other
+        )
         with pytest.raises(NotImplementedError):
             self.qarray + self.scalar
         with pytest.raises(NotImplementedError):
             self.qarray + self.bscalar
 
     def test_radd(self):
-        assert jnp.array_equal((self.other + self.qarray).to_jax(), self.other + self.data)
-        assert jnp.array_equal((self.qother + self.qarray).to_jax(), self.other + self.data)
+        assert jnp.array_equal(
+            (self.other + self.qarray).to_jax(), self.other + self.data
+        )
+        assert jnp.array_equal(
+            (self.qother + self.qarray).to_jax(), self.other + self.data
+        )
         with pytest.raises(NotImplementedError):
             self.scalar + self.qarray
         with pytest.raises(NotImplementedError):
@@ -51,8 +59,12 @@ class TestDenseQArray:
         )
 
     def test_sub(self):
-        assert jnp.array_equal((self.qarray - self.other).to_jax(), self.data - self.other)
-        assert jnp.array_equal((self.qarray - self.qother).to_jax(), self.data - self.other)
+        assert jnp.array_equal(
+            (self.qarray - self.other).to_jax(), self.data - self.other
+        )
+        assert jnp.array_equal(
+            (self.qarray - self.qother).to_jax(), self.data - self.other
+        )
         with pytest.raises(NotImplementedError):
             self.qarray - self.scalar
         with pytest.raises(NotImplementedError):
@@ -83,12 +95,20 @@ class TestDenseQArray:
         )
 
     def test_matmul(self):
-        assert jnp.array_equal((self.qarray @ self.other).to_jax(), self.data @ self.other)
-        assert jnp.array_equal((self.qarray @ self.qother).to_jax(), self.data @ self.other)
+        assert jnp.array_equal(
+            (self.qarray @ self.other).to_jax(), self.data @ self.other
+        )
+        assert jnp.array_equal(
+            (self.qarray @ self.qother).to_jax(), self.data @ self.other
+        )
 
     def test_rmatmul(self):
-        assert jnp.array_equal((self.other @ self.qarray).to_jax(), self.other @ self.data)
-        assert jnp.array_equal((self.qother @ self.qarray).to_jax(), self.other @ self.data)
+        assert jnp.array_equal(
+            (self.other @ self.qarray).to_jax(), self.other @ self.data
+        )
+        assert jnp.array_equal(
+            (self.qother @ self.qarray).to_jax(), self.other @ self.data
+        )
 
     def test_and(self):
         t = self.qarray & self.qother

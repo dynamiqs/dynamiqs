@@ -199,7 +199,8 @@ class SparseDIADataArray(DataArray):
         return DenseDataArray(data)
 
     def assparsedia(
-        self, offsets: tuple[int, ...] | None = None  # noqa: ARG002
+        self,
+        offsets: tuple[int, ...] | None = None,  # noqa: ARG002
     ) -> SparseDIADataArray:
         return self
 
@@ -236,9 +237,7 @@ class SparseDIADataArray(DataArray):
             )
             return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
         elif isinstance(y, DenseDataArray):
-            offsets, diags = mul_sparsedia_array(
-                self.offsets, self.diags, y.data
-            )
+            offsets, diags = mul_sparsedia_array(self.offsets, self.diags, y.data)
             return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
         elif isinstance(y, get_args(ArrayLike)):
             y_arr = jnp.asarray(y)
@@ -252,9 +251,7 @@ class SparseDIADataArray(DataArray):
                 return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
             else:
                 # full matrix: extract matching diagonals and multiply
-                offsets, diags = mul_sparsedia_array(
-                    self.offsets, self.diags, y_arr
-                )
+                offsets, diags = mul_sparsedia_array(self.offsets, self.diags, y_arr)
                 return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
 
         return NotImplemented

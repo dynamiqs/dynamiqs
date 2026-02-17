@@ -11,14 +11,13 @@ from qutip import Qobj
 from .dense_dataarray import DenseDataArray, array_to_qobj_list
 from .layout import Layout, dense
 from .qarray import QArray, QArrayLike, get_dims, isqarraylike, to_jax, to_numpy
+from .sparsedia_dataarray import SparseDIADataArray
 from .sparsedia_primitives import (
     array_to_sparsedia,
     autopad_sparsedia_diags,
     shape_sparsedia,
-    sparsedia_to_array,
     stack_sparsedia,
 )
-from .sparsedia_dataarray import SparseDIADataArray
 
 __all__ = [
     'asqarray',
