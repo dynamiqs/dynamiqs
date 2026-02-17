@@ -265,6 +265,11 @@ class QArray(eqx.Module):
     @property
     def ndiags(self) -> int:
         """Number of stored diagonals (only for sparse diagonal layout)."""
+        if not hasattr(self.data, 'ndiags'):
+            raise AttributeError(
+                f"Attribute 'ndiags' is only defined for sparse diagonal layouts; "
+                f"got layout {self.layout!r}."
+            )
         return self.data.ndiags
 
     # === Array methods delegated to DataArray ===

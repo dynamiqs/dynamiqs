@@ -38,8 +38,6 @@ from .sparsedia_primitives import (
     transpose_sparsedia,
 )
 
-__all__ = ['SparseDIADataArray']
-
 
 class SparseDIADataArray(DataArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
@@ -58,7 +56,7 @@ class SparseDIADataArray(DataArray):
         if self.diags.ndim < 2 or self.diags.shape[-2] != len(self.offsets):
             raise ValueError(
                 'Argument `diags` of `SparseDIADataArray` must be of shape '
-                f'(..., len(offsets), prod(dims)), but got {self.diags.shape}'
+                f'(..., len(offsets), n), but got {self.diags.shape}'
             )
 
         # check that diagonals contain zeros outside the bounds of the matrix using

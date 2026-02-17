@@ -19,8 +19,6 @@ from .sparsedia_primitives import array_to_sparsedia
 if TYPE_CHECKING:
     from .sparsedia_dataarray import SparseDIADataArray
 
-__all__ = ['DenseDataArray']
-
 
 class DenseDataArray(DataArray):
     r"""A dense data array using JAX arrays as data storage."""
