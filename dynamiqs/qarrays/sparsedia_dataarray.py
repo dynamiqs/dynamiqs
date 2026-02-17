@@ -12,7 +12,13 @@ import numpy as np
 from equinox.internal._omega import _Metaω  # noqa: PLC2403
 from jaxtyping import Array, ArrayLike
 
-from .dataarray import DataArray, IndexType, in_last_two_dims, include_last_two_dims
+from .dataarray import (
+    DataArray,
+    DataArrayLike,
+    IndexType,
+    in_last_two_dims,
+    include_last_two_dims,
+)
 from .dense_dataarray import DenseDataArray
 from .layout import Layout, dia
 from .sparsedia_primitives import (
@@ -230,7 +236,7 @@ class SparseDIADataArray(DataArray):
         data_str = re.sub(pattern, replace_with_dot, str(self.to_jax()))
         return f', ndiags={self.ndiags}\n{data_str}'
 
-    def __mul__(self, y: DataArray | ArrayLike) -> DataArray:
+    def __mul__(self, y: DataArrayLike) -> DataArray:
         if isinstance(y, SparseDIADataArray):
             offsets, diags = mul_sparsedia_sparsedia(
                 self.offsets, self.diags, y.offsets, y.diags
@@ -256,7 +262,7 @@ class SparseDIADataArray(DataArray):
 
         return NotImplemented
 
-    def __add__(self, y: DataArray | ArrayLike) -> DataArray:
+    def __add__(self, y: DataArrayLike) -> DataArray:
         if isinstance(y, int | float) and y == 0:
             return self
 
@@ -282,7 +288,7 @@ class SparseDIADataArray(DataArray):
 
         return NotImplemented
 
-    def __matmul__(self, y: DataArray | ArrayLike) -> DataArray:
+    def __matmul__(self, y: DataArrayLike) -> DataArray:
         if isinstance(y, SparseDIADataArray):
             offsets, diags = matmul_sparsedia_sparsedia(
                 self.offsets, self.diags, y.offsets, y.diags
@@ -297,7 +303,7 @@ class SparseDIADataArray(DataArray):
 
         return NotImplemented
 
-    def __rmatmul__(self, y: DataArray | ArrayLike) -> DataArray:
+    def __rmatmul__(self, y: DataArrayLike) -> DataArray:
         if isinstance(y, DenseDataArray):
             data = matmul_array_sparsedia(y.data, self.offsets, self.diags)
             return DenseDataArray(data)

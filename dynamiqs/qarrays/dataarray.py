@@ -194,37 +194,37 @@ class DataArray(eqx.Module):
     # === Arithmetic operations ===
 
     @abstractmethod
-    def __mul__(self, y: DataArray | ArrayLike) -> DataArray:
+    def __mul__(self, y: DataArrayLike) -> DataArray:
         pass
 
     def __neg__(self) -> DataArray:
         return self * (-1)
 
-    def __rmul__(self, y: DataArray | ArrayLike) -> DataArray:
+    def __rmul__(self, y: DataArrayLike) -> DataArray:
         return self * y
 
     def __truediv__(self, y: ArrayLike) -> DataArray:
         return self * (1 / y)
 
     @abstractmethod
-    def __add__(self, y: DataArray | ArrayLike) -> DataArray:
+    def __add__(self, y: DataArrayLike) -> DataArray:
         pass
 
-    def __radd__(self, y: DataArray | ArrayLike) -> DataArray:
+    def __radd__(self, y: DataArrayLike) -> DataArray:
         return self.__add__(y)
 
-    def __sub__(self, y: DataArray | ArrayLike) -> DataArray:
+    def __sub__(self, y: DataArrayLike) -> DataArray:
         return self + (-y)
 
-    def __rsub__(self, y: DataArray | ArrayLike) -> DataArray:
+    def __rsub__(self, y: DataArrayLike) -> DataArray:
         return -self + y
 
     @abstractmethod
-    def __matmul__(self, y: DataArray | ArrayLike) -> DataArray | Array:
+    def __matmul__(self, y: DataArrayLike) -> DataArray | Array:
         pass
 
     @abstractmethod
-    def __rmatmul__(self, y: DataArray | ArrayLike) -> DataArray:
+    def __rmatmul__(self, y: DataArrayLike) -> DataArray:
         pass
 
     @abstractmethod
@@ -254,3 +254,7 @@ def include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> bool
     return axis is None or (
         ndim - 1 in [a % ndim for a in axis] and ndim - 2 in [a % ndim for a in axis]
     )
+
+
+# A type alias for DataArray or raw JAX/NumPy array-like values.
+DataArrayLike: TypeAlias = DataArray | ArrayLike

@@ -12,7 +12,7 @@ from jax import Array, Device
 from jaxtyping import ArrayLike
 from qutip import Qobj
 
-from .dataarray import DataArray, IndexType, in_last_two_dims
+from .dataarray import DataArray, DataArrayLike, IndexType, in_last_two_dims
 from .layout import Layout, dense
 from .sparsedia_primitives import array_to_sparsedia
 
@@ -133,7 +133,7 @@ class DenseDataArray(DataArray):
     def _repr_extra(self) -> str:
         return f'\n{self.data}'
 
-    def __mul__(self, y: DataArray | ArrayLike) -> DataArray:
+    def __mul__(self, y: DataArrayLike) -> DataArray:
         from .sparsedia_dataarray import SparseDIADataArray  # noqa: PLC0415
 
         if isinstance(y, SparseDIADataArray):
@@ -148,7 +148,7 @@ class DenseDataArray(DataArray):
 
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def __add__(self, y: DataArray | ArrayLike) -> DataArray:
+    def __add__(self, y: DataArrayLike) -> DataArray:
         if isinstance(y, int | float) and y == 0:
             return self
 
@@ -161,7 +161,7 @@ class DenseDataArray(DataArray):
 
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def __matmul__(self, y: DataArray | ArrayLike) -> DataArray | Array:
+    def __matmul__(self, y: DataArrayLike) -> DataArray | Array:
         if (
             hasattr(y, '_matmul_priority')
             and self._matmul_priority < y._matmul_priority
@@ -177,7 +177,7 @@ class DenseDataArray(DataArray):
 
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def __rmatmul__(self, y: DataArray | ArrayLike) -> DataArray:
+    def __rmatmul__(self, y: DataArrayLike) -> DataArray:
         if isinstance(y, DenseDataArray):
             data = y.data @ self.data
         elif isinstance(y, get_args(ArrayLike)):
