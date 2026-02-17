@@ -104,7 +104,7 @@ class TestTwoModes:
         """Solver converges and residual is below tolerance."""
         H, Ls = build_two_modes(na, nb, kappa_a=1)
         rho, info = steady_state(
-            H, Ls, tol=tol, max_iter=200, krylov_size=64, exact_dm=False
+            H, Ls, tol=tol, max_iteration=200, krylov_size=64, exact_dm=False
         )
 
         assert bool(info.success), (
@@ -128,7 +128,7 @@ class TestRandomSingleMode:
         """Solver converges and residual is below tolerance."""
         n = na * nb
         H, Ls = build_random_single_mode(n, seed=0, gamma=gamma)
-        rho, info = steady_state(H, Ls, tol=tol, max_iter=200, krylov_size=32)
+        rho, info = steady_state(H, Ls, tol=tol, max_iteration=200, krylov_size=32)
 
         assert bool(info.success), (
             f'Solver did not converge (n={n}, gamma={gamma}, tol={tol:.0e}, '
@@ -157,7 +157,7 @@ class TestSimpleOscillator:
         Ls = [jnp.sqrt(kappa) * a]
 
         rho, info = steady_state(
-            H, Ls, tol=tol, max_iter=200, krylov_size=64, exact_dm=True
+            H, Ls, tol=tol, max_iteration=200, krylov_size=64, exact_dm=True
         )
 
         assert bool(info.success), (
@@ -169,7 +169,7 @@ class TestSimpleOscillator:
 
         tol = 1e-8 if precision == 'double' else 1e-5
         rho_num, info = steady_state(
-            H, Ls, tol=tol, max_iter=200, krylov_size=64, exact_dm=True
+            H, Ls, tol=tol, max_iteration=200, krylov_size=64, exact_dm=True
         )
         assert bool(info.success), (
             f'Solver did not converge (n={n}, tol={tol:.0e}, iters={info.n_iteration})'

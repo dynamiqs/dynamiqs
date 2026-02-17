@@ -25,7 +25,7 @@ def steady_state(
     tol: float = 1e-4,
     *,
     initial_guess: dq.QArray | None = None,
-    max_iter: int = 100,
+    max_iteration: int = 100,
     krylov_size: int = 32,
     recycling: int = 5,
     exact_dm: bool = True,
@@ -220,7 +220,7 @@ def steady_state(
         x_0,
         rhs,
         stopping_criterion,
-        max_iter,
+        max_iteration,
         krylov_size,
         recycling,
     )
