@@ -23,32 +23,6 @@ def build_random_single_mode(n: int, seed: int = 0, gamma: float = 0.1):
     return H, Ls
 
 
-def build_single_mode(n_b: int):
-    # Conversion: Value (MHz) * 1e-3 (to GHz) * 2pi (to angular rad/ns)
-    to_rad_ns = 1e-3 * 2 * pi
-
-    detuning_rad_ns = 0.1 * to_rad_ns
-    drive_rad_ns = 0.2 * to_rad_ns
-    kerr_4_rad_ns = -1.5 * to_rad_ns
-    kerr_6_rad_ns = -0.3 * to_rad_ns
-    kappa_rad_ns = 0.5 * to_rad_ns
-
-    d = int(n_b)
-    b = dq.destroy(d)
-
-    H = (
-        detuning_rad_ns * (b.dag() @ b)
-        + drive_rad_ns * (b + b.dag())
-        + kerr_4_rad_ns / 2 * (dq.powm(b.dag(), 2) @ dq.powm(b, 2))
-        + kerr_6_rad_ns / 6 * (dq.powm(b.dag(), 3) @ dq.powm(b, 3))
-    )
-
-    # Dissipation: L = sqrt(kappa) * b
-    Ls = [jnp.sqrt(kappa_rad_ns) * b]
-
-    return H, Ls
-
-
 kHz, MHz = 2 * jnp.pi * 1e-3, 2 * jnp.pi
 ns, us = 1e-3, 1e0
 
@@ -85,7 +59,6 @@ def build_two_modes(
         eps_d = eps_d_from_na(n_a, g2)
     g2 = g2 * MHz
     kappa_b = kappa_b * MHz
-    # kappa_a = 0.05 * MHz
     kappa_a = kappa_a * MHz
     eps_d = eps_d * MHz
     a, b = dq.destroy(n_a, n_b)
