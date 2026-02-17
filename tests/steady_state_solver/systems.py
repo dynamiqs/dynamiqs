@@ -23,8 +23,7 @@ def build_random_single_mode(n: int, seed: int = 0, gamma: float = 0.1):
     return H, Ls
 
 
-kHz, MHz = 2 * jnp.pi * 1e-3, 2 * jnp.pi
-ns, us = 1e-3, 1e0
+to_rad_MHz = 2 * jnp.pi * 1e-3  # Converts units in rad.MHz
 
 
 def eps_d_from_na(na: int, g2: float) -> float:
@@ -55,16 +54,30 @@ def build_two_modes(
     kappa_b: float = 8,
     kappa_a: float = 1,
 ):
+    """
+    Build the generators for the Hamiltonian of a memory-buffer cat qubit
+
+    Args :
+        n_a : truncature of the memory mode
+        n_b : truncature of the buffer mode
+        g2 : coupling strength between the two modes
+        eps_d : drive on the buffer mode
+        kappa_a : single photon loss on the memory mode
+        kappa_b : single photon loss on the buffer mode
+
+    Outputs :
+        H (qarray) : Hamiltonian.
+        Ls (list of qarray) : List of jump operators.
+    """
+
     if eps_d is None:
         eps_d = eps_d_from_na(n_a, g2)
-    g2 = g2 * MHz
-    kappa_b = kappa_b * MHz
-    kappa_a = kappa_a * MHz
-    eps_d = eps_d * MHz
+    g2 = g2 * to_rad_MHz
+    kappa_b = kappa_b * to_rad_MHz
+    kappa_a = kappa_a * to_rad_MHz
+    eps_d = eps_d * to_rad_MHz
     a, b = dq.destroy(n_a, n_b)
-    adag = a.dag()
-    bdag = b.dag()
-    H0 = g2 * (a @ a @ bdag + adag @ adag @ b) + eps_d * (b + bdag)
+    H0 = g2 * (a @ a @ b.dag() + a.dag() @ a.dag() @ b) + eps_d * (b + b.dag())
     Ls = [dq.asqarray(jnp.sqrt(kappa_b) * b), dq.asqarray(jnp.sqrt(kappa_a) * a)]
 
     return H0, Ls
