@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, ClassVar, get_args
 import jax
 import jax.numpy as jnp
 import numpy as np
+from equinox.internal._omega import _Metaω  # noqa: PLC2403
 from jax import Array, Device
 from jaxtyping import ArrayLike
 from qutip import Qobj
@@ -134,8 +135,19 @@ class DenseDataArray(DataArray):
     def _repr_extra(self) -> str:
         return f'\n{self.data}'
 
-    def __mul__(self, y: ArrayLike) -> DataArray:
-        data = y * self.data
+    def __mul__(self, y: DataArray | ArrayLike) -> DataArray:
+        from .sparsedia_dataarray import SparseDIADataArray  # noqa: PLC0415
+
+        if isinstance(y, SparseDIADataArray):
+            return y * self
+
+        if isinstance(y, DenseDataArray):
+            data = self.data * y.data
+        elif isinstance(y, get_args(ArrayLike)):
+            data = self.data * jnp.asarray(y)
+        else:
+            return NotImplemented
+
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
     def __add__(self, y: DataArray | ArrayLike) -> DataArray:
@@ -185,26 +197,11 @@ class DenseDataArray(DataArray):
 
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def addscalar(self, y: ArrayLike) -> DataArray:
-        data = self.data + jnp.asarray(y)
-        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+    def __pow__(self, power: int | _Metaω) -> DataArray:
+        # to deal with the x**ω notation from equinox (used in diffrax internals)
+        if isinstance(power, _Metaω):
+            return _Metaω.__rpow__(power, self)
 
-    def elmul(self, y: DataArray | ArrayLike) -> DataArray:
-        from .sparsedia_dataarray import SparseDIADataArray  # noqa: PLC0415
-
-        if isinstance(y, SparseDIADataArray):
-            return y.elmul(self)
-
-        if isinstance(y, DenseDataArray):
-            data = self.data * y.data
-        elif isinstance(y, get_args(ArrayLike)):
-            data = self.data * jnp.asarray(y)
-        else:
-            return NotImplemented
-
-        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
-
-    def elpow(self, power: int) -> DataArray:
         data = self.data**power
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 

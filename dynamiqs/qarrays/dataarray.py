@@ -39,7 +39,7 @@ class DataArray(eqx.Module):
     #                                     _eigvals, _eigvalsh, devices, isherm
     #   - conversion/utils: to_jax, __array__, block_until_ready
     #   - arithmetic: __mul__, __add__, __matmul__, __rmatmul__, __and__,
-    #                 addscalar, elmul, elpow, __getitem__
+    #                 __pow__, __getitem__
     #   - repr: _repr_extra
 
     # Priority for matmul dispatch between dense and sparse.
@@ -197,13 +197,13 @@ class DataArray(eqx.Module):
     # === Arithmetic operations ===
 
     @abstractmethod
-    def __mul__(self, y: ArrayLike) -> DataArray:
+    def __mul__(self, y: DataArray | ArrayLike) -> DataArray:
         pass
 
     def __neg__(self) -> DataArray:
         return self * (-1)
 
-    def __rmul__(self, y: ArrayLike) -> DataArray:
+    def __rmul__(self, y: DataArray | ArrayLike) -> DataArray:
         return self * y
 
     def __truediv__(self, y: ArrayLike) -> DataArray:
@@ -238,28 +238,9 @@ class DataArray(eqx.Module):
         for i in range(self.shape[0]):
             yield self[i]
 
+    @abstractmethod
     def __pow__(self, power: int | _Metaω) -> DataArray:
-        # to deal with the x**ω notation from equinox (used in diffrax internals)
-        if isinstance(power, _Metaω):
-            return _Metaω.__rpow__(power, self)
-
-        raise NotImplementedError(
-            'Computing the element-wise power of a data array with the `**` operator '
-            'is not supported. For the matrix power, use `x.powm(power)`. For the '
-            'element-wise power, use `x.elpow(power)`.'
-        )
-
-    @abstractmethod
-    def addscalar(self, y: ArrayLike) -> DataArray:
-        """Adds a scalar to every element."""
-
-    @abstractmethod
-    def elmul(self, y: DataArray | ArrayLike) -> DataArray:
-        """Computes the element-wise multiplication."""
-
-    @abstractmethod
-    def elpow(self, power: int) -> DataArray:
-        """Computes the element-wise power."""
+        pass
 
     @abstractmethod
     def __getitem__(self, key: IndexType) -> DataArray:

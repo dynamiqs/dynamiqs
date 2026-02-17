@@ -9,6 +9,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import numpy as np
+from equinox.internal._omega import _Metaω  # noqa: PLC2403
 from jaxtyping import Array, ArrayLike
 
 from .dataarray import DataArray, IndexType, in_last_two_dims, include_last_two_dims
@@ -228,9 +229,35 @@ class SparseDIADataArray(DataArray):
         data_str = re.sub(pattern, replace_with_dot, str(self.to_jax()))
         return f', ndiags={self.ndiags}\n{data_str}'
 
-    def __mul__(self, y: ArrayLike) -> DataArray:
-        diags = y * self.diags
-        return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+    def __mul__(self, y: DataArray | ArrayLike) -> DataArray:
+        if isinstance(y, SparseDIADataArray):
+            offsets, diags = mul_sparsedia_sparsedia(
+                self.offsets, self.diags, y.offsets, y.diags
+            )
+            return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+        elif isinstance(y, DenseDataArray):
+            offsets, diags = mul_sparsedia_array(
+                self.offsets, self.diags, y.data
+            )
+            return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+        elif isinstance(y, get_args(ArrayLike)):
+            y_arr = jnp.asarray(y)
+            if (
+                y_arr.ndim == 0
+                or (y_arr.ndim == 1 and y_arr.shape[0] == 1)
+                or (y_arr.ndim >= 2 and y_arr.shape[-2:] == (1, 1))
+            ):
+                # scalar or batched scalar: broadcast onto diags directly
+                diags = y_arr * self.diags
+                return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+            else:
+                # full matrix: extract matching diagonals and multiply
+                offsets, diags = mul_sparsedia_array(
+                    self.offsets, self.diags, y_arr
+                )
+                return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+
+        return NotImplemented
 
     def __add__(self, y: DataArray | ArrayLike) -> DataArray:
         if isinstance(y, int | float) and y == 0:
@@ -300,33 +327,11 @@ class SparseDIADataArray(DataArray):
 
         return NotImplemented
 
-    def addscalar(self, y: ArrayLike) -> DataArray:
-        warnings.warn(
-            'A sparse data array has been converted to dense layout due to '
-            'element-wise addition with a scalar.',
-            stacklevel=2,
-        )
-        return self.asdense().addscalar(y)
+    def __pow__(self, power: int | _Metaω) -> DataArray:
+        # to deal with the x**ω notation from equinox (used in diffrax internals)
+        if isinstance(power, _Metaω):
+            return _Metaω.__rpow__(power, self)
 
-    def elmul(self, y: DataArray | ArrayLike) -> DataArray:
-        if isinstance(y, SparseDIADataArray):
-            offsets, diags = mul_sparsedia_sparsedia(
-                self.offsets, self.diags, y.offsets, y.diags
-            )
-        elif isinstance(y, DenseDataArray):
-            offsets, diags = mul_sparsedia_array(
-                self.offsets, self.diags, y.data
-            )
-        elif isinstance(y, get_args(ArrayLike)):
-            offsets, diags = mul_sparsedia_array(
-                self.offsets, self.diags, jnp.asarray(y)
-            )
-        else:
-            return NotImplemented
-
-        return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
-
-    def elpow(self, power: int) -> DataArray:
         diags = self.diags**power
         return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
 

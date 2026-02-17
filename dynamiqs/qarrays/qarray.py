@@ -640,7 +640,7 @@ class QArray(eqx.Module):
         Returns:
             New qarray resulting from the addition with the scalar.
         """
-        return replace(self, data=self.data.addscalar(y))
+        return replace(self, data=self.data + jnp.asarray(y))
 
     def elmul(self, y: QArrayLike) -> QArray:
         """Computes the element-wise multiplication.
@@ -653,9 +653,9 @@ class QArray(eqx.Module):
         """
         if isinstance(y, QArray):
             check_compatible_dims(self.dims, y.dims)
-            result = self.data.elmul(y.data)
+            result = self.data * y.data
         elif isqarraylike(y):
-            result = self.data.elmul(to_jax(y))
+            result = self.data * to_jax(y)
         else:
             return NotImplemented
 
@@ -674,7 +674,7 @@ class QArray(eqx.Module):
         Returns:
             New qarray with elements raised to the specified power.
         """
-        return replace(self, data=self.data.elpow(power))
+        return replace(self, data=self.data ** power)
 
     def __getitem__(self, key) -> QArray:
         result = self.data[key]
