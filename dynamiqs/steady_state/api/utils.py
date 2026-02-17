@@ -59,11 +59,11 @@ def projection_dm(rho: Array, rank: int) -> Array:
     w, v = jnp.linalg.eigh(rho)
     assert isinstance(w, Array)
     w = jnp.where(w < 0, 0.0, w)
-    w_new = jnp.zeros_like(w).at[-rank:].set(proj_simplex(w[-rank:]))
+    w_new = jnp.zeros_like(w).at[-rank:].set(projection_on_simplex(w[-rank:]))
     return (v * w_new) @ v.conj().T
 
 
-def proj_simplex(x: Array) -> Array:
+def projection_on_simplex(x: Array) -> Array:
     """Projects the vector `x` onto the simplex."""
     u = jnp.sort(x, descending=True)
     projection = (1 - jnp.cumsum(u)) / (jnp.arange(1, len(x) + 1))
