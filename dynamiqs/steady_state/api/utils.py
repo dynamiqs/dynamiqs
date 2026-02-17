@@ -66,7 +66,7 @@ def projection_dm(rho: Array, rank: int) -> Array:
 def proj_simplex(x: Array) -> Array:
     """Projects the vector `x` onto the simplex."""
     u = jnp.sort(x, descending=True)
-    pi = (1 - jnp.cumsum(u)) / (jnp.arange(1, len(x) + 1))
-    idx = jnp.searchsorted(x + pi <= 0, True)
-    theta = pi[idx]
+    projection = (1 - jnp.cumsum(u)) / (jnp.arange(1, len(x) + 1))
+    index = jnp.searchsorted(x + projection <= 0, True)
+    theta = projection[index]
     return jnp.maximum(x + theta, 0.0)
