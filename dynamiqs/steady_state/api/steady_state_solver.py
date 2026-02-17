@@ -150,8 +150,11 @@ def steady_state(
 
     n = H.shape[-1]
     dims = H.dims
+
+    # Conversion of Ls in tensor in order to efficiently get LdagL
     Ls_q = dq.stack(Ls)
     LdagL = (Ls_q.dag() @ Ls_q).sum(0).to_jax()
+
     G = 1j * H.to_jax() + 1 / 2 * LdagL
     dtype = G.dtype
 
