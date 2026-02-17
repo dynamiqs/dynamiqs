@@ -22,7 +22,7 @@ class GMRESAuxInfo(eqx.Module):
 def steady_state(
     H: dq.QArray,
     Ls: list[dq.QArray],
-    tol: float = 1e-8,
+    tol: float = 1e-4,
     *,
     initial_guess: dq.QArray | None = None,
     max_iter: int = 100,
@@ -83,33 +83,31 @@ def steady_state(
     analytically via eigendecomposition of $G$: given the decomposition
     $G = U \Lambda U^{-1}$, the solution of $GX + XG^\dag + \mu X = Y$ is
     $$
-        X = U \widetilde{X} U^{H}, \qquad
+        X = U \widetilde{X} U^\dag, \qquad
         \widetilde{X}_{ij} = \frac{\widetilde{Y}_{ij}}
         {\lambda_i + \bar\lambda_j + \mu},
     $$
-    where $\widetilde{Y} = U^{-H} Y U^{-1}$.
+    where $\widetilde{Y} = U^{-1}^\dag Y U^{-1}$.
 
     Args:
         H (qarray of shape (n, n)): Hamiltonian.
         Ls (list of qarray, each of shape (n, n)): List of jump operators.
         tol: Tolerance for the stopping criterion. The solver stops when
             $\|\mathcal{L}(\rho)\| < \mathrm{tol}$, where the norm is determined
-            by `norm_type`. Defaults to `1e-8`.
+            by `norm_type`. Defaults to `1e-4`. This tolerance works for both simple and double precision.
         initial_guess (qarray of shape (n, n), optional): Initial guess for the
             density matrix. Defaults to `None`, which uses the vacuum state
             $|0\rangle\langle 0|$.
         max_iter: Maximum number of outer GMRES iterations. Defaults to `100`.
         krylov_size: Size of the Krylov subspace used in each GMRES restart cycle.
             Defaults to `32`.
-        recycling: Number of Krylov vectors to recycle between restarts. Defaults
-            to `5`, if the problem converges in a high number of iterations, this value can be increased, leading in a
+            If the steady state doesn't converge to the wanted tolerance, this parameter can be increased:
+            `krylov_size = 64` or `128`
         exact_dm: If `True`, the final density matrix is projected onto the set of
             valid density matrices (positive semi-definite with unit trace) by
             diagonalizing and projecting the eigenvalues onto the simplex. If
             `False`, only Hermitization and trace normalization are applied.
-            Defaults to `False`.
-        I_normalized: If `True`, the rank-1 coefficient is normalized by $n^2$
-            where $n$ is the Hilbert space dimension. Defaults to `True`.
+            Defaults to `True`.
         norm_type: Norm used in the stopping criterion. Supported values:
             `'max'` (element-wise maximum of $|\mathcal{L}(\rho)|$) and
             `'norm2'` (Frobenius norm of $\mathcal{L}(\rho)$). Defaults to
@@ -144,6 +142,12 @@ def steady_state(
         print(f"Converged: {info.success}, iterations: {info.n_iteration}")
     ```
     """
+    supported_norm_types = ('max', 'norm2')
+    if norm_type not in supported_norm_types:
+        raise ValueError(
+            f'Unknown norm type {norm_type!r}. Expected one of {supported_norm_types}.'
+        )
+
     n = H.shape[-1]
     dims = H.dims
     Ls_q = dq.stack(Ls)
@@ -180,11 +184,6 @@ def steady_state(
     def lindbladian(x: Array) -> Array:
         return from_dm(dq.lindbladian(H, Ls_q, to_dm(x)))
 
-    use_rank_1_update = True
-
-    # When `use_rank_1_update` is `True`, the preconditioner is further corrected
-    # to account for the rank-1 deflation using the Sherman-Morrison formula.
-
     def lindbladian_plus_rank1(x: Array) -> Array:
         return (
             lindbladian(x)
@@ -196,6 +195,9 @@ def steady_state(
     def base_preconditioner(x: Array) -> Array:
         return -from_matrix(preconditioner.solve(to_matrix(x), mu=0.0))
 
+    # When `use_rank_1_update` is `True`, the preconditioner is further corrected
+    # to account for the rank-1 deflation using the Sherman-Morrison formula.
+    use_rank_1_update = True
     preconditioner_fn = update_preconditioner(
         base_preconditioner, identity_vectorized, use_rank_1_update
     )
@@ -208,7 +210,7 @@ def steady_state(
         x_mat = x_mat / jnp.trace(x_mat)
         if norm_type == 'max':
             norm = jnp.max(jnp.abs(lindbladian(from_matrix(x_mat))))
-        elif norm_type == 'norm2':
+        else:  # norm_type == 'norm2' (validated above)
             norm = jnp.linalg.norm(lindbladian(from_matrix(x_mat)))
         return norm < tol
 
