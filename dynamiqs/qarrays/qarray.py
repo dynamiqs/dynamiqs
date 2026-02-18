@@ -268,7 +268,7 @@ class QArray(eqx.Module):
         if not hasattr(self.data, 'ndiags'):
             raise AttributeError(
                 f"Attribute 'ndiags' is only defined for sparse diagonal layouts; "
-                f"got layout {self.layout!r}."
+                f'got layout {self.layout!r}.'
             )
         return self.data.ndiags
 
