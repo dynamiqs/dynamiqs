@@ -25,7 +25,7 @@ from .interfaces import (
     SolveInterface,
 )
 from .rouchon_integrator import (
-    KrausRK
+    KrausRK,
     MESolveFixedRouchon1Integrator,
     cholesky_normalize,
 )
@@ -489,25 +489,30 @@ class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
         return eye_like(self.H(0))
 
     @property
-    def G(self):
-        def G_at_t(t):
+    def G(self):  # noqa: ANN201
+        def G_at_t(t):  # noqa: ANN001, ANN202
             LdL = sum([_L.dag() @ _L for _L in self.L(t)])
             return -1j * self.H(t) - 0.5 * LdL
+
         return G_at_t
 
     @property
-    def no_jump_solver(self):
+    def no_jump_solver(self):  # noqa: ANN201
         return Euler()
 
     @property
-    def no_jump_propagator(self):
-        def _no_jump_propagator_flow(t, y, *args):
+    def no_jump_propagator(self):  # noqa: ANN201
+        def _no_jump_propagator_flow(t, y, *args):  # noqa: ANN001, ANN202
             return self.G(t) @ y
+
         no_jump_propagator_flow = ODETerm(_no_jump_propagator_flow)
-        def _no_jump_propagator(t, dt):
+
+        def _no_jump_propagator(t, dt):  # noqa: ANN001, ANN202
             solver = self.no_jump_solver
-            solver_state = solver.init(no_jump_propagator_flow, t, t + dt, self.identity, None)
-            y1, error, dense_info, solver_state, result = solver.step(
+            solver_state = solver.init(
+                no_jump_propagator_flow, t, t + dt, self.identity, None
+            )
+            _y1, _error, dense_info, solver_state, _result = solver.step(
                 no_jump_propagator_flow,
                 t0=t,
                 t1=t + dt,
@@ -516,12 +521,9 @@ class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
                 solver_state=solver_state,
                 made_jump=False,
             )
-            interpolant = solver.interpolation_cls(
-                t0=t,
-                t1=t + dt,
-                **dense_info,
-            )
+            interpolant = solver.interpolation_cls(t0=t, t1=t + dt, **dense_info)
             return interpolant.evaluate
+
         return _no_jump_propagator
 
     def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
@@ -611,29 +613,32 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         return eye_like(self.H(0))
 
     @property
-    def G(self):
-        def G_at_t(t):
+    def G(self):  # noqa: ANN201
+        def G_at_t(t):  # noqa: ANN001, ANN202
             LdL = sum([_L.dag() @ _L for _L in self.L(t)])
             return -1j * self.H(t) - 0.5 * LdL
+
         return G_at_t
 
     @property
-    def no_jump_solver(self):
+    def no_jump_solver(self):  # noqa: ANN201
         # we use the same solver as for the Rouchon1 jump integrator, but with a
         # different no-jump propagator flow (see below)
         return Euler()
 
-
     @property
-    def no_jump_propagator(self):
-        def _no_jump_propagator_flow(t, y, *args):
+    def no_jump_propagator(self):  # noqa: ANN201
+        def _no_jump_propagator_flow(t, y, *args):  # noqa: ANN001, ANN202
             return self.G(t) @ y
 
         no_jump_propagator_flow = ODETerm(_no_jump_propagator_flow)
-        def _no_jump_propagator(t, dt):
+
+        def _no_jump_propagator(t, dt):  # noqa: ANN001, ANN202
             solver = self.no_jump_solver
-            solver_state = solver.init(no_jump_propagator_flow, t, t + dt, self.identity, None)
-            y1, error, dense_info, solver_state, result = solver.step(
+            solver_state = solver.init(
+                no_jump_propagator_flow, t, t + dt, self.identity, None
+            )
+            _y1, _error, dense_info, solver_state, _result = solver.step(
                 no_jump_propagator_flow,
                 t0=t,
                 t1=t + dt,
@@ -642,12 +647,9 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
                 solver_state=solver_state,
                 made_jump=False,
             )
-            interpolant = solver.interpolation_cls(
-                t0=t,
-                t1=t + dt,
-                **dense_info,
-            )
+            interpolant = solver.interpolation_cls(t0=t, t1=t + dt, **dense_info)
             return interpolant.evaluate
+
         return _no_jump_propagator
 
     def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
