@@ -400,7 +400,7 @@ class KrausRK4(KrausRK): #Classic RK4 is very sparse. Not used yet
 
 
 
-def cholesky_normalize(kraus_map: KrausMap, rho: QArray) -> jax.Array:
+def cholesky_normalize(kraus_map: KrausRK, rho: QArray) -> jax.Array:
     # To normalize the scheme, we compute
     #   S = sum_k Mk^† @ Mk
     # and replace

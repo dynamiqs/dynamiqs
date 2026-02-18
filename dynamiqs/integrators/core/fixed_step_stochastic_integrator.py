@@ -25,7 +25,7 @@ from .interfaces import (
     SolveInterface,
 )
 from .rouchon_integrator import (
-    KrausMap,
+    KrausRK
     MESolveFixedRouchon1Integrator,
     cholesky_normalize,
 )
@@ -466,7 +466,7 @@ class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
         return DiffusiveState(psi + dpsi, y.Y + dY)
 
 
-def cholesky_normalize_ket(kraus_map: KrausMap, psi: QArray) -> jax.Array:
+def cholesky_normalize_ket(kraus_map: KrausRK, psi: QArray) -> jax.Array:
     # See comment of `cholesky_normalize()`.
     # For a ket we compute ~M @ psi = M @ T^{†(-1)} @ psi, so we directly replace psi by
     # T^{†(-1)} @ psi.
