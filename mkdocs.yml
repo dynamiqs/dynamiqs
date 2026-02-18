@@ -198,6 +198,8 @@ nav:
               - zeros_like: python_api/utils/operators/zeros_like.md
               - destroy: python_api/utils/operators/destroy.md
               - create: python_api/utils/operators/create.md
+              - fdestroy: python_api/utils/operators/fdestroy.md
+              - fcreate: python_api/utils/operators/fcreate.md
               - number: python_api/utils/operators/number.md
               - parity: python_api/utils/operators/parity.md
               - displace: python_api/utils/operators/displace.md
