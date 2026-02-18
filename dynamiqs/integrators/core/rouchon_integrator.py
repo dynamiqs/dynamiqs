@@ -496,6 +496,7 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
     
     @property
     def no_jump_propagator(self):
+        # returns the function that gives the no-jump propagator between t and t+dt, computed using the dense output of provided solver for the no-jump evolution. We use the dense output to be able to compute the no-jump propagator at any time between t and t+dt, which is needed for some Rouchon schemes (RK3 for example).
         def _no_jump_propagator_flow(t, y, *args):
             return self.G(t) @ y
         no_jump_propagator_flow = ODETerm(_no_jump_propagator_flow)
