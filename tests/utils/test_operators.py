@@ -13,16 +13,16 @@ def test_global_dispatch():
     dim = 4
 
     # default: sparse DIA
-    assert isinstance(dq.eye(dim), dq.SparseDIAQArray)
-    assert isinstance(dq.eye(dim, layout=dq.dense), dq.DenseQArray)
+    assert dq.eye(dim).layout == dq.dia
+    assert dq.eye(dim, layout=dq.dense).layout == dq.dense
 
     dq.set_layout('dense')
-    assert isinstance(dq.eye(dim), dq.DenseQArray)
-    assert isinstance(dq.eye(dim, layout=dq.dia), dq.SparseDIAQArray)
+    assert dq.eye(dim).layout == dq.dense
+    assert dq.eye(dim, layout=dq.dia).layout == dq.dia
 
     dq.set_layout('dia')
-    assert isinstance(dq.eye(dim), dq.SparseDIAQArray)
-    assert isinstance(dq.eye(dim, layout=dq.dense), dq.DenseQArray)
+    assert dq.eye(dim).layout == dq.dia
+    assert dq.eye(dim, layout=dq.dense).layout == dq.dense
 
 
 @pytest.mark.run(order=TEST_INSTANT)
