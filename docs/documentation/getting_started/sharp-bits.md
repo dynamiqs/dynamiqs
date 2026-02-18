@@ -92,7 +92,7 @@ Likewise, you should use `x.powm()` instead of `**` (element-wise power) to comp
     >>> sx**2
     Traceback (most recent call last):
         ...
-    NotImplementedError: Computing the element-wise power of a qarray with the `**` operator is not supported. For the matrix power, use `x.pomw(power)`. For the element-wise power, use `x.elpow(power)`.
+    NotImplementedError: Computing the element-wise power of a qarray with the `**` operator is not supported. For the matrix power, use `x.powm(power)`. For the element-wise power, use `x.elpow(power)`.
     ```
 
 If you *actually* want to compute the element-wise power, you can use `x.elpow(power)`.

@@ -6,6 +6,7 @@ import pytest
 from equinox import EquinoxRuntimeError
 
 import dynamiqs as dq
+from dynamiqs.qarrays.sparsedia_dataarray import SparseDIADataArray
 
 from ..order import TEST_SHORT
 
@@ -51,7 +52,7 @@ class TestSparseDIAQArray:
             batch_broadcast=dq.stack([x, 2 * x]).reshape(2, 1, N, N),
         )
 
-        sparseA = dq.SparseDIAQArray((N,), False, offsetsA, diagsA)
+        sparseA = dq.QArray((N,), False, SparseDIADataArray(offsetsA, diagsA))
         denseA = sparseA.asdense()
 
         self.denseA = make_dictA(denseA)
@@ -64,7 +65,7 @@ class TestSparseDIAQArray:
             batch_broadcast=dq.stack([x, 2 * x, 3 * x]).reshape(1, 3, N, N),
         )
 
-        sparseB = dq.SparseDIAQArray((N,), False, offsetsB, diagsB)
+        sparseB = dq.QArray((N,), False, SparseDIADataArray(offsetsB, diagsB))
         denseB = sparseB.asdense()
 
         self.denseB = make_dictB(denseB)
@@ -214,7 +215,7 @@ class TestSparseDIAQArray:
         # assert an error is raised
         error_str = 'must contain zeros outside the matrix bounds'
         with pytest.raises(EquinoxRuntimeError, match=error_str):
-            dq.SparseDIAQArray((N,), False, offsets, diags)
+            SparseDIADataArray(offsets, diags)
 
     @pytest.mark.parametrize('k', ['simple', 'batch', 'batch_broadcast'])
     def test_elpow(self, k):
