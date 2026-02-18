@@ -69,80 +69,25 @@ class AdaptiveRouchonDXSolver(dx.AbstractAdaptiveSolver, RouchonDXSolver):
     pass
 
 
-class KrausChannel(eqx.Module):
-    operators: list[QArray]
-
-    def __call__(self, rho) -> QArray:
-        return sum([M @ rho @ M.dag() for M in self.operators])
-
-    def apply_conjugate(self, op) -> QArray:
-        # computes S = sum(M† op M) for the channel
-        return sum([M.dag() @ op @ M for M in self.operators])
-
-    def S(self) -> QArray:
-        # computes S = sum(M†M) for the channel
-        return sum([M.dag() @ M for M in self.operators])
-
-    def get_kraus_operators(self) -> list[QArray]:
-        # returns the list of Kraus operators in the channel.
-        return self.operators
-
-
-class NestedKrausChannel(eqx.Module):
-    channels: list[KrausChannel]
-
-    def __init__(self, *channels: KrausChannel):
-        self.channels = list(channels)
-
-    def __call__(self, rho) -> QArray:
-        for channel in reversed(self.channels):
-            rho = channel(rho)
-        return rho
-
-    def S(self) -> QArray:
-        # computes S = sum(M†M) for the nested channel
-        if len(self.channels) == 0:
-            return eye_like(self.channels[0].operators[0])
-
-        out = self.channels[0].S()
-        for channel in self.channels[1:]:
-            out = channel.apply_conjugate(out)
-        return out
-
-    def get_kraus_operators(self) -> list[QArray]:
-        # returns the list of all Kraus operators in the nested channel.
-        return [
-            reduce(lambda a, b: a @ b, x)  # product of all the operators
-            for x in product(*[ch.operators for ch in self.channels])
-        ]
-
-
-class KrausMap(eqx.Module):
-    channels: list[NestedKrausChannel | KrausChannel]
-
-    def __init__(self, *channels: NestedKrausChannel | KrausChannel):
-        self.channels = list(channels)
-
-    def __call__(self, rho) -> QArray:
-        return sum([channel(rho) for channel in self.channels])
-
-    def S(self) -> QArray:
-        # computes S = sum(M†M) for the full map
-        return sum([channel.S() for channel in self.channels])
-
-    def get_kraus_operators(self) -> list[QArray]:
-        # returns the list of all Kraus operators in the map.
-        return [op for c in self.channels for op in c.get_kraus_operators()]
-
-class RKStage(eqx.Module):
+class RKStage(eqx.Module): 
+    """
+    Generic class for a single stage $\rho^{(i+1)}$ of a Rouchon Runge-Kutta method. The stage is defined by a no-jump propagator no_jump_0 to apply to $\rhohat_0$, and a no-jump propagator and jump operators to apply to $\rho^{(i)}$.
+    Works only for diagonal Butcher tableaux, where $\rho^{(i+1)}$ depends only on $\rho^{(i)}$ and not on any previous stage.
+    
+    :no_jump_0 U1: no-jump propagator to apply to $\rhohat_0$
+    Ls: jump operators to apply to $\rho^{(i)}$
+    :no_jump_i U1: o-jump propagator to apply to $\sum_k L_k\rho^{(i)}L_k^\dagger$
+    :dt: time step
+    :aii: Butcher tableau coefficient for the contribution of $\rho^{(i)}$ to $\rho^{(i+1)}$ 
+    """
     no_jump_0: QArray
     no_jump_i: QArray
     Ls: list[Sequence[QArray]]
     dt: float
-    aij: float
+    aii: float
 
     def __call__(self, rho0, rhoi) -> list[QArray]:
-        return self.no_jump_0@rho0@self.no_jump_0.dag() + self.no_jump_i @ (self.dt* self.aij * sum([_L @ rhoi @ _L.dag() for _L in self.Ls]))@ self.no_jump_i.dag()
+        return self.no_jump_0@rho0@self.no_jump_0.dag() + self.no_jump_i @ (self.dt* self.aii * sum([_L @ rhoi @ _L.dag() for _L in self.Ls]))@ self.no_jump_i.dag()
     
     def S(self, O):
         return self.S_nojump(O) + self.S_jump(O)
@@ -154,21 +99,23 @@ class RKStage(eqx.Module):
     def S_jump(self, O):
         # Contribution from jump operators: sum(Mi† @ O @ Mi) for i >= 1
         O_sandwiched = self.no_jump_i.dag() @ O @ self.no_jump_i
-        return self.dt * self.aij * sum([_L.dag() @ O_sandwiched @ _L for _L in self.Ls])
+        return self.dt * self.aii * sum([_L.dag() @ O_sandwiched @ _L for _L in self.Ls])
     
-    def S_composed(self, O, prev_stage_S):
+    def S_composed(self, O, prev_stage_S): 
+        # to compose the jump contribution of this stage with the previous stage's map
         # For add_kraus_operators: no_jump_0 is standalone, jump ops are composed
         # sum(M† @ O @ M) = no_jump_0† @ O @ no_jump_0 + prev_stage_S(S_jump(O))
         return self.S_nojump(O) + prev_stage_S(self.S_jump(O))
     
     def get_kraus_operators(self):
-        return [self.no_jump_0] + [jnp.sqrt(self.dt * self.aij) * self.no_jump_i @ _L for _L in self.Ls]
+        return [self.no_jump_0] + [jnp.sqrt(self.dt * self.aii) * self.no_jump_i @ _L for _L in self.Ls]
     
-    def add_kraus_operators(self, kraus_ops) -> list[QArray]:
-        res_int = [jnp.sqrt(self.dt * self.aij) * self.no_jump_i @ _L for _L in self.Ls]
-        return [self.no_jump_0] + [op_int @ op_stage for op_int, op_stage in product(res_int, kraus_ops)]
+    def add_kraus_operators(self, previous_kraus_ops) -> list[QArray]: 
+        # to compose the jump contribution of this stage with the previous stage's Kraus operators 
+        res_int = [jnp.sqrt(self.dt * self.aii) * self.no_jump_i @ _L for _L in self.Ls]
+        return [self.no_jump_0] + [op_int @ op_stage for op_int, op_stage in product(res_int, previous_kraus_ops)]
 
-class FirstStage(RKStage): # Identity stage
+class FirstStage(RKStage): # Identity stage (actually never used for now)
     def __call__(self, rho0, _rhom) -> list[QArray]:
         return rho0
     
@@ -184,42 +131,53 @@ class FirstStage(RKStage): # Identity stage
     def S_composed(self, O, prev_stage_S):
         return O
 
-class SecondStage(RKStage): # if no_jump_i is equal to no_jump_0
+class SecondStage(RKStage): 
+    # In the second stage, no_jump_i is equal to no_jump_0, so it can be factorized
     def __call__(self, rho0, rhoi) -> list[QArray]:
-        return self.no_jump_0 @ (rho0 + self.dt* self.aij * sum([_L @ rhoi @ _L.dag() for _L in self.Ls]))@ self.no_jump_0.dag()
+        return self.no_jump_0 @ (rho0 + self.dt* self.aii * sum([_L @ rhoi @ _L.dag() for _L in self.Ls]))@ self.no_jump_0.dag()
     
     def S_nojump(self, O):
         return self.no_jump_0.dag() @ O @ self.no_jump_0
     
     def S_jump(self, O):
         O_sandwiched = self.no_jump_0.dag() @ O @ self.no_jump_0
-        return self.dt * self.aij * sum([_L.dag() @ O_sandwiched @ _L for _L in self.Ls])
+        return self.dt * self.aii * sum([_L.dag() @ O_sandwiched @ _L for _L in self.Ls])
     
     def S(self, O):
         return self.S_nojump(O) + self.S_jump(O)
     
-class SameTimeStage(RKStage): #if no_jump_i is identity
+class SameTimeStage(RKStage): #if no_jump_i is identity (in RK4 for example), we can avoid applying it
     def __call__(self, rho0, rhom) -> list[QArray]:
-        return self.no_jump_0 @ rho0 @ self.no_jump_0.dag() + self.dt* self.aij * sum([_L @ rhom @ _L.dag() for _L in self.Ls])
+        return self.no_jump_0 @ rho0 @ self.no_jump_0.dag() + self.dt* self.aii * sum([_L @ rhom @ _L.dag() for _L in self.Ls])
     
     def S_nojump(self, O):
         return self.no_jump_0.dag() @ O @ self.no_jump_0
     
     def S_jump(self, O):
         # no_jump_i is identity, so no sandwich
-        return self.dt * self.aij * sum([_L.dag() @ O @ _L for _L in self.Ls])
+        return self.dt * self.aii * sum([_L.dag() @ O @ _L for _L in self.Ls])
     
     def S(self, O):
         return self.S_nojump(O) + self.S_jump(O)
     
 class KrausRK(eqx.Module):
+    """
+    Generic class for a Rouchon Runge-Kutta method, defined by a no-jump propagator and jump operators to apply to $\rhohat_0$.
+    
+    t: beginning of the time step
+    dt: time step
+    :no_jump_propagator: no jump propagator between t and t+dt, used to compute the no-jump contribution to the Kraus operators and the intermediate stages if needed
+    :Ls: The function that gives the value of the jump operators at any time
+    :identity: identity operator, to avoid regenerating it at each step
+    """
+
     no_jump_propagator: Callable[[RealScalarLike], QArray]
     t: RealScalarLike
     dt: RealScalarLike
     Ls: Callable[[RealScalarLike], Sequence[QArray]]
     identity: QArray   
 
-class KrausEuler(KrausRK):
+class KrausEuler(KrausRK): #Rouchon's first order method (which is just Euler's method in Kraus form)
     @property
     def nojump_0to1(self):
         return self.no_jump_propagator(self.t + self.dt)
@@ -232,7 +190,8 @@ class KrausEuler(KrausRK):
     def get_kraus_operators(self):
         return [self.nojump_0to1] + [jnp.sqrt(self.dt) * _L for _L in self.Ls(self.t)]
 
-class KrausHeun2(KrausRK): #Heun's second order method    
+class KrausHeun2(KrausRK): 
+    #Based on Heun's second order method. Stage 1 is identity. Preferred to Midpoint because it does not need to inverse the no-jump propagator between t and t+dt (it needs evaluations only on the enpoints of the interval)
     @property
     def nojump_0to1(self):
         return self.no_jump_propagator(self.t + self.dt)
@@ -252,7 +211,7 @@ class KrausHeun2(KrausRK): #Heun's second order method
             no_jump_i=self.nojump_0to1,
             Ls=self.Ls0,
             dt=self.dt,
-            aij = 1,
+            aii = 1,
         )
     
     def __call__(self, rho0) -> list[QArray]:
@@ -274,7 +233,8 @@ class KrausHeun2(KrausRK): #Heun's second order method
                 + [jnp.sqrt(self.dt/2) * self.nojump_0to1 @ _L for _L in self.Ls0] 
                 + [jnp.sqrt(self.dt/2) * _L @ op for _L, op in product(self.Ls1, self.stage2.get_kraus_operators())])
 
-class KrausHeun3(KrausRK): #Heun's third order method
+class KrausHeun3(KrausRK): 
+    #Based on Heun's third order method. Chosen for the sparsity of its Butcher tableau, which minimizes the number of no-jump propagator evaluations and inversions needed.
     @property
     def nojump_0to1(self):
         return self.no_jump_propagator(self.t + self.dt)
@@ -315,7 +275,7 @@ class KrausHeun3(KrausRK): #Heun's third order method
             no_jump_i=self.nojump_0to1o3,
             Ls=self.Ls0,
             dt=self.dt,
-            aij = 1/3,
+            aii = 1/3,
         )
     
     @property
@@ -325,7 +285,7 @@ class KrausHeun3(KrausRK): #Heun's third order method
             no_jump_i=self.nojump_1o3to2o3,
             Ls=self.Ls1o3,
             dt=self.dt,
-            aij = 2/3,
+            aii = 2/3,
         )
     
     def __call__(self, rho0) -> list[QArray]:
@@ -352,7 +312,7 @@ class KrausHeun3(KrausRK): #Heun's third order method
                    for _L, op in product(self.Ls2o3,
                                          self.stage3.add_kraus_operators(self.stage2.get_kraus_operators()))])
 
-class KrausRK4(KrausRK): #Optimized RK4 scheme
+class KrausRK4(KrausRK): #Classic RK4 is very sparse. Not used yet
     @property
     def nojump_0to1(self):
         return self.no_jump_propagator(self.t + self.dt)
@@ -385,7 +345,7 @@ class KrausRK4(KrausRK): #Optimized RK4 scheme
             no_jump_i=self.nojump_0tomid,
             Ls=self.Ls0,
             dt=self.dt,
-            aij = 0.5,
+            aii = 0.5,
         )
     
     @property
@@ -395,7 +355,7 @@ class KrausRK4(KrausRK): #Optimized RK4 scheme
             no_jump_i=self.identity,
             Ls=self.Lsmid,
             dt=self.dt,
-            aij = 0.5,
+            aii = 0.5,
         )
     
     @property
@@ -405,7 +365,7 @@ class KrausRK4(KrausRK): #Optimized RK4 scheme
             no_jump_i= self.nojump_midto1,
             Ls=self.Lsmid,
             dt=self.dt,
-            aij = 1.0,
+            aii = 1.0,
         )
     def __call__(self, rho0) -> list[QArray]:
         rho1 = rho0
