@@ -6894,12 +6894,12 @@
     <span class="n">offsets_diags</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">],</span>
     <span class="n">dims</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">dtype</span><span class="p">:</span> <span class="n">DTypeLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseDIAQArray</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Initialize a <code>SparseDIAQArray</code> from a dictionary of offsets and diagonals.</p>
+        <p>Initialize a sparse diagonal qarray from a dictionary of offsets and diagonals.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -6937,7 +6937,7 @@ diagonals.</p>
   <ul>
       <li class="doc-section-item field-body">
         <div class="doc-md-description">
-          <p>A <code>SparseDIAQArray</code> with non-zero diagonals at the specified offsets.</p>
+          <p>A sparse diagonal qarray with non-zero diagonals at the specified offsets.</p>
         </div>
       </li>
   </ul>

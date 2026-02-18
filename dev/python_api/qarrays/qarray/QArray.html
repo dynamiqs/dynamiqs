@@ -1722,6 +1722,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#dynamiqs.qarrays.qarray.QArray.ndiags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ndiags
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#dynamiqs.qarrays.qarray.QArray.conj" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6995,6 +7006,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#dynamiqs.qarrays.qarray.QArray.ndiags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ndiags
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#dynamiqs.qarrays.qarray.QArray.conj" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7120,11 +7142,10 @@
 <p>A qarray is a wrapper around the data structure representing a quantum object (a
 ket, a density matrix, an operator, a superoperator, etc.) that offers convenience
 methods.</p>
-<p>There are two types of qarrays:</p>
+<p>The underlying data can be in two formats:</p>
 <ul>
-<li><code>DenseQArray</code>: wrapper around JAX arrays, dense representation of the array.</li>
-<li><code>SparseDIAQArray</code>: Dynamiqs sparse diagonal format, storing only the non-zero
-    diagonals.</li>
+<li>Dense: wrapper around JAX arrays, dense representation of the array.</li>
+<li>SparseDIA: Dynamiqs sparse diagonal format, storing only the non-zero diagonals.</li>
 </ul>
   
 
@@ -7372,6 +7393,26 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
 
 
 
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="dynamiqs.qarrays.qarray.QArray.ndiags" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">ndiags</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">ndiags</span><span class="p">:</span> <span class="nb">int</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Number of stored diagonals (only for sparse diagonal layout).</p>
+
+    </div>
+
+</div>
+
 
 
 
@@ -7497,7 +7538,7 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
 
 
 </h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">asdense</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DenseQArray</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">asdense</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -7509,7 +7550,7 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
   <ul>
       <li class="doc-section-item field-body">
         <div class="doc-md-description">
-          <p>A <code>DenseQArray</code>.</p>
+          <p>A qarray with dense data layout.</p>
         </div>
       </li>
   </ul>
@@ -7527,7 +7568,7 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
 
 
 </h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">assparsedia</span><span class="p">(</span><span class="n">offsets</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseDIAQArray</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">assparsedia</span><span class="p">(</span><span class="n">offsets</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -7554,7 +7595,7 @@ which require static offset values.</p>
   <ul>
       <li class="doc-section-item field-body">
         <div class="doc-md-description">
-          <p>A <code>SparseDIAQArray</code>.</p>
+          <p>A qarray with sparse diagonal data layout.</p>
         </div>
       </li>
   </ul>
