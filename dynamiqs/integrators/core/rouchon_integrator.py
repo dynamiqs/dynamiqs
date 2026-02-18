@@ -439,51 +439,6 @@ def cholesky_normalize(kraus_map: KrausMap, rho: QArray) -> jax.Array:
     return jax.lax.linalg.triangular_solve(T, rho, lower=True, left_side=True)
 
 
-def order2_nojump_evolution(
-    H: Callable[[RealScalarLike], QArray],
-    L: Callable[[RealScalarLike], Sequence[QArray]],
-    t: float,
-    dt: float,
-) -> Callable[[float], QArray]:
-    """Evaluates the no-jump evolution between t and t+dt
-    using the explicit midpoint method.
-    """
-    G0 = -1j * H(t) - 0.5 * sum([_L.dag() @ _L for _L in L(t)])
-    Gmid = -1j * H(t + 0.5 * dt) - 0.5 * sum([_L.dag() @ _L for _L in L(t + 0.5 * dt)])
-    U0 = eye_like(G0)
-    k1 = U0 + G0 * dt / 2
-    return U0 + dt * Gmid @ k1
-
-
-def order3_nojump_dense_evolution(
-    H: Callable[[RealScalarLike], QArray],
-    L: Callable[[RealScalarLike], Sequence[QArray]],
-    t: float,
-    dt: float,
-) -> Callable[[float], QArray]:
-    """Evaluates the no-jump evolution between t and t+dt
-    using Kutta's third order method with dense output.
-    """
-    G0 = -1j * H(t) - 0.5 * sum([_L.dag() @ _L for _L in L(t)])
-    Gmid = -1j * H(t + dt / 2) - 0.5 * sum([_L.dag() @ _L for _L in L(t + dt / 2)])
-    G1 = -1j * H(t + dt) - 0.5 * sum([_L.dag() @ _L for _L in L(t + dt)])
-    U0 = eye_like(G0)
-    k1 = G0
-    k2 = Gmid @ (U0 + (dt / 2) * k1)
-    k3 = G1 @ (U0 - dt * k1 + 2 * dt * k2)
-    U1 = U0 + dt / 6 * (k1 + 4 * k2 + k3)
-
-    def interp(s: float) -> QArray:
-        # Quadratic Hermite interpolation: p(theta) = a0 + a1*theta + a2*theta^2
-        # Constraints: p(0)=U0, p(1)=U1, p'(0)=dt*f0
-        theta = (s - t) / dt
-        a0 = U0
-        a1 = dt * k1
-        a2 = U1 - U0 - dt * k1
-        return a0 + theta * a1 + theta**2 * a2
-
-    return interp
-
 def solve_propagator(U1, U2) -> QArray:
     """Compute the no jump propagator from t2 to t1 using LU factorization.
 
