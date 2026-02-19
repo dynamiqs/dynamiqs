@@ -5,6 +5,8 @@ from math import prod
 import jax.numpy as jnp
 from jax.typing import ArrayLike
 
+from typing import Literal
+
 from .._utils import cdtype
 from ..qarrays.dense_qarray import DenseQArray
 from ..qarrays.layout import Layout, dense, get_layout
@@ -539,16 +541,20 @@ def squeeze(dim: int, z: ArrayLike) -> DenseQArray:
     return (0.5 * (z.conj() * a2 - z * a2.dag())).expm()
 
 
-def quadrature(dim: int, phi: float, *, layout: Layout | None = None) -> QArray:
+def quadrature(dim: int, phi: float, *, layout: Layout | None = None, norm_convention: Literal["half", "sqrt2", "none"] = "half") -> QArray:
     r"""Returns the quadrature operator of phase angle $\phi$.
 
-    It is defined by $x_\phi = (e^{i\phi} a^\dag + e^{-i\phi} a) / 2$, where $a$ and
-    $a^\dag$ are the annihilation and creation operators respectively.
+    It is defined by $x_\phi = (e^{i\phi} a^\dag + e^{-i\phi} a) / f$, where $a$ and
+    $a^\dag$ are the annihilation and creation operators respectively, and $f$ is a normalization factor determined by the `norm_convention` argument.
 
     Args:
         dim: Dimension of the Hilbert space.
         phi: Phase angle.
         layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        norm_convention: Normalization convention (`"half"`, `"sqrt2"`, `"none"`), Choices are :
+            - `"half"` (default): $x_\phi = (e^{i\phi} a^\dag + e^{-i\phi} a) / 2$.
+            - `"sqrt2"`: $x_\phi = (e^{i\phi} a^\dag + e^{-i\phi} a) / \sqrt{2}$.
+            - `"none"`: $x_\phi = e^{i\phi} a^\dag + e^{-i\phi} a$.
 
     Returns:
         (qarray of shape (dim, dim)): Quadrature operator.
@@ -566,15 +572,27 @@ def quadrature(dim: int, phi: float, *, layout: Layout | None = None) -> QArray:
          [   ⋅       -0.+0.707j    ⋅      ]]
     """
     a = destroy(dim, layout=layout)
-    return 0.5 * (jnp.exp(1j * phi) * a.dag() + jnp.exp(-1j * phi) * a)
+    quadrature_op = jnp.exp(1j * phi) * a.dag() + jnp.exp(-1j * phi) * a
+    if norm_convention == "half":
+        return 0.5 * quadrature_op
+    elif norm_convention == "sqrt2":
+        return (1 / jnp.sqrt(2)) * quadrature_op
+    elif norm_convention == "none":
+        return quadrature_op
+    else:
+        raise ValueError(f"Invalid norm_convention={norm_convention!r}. Expected one of: 'half', 'sqrt2', 'none'.")
 
 
-def position(dim: int, *, layout: Layout | None = None) -> QArray:
-    r"""Returns the position operator $x = (a^\dag + a) / 2$.
+def position(dim: int, *, layout: Layout | None = None, norm_convention: Literal["half", "sqrt2", "none"] = "half") -> QArray:
+    r"""Returns the position operator $x = (a^\dag + a) / f$, with $f$ a normalization factor determined by the normalization convention.
 
     Args:
         dim: Dimension of the Hilbert space.
         layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        norm_convention: Normalization convention (`"half"`, `"sqrt2"`, `"none"`), Choices are :
+            - `"half"` (default): $x = (a^\dag + a) / 2$.
+            - `"sqrt2"`: $x = (a^\dag + a) / \sqrt{2}$.
+            - `"none"`: $x = a^\dag + a$.
 
     Returns:
         (qarray of shape (dim, dim)): Position operator.
@@ -587,15 +605,26 @@ def position(dim: int, *, layout: Layout | None = None) -> QArray:
          [    ⋅     0.707+0.j     ⋅    ]]
     """
     a = destroy(dim, layout=layout)
-    return 0.5 * (a + a.dag())
+    position_op = a.dag() + a
+    if norm_convention == "half":
+        return 0.5 * position_op
+    elif norm_convention == "sqrt2":
+        return (1 / jnp.sqrt(2)) * position_op
+    elif norm_convention == "none":
+        return position_op
+    else:
+        raise ValueError(f"Invalid norm_convention={norm_convention!r}. Expected one of: 'half', 'sqrt2', 'none'.")
 
-
-def momentum(dim: int, *, layout: Layout | None = None) -> QArray:
-    r"""Returns the momentum operator $p = i (a^\dag - a) / 2$.
+def momentum(dim: int, *, layout: Layout | None = None, norm_convention: Literal["half", "sqrt2", "none"] = "half") -> QArray:
+    r"""Returns the momentum operator $p = i (a^\dag - a) / f$, with $f$ a normalization factor determined by the normalization convention.
 
     Args:
         dim: Dimension of the Hilbert space.
         layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        norm_convention: Normalization convention (`"half"`, `"sqrt2"`, `"none"`), Choices are :
+            - `"half"` (default): $p = i (a^\dag - a) / 2$.
+            - `"sqrt2"`: $p = i (a^\dag - a) / \sqrt{2}$.
+            - `"none"`: $p = i (a^\dag - a)$.
 
     Returns:
         (qarray of shape (dim, dim)): Momentum operator.
@@ -608,7 +637,15 @@ def momentum(dim: int, *, layout: Layout | None = None) -> QArray:
          [  ⋅       0.+0.707j   ⋅      ]]
     """
     a = destroy(dim, layout=layout)
-    return 0.5j * (a.dag() - a)
+    momentum_op = 1j * (a.dag() - a)
+    if norm_convention == "half":
+        return 0.5 * momentum_op
+    elif norm_convention == "sqrt2":
+        return (1 / jnp.sqrt(2)) * momentum_op
+    elif norm_convention == "none":
+        return momentum_op
+    else:
+        raise ValueError(f"Invalid norm_convention={norm_convention!r}. Expected one of: 'half', 'sqrt2', 'none'.")
 
 
 def sigmax(*, layout: Layout | None = None) -> QArray:
