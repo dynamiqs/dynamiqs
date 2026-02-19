@@ -8,6 +8,7 @@ matches element-wise sequential solves.
 import jax
 import jax.numpy as jnp
 import dynamiqs as dq
+from dynamiqs.steady_state import SteadyStateGMRES
 import pytest
 
 
@@ -16,9 +17,7 @@ import pytest
 # ---------------------------------------------------------------------------
 
 N = 12  # Hilbert space size (kept small for speed)
-TOL = 1e-3
-KRYLOV = 32
-MAX_ITER = 100
+SOLVER = SteadyStateGMRES(tol=1e-3, max_iteration=100, krylov_size=32)
 
 
 def _build_driven_damped_oscillator(n, epsilon, kappa):
@@ -31,7 +30,7 @@ def _build_driven_damped_oscillator(n, epsilon, kappa):
 
 def _solve_single(H, Ls):
     """Solve a single (non-batched) system and return the result."""
-    return dq.steadystate(H, Ls, tol=TOL, max_iteration=MAX_ITER, krylov_size=KRYLOV)
+    return dq.steadystate(H, Ls, solver=SOLVER)
 
 
 def _assert_rhos_close(rho_batched, rho_ref, idx, atol=1e-3):
@@ -64,9 +63,7 @@ class TestBatchOverH:
         Ls = [jnp.sqrt(kappa) * a]
 
         # Batched solve
-        result = dq.steadystate(
-            H_batched, Ls, tol=TOL, max_iteration=MAX_ITER, krylov_size=KRYLOV
-        )
+        result = dq.steadystate(H_batched, Ls, solver=SOLVER)
 
         # Check output shape
         assert result.rho.shape == (len(epsilons), N, N), (
@@ -98,9 +95,7 @@ class TestBatchOverLs:
         # Stack jump operators: shape (batch, n, n)
         Ls_batched = [dq.stack([jnp.sqrt(k) * a for k in kappas])]
 
-        result = dq.steadystate(
-            H, Ls_batched, tol=TOL, max_iteration=MAX_ITER, krylov_size=KRYLOV
-        )
+        result = dq.steadystate(H, Ls_batched, solver=SOLVER)
 
         assert result.rho.shape == (len(kappas), N, N), (
             f'Expected shape {(len(kappas), N, N)}, got {result.rho.shape}'
@@ -136,9 +131,7 @@ class TestBatchBroadcast:
         result = dq.steadystate(
             H_batched,
             Ls_batched,
-            tol=TOL,
-            max_iteration=MAX_ITER,
-            krylov_size=KRYLOV,
+            solver=SOLVER,
             options=Options(cartesian_batching=False),
         )
 
@@ -163,9 +156,7 @@ class TestBatchBroadcast:
         Ls_batched = [dq.stack([jnp.sqrt(k) * a for k in kappas])]
 
         # Default cartesian batching: all (H[i], Ls[j]) combinations
-        result = dq.steadystate(
-            H_batched, Ls_batched, tol=TOL, max_iteration=MAX_ITER, krylov_size=KRYLOV
-        )
+        result = dq.steadystate(H_batched, Ls_batched, solver=SOLVER)
 
         assert result.rho.shape == (len(epsilons), len(kappas), N, N), (
             f'Expected shape {(len(epsilons), len(kappas), N, N)}, '
@@ -212,9 +203,7 @@ class TestBatchBroadcast:
         result = dq.steadystate(
             H_batched,
             Ls_batched,
-            tol=TOL,
-            max_iteration=MAX_ITER,
-            krylov_size=KRYLOV,
+            solver=SOLVER,
             options=Options(cartesian_batching=False),
         )
 
@@ -254,9 +243,7 @@ class TestBatchHScalarLs:
         H_batched = dq.stack(Hs)
         Ls = [jnp.sqrt(kappa) * a]  # not batched
 
-        result = dq.steadystate(
-            H_batched, Ls, tol=TOL, max_iteration=MAX_ITER, krylov_size=KRYLOV
-        )
+        result = dq.steadystate(H_batched, Ls, solver=SOLVER)
 
         assert result.rho.shape == (len(epsilons), N, N)
         assert jnp.all(result.infos.success)
