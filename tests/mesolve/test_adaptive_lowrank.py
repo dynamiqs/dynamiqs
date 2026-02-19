@@ -26,11 +26,15 @@ def _double_precision():
 
 def _lowrank_method(system):
     rank = 2 if system is otdqubit else system.n // 2
-    return LowRank(rank=rank, ode_method=Tsit5())
+    return LowRank(rank=rank, ode_method=Tsit5(), key=jax.random.PRNGKey(0))
 
 
 @pytest.mark.run(order=TEST_LONG)
 class TestMESolveAdaptiveLowRank(IntegratorTester):
+    def test_key_is_required(self):
+        with pytest.raises(TypeError):
+            LowRank(rank=2, ode_method=Tsit5())
+
     @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
     def test_correctness(self, system):
         options = Options()

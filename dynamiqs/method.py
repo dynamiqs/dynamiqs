@@ -789,8 +789,7 @@ class LowRank(Method):
         eps_init: Regularization parameter for the initialization of the low-rank
             factors. This introduces random orthonormalized states of probabilities
             $p_j=\epsilon$ to avoid $m^\dag m$ being singular. Defaults to `1e-5`.
-        key: PRNG key used for random initialization of the low-rank factors. If
-            `None`, a default key is used.
+        key: PRNG key used for random initialization of the low-rank factors.
 
     Note:
         The low-rank factors can be accessed from
@@ -817,7 +816,7 @@ class LowRank(Method):
     rank: int = eqx.field(static=True)
     linear_solver: str = eqx.field(static=True, default='QR')
     eps_init: float = eqx.field(static=True, default=1e-5)
-    key: PRNGKeyArray | None = None
+    key: PRNGKeyArray
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
         Direct,
@@ -832,7 +831,8 @@ class LowRank(Method):
         ode_method: Method = Tsit5(),  # noqa: B008
         linear_solver: str = 'QR',
         eps_init: float = 1e-5,
-        key: PRNGKeyArray | None = None,
+        *,
+        key: PRNGKeyArray,
     ):
         self.ode_method = ode_method
 
@@ -865,6 +865,4 @@ class LowRank(Method):
             )
         self.eps_init = eps_init
 
-        if key is not None:
-            key = jnp.asarray(key)
-        self.key = key
+        self.key = jnp.asarray(key)
