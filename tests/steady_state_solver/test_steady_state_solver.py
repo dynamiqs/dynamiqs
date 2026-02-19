@@ -11,6 +11,11 @@ import jax.numpy as jnp
 import dynamiqs as dq
 import pytest
 
+from dynamiqs.steady_state import (
+    SteadyStateGMRES,
+    SteadyStateResult,
+    SteadyStateGMRESResult,
+)
 from .systems import build_two_modes, build_random_single_mode
 
 
@@ -99,9 +104,10 @@ class TestTwoModes:
     def test_convergence(self, na, nb, tol, precision):
         """Solver converges and residual is below tolerance."""
         H, Ls = build_two_modes(na, nb, kappa_a=1)
-        result = dq.steadystate(
-            H, Ls, tol=tol, max_iteration=200, krylov_size=64, exact_dm=False
+        solver = SteadyStateGMRES(
+            tol=tol, max_iteration=200, krylov_size=64, exact_dm=True
         )
+        result = dq.steadystate(H, Ls, solver=solver)
 
         assert bool(result.infos.success), (
             f'Solver did not converge (na={na}, nb={nb}, tol={tol:.0e}, '
@@ -124,7 +130,10 @@ class TestRandomSingleMode:
         """Solver converges and residual is below tolerance."""
         n = na * nb
         H, Ls = build_random_single_mode(n, seed=0, gamma=gamma)
-        result = dq.steadystate(H, Ls, tol=tol, max_iteration=200, krylov_size=32)
+        solver = SteadyStateGMRES(
+            tol=tol, max_iteration=200, krylov_size=32, exact_dm=True
+        )
+        result = dq.steadystate(H, Ls, solver=solver)
 
         assert bool(result.infos.success), (
             f'Solver did not converge (n={n}, gamma={gamma}, tol={tol:.0e}, '
@@ -152,9 +161,10 @@ class TestSimpleOscillator:
         H = epsilon_a * a + epsilon_a * a.dag()
         Ls = [jnp.sqrt(kappa) * a]
 
-        result = dq.steadystate(
-            H, Ls, tol=tol, max_iteration=200, krylov_size=64, exact_dm=True
+        solver = SteadyStateGMRES(
+            tol=tol, max_iteration=200, krylov_size=64, exact_dm=True
         )
+        result = dq.steadystate(H, Ls, solver=solver)
 
         assert bool(result.infos.success), (
             f'Solver did not converge (n={n}, tol={tol:.0e}, '
@@ -165,9 +175,10 @@ class TestSimpleOscillator:
         assert_valid_dm(result.rho, precision)
 
         fine_tol = 1e-8 if precision == 'double' else 1e-5
-        result_fine = dq.steadystate(
-            H, Ls, tol=fine_tol, max_iteration=200, krylov_size=64, exact_dm=True
+        solver_fine = SteadyStateGMRES(
+            tol=fine_tol, max_iteration=200, krylov_size=64, exact_dm=True
         )
+        result_fine = dq.steadystate(H, Ls, solver=solver_fine)
         assert bool(result_fine.infos.success), (
             f'Solver did not converge (n={n}, tol={fine_tol:.0e}, '
             f'iters={result_fine.infos.n_iteration})'
@@ -198,11 +209,11 @@ class TestJIT:
         """steadystate can be called inside a jitted function."""
         na, nb = 12, 3
         H, Ls = build_two_modes(na, nb, kappa_a=1)
-        tol = 1e-1
+        solver = SteadyStateGMRES(tol=1e-1)
 
         @jax.jit
         def solve_and_get_trace(H, Ls):
-            result = dq.steadystate(H, Ls, tol=tol)
+            result = dq.steadystate(H, Ls, solver=solver)
             return jnp.trace(result.rho.to_jax()), result.infos.success
 
         trace_val, success = solve_and_get_trace(H, Ls)
@@ -219,11 +230,11 @@ class TestJIT:
         """steadystate can be called inside a jitted function."""
         n = 36
         H, Ls = build_random_single_mode(n, seed=42, gamma=1.0)
-        tol = 1e-1
+        solver = SteadyStateGMRES(tol=1e-1)
 
         @jax.jit
         def solve_and_get_trace(H, Ls):
-            result = dq.steadystate(H, Ls, tol=tol)
+            result = dq.steadystate(H, Ls, solver=solver)
             return jnp.trace(result.rho.to_jax()), result.infos.success
 
         trace_val, success = solve_and_get_trace(H, Ls)
