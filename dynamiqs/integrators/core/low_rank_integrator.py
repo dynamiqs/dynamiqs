@@ -49,14 +49,14 @@ def rho_from_m(m: Array) -> Array:
 
 
 def initialize_m0_from_ket(
-    psi0: Array, M: int, *, eps: float, key: Array | None
+    psi0: Array, rank: int, *, eps: float, key: Array | None
 ) -> Array:
     """Initialize the low-rank d.m. m0 from a pure state |psi0>.
 
-    The first column of m0 is (a rescaled) psi0, and the remaining M-1 columns
+    The first column of m0 is (a rescaled) psi0, and the remaining rank-1 columns
     are small random vectors orthogonal to psi0, scaled by `eps`.
     This ensures the initial density matrix rho0 = m0 @ m0† ≈ |psi0><psi0|
-    while making the rank M for numerical stability.
+    while making the target rank for numerical stability.
     """
     # psi0 has shape (n, 1)
     if key is None:
@@ -66,18 +66,18 @@ def initialize_m0_from_ket(
     psi0 = psi0 / jnp.linalg.norm(psi0)
     psi0_unit = psi0
 
-    # Rescale the leading column so that its weight plus the M-1 perturbation
+    # Rescale the leading column so that its weight plus the rank-1 perturbation
     # columns (each with norm eps) sum to 1 in the trace of rho.
-    if M > 1:
-        psi0 = psi0_unit * jnp.sqrt(jnp.maximum(1.0 - (M - 1) * (eps**2), 0.0))
+    if rank > 1:
+        psi0 = psi0_unit * jnp.sqrt(jnp.maximum(1.0 - (rank - 1) * (eps**2), 0.0))
 
-    if M == 1:
+    if rank == 1:
         return normalize_m(psi0)
 
-    # Generate random complex vectors for the remaining M-1 columns.
+    # Generate random complex vectors for the remaining rank-1 columns.
     key_r, key_i = jax.random.split(key)
-    rand_r = jax.random.normal(key_r, (n, M - 1), dtype=psi0.real.dtype)
-    rand_i = jax.random.normal(key_i, (n, M - 1), dtype=psi0.real.dtype)
+    rand_r = jax.random.normal(key_r, (n, rank - 1), dtype=psi0.real.dtype)
+    rand_i = jax.random.normal(key_i, (n, rank - 1), dtype=psi0.real.dtype)
     rand = (rand_r + 1j * rand_i) / jnp.sqrt(2.0)
 
     # Project out the psi0 component to make perturbations orthogonal to psi0,
@@ -89,20 +89,20 @@ def initialize_m0_from_ket(
 
 
 def initialize_m0_from_dm(
-    rho0: Array, M: int, *, eps: float, key: Array | None, eigval_tol: float = 1e-12
+    rho0: Array, rank: int, *, eps: float, key: Array | None, eigval_tol: float = 1e-12
 ) -> Array:
     """Initialize the low-rank d.m. m0 from a density matrix rho0.
 
-    The M largest eigenvectors of rho0 are used as columns of m0, scaled by
+    The largest `rank` eigenvectors of rho0 are used as columns of m0, scaled by
     the square root of their eigenvalues. Columns corresponding to
     near-zero eigenvalues (below `eigval_tol`) are replaced by small random
-    perturbations scaled by `eps`, ensuring that the rank is at least M.
+    perturbations scaled by `eps`, ensuring that the rank is at least `rank`.
     """
-    # Eigendecompose rho0 and keep the M largest eigenvalues/vectors.
+    # Eigendecompose rho0 and keep the `rank` largest eigenvalues/vectors.
     evals, evecs = jnp.linalg.eigh(rho0)
     evals = jnp.maximum(evals, 0.0)
-    evals_M = evals[-M:][::-1]
-    cols = evecs[:, -M:][:, ::-1] * jnp.sqrt(evals_M)[None, :]
+    evals_rank = evals[-rank:][::-1]
+    cols = evecs[:, -rank:][:, ::-1] * jnp.sqrt(evals_rank)[None, :]
 
     # For columns with near-zero eigenvalues, add small random perturbations
     # scaled by eps to avoid degeneracies during solve.
@@ -110,13 +110,13 @@ def initialize_m0_from_dm(
         if key is None:
             key = jax.random.PRNGKey(0)
         key_r, key_i = jax.random.split(key)
-        rand_r = jax.random.normal(key_r, (rho0.shape[0], M), dtype=cols.real.dtype)
-        rand_i = jax.random.normal(key_i, (rho0.shape[0], M), dtype=cols.real.dtype)
+        rand_r = jax.random.normal(key_r, (rho0.shape[0], rank), dtype=cols.real.dtype)
+        rand_i = jax.random.normal(key_i, (rho0.shape[0], rank), dtype=cols.real.dtype)
         rand = (rand_r + 1j * rand_i) / jnp.sqrt(2.0)
 
         # Only perturb columns whose eigenvalue is below the tolerance.
-        tol = eigval_tol * jnp.maximum(jnp.max(evals_M), 1.0)
-        mask = (evals_M <= tol).astype(cols.real.dtype)
+        tol = eigval_tol * jnp.maximum(jnp.max(evals_rank), 1.0)
+        mask = (evals_rank <= tol).astype(cols.real.dtype)
         cols = cols + rand * (eps * mask)[None, :]
 
     return normalize_m(cols)
@@ -145,9 +145,9 @@ class MESolveLowRankIntegrator(BaseIntegrator, MEInterface, SolveInterface):
             self.y0 = check_hermitian(self.y0, 'rho0')
 
         n = self.y0.shape[-2]
-        if n < self.method.M:
+        if n < self.method.rank:
             raise ValueError(
-                f'Argument `M` must be <= n, but is M={self.method.M} (n={n}).'
+                f'Argument `rank` must be <= n, but is rank={self.method.rank} (n={n}).'
             )
         if self.method.linear_solver == 'cholesky' and not jax.config.read(
             'jax_enable_x64'
@@ -165,12 +165,12 @@ class MESolveLowRankIntegrator(BaseIntegrator, MEInterface, SolveInterface):
         if self.y0.isket():
             psi0 = self.y0.to_jax()
             self.y0 = initialize_m0_from_ket(
-                psi0, self.method.M, eps=eps, key=self.method.key
+                psi0, self.method.rank, eps=eps, key=self.method.key
             )
         else:
             rho0_dm = self.y0.todm()
             self.y0 = initialize_m0_from_dm(
-                rho0_dm.to_jax(), self.method.M, eps=eps, key=self.method.key
+                rho0_dm.to_jax(), self.method.rank, eps=eps, key=self.method.key
             )
 
         self.Es = [E.to_jax() for E in self.Es] if self.Es is not None else None

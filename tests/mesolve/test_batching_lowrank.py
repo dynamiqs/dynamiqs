@@ -40,7 +40,9 @@ def test_cartesian_batching_lowrank(nH, npsi0, nL1, nL2):
     # run mesolve
     H, Ls, psi0, Es = rand_mesolve_args(n, nH, nLs, npsi0, nEs)
     tsave = jnp.linspace(0, 0.01, ntsave)
-    result = dq.mesolve(H, Ls, psi0, tsave, exp_ops=Es, method=dq.method.LowRank(M=n))
+    result = dq.mesolve(
+        H, Ls, psi0, tsave, exp_ops=Es, method=dq.method.LowRank(rank=n)
+    )
 
     # check result shape
     assert result.states.shape == (*nH, *nL1, *nL2, *npsi0, ntsave, n, n)
@@ -65,7 +67,13 @@ def test_flat_batching_lowrank(nL1, npsi0):
     tsave = jnp.linspace(0, 0.01, ntsave)
     options = dq.Options(cartesian_batching=False)
     result = dq.mesolve(
-        H, Ls, psi0, tsave, exp_ops=Es, method=dq.method.LowRank(M=n), options=options
+        H,
+        Ls,
+        psi0,
+        tsave,
+        exp_ops=Es,
+        method=dq.method.LowRank(rank=n),
+        options=options,
     )
 
     # check result shape
@@ -95,7 +103,9 @@ def test_batching_boris_lowrank():
 
     rho0 = dq.fock_dm(n, range(3))  # (3, 9, 9)
     jump_ops = [a]
-    result = dq.mesolve(H, jump_ops, rho0, [0, 1], method=dq.method.LowRank(M=n // 2))
+    result = dq.mesolve(
+        H, jump_ops, rho0, [0, 1], method=dq.method.LowRank(rank=n // 2)
+    )
     assert result.states.shape == (7, 5, 3, 2, 9, 9)
     assert result.lowrank_states.shape == (7, 5, 3, 2, 9, n // 2)
     assert result.tsave is not None
