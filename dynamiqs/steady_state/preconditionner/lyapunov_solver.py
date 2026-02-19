@@ -77,14 +77,18 @@ class LyapunovSolverEig(eqx.Module):
 
         Y_tilde = v_.mT.conj() @ Y @ v_
         X_tilde = Y_tilde / (w_[:, None] + w_[None, :].conj() + mu)
-        X = u_ @ X_tilde @ u_.mT.conj()
-        return X
+        return u_ @ X_tilde @ u_.mT.conj()
 
     def solve(self, Y: Array, mu: float) -> Array:
-
         return jax.lax.custom_linear_solve(
             lambda X: self.lyapunov(X, mu),
             Y,
+            # `_mv` is the linear operator (matvec) passed by `custom_linear_solve`.
+            # It is required by the API but unused here because we provide a closed-form
+            # solver based on the eigendecomposition of G.
+            # `_mvT` is the transpose matvec passed by `custom_linear_solve`.
+            # It is required for autodiff, but unused since the transpose system
+            # is solved analytically via a dedicated eigenspace-based routine.
             solve=lambda _mv, Y: self._solve(Y, mu),
             transpose_solve=lambda _mvT, Y: self._solve_transpose(Y, mu),
         )
@@ -111,5 +115,4 @@ class LyapunovSolverEig(eqx.Module):
 
         Y_tilde = v_.mT.conj() @ Y @ v_
         X_tilde = Y_tilde / (w_[:, None] + w_[None, :].conj() + mu)
-        X = u_ @ X_tilde @ u_.mT.conj()
-        return X
+        return u_ @ X_tilde @ u_.mT.conj()
