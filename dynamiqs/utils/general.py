@@ -8,7 +8,6 @@ import numpy as np
 from jax import Array
 
 from .._checks import check_hermitian, check_shape
-from ..qarrays.dataarray import DataArray
 from ..qarrays.qarray import QArray, QArrayLike, get_dims
 from ..qarrays.utils import asqarray, init_dims, to_jax
 
@@ -795,11 +794,11 @@ def islrdm(x: QArrayLike) -> bool:
         >>> dq.islrdm(jnp.ones((4, 1)))
         False
     """
-    shape = x.shape if isinstance(x, QArray | DataArray) else asqarray(x).shape
-    if len(shape) < 2:
+    x = asqarray(x)
+    if len(x.shape) < 2:
         return False
-    n = shape[-2]
-    m = shape[-1]
+    n = x.shape[-2]
+    m = x.shape[-1]
     return (m > 1) and (n > m)
 
 

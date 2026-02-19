@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import ClassVar
 
 import equinox as eqx
+import jax.numpy as jnp
 from jaxtyping import PRNGKeyArray
 from optimistix import AbstractRootFinder
 
@@ -18,6 +19,7 @@ __all__ = [
     'Expm',
     'JumpMonteCarlo',
     'DiffusiveMonteCarlo',
+    'LowRank',
     'Kvaerno3',
     'Kvaerno5',
     'Rouchon1',
@@ -766,3 +768,108 @@ class DiffusiveMonteCarlo(_DEMethod):
     def __init__(self, keys: PRNGKeyArray, dsse_method: Method):
         self.keys = keys
         self.dsse_method = dsse_method
+
+
+class LowRank(Method):
+    r"""Low-rank method for the Lindblad master equation.
+
+    This method solves the low-rank Lindblad master equation by evolving factors
+    `m(t)` such that `$rho(t) = m(t) m(t)^\dagger$`, following Goutte, Savona (2025)
+    arxiv:2508.18114. The low-rank method is available via
+    [`dq.mesolve()`][dynamiqs.mesolve] by passing `method=dq.method.LowRank(...)`.
+
+    Args:
+        rank: Rank of the low-rank approximation (number of columns of `m(t)`).
+        ode_method: ODE solver used for the low-rank evolution (supported:
+            [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8], [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5], [`Euler`][dynamiqs.method.Euler]).
+        linear_solver: Linear solver used for the low-rank evolution. Supported values
+            are `'QR'` and `'cholesky'`. Defaults to `'QR'`. `'cholesky'` is usually
+            faster but may lead to instabilities.
+        init_perturbation_scale: Regularization parameter for the initialization of
+            the low-rank factors. This introduces random orthonormalized states of
+            probabilities $p_j=\epsilon$ to avoid $m^\dag m$ being singular. Defaults
+            to `1e-5`.
+        key: PRNG key used for random initialization of the low-rank factors.
+
+    Note:
+        The low-rank factors can be accessed from
+        [`result.lowrank_states`][dynamiqs.MESolveLowRankResult.lowrank_states].
+        `result.states` computes and returns the full-rank density matrices.
+
+    Note: Supported gradients
+        This method supports the same gradients as the chosen `ode_method`.
+
+    Warning:
+        Differentiation may be unstable and return wrong results or overflow: verify
+        stability before using in production.
+
+    Warning:
+        The `'cholesky'` linear solver may lead to instabilities and the progress bar
+        getting stuck when using single precision.
+
+    Warning:
+        The low-rank method is more sensitive to time-step error. If the accuracy does
+        not improve when increasing the `rank`, consider tightening the tolerances of
+        the chosen `ode_method`.
+    """
+
+    ode_method: Method
+    rank: int = eqx.field(static=True)
+    linear_solver: str = eqx.field(static=True, default='QR')
+    init_perturbation_scale: float = eqx.field(static=True, default=1e-5)
+    key: PRNGKeyArray
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
+        Direct,
+        BackwardCheckpointed,
+        Forward,
+    )
+
+    # dummy init to have the signature in the documentation
+    def __init__(
+        self,
+        rank: int,
+        ode_method: Method = Tsit5(),  # noqa: B008
+        linear_solver: str = 'QR',
+        init_perturbation_scale: float = 1e-5,
+        *,
+        key: PRNGKeyArray,
+    ):
+        self.ode_method = ode_method
+
+        if not jnp.issubdtype(type(rank), jnp.integer):
+            raise TypeError('Argument `rank` must be an int.')
+        rank = int(rank)
+        if rank <= 0:
+            raise ValueError(
+                f'Argument `rank` must be a positive integer, but is {rank}.'
+            )
+        self.rank = rank
+
+        if not isinstance(linear_solver, str):
+            raise TypeError('Argument `linear_solver` must be a string.')
+        linear_solver = linear_solver.lower()
+        if linear_solver not in ('qr', 'cholesky'):
+            raise ValueError(
+                "Argument `linear_solver` must be 'QR' or 'cholesky', "
+                f'but is {linear_solver!r}.'
+            )
+
+        self.linear_solver = linear_solver
+
+        try:
+            init_perturbation_scale = float(init_perturbation_scale)
+        except (TypeError, ValueError) as exc:
+            raise TypeError(
+                'Argument `init_perturbation_scale` must be a float.'
+            ) from exc
+        if init_perturbation_scale < 0.0:
+            raise ValueError(
+                'Argument `init_perturbation_scale` must be non-negative, but is '
+                f'{init_perturbation_scale}.'
+            )
+        self.init_perturbation_scale = init_perturbation_scale
+
+        self.key = jnp.asarray(key)

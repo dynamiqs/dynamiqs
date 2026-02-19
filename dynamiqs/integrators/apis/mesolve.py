@@ -19,6 +19,7 @@ from ...method import (
     JumpMonteCarlo,
     Kvaerno3,
     Kvaerno5,
+    LowRank,
     Method,
     Rouchon1,
     Rouchon2,
@@ -28,7 +29,7 @@ from ...method import (
 from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
-from ...result import MESolveResult
+from ...result import MESolveLowRankResult, MESolveResult
 from ...time_qarray import TimeQArray
 from .._utils import (
     assert_method_supported,
@@ -46,6 +47,7 @@ from ..core.diffrax_integrator import (
     mesolve_tsit5_integrator_constructor,
 )
 from ..core.expm_integrator import mesolve_expm_integrator_constructor
+from ..core.low_rank_integrator import mesolve_lowrank_integrator_constructor
 from ..core.montecarlo_integrator import (
     mesolve_diffusivemontecarlo_integrator_constructor,
     mesolve_jumpmontecarlo_integrator_constructor,
@@ -112,7 +114,8 @@ def mesolve(
             [`Rouchon3`][dynamiqs.method.Rouchon3],
             [`Expm`][dynamiqs.method.Expm],
             [`JumpMonteCarlo`][dynamiqs.method.JumpMonteCarlo],
-            [`DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo]).
+            [`DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo],
+            [`LowRank`][dynamiqs.method.LowRank]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
@@ -194,6 +197,9 @@ def mesolve(
                 - **`method`** _(Method)_ - Method used.
                 - **`gradient`** _(Gradient)_ - Gradient used.
                 - **`options`** _(Options)_ - Options used.
+                - **`lowrank_states`** _(qarray of shape (..., nsave, n, rank))_ - Only
+                    available when using `dq.method.LowRank`, stores the low-rank
+                    factors `m(t)`.
 
     Examples:
         ```python
@@ -311,7 +317,11 @@ def _vectorized_mesolve(
 ) -> MESolveResult:
     # vectorize input over H, Ls and rho0
     in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, None, None, None, None, None)
-    out_axes = MESolveResult.out_axes()
+    out_axes = (
+        MESolveLowRankResult.out_axes()
+        if isinstance(method, LowRank)
+        else MESolveResult.out_axes()
+    )
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0.ndim - 2, 0, 0, 0, 0, 0)
@@ -354,6 +364,7 @@ def _mesolve(
         Expm: mesolve_expm_integrator_constructor,
         JumpMonteCarlo: mesolve_jumpmontecarlo_integrator_constructor,
         DiffusiveMonteCarlo: mesolve_diffusivemontecarlo_integrator_constructor,
+        LowRank: mesolve_lowrank_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
     integrator_constructor = integrator_constructors[type(method)]

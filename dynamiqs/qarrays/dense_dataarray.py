@@ -72,7 +72,7 @@ class DenseDataArray(DataArray):
     def trace(self) -> Array:
         from ..utils.general import islrdm  # noqa: PLC0415
 
-        if islrdm(self):
+        if islrdm(self.data):
             return (jnp.abs(self.data) ** 2).sum((-2, -1))
         return self.data.trace(axis1=-1, axis2=-2)
 
