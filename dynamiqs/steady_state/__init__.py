@@ -1,1 +1,1 @@
-from .api.steady_state_solver import steady_state
+from .api.steady_state_solver import steadystate

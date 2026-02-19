@@ -5,6 +5,7 @@ from .options import *
 from .qarrays import *
 from .qarrays.layout import dense, dia
 from .result import *
+from .steady_state import *
 from .time_qarray import *
 from .utils import *
 
