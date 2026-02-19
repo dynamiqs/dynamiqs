@@ -785,7 +785,8 @@ class LowRank(Method):
             [`Dopri8`][dynamiqs.method.Dopri8], [`Kvaerno3`][dynamiqs.method.Kvaerno3],
             [`Kvaerno5`][dynamiqs.method.Kvaerno5], [`Euler`][dynamiqs.method.Euler]).
         linear_solver: Linear solver used for the low-rank evolution. Supported values
-            are `'QR'` and `'cholesky'`. Defaults to `'QR'`.
+            are `'QR'` and `'cholesky'`. Defaults to `'QR'`. `'cholesky'` is usually
+            faster but may lead to instabilities.
         eps_init: Regularization parameter for the initialization of the low-rank
             factors. This introduces random orthonormalized states of probabilities
             $p_j=\epsilon$ to avoid $m^\dag m$ being singular. Defaults to `1e-5`.
@@ -797,10 +798,11 @@ class LowRank(Method):
         `result.states` computes and returns the full-rank density matrices.
 
     Note: Supported gradients
-        This method supports in principle the same gradients as the chosen `ode_method`.
+        This method supports the same gradients as the chosen `ode_method`.
 
     Warning:
-        Differentiation may be unstable and return wrong results.
+        Differentiation may be unstable and return wrong results or overflow: verify
+        stability before using in production.
 
     Warning:
         The `'cholesky'` linear solver may lead to instabilities and the progress bar
@@ -836,8 +838,9 @@ class LowRank(Method):
     ):
         self.ode_method = ode_method
 
-        if not isinstance(rank, int):
+        if not jnp.issubdtype(type(rank), jnp.integer):
             raise TypeError('Argument `rank` must be an int.')
+        rank = int(rank)
         if rank <= 0:
             raise ValueError(
                 f'Argument `rank` must be a positive integer, but is {rank}.'
