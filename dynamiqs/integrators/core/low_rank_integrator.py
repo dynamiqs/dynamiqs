@@ -48,9 +48,7 @@ def rho_from_m(m: Array) -> Array:
     return rho / tr[..., None, None]
 
 
-def initialize_m0_from_ket(
-    psi0: Array, rank: int, *, eps: float, key: Array | None
-) -> Array:
+def initialize_m0_from_ket(psi0: Array, rank: int, *, eps: float, key: Array) -> Array:
     """Initialize the low-rank d.m. m0 from a pure state |psi0>.
 
     The first column of m0 is (a rescaled) psi0, and the remaining rank-1 columns
@@ -59,9 +57,6 @@ def initialize_m0_from_ket(
     while making the target rank for numerical stability.
     """
     # psi0 has shape (n, 1)
-    if key is None:
-        key = jax.random.PRNGKey(0)
-
     n = psi0.shape[0]
     psi0 = psi0 / jnp.linalg.norm(psi0)
     psi0_unit = psi0
@@ -89,7 +84,7 @@ def initialize_m0_from_ket(
 
 
 def initialize_m0_from_dm(
-    rho0: Array, rank: int, *, eps: float, key: Array | None, eigval_tol: float = 1e-12
+    rho0: Array, rank: int, *, eps: float, key: Array, eigval_tol: float = 1e-12
 ) -> Array:
     """Initialize the low-rank d.m. m0 from a density matrix rho0.
 
@@ -107,8 +102,6 @@ def initialize_m0_from_dm(
     # For columns with near-zero eigenvalues, add small random perturbations
     # scaled by eps to avoid degeneracies during solve.
     if eps > 0.0:
-        if key is None:
-            key = jax.random.PRNGKey(0)
         key_r, key_i = jax.random.split(key)
         rand_r = jax.random.normal(key_r, (rho0.shape[0], rank), dtype=cols.real.dtype)
         rand_i = jax.random.normal(key_i, (rho0.shape[0], rank), dtype=cols.real.dtype)
