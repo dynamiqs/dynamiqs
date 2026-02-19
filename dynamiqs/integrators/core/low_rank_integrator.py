@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from functools import partial
 from typing import Literal
 
@@ -11,8 +12,12 @@ import lineax as lx
 from jax import Array
 from jaxtyping import PyTree
 
+from ..._checks import check_hermitian
+from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, LowRank, Tsit5
 from ...qarrays.utils import asqarray
-from ...result import SolveSaved
+from ...result import Result, SolveSaved
+from .._utils import assert_method_supported
+from .abstract_integrator import BaseIntegrator
 from .diffrax_integrator import DiffraxIntegrator
 from .interfaces import MEInterface, SolveInterface
 from .save_mixin import SolveSaveMixin
@@ -121,6 +126,86 @@ def expval_from_m(m: Array, op: Array) -> Array:
     return jnp.sum(jnp.conj(m) * (op @ m))
 
 
+class MESolveLowRankIntegrator(BaseIntegrator, MEInterface, SolveInterface):
+    # Handles LowRank method checks and initialization of the low-rank d.m. `m0`,
+    # then initializes and calls `MESolveLowRankDiffraxIntegrator`.
+    method: LowRank
+    dims: tuple[int, ...] | None = eqx.field(static=True, default=None)
+
+    def __post_init__(self):
+        # check that assume_hermitian is True (required for the low-rank solver)
+        if not self.options.assume_hermitian:
+            raise ValueError(
+                'The low-rank solver requires `assume_hermitian=True` (the default). '
+                'Set `options=dq.Options(assume_hermitian=True)` or omit the option.'
+            )
+
+        # check hermiticity for density matrix inputs
+        if self.y0.isdm():
+            self.y0 = check_hermitian(self.y0, 'rho0')
+
+        n = self.y0.shape[-2]
+        if n < self.method.M:
+            raise ValueError(
+                f'Argument `M` must be <= n, but is M={self.method.M} (n={n}).'
+            )
+        if self.method.linear_solver == 'cholesky' and not jax.config.read(
+            'jax_enable_x64'
+        ):
+            warnings.warn(
+                'Using the Cholesky linear solver with single-precision dtypes can be '
+                'numerically unstable; consider enabling double precision with '
+                "`dq.set_precision('double')`.",
+                stacklevel=2,
+            )
+
+        # initialize low-rank representation from ket or density matrix input
+        self.dims = self.y0.dims
+        eps = self.method.eps_init
+        if self.y0.isket():
+            psi0 = self.y0.to_jax()
+            self.y0 = initialize_m0_from_ket(
+                psi0, self.method.M, eps=eps, key=self.method.key
+            )
+        else:
+            rho0_dm = self.y0.todm()
+            self.y0 = initialize_m0_from_dm(
+                rho0_dm.to_jax(), self.method.M, eps=eps, key=self.method.key
+            )
+
+        self.Es = [E.to_jax() for E in self.Es] if self.Es is not None else None
+
+    def run(self) -> Result:
+        integrator_constructors = {
+            Euler: mesolve_lr_euler_integrator_constructor,
+            Dopri5: mesolve_lr_dopri5_integrator_constructor,
+            Dopri8: mesolve_lr_dopri8_integrator_constructor,
+            Tsit5: mesolve_lr_tsit5_integrator_constructor,
+            Kvaerno3: mesolve_lr_kvaerno3_integrator_constructor,
+            Kvaerno5: mesolve_lr_kvaerno5_integrator_constructor,
+        }
+        assert_method_supported(self.method.ode_method, integrator_constructors.keys())
+        integrator_constructor = integrator_constructors[type(self.method.ode_method)]
+
+        self.method.ode_method.assert_supports_gradient(self.gradient)
+
+        integrator = integrator_constructor(
+            ts=self.ts,
+            y0=self.y0,
+            method=self.method.ode_method,
+            gradient=self.gradient,
+            result_class=self.result_class,
+            options=self.options,
+            H=self.H,
+            Ls=self.Ls,
+            Es=self.Es,
+            linear_solver=self.method.linear_solver,
+            save_lowrank_representation_only=self.method.save_lowrank_representation_only,
+            dims=self.dims,
+        )
+        return integrator.run()
+
+
 class MESolveLowRankDiffraxIntegrator(
     DiffraxIntegrator, MEInterface, SolveSaveMixin, SolveInterface
 ):
@@ -214,3 +299,6 @@ mesolve_lr_kvaerno3_integrator_constructor = partial(
 mesolve_lr_kvaerno5_integrator_constructor = partial(
     MESolveLowRankDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
 )
+
+
+mesolve_lowrank_integrator_constructor = MESolveLowRankIntegrator

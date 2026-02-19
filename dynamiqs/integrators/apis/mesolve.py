@@ -7,7 +7,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
+from ..._checks import check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
 from ...method import (
     DiffusiveMonteCarlo,
@@ -47,16 +47,7 @@ from ..core.diffrax_integrator import (
     mesolve_tsit5_integrator_constructor,
 )
 from ..core.expm_integrator import mesolve_expm_integrator_constructor
-from ..core.low_rank_integrator import (
-    initialize_m0_from_dm,
-    initialize_m0_from_ket,
-    mesolve_lr_dopri5_integrator_constructor,
-    mesolve_lr_dopri8_integrator_constructor,
-    mesolve_lr_euler_integrator_constructor,
-    mesolve_lr_kvaerno3_integrator_constructor,
-    mesolve_lr_kvaerno5_integrator_constructor,
-    mesolve_lr_tsit5_integrator_constructor,
-)
+from ..core.low_rank_integrator import mesolve_lowrank_integrator_constructor
 from ..core.montecarlo_integrator import (
     mesolve_diffusivemontecarlo_integrator_constructor,
     mesolve_jumpmontecarlo_integrator_constructor,
@@ -295,8 +286,6 @@ def mesolve(
 
     # === check arguments
     _check_mesolve_args(H, Ls, rho0, exp_ops)
-    if isinstance(method, LowRank):
-        rho0 = _check_mesolve_low_rank_args(rho0, method, options)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'mesolve')
     options = options.initialise()
@@ -357,9 +346,6 @@ def _mesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> MESolveResult:
-    if isinstance(method, LowRank):
-        return _mesolve_low_rank(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
-
     # === select integrator constructor
     integrator_constructors = {
         Euler: mesolve_euler_integrator_constructor,
@@ -374,6 +360,7 @@ def _mesolve(
         Expm: mesolve_expm_integrator_constructor,
         JumpMonteCarlo: mesolve_jumpmontecarlo_integrator_constructor,
         DiffusiveMonteCarlo: mesolve_diffusivemontecarlo_integrator_constructor,
+        LowRank: mesolve_lowrank_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
     integrator_constructor = integrator_constructors[type(method)]
@@ -401,58 +388,6 @@ def _mesolve(
     return result  # noqa: RET504
 
 
-def _mesolve_low_rank(
-    H: TimeQArray,
-    Ls: list[TimeQArray],
-    rho0: QArray,
-    tsave: Array,
-    exp_ops: list[QArray] | None,
-    method: LowRank,
-    gradient: Gradient | None,
-    options: Options,
-) -> MESolveResult:
-    integrator_constructors = {
-        Euler: mesolve_lr_euler_integrator_constructor,
-        Dopri5: mesolve_lr_dopri5_integrator_constructor,
-        Dopri8: mesolve_lr_dopri8_integrator_constructor,
-        Tsit5: mesolve_lr_tsit5_integrator_constructor,
-        Kvaerno3: mesolve_lr_kvaerno3_integrator_constructor,
-        Kvaerno5: mesolve_lr_kvaerno5_integrator_constructor,
-    }
-    assert_method_supported(method.ode_method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method.ode_method)]
-
-    method.ode_method.assert_supports_gradient(gradient)
-
-    eps = method.eps_init
-
-    if rho0.isket():
-        psi0 = rho0.to_jax()
-        m0 = initialize_m0_from_ket(psi0, method.M, eps=eps, key=method.key)
-    else:
-        rho0_dm = rho0.todm()
-        m0 = initialize_m0_from_dm(rho0_dm.to_jax(), method.M, eps=eps, key=method.key)
-
-    Es = [E.to_jax() for E in exp_ops] if exp_ops is not None else None
-
-    integrator = integrator_constructor(
-        ts=tsave,
-        y0=m0,
-        method=method.ode_method,
-        gradient=gradient,
-        result_class=MESolveResult,
-        options=options,
-        H=H,
-        Ls=Ls,
-        Es=Es,
-        linear_solver=method.linear_solver,
-        save_lowrank_representation_only=method.save_lowrank_representation_only,
-        dims=rho0.dims,
-    )
-
-    return integrator.run()
-
-
 def _check_mesolve_args(
     H: TimeQArray, Ls: list[TimeQArray], rho0: QArray, exp_ops: list[QArray] | None
 ):
@@ -478,31 +413,3 @@ def _check_mesolve_args(
     if exp_ops is not None:
         for i, E in enumerate(exp_ops):
             check_shape(E, f'exp_ops[{i}]', '(n, n)')
-
-
-def _check_mesolve_low_rank_args(
-    rho0: QArray, method: LowRank, options: Options
-) -> QArray:
-    # check that assume_hermitian is True (required for the low-rank solver)
-    if not options.assume_hermitian:
-        raise ValueError(
-            'The low-rank solver requires `assume_hermitian=True` (the default). '
-            'Set `options=dq.Options(assume_hermitian=True)` or omit the option.'
-        )
-
-    # check hermiticity for density matrix inputs
-    if rho0.isdm():
-        rho0 = check_hermitian(rho0, 'rho0')
-
-    n = rho0.shape[-2]
-    if n < method.M:
-        raise ValueError(f'Argument `M` must be <= n, but is M={method.M} (n={n}).')
-    if method.linear_solver == 'cholesky' and not jax.config.read('jax_enable_x64'):
-        warnings.warn(
-            'Using the Cholesky linear solver with single-precision dtypes can be '
-            'numerically unstable; consider enabling double precision with '
-            "`dq.set_precision('double')`.",
-            stacklevel=2,
-        )
-
-    return rho0
