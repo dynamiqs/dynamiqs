@@ -786,13 +786,16 @@ class LowRank(Method):
             [`Kvaerno5`][dynamiqs.method.Kvaerno5], [`Euler`][dynamiqs.method.Euler]).
         linear_solver: Linear solver used for the low-rank evolution. Supported values
             are `'QR'` and `'cholesky'`. Defaults to `'QR'`.
-        save_lowrank_representation_only: If `True`, `result.states` stores the
-            low-rank factors `m(t)` instead of density matrices. Defaults to `False`.
         eps_init: Regularization parameter for the initialization of the low-rank
             factors. This introduces random orthonormalized states of probabilities
             $p_j=\epsilon$ to avoid $m^\dag m$ being singular. Defaults to `1e-5`.
         key: PRNG key used for random initialization of the low-rank factors. If
             `None`, a default key is used.
+
+    Note:
+        The low-rank factors can be accessed from
+        [`result.lowrank_states`][dynamiqs.MESolveLowRankResult.lowrank_states].
+        `result.states` computes and returns the full-rank density matrices.
 
     Note: Supported gradients
         This method supports in principle the same gradients as the chosen `ode_method`.
@@ -813,7 +816,6 @@ class LowRank(Method):
     ode_method: Method
     M: int = eqx.field(static=True)
     linear_solver: str = eqx.field(static=True, default='QR')
-    save_lowrank_representation_only: bool = eqx.field(static=True, default=False)
     eps_init: float = eqx.field(static=True, default=1e-5)
     key: PRNGKeyArray | None = None
 
@@ -829,7 +831,6 @@ class LowRank(Method):
         M: int,
         ode_method: Method = Tsit5(),  # noqa: B008
         linear_solver: str = 'QR',
-        save_lowrank_representation_only: bool = False,
         eps_init: float = 1e-5,
         key: PRNGKeyArray | None = None,
     ):
@@ -851,7 +852,6 @@ class LowRank(Method):
             )
 
         self.linear_solver = linear_solver
-        self.save_lowrank_representation_only = save_lowrank_representation_only
 
         try:
             eps_init = float(eps_init)
