@@ -197,7 +197,7 @@ def mesolve(
                 - **`method`** _(Method)_ - Method used.
                 - **`gradient`** _(Gradient)_ - Gradient used.
                 - **`options`** _(Options)_ - Options used.
-                - **`lowrank_states`** _(qarray of shape (..., nsave, n, M))_ - Only
+                - **`lowrank_states`** _(qarray of shape (..., nsave, n, rank))_ - Only
                     available when using `dq.method.LowRank`, stores the low-rank
                     factors `m(t)`.
 

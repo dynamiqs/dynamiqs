@@ -25,8 +25,8 @@ def _double_precision():
 
 
 def _lowrank_method(system):
-    M = 2 if system is otdqubit else system.n // 2
-    return LowRank(M=M, ode_method=Tsit5())
+    rank = 2 if system is otdqubit else system.n // 2
+    return LowRank(rank=rank, ode_method=Tsit5())
 
 
 @pytest.mark.run(order=TEST_LONG)

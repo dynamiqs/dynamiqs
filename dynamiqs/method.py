@@ -779,7 +779,7 @@ class LowRank(Method):
     [`dq.mesolve()`][dynamiqs.mesolve] by passing `method=dq.method.LowRank(...)`.
 
     Args:
-        M: Rank of the low-rank approximation (number of columns of `m(t)`).
+        rank: Rank of the low-rank approximation (number of columns of `m(t)`).
         ode_method: ODE solver used for the low-rank evolution (supported:
             [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
             [`Dopri8`][dynamiqs.method.Dopri8], [`Kvaerno3`][dynamiqs.method.Kvaerno3],
@@ -809,12 +809,12 @@ class LowRank(Method):
 
     Warning:
         The low-rank method is more sensitive to time-step error. If the accuracy does
-        not improve when increasing the rank `M`, consider tightening the tolerances of
+        not improve when increasing the `rank`, consider tightening the tolerances of
         the chosen `ode_method`.
     """
 
     ode_method: Method
-    M: int = eqx.field(static=True)
+    rank: int = eqx.field(static=True)
     linear_solver: str = eqx.field(static=True, default='QR')
     eps_init: float = eqx.field(static=True, default=1e-5)
     key: PRNGKeyArray | None = None
@@ -828,7 +828,7 @@ class LowRank(Method):
     # dummy init to have the signature in the documentation
     def __init__(
         self,
-        M: int,
+        rank: int,
         ode_method: Method = Tsit5(),  # noqa: B008
         linear_solver: str = 'QR',
         eps_init: float = 1e-5,
@@ -836,11 +836,13 @@ class LowRank(Method):
     ):
         self.ode_method = ode_method
 
-        if not isinstance(M, int):
-            raise TypeError('Argument `M` must be an int.')
-        if M <= 0:
-            raise ValueError(f'Argument `M` must be a positive integer, but is {M}.')
-        self.M = M
+        if not isinstance(rank, int):
+            raise TypeError('Argument `rank` must be an int.')
+        if rank <= 0:
+            raise ValueError(
+                f'Argument `rank` must be a positive integer, but is {rank}.'
+            )
+        self.rank = rank
 
         if not isinstance(linear_solver, str):
             raise TypeError('Argument `linear_solver` must be a string.')
