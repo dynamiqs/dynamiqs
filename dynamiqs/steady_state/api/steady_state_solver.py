@@ -1,16 +1,20 @@
-import abc
-from collections.abc import Callable
-from typing import Any
-
-import dynamiqs as dq
 import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jax import Array
 
+import dynamiqs as dq
+
 from ..linear_system.gmres import gmres
 from ..preconditionner.lyapunov_solver import LyapunovSolverEig
-from .utils import finalize_density_matrix, frobenius_dot_product, update_preconditioner
+from .utils import (
+    finalize_density_matrix,
+    from_dm,
+    from_matrix,
+    to_dm,
+    to_matrix,
+    update_preconditioner,
+)
 
 
 class GMRESAuxInfo(eqx.Module):
@@ -94,15 +98,16 @@ def steady_state(
         Ls (list of qarray, each of shape (n, n)): List of jump operators.
         tol: Tolerance for the stopping criterion. The solver stops when
             $\|\mathcal{L}(\rho)\| < \mathrm{tol}$, where the norm is determined
-            by `norm_type`. Defaults to `1e-4`. This tolerance works for both simple and double precision.
+            by `norm_type`. Defaults to `1e-4`.
+            This tolerance works for both simple and double precision.
         initial_guess (qarray of shape (n, n), optional): Initial guess for the
             density matrix. Defaults to `None`, which uses the vacuum state
             $|0\rangle\langle 0|$.
         max_iter: Maximum number of outer GMRES iterations. Defaults to `100`.
         krylov_size: Size of the Krylov subspace used in each GMRES restart cycle.
             Defaults to `32`.
-            If the steady state doesn't converge to the wanted tolerance, this parameter can be increased:
-            `krylov_size = 64` or `128`
+            If the steady state doesn't converge to the wanted tolerance, this
+            parameter can be increased: `krylov_size = 64` or `128`
         exact_dm: If `True`, the final density matrix is projected onto the set of
             valid density matrices (positive semi-definite with unit trace) by
             diagonalizing and projecting the eigenvalues onto the simplex. If
@@ -148,8 +153,8 @@ def steady_state(
             f'Unknown norm type {norm_type!r}. Expected one of {supported_norm_types}.'
         )
 
-    n = H.shape[-1]
-    dims = H.dims
+    hilbert_size = H.shape[-1]
+    hilbert_dimensions = H.dims
 
     # Conversion of Ls in tensor in order to efficiently get LdagL
     Ls_q = dq.stack(Ls)
@@ -164,28 +169,18 @@ def steady_state(
     # the solver itself. Hence the stop_gradient here.
     preconditioner = LyapunovSolverEig(jax.lax.stop_gradient(G))
 
-    def from_matrix(x: Array) -> Array:
-        return x.flatten(order='F')
-
-    def to_matrix(x: Array) -> Array:
-        return x.reshape((n, n), order='F')
-
-    def to_dm(x: Array) -> dq.QArray:
-        return dq.asqarray(to_matrix(x), dims=dims)
-
-    def from_dm(x: dq.QArray) -> Array:
-        return from_matrix(x.to_jax())
-
     if initial_guess is None:
-        initial_guess = dq.coherent_dm(n, 0.0)
+        initial_guess = dq.coherent_dm(hilbert_size, 0.0)
 
     x_0 = from_dm(initial_guess)
 
-    identity_vectorized = from_matrix(jnp.eye(n, dtype=dtype))
+    identity_vectorized = from_matrix(jnp.eye(hilbert_size, dtype=dtype))
     rhs = identity_vectorized
 
     def lindbladian(x: Array) -> Array:
-        return from_dm(dq.lindbladian(H, Ls_q, to_dm(x)))
+        return from_dm(
+            dq.lindbladian(H, Ls_q, to_dm(x, n=hilbert_size, dims=hilbert_dimensions))
+        )
 
     def lindbladian_plus_rank1(x: Array) -> Array:
         return (
@@ -196,7 +191,7 @@ def steady_state(
         )
 
     def base_preconditioner(x: Array) -> Array:
-        return -from_matrix(preconditioner.solve(to_matrix(x), mu=0.0))
+        return -from_matrix(preconditioner.solve(to_matrix(x, n=hilbert_size), mu=0.0))
 
     # When `use_rank_1_update` is `True`, the preconditioner is further corrected
     # to account for the rank-1 deflation using the Sherman-Morrison formula.
@@ -207,8 +202,9 @@ def steady_state(
 
     def stopping_criterion(x: Array) -> Array:
         """Checks if the hermicized, trace-1 density matrix satisfies
-        `|| L rho || < tol`."""
-        x_mat = to_matrix(x)
+        `|| L rho || < tol`.
+        """
+        x_mat = to_matrix(x, hilbert_size)
         x_mat = 0.5 * (x_mat.conj().mT + x_mat)
         x_mat = x_mat / jnp.trace(x_mat)
         if norm_type == 'max':
@@ -229,7 +225,7 @@ def steady_state(
     )
     recycling_info = (U, C)
 
-    rho = finalize_density_matrix(to_matrix(x), exact_dm)
-    rho = to_dm(from_matrix(rho))
+    rho = finalize_density_matrix(to_matrix(x, n=hilbert_size), exact_dm)
+    rho = to_dm(from_matrix(rho), n=hilbert_size, dims=hilbert_dimensions)
 
     return rho, GMRESAuxInfo(n_iteration, success, recycling_info)
