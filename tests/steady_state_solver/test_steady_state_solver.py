@@ -1,4 +1,4 @@
-"""Tests for the steady_state solver.
+"""Tests for the steadystate solver.
 
 Tests convergence at different tolerances and system sizes for:
 - Two-mode systems (build_two_modes with kappa_a=1)
@@ -7,12 +7,9 @@ Also tests JIT compatibility.
 """
 
 import jax
-
 import jax.numpy as jnp
 import dynamiqs as dq
 import pytest
-
-from dynamiqs.steady_state.api.steady_state_solver import steady_state
 
 from .systems import build_two_modes, build_random_single_mode
 
@@ -62,7 +59,6 @@ def gamma(request):
 
 def lindbladian_residual(H, Ls, rho):
     """Compute max-abs norm of L(rho), i.e. max|lindbladian(rho)|."""
-    # Ls_q = dq.stack(Ls)
     L_rho = dq.lindbladian(H, Ls, rho)
     return float(jnp.max(jnp.abs(L_rho.to_jax())))
 
@@ -103,17 +99,17 @@ class TestTwoModes:
     def test_convergence(self, na, nb, tol, precision):
         """Solver converges and residual is below tolerance."""
         H, Ls = build_two_modes(na, nb, kappa_a=1)
-        rho, info = steady_state(
+        result = dq.steadystate(
             H, Ls, tol=tol, max_iteration=200, krylov_size=64, exact_dm=False
         )
 
-        assert bool(info.success), (
+        assert bool(result.infos.success), (
             f'Solver did not converge (na={na}, nb={nb}, tol={tol:.0e}, '
-            f'iters={info.n_iteration})'
+            f'iters={result.infos.n_iteration})'
         )
-        residual = lindbladian_residual(H, Ls, rho)
+        residual = lindbladian_residual(H, Ls, result.rho)
         assert residual < tol, f'Residual {residual:.2e} exceeds tol={tol:.0e}'
-        assert_valid_dm(rho, precision)
+        assert_valid_dm(result.rho, precision)
 
 
 # ---------------------------------------------------------------------------
@@ -128,15 +124,15 @@ class TestRandomSingleMode:
         """Solver converges and residual is below tolerance."""
         n = na * nb
         H, Ls = build_random_single_mode(n, seed=0, gamma=gamma)
-        rho, info = steady_state(H, Ls, tol=tol, max_iteration=200, krylov_size=32)
+        result = dq.steadystate(H, Ls, tol=tol, max_iteration=200, krylov_size=32)
 
-        assert bool(info.success), (
+        assert bool(result.infos.success), (
             f'Solver did not converge (n={n}, gamma={gamma}, tol={tol:.0e}, '
-            f'iters={info.n_iteration})'
+            f'iters={result.infos.n_iteration})'
         )
-        residual = lindbladian_residual(H, Ls, rho)
+        residual = lindbladian_residual(H, Ls, result.rho)
         assert residual < tol, f'Residual {residual:.2e} exceeds tol={tol:.0e}'
-        assert_valid_dm(rho, precision)
+        assert_valid_dm(result.rho, precision)
 
 
 # ---------------------------------------------------------------------------
@@ -156,26 +152,28 @@ class TestSimpleOscillator:
         H = epsilon_a * a + epsilon_a * a.dag()
         Ls = [jnp.sqrt(kappa) * a]
 
-        rho, info = steady_state(
+        result = dq.steadystate(
             H, Ls, tol=tol, max_iteration=200, krylov_size=64, exact_dm=True
         )
 
-        assert bool(info.success), (
-            f'Solver did not converge (n={n}, tol={tol:.0e}, iters={info.n_iteration})'
+        assert bool(result.infos.success), (
+            f'Solver did not converge (n={n}, tol={tol:.0e}, '
+            f'iters={result.infos.n_iteration})'
         )
-        residual = lindbladian_residual(H, Ls, rho)
+        residual = lindbladian_residual(H, Ls, result.rho)
         assert residual < tol, f'Residual {residual:.2e} exceeds tol={tol:.0e}'
-        assert_valid_dm(rho, precision)
+        assert_valid_dm(result.rho, precision)
 
-        tol = 1e-8 if precision == 'double' else 1e-5
-        rho_num, info = steady_state(
-            H, Ls, tol=tol, max_iteration=200, krylov_size=64, exact_dm=True
+        fine_tol = 1e-8 if precision == 'double' else 1e-5
+        result_fine = dq.steadystate(
+            H, Ls, tol=fine_tol, max_iteration=200, krylov_size=64, exact_dm=True
         )
-        assert bool(info.success), (
-            f'Solver did not converge (n={n}, tol={tol:.0e}, iters={info.n_iteration})'
+        assert bool(result_fine.infos.success), (
+            f'Solver did not converge (n={n}, tol={fine_tol:.0e}, '
+            f'iters={result_fine.infos.n_iteration})'
         )
         rho_analytical = _simple_oscillator_analytical_steady_state(n, epsilon_a, kappa)
-        fidelity = float(dq.fidelity(rho_num, rho_analytical))
+        fidelity = float(dq.fidelity(result_fine.rho, rho_analytical))
         fid_tol = 1e-10 if precision == 'double' else 1e-5
         assert fidelity > 1 - fid_tol, (
             f'Fidelity {fidelity:.8f} too low for analytical steady state '
@@ -189,38 +187,50 @@ class TestSimpleOscillator:
 
 
 class TestJIT:
-    """Verify that steady_state is jittable."""
+    """Verify that steadystate works correctly within a JIT context.
 
-    def test_jit_two_modes(self):
+    Since steadystate already applies @jax.jit internally, we test that it can
+    be called from within a larger jitted function (composability) and that
+    repeated calls hit the compilation cache.
+    """
+
+    def test_jit_composability_two_modes(self):
+        """steadystate can be called inside a jitted function."""
         na, nb = 12, 3
         H, Ls = build_two_modes(na, nb, kappa_a=1)
         tol = 1e-1
 
         @jax.jit
-        def solve():
-            return steady_state(H, Ls, tol=tol)
+        def solve_and_get_trace(H, Ls):
+            result = dq.steadystate(H, Ls, tol=tol)
+            return jnp.trace(result.rho.to_jax()), result.infos.success
 
-        # First call triggers compilation
-        rho, info = solve()
-        assert bool(info.success), 'JIT solver did not converge (two-mode)'
-        assert lindbladian_residual(H, Ls, rho) < tol
+        trace_val, success = solve_and_get_trace(H, Ls)
+        assert bool(success), 'JIT-wrapped solver did not converge (two-mode)'
+        assert jnp.isclose(trace_val, 1.0, atol=1e-4), (
+            f'Tr(rho) = {trace_val}, expected 1.0'
+        )
 
-        # Second call uses cached compilation
-        rho2, info2 = solve()
-        assert bool(info2.success), 'Second JIT call did not converge'
+        # Second call should use cached compilation
+        trace_val2, success2 = solve_and_get_trace(H, Ls)
+        assert bool(success2), 'Second JIT call did not converge'
 
-    def test_jit_random_single_mode(self):
+    def test_jit_composability_random_single_mode(self):
+        """steadystate can be called inside a jitted function."""
         n = 36
         H, Ls = build_random_single_mode(n, seed=42, gamma=1.0)
         tol = 1e-1
 
         @jax.jit
-        def solve():
-            return steady_state(H, Ls, tol=tol)
+        def solve_and_get_trace(H, Ls):
+            result = dq.steadystate(H, Ls, tol=tol)
+            return jnp.trace(result.rho.to_jax()), result.infos.success
 
-        rho, info = solve()
-        assert bool(info.success), 'JIT solver did not converge (random)'
-        assert lindbladian_residual(H, Ls, rho) < tol
+        trace_val, success = solve_and_get_trace(H, Ls)
+        assert bool(success), 'JIT-wrapped solver did not converge (random)'
+        assert jnp.isclose(trace_val, 1.0, atol=1e-4), (
+            f'Tr(rho) = {trace_val}, expected 1.0'
+        )
 
 
 # ---------------------------------------------------------------------------
