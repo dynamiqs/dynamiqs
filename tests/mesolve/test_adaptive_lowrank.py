@@ -1,4 +1,5 @@
 import jax
+import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
@@ -39,3 +40,12 @@ class TestMESolveAdaptiveLowRank(IntegratorTester):
     @pytest.mark.parametrize('gradient', [Direct(), BackwardCheckpointed(), Forward()])
     def test_gradient(self, system, gradient):
         self._test_gradient(system, _lowrank_method(system), gradient)
+
+    @pytest.mark.parametrize('system', [dense_ocavity])
+    def test_lowrank_states(self, system):
+        result = system.run(_lowrank_method(system), options=Options())
+        assert isinstance(result, dq.MESolveLowRankResult)
+
+        m = result.lowrank_states.to_jax()
+        rho = m @ m.conj().swapaxes(-2, -1)
+        assert jnp.allclose(result.states.to_jax(), rho)

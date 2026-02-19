@@ -29,7 +29,7 @@ from ...method import (
 from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
-from ...result import MESolveResult
+from ...result import MESolveLowRankResult, MESolveResult
 from ...time_qarray import TimeQArray
 from .._utils import (
     assert_method_supported,
@@ -184,10 +184,7 @@ def mesolve(
 
                 - **`states`** _(qarray of shape (..., nsave, n, n))_ - Saved states
                     with `nsave = ntsave`, or `nsave = 1` if
-                    `options.save_states=False`. When using the low-rank method with
-                    `save_lowrank_representation_only=True`, `states` contains the
-                    factors `m(t)` with
-                    shape (..., nsave, n, M).
+                    `options.save_states=False`.
                 - **`final_state`** _(qarray of shape (..., n, n))_ - Saved final state.
                 - **`expects`** _(array of shape (..., len(exp_ops), ntsave) or None)_ -
                     Saved expectation values, if specified by `exp_ops`.
@@ -200,6 +197,9 @@ def mesolve(
                 - **`method`** _(Method)_ - Method used.
                 - **`gradient`** _(Gradient)_ - Gradient used.
                 - **`options`** _(Options)_ - Options used.
+                - **`lowrank_states`** _(qarray of shape (..., nsave, n, M))_ - Only
+                    available when using `dq.method.LowRank`, stores the low-rank
+                    factors `m(t)`.
 
     Examples:
         ```python
@@ -317,7 +317,11 @@ def _vectorized_mesolve(
 ) -> MESolveResult:
     # vectorize input over H, Ls and rho0
     in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, None, None, None, None, None)
-    out_axes = MESolveResult.out_axes()
+    out_axes = (
+        MESolveLowRankResult.out_axes()
+        if isinstance(method, LowRank)
+        else MESolveResult.out_axes()
+    )
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0.ndim - 2, 0, 0, 0, 0, 0)

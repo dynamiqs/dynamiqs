@@ -15,7 +15,7 @@ from jaxtyping import PyTree
 from ..._checks import check_hermitian
 from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, LowRank, Tsit5
 from ...qarrays.utils import asqarray
-from ...result import Result, SolveSaved
+from ...result import MESolveLowRankResult, Result, SolveSaved
 from .._utils import assert_method_supported
 from .abstract_integrator import BaseIntegrator
 from .diffrax_integrator import DiffraxIntegrator
@@ -194,13 +194,12 @@ class MESolveLowRankIntegrator(BaseIntegrator, MEInterface, SolveInterface):
             y0=self.y0,
             method=self.method.ode_method,
             gradient=self.gradient,
-            result_class=self.result_class,
+            result_class=MESolveLowRankResult,
             options=self.options,
             H=self.H,
             Ls=self.Ls,
             Es=self.Es,
             linear_solver=self.method.linear_solver,
-            save_lowrank_representation_only=self.method.save_lowrank_representation_only,
             dims=self.dims,
         )
         return integrator.run()
@@ -215,7 +214,6 @@ class MESolveLowRankDiffraxIntegrator(
     https://github.com/leogoutte/low_rank/blob/main/src/low_rank.jl
     """
 
-    save_lowrank_representation_only: bool = eqx.field(static=True)
     linear_solver: Literal['cholesky', 'qr'] = eqx.field(static=True)
     dims: tuple[int, ...] | None = eqx.field(static=True)
 
@@ -245,18 +243,11 @@ class MESolveLowRankDiffraxIntegrator(
 
     def save(self, y: PyTree) -> SolveSaved:
         m = normalize_m(y)
-        save_lowrank_representation_only = self.save_lowrank_representation_only
-
-        need_rho = (
-            self.options.save_states and not save_lowrank_representation_only
-        ) or self.options.save_extra is not None
-        rho = self._rho_from_m(m) if need_rho else None
+        rho = self._rho_from_m(m) if self.options.save_extra is not None else None
 
         ysave = None
         if self.options.save_states:
-            ysave = (
-                asqarray(m, dims=self.dims) if save_lowrank_representation_only else rho
-            )
+            ysave = asqarray(m, dims=self.dims)
         extra = self.options.save_extra(rho) if self.options.save_extra else None
 
         if self.Es is not None:
@@ -269,11 +260,7 @@ class MESolveLowRankDiffraxIntegrator(
     def postprocess_saved(self, saved: SolveSaved, ylast: PyTree) -> SolveSaved:
         if not self.options.save_states:
             mlast = normalize_m(ylast)
-            ylast_save = (
-                asqarray(mlast, dims=self.dims)
-                if self.save_lowrank_representation_only
-                else self._rho_from_m(mlast)
-            )
+            ylast_save = asqarray(mlast, dims=self.dims)
             saved = eqx.tree_at(
                 lambda x: x.ysave, saved, ylast_save, is_leaf=lambda x: x is None
             )

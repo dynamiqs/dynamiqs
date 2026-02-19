@@ -44,6 +44,7 @@ def test_cartesian_batching_lowrank(nH, npsi0, nL1, nL2):
 
     # check result shape
     assert result.states.shape == (*nH, *nL1, *nL2, *npsi0, ntsave, n, n)
+    assert result.lowrank_states.shape == (*nH, *nL1, *nL2, *npsi0, ntsave, n, n)
     assert result.expects.shape == (*nH, *nL1, *nL2, *npsi0, nEs, ntsave)
 
 
@@ -70,6 +71,7 @@ def test_flat_batching_lowrank(nL1, npsi0):
     # check result shape
     broadcast_shape = jnp.broadcast_shapes(nH, nL1, npsi0)
     assert result.states.shape == (*broadcast_shape, ntsave, n, n)
+    assert result.lowrank_states.shape == (*broadcast_shape, ntsave, n, n)
     assert result.expects.shape == (*broadcast_shape, nEs, ntsave)
 
 
@@ -95,4 +97,5 @@ def test_batching_boris_lowrank():
     jump_ops = [a]
     result = dq.mesolve(H, jump_ops, rho0, [0, 1], method=dq.method.LowRank(M=n // 2))
     assert result.states.shape == (7, 5, 3, 2, 9, 9)
+    assert result.lowrank_states.shape == (7, 5, 3, 2, 9, n // 2)
     assert result.tsave is not None
