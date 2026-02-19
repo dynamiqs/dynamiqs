@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import warnings
 from functools import partial
 
@@ -13,10 +14,10 @@ import jax.numpy as jnp
 from jax import Array
 
 import dynamiqs as dq
-from dynamiqs._checks import check_hermitian, check_qarray_is_dense, check_shape
-from dynamiqs.options import Options, check_options
-from dynamiqs.qarrays.qarray import QArray, QArrayLike
-from dynamiqs.qarrays.utils import asqarray
+from ..._checks import check_hermitian, check_qarray_is_dense, check_shape
+from ...options import Options, check_options
+from ...qarrays.qarray import QArray, QArrayLike
+from ...qarrays.utils import asqarray
 
 from ...integrators._utils import cartesian_vmap, catch_xla_runtime_error, multi_vmap
 from ..linear_system.gmres import gmres
@@ -31,7 +32,9 @@ from .utils import (
 )
 
 
-# === Result type ===
+# =============================================================================
+# Auxiliary info types
+# =============================================================================
 
 
 class GMRESAuxInfo(eqx.Module):
@@ -49,7 +52,23 @@ class GMRESAuxInfo(eqx.Module):
     recycling: tuple[Array, Array]
 
 
-class SteadyStateGMRESResult(eqx.Module):
+# =============================================================================
+# Result types
+# =============================================================================
+
+
+class SteadyStateResult(eqx.Module, ABC):
+    """Abstract base class for steady-state solver results."""
+
+    rho: QArray
+    infos: eqx.Module
+
+    @staticmethod
+    @abstractmethod
+    def out_axes(): ...
+
+
+class SteadyStateGMRESResult(SteadyStateResult):
     """Result of the GMRES steady-state solver.
 
     Attributes:
@@ -67,7 +86,98 @@ class SteadyStateGMRESResult(eqx.Module):
         )
 
 
-# === Public API ===
+# =============================================================================
+# Solver classes
+# =============================================================================
+
+
+class SteadyStateSolver(eqx.Module, ABC):
+    """Abstract base class for steady-state solvers.
+
+    Subclasses must implement `_run` (the core single-instance solver logic)
+    and `result_type` (returning the concrete `SteadyStateResult` subclass).
+    """
+
+    @abstractmethod
+    def _run(
+        self, H: QArray, Ls: list[QArray], rho0: QArray | None, options: Options
+    ) -> SteadyStateResult: ...
+
+    @staticmethod
+    @abstractmethod
+    def result_type() -> type[SteadyStateResult]: ...
+
+
+class SteadyStateGMRES(SteadyStateSolver):
+    r"""GMRES steady-state solver configuration.
+
+    This solver uses a preconditioned GMRES algorithm with Krylov recycling.
+    The Lindbladian is deflated with a rank-1 update to enforce the trace
+    constraint, and the resulting linear system is preconditioned by a Lyapunov
+    equation solver.
+
+    Args:
+        tol: Tolerance for the stopping criterion. The solver stops when
+            $\|\mathcal{L}(\rho)\| < \mathrm{tol}$, where the norm is
+            determined by `norm_type`. Defaults to `1e-4`.
+        max_iteration: Maximum number of outer GMRES iterations. Defaults to
+            `100`.
+        krylov_size: Size of the Krylov subspace used in each GMRES restart
+            cycle. Defaults to `32`. Can be increased to `64` or `128` if
+            convergence is slow.
+        recycling: Number of Krylov vectors to recycle between restarts.
+            Defaults to `5`.
+        exact_dm: If `True`, the final density matrix is projected onto the set
+            of valid density matrices (positive semi-definite with unit trace).
+            If `False`, only Hermitization and trace normalization are applied.
+            Defaults to `True`.
+        norm_type: Norm used in the stopping criterion. Supported values:
+            `'max'` (element-wise max) and `'norm2'` (Frobenius norm).
+            Defaults to `'max'`.
+
+    Examples:
+        ```python
+        # Default parameters
+        solver = SteadyStateGMRES()
+
+        # Custom parameters
+        solver = SteadyStateGMRES(tol=1e-6, krylov_size=64, exact_dm=False)
+
+        result = dq.steadystate(H, jump_ops, solver=solver)
+        ```
+    """
+
+    tol: float = 1e-4
+    max_iteration: int = 100
+    krylov_size: int = 32
+    recycling: int = 5
+    exact_dm: bool = True
+    norm_type: str = 'max'
+
+    @staticmethod
+    def result_type() -> type[SteadyStateGMRESResult]:
+        return SteadyStateGMRESResult
+
+    def _run(
+        self, H: QArray, Ls: list[QArray], rho0: QArray | None, options: Options
+    ) -> SteadyStateGMRESResult:
+        return _steadystate_gmres(
+            H,
+            Ls,
+            rho0,
+            self.tol,
+            self.max_iteration,
+            self.krylov_size,
+            self.recycling,
+            self.exact_dm,
+            self.norm_type,
+            options,
+        )
+
+
+# =============================================================================
+# Public API
+# =============================================================================
 
 
 def steadystate(
@@ -75,15 +185,10 @@ def steadystate(
     jump_ops: list[QArrayLike],
     *,
     rho0: QArrayLike | None = None,
-    tol: float = 1e-4,
-    max_iteration: int = 100,
-    krylov_size: int = 32,
-    recycling: int = 5,
-    exact_dm: bool = True,
-    norm_type: str = 'max',
+    solver: SteadyStateSolver = SteadyStateGMRES(),  # noqa: B008
     options: Options = Options(),  # noqa: B008
-) -> SteadyStateGMRESResult:
-    r"""Compute the steady state of the Lindblad master equation using GMRES.
+) -> SteadyStateResult:
+    r"""Compute the steady state of the Lindblad master equation.
 
     This function finds the density matrix $\rho_\mathrm{ss}$ satisfying
     $$
@@ -95,45 +200,30 @@ def steadystate(
         \right) = 0.
     $$
 
-    The steady state is computed using a preconditioned GMRES algorithm. The
-    Lindbladian is deflated with a rank-1 update to enforce the trace constraint,
-    and the resulting linear system is preconditioned by a Lyapunov equation solver.
-
     Note:
-        This function supports batched computation over `H`, `jump_ops`, and `rho0`
-        via JAX's `vmap`, as well as gradient computation via implicit
-        differentiation.
+        This function supports batched computation over `H`, `jump_ops`, and
+        `rho0` via JAX's `vmap`, as well as gradient computation.
 
     Args:
         H *(qarray of shape (..., n, n))*: Hamiltonian.
         jump_ops *(list of qarray, each of shape (..., n, n))*: Jump operators.
-        rho0 *(qarray of shape (..., n, n), optional)*: Initial guess for the density
-            matrix. Defaults to `None`, which uses the vacuum state
+        rho0 *(qarray of shape (..., n, n), optional)*: Initial guess for the
+            density matrix. Defaults to `None`, which uses the vacuum state
             $|0\rangle\langle 0|$.
-        tol: Tolerance for the stopping criterion. The solver stops when
-            $\|\mathcal{L}(\rho)\| < \mathrm{tol}$, where the norm is determined
-            by `norm_type`. Defaults to `1e-4`.
-        max_iteration: Maximum number of outer GMRES iterations. Defaults to `100`.
-        krylov_size: Size of the Krylov subspace used in each GMRES restart cycle.
-            Defaults to `32`. Can be increased to `64` or `128` if convergence is
-            slow.
-        recycling: Number of Krylov vectors to recycle between restarts.
-            Defaults to `5`.
-        exact_dm: If `True`, the final density matrix is projected onto the set of
-            valid density matrices (positive semi-definite with unit trace). If
-            `False`, only Hermitization and trace normalization are applied.
-            Defaults to `True`.
-        norm_type: Norm used in the stopping criterion. Supported values:
-            `'max'` (element-wise max) and `'norm2'` (Frobenius norm).
-            Defaults to `'max'`.
+        solver: Solver instance controlling the algorithm and its parameters.
+            Defaults to `SteadyStateGMRES()`. See `SteadyStateGMRES` for
+            available options.
         options: Generic dynamiqs solver options (e.g. `cartesian_batching`).
 
     Returns:
-        `SteadyStateGMRESResult` with fields:
+        `SteadyStateResult` subclass depending on the solver used. For the
+        default `SteadyStateGMRES` solver, returns `SteadyStateGMRESResult`
+        with fields:
 
-        - **`rho`** *(qarray of shape (..., n, n))* — The steady-state density matrix.
-        - **`infos`** *(`GMRESAuxInfo`)* — Auxiliary solver information containing
-          `n_iteration`, `success`, and `recycling`.
+        - **`rho`** *(qarray of shape (..., n, n))* — The steady-state density
+          matrix.
+        - **`infos`** *(`GMRESAuxInfo`)* — Auxiliary solver information
+          containing `n_iteration`, `success`, and `recycling`.
 
     Examples:
         ```python
@@ -144,17 +234,16 @@ def steadystate(
         H = a.dag() @ a
         jump_ops = [a]
 
+        # With default solver
         result = dq.steadystate(H, jump_ops)
         print(f'Converged: {result.infos.success}')
         print(f'Iterations: {result.infos.n_iteration}')
+
+        # With custom solver parameters
+        solver = SteadyStateGMRES(tol=1e-6, krylov_size=64)
+        result = dq.steadystate(H, jump_ops, solver=solver)
         ```
     """
-    supported_norm_types = ('max', 'norm2')
-    if norm_type not in supported_norm_types:
-        raise ValueError(
-            f'Unknown norm type {norm_type!r}. Expected one of {supported_norm_types}.'
-        )
-
     # === convert arguments ===
     H = asqarray(H)
     Ls = [asqarray(L) for L in jump_ops]
@@ -163,6 +252,7 @@ def steadystate(
 
     # === check arguments ===
     _check_steadystate_args(H, Ls, rho0)
+    _check_steadystate_solver(solver)
     check_options(options, 'steadystate')
     options = options.initialise()
 
@@ -171,79 +261,53 @@ def steadystate(
         rho0 = rho0.todm()
         rho0 = check_hermitian(rho0, 'rho0')
 
-    return _vectorized_steadystate(
-        H,
-        Ls,
-        rho0,
-        tol,
-        max_iteration,
-        krylov_size,
-        recycling,
-        exact_dm,
-        norm_type,
-        options,
-    )
+    return _vectorized_steadystate(H, Ls, rho0, solver, options)
 
 
-# === Vectorized entry point ===
+# =============================================================================
+# Vectorized entry point (shared by all solvers)
+# =============================================================================
 
 
 @catch_xla_runtime_error
-@partial(
-    jax.jit,
-    static_argnames=(
-        'tol',
-        'max_iteration',
-        'krylov_size',
-        'recycling',
-        'exact_dm',
-        'norm_type',
-        'options',
-    ),
-)
+@partial(jax.jit, static_argnames=('solver', 'options'))
 def _vectorized_steadystate(
     H: QArray,
     Ls: list[QArray],
     rho0: QArray | None,
-    tol: float,
-    max_iteration: int,
-    krylov_size: int,
-    recycling: int,
-    exact_dm: bool,
-    norm_type: str,
+    solver: SteadyStateSolver,
     options: Options,
-) -> SteadyStateGMRESResult:
-    # Build in_axes: vectorize over H, Ls, rho0 (if provided).
-    # QArrays don't have .in_axes (that's a TimeQArray attribute), so we use
-    # 0 if the array has batch dimensions, None otherwise.
+) -> SteadyStateResult:
+    """Vectorized entry point shared by all steady-state solvers.
 
+    Handles batching (flat or cartesian) via `vmap`, then dispatches to
+    ``solver._run`` for each individual (non-batched) solve.
+    """
     if options is None:
         options = Options(cartesian_batching=False)
 
     def _qarray_in_axes(q: QArray) -> int | None:
         return 0 if q.ndim > 2 else None
 
+    # --- build in_axes and out_axes ---
     H_in_axes = _qarray_in_axes(H)
     Ls_in_axes = [_qarray_in_axes(L) for L in Ls]
     rho0_in_axes = _qarray_in_axes(rho0) if rho0 is not None else None
-    in_axes = (
-        H_in_axes,
-        Ls_in_axes,
-        rho0_in_axes,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    )
-    out_axes = SteadyStateGMRESResult.out_axes()
+    in_axes = (H_in_axes, Ls_in_axes, rho0_in_axes, None)
 
+    out_axes = solver.result_type().out_axes()
+
+    # Closure that captures `solver` (static) and calls its _run method.
+    def _run_single(H, Ls, rho0, options):
+        return solver._run(H, Ls, rho0, options)
+
+    # --- cartesian batching ---
     if options.cartesian_batching:
         rho0_nvmap = rho0.ndim - 2 if rho0 is not None else 0
-        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0_nvmap, 0, 0, 0, 0, 0, 0, 0)
-        f = cartesian_vmap(_steadystate, in_axes, out_axes, nvmap)
+        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0_nvmap, 0)
+        f = cartesian_vmap(_run_single, in_axes, out_axes, nvmap)
+
+    # --- flat (broadcast) batching ---
     else:
         arrays_to_broadcast = [H, *Ls]
         if rho0 is not None:
@@ -257,26 +321,17 @@ def _vectorized_steadystate(
         if rho0 is not None:
             rho0 = rho0.broadcast_to(*bshape, n, n)
 
-        f = multi_vmap(_steadystate, in_axes, out_axes, nvmap)
+        f = multi_vmap(_run_single, in_axes, out_axes, nvmap)
 
-    return f(
-        H,
-        Ls,
-        rho0,
-        tol,
-        max_iteration,
-        krylov_size,
-        recycling,
-        exact_dm,
-        norm_type,
-        options,
-    )
+    return f(H, Ls, rho0, options)
 
 
-# === Core solver (single instance, no batching) ===
+# =============================================================================
+# Core GMRES solver (single instance, no batching)
+# =============================================================================
 
 
-def _steadystate(
+def _steadystate_gmres(
     H: QArray,
     Ls: list[QArray],
     rho0: QArray | None,
@@ -288,6 +343,7 @@ def _steadystate(
     norm_type: str,
     options: Options,
 ) -> SteadyStateGMRESResult:
+    """Core GMRES steady-state solver for a single (non-batched) instance."""
     hilbert_size = H.shape[-1]
     hilbert_dimensions = H.dims
 
@@ -359,7 +415,17 @@ def _steadystate(
     return SteadyStateGMRESResult(rho=rho, infos=infos)
 
 
-# === Argument checking ===
+# =============================================================================
+# Argument checking
+# =============================================================================
+
+
+def _check_steadystate_solver(solver: SteadyStateSolver):
+    if not isinstance(solver, SteadyStateSolver):
+        raise TypeError(
+            f'Argument `solver` must be an instance of `SteadyStateSolver`, '
+            f'got {type(solver).__name__}.'
+        )
 
 
 def _check_steadystate_args(H: QArray, Ls: list[QArray], rho0: QArray | None):
