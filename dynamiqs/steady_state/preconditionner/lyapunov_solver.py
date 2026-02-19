@@ -16,7 +16,7 @@ class LyapunovSolverEig(eqx.Module):
         self.G_eigvals, self.G_eigvecs = jnp.linalg.eig(self.G)
         self.G_eigvecs_inv = jnp.linalg.inv(self.G_eigvecs).mT.conj()
 
-    def lyapunov(self, X: Array, mu: float):
+    def lyapunov(self, X: Array, mu: float) -> Array:
         """Apply the Lyapunov operator to a matrix X.
 
         Computes the right-hand side of the Lyapunov equation:
@@ -71,7 +71,7 @@ class LyapunovSolverEig(eqx.Module):
         G = self.G
         return G.T @ X + X @ G.conj() + mu * X
 
-    def _solve(self, Y: Array, mu: float):
+    def _solve(self, Y: Array, mu: float) -> Array:
         """Solve the Lyapunov equation G X + X G.H + mu X = Y."""
         u_, v_, w_ = (self.G_eigvecs, self.G_eigvecs_inv, self.G_eigvals)
 
