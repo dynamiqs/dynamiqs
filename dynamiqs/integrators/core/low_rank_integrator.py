@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from functools import partial
-from typing import Literal
+from dataclasses import replace
 
 import diffrax as dx
 import equinox as eqx
@@ -15,9 +14,8 @@ from jaxtyping import PyTree
 from ..._checks import check_hermitian
 from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, LowRank, Tsit5
 from ...qarrays.utils import asqarray
-from ...result import MESolveLowRankResult, Result, SolveSaved
+from ...result import MESolveLowRankResult, Saved, SolveSaved
 from .._utils import assert_method_supported
-from .abstract_integrator import BaseIntegrator
 from .diffrax_integrator import DiffraxIntegrator
 from .interfaces import MEInterface, SolveInterface
 from .save_mixin import SolveSaveMixin
@@ -119,11 +117,21 @@ def expval_from_m(m: Array, op: Array) -> Array:
     return jnp.sum(jnp.conj(m) * (op @ m))
 
 
-class MESolveLowRankIntegrator(BaseIntegrator, MEInterface, SolveInterface):
-    # Handles LowRank method checks and initialization of the low-rank d.m. `m0`,
-    # then initializes and calls `MESolveLowRankDiffraxIntegrator`.
+class MESolveLowRankIntegrator(
+    DiffraxIntegrator, MEInterface, SolveSaveMixin, SolveInterface
+):
+    """Implementation of low-rank method from Goutte, Savona (2025) arxiv:2508.18114.
+
+    Original implementation in Julia:
+    https://github.com/leogoutte/low_rank/blob/main/src/low_rank.jl
+    """
+
     method: LowRank
+    diffrax_solver: dx.AbstractSolver = eqx.field(static=True, default=dx.Tsit5())
+    fixed_step: bool = eqx.field(static=True, default=False)
+    linear_solver: str = eqx.field(static=True, default='qr')
     dims: tuple[int, ...] | None = eqx.field(static=True, default=None)
+    Es_jax: list[Array] | None = None
 
     def __post_init__(self):
         # check that assume_hermitian is True (required for the low-rank solver)
@@ -166,49 +174,58 @@ class MESolveLowRankIntegrator(BaseIntegrator, MEInterface, SolveInterface):
                 rho0_dm.to_jax(), self.method.rank, eps=eps, key=self.method.key
             )
 
-        self.Es = [E.to_jax() for E in self.Es] if self.Es is not None else None
+        self.Es_jax = [E.to_jax() for E in self.Es] if self.Es is not None else None
 
-    def run(self) -> Result:
-        integrator_constructors = {
-            Euler: mesolve_lr_euler_integrator_constructor,
-            Dopri5: mesolve_lr_dopri5_integrator_constructor,
-            Dopri8: mesolve_lr_dopri8_integrator_constructor,
-            Tsit5: mesolve_lr_tsit5_integrator_constructor,
-            Kvaerno3: mesolve_lr_kvaerno3_integrator_constructor,
-            Kvaerno5: mesolve_lr_kvaerno5_integrator_constructor,
+        # select low-rank inner ODE method/solver
+        supported_ode_methods = (Euler, Dopri5, Dopri8, Tsit5, Kvaerno3, Kvaerno5)
+        ode_method_constructors = {
+            Euler: (dx.Euler(), True),
+            Dopri5: (dx.Dopri5(), False),
+            Dopri8: (dx.Dopri8(), False),
+            Tsit5: (dx.Tsit5(), False),
+            Kvaerno3: (dx.Kvaerno3(), False),
+            Kvaerno5: (dx.Kvaerno5(), False),
         }
-        assert_method_supported(self.method.ode_method, integrator_constructors.keys())
-        integrator_constructor = integrator_constructors[type(self.method.ode_method)]
+        assert_method_supported(self.method.ode_method, supported_ode_methods)
+        ode_method = self.method.ode_method
+        self.diffrax_solver, self.fixed_step = ode_method_constructors[type(ode_method)]
+        ode_method.assert_supports_gradient(self.gradient)
 
-        self.method.ode_method.assert_supports_gradient(self.gradient)
+        # save low-rank-specific settings and result container
+        self.linear_solver = self.method.linear_solver
+        self.result_class = MESolveLowRankResult
 
-        integrator = integrator_constructor(
-            ts=self.ts,
-            y0=self.y0,
-            method=self.method.ode_method,
-            gradient=self.gradient,
-            result_class=MESolveLowRankResult,
-            options=self.options,
-            H=self.H,
-            Ls=self.Ls,
-            Es=self.Es,
-            linear_solver=self.method.linear_solver,
-            dims=self.dims,
+    # we need to redefine these since the Diffrax method is now store in ode_method
+    # We could avoid this by defining a _method() property in DiffraxIntegrator and
+    # overriding it here to return self.ode_method, but this requires changes
+    # outside this file.
+    @property
+    def stepsize_controller(self) -> dx.AbstractStepSizeController:
+        ode_method = self.method.ode_method
+        if self.fixed_step:
+            return dx.ConstantStepSize()
+        jump_ts = None if len(self.discontinuity_ts) == 0 else self.discontinuity_ts
+        controller = dx.PIDController(
+            rtol=ode_method.rtol,
+            atol=ode_method.atol,
+            safety=ode_method.safety_factor,
+            factormin=ode_method.min_factor,
+            factormax=ode_method.max_factor,
         )
-        return integrator.run()
+        if jump_ts is not None:
+            controller = replace(controller, jump_ts=jump_ts)
+        return controller
 
+    @property
+    def dt0(self) -> float | None:
+        ode_method = self.method.ode_method
+        return ode_method.dt if self.fixed_step else None
 
-class MESolveLowRankDiffraxIntegrator(
-    DiffraxIntegrator, MEInterface, SolveSaveMixin, SolveInterface
-):
-    """Implementation of low-rank method from Goutte, Savona (2025) arxiv:2508.18114.
-
-    Original implementation in Julia:
-    https://github.com/leogoutte/low_rank/blob/main/src/low_rank.jl
-    """
-
-    linear_solver: Literal['cholesky', 'qr'] = eqx.field(static=True)
-    dims: tuple[int, ...] | None = eqx.field(static=True)
+    @property
+    def max_steps(self) -> int:
+        # TODO: fix hard-coded max_steps for fixed methods
+        ode_method = self.method.ode_method
+        return 100_000 if self.fixed_step else ode_method.max_steps
 
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -243,14 +260,14 @@ class MESolveLowRankDiffraxIntegrator(
             ysave = asqarray(m, dims=self.dims)
         extra = self.options.save_extra(rho) if self.options.save_extra else None
 
-        if self.Es is not None:
-            Esave = jnp.stack([expval_from_m(m, E) for E in self.Es])
+        if self.Es_jax is not None:
+            Esave = jnp.stack([expval_from_m(m, E) for E in self.Es_jax])
         else:
             Esave = None
 
         return SolveSaved(ysave=ysave, extra=extra, Esave=Esave)
 
-    def postprocess_saved(self, saved: SolveSaved, ylast: PyTree) -> SolveSaved:
+    def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
         if not self.options.save_states:
             mlast = normalize_m(ylast)
             ylast_save = asqarray(mlast, dims=self.dims)
@@ -259,26 +276,6 @@ class MESolveLowRankDiffraxIntegrator(
             )
 
         return self.reorder_Esave(saved)
-
-
-mesolve_lr_euler_integrator_constructor = partial(
-    MESolveLowRankDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
-)
-mesolve_lr_dopri5_integrator_constructor = partial(
-    MESolveLowRankDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
-)
-mesolve_lr_dopri8_integrator_constructor = partial(
-    MESolveLowRankDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
-)
-mesolve_lr_tsit5_integrator_constructor = partial(
-    MESolveLowRankDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
-)
-mesolve_lr_kvaerno3_integrator_constructor = partial(
-    MESolveLowRankDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
-)
-mesolve_lr_kvaerno5_integrator_constructor = partial(
-    MESolveLowRankDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
-)
 
 
 mesolve_lowrank_integrator_constructor = MESolveLowRankIntegrator
