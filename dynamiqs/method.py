@@ -787,9 +787,10 @@ class LowRank(Method):
         linear_solver: Linear solver used for the low-rank evolution. Supported values
             are `'QR'` and `'cholesky'`. Defaults to `'QR'`. `'cholesky'` is usually
             faster but may lead to instabilities.
-        eps_init: Regularization parameter for the initialization of the low-rank
-            factors. This introduces random orthonormalized states of probabilities
-            $p_j=\epsilon$ to avoid $m^\dag m$ being singular. Defaults to `1e-5`.
+        init_perturbation_scale: Regularization parameter for the initialization of
+            the low-rank factors. This introduces random orthonormalized states of
+            probabilities $p_j=\epsilon$ to avoid $m^\dag m$ being singular. Defaults
+            to `1e-5`.
         key: PRNG key used for random initialization of the low-rank factors.
 
     Note:
@@ -817,7 +818,7 @@ class LowRank(Method):
     ode_method: Method
     rank: int = eqx.field(static=True)
     linear_solver: str = eqx.field(static=True, default='QR')
-    eps_init: float = eqx.field(static=True, default=1e-5)
+    init_perturbation_scale: float = eqx.field(static=True, default=1e-5)
     key: PRNGKeyArray
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
@@ -832,7 +833,7 @@ class LowRank(Method):
         rank: int,
         ode_method: Method = Tsit5(),  # noqa: B008
         linear_solver: str = 'QR',
-        eps_init: float = 1e-5,
+        init_perturbation_scale: float = 1e-5,
         *,
         key: PRNGKeyArray,
     ):
@@ -859,13 +860,16 @@ class LowRank(Method):
         self.linear_solver = linear_solver
 
         try:
-            eps_init = float(eps_init)
+            init_perturbation_scale = float(init_perturbation_scale)
         except (TypeError, ValueError) as exc:
-            raise TypeError('Argument `eps_init` must be a float.') from exc
-        if eps_init < 0.0:
+            raise TypeError(
+                'Argument `init_perturbation_scale` must be a float.'
+            ) from exc
+        if init_perturbation_scale < 0.0:
             raise ValueError(
-                f'Argument `eps_init` must be non-negative, but is {eps_init}.'
+                'Argument `init_perturbation_scale` must be non-negative, but is '
+                f'{init_perturbation_scale}.'
             )
-        self.eps_init = eps_init
+        self.init_perturbation_scale = init_perturbation_scale
 
         self.key = jnp.asarray(key)

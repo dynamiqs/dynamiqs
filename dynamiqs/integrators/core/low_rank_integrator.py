@@ -154,7 +154,7 @@ class MESolveLowRankIntegrator(BaseIntegrator, MEInterface, SolveInterface):
 
         # initialize low-rank representation from ket or density matrix input
         self.dims = self.y0.dims
-        eps = self.method.eps_init
+        eps = self.method.init_perturbation_scale
         if self.y0.isket():
             psi0 = self.y0.to_jax()
             self.y0 = initialize_m0_from_ket(
