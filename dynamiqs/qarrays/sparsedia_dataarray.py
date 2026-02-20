@@ -3,25 +3,24 @@ from __future__ import annotations
 import re
 import warnings
 from dataclasses import replace
+from typing import ClassVar, get_args
 
 import equinox as eqx
 import jax
 import jax.numpy as jnp
 import numpy as np
+from equinox.internal._omega import _Metaω  # noqa: PLC2403
 from jaxtyping import Array, ArrayLike
-from qutip import Qobj
 
-from .dense_qarray import DenseQArray
-from .layout import Layout, dia
-from .qarray import (
+from .dataarray import (
+    DataArray,
+    DataArrayLike,
     IndexType,
-    QArray,
-    QArrayLike,
     in_last_two_dims,
     include_last_two_dims,
-    isqarraylike,
-    to_jax,
 )
+from .dense_dataarray import DenseDataArray
+from .layout import Layout, dia
 from .sparsedia_primitives import (
     add_sparsedia_sparsedia,
     and_sparsedia_sparsedia,
@@ -39,33 +38,31 @@ from .sparsedia_primitives import (
     transpose_sparsedia,
 )
 
-__all__ = ['SparseDIAQArray']
 
-
-class SparseDIAQArray(QArray):
+class SparseDIADataArray(DataArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
     diags: Array = eqx.field(converter=jnp.asarray)
 
-    __qarray_matmul_priority__ = 10
+    _matmul_priority: ClassVar[int] = 10
 
     def __check_init__(self):
         # check diags and offsets have the right type and shape before compressing them
         if not isinstance(self.offsets, tuple):
             raise TypeError(
-                'Argument `offsets` of `SparseDIAQArray` must be a tuple but got '
+                'Argument `offsets` of `SparseDIADataArray` must be a tuple but got '
                 f'{type(self.offsets)}'
             )
 
         if self.diags.ndim < 2 or self.diags.shape[-2] != len(self.offsets):
             raise ValueError(
-                'Argument `diags` of `SparseDIAQArray` must be of shape '
-                f'(..., len(offsets), prod(dims)), but got {self.diags.shape}'
+                'Argument `diags` of `SparseDIADataArray` must be of shape '
+                f'(..., len(offsets), n), but got {self.diags.shape}'
             )
 
         # check that diagonals contain zeros outside the bounds of the matrix using
         # equinox runtime checks
         error = (
-            'Diagonals of a `SparseDIAQArray` must contain zeros outside the '
+            'Diagonals of a `SparseDIADataArray` must contain zeros outside the '
             'matrix bounds.'
         )
         for i, offset in enumerate(self.offsets):
@@ -86,7 +83,7 @@ class SparseDIAQArray(QArray):
         return shape_sparsedia(self.diags)
 
     @property
-    def mT(self) -> QArray:
+    def mT(self) -> DataArray:
         offsets, diags = transpose_sparsedia(self.offsets, self.diags)
         return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
 
@@ -94,15 +91,15 @@ class SparseDIAQArray(QArray):
     def ndiags(self) -> int:
         return len(self.offsets)
 
-    def conj(self) -> QArray:
+    def conj(self) -> DataArray:
         diags = self.diags.conj()
         return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
 
-    def _reshape_unchecked(self, *shape: int) -> QArray:
+    def _reshape_unchecked(self, *shape: int) -> DataArray:
         offsets, diags = reshape_sparsedia(self.offsets, self.diags, shape)
         return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
 
-    def broadcast_to(self, *shape: int) -> QArray:
+    def broadcast_to(self, *shape: int) -> DataArray:
         if shape[-2:] != self.shape[-2:]:
             raise ValueError(
                 f'Cannot broadcast to shape {shape} because the last two dimensions do '
@@ -112,22 +109,19 @@ class SparseDIAQArray(QArray):
         offsets, diags = broadcast_sparsedia(self.offsets, self.diags, shape)
         return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
 
-    def ptrace(self, *keep: int) -> QArray:
-        raise NotImplementedError
-
-    def powm(self, n: int) -> QArray:
+    def powm(self, n: int) -> DataArray:
         offsets, diags = powm_sparsedia(self.offsets, self.diags, n)
         return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
 
-    def expm(self, *, max_squarings: int = 16) -> QArray:
+    def expm(self, *, max_squarings: int = 16) -> DataArray:
         warnings.warn(
-            'A `SparseDIAQArray` has been converted to a `DenseQArray` while computing '
-            'its matrix exponential.',
+            'A `SparseDIADataArray` has been converted to a `DenseDataArray` while '
+            'computing its matrix exponential.',
             stacklevel=2,
         )
         x = sparsedia_to_array(self.offsets, self.diags)
         expm_x = jax.scipy.linalg.expm(x, max_squarings=max_squarings)
-        return DenseQArray(self.dims, self.vectorized, expm_x)
+        return DenseDataArray(expm_x)
 
     def norm(self, *, psd: bool = False) -> Array:
         if psd:
@@ -138,8 +132,8 @@ class SparseDIAQArray(QArray):
     def trace(self) -> Array:
         return trace_sparsedia(self.offsets, self.diags)
 
-    def sum(self, axis: int | tuple[int, ...] | None = None) -> Array:
-        # return array if last two dimensions are modified, qarray otherwise
+    def sum(self, axis: int | tuple[int, ...] | None = None) -> DataArray | Array:
+        # return array if last two dimensions are modified, DataArray otherwise
         if in_last_two_dims(axis, self.ndim):
             if include_last_two_dims(axis, self.ndim):
                 return self.diags.sum(axis)
@@ -149,8 +143,8 @@ class SparseDIAQArray(QArray):
             diags = self.diags.sum(axis)
             return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
 
-    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
-        # return array if last two dimensions are modified, qarray otherwise
+    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> DataArray | Array:
+        # return array if last two dimensions are modified, DataArray otherwise
         if in_last_two_dims(axis, self.ndim):
             if include_last_two_dims(axis, self.ndim):
                 return self.diags.squeeze(axis)
@@ -160,34 +154,34 @@ class SparseDIAQArray(QArray):
             diags = self.diags.squeeze(axis)
             return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
 
-    def _eig(self) -> tuple[Array, QArray]:
+    def _eig(self) -> tuple[Array, DataArray]:
         warnings.warn(
-            'A `SparseDIAQArray` has been converted to a `DenseQArray` while attempting'
-            ' to compute its eigen-decomposition.',
+            'A `SparseDIADataArray` has been converted to a `DenseDataArray` while '
+            'attempting to compute its eigen-decomposition.',
             stacklevel=2,
         )
         return self.asdense()._eig()
 
     def _eigh(self) -> tuple[Array, Array]:
         warnings.warn(
-            'A `SparseDIAQArray` has been converted to a `DenseQArray` while attempting'
-            ' to compute its eigen-decomposition.',
+            'A `SparseDIADataArray` has been converted to a `DenseDataArray` while '
+            'attempting to compute its eigen-decomposition.',
             stacklevel=2,
         )
         return self.asdense()._eigh()
 
     def _eigvals(self) -> Array:
         warnings.warn(
-            'A `SparseDIAQArray` has been converted to a `DenseQArray` while attempting'
-            ' to compute its eigen-decomposition.',
+            'A `SparseDIADataArray` has been converted to a `DenseDataArray` while '
+            'attempting to compute its eigen-decomposition.',
             stacklevel=2,
         )
         return self.asdense()._eigvals()
 
     def _eigvalsh(self) -> Array:
         warnings.warn(
-            'A `SparseDIAQArray` has been converted to a `DenseQArray` while attempting'
-            ' to compute its eigen-decomposition.',
+            'A `SparseDIADataArray` has been converted to a `DenseDataArray` while '
+            'attempting to compute its eigen-decomposition.',
             stacklevel=2,
         )
         return self.asdense()._eigvalsh()
@@ -196,31 +190,29 @@ class SparseDIAQArray(QArray):
         raise NotImplementedError
 
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
-        # TODO: Improve this by using a direct QArray comparison function, once it is
-        # implemented. This will avoid materalizing the dense matrix.
         return self.asdense().isherm(rtol=rtol, atol=atol)
 
-    def to_qutip(self) -> Qobj | list[Qobj]:
-        return self.asdense().to_qutip()
-
     def to_jax(self) -> Array:
-        return self.asdense().to_jax()
+        return sparsedia_to_array(self.offsets, self.diags)
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         return self.asdense().__array__(dtype=dtype, copy=copy)
 
-    def asdense(self) -> DenseQArray:
+    def asdense(self) -> DenseDataArray:
         data = sparsedia_to_array(self.offsets, self.diags)
-        return DenseQArray(self.dims, self.vectorized, data)
+        return DenseDataArray(data)
 
-    def assparsedia(self, offsets: tuple[int, ...] | None = None) -> SparseDIAQArray:  # noqa: ARG002
+    def assparsedia(
+        self,
+        offsets: tuple[int, ...] | None = None,  # noqa: ARG002
+    ) -> SparseDIADataArray:
         return self
 
-    def block_until_ready(self) -> QArray:
+    def block_until_ready(self) -> DataArray:
         _ = self.diags.block_until_ready()
         return self
 
-    def __repr__(self) -> str:
+    def _repr_extra(self) -> str:
         # === array representation with dots instead of zeros
         if jnp.issubdtype(self.dtype, jnp.complexfloating):
             # match '0. +0.j' with any number of spaces
@@ -233,112 +225,118 @@ class SparseDIAQArray(QArray):
             pattern = r'(?<!\d)0\s*'
         else:
             raise ValueError(
-                'Unsupported dtype for `SparseDIAQArray` representation, got '
+                'Unsupported dtype for `SparseDIADataArray` representation, got '
                 f'{self.dtype}.'
             )
 
         # replace with a centered dot of the same length as the matched string
         replace_with_dot = lambda match: f'{"⋅":^{len(match.group(0))}}'
         data_str = re.sub(pattern, replace_with_dot, str(self.to_jax()))
-        return super().__repr__() + f', ndiags={self.ndiags}\n{data_str}'
+        return f', ndiags={self.ndiags}\n{data_str}'
 
-    def __mul__(self, y: ArrayLike) -> QArray:
-        super().__mul__(y)
+    def __mul__(self, y: DataArrayLike) -> DataArray:
+        if isinstance(y, SparseDIADataArray):
+            offsets, diags = mul_sparsedia_sparsedia(
+                self.offsets, self.diags, y.offsets, y.diags
+            )
+            return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+        elif isinstance(y, DenseDataArray):
+            offsets, diags = mul_sparsedia_array(self.offsets, self.diags, y.data)
+            return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+        elif isinstance(y, get_args(ArrayLike)):
+            y_arr = jnp.asarray(y)
+            if (
+                y_arr.ndim == 0
+                or (y_arr.ndim == 1 and y_arr.shape[0] == 1)
+                or (y_arr.ndim >= 2 and y_arr.shape[-2:] == (1, 1))
+            ):
+                # scalar or batched scalar: broadcast onto diags directly
+                diags = y_arr * self.diags
+                return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+            else:
+                # full matrix: extract matching diagonals and multiply
+                offsets, diags = mul_sparsedia_array(self.offsets, self.diags, y_arr)
+                return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
 
-        diags = y * self.diags
-        return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+        return NotImplemented
 
-    def __add__(self, y: QArrayLike) -> QArray:
+    def __add__(self, y: DataArrayLike) -> DataArray:
         if isinstance(y, int | float) and y == 0:
             return self
 
-        super().__add__(y)
-
-        if isinstance(y, SparseDIAQArray):
+        if isinstance(y, SparseDIADataArray):
             offsets, diags = add_sparsedia_sparsedia(
                 self.offsets, self.diags, y.offsets, y.diags
             )
             return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
-        elif isqarraylike(y):
+        elif isinstance(y, DenseDataArray):
             warnings.warn(
-                'A sparse qarray has been converted to dense layout due to element-wise'
-                ' addition with a dense qarray.',
+                'A sparse data array has been converted to dense layout due to '
+                'element-wise addition with a dense data array.',
                 stacklevel=2,
             )
             return self.asdense() + y
+        elif isinstance(y, get_args(ArrayLike)):
+            warnings.warn(
+                'A sparse data array has been converted to dense layout due to '
+                'element-wise addition with a raw array.',
+                stacklevel=2,
+            )
+            return self.asdense() + DenseDataArray(jnp.asarray(y))
 
         return NotImplemented
 
-    def __matmul__(self, y: QArrayLike) -> QArray:
-        out = super().__matmul__(y)
-        if out is NotImplemented:
-            return NotImplemented
-
-        if isinstance(y, SparseDIAQArray):
+    def __matmul__(self, y: DataArrayLike) -> DataArray:
+        if isinstance(y, SparseDIADataArray):
             offsets, diags = matmul_sparsedia_sparsedia(
                 self.offsets, self.diags, y.offsets, y.diags
             )
             return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
-        elif isqarraylike(y):
-            y = to_jax(y)
-            data = matmul_sparsedia_array(self.offsets, self.diags, y)
-            return DenseQArray(self.dims, self.vectorized, data)
+        elif isinstance(y, DenseDataArray):
+            data = matmul_sparsedia_array(self.offsets, self.diags, y.data)
+            return DenseDataArray(data)
+        elif isinstance(y, get_args(ArrayLike)):
+            data = matmul_sparsedia_array(self.offsets, self.diags, jnp.asarray(y))
+            return DenseDataArray(data)
 
         return NotImplemented
 
-    def __rmatmul__(self, y: QArrayLike) -> QArray:
-        super().__rmatmul__(y)
-
-        if isqarraylike(y):
-            y = to_jax(y)
-            data = matmul_array_sparsedia(y, self.offsets, self.diags)
-            return DenseQArray(self.dims, self.vectorized, data)
+    def __rmatmul__(self, y: DataArrayLike) -> DataArray:
+        if isinstance(y, DenseDataArray):
+            data = matmul_array_sparsedia(y.data, self.offsets, self.diags)
+            return DenseDataArray(data)
+        elif isinstance(y, get_args(ArrayLike)):
+            data = matmul_array_sparsedia(jnp.asarray(y), self.offsets, self.diags)
+            return DenseDataArray(data)
 
         return NotImplemented
 
-    def __and__(self, y: QArray) -> QArray:
-        if isinstance(y, SparseDIAQArray):
+    def __and__(self, y: DataArray) -> DataArray:
+        if isinstance(y, SparseDIADataArray):
             offsets, diags = and_sparsedia_sparsedia(
                 self.offsets, self.diags, y.offsets, y.diags
             )
-            dims = self.dims + y.dims
-            return replace(self, dims=dims, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
-        elif isinstance(y, DenseQArray):
+            return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+        elif isinstance(y, DenseDataArray):
             return self.asdense() & y
 
         return NotImplemented
 
-    def __rand__(self, y: QArray) -> QArray:
-        if isinstance(y, DenseQArray):
+    def __rand__(self, y: DataArray) -> DataArray:
+        if isinstance(y, DenseDataArray):
             return y & self.asdense()
 
         return NotImplemented
 
-    def addscalar(self, y: ArrayLike) -> QArray:
-        warnings.warn(
-            'A sparse qarray has been converted to dense layout due to element-wise '
-            'addition with a scalar.',
-            stacklevel=2,
-        )
-        return self.asdense().addscalar(y)
+    def __pow__(self, power: int | _Metaω) -> DataArray:
+        # to deal with the x**ω notation from equinox (used in diffrax internals)
+        if isinstance(power, _Metaω):
+            return _Metaω.__rpow__(power, self)
 
-    def elmul(self, y: QArrayLike) -> QArray:
-        super().elmul(y)
-
-        if isinstance(y, SparseDIAQArray):
-            offsets, diags = mul_sparsedia_sparsedia(
-                self.offsets, self.diags, y.offsets, y.diags
-            )
-        else:
-            offsets, diags = mul_sparsedia_array(self.offsets, self.diags, to_jax(y))
-
-        return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
-
-    def elpow(self, power: int) -> QArray:
         diags = self.diags**power
         return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
 
-    def __getitem__(self, key: IndexType) -> QArray:
+    def __getitem__(self, key: IndexType) -> DataArray:
         if key in (slice(None, None, None), Ellipsis):
             return self
 
@@ -371,6 +369,6 @@ def _check_key_in_batch_dims(key: IndexType, ndim: int):
 
     if not valid_key:
         raise NotImplementedError(
-            'Getting items from non batching dimensions of a `SparseDIAQArray` is not '
-            'supported.'
+            'Getting items from non batching dimensions of a `SparseDIADataArray` is '
+            'not supported.'
         )
