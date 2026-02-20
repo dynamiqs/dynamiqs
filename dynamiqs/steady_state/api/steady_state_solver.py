@@ -182,7 +182,7 @@ class SteadyStateGMRES(SteadyStateSolver):
 
         n = 16
         a = dq.destroy(n)
-        H = a.dag() @ a
+        H = a + a.dag()
         jump_ops = [a]
 
         # Default parameters
@@ -190,7 +190,7 @@ class SteadyStateGMRES(SteadyStateSolver):
         result = dq.steadystate(H, jump_ops, solver=solver)
 
         # Custom parameters for tighter convergence
-        solver = dq.SteadyStateGMRES(tol=1e-6, krylov_size=64, exact_dm=False)
+        solver = dq.SteadyStateGMRES(tol=1e-6, krylov_size=32, exact_dm=True)
         result = dq.steadystate(H, jump_ops, solver=solver)
 
         print(f'Converged: {result.infos.success}')
@@ -290,7 +290,7 @@ def steadystate(
 
         n = 16
         a = dq.destroy(n)
-        H = a.dag() @ a
+        H = a.dag() + a
         jump_ops = [a]
 
         # With default solver
@@ -452,6 +452,10 @@ def _steadystate_gmres(
         else:  # norm_type == 'norm2'
             norm = jnp.linalg.norm(lind_x)
         return norm < tol
+
+    krylov_size = min(
+        krylov_size, hilbert_size - 1
+    )  # Krylov size cannot exceed n-1 for an n x n system
 
     # === Solve ===
     x, (n_iteration, success, U, C) = gmres(
