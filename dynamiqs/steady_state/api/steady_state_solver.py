@@ -109,41 +109,92 @@ class SteadyStateSolver(eqx.Module, ABC):
 
 
 class SteadyStateGMRES(SteadyStateSolver):
-    r"""GMRES steady-state solver configuration.
+    r"""GMRES steady-state solver with Krylov recycling.
 
-    This solver uses a preconditioned GMRES algorithm with Krylov recycling.
-    The Lindbladian is deflated with a rank-1 update to enforce the trace
-    constraint, and the resulting linear system is preconditioned by a Lyapunov
-    equation solver.
+    This solver computes the steady-state density matrix
+    $\rho_\infty$ such that $\mathcal{L}(\rho_\infty) = 0$, where
+    $\mathcal{L}$ is the Lindbladian superoperator.
+
+    Because $\mathcal{L}$ has a zero eigenvalue (the steady state), the equation
+    $\mathcal{L}(\rho)=0$ is singular. We therefore solve a rank-1 *deflated*
+    linear system. Using the vectorization $|x\rangle=\mathrm{vec}(\rho)$
+    and $|I\rangle=\mathrm{vec}(I)$, we solve
+    $$
+        \bigl(\mathcal{L} + |I\rangle\langle I|\bigr)
+        |x\rangle
+        = |I\rangle.
+    $$
+    The resulting matrix is then Hermitized and trace-normalized to produce
+    $\rho_\infty$ (and optionally projected onto the set of valid density
+    matrices when `exact_dm=True`).
+
+    Krylov subspace recycling is used between restart cycles to reduce the number
+    of Lindbladian applications and accelerate convergence.
+
+    Note:
+        **Preconditioning and GMRES.** GMRES solves a linear system $Ax=b$ by
+        building Krylov subspaces from repeated applications of $A$.
+        When $A$ is ill-conditioned, convergence can be slow; a (left)
+        preconditioner $M^{-1}$ replaces the system by
+        $$
+            (M^{-1}A)x = M^{-1}b,
+        $$
+        ideally making $M^{-1}A$ better conditioned (or more tightly clustered in
+        spectrum) so that GMRES reaches the stopping criterion in fewer
+        iterations.
+
+    In this solver, the linear system is preconditioned with an operator
+    $S^{-1}$ that approximates the inverse of the Lindbladian.
+
+    The preconditioner is built from the Lyapunov part of the Lindbladian.
+    Defining
+    $$
+        G = iH + \tfrac{1}{2}\sum_k L_k^\dagger L_k,
+    $$
+    the action of $S$ on a matrix $X$ is
+    $$
+        S(X) = G X + X G^\dagger.
+    $$
+    the action of $S^{-1}$ on a matrix $Y$ is defined by solving the Lyapunov equation
+    $$
+        G X + X G^\dagger = Y.
+    $$
 
     Args:
         tol: Tolerance for the stopping criterion. The solver stops when
-            $\|\mathcal{L}(\rho)\| < \mathrm{tol}$, where the norm is
-            determined by `norm_type`. Defaults to `1e-4`.
-        max_iteration: Maximum number of outer GMRES iterations. Defaults to
-            `100`.
-        krylov_size: Size of the Krylov subspace used in each GMRES restart
-            cycle. Defaults to `32`. Can be increased to `64` or `128` if
-            convergence is slow.
+            $\|\mathcal{L}(\rho)\| < \mathrm{tol}$, where the norm is determined
+            by `norm_type`. Defaults to `1e-4`.
+        max_iteration: Maximum number of outer GMRES iterations. Defaults to `100`.
+        krylov_size: Size of the Krylov subspace used in each GMRES restart cycle.
+            Defaults to `32`. Increase to `64` or `128` if convergence is slow.
         recycling: Number of Krylov vectors to recycle between restarts.
             Defaults to `5`.
-        exact_dm: If `True`, the final density matrix is projected onto the set
-            of valid density matrices (positive semi-definite with unit trace).
-            If `False`, only Hermitization and trace normalization are applied.
-            Defaults to `True`.
+        exact_dm: If `True`, project the final matrix onto the set of valid density
+            matrices (positive semidefinite with unit trace). If `False`, only
+            Hermitization and trace normalization are applied. Defaults to `True`.
         norm_type: Norm used in the stopping criterion. Supported values:
             `'max'` (element-wise max) and `'norm2'` (Frobenius norm).
             Defaults to `'max'`.
 
     Examples:
         ```python
+        import dynamiqs as dq
+
+        n = 16
+        a = dq.destroy(n)
+        H = a.dag() @ a
+        jump_ops = [a]
+
         # Default parameters
-        solver = SteadyStateGMRES()
-
-        # Custom parameters
-        solver = SteadyStateGMRES(tol=1e-6, krylov_size=64, exact_dm=False)
-
+        solver = dq.SteadyStateGMRES()
         result = dq.steadystate(H, jump_ops, solver=solver)
+
+        # Custom parameters for tighter convergence
+        solver = dq.SteadyStateGMRES(tol=1e-6, krylov_size=64, exact_dm=False)
+        result = dq.steadystate(H, jump_ops, solver=solver)
+
+        print(f'Converged: {result.infos.success}')
+        print(f'Iterations: {result.infos.n_iteration}')
         ```
     """
 
