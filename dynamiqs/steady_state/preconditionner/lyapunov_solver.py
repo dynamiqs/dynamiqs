@@ -5,6 +5,43 @@ from jax import Array
 
 
 class LyapunovSolverEig(eqx.Module):
+    r"""Closed-form solver for continuous Lyapunov equations using eigendecomposition.
+
+    This class provides an efficient solver for matrix equations of the form
+    $$
+        G X + X G^\dagger + \mu X = Y,
+    $$
+    where $G \in \mathbb{C}^{n\times n}$ is a fixed matrix and $\mu \in \mathbb{R}$
+    is an optional shift parameter.
+
+    The solution is obtained by diagonalizing $G$,
+    $$
+        G = U \Lambda U^{-1},
+    $$
+    and solving the Lyapunov equation elementwise in the eigenbasis:
+    $$
+        X = U \left(
+            \frac{\widetilde{Y}_{ij}}
+                 {\lambda_i + \bar{\lambda}_j + \mu}
+        \right) U^\dagger,
+        \qquad
+        \widetilde{Y} = (U^{-1})^\dagger Y U^{-1}.
+    $$
+    This approach has $\mathcal{O}(n^3)$ preprocessing cost due to the
+    eigendecomposition, but allows repeated solves with different right-hand
+    sides $Y$ at low additional cost.
+
+    Args:
+        G: Square matrix of shape `(n, n)` defining the Lyapunov operator.
+
+    Attributes:
+        G: The matrix defining the Lyapunov operator.
+        G_eigvals: Eigenvalues of `G`.
+        G_eigvecs: Right eigenvectors of `G`.
+        G_eigvecs_inv: Inverse (Hermitian-transposed) eigenvector matrix
+            used for basis transformations.
+    """
+
     G: Array
     G_eigvals: Array
     G_eigvecs: Array
@@ -24,7 +61,8 @@ class LyapunovSolverEig(eqx.Module):
 
         Args:
             X: Matrix of shape (n, n) to apply the Lyapunov operator to.
-            mu: Shift parameter for the Lyapunov equation.
+            mu: Shift parameter for the Lyapunov equation,
+            may be useful for numerical stability.
 
         Returns:
             Result of applying the Lyapunov operator, shape (n, n).

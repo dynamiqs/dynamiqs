@@ -157,6 +157,11 @@ nav:
           - sepropagator: python_api/integrators/sepropagator.md
           - mepropagator: python_api/integrators/mepropagator.md
           - floquet: python_api/integrators/floquet.md
+          - Steady-state:
+            - steadystate: python_api/steady_state/steadystate.md
+            - SteadyStateGMRES: python_api/steady_state/SteadyStateGMRES.md
+            - preconditionner:
+              - LyapunovSolverEig: python_api/steady_state/preconditionner/LyapunovSolverEig.md
           - stochastic:
             - jssesolve: python_api/integrators/jssesolve.md
             - dssesolve: python_api/integrators/dssesolve.md
