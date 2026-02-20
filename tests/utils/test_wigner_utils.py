@@ -67,3 +67,27 @@ def test_wigner_tracing():
     jax.jit(dq.wigner).trace(state, xvec=xvec)
     jax.jit(dq.wigner).trace(state, yvec=yvec)
     jax.jit(dq.wigner).trace(state, xvec=xvec, yvec=yvec)
+
+NORMS_WIGNER = ["half", "sqrt2", "none"]
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize("norm", NORMS_WIGNER)
+def test_wigner_utils_valid_norm_convention(norm):
+    psi = dq.coherent(10, 2.0)
+    xvec, yvec, w = dq.wigner(psi, norm_convention=norm)
+    assert w.shape == (201, 201)
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_wigner_utils_invalid_norm_convention():
+    psi = dq.coherent(10, 2.0)
+    with pytest.raises(ValueError) as excinfo:
+        dq.wigner(psi, norm_convention="invalid")
+    msg = str(excinfo.value)
+    assert "Invalid norm_convention=" in msg
+    assert "'half'" in msg and "'sqrt2'" in msg and "'none'" in msg
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize("norm", NORMS_WIGNER)
+def test_wigner_tracing_norm_convention(norm):
+    state = dq.coherent(8, 1.0)
+    jax.jit(dq.wigner, static_argnames=("norm_convention",)).trace(state, norm_convention=norm)
