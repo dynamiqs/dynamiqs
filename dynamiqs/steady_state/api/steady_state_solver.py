@@ -241,14 +241,22 @@ def steadystate(
 ) -> SteadyStateResult:
     r"""Compute the steady state of the Lindblad master equation.
 
-    This function finds the density matrix $\rho_\mathrm{ss}$ satisfying
+    The Lindblad dynamics are written as
     $$
-        \mathcal{L}(\rho_\mathrm{ss}) = -i[H, \rho_\mathrm{ss}]
+        \frac{d\rho}{dt} = \mathcal{L}(\rho),
+    $$
+    with
+    $$
+        \mathcal{L}(\rho) = -i[H, \rho]
         + \sum_{k=1}^N \left(
-            L_k \rho_\mathrm{ss} L_k^\dag
-            - \frac{1}{2} L_k^\dag L_k \rho_\mathrm{ss}
-            - \frac{1}{2} \rho_\mathrm{ss} L_k^\dag L_k
-        \right) = 0.
+            L_k \rho L_k^\dag
+            - \frac{1}{2} L_k^\dag L_k \rho
+            - \frac{1}{2} \rho L_k^\dag L_k
+        \right).
+    $$
+    This function finds the steady-state density matrix $\rho_\infty$ such that
+    $$
+        \mathcal{L}(\rho_\infty) = 0.
     $$
 
     Note:
