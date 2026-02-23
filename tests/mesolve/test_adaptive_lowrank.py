@@ -17,7 +17,7 @@ from ..systems import dense_ocavity, dia_ocavity, otdqubit
 # use double precision for gradients
 @pytest.fixture(scope='module', autouse=True)
 def _double_precision():
-    # Keep precision changes local to this module to avoid cross-test leakage.
+    # keep precision changes local to this module to avoid cross-test leakage.
     prev_x64 = jax.config.read('jax_enable_x64')
     dq.set_precision('double')  # needed for time dependent test
     yield

@@ -60,7 +60,7 @@ def initialize_m0_from_ket(psi0: Array, rank: int, *, eps: float, key: Array) ->
     psi0 = psi0 / jnp.linalg.norm(psi0)
     psi0_unit = psi0
 
-    # Rescale the leading column so that its weight plus the rank-1 perturbation
+    # rescale the leading column so that its weight plus the rank-1 perturbation
     # columns (each with norm eps) sum to 1 in the trace of rho.
     if rank > 1:
         psi0 = psi0_unit * jnp.sqrt(jnp.maximum(1.0 - (rank - 1) * (eps**2), 0.0))
@@ -68,13 +68,13 @@ def initialize_m0_from_ket(psi0: Array, rank: int, *, eps: float, key: Array) ->
     if rank == 1:
         return normalize_m(psi0)
 
-    # Generate random complex vectors for the remaining rank-1 columns.
+    # generate random complex vectors for the remaining rank-1 columns.
     key_r, key_i = jax.random.split(key)
     rand_r = jax.random.normal(key_r, (n, rank - 1), dtype=psi0.real.dtype)
     rand_i = jax.random.normal(key_i, (n, rank - 1), dtype=psi0.real.dtype)
     rand = (rand_r + 1j * rand_i) / jnp.sqrt(2.0)
 
-    # Project out the psi0 component to make perturbations orthogonal to psi0,
+    # project out the psi0 component to make perturbations orthogonal to psi0,
     # then QR-orthonormalize them before scaling by eps.
     rand = rand - psi0_unit @ (psi0_unit.conj().T @ rand)
     q, _ = jnp.linalg.qr(rand, mode='reduced')
@@ -92,13 +92,13 @@ def initialize_m0_from_dm(
     near-zero eigenvalues (below `eigval_tol`) are replaced by small random
     perturbations scaled by `eps`, ensuring that the rank is at least `rank`.
     """
-    # Eigendecompose rho0 and keep the `rank` largest eigenvalues/vectors.
+    # eigendecompose rho0 and keep the `rank` largest eigenvalues/vectors.
     evals, evecs = jnp.linalg.eigh(rho0)
     evals = jnp.maximum(evals, 0.0)
     evals_rank = evals[-rank:][::-1]
     cols = evecs[:, -rank:][:, ::-1] * jnp.sqrt(evals_rank)[None, :]
 
-    # For columns with near-zero eigenvalues, add small random perturbations
+    # for columns with near-zero eigenvalues, add small random perturbations
     # scaled by eps to avoid degeneracies during solve.
     if eps > 0.0:
         key_r, key_i = jax.random.split(key)
