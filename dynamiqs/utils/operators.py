@@ -538,7 +538,9 @@ def squeeze(dim: int, z: ArrayLike) -> QArray:
     return (0.5 * (z.conj() * a2 - z * a2.dag())).expm()
 
 
-def quadrature(dim: int, phi: float, *, layout: Layout | None = None, hbar: float = 0.5) -> QArray:
+def quadrature(
+    dim: int, phi: float, *, layout: Layout | None = None, hbar: float = 0.5
+) -> QArray:
     r"""Returns the quadrature operator of phase angle $\phi$.
 
     It is defined by $x_\phi = \sqrt{\hbar/2}\,(e^{i\phi} a^\dag + e^{-i\phi} a)$,
@@ -593,6 +595,7 @@ def position(dim: int, *, layout: Layout | None = None, hbar: float = 0.5) -> QA
     a = destroy(dim, layout=layout)
     position_op = a.dag() + a
     return jnp.sqrt(hbar / 2) * position_op
+
 
 def momentum(dim: int, *, layout: Layout | None = None, hbar: float = 0.5) -> QArray:
     r"""Returns the momentum operator $p = i\sqrt{\hbar/2}\,(a^\dag - a)$.
