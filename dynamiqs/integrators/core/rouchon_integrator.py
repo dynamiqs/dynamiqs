@@ -270,7 +270,7 @@ class KrausHeun2(KrausRK):
         O11 = sum(_L.dag() @ _L for _L in self.Ls1)
         return O1 + self.dt / 2 * (O10 + self.stage2.S(O11))
 
-    def get_kraus_operators(self):
+    def get_kraus_operators(self): #not tested yet but unused
         return (
             [self.nojump_0to1]
             + [jnp.sqrt(self.dt / 2) * self.nojump_0to1 @ _L for _L in self.Ls0]
@@ -368,7 +368,7 @@ class KrausHeun3(KrausRK):
             1 / 4 * O2 + 3 / 4 * self.stage3.S_composed(O3, self.stage2.S)
         )
 
-    def get_kraus_operators(self):
+    def get_kraus_operators(self): #not tested yet but unused
         return (
             [self.nojump_0to1]
             + [jnp.sqrt(self.dt / 4) * self.nojump_0to1 @ _L for _L in self.Ls0]
@@ -478,7 +478,7 @@ class KrausRK4(KrausRK):  # Classic RK4 is very sparse. Not used yet
             )
         )
 
-    def get_kraus_operators(self):
+    def get_kraus_operators(self): #not tested yet but unused
         k0s = [self.nojump_0to1]
         k1s = [jnp.sqrt(self.dt / 6) * self.nojump_0to1 @ _L for _L in self.Ls0]
         k23s_int = [
