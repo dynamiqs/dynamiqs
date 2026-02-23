@@ -7,8 +7,6 @@ import jax.numpy as jnp
 from jax import Array, lax
 from jaxtyping import ArrayLike
 
-from typing import Literal
-
 from .._checks import check_shape
 from ..qarrays.qarray import QArrayLike
 from ..qarrays.utils import to_jax
@@ -24,7 +22,7 @@ def wigner(
     npixels: int = 201,
     xvec: ArrayLike | None = None,
     yvec: ArrayLike | None = None,
-    norm_convention: Literal["half", "sqrt2", "none"] = "half"
+    hbar: float = 0.5,
 ) -> tuple[Array, Array, Array]:
     r"""Compute the Wigner distribution of a ket or density matrix.
 
@@ -40,10 +38,10 @@ def wigner(
             defaults to `xvec = jnp.linspace(-xmax, xmax, npixels)`.
         yvec (array-like of shape (nyvec,), optional): $y$ coordinates. If `None`,
             defaults to `yvec = jnp.linspace(-ymax, ymax, npixels)`.
-        norm_convention: Normalization convention (`"half"`, `"sqrt2"`, `"none"`). Choices are:
-            - `"half"` (default): $x = (a^\dag + a) / 2$. Coherent state $\ket{\alpha}$ is centered at coordinates $(\mathrm{Re}(\alpha), \mathrm{Im}(\alpha))$.
-            - `"sqrt2"`: $x = (a^\dag + a) / \sqrt{2}$.
-            - `"none"`: $x = a^\dag + a$.
+        hbar: Value of $\hbar$ in the commutation relation $[\hat{x}, \hat{p}]
+            = i\hbar$. Common choices are `0.5` (default, coherent state
+            $\ket{\alpha}$ centered at $(\mathrm{Re}(\alpha),
+            \mathrm{Im}(\alpha))$), `1.0`, and `2.0`.
 
     Returns:
         xvec (array of shape (npixels,) or (nxvec,)): $x$ coordinates, or
@@ -70,14 +68,7 @@ def wigner(
     yvec = jnp.linspace(-ymax, ymax, npixels) if yvec is None else jnp.asarray(yvec)
     check_shape(yvec, 'yvec', '(n,)', subs={'n': 'nyvec'})
 
-    if norm_convention == "half":
-        g = 2.0
-    elif norm_convention == "sqrt2":
-        g = jnp.sqrt(2)
-    elif norm_convention == "none":
-        g = 1.0
-    else:
-        raise ValueError(f"Invalid norm_convention={norm_convention!r}. Expected one of: 'half', 'sqrt2', 'none'.")
+    g = jnp.sqrt(2.0 / hbar)
 
     return xvec, yvec, _wigner(state, xvec, yvec, g)
 
