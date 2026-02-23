@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import replace
+from functools import partial
 
 import diffrax as dx
 import equinox as eqx
@@ -193,7 +194,6 @@ class MESolveLowRankIntegrator(
 
         # save low-rank-specific settings and result container
         self.linear_solver = self.method.linear_solver
-        self.result_class = MESolveLowRankResult
 
     # we need to redefine these since the Diffrax method is now store in ode_method
     # We could avoid this by defining a _method() property in DiffraxIntegrator and
@@ -278,4 +278,4 @@ class MESolveLowRankIntegrator(
         return self.reorder_Esave(saved)
 
 
-mesolve_lowrank_integrator_constructor = MESolveLowRankIntegrator
+mesolve_lowrank_integrator_constructor = partial(MESolveLowRankIntegrator, result_class=MESolveLowRankResult)

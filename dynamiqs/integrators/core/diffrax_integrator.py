@@ -15,7 +15,7 @@ from ..._utils import obj_type_str
 from ...gradient import BackwardCheckpointed, Direct, Forward, Gradient
 from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options
-from ...result import Result, Saved
+from ...result import MESolveResult, Result, Saved
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
@@ -353,22 +353,40 @@ class MESolveDiffraxIntegrator(
 
 
 mesolve_euler_integrator_constructor = partial(
-    MESolveDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
+    MESolveDiffraxIntegrator,
+    diffrax_solver=dx.Euler(),
+    fixed_step=True,
+    result_class=MESolveResult,
 )
 mesolve_dopri5_integrator_constructor = partial(
-    MESolveDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+    MESolveDiffraxIntegrator,
+    diffrax_solver=dx.Dopri5(),
+    fixed_step=False,
+    result_class=MESolveResult,
 )
 mesolve_dopri8_integrator_constructor = partial(
-    MESolveDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+    MESolveDiffraxIntegrator,
+    diffrax_solver=dx.Dopri8(),
+    fixed_step=False,
+    result_class=MESolveResult,
 )
 mesolve_tsit5_integrator_constructor = partial(
-    MESolveDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+    MESolveDiffraxIntegrator,
+    diffrax_solver=dx.Tsit5(),
+    fixed_step=False,
+    result_class=MESolveResult,
 )
 mesolve_kvaerno3_integrator_constructor = partial(
-    MESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+    MESolveDiffraxIntegrator,
+    diffrax_solver=dx.Kvaerno3(),
+    fixed_step=False,
+    result_class=MESolveResult,
 )
 mesolve_kvaerno5_integrator_constructor = partial(
-    MESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+    MESolveDiffraxIntegrator,
+    diffrax_solver=dx.Kvaerno5(),
+    fixed_step=False,
+    result_class=MESolveResult,
 )
 
 

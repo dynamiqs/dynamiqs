@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from functools import partial
 
 import equinox as eqx
 import jax
@@ -12,7 +13,7 @@ from dynamiqs._utils import concatenate_sort
 
 from ..._checks import check_hermitian
 from ...qarrays.qarray import QArray
-from ...result import Result, Saved
+from ...result import MESolveResult, Result, Saved
 from ...utils.general import expm
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .._utils import ispwc
@@ -169,7 +170,7 @@ class MESolveExpmIntegrator(MEExpmIntegrator, SolveSaveMixin, SolveInterface):
         return super().save(y)
 
 
-mesolve_expm_integrator_constructor = MESolveExpmIntegrator
+mesolve_expm_integrator_constructor = partial(MESolveExpmIntegrator, result_class=MESolveResult)
 
 
 class MEPropagatorExpmIntegrator(MEExpmIntegrator, PropagatorSaveMixin):

@@ -378,7 +378,6 @@ def _mesolve(
         y0=rho0,
         method=method,
         gradient=gradient,
-        result_class=MESolveResult,
         options=options,
         H=H,
         Ls=Ls,

@@ -17,6 +17,7 @@ from diffrax._custom_types import RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
 
 from ...qarrays.qarray import QArray
+from ...result import MESolveResult
 from ...utils.operators import eye_like
 from .diffrax_integrator import MESolveDiffraxIntegrator
 
@@ -229,7 +230,10 @@ class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
 
 mesolve_rouchon1_integrator_constructor = lambda **kwargs: (
     MESolveFixedRouchon1Integrator(
-        **kwargs, diffrax_solver=RouchonDXSolver(1), fixed_step=True
+        **kwargs,
+        diffrax_solver=RouchonDXSolver(1),
+        fixed_step=True,
+        result_class=MESolveResult,
     )
 )
 
@@ -379,10 +383,16 @@ def mesolve_rouchon2_integrator_constructor(**kwargs):
     """Factory function to create a Rouchon2 integrator."""
     if kwargs['method'].dt is not None:
         return MESolveFixedRouchon2Integrator(
-            **kwargs, diffrax_solver=RouchonDXSolver(2), fixed_step=True
+            **kwargs,
+            diffrax_solver=RouchonDXSolver(2),
+            fixed_step=True,
+            result_class=MESolveResult,
         )
     return MESolveAdaptiveRouchon2Integrator(
-        **kwargs, diffrax_solver=AdaptiveRouchonDXSolver(2), fixed_step=False
+        **kwargs,
+        diffrax_solver=AdaptiveRouchonDXSolver(2),
+        fixed_step=False,
+        result_class=MESolveResult,
     )
 
 
@@ -390,8 +400,14 @@ def mesolve_rouchon3_integrator_constructor(**kwargs):
     """Factory function to create a Rouchon3 integrator."""
     if kwargs['method'].dt is not None:
         return MESolveFixedRouchon3Integrator(
-            **kwargs, diffrax_solver=RouchonDXSolver(3), fixed_step=True
+            **kwargs,
+            diffrax_solver=RouchonDXSolver(3),
+            fixed_step=True,
+            result_class=MESolveResult,
         )
     return MESolveAdaptiveRouchon3Integrator(
-        **kwargs, diffrax_solver=AdaptiveRouchonDXSolver(3), fixed_step=False
+        **kwargs,
+        diffrax_solver=AdaptiveRouchonDXSolver(3),
+        fixed_step=False,
+        result_class=MESolveResult,
     )
