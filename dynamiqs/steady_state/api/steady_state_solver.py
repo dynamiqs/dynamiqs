@@ -166,9 +166,15 @@ class SteadyStateGMRES(SteadyStateSolver):
             by `norm_type`. Defaults to `1e-4`.
         max_iteration: Maximum number of outer GMRES iterations. Defaults to `100`.
         krylov_size: Size of the Krylov subspace used in each GMRES restart cycle.
-            Defaults to `32`. Increase to `64` or `128` if convergence is slow.
+            Defaults to `32`. Increase to `64` or `128` if convergence is slow
+            in term of iterations.
+            Note that increasing `krylov_size` also increases memory usage and runtime
+              per iteration.
         recycling: Number of Krylov vectors to recycle between restarts.
-            Defaults to `5`.
+            Defaults to `5`. The recycling is necessary if you have convergence issues,
+              but it can cause longer overall runtime.
+            If you have convergence issues, try increasing `krylov_size` first,
+            then add recycling if the number of iterations is still high.
         exact_dm: If `True`, project the final matrix onto the set of valid density
             matrices (positive semidefinite with unit trace). If `False`, only
             Hermitization and trace normalization are applied. Defaults to `True`.
@@ -275,13 +281,14 @@ def steadystate(
         options: Generic dynamiqs solver options (e.g. `cartesian_batching`).
 
     Returns:
-        `SteadyStateResult` subclass depending on the solver used. For the
-        default `SteadyStateGMRES` solver, returns `SteadyStateGMRESResult`
-        with fields:
+        `SteadyStateResult` :
+            A subclass depending on the solver used. For the
+            default `SteadyStateGMRES` solver, returns `SteadyStateGMRESResult`
+            with fields:
 
-        - **`rho`** *(qarray of shape (..., n, n))* — The steady-state density
+        **`rho`** *(qarray of shape (..., n, n))* — The steady-state density
           matrix.
-        - **`infos`** *(`GMRESAuxInfo`)* — Auxiliary solver information
+        **`infos`** *(`GMRESAuxInfo`)* — Auxiliary solver information
           containing `n_iteration`, `success`, and `recycling`.
 
     Examples:
@@ -446,11 +453,11 @@ def _steadystate_gmres(
         x_mat = to_matrix(x, hilbert_size)
         x_mat = 0.5 * (x_mat.conj().mT + x_mat)
         x_mat = x_mat / jnp.trace(x_mat)
-        lind_x = lindbladian(from_matrix(x_mat))
+        lindbladian_x = lindbladian(from_matrix(x_mat))
         if norm_type == 'max':
-            norm = jnp.max(jnp.abs(lind_x))
+            norm = jnp.max(jnp.abs(lindbladian_x))
         else:  # norm_type == 'norm2'
-            norm = jnp.linalg.norm(lind_x)
+            norm = jnp.linalg.norm(lindbladian_x)
         return norm < tol
 
     krylov_size = min(
