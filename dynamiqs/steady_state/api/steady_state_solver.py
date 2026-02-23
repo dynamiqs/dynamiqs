@@ -477,12 +477,12 @@ def _steadystate_gmres(
     )
 
     # === Finalize density matrix ===
-    rho = finalize_density_matrix(to_matrix(x, n=hilbert_size), exact_dm)
-    rho = to_dm(from_matrix(rho), n=hilbert_size, dims=hilbert_dimensions)
+    state = finalize_density_matrix(to_matrix(x, n=hilbert_size), exact_dm)
+    state = to_dm(from_matrix(state), n=hilbert_size, dims=hilbert_dimensions)
 
     infos = GMRESAuxInfo(n_iteration=n_iteration, success=success, recycling=(U, C))
 
-    return SteadyStateGMRESResult(rho=rho, infos=infos)
+    return SteadyStateGMRESResult(rho=state, infos=infos)
 
 
 # =============================================================================
