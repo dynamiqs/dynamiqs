@@ -10,7 +10,6 @@ from ..order import TEST_SHORT
 
 # TODO : add comparison with analytical wigner for coherent states and cat states
 
-NORMS_WIGNER = ["half", "sqrt2", "none"]
 
 @pytest.mark.run(order=TEST_SHORT)
 class TestPlots:
@@ -56,14 +55,3 @@ class TestPlots:
         wigner(self.psis[0], xvec=vec)
         wigner(self.psis[0], yvec=vec)
         wigner(self.psis[0], xvec=vec, yvec=vec)
-
-    @pytest.mark.parametrize("norm", NORMS_WIGNER)
-    def test_plot_wigner_valid_norm_convention(self, norm):
-        plot.wigner(self.psis[0], norm_convention=norm)
-
-    def test_plot_wigner_invalid_norm_convention(self):
-        with pytest.raises(ValueError) as excinfo:
-            plot.wigner(self.psis[0], norm_convention="invalid")
-        msg = str(excinfo.value)
-        assert "Invalid norm_convention=" in msg
-        assert "'half'" in msg and "'sqrt2'" in msg and "'none'" in msg

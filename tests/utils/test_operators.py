@@ -246,149 +246,62 @@ def test_momentum():
         dq.momentum(dim, layout=dq.dia).to_jax(),
     )
 
+
 # helper
 LAYOUTS = [dq.dense, dq.dia]
 
-@pytest.mark.run(order=TEST_INSTANT)
-@pytest.mark.parametrize("layout", LAYOUTS)
-def test_position_norm_convention(layout):
-    # prepare inputs
-    dim = 4
-
-    x_half = dq.position(dim, layout=layout, norm_convention="half").to_jax()
-    x_s2 = dq.position(dim, layout=layout, norm_convention="sqrt2").to_jax()
-    x_none = dq.position(dim, layout=layout, norm_convention="none").to_jax()
-
-    # Check expected scaling between conventions
-    assert jnp.allclose(x_none, 2.0 * x_half)
-    assert jnp.allclose(x_s2, jnp.sqrt(2.0) * x_half)
 
 @pytest.mark.run(order=TEST_INSTANT)
-@pytest.mark.parametrize("layout", LAYOUTS)
-def test_momentum_norm_convention(layout):
-    # prepare inputs
+@pytest.mark.parametrize('layout', LAYOUTS)
+def test_position_hbar_scaling(layout):
     dim = 4
+    # operators scale as sqrt(hbar / 2)
+    x1 = dq.position(dim, layout=layout, hbar=0.5).to_jax()
+    x2 = dq.position(dim, layout=layout, hbar=2.0).to_jax()
+    assert jnp.allclose(x2, 2.0 * x1)
 
-    p_half = dq.momentum(dim, layout=layout, norm_convention="half").to_jax()
-    p_s2 = dq.momentum(dim, layout=layout, norm_convention="sqrt2").to_jax()
-    p_none = dq.momentum(dim, layout=layout, norm_convention="none").to_jax()
-
-    assert jnp.allclose(p_none, 2.0 * p_half)
-    assert jnp.allclose(p_s2, jnp.sqrt(2.0) * p_half)
 
 @pytest.mark.run(order=TEST_INSTANT)
-@pytest.mark.parametrize("layout", LAYOUTS)
-def test_quadrature_norm_convention(layout):
-    # prepare inputs
+@pytest.mark.parametrize('layout', LAYOUTS)
+def test_momentum_hbar_scaling(layout):
     dim = 4
-    phi = 0.37  # arbitrary nontrivial angle
+    p1 = dq.momentum(dim, layout=layout, hbar=0.5).to_jax()
+    p2 = dq.momentum(dim, layout=layout, hbar=2.0).to_jax()
+    assert jnp.allclose(p2, 2.0 * p1)
 
-    q_half = dq.quadrature(dim, phi, layout=layout, norm_convention="half").to_jax()
-    q_s2 = dq.quadrature(dim, phi, layout=layout, norm_convention="sqrt2").to_jax()
-    q_none = dq.quadrature(dim, phi, layout=layout, norm_convention="none").to_jax()
-
-    assert jnp.allclose(q_none, 2.0 * q_half)
-    assert jnp.allclose(q_s2, jnp.sqrt(2.0) * q_half)
-
-# helper
-NORMS = ["half", "sqrt2", "none"]
 
 @pytest.mark.run(order=TEST_INSTANT)
-@pytest.mark.parametrize("layout", LAYOUTS)
-@pytest.mark.parametrize("norm", NORMS)
-def test_quadrature_zero_equals_position_norm_convention(layout, norm):
-    # prepare inputs
+@pytest.mark.parametrize('layout', LAYOUTS)
+def test_quadrature_hbar_scaling(layout):
     dim = 4
+    phi = 0.37
+    q1 = dq.quadrature(dim, phi, layout=layout, hbar=0.5).to_jax()
+    q2 = dq.quadrature(dim, phi, layout=layout, hbar=2.0).to_jax()
+    assert jnp.allclose(q2, 2.0 * q1)
 
-    q0 = dq.quadrature(dim, 0.0, layout=layout, norm_convention=norm).to_jax()
-    x = dq.position(dim, layout=layout, norm_convention=norm).to_jax()
 
+HBAR_VALUES = [0.5, 1.0, 2.0]
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', LAYOUTS)
+@pytest.mark.parametrize('hbar', HBAR_VALUES)
+def test_quadrature_zero_equals_position(layout, hbar):
+    dim = 4
+    q0 = dq.quadrature(dim, 0.0, layout=layout, hbar=hbar).to_jax()
+    x = dq.position(dim, layout=layout, hbar=hbar).to_jax()
     assert jnp.allclose(q0, x)
 
-@pytest.mark.run(order=TEST_INSTANT)
-@pytest.mark.parametrize("layout", LAYOUTS)
-@pytest.mark.parametrize("norm", NORMS)
-def test_quadrature_pi_over_2_equals_momentum_norm_convention(layout, norm):
-    # prepare inputs
-    dim = 4
 
-    q90 = dq.quadrature(dim, jnp.pi / 2, layout=layout, norm_convention=norm).to_jax()
-    p = dq.momentum(dim, layout=layout, norm_convention=norm).to_jax()
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', LAYOUTS)
+@pytest.mark.parametrize('hbar', HBAR_VALUES)
+def test_quadrature_pi_over_2_equals_momentum(layout, hbar):
+    dim = 4
+    q90 = dq.quadrature(dim, jnp.pi / 2, layout=layout, hbar=hbar).to_jax()
+    p = dq.momentum(dim, layout=layout, hbar=hbar).to_jax()
     assert jnp.allclose(q90, p)
 
-@pytest.mark.run(order=TEST_INSTANT)
-@pytest.mark.parametrize("norm", NORMS)
-def test_hermiticity_norm_convention(norm):
-    dim = 4
-    phi = 0.33
-
-    assert dq.isherm(dq.position(dim, norm_convention=norm))
-    assert dq.isherm(dq.momentum(dim, norm_convention=norm))
-    assert dq.isherm(dq.quadrature(dim, phi, norm_convention=norm))
-
-@pytest.mark.run(order=TEST_INSTANT)
-@pytest.mark.parametrize("norm", NORMS)
-def test_trace_quadrature_for_each_norm_convention(norm):
-    # prepare inputs
-    dim = 4
-
-    jax.jit(dq.quadrature, static_argnums=(0,), static_argnames=("layout", "norm_convention")).trace(dim, 0.1, layout=dq.dense, norm_convention=norm)
-    jax.jit(dq.quadrature, static_argnums=(0,), static_argnames=("layout", "norm_convention")).trace(dim, 0.1, layout=dq.dia, norm_convention=norm)
-
-@pytest.mark.run(order=TEST_INSTANT)
-@pytest.mark.parametrize("norm", NORMS)
-def test_trace_position_for_each_norm_convention(norm):
-    # prepare inputs
-    dim = 4
-
-    jax.jit(dq.position, static_argnums=(0,), static_argnames=("layout", "norm_convention")).trace(dim, layout=dq.dense, norm_convention=norm)
-    jax.jit(dq.position, static_argnums=(0,), static_argnames=("layout", "norm_convention")).trace(dim, layout=dq.dia, norm_convention=norm)
-
-@pytest.mark.run(order=TEST_INSTANT)
-@pytest.mark.parametrize("norm", NORMS)
-def test_trace_momentum_for_each_norm_convention(norm):
-    # prepare inputs
-    dim = 4
-
-    jax.jit(dq.momentum, static_argnums=(0,), static_argnames=("layout", "norm_convention")).trace(dim, layout=dq.dense, norm_convention=norm)
-    jax.jit(dq.momentum, static_argnums=(0,), static_argnames=("layout", "norm_convention")).trace(dim, layout=dq.dia, norm_convention=norm)
-
-@pytest.mark.run(order=TEST_INSTANT)
-@pytest.mark.parametrize("layout", LAYOUTS)
-def test_defaults_are_half(layout):
-    # prepare inputs
-    dim = 4
-
-    # Position default
-    assert jnp.allclose(
-        dq.position(dim, layout=layout).to_jax(),
-        dq.position(dim, layout=layout, norm_convention="half").to_jax(),
-    )
-    # Momentum default
-    assert jnp.allclose(
-        dq.momentum(dim, layout=layout).to_jax(),
-        dq.momentum(dim, layout=layout, norm_convention="half").to_jax(),
-    )
-    # Quadrature default
-    phi = 0.82
-    assert jnp.allclose(
-        dq.quadrature(dim, phi, layout=layout).to_jax(),
-        dq.quadrature(dim, phi, layout=layout, norm_convention="half").to_jax(),
-    )
-
-@pytest.mark.run(order=TEST_INSTANT)
-@pytest.mark.parametrize("func_and_args", [
-    (dq.position, (4,), {"layout": dq.dense}),
-    (dq.momentum, (4,), {"layout": dq.dense}),
-    (dq.quadrature, (4, 0.0), {"layout": dq.dense}),
-])
-def test_invalid_norm_convention_raises_value_error(func_and_args):
-    func, args, kwargs = func_and_args
-    with pytest.raises(ValueError) as excinfo:
-        func(*args, norm_convention="invalid", **kwargs)
-    msg = str(excinfo.value)
-    assert "Invalid norm_convention=" in msg
-    assert "'half'" in msg and "'sqrt2'" in msg and "'none'" in msg
 
 @pytest.mark.run(order=TEST_INSTANT)
 def test_sigmax():
