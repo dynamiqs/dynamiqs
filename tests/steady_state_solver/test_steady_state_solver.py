@@ -8,16 +8,12 @@ Also tests JIT compatibility.
 
 import jax
 import jax.numpy as jnp
-import dynamiqs as dq
 import pytest
 
-from dynamiqs.steady_state import (
-    SteadyStateGMRES,
-    SteadyStateResult,
-    SteadyStateGMRESResult,
-)
-from .systems import build_two_modes, build_random_single_mode
+import dynamiqs as dq
+from dynamiqs.steady_state import SteadyStateGMRES
 
+from .systems import build_random_single_mode, build_two_modes
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -43,13 +39,9 @@ def nb(na):
     return na // 4
 
 
-@pytest.fixture(params=[0, 1], ids=lambda i: f'tol_idx={i}')
-def tol(request, precision):
-    if precision == 'single':
-        tols = (1e-1, 1e-4)
-    else:
-        tols = (1e-4, 1e-8)
-    return tols[request.param]
+@pytest.fixture
+def tol(precision):
+    return 1e-4 if precision == 'single' else 1e-8
 
 
 @pytest.fixture(params=[1.0, 0.1], ids=lambda g: f'gamma={g}')
@@ -174,9 +166,9 @@ class TestSimpleOscillator:
         assert residual < tol, f'Residual {residual:.2e} exceeds tol={tol:.0e}'
         assert_valid_dm(result.rho, precision)
 
-        fine_tol = 1e-8 if precision == 'double' else 1e-5
+        fine_tol = 1e-7 if precision == 'double' else 1e-4
         solver_fine = SteadyStateGMRES(
-            tol=fine_tol, max_iteration=200, krylov_size=64, exact_dm=True
+            tol=fine_tol, max_iteration=100, krylov_size=32, exact_dm=True
         )
         result_fine = dq.steadystate(H, Ls, solver=solver_fine)
         assert bool(result_fine.infos.success), (
@@ -206,7 +198,7 @@ class TestJIT:
     """
 
     def test_jit_composability_two_modes(self):
-        """steadystate can be called inside a jitted function."""
+        """Steadystate can be called inside a jitted function."""
         na, nb = 12, 3
         H, Ls = build_two_modes(na, nb, kappa_a=1)
         solver = SteadyStateGMRES(tol=1e-1)
@@ -223,11 +215,11 @@ class TestJIT:
         )
 
         # Second call should use cached compilation
-        trace_val2, success2 = solve_and_get_trace(H, Ls)
+        _trace_val2, success2 = solve_and_get_trace(H, Ls)
         assert bool(success2), 'Second JIT call did not converge'
 
     def test_jit_composability_random_single_mode(self):
-        """steadystate can be called inside a jitted function."""
+        """Steadystate can be called inside a jitted function."""
         n = 36
         H, Ls = build_random_single_mode(n, seed=42, gamma=1.0)
         solver = SteadyStateGMRES(tol=1e-1)

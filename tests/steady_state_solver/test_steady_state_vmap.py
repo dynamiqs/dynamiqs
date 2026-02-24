@@ -5,12 +5,12 @@ rates so we can build batched QArrays and verify that the batched result
 matches element-wise sequential solves.
 """
 
-import jax
 import jax.numpy as jnp
-import dynamiqs as dq
-from dynamiqs.steady_state import SteadyStateGMRES
 import pytest
 
+import dynamiqs as dq
+from dynamiqs.options import Options
+from dynamiqs.steady_state import SteadyStateGMRES
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -117,8 +117,6 @@ class TestBatchBroadcast:
 
     def test_broadcast_H_and_Ls(self):
         """H of shape (3, n, n) and Ls of shape (3, n, n) broadcast element-wise."""
-        from dynamiqs.options import Options
-
         epsilons = [0.1, 0.3, 0.5]
         kappas = [0.5, 1.0, 2.0]
         a = dq.destroy(N)
@@ -186,8 +184,6 @@ class TestBatchBroadcast:
 
         Entry [i, j] should correspond to (epsilons[i], kappas[j]).
         """
-        from dynamiqs.options import Options
-
         epsilons = [0.1, 0.3, 0.5]
         kappas = [0.5, 2.0]
         a = dq.destroy(N)
