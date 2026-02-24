@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from enum import Enum
 from typing import ClassVar
 
 import equinox as eqx
@@ -19,6 +20,7 @@ __all__ = [
     'Expm',
     'JumpMonteCarlo',
     'DiffusiveMonteCarlo',
+    'LinearSolver',
     'LowRank',
     'Kvaerno3',
     'Kvaerno5',
@@ -770,6 +772,19 @@ class DiffusiveMonteCarlo(_DEMethod):
         self.dsse_method = dsse_method
 
 
+class LinearSolver(Enum):
+    """Enum for linear solvers used in the low-rank method."""
+
+    QR = 'qr'
+    CHOLESKY = 'cholesky'
+
+    def __repr__(self) -> str:
+        return self.value
+
+    def __str__(self) -> str:
+        return repr(self)
+
+
 class LowRank(Method):
     r"""Low-rank method for the Lindblad master equation.
 
@@ -785,17 +800,17 @@ class LowRank(Method):
             [`Dopri8`][dynamiqs.method.Dopri8], [`Kvaerno3`][dynamiqs.method.Kvaerno3],
             [`Kvaerno5`][dynamiqs.method.Kvaerno5], [`Euler`][dynamiqs.method.Euler]).
         linear_solver: Linear solver used for the low-rank evolution. Supported values
-            are `'QR'` and `'cholesky'`. Defaults to `'QR'`. `'cholesky'` is usually
-            faster but may lead to instabilities.
-        init_perturbation_scale: Regularization parameter for the initialization of
-            the low-rank factors. This introduces random orthonormalized states of
-            probabilities $p_j=\epsilon$ to avoid $m^\dag m$ being singular. Defaults
+            are `LowRank.qr` and `LowRank.cholesky`. Defaults to `LowRank.qr`.
+            `LowRank.cholesky` is usually faster but may lead to instabilities.
+        perturbation_scale: Regularization parameter for the initialization of
+            the low-rank factors. This appends random orthonormalized states of
+            norm `perturbation_scale` to avoid $m^\dag m$ being singular. Defaults
             to `1e-5`.
         key: PRNG key used for random initialization of the low-rank factors.
 
     Note:
         The low-rank factors can be accessed from
-        [`result.lowrank_states`][dynamiqs.MESolveLowRankResult.lowrank_states].
+        `result.lowrank_states`.
         `result.states` computes and returns the full-rank density matrices.
 
     Note: Supported gradients
@@ -806,8 +821,8 @@ class LowRank(Method):
         stability before using in production.
 
     Warning:
-        The `'cholesky'` linear solver may lead to instabilities and the progress bar
-        getting stuck when using single precision.
+        The `LowRank.cholesky` linear solver may lead to instabilities and the
+        progress bar getting stuck when using single precision.
 
     Warning:
         The low-rank method is more sensitive to time-step error. If the accuracy does
@@ -815,11 +830,14 @@ class LowRank(Method):
         the chosen `ode_method`.
     """
 
+    qr: ClassVar[LinearSolver] = LinearSolver.QR
+    cholesky: ClassVar[LinearSolver] = LinearSolver.CHOLESKY
+
     ode_method: Method
     rank: int = eqx.field(static=True)
-    linear_solver: str = eqx.field(static=True, default='QR')
-    init_perturbation_scale: float = eqx.field(static=True, default=1e-5)
     key: PRNGKeyArray
+    linear_solver: LinearSolver = eqx.field(static=True, default=LinearSolver.QR)
+    perturbation_scale: float = eqx.field(static=True, default=1e-5)
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
         Direct,
@@ -832,8 +850,8 @@ class LowRank(Method):
         self,
         rank: int,
         ode_method: Method = Tsit5(),  # noqa: B008
-        linear_solver: str = 'QR',
-        init_perturbation_scale: float = 1e-5,
+        linear_solver: LinearSolver = LinearSolver.QR,
+        perturbation_scale: float = 1e-5,
         *,
         key: PRNGKeyArray,
     ):
@@ -848,28 +866,22 @@ class LowRank(Method):
             )
         self.rank = rank
 
-        if not isinstance(linear_solver, str):
-            raise TypeError('Argument `linear_solver` must be a string.')
-        linear_solver = linear_solver.lower()
-        if linear_solver not in ('qr', 'cholesky'):
-            raise ValueError(
-                "Argument `linear_solver` must be 'QR' or 'cholesky', "
-                f'but is {linear_solver!r}.'
+        if not isinstance(linear_solver, LinearSolver):
+            raise TypeError(
+                'Argument `linear_solver` must be `LowRank.qr` or'
+                f' `LowRank.cholesky`, but is `{linear_solver!r}`.'
             )
-
         self.linear_solver = linear_solver
 
         try:
-            init_perturbation_scale = float(init_perturbation_scale)
+            perturbation_scale = float(perturbation_scale)
         except (TypeError, ValueError) as exc:
-            raise TypeError(
-                'Argument `init_perturbation_scale` must be a float.'
-            ) from exc
-        if init_perturbation_scale < 0.0:
+            raise TypeError('Argument `perturbation_scale` must be a float.') from exc
+        if perturbation_scale < 0.0:
             raise ValueError(
-                'Argument `init_perturbation_scale` must be non-negative, but is '
-                f'{init_perturbation_scale}.'
+                'Argument `perturbation_scale` must be non-negative, but is '
+                f'{perturbation_scale}.'
             )
-        self.init_perturbation_scale = init_perturbation_scale
+        self.perturbation_scale = perturbation_scale
 
         self.key = jnp.asarray(key)

@@ -29,7 +29,7 @@ from ...method import (
 from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
-from ...result import MESolveLowRankResult, MESolveResult
+from ...result import MESolveResult
 from ...time_qarray import TimeQArray
 from .._utils import (
     assert_method_supported,
@@ -198,8 +198,8 @@ def mesolve(
                 - **`gradient`** _(Gradient)_ - Gradient used.
                 - **`options`** _(Options)_ - Options used.
                 - **`lowrank_states`** _(qarray of shape (..., nsave, n, rank))_ - Only
-                    available when using `dq.method.LowRank`, stores the low-rank
-                    factors `m(t)`.
+                    available when using [`LowRank`][dynamiqs.method.LowRank], stores
+                    the low-rank factors `m(t)`.
 
     Examples:
         ```python
@@ -317,11 +317,7 @@ def _vectorized_mesolve(
 ) -> MESolveResult:
     # vectorize input over H, Ls and rho0
     in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, None, None, None, None, None)
-    out_axes = (
-        MESolveLowRankResult.out_axes()
-        if isinstance(method, LowRank)
-        else MESolveResult.out_axes()
-    )
+    out_axes = MESolveResult.out_axes()
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0.ndim - 2, 0, 0, 0, 0, 0)

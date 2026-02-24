@@ -170,7 +170,9 @@ class MESolveExpmIntegrator(MEExpmIntegrator, SolveSaveMixin, SolveInterface):
         return super().save(y)
 
 
-mesolve_expm_integrator_constructor = partial(MESolveExpmIntegrator, result_class=MESolveResult)
+mesolve_expm_integrator_constructor = partial(
+    MESolveExpmIntegrator, result_class=MESolveResult
+)
 
 
 class MEPropagatorExpmIntegrator(MEExpmIntegrator, PropagatorSaveMixin):

@@ -12,7 +12,7 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ..._checks import check_hermitian
-from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, LowRank, Tsit5
+from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, LinearSolver, Tsit5
 from ...qarrays.utils import asqarray
 from ...result import MESolveLowRankResult, Result, Saved, SolveSaved
 from .._utils import assert_method_supported
@@ -100,16 +100,15 @@ def initialize_m0_from_dm(
 
     # for columns with near-zero eigenvalues, add small random perturbations
     # scaled by eps to avoid degeneracies during solve.
-    if eps > 0.0:
-        key_r, key_i = jax.random.split(key)
-        rand_r = jax.random.normal(key_r, (rho0.shape[0], rank), dtype=cols.real.dtype)
-        rand_i = jax.random.normal(key_i, (rho0.shape[0], rank), dtype=cols.real.dtype)
-        rand = (rand_r + 1j * rand_i) / jnp.sqrt(2.0)
+    key_r, key_i = jax.random.split(key)
+    rand_r = jax.random.normal(key_r, (rho0.shape[0], rank), dtype=cols.real.dtype)
+    rand_i = jax.random.normal(key_i, (rho0.shape[0], rank), dtype=cols.real.dtype)
+    rand = (rand_r + 1j * rand_i) / jnp.sqrt(2.0)
 
-        # Only perturb columns whose eigenvalue is below the tolerance.
-        tol = eigval_tol * jnp.maximum(jnp.max(evals_rank), 1.0)
-        mask = (evals_rank <= tol).astype(cols.real.dtype)
-        cols = cols + rand * (eps * mask)[None, :]
+    # Only perturb columns whose eigenvalue is below the tolerance.
+    tol = eigval_tol * jnp.maximum(jnp.max(evals_rank), 1.0)
+    mask = (evals_rank <= tol).astype(cols.real.dtype)
+    cols = cols + rand * (eps * mask)[None, :]
 
     return normalize_m(cols)
 
@@ -127,16 +126,23 @@ class MESolveLowRankIntegrator(
     https://github.com/leogoutte/low_rank/blob/main/src/low_rank.jl
     """
 
-    linear_solver: str = eqx.field(static=True, default='qr')
-    dims: tuple[int, ...] | None = eqx.field(static=True, default=None)
-    Es_jax: list[Array] | None = None
+    linear_solver: LinearSolver = eqx.field(static=True, default=LinearSolver.QR)
+
+    @property
+    def dims(self) -> tuple[int, ...]:
+        return self.H.dims
+
+    @property
+    def Es_jax(self) -> list[Array] | None:
+        return [E.to_jax() for E in self.Es] if self.Es is not None else None
 
     def __post_init__(self):
         # check that assume_hermitian is True (required for the low-rank solver)
         if not self.options.assume_hermitian:
             raise ValueError(
-                'The low-rank solver requires `assume_hermitian=True` (the default). '
-                'Set `options=dq.Options(assume_hermitian=True)` or omit the option.'
+                'The LowRank method requires `dq.Options(assume_hermitian=True, ...)`'
+                '(default value). '
+                'If you initial state is not Hermitian, consider using other methods.'
             )
 
         # check hermiticity for density matrix inputs
@@ -146,9 +152,10 @@ class MESolveLowRankIntegrator(
         n = self.y0.shape[-2]
         if n < self.method.rank:
             raise ValueError(
-                f'Argument `rank` must be <= n, but is rank={self.method.rank} (n={n}).'
+                'Argument `rank` must be smaller than the initial state size `n,'
+                f'but got rank={self.method.rank} and n={n}.'
             )
-        if self.method.linear_solver == 'cholesky' and not jax.config.read(
+        if self.method.linear_solver is LinearSolver.CHOLESKY and not jax.config.read(
             'jax_enable_x64'
         ):
             warnings.warn(
@@ -159,8 +166,7 @@ class MESolveLowRankIntegrator(
             )
 
         # initialize low-rank representation from ket or density matrix input
-        self.dims = self.y0.dims
-        eps = self.method.init_perturbation_scale
+        eps = self.method.perturbation_scale
         if self.y0.isket():
             psi0 = self.y0.to_jax()
             self.y0 = initialize_m0_from_ket(
@@ -172,8 +178,6 @@ class MESolveLowRankIntegrator(
                 rho0_dm.to_jax(), self.method.rank, eps=eps, key=self.method.key
             )
 
-        self.Es_jax = [E.to_jax() for E in self.Es] if self.Es is not None else None
-
         supported_ode_methods = (Euler, Dopri5, Dopri8, Tsit5, Kvaerno3, Kvaerno5)
         assert_method_supported(self.method.ode_method, supported_ode_methods)
         self.method.ode_method.assert_supports_gradient(self.gradient)
@@ -183,7 +187,9 @@ class MESolveLowRankIntegrator(
 
     @property
     def terms(self) -> dx.AbstractTerm:
-        solve = cholesky_solve if self.linear_solver == 'cholesky' else qr_solve
+        solve = (
+            cholesky_solve if self.linear_solver is LinearSolver.CHOLESKY else qr_solve
+        )
 
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
             m = y
