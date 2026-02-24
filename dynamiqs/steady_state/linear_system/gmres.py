@@ -10,6 +10,9 @@ MatVec = Callable[[Array], Array]
 BoolLike = Array
 BoolFn = Callable[[Array], BoolLike]
 
+Carry = tuple[Array, Array, Array, Array, Array]
+ArnoldiCarry = tuple[Array, Array, Array, Array, Array, Array]
+
 
 def gmres(
     A: MatVec,
@@ -20,7 +23,7 @@ def gmres(
     max_iter: int,
     krylov_size: int,
     recycling: int | tuple[Array, Array],
-):
+) -> tuple[Array, tuple[Array, Array, Array, Array]]:
     """GMRES with _right_ preconditioning, recycling, and custom stopping criterion.
 
     Args:
@@ -54,11 +57,11 @@ def gmres(
         U_first, C_first, V_first, H_bar_first, recycling
     )
 
-    def cond_fn(carry):
-        n_iteration, x, U, C, converged = carry
+    def cond_fn(carry: Carry) -> BoolLike:
+        n_iteration, _x, _U, _C, converged = carry
         return (n_iteration < max_iter - 1) & (jnp.logical_not(converged))
 
-    def body_fn(carry):
+    def body_fn(carry: Carry) -> Carry:
         n_iteration, x, U, C, converged = carry
         x_new, U_new, C_new, _, _, converged = gmres_one_cycle(
             A, M, x, b, U, C, V, H, stopping_criterion
@@ -82,8 +85,7 @@ def gmres_one_cycle(
     H: Array,
     stopping_criterion: BoolFn,
 ) -> tuple[Array, Array, Array, Array, Array, Array]:
-    """
-    One cycle of GMRES with right-preconditioning and recycling.
+    """One cycle of GMRES with right-preconditioning and recycling.
 
     Args:
         A: linear operator
@@ -160,9 +162,11 @@ def gmres_one_cycle(
     return solution, U_new, C_new, V, H_bar, converged
 
 
-def arnoldi(A: MatVec, U: Array, C: Array, V: Array, H: Array, r_0: Array):
-    """
-    Builds the Krylov subspace associated to `(A, r_0)` with recycling from `(U, C)`.
+def arnoldi(
+    A: MatVec, U: Array, C: Array, V: Array, H: Array, r_0: Array
+) -> tuple[Array, Array, Array, Array, BoolLike]:
+    r"""Builds the Krylov subspace associated to `(A, r_0)` with recycling from `(U, C)`
+    .
 
     Performs initial deflation against C, then builds the Krylov space orthogonal to C.
 
@@ -201,7 +205,8 @@ def arnoldi(A: MatVec, U: Array, C: Array, V: Array, H: Array, r_0: Array):
     Note:
         Our `H` (size `(n, n-1)`) is usually denoted as `\\tilde{H}` in textbooks.
 
-        We use a `scan` loop rather than a while loop, deferring the breakdown check at the very end.
+        We use a `scan` loop rather than a while loop, deferring the breakdown check
+        at the very end.
     """
     m, n = V.shape
     _, p = C.shape
@@ -237,7 +242,9 @@ def arnoldi(A: MatVec, U: Array, C: Array, V: Array, H: Array, r_0: Array):
     return V, H, B, beta, breakdown
 
 
-def _arnoldi_inner(carry, _, *, A: MatVec, C: Array):
+def _arnoldi_inner(
+    carry: ArnoldiCarry, _: object, *, A: MatVec, C: Array
+) -> tuple[ArnoldiCarry, None]:
     """Inner loop of Arnoldi iteration with recycling.
 
     Called by the scan function. Second argument is input of scan, which is unused.
@@ -305,13 +312,14 @@ def _arnoldi_inner(carry, _, *, A: MatVec, C: Array):
     return (k + 1, H, B, V, q_new, h_res), None
 
 
-def _error_if_breakdown(args, breakdown):
-    args = eqx.error_if(
+def _error_if_breakdown(
+    args: tuple[Array, Array, Array], breakdown: BoolLike
+) -> tuple[Array, Array, Array]:
+    return eqx.error_if(
         args,
         breakdown,
         'Arnoldi process resulted in colinear basis. Not Handled for now.',
     )
-    return args
 
 
 def build_augmented_hessenberg_matrix(B: Array, H_aug: Array) -> Array:
@@ -352,9 +360,8 @@ def build_augmented_hessenberg_matrix(B: Array, H_aug: Array) -> Array:
     bottom = jnp.concatenate(
         [jnp.zeros((n, p), dtype=H_aug.dtype), H_aug], axis=1
     )  # (n, p + n - 1)
-    H_bar = jnp.concatenate([top, bottom], axis=0)  # (p + n, p + n - 1)
 
-    return H_bar
+    return jnp.concatenate([top, bottom], axis=0)  # (p + n, p + n - 1) (H_bar)
 
 
 def extract_recycled_matrices(
@@ -424,7 +431,7 @@ def extract_recycled_matrices(
     return U_new, C_new
 
 
-def assert_dtypes_are_the_same(A, M, x_0, b):
+def assert_dtypes_are_the_same(A: MatVec, M: MatVec, x_0: Array, b: Array) -> None:
     dtype_output_of_A = jax.eval_shape(lambda: A(x_0)).dtype
     dtype_output_of_M = jax.eval_shape(lambda: M(x_0)).dtype
 
@@ -447,7 +454,6 @@ def initialize_recycling_arrays(
     So we initialize an empty array which will be optimized away under JAX.
     It will be updated later in `maybe_update_recycling_arrays`.
     """
-
     if isinstance(recycling, int):
         U, C = (
             jnp.zeros((dimension, 0), dtype=dtype),
@@ -461,7 +467,7 @@ def initialize_recycling_arrays(
                 f'shape, got U: {U.shape}, C: {C.shape}'
             )
     else:
-        raise ValueError(
+        raise TypeError(
             f'Invalid recycling parameter. Expected int, or tuple[Array, Array], '
             f'got {type(recycling)}'
         )

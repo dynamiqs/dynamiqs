@@ -4,8 +4,8 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import warnings
+from abc import ABC, abstractmethod
 from functools import partial
 
 import equinox as eqx
@@ -14,12 +14,12 @@ import jax.numpy as jnp
 from jax import Array
 
 import dynamiqs as dq
+
 from ..._checks import check_hermitian, check_qarray_is_dense, check_shape
+from ...integrators._utils import cartesian_vmap, catch_xla_runtime_error, multi_vmap
 from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
-
-from ...integrators._utils import cartesian_vmap, catch_xla_runtime_error, multi_vmap
 from ..linear_system.gmres import gmres
 from ..preconditionner.lyapunov_solver import LyapunovSolverEig
 from .utils import (
@@ -30,7 +30,6 @@ from .utils import (
     to_matrix,
     update_preconditioner,
 )
-
 
 # =============================================================================
 # Auxiliary info types
@@ -80,7 +79,7 @@ class SteadyStateGMRESResult(SteadyStateResult):
     infos: GMRESAuxInfo
 
     @staticmethod
-    def out_axes():
+    def out_axes() -> SteadyStateGMRESResult:
         return SteadyStateGMRESResult(
             rho=0, infos=GMRESAuxInfo(n_iteration=0, success=0, recycling=(0, 0))
         )
@@ -364,7 +363,9 @@ def _vectorized_steadystate(
     out_axes = solver.result_type().out_axes()
 
     # Closure that captures `solver` (static) and calls its _run method.
-    def _run_single(H, Ls, rho0, options):
+    def _run_single(
+        H: QArray, Ls: list[QArray], rho0: QArray | None, options: Options
+    ) -> SteadyStateResult:
         return solver._run(H, Ls, rho0, options)
 
     # --- cartesian batching ---
