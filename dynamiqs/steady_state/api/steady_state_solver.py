@@ -19,7 +19,6 @@ from ...integrators._utils import cartesian_vmap, catch_xla_runtime_error, multi
 from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
-from ..solvers.steady_state_gmres import SteadyStateGMRES
 
 # =============================================================================
 # Result types
@@ -69,7 +68,7 @@ def steadystate(
     jump_ops: list[QArrayLike],
     *,
     rho0: QArrayLike | None = None,
-    solver: SteadyStateSolver = SteadyStateGMRES(),  # noqa: B008
+    solver: SteadyStateSolver | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> SteadyStateResult:
     r"""Compute the steady state of the Lindblad master equation.
@@ -142,6 +141,12 @@ def steadystate(
     Ls = [asqarray(L) for L in jump_ops]
     if rho0 is not None:
         rho0 = asqarray(rho0)
+
+    # === default solver (lazy import to avoid circular dependency) ===
+    if solver is None:
+        from ..solvers.steady_state_gmres import SteadyStateGMRES  # noqa: PLC0415
+
+        solver = SteadyStateGMRES()
 
     # === check arguments ===
     _check_steadystate_solver(solver)
