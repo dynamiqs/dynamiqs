@@ -6890,12 +6890,12 @@
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">momentum</span><span class="p">(</span><span class="n">dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">layout</span><span class="p">:</span> <span class="n">Layout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">momentum</span><span class="p">(</span><span class="n">dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">layout</span><span class="p">:</span> <span class="n">Layout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hbar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns the momentum operator <span class="arithmatex">\(p = i (a^\dag - a) / 2\)</span>.</p>
+        <p>Returns the momentum operator <span class="arithmatex">\(p = i\sqrt{\hbar/2}\,(a^\dag - a)\)</span>.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -6912,6 +6912,14 @@
         –
         <div class="doc-md-description">
           <p>Matrix layout (<code>dq.dense</code>, <code>dq.dia</code> or <code>None</code>).</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>hbar</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Value of <span class="arithmatex">\(\hbar\)</span> in the commutation relation <span class="arithmatex">\([\hat{x}, \hat{p}]
+= i\hbar\)</span>. Common choices are <code>0.5</code> (default), <code>1.0</code>, and <code>2.0</code>.</p>
         </div>
       </li>
   </ul>

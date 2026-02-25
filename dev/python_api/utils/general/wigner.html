@@ -6897,7 +6897,7 @@
     <span class="n">npixels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">201</span><span class="p">,</span>
     <span class="n">xvec</span><span class="p">:</span> <span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">yvec</span><span class="p">:</span> <span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">g</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
+    <span class="n">hbar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array</span><span class="p">,</span> <span class="n">Array</span><span class="p">,</span> <span class="n">Array</span><span class="p">]</span>
 </code></pre></div>
 
@@ -6958,10 +6958,13 @@ defaults to <code>yvec = jnp.linspace(-ymax, ymax, npixels)</code>.</p>
         </div>
       </li>
       <li class="doc-section-item field-body">
-          <b><code>g</code></b>
+          <b><code>hbar</code></b>
         –
         <div class="doc-md-description">
-          <p>Scaling factor of Wigner quadratures, such that <span class="arithmatex">\(a = g(x + iy)/2\)</span>.</p>
+          <p>Value of <span class="arithmatex">\(\hbar\)</span> in the commutation relation <span class="arithmatex">\([\hat{x}, \hat{p}]
+= i\hbar\)</span>. Common choices are <code>0.5</code> (default, coherent state
+<span class="arithmatex">\(\ket{\alpha}\)</span> centered at <span class="arithmatex">\((\mathrm{Re}(\alpha),
+\mathrm{Im}(\alpha))\)</span>), <code>1.0</code>, and <code>2.0</code>.</p>
         </div>
       </li>
   </ul>
