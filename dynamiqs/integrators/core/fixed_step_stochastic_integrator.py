@@ -7,7 +7,6 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import numpy as np
-from diffrax import Euler, ODETerm
 from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
 
@@ -27,6 +26,7 @@ from .interfaces import (
 from .rouchon_integrator import (
     KrausRK,
     MESolveFixedRouchon1Integrator,
+    RouchonPropertiesMixin,
     cholesky_normalize,
 )
 from .save_mixin import SolveSaveMixin
@@ -481,50 +481,12 @@ def cholesky_normalize_ket(kraus_map: KrausRK, psi: QArray) -> jax.Array:
     )[:, None]  # (n,) -> (n, 1)
 
 
-class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
+class DSSESolveRouchon1Integrator(RouchonPropertiesMixin, DSSEFixedStepIntegrator):
     """Integrator solving the diffusive SSE with the Rouchon1 method."""
 
     @property
     def identity(self) -> QArray:
         return eye_like(self.H(0))
-
-    @property
-    def G(self):  # noqa: ANN201
-        def G_at_t(t):  # noqa: ANN001, ANN202
-            LdL = sum([_L.dag() @ _L for _L in self.L(t)])
-            return -1j * self.H(t) - 0.5 * LdL
-
-        return G_at_t
-
-    @property
-    def no_jump_solver(self):  # noqa: ANN201
-        return Euler()
-
-    @property
-    def no_jump_propagator(self):  # noqa: ANN201
-        def _no_jump_propagator_flow(t, y, *args):  # noqa: ANN001, ANN202
-            return self.G(t) @ y
-
-        no_jump_propagator_flow = ODETerm(_no_jump_propagator_flow)
-
-        def _no_jump_propagator(t, dt):  # noqa: ANN001, ANN202
-            solver = self.no_jump_solver
-            solver_state = solver.init(
-                no_jump_propagator_flow, t, t + dt, self.identity, None
-            )
-            _y1, _error, dense_info, solver_state, _result = solver.step(
-                no_jump_propagator_flow,
-                t0=t,
-                t1=t + dt,
-                y0=self.identity,
-                args=None,
-                solver_state=solver_state,
-                made_jump=False,
-            )
-            interpolant = solver.interpolation_cls(t0=t, t1=t + dt, **dense_info)
-            return interpolant.evaluate
-
-        return _no_jump_propagator
 
     def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
         psi = y.state
@@ -605,52 +567,14 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
         return DiffusiveState(rho + drho, y.Y + dY)
 
 
-class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
+class DSMESolveRouchon1Integrator(
+    RouchonPropertiesMixin, DSMEFixedStepIntegrator, SolveInterface
+):
     """Integrator solving the diffusive SME with the Rouchon1 method."""
 
     @property
     def identity(self) -> QArray:
         return eye_like(self.H(0))
-
-    @property
-    def G(self):  # noqa: ANN201
-        def G_at_t(t):  # noqa: ANN001, ANN202
-            LdL = sum([_L.dag() @ _L for _L in self.L(t)])
-            return -1j * self.H(t) - 0.5 * LdL
-
-        return G_at_t
-
-    @property
-    def no_jump_solver(self):  # noqa: ANN201
-        # we use the same solver as for the Rouchon1 jump integrator, but with a
-        # different no-jump propagator flow (see below)
-        return Euler()
-
-    @property
-    def no_jump_propagator(self):  # noqa: ANN201
-        def _no_jump_propagator_flow(t, y, *args):  # noqa: ANN001, ANN202
-            return self.G(t) @ y
-
-        no_jump_propagator_flow = ODETerm(_no_jump_propagator_flow)
-
-        def _no_jump_propagator(t, dt):  # noqa: ANN001, ANN202
-            solver = self.no_jump_solver
-            solver_state = solver.init(
-                no_jump_propagator_flow, t, t + dt, self.identity, None
-            )
-            _y1, _error, dense_info, solver_state, _result = solver.step(
-                no_jump_propagator_flow,
-                t0=t,
-                t1=t + dt,
-                y0=self.identity,
-                args=None,
-                solver_state=solver_state,
-                made_jump=False,
-            )
-            interpolant = solver.interpolation_cls(t0=t, t1=t + dt, **dense_info)
-            return interpolant.evaluate
-
-        return _no_jump_propagator
 
     def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
         # The Rouchon update for a single loss channel is:

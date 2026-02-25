@@ -9,7 +9,6 @@ from ..systems import dense_ocavity, otdqubit
 
 # for speed we don't test all possible options:
 # - normalize: set to True
-# - exact_expm: set to False
 # - skip system dia_ocavity
 
 
