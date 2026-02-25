@@ -104,6 +104,7 @@ def wigner(
     colorbar: bool = True,
     cross: bool = False,
     clear: bool = False,
+    hbar: float = 0.5,
 ):
     r"""Plot the Wigner function of a state.
 
@@ -153,7 +154,7 @@ def wigner(
     check_shape(state, 'state', '(n, 1)', '(n, n)')
 
     ymax = xmax if ymax is None else ymax
-    _, _, w = compute_wigner(state, xmax, ymax, npixels)
+    _, _, w = compute_wigner(state, xmax, ymax, npixels, hbar=hbar)
 
     wigner_data(
         w,
@@ -183,6 +184,7 @@ def wigner_mosaic(
     cmap: str = 'dq',
     interpolation: str = 'bilinear',
     cross: bool = False,
+    hbar: float = 0.5,
 ):
     r"""Plot the Wigner function of multiple states in a mosaic arrangement.
 
@@ -240,7 +242,7 @@ def wigner_mosaic(
 
     ymax = xmax if ymax is None else ymax
     selected_indexes = np.linspace(0, nstates, n, dtype=int)
-    _, _, wig = compute_wigner(states[selected_indexes], xmax, ymax, npixels)
+    _, _, wig = compute_wigner(states[selected_indexes], xmax, ymax, npixels, hbar=hbar)
 
     # plot individual wigner
     for i, ax in enumerate(axs):
@@ -273,6 +275,7 @@ def wigner_gif(
     interpolation: str = 'bilinear',
     cross: bool = False,
     clear: bool = False,
+    hbar: float = 0.5,
 ) -> Image:
     r"""Plot a GIF of the Wigner function of multiple states.
 
@@ -314,7 +317,7 @@ def wigner_gif(
     ymax = xmax if ymax is None else ymax
     nframes = int(gif_duration * fps)
     indices = gif_indices(len(states), nframes)
-    _, _, wig = compute_wigner(states[indices], xmax, ymax, npixels)
+    _, _, wig = compute_wigner(states[indices], xmax, ymax, npixels, hbar=hbar)
 
     return gifit(wigner_data)(
         wig,
