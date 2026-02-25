@@ -22,7 +22,7 @@ def wigner(
     npixels: int = 201,
     xvec: ArrayLike | None = None,
     yvec: ArrayLike | None = None,
-    g: float = 2.0,
+    hbar: float = 0.5,
 ) -> tuple[Array, Array, Array]:
     r"""Compute the Wigner distribution of a ket or density matrix.
 
@@ -38,7 +38,10 @@ def wigner(
             defaults to `xvec = jnp.linspace(-xmax, xmax, npixels)`.
         yvec (array-like of shape (nyvec,), optional): $y$ coordinates. If `None`,
             defaults to `yvec = jnp.linspace(-ymax, ymax, npixels)`.
-        g: Scaling factor of Wigner quadratures, such that $a = g(x + iy)/2$.
+        hbar: Value of $\hbar$ in the commutation relation $[\hat{x}, \hat{p}]
+            = i\hbar$. Common choices are `0.5` (default, coherent state
+            $\ket{\alpha}$ centered at $(\mathrm{Re}(\alpha),
+            \mathrm{Im}(\alpha))$), `1.0`, and `2.0`.
 
     Returns:
         xvec (array of shape (npixels,) or (nxvec,)): $x$ coordinates, or
@@ -64,6 +67,8 @@ def wigner(
     check_shape(xvec, 'xvec', '(n,)', subs={'n': 'nxvec'})
     yvec = jnp.linspace(-ymax, ymax, npixels) if yvec is None else jnp.asarray(yvec)
     check_shape(yvec, 'yvec', '(n,)', subs={'n': 'nyvec'})
+
+    g = jnp.sqrt(2.0 / hbar)
 
     return xvec, yvec, _wigner(state, xvec, yvec, g)
 
