@@ -1,10 +1,11 @@
 import warnings
 from abc import abstractmethod
 from dataclasses import replace
+from functools import partial
 
 import jax.numpy as jnp
 
-from ...result import Result, SolveSaved, StochasticSolveResult
+from ...result import MESolveResult, Result, SolveSaved, StochasticSolveResult
 from ..apis.dssesolve import _vectorized_dssesolve
 from ..apis.jssesolve import _vectorized_jssesolve
 from .abstract_integrator import BaseIntegrator
@@ -75,7 +76,9 @@ class MESolveJumpMonteCarloIntegrator(MESolveMonteCarloIntegrator):
         )
 
 
-mesolve_jumpmontecarlo_integrator_constructor = MESolveJumpMonteCarloIntegrator
+mesolve_jumpmontecarlo_integrator_constructor = partial(
+    MESolveJumpMonteCarloIntegrator, result_class=MESolveResult
+)
 
 
 class MESolveDiffusiveMonteCarloIntegrator(MESolveMonteCarloIntegrator):
@@ -96,6 +99,6 @@ class MESolveDiffusiveMonteCarloIntegrator(MESolveMonteCarloIntegrator):
         )
 
 
-mesolve_diffusivemontecarlo_integrator_constructor = (
-    MESolveDiffusiveMonteCarloIntegrator
+mesolve_diffusivemontecarlo_integrator_constructor = partial(
+    MESolveDiffusiveMonteCarloIntegrator, result_class=MESolveResult
 )
