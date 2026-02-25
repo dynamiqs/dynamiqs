@@ -14,6 +14,11 @@ import dynamiqs as dq
 from dynamiqs.steady_state import SteadyStateGMRES
 
 from .systems import build_random_single_mode, build_two_modes
+from .utils import (
+    assert_valid_dm,
+    lindbladian_residual,
+    simple_oscillator_analytical_steady_state,
+)
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -47,42 +52,6 @@ def tol(precision):
 @pytest.fixture(params=[1.0, 0.1], ids=lambda g: f'gamma={g}')
 def gamma(request):
     return request.param
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def lindbladian_residual(H, Ls, rho):
-    """Compute max-abs norm of L(rho), i.e. max|lindbladian(rho)|."""
-    L_rho = dq.lindbladian(H, Ls, rho)
-    return float(jnp.max(jnp.abs(L_rho.to_jax())))
-
-
-def _dm_atol(precision):
-    """Return the absolute tolerance for density matrix checks."""
-    return 1e-8 if precision == 'double' else 1e-4
-
-
-def _simple_oscillator_analytical_steady_state(n, epsilon_a, kappa):
-    """Analytical steady state for H=epsilon_a*(a+a^dagger), L=sqrt(kappa)*a."""
-    alpha_ss = -2j * epsilon_a / kappa
-    return dq.coherent_dm(n, alpha_ss)
-
-
-def assert_valid_dm(rho, precision):
-    """Check that rho is a valid density matrix (hermitian, trace 1, PSD)."""
-    atol = _dm_atol(precision)
-    rho_jax = rho.to_jax()
-    assert jnp.allclose(rho_jax, rho_jax.conj().T, atol=atol), 'rho is not Hermitian'
-    assert jnp.isclose(jnp.trace(rho_jax), 1.0, atol=atol), (
-        f'Tr(rho) = {jnp.trace(rho_jax)}, expected 1.0'
-    )
-    eigvals = jnp.linalg.eigvalsh(rho_jax)
-    assert jnp.all(eigvals > -atol), (
-        f'rho has negative eigenvalue: {float(jnp.min(eigvals))}'
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -175,7 +144,7 @@ class TestSimpleOscillator:
             f'Solver did not converge (n={n}, tol={fine_tol:.0e}, '
             f'iters={result_fine.infos.n_iteration})'
         )
-        rho_analytical = _simple_oscillator_analytical_steady_state(n, epsilon_a, kappa)
+        rho_analytical = simple_oscillator_analytical_steady_state(n, epsilon_a, kappa)
         fidelity = float(dq.fidelity(result_fine.rho, rho_analytical))
         fid_tol = 1e-10 if precision == 'double' else 1e-5
         assert fidelity > 1 - fid_tol, (
@@ -233,6 +202,45 @@ class TestJIT:
         assert bool(success), 'JIT-wrapped solver did not converge (random)'
         assert jnp.isclose(trace_val, 1.0, atol=1e-4), (
             f'Tr(rho) = {trace_val}, expected 1.0'
+        )
+
+
+# ---------------------------------------------------------------------------
+# Differentiability test
+# ---------------------------------------------------------------------------
+
+
+class TestAutodiff:
+    """Verify that the steady-state pipeline is differentiable on a two-mode example."""
+
+    def test_two_modes_is_differentiable_wrt_eps_d(self):
+        """Forward-mode autodiff gradient matches a finite-difference estimate."""
+        jax.config.update('jax_enable_x64', True)
+
+        na, nb = 12, 3
+        solver = SteadyStateGMRES(
+            tol=1e-7, max_iteration=200, krylov_size=64, exact_dm=False
+        )
+        _, b = dq.destroy(na, nb)
+        n_b = b.dag() @ b
+
+        def loss(eps_d):
+            H, Ls = build_two_modes(na, nb, eps_d=eps_d, kappa_a=1)
+            result = dq.steadystate(H, Ls, solver=solver)
+            return jnp.real(dq.expect(n_b, result.rho))
+
+        eps0 = jnp.array(2.0)
+        _, grad_auto = jax.jvp(loss, (eps0,), (jnp.array(1.0),))
+
+        h = 5e-3
+        grad_fd = (loss(eps0 + h) - loss(eps0 - h)) / (2 * h)
+
+        assert jnp.isfinite(grad_auto), 'Autodiff gradient is not finite'
+        assert jnp.isfinite(grad_fd), 'Finite-difference gradient is not finite'
+        assert jnp.abs(grad_auto) > 1e-8, 'Autodiff gradient is unexpectedly near zero'
+        assert jnp.isclose(grad_auto, grad_fd, rtol=5e-2, atol=1e-4), (
+            f'Gradient mismatch: autodiff={float(grad_auto):.6e}, '
+            f'finite_diff={float(grad_fd):.6e}'
         )
 
 
