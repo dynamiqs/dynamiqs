@@ -47,7 +47,7 @@ def rho_from_m(m: Array) -> Array:
     return rho / tr[..., None, None]
 
 
-def initialize_m0_from_ket(psi0: Array, rank: int, *, eps: float, key: Array) -> Array:
+def initialize_m0_from_ket(psi0: Array, rank: int, eps: float, key: Array) -> Array:
     """Initialize the low-rank d.m. m0 from a pure state |psi0>.
 
     The first column of m0 is (a rescaled) psi0, and the remaining rank-1 columns
@@ -83,7 +83,7 @@ def initialize_m0_from_ket(psi0: Array, rank: int, *, eps: float, key: Array) ->
 
 
 def initialize_m0_from_dm(
-    rho0: Array, rank: int, *, eps: float, key: Array, eigval_tol: float = 1e-12
+    rho0: Array, rank: int, eps: float, key: Array, eigval_tol: float = 1e-12
 ) -> Array:
     """Initialize the low-rank d.m. m0 from a density matrix rho0.
 
@@ -126,8 +126,6 @@ class MESolveLowRankIntegrator(
     https://github.com/leogoutte/low_rank/blob/main/src/low_rank.jl
     """
 
-    linear_solver: LinearSolver = eqx.field(static=True, default=LinearSolver.QR)
-
     @property
     def dims(self) -> tuple[int, ...]:
         return self.H.dims
@@ -149,12 +147,15 @@ class MESolveLowRankIntegrator(
         if self.y0.isdm():
             self.y0 = check_hermitian(self.y0, 'rho0')
 
+        # check that the rank is smaller than the initial state size
         n = self.y0.shape[-2]
         if n < self.method.rank:
             raise ValueError(
-                'Argument `rank` must be smaller than the initial state size `n,'
+                'Argument `rank` must be smaller than the initial state size `n`,'
                 f'but got rank={self.method.rank} and n={n}.'
             )
+
+        # warn if using Cholesky solver with single precision
         if self.method.linear_solver is LinearSolver.CHOLESKY and not jax.config.read(
             'jax_enable_x64'
         ):
@@ -165,92 +166,47 @@ class MESolveLowRankIntegrator(
                 stacklevel=2,
             )
 
-        # initialize low-rank representation from ket or density matrix input
-        eps = self.method.perturbation_scale
-        if self.y0.isket():
-            psi0 = self.y0.to_jax()
-            self.y0 = initialize_m0_from_ket(
-                psi0, self.method.rank, eps=eps, key=self.method.key
-            )
-        else:
-            rho0_dm = self.y0.todm()
-            self.y0 = initialize_m0_from_dm(
-                rho0_dm.to_jax(), self.method.rank, eps=eps, key=self.method.key
-            )
-
+        # check internal ODE solver
         supported_ode_methods = (Euler, Dopri5, Dopri8, Tsit5, Kvaerno3, Kvaerno5)
         assert_method_supported(self.method.ode_method, supported_ode_methods)
         self.method.ode_method.assert_supports_gradient(self.gradient)
 
-        # save low-rank-specific settings and result container
-        self.linear_solver = self.method.linear_solver
+    def run(self) -> Result:
+        # initialize low-rank representation from ket or density matrix input
+        eps = self.method.perturbation_scale
+        if self.y0.isket():
+            psi0 = self.y0.to_jax()
+            m0 = initialize_m0_from_ket(psi0, self.method.rank, eps, self.method.key)
+        else:
+            rho0 = self.y0.todm().to_jax()
+            m0 = initialize_m0_from_dm(rho0, self.method.rank, eps, self.method.key)
 
-    @property
-    def terms(self) -> dx.AbstractTerm:
-        solve = (
-            cholesky_solve if self.linear_solver is LinearSolver.CHOLESKY else qr_solve
-        )
+        # define diffrax term
+        linear_solvers = {
+            LinearSolver.CHOLESKY: cholesky_solve,
+            LinearSolver.QR: qr_solve,
+        }
+        linsolve = linear_solvers[self.method.linear_solver]
 
-        def vector_field(t, y, _):  # noqa: ANN001, ANN202
-            m = y
-
+        def vector_field(t, m, _):  # noqa: ANN001, ANN202
             H = self.H(t)
             Ls = [L(t) for L in self.Ls]
             dm = (-1j) * (H @ m).to_jax()
 
-            if len(Ls) > 0:
-                for L in Ls:
-                    Lm = (L @ m).to_jax()
-                    tmp = solve(m, Lm)
-                    dm = dm + 0.5 * (Lm @ tmp.conj().T) - 0.5 * (L.dag() @ Lm).to_jax()
+            for L in Ls:
+                Lm = (L @ m).to_jax()
+                tmp = linsolve(m, Lm)
+                dm += 0.5 * (Lm @ tmp.conj().T) - 0.5 * (L.dag() @ Lm).to_jax()
 
             return dm
 
-        return dx.ODETerm(vector_field)
+        term = dx.ODETerm(vector_field)
 
-    def _rho_from_m(self, m: Array):  # noqa: ANN202
-        return asqarray(rho_from_m(m), dims=self.dims)
-
-    def save(self, y: PyTree) -> SolveSaved:
-        m = normalize_m(y)
-
-        ysave = None
-        if self.options.save_states:
-            ysave = asqarray(m, dims=self.dims)
-
-        extra = None
-        if self.options.save_extra:
-            extra = self.options.save_extra(self._rho_from_m(m))
-
-        if self.Es_jax is not None:
-            Esave = jnp.stack([expval_from_m(m, E) for E in self.Es_jax])
-        else:
-            Esave = None
-
-        return SolveSaved(ysave=ysave, extra=extra, Esave=Esave)
-
-    def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
-        if not self.options.save_states:
-            mlast = normalize_m(ylast)
-            ylast_save = asqarray(mlast, dims=self.dims)
-            saved = eqx.tree_at(
-                lambda x: x.ysave, saved, ylast_save, is_leaf=lambda x: x is None
-            )
-
-        return self.reorder_Esave(saved)
-
-    def infos(self, stats: dict[str, Array]) -> PyTree:
-        if isinstance(self.method.ode_method, Euler):
-            return FixedStepInfos(stats['num_steps'])
-        return AdaptiveStepInfos(
-            stats['num_steps'], stats['num_accepted_steps'], stats['num_rejected_steps']
-        )
-
-    def run(self) -> Result:
+        # call diffrax to solve the ODE and save the results
         solution = call_diffeqsolve(
             self.ts,
-            self.y0,
-            self.terms,
+            m0,
+            term,
             self.method.ode_method,
             self.gradient,
             self.options,
@@ -260,6 +216,53 @@ class MESolveLowRankIntegrator(
 
         saved = self.postprocess_saved(*solution.ys)
         return self.result(saved, infos=self.infos(solution.stats))
+
+    def save(self, m: PyTree) -> SolveSaved:
+        m = normalize_m(m)
+
+        msave = None
+        if self.options.save_states:
+            msave = asqarray(m, dims=self.dims)
+
+        extra = None
+        if self.options.save_extra:
+            rho = asqarray(rho_from_m(m), dims=self.dims)
+            extra = self.options.save_extra(rho)
+
+        if self.Es_jax is not None:
+            Esave = jnp.stack([expval_from_m(m, E) for E in self.Es_jax])
+        else:
+            Esave = None
+
+        return SolveSaved(ysave=msave, extra=extra, Esave=Esave)
+
+    def postprocess_saved(self, saved: Saved, mlast: PyTree) -> Saved:
+        if not self.options.save_states:
+            mlast_save = asqarray(normalize_m(mlast), dims=self.dims)
+            saved = eqx.tree_at(
+                lambda x: x.ysave, saved, mlast_save, is_leaf=lambda x: x is None
+            )
+
+        return self.reorder_Esave(saved)
+
+    def infos(self, stats: dict[str, Array]) -> PyTree:
+        fixed_step = {
+            Euler: True,
+            Dopri5: False,
+            Dopri8: False,
+            Tsit5: False,
+            Kvaerno3: False,
+            Kvaerno5: False,
+        }[type(self.method.ode_method)]
+
+        if fixed_step:
+            return FixedStepInfos(stats['num_steps'])
+        else:
+            return AdaptiveStepInfos(
+                stats['num_steps'],
+                stats['num_accepted_steps'],
+                stats['num_rejected_steps'],
+            )
 
 
 mesolve_lowrank_integrator_constructor = partial(
