@@ -205,6 +205,10 @@ class MESolveLowRankResult(MESolveResult):
         rho = m @ m.conj().swapaxes(-2, -1)
         return asqarray(rho, dims=self.lowrank_states.dims)
 
+    def _str_parts(self) -> dict[str, str | None]:
+        d = super()._str_parts()
+        return d | {'Lowrank states': _array_str(self.lowrank_states)}
+
 
 class SEPropagatorResult(PropagatorResult):
     pass
