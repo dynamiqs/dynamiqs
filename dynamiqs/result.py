@@ -238,9 +238,9 @@ class JumpSolveResult(StochasticSolveResult):
         mean_states = super().mean_states()
 
         if isinstance(self.method, Event) and self.method.smart_sampling:
-            noclick_prob = self.infos.noclick_prob[..., None, None, None]  # ty: ignore[possibly-missing-attribute]
+            noclick_prob = self.infos.noclick_prob[..., None, None, None]  # ty: ignore[unresolved-attribute]
             return unit(
-                noclick_prob * self.infos.noclick_states.todm()  # ty: ignore[possibly-missing-attribute]
+                noclick_prob * self.infos.noclick_states.todm()  # ty: ignore[unresolved-attribute]
                 + (1 - noclick_prob) * mean_states,
                 psd=True,
             )
@@ -254,9 +254,9 @@ class JumpSolveResult(StochasticSolveResult):
         mean_expect = super().mean_expects()
 
         if isinstance(self.method, Event) and self.method.smart_sampling:
-            noclick_prob = self.infos.noclick_prob[..., None, None]  # ty: ignore[possibly-missing-attribute]
+            noclick_prob = self.infos.noclick_prob[..., None, None]  # ty: ignore[unresolved-attribute]
             return (
-                noclick_prob * self.infos.noclick_expects  # ty: ignore[possibly-missing-attribute]
+                noclick_prob * self.infos.noclick_expects  # ty: ignore[unresolved-attribute]
                 + (1 - noclick_prob) * mean_expect
             )
         else:
