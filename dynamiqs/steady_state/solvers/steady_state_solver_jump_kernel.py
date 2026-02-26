@@ -150,7 +150,7 @@ def _steadystate_jump_kernel(
     L_stack = jnp.concatenate([L.to_jax().astype(dtype) for L in Ls], axis=0)
     _, S, Vh = jnp.linalg.svd(L_stack, full_matrices=False)
 
-    keep = S <= tol
+    keep = tol >= S
     nullity = jnp.sum(keep, dtype=jnp.int32)
     rank = jnp.asarray(S.shape[0], dtype=jnp.int32) - nullity
 
