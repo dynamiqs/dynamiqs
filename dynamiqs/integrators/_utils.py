@@ -19,6 +19,12 @@ from ..time_qarray import (
     TimeQArray,
 )
 
+# Sentinel value for cartesian_vmap: marks arguments that should be mapped
+# (in_axes preserved) at every vmap step, rather than only when their own
+# path is being vmapped.  Used for PRNG keys that must be peeled along with
+# every batch dimension.
+ALWAYS_MAPPED = object()
+
 
 def astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
     if isinstance(x, TimeQArray):
@@ -170,15 +176,29 @@ def cartesian_vmap(
     """
     keyleaf = jax.tree_util.tree_leaves_with_path(nvmap)
 
-    # apply successive vmaps in reverse order
+    # collect paths of always-mapped arguments (e.g. PRNG keys that must be
+    # peeled at every vmap step)
+    always_mapped_paths = frozenset(
+        path for path, n in keyleaf if n is ALWAYS_MAPPED
+    )
+
+    # apply successive vmaps in reverse order, skipping ALWAYS_MAPPED leaves
     for path, n in keyleaf[::-1]:
-        if n > 0:
-            # set all elements `in_axes` to `None` except for a specific subpart
-            keep_path_only = lambda cpath, x, path=path: (
-                x if cpath[: len(path)] == path else None
-            )
-            in_axes_single = jax.tree_util.tree_map_with_path(keep_path_only, in_axes)
-            for _ in range(n):
-                f = jax.vmap(f, in_axes=in_axes_single, out_axes=out_axes)
+        if n is ALWAYS_MAPPED or n == 0:
+            continue
+        # set all elements `in_axes` to `None` except for the current subpart
+        # and any always-mapped arguments
+        def keep_path_only(
+            cpath, x, path=path, _amp=always_mapped_paths
+        ):
+            if cpath[: len(path)] == path:
+                return x
+            if any(cpath[: len(ap)] == ap for ap in _amp):
+                return x
+            return None
+
+        in_axes_single = jax.tree_util.tree_map_with_path(keep_path_only, in_axes)
+        for _ in range(n):
+            f = jax.vmap(f, in_axes=in_axes_single, out_axes=out_axes)
 
     return f
