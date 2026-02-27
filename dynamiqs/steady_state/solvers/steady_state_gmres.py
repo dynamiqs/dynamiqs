@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import equinox as eqx
+from collections.abc import Callable
+
 import jax
 import jax.numpy as jnp
-import jax.scipy.sparse.linalg as jax_sparse
 
 import dynamiqs as dq
 
@@ -36,7 +36,7 @@ class SteadyStateGMRESResult(SteadyStateResult):
 
 
 class SteadyStateGMRES(SteadyStateSolver):
-    r"""GMRES steady-state solver with Krylov recycling.
+    r"""GMRES steady-state solver.
 
     Solves the deflated linear system
     $$
@@ -44,8 +44,6 @@ class SteadyStateGMRES(SteadyStateSolver):
     $$
     via preconditioned GMRES. Differentiation is handled by
     `jax.lax.custom_linear_solve`.
-
-    GMRES steady-state solver with Krylov recycling.
 
     This solver computes the steady-state density matrix
     $\rho_\infty$ such that $\mathcal{L}(\rho_\infty) = 0$, where
@@ -63,9 +61,6 @@ class SteadyStateGMRES(SteadyStateSolver):
     The resulting matrix is then Hermitized and trace-normalized to produce
     $\rho_\infty$ (and optionally projected onto the set of valid density
     matrices when `exact_dm=True`).
-
-    Krylov subspace recycling is used between restart cycles to reduce the number
-    of Lindbladian applications and accelerate convergence.
 
     Note:
         **Preconditioning and GMRES.** GMRES solves a linear system $Ax=b$ by
@@ -98,25 +93,16 @@ class SteadyStateGMRES(SteadyStateSolver):
 
     Args:
         tol: Tolerance for the stopping criterion. The solver stops when
-            $\|\mathcal{L}(\rho)\| < \mathrm{tol}$, where the norm is determined
-            by `norm_type`. Defaults to `1e-4`.
+            $\|\mathcal{L}(\rho)\| < \mathrm{tol}$. Defaults to `1e-4`.
         max_iteration: Maximum number of outer GMRES iterations. Defaults to `100`.
         krylov_size: Size of the Krylov subspace used in each GMRES restart cycle.
             Defaults to `32`. Increase to `64` or `128` if convergence is slow
             in term of iterations.
             Note that increasing `krylov_size` also increases memory usage and runtime
               per iteration.
-        recycling: Number of Krylov vectors to recycle between restarts.
-            Defaults to `5`. The recycling is necessary if you have convergence issues,
-              but it can cause longer overall runtime.
-            If you have convergence issues, try increasing `krylov_size` first,
-            then add recycling if the number of iterations is still high.
         exact_dm: If `True`, project the final matrix onto the set of valid density
             matrices (positive semidefinite with unit trace). If `False`, only
             Hermitization and trace normalization are applied. Defaults to `True`.
-        norm_type: Norm used in the stopping criterion. Supported values:
-            `'max'` (element-wise max) and `'norm2'` (Frobenius norm).
-            Defaults to `'max'`.
 
     Examples:
         ```python
@@ -142,9 +128,7 @@ class SteadyStateGMRES(SteadyStateSolver):
     tol: float = 1e-4
     max_iteration: int = 100
     krylov_size: int = 32
-    recycling: int = 5
     exact_dm: bool = True
-    norm_type: str = 'max'
 
     @staticmethod
     def result_type() -> type[SteadyStateGMRESResult]:
@@ -176,20 +160,20 @@ class SteadyStateGMRES(SteadyStateSolver):
             [dq.asqarray(L_j, dims=Ls[i].dims) for i, L_j in enumerate(Ls_jax)]
         )
 
-        def lindbladian_vec(x):
+        def lindbladian_vec(x: jax.Array) -> jax.Array:
             return from_dm(dq.lindbladian(H_q, Ls_q, to_dm(x, n=n, dims=dims)))
 
-        def deflated_matvec(x):
+        def deflated_matvec(x: jax.Array) -> jax.Array:
             return lindbladian_vec(x) + identity_vec * jnp.dot(identity_vec, x)
 
         # ── preconditioners (stop_gradient: not differentiated) ─────────────
         LdagL = (Ls_q.dag() @ Ls_q).sum(0).to_jax()
         G = jax.lax.stop_gradient(1j * H_jax + 0.5 * LdagL)
 
-        def make_preconditioner(G_mat):
+        def make_preconditioner(G_mat: jax.Array) -> Callable[[jax.Array], jax.Array]:
             solver = LyapunovSolverEig(G_mat)
 
-            def precond(x):
+            def precond(x: jax.Array) -> jax.Array:
                 return -from_matrix(solver.solve(to_matrix(x, n=n), mu=0.0))
 
             return update_preconditioner(precond, identity_vec, use_rank_1_update=True)
@@ -199,8 +183,8 @@ class SteadyStateGMRES(SteadyStateSolver):
 
         # ── custom_linear_solve ─────────────────────────────────────────────
 
-        def solve(matvec, b):
-            x, _info = jax_sparse.gmres(
+        def solve(matvec: Callable[[jax.Array], jax.Array], b: jax.Array) -> jax.Array:
+            x, _info = jax.scipy.sparse.linalg.gmres(
                 matvec,
                 b,
                 x0=x_0,
@@ -211,8 +195,10 @@ class SteadyStateGMRES(SteadyStateSolver):
             )
             return x
 
-        def transpose_solve(matvec_adj, b):
-            y, _info = jax_sparse.gmres(
+        def transpose_solve(
+            matvec_adj: Callable[[jax.Array], jax.Array], b: jax.Array
+        ) -> jax.Array:
+            y, _info = jax.scipy.sparse.linalg.gmres(
                 matvec_adj,
                 b,
                 x0=jnp.zeros_like(b),
