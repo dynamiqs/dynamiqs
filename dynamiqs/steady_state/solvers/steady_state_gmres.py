@@ -3,6 +3,7 @@ from __future__ import annotations
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+import jax.scipy.sparse.linalg as jax_sparse
 from jax import Array
 
 import dynamiqs as dq
@@ -18,7 +19,6 @@ from ..api.utils import (
     to_matrix,
     update_preconditioner,
 )
-from ..linear_system.gmres import gmres
 from ..preconditionner.lyapunov_solver import LyapunovSolverEig
 
 
@@ -57,6 +57,15 @@ class SteadyStateGMRESResult(SteadyStateResult):
 
 class SteadyStateGMRES(SteadyStateSolver):
     r"""GMRES steady-state solver with Krylov recycling.
+
+    Solves the deflated linear system
+    $$
+        (\mathcal{L} + |I\rangle\langle I|) |x\rangle = |I\rangle
+    $$
+    via preconditioned GMRES. Differentiation is handled by
+    `jax.lax.custom_linear_solve`.
+
+    GMRES steady-state solver with Krylov recycling.
 
     This solver computes the steady-state density matrix
     $\rho_\infty$ such that $\mathcal{L}(\rho_\infty) = 0$, where
@@ -128,15 +137,6 @@ class SteadyStateGMRES(SteadyStateSolver):
         norm_type: Norm used in the stopping criterion. Supported values:
             `'max'` (element-wise max) and `'norm2'` (Frobenius norm).
             Defaults to `'max'`.
-        check_pure_imaginary_eigenvalue: If `True`, perform an early spectral
-            validation on
-            $G=-iH-\tfrac{1}{2}\sum_k L_k^\dagger L_k$
-            and raise an error if at least one eigenvalue has near-zero real
-            part (purely imaginary eigenvalue), because GMRES preconditioning
-            can fail in this regime.
-            Defaults to `False`.
-            The tolerance is automatically set to machine epsilon of the
-            corresponding real dtype.
 
     Examples:
         ```python
@@ -166,7 +166,6 @@ class SteadyStateGMRES(SteadyStateSolver):
     recycling: int = 5
     exact_dm: bool = True
     norm_type: str = 'max'
-    check_pure_imaginary_eigenvalue: bool = False
 
     @staticmethod
     def result_type() -> type[SteadyStateGMRESResult]:
@@ -175,93 +174,95 @@ class SteadyStateGMRES(SteadyStateSolver):
     def _run(
         self, H: QArray, Ls: list[QArray], rho0: QArray | None, options: Options
     ) -> SteadyStateGMRESResult:
-        state, (n_iteration, success, U, C) = steadystate_gmres_single_instance(
-            H,
-            Ls,
-            rho0,
-            self.tol,
-            self.max_iteration,
-            self.krylov_size,
-            self.recycling,
-            self.exact_dm,
-            self.norm_type,
-            options,
-        )
-        infos = GMRESAuxInfo(n_iteration=n_iteration, success=success, recycling=(U, C))
-        return SteadyStateGMRESResult(rho=state, infos=infos)
+        del options
 
+        n = H.shape[-1]
+        dims = H.dims
+        tol = self.tol
+        max_iter = self.max_iteration
+        krylov_size = min(self.krylov_size, n * n - 1)
+        recycling_size = self.recycling
 
-def steadystate_gmres_single_instance(
-    H: QArray,
-    Ls: list[QArray],
-    rho0: QArray | None,
-    tol: float,
-    max_iteration: int,
-    krylov_size: int,
-    recycling: int,
-    exact_dm: bool,
-    norm_type: str,
-    options: Options,
-) -> tuple[QArray, tuple[Array, Array | bool, Array, Array]]:
-    """Core GMRES steady-state solver for a single (non-batched) instance."""
-    del options
+        H_jax = H.to_jax()
+        Ls_jax = [L.to_jax() for L in Ls]
+        dtype = H_jax.dtype
 
-    hilbert_size = H.shape[-1]
-    hilbert_dimensions = H.dims
+        identity_vec = from_matrix(jnp.eye(n, dtype=dtype))
 
-    Ls_q = dq.stack(Ls)
-    LdagL = (Ls_q.dag() @ Ls_q).sum(0).to_jax()
-    G = 1j * H.to_jax() + 0.5 * LdagL
-    dtype = G.dtype
+        if rho0 is None:
+            rho0 = dq.coherent_dm(n, 0.0)
+        x_0 = from_dm(rho0)
 
-    preconditioner = LyapunovSolverEig(jax.lax.stop_gradient(G))
-
-    if rho0 is None:
-        rho0 = dq.coherent_dm(hilbert_size, 0.0)
-    x_0 = from_dm(rho0)
-
-    identity_vectorized = from_matrix(jnp.eye(hilbert_size, dtype=dtype))
-    rhs = identity_vectorized
-
-    def lindbladian(x: Array) -> Array:
-        return from_dm(
-            dq.lindbladian(H, Ls_q, to_dm(x, n=hilbert_size, dims=hilbert_dimensions))
+        H_q = dq.asqarray(H_jax, dims=dims)
+        Ls_q = dq.stack(
+            [dq.asqarray(L_j, dims=Ls[i].dims) for i, L_j in enumerate(Ls_jax)]
         )
 
-    def lindbladian_plus_rank1(x: Array) -> Array:
-        return lindbladian(x) + identity_vectorized.dot(x) * identity_vectorized
+        def lindbladian_vec(x):
+            return from_dm(dq.lindbladian(H_q, Ls_q, to_dm(x, n=n, dims=dims)))
 
-    def base_preconditioner(x: Array) -> Array:
-        return -from_matrix(preconditioner.solve(to_matrix(x, n=hilbert_size), mu=0.0))
+        def deflated_matvec(x):
+            return lindbladian_vec(x) + identity_vec * jnp.dot(identity_vec, x)
 
-    preconditioner_fn = update_preconditioner(
-        base_preconditioner, identity_vectorized, use_rank_1_update=True
-    )
+        # ── preconditioners (stop_gradient: not differentiated) ─────────────
+        LdagL = (Ls_q.dag() @ Ls_q).sum(0).to_jax()
+        G = jax.lax.stop_gradient(1j * H_jax + 0.5 * LdagL)
 
-    def stopping_criterion(x: Array) -> Array:
-        x_mat = to_matrix(x, hilbert_size)
-        x_mat = 0.5 * (x_mat.conj().mT + x_mat)
-        x_mat = x_mat / jnp.trace(x_mat)
-        lindbladian_x = lindbladian(from_matrix(x_mat))
-        if norm_type == 'max':
-            norm = jnp.max(jnp.abs(lindbladian_x))
-        else:
-            norm = jnp.linalg.norm(lindbladian_x)
-        return norm < tol
+        def make_preconditioner(G_mat):
+            solver = LyapunovSolverEig(G_mat)
 
-    krylov_size = min(krylov_size, hilbert_size - 1)
+            def precond(x):
+                return -from_matrix(solver.solve(to_matrix(x, n=n), mu=0.0))
 
-    x, (n_iteration, success, U, C) = gmres(
-        lindbladian_plus_rank1,
-        preconditioner_fn,
-        x_0,
-        rhs,
-        stopping_criterion,
-        max_iteration,
-        krylov_size,
-        recycling,
-    )
+            return update_preconditioner(precond, identity_vec, use_rank_1_update=True)
 
-    state = finalize_density_matrix(to_matrix(x, n=hilbert_size), exact_dm)
-    state = to_dm(from_matrix(state), n=hilbert_size, dims=hilbert_dimensions)
-    return state, (n_iteration, success, U, C)
+        precond_fn = make_preconditioner(G)
+        precond_fn_adj = make_preconditioner(G.conj().T)
+
+        # ── custom_linear_solve ─────────────────────────────────────────────
+
+        def solve(matvec, b):
+            x, _info = jax_sparse.gmres(
+                matvec,
+                b,
+                x0=x_0,
+                tol=(tol / n),
+                restart=krylov_size,
+                maxiter=max_iter,
+                M=precond_fn,
+            )
+            return x
+
+        def transpose_solve(matvec_adj, b):
+            y, _info = jax_sparse.gmres(
+                matvec_adj,
+                b,
+                x0=jnp.zeros_like(b),
+                tol=tol,
+                restart=krylov_size,
+                maxiter=max_iter,
+                M=precond_fn_adj,
+            )
+            return y
+
+        x_sol = jax.lax.custom_linear_solve(
+            deflated_matvec,
+            identity_vec,
+            solve=solve,
+            transpose_solve=transpose_solve,
+            symmetric=False,
+        )
+
+        rho_ss = finalize_density_matrix(to_matrix(x_sol, n=n), self.exact_dm)
+
+        # ── result (dummy aux info) ─────────────────────────────────────────
+        dummy_U = jnp.zeros((n * n, recycling_size), dtype=dtype)
+        dummy_C = jnp.zeros((n * n, recycling_size), dtype=dtype)
+        infos = GMRESAuxInfo(
+            n_iteration=jnp.int32(-1),
+            success=jnp.bool_(True),
+            recycling=(dummy_U, dummy_C),
+        )
+
+        state_q = dq.asqarray(rho_ss, dims=dims)
+        return SteadyStateGMRESResult(rho=state_q, infos=infos)
