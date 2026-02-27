@@ -6,10 +6,9 @@ import jax.numpy as jnp
 from jax.typing import ArrayLike
 
 from .._utils import cdtype
-from ..qarrays.dense_qarray import DenseQArray
 from ..qarrays.layout import Layout, dense, get_layout
 from ..qarrays.qarray import QArray, QArrayLike, get_dims
-from ..qarrays.sparsedia_qarray import SparseDIAQArray
+from ..qarrays.sparsedia_dataarray import SparseDIADataArray
 from ..qarrays.utils import asqarray, init_dims, sparsedia_from_dict, stack, to_jax
 from .general import tensor
 
@@ -188,7 +187,7 @@ def zeros(*dims: int, layout: Layout | None = None) -> QArray:
         return asqarray(array, dims=dims)
     else:
         diags = jnp.zeros((0, dim), dtype=cdtype())
-        return SparseDIAQArray(dims, False, (), diags)
+        return QArray(dims, False, SparseDIADataArray((), diags))
 
 
 def zeros_like(
@@ -474,7 +473,7 @@ def parity(dim: int, *, layout: Layout | None = None) -> QArray:
         return sparsedia_from_dict({0: diag})
 
 
-def displace(dim: int, alpha: ArrayLike) -> DenseQArray:
+def displace(dim: int, alpha: ArrayLike) -> QArray:
     r"""Returns the displacement operator of complex amplitude $\alpha$.
 
     It is defined by
@@ -506,7 +505,7 @@ def displace(dim: int, alpha: ArrayLike) -> DenseQArray:
     return (alpha * a.dag() - alpha.conj() * a).expm()
 
 
-def squeeze(dim: int, z: ArrayLike) -> DenseQArray:
+def squeeze(dim: int, z: ArrayLike) -> QArray:
     r"""Returns the squeezing operator of complex squeezing amplitude $z$.
 
     It is defined by
@@ -539,16 +538,20 @@ def squeeze(dim: int, z: ArrayLike) -> DenseQArray:
     return (0.5 * (z.conj() * a2 - z * a2.dag())).expm()
 
 
-def quadrature(dim: int, phi: float, *, layout: Layout | None = None) -> QArray:
+def quadrature(
+    dim: int, phi: float, *, layout: Layout | None = None, hbar: float = 0.5
+) -> QArray:
     r"""Returns the quadrature operator of phase angle $\phi$.
 
-    It is defined by $x_\phi = (e^{i\phi} a^\dag + e^{-i\phi} a) / 2$, where $a$ and
-    $a^\dag$ are the annihilation and creation operators respectively.
+    It is defined by $x_\phi = \sqrt{\hbar/2}\,(e^{i\phi} a^\dag + e^{-i\phi} a)$,
+    where $a$ and $a^\dag$ are the annihilation and creation operators respectively.
 
     Args:
         dim: Dimension of the Hilbert space.
         phi: Phase angle.
         layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        hbar: Value of $\hbar$ in the commutation relation $[\hat{x}, \hat{p}]
+            = i\hbar$. Common choices are `0.5` (default), `1.0`, and `2.0`.
 
     Returns:
         (qarray of shape (dim, dim)): Quadrature operator.
@@ -566,15 +569,18 @@ def quadrature(dim: int, phi: float, *, layout: Layout | None = None) -> QArray:
          [   ⋅       -0.+0.707j    ⋅      ]]
     """
     a = destroy(dim, layout=layout)
-    return 0.5 * (jnp.exp(1j * phi) * a.dag() + jnp.exp(-1j * phi) * a)
+    quadrature_op = jnp.exp(1j * phi) * a.dag() + jnp.exp(-1j * phi) * a
+    return jnp.sqrt(hbar / 2) * quadrature_op
 
 
-def position(dim: int, *, layout: Layout | None = None) -> QArray:
-    r"""Returns the position operator $x = (a^\dag + a) / 2$.
+def position(dim: int, *, layout: Layout | None = None, hbar: float = 0.5) -> QArray:
+    r"""Returns the position operator $x = \sqrt{\hbar/2}\,(a^\dag + a)$.
 
     Args:
         dim: Dimension of the Hilbert space.
         layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        hbar: Value of $\hbar$ in the commutation relation $[\hat{x}, \hat{p}]
+            = i\hbar$. Common choices are `0.5` (default), `1.0`, and `2.0`.
 
     Returns:
         (qarray of shape (dim, dim)): Position operator.
@@ -587,15 +593,18 @@ def position(dim: int, *, layout: Layout | None = None) -> QArray:
          [    ⋅     0.707+0.j     ⋅    ]]
     """
     a = destroy(dim, layout=layout)
-    return 0.5 * (a + a.dag())
+    position_op = a.dag() + a
+    return jnp.sqrt(hbar / 2) * position_op
 
 
-def momentum(dim: int, *, layout: Layout | None = None) -> QArray:
-    r"""Returns the momentum operator $p = i (a^\dag - a) / 2$.
+def momentum(dim: int, *, layout: Layout | None = None, hbar: float = 0.5) -> QArray:
+    r"""Returns the momentum operator $p = i\sqrt{\hbar/2}\,(a^\dag - a)$.
 
     Args:
         dim: Dimension of the Hilbert space.
         layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        hbar: Value of $\hbar$ in the commutation relation $[\hat{x}, \hat{p}]
+            = i\hbar$. Common choices are `0.5` (default), `1.0`, and `2.0`.
 
     Returns:
         (qarray of shape (dim, dim)): Momentum operator.
@@ -608,7 +617,8 @@ def momentum(dim: int, *, layout: Layout | None = None) -> QArray:
          [  ⋅       0.+0.707j   ⋅      ]]
     """
     a = destroy(dim, layout=layout)
-    return 0.5j * (a.dag() - a)
+    momentum_op = 1j * (a.dag() - a)
+    return jnp.sqrt(hbar / 2) * momentum_op
 
 
 def sigmax(*, layout: Layout | None = None) -> QArray:
