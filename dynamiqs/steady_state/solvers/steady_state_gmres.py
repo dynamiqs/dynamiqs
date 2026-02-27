@@ -204,7 +204,7 @@ class SteadyStateGMRES(SteadyStateSolver):
                 matvec,
                 b,
                 x0=x_0,
-                tol=(tol / n),
+                tol=tol,
                 restart=krylov_size,
                 maxiter=max_iter,
                 M=precond_fn,
