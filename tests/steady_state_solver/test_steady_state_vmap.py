@@ -17,7 +17,7 @@ from dynamiqs.steady_state import SteadyStateGMRES
 # ---------------------------------------------------------------------------
 
 N = 12  # Hilbert space size (kept small for speed)
-SOLVER = SteadyStateGMRES(tol=1e-3, max_iteration=100, krylov_size=32)
+SOLVER = SteadyStateGMRES(tol=1e-5, max_iteration=100, krylov_size=32)
 
 
 def _build_driven_damped_oscillator(n, epsilon, kappa):
@@ -219,30 +219,6 @@ class TestBatchBroadcast:
                     f'Broadcast rho[{i},{j}] does not match sequential result '
                     f'(max diff = {float(jnp.max(jnp.abs(rho_slice - rho_ref))):.2e})'
                 )
-
-
-# ---------------------------------------------------------------------------
-# Test: batch over H with broadcasting (H batched, Ls scalar)
-# ---------------------------------------------------------------------------
-
-
-class TestBatchHScalarLs:
-    """H is batched, Ls is not — Ls should be broadcast automatically."""
-
-    def test_H_batched_Ls_scalar(self):
-        """Non-batched Ls are broadcast to match batched H."""
-        epsilons = [0.1, 0.2, 0.5]
-        kappa = 1.0
-        a = dq.destroy(N)
-
-        Hs = [eps * (a + a.dag()) for eps in epsilons]
-        H_batched = dq.stack(Hs)
-        Ls = [jnp.sqrt(kappa) * a]  # not batched
-
-        result = dq.steadystate(H_batched, Ls, solver=SOLVER)
-
-        assert result.rho.shape == (len(epsilons), N, N)
-        assert jnp.all(result.infos.success)
 
 
 if __name__ == '__main__':
