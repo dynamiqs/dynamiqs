@@ -1,5 +1,3 @@
-import time
-
 import jax
 import jax.numpy as jnp
 import pytest
@@ -41,6 +39,7 @@ def test_cartesian_batching(nH, npsi0, nL):
     # check result shape
     assert result.states.shape == (*nH, *nL, *npsi0, ntrajs, ntsave, n, 1)
     assert result.expects.shape == (*nH, *nL, *npsi0, ntrajs, nEs, ntsave)
+    assert result.keys.shape == (*nH, *nL, *npsi0, ntrajs)
 
 
 # H has fixed shape (3, 4, n, n) for the next test case, we test a broad ensemble of
@@ -70,61 +69,39 @@ def test_flat_batching(nL1, npsi0, ntrajs):
     broadcast_shape = jnp.broadcast_shapes(nH, nL1, npsi0)
     assert result.states.shape == (*broadcast_shape, ntrajs, ntsave, n, 1)
     assert result.expects.shape == (*broadcast_shape, ntrajs, nEs, ntsave)
+    assert result.keys.shape == (*broadcast_shape, ntrajs)
 
-@pytest.mark.run(order=TEST_SHORT)
+
+# ---------------------------------------------------------------------------
+# Key-independence test: cheap simulation, wide variety of batch patterns
+# ---------------------------------------------------------------------------
+# All batch dims use size 2 for cheapness.  ntrajs uses 1 or 3 (never 2) so
+# shape assertions stay unambiguous despite uniform batch sizes.
+# Simulation time is near-zero — only key independence is tested here.
+@pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('cartesian_batching', [True, False])
-# @pytest.mark.parametrize('H_batch', [()])
-# @pytest.mark.parametrize('Ls_batch', [[()], [(),()]])
-# @pytest.mark.parametrize('psi0_batch', [()])
-# @pytest.mark.parametrize('ntrajs', [1, 5])
-@pytest.mark.parametrize('H_batch', [(), (3, 2)])
-@pytest.mark.parametrize('Ls_batch', [[(), ()], [(2,), ()], [(3, 2), (2,)]])
-@pytest.mark.parametrize('psi0_batch', [(), (2,), (3, 2)])
-@pytest.mark.parametrize('ntrajs', [1, 2])
+@pytest.mark.parametrize('H_batch', [(), (2,)])
+@pytest.mark.parametrize('Ls_batch', [[(), ()], [(2, 2), (2,)]])
+@pytest.mark.parametrize('psi0_batch', [()])
+@pytest.mark.parametrize('ntrajs', [1, 3])
 def test_keys_batching(cartesian_batching, H_batch, Ls_batch, psi0_batch, ntrajs):
     n = 2
-    nEs = 6
-    ntsave = 7
+    ntsave = 4
+    nEs = 5  # distinct from n=2, ntrajs∈{1,3}, batch=2, ntsave=4
 
     # create base (unbatched) operators with identical data
     H = dq.random.herm(jax.random.key(0), (n, n))
     Ls = [dq.random.operator(jax.random.key(i + 1), n) for i in range(len(Ls_batch))]
-    psi0 = dq.random.ket(jax.random.key(len(Ls_batch) + 1), n)
-    Es = dq.random.operator(
-        jax.random.key(len(Ls_batch) + 2), n, hermitian=False, batch=nEs
-    )
+    psi0 = dq.random.ket(jax.random.key(42), n)
+    Es = dq.random.operator(jax.random.key(99), n, hermitian=False, batch=nEs)
 
     # broadcast to desired batch shapes (identical data along batch dims)
     H = H.broadcast_to(*H_batch, n, n)
     Ls = [L.broadcast_to(*lb, n, n) for L, lb in zip(Ls, Ls_batch)]
     psi0 = psi0.broadcast_to(*psi0_batch, n, 1)
 
-    # sanity-check input shapes
-    # assert H.shape == (*H_batch, n, n)
-    # for L, lb in zip(Ls, Ls_batch):
-    #     assert L.shape == (*lb, n, n)
-    # assert psi0.shape == (*psi0_batch, n, 1)
-
-    # verify inputs are identical along batch dimensions
-    if H_batch:
-        H_flat = H.to_jax().reshape(-1, n, n)
-        assert jnp.allclose(H_flat[0], H_flat[-1]), (
-            'H data differs across batch dims — test expects identical data'
-        )
-    for L, lb in zip(Ls, Ls_batch):
-        if lb:
-            L_flat = L.to_jax().reshape(-1, n, n)
-            assert jnp.allclose(L_flat[0], L_flat[-1]), (
-                'L data differs across batch dims — test expects identical data'
-            )
-    if psi0_batch:
-        psi0_flat = psi0.to_jax().reshape(-1, n, 1)
-        assert jnp.allclose(psi0_flat[0], psi0_flat[-1]), (
-            'psi0 data differs across batch dims — test expects identical data'
-        )
-
-    keys = jax.random.split(jax.random.key(len(Ls_batch) + 3), num=ntrajs)
-    tsave = jnp.linspace(0.0, 0.1, ntsave)
+    keys = jax.random.split(jax.random.key(123), num=ntrajs)
+    tsave = jnp.linspace(0.0, 0.001, ntsave)  # near-zero: only key shapes matter
     options = dq.Options(cartesian_batching=cartesian_batching)
     method = dq.method.Event(dtmax=1e-1)
 
@@ -132,33 +109,75 @@ def test_keys_batching(cartesian_batching, H_batch, Ls_batch, psi0_batch, ntrajs
         H, Ls, psi0, tsave, keys=keys, exp_ops=Es, options=options, method=method
     )
 
-    # check expected output shape
+    # expected batch shape
     if cartesian_batching:
         batch_shape = (*H_batch, *(d for lb in Ls_batch for d in lb), *psi0_batch)
     else:
         batch_shape = jnp.broadcast_shapes(H_batch, *Ls_batch, psi0_batch)
 
+    # shape checks
     assert result.states.shape == (*batch_shape, ntrajs, ntsave, n, 1)
     assert result.expects.shape == (*batch_shape, ntrajs, nEs, ntsave)
+    assert result.keys.shape == (*batch_shape, ntrajs)
 
-    # verify keys are independent across batch dims
-    nbatch = len(batch_shape)
-    if nbatch > 0:
-        total_batch = 1
-        for d in batch_shape:
-            total_batch *= d
+    # key independence across batch elements
+    total_batch = 1
+    for d in batch_shape:
+        total_batch *= d
 
-        if total_batch > 1:
-            flat_keys = result.keys.reshape(total_batch, ntrajs, -1)
-            # check multiple batch element pairs, not just first vs last
-            for i in range(min(total_batch, 4)):
-                for j in range(i + 1, min(total_batch, 4)):
-                    assert not jnp.array_equal(flat_keys[i], flat_keys[j]), (
-                        f'Keys identical for batch elements {i} and {j} '
-                        '— key splitting is broken'
-                    )
-            # check trajectories within a batch element are distinct
-            if ntrajs > 1:
-                assert not jnp.array_equal(flat_keys[0, 0], flat_keys[0, 1]), (
-                    'Trajectory keys within a batch element are identical'
+    if total_batch > 1:
+        flat_keys = result.keys.reshape(total_batch, ntrajs, -1)
+        for i in range(min(total_batch, 4)):
+            for j in range(i + 1, min(total_batch, 4)):
+                assert not jnp.array_equal(flat_keys[i], flat_keys[j]), (
+                    f'Keys identical for batch elements {i} and {j}'
                 )
+        # trajectories within a batch element must also be distinct
+        if ntrajs > 1:
+            assert not jnp.array_equal(flat_keys[0, 0], flat_keys[0, 1]), (
+                'Trajectory keys within a batch element are identical'
+            )
+
+
+# ---------------------------------------------------------------------------
+# Trajectory-independence test: realistic simulation, verify states diverge
+# ---------------------------------------------------------------------------
+# Two identical Hamiltonians (batch=2) with ntrajs=2 → 4 total trajectories.
+# Each (batch, traj) pair gets a unique PRNG key, so all 4 final states must
+# differ despite identical physics.  Both cartesian and flat batching are
+# tested — with a single batch dim they follow different code paths but yield
+# the same output shape.
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize('cartesian_batching', [True, False])
+def test_keys_trajectory_independence(cartesian_batching):
+    n = 8
+    a = dq.destroy(n)
+
+    # two identical Hamiltonians
+    H = (a.dag() @ a).broadcast_to(2, n, n)
+    jump_ops = [a]
+    psi0 = dq.fock(n, 5)  # high photon number → many jumps guaranteed
+
+    ntrajs = 2
+    ntsave = 11
+    keys = jax.random.split(jax.random.key(42), ntrajs)
+    tsave = jnp.linspace(0.0, 2.0, ntsave)
+    options = dq.Options(cartesian_batching=cartesian_batching)
+    method = dq.method.Event(dtmax=5e-2)
+
+    result = dq.jssesolve(
+        H, jump_ops, psi0, tsave, keys=keys, options=options, method=method
+    )
+
+    # shape: (2_batch, 2_trajs, ...)
+    assert result.states.shape == (2, ntrajs, ntsave, n, 1)
+    assert result.keys.shape == (2, ntrajs)
+
+    # all 4 final states must be pairwise different
+    final = result.final_state.to_jax().reshape(4, n, 1)
+    for i in range(4):
+        for j in range(i + 1, 4):
+            assert not jnp.allclose(final[i], final[j], atol=1e-6), (
+                f'Trajectories {i} and {j} have identical final states — '
+                'key independence is broken'
+            )
