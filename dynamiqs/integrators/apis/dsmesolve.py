@@ -7,6 +7,8 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray
 
+import math
+
 from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
 from ...method import EulerMaruyama, Method, Rouchon1
@@ -16,6 +18,7 @@ from ...qarrays.utils import asqarray
 from ...result import DSMESolveResult
 from ...time_qarray import TimeQArray
 from .._utils import (
+    ALWAYS_MAPPED,
     assert_method_supported,
     astimeqarray,
     cartesian_vmap,
@@ -332,12 +335,17 @@ def _vectorized_dsmesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSMESolveResult:
-    # vectorize input over H and rho0
-    in_axes = (H.in_axes, None, None, None, 0, *(None,) * 6)
+    # vectorize input over H, rho0 and keys
+    in_axes = (H.in_axes, None, None, None, 0, None, 0, *(None,) * 4)
     out_axes = DSMESolveResult.out_axes()
 
     if options.cartesian_batching:
-        nvmap = (H.ndim - 2, 0, 0, 0, rho0.ndim - 2, 0, 0, 0, 0, 0, 0)
+        nvmap = (H.ndim - 2, 0, 0, 0, rho0.ndim - 2, 0, ALWAYS_MAPPED, 0, 0, 0, 0)
+        # pre-split keys to the cartesian product of H and rho0 batch dims
+        bshape = (*H.shape[:-2], *rho0.shape[:-2])
+        nbatch = math.prod(bshape)
+        batch_multiple_keys = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)(keys, nbatch)
+        keys = batch_multiple_keys.reshape(*bshape, keys.shape[0])
         f = cartesian_vmap(_dsmesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
@@ -346,6 +354,10 @@ def _vectorized_dsmesolve(
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         rho0 = rho0.broadcast_to(*bshape, n, n)
+        # broadcast keys to have same leading batch shape as other inputs
+        nbatch = math.prod(bshape)
+        batch_multiple_keys = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)(keys, nbatch)
+        keys = batch_multiple_keys.reshape(*bshape, keys.shape[0])
         # vectorize the function
         f = multi_vmap(_dsmesolve_many_trajectories, in_axes, out_axes, nvmap)
 
