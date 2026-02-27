@@ -29,7 +29,6 @@ class SteadyStateResult(eqx.Module, ABC):
     """Abstract base class for steady-state solver results."""
 
     rho: QArray
-    infos: eqx.Module
 
     @staticmethod
     @abstractmethod
@@ -114,8 +113,6 @@ def steadystate(
 
         **`rho`** *(qarray of shape (..., n, n))* — The steady-state density
           matrix.
-        **`infos`** *(`GMRESAuxInfo`)* — Auxiliary solver information
-          containing `n_iteration`, `success`, and `recycling`.
 
     Examples:
         ```python
@@ -128,8 +125,7 @@ def steadystate(
 
         # With default solver
         result = dq.steadystate(H, jump_ops)
-        print(f'Converged: {result.infos.success}')
-        print(f'Iterations: {result.infos.n_iteration}')
+        print(result.rho)
 
         # With custom solver parameters
         solver = SteadyStateGMRES(tol=1e-6, krylov_size=64)

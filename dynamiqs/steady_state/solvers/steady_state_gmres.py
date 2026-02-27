@@ -4,7 +4,6 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import jax.scipy.sparse.linalg as jax_sparse
-from jax import Array
 
 import dynamiqs as dq
 
@@ -22,37 +21,18 @@ from ..api.utils import (
 from ..preconditionner.lyapunov_solver import LyapunovSolverEig
 
 
-class GMRESAuxInfo(eqx.Module):
-    """Auxiliary information returned by the GMRES steady-state solver.
-
-    Attributes:
-        n_iteration: Number of outer GMRES iterations performed.
-        success: Whether the solver converged within the specified tolerance.
-        recycling: Recycled Krylov vectors `(U, C)` that can be reused in
-            subsequent solves.
-    """
-
-    n_iteration: int
-    success: Array | bool
-    recycling: tuple[Array, Array]
-
-
 class SteadyStateGMRESResult(SteadyStateResult):
     """Result of the GMRES steady-state solver.
 
     Attributes:
         rho: The steady-state density matrix, of shape `(..., n, n)`.
-        infos: Auxiliary solver information (`GMRESAuxInfo`).
     """
 
     rho: QArray
-    infos: GMRESAuxInfo
 
     @staticmethod
     def out_axes() -> SteadyStateGMRESResult:
-        return SteadyStateGMRESResult(
-            rho=0, infos=GMRESAuxInfo(n_iteration=0, success=0, recycling=(0, 0))
-        )
+        return SteadyStateGMRESResult(rho=0)
 
 
 class SteadyStateGMRES(SteadyStateSolver):
@@ -155,8 +135,7 @@ class SteadyStateGMRES(SteadyStateSolver):
         solver = dq.SteadyStateGMRES(tol=1e-6, krylov_size=32, exact_dm=True)
         result = dq.steadystate(H, jump_ops, solver=solver)
 
-        print(f'Converged: {result.infos.success}')
-        print(f'Iterations: {result.infos.n_iteration}')
+        print(result.rho)
         ```
     """
 
@@ -181,7 +160,6 @@ class SteadyStateGMRES(SteadyStateSolver):
         tol = self.tol
         max_iter = self.max_iteration
         krylov_size = min(self.krylov_size, n * n - 1)
-        recycling_size = self.recycling
 
         H_jax = H.to_jax()
         Ls_jax = [L.to_jax() for L in Ls]
@@ -255,14 +233,5 @@ class SteadyStateGMRES(SteadyStateSolver):
 
         rho_ss = finalize_density_matrix(to_matrix(x_sol, n=n), self.exact_dm)
 
-        # ── result (dummy aux info) ─────────────────────────────────────────
-        dummy_U = jnp.zeros((n * n, recycling_size), dtype=dtype)
-        dummy_C = jnp.zeros((n * n, recycling_size), dtype=dtype)
-        infos = GMRESAuxInfo(
-            n_iteration=jnp.int32(-1),
-            success=jnp.bool_(True),
-            recycling=(dummy_U, dummy_C),
-        )
-
         state_q = dq.asqarray(rho_ss, dims=dims)
-        return SteadyStateGMRESResult(rho=state_q, infos=infos)
+        return SteadyStateGMRESResult(rho=state_q)
