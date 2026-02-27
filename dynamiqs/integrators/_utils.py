@@ -145,7 +145,10 @@ def multi_vmap(
 
 
 def cartesian_vmap(
-    f: callable, in_axes: int | None | Sequence[Any], out_axes: Any, nvmap: PyTree[int | object]
+    f: callable,
+    in_axes: int | None | Sequence[Any],
+    out_axes: Any,
+    nvmap: PyTree[int | object],
 ) -> callable:
     """Vectorize a function multiple time over distinct axes.
 
@@ -178,9 +181,7 @@ def cartesian_vmap(
 
     # collect paths of always-mapped arguments (e.g. PRNG keys that must be
     # peeled at every vmap step)
-    always_mapped_paths = frozenset(
-        path for path, n in keyleaf if n is ALWAYS_MAPPED
-    )
+    always_mapped_paths = frozenset(path for path, n in keyleaf if n is ALWAYS_MAPPED)
 
     # apply successive vmaps in reverse order, skipping ALWAYS_MAPPED leaves
     for path, n in keyleaf[::-1]:
@@ -188,14 +189,11 @@ def cartesian_vmap(
             continue
         # set all elements `in_axes` to `None` except for the current subpart
         # and any always-mapped arguments
-        def keep_path_only(
-            cpath, x, path=path, _amp=always_mapped_paths
-        ):
-            if cpath[: len(path)] == path:
-                return x
-            if any(cpath[: len(ap)] == ap for ap in _amp):
-                return x
-            return None
+        keep_path_only = lambda cpath, x, path=path, _amp=always_mapped_paths: (
+            x
+            if cpath[: len(path)] == path or any(cpath[: len(ap)] == ap for ap in _amp)
+            else None
+        )
 
         in_axes_single = jax.tree_util.tree_map_with_path(keep_path_only, in_axes)
         for _ in range(n):

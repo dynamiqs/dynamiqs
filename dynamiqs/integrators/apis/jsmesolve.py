@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+import math
 from functools import partial
 
 import jax
 import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray
-
-import math
 
 from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
@@ -343,11 +342,11 @@ def _vectorized_jsmesolve(
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, 0, 0, 0, 0, rho0.ndim - 2, 0, ALWAYS_MAPPED, 0, 0, 0, 0)
-        # pre-split keys to the cartesian product of H and rho0 batch dims
+        # pre-split keys over the cartesian product of H, rho0
         bshape = (*H.shape[:-2], *rho0.shape[:-2])
         nbatch = math.prod(bshape)
-        batch_multiple_keys = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)(keys, nbatch)
-        keys = batch_multiple_keys.reshape(*bshape, keys.shape[0])
+        _split = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)
+        keys = _split(keys, nbatch).reshape(*bshape, keys.shape[0])
         f = cartesian_vmap(_jsmesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
@@ -356,10 +355,10 @@ def _vectorized_jsmesolve(
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         rho0 = rho0.broadcast_to(*bshape, n, n)
-        # broadcast keys to have same leading batch shape as other inputs
+        # broadcast keys to have same leading batch shape
         nbatch = math.prod(bshape)
-        batch_multiple_keys = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)(keys, nbatch)
-        keys = batch_multiple_keys.reshape(*bshape, keys.shape[0])
+        _split = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)
+        keys = _split(keys, nbatch).reshape(*bshape, keys.shape[0])
         # vectorize the function
         f = multi_vmap(_jsmesolve_many_trajectories, in_axes, out_axes, nvmap)
 

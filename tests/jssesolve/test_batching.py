@@ -97,7 +97,7 @@ def test_keys_batching(cartesian_batching, H_batch, Ls_batch, psi0_batch, ntrajs
 
     # broadcast to desired batch shapes (identical data along batch dims)
     H = H.broadcast_to(*H_batch, n, n)
-    Ls = [L.broadcast_to(*lb, n, n) for L, lb in zip(Ls, Ls_batch)]
+    Ls = [L.broadcast_to(*lb, n, n) for L, lb in zip(Ls, Ls_batch, strict=False)]
     psi0 = psi0.broadcast_to(*psi0_batch, n, 1)
 
     keys = jax.random.split(jax.random.key(123), num=ntrajs)
