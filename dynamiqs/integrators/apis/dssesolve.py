@@ -6,6 +6,7 @@ import jax
 import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray
+import math
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
@@ -21,6 +22,7 @@ from .._utils import (
     cartesian_vmap,
     catch_xla_runtime_error,
     multi_vmap,
+    ALWAYS_MAPPED
 )
 from ..core.fixed_step_stochastic_integrator import (
     dssesolve_euler_maruyama_integrator_constructor,
@@ -299,12 +301,17 @@ def _vectorized_dssesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSSESolveResult:
-    # vectorize input over H, Ls and rho0
-    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, *(None,) * 6)
+    # vectorize input over H, Ls, psi0 and keys
+    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, None, 0, *(None,) * 4)
     out_axes = DSSESolveResult.out_axes()
 
     if options.cartesian_batching:
-        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, 0, 0, 0, 0, 0, 0)
+        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, 0, ALWAYS_MAPPED, 0, 0, 0, 0)
+        # broadcasting only keys to the cartesian product of the leading batch dimensions of H, Ls and psi0
+        bshape = (*H.shape[:-2], *(d for L in Ls for d in L.shape[:-2]), *psi0.shape[:-2])
+        nbatch = math.prod(bshape)
+        batch_multiple_keys = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)(keys, nbatch)
+        keys = batch_multiple_keys.reshape(*bshape, keys.shape[0])
         f = cartesian_vmap(_dssesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
@@ -314,6 +321,10 @@ def _vectorized_dssesolve(
         H = H.broadcast_to(*bshape, n, n)
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
         psi0 = psi0.broadcast_to(*bshape, n, 1)
+        # broadcast keys to have same leading batch shape as other inputs
+        nbatch = math.prod(bshape)
+        batch_multiple_keys = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)(keys, nbatch)
+        keys = batch_multiple_keys.reshape(*bshape, keys.shape[0])
         # vectorize the function
         f = multi_vmap(_dssesolve_many_trajectories, in_axes, out_axes, nvmap)
 
