@@ -377,10 +377,10 @@ def cholesky_normalize(kraus_map: KrausRK, rho: QArray) -> jax.Array:
     rho = rho.to_jax()
     # solve T^† @ x = rho => x = T^{†(-1)} @ rho
     rho = jax.lax.linalg.triangular_solve(
-        T, rho, lower=True, transpose_a=True, conjugate_a=True
+        T, rho, lower=True, transpose_a=True, conjugate_a=True, left_side=True
     )
     # solve x @ T = rho => x = rho @ T^{-1}
-    return jax.lax.linalg.triangular_solve(T, rho, lower=True, left_side=True)
+    return jax.lax.linalg.triangular_solve(T, rho, lower=True, left_side=False)
 
 
 def solve_propagator(U1, U2) -> QArray:
