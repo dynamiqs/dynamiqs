@@ -261,32 +261,3 @@ def _check_steadystate_args(
     if rho0 is not None:
         check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'})
         check_qarray_is_dense(rho0, 'rho0')
-
-    should_check = getattr(solver, 'check_pure_imaginary_eigenvalue', False)
-    if should_check:
-        _check_G_has_no_pure_imaginary_eigenvalue(H, Ls)
-
-
-def _check_G_has_no_pure_imaginary_eigenvalue(H: QArray, Ls: list[QArray]) -> None:
-    H_mat = H.to_jax()
-    if len(Ls) == 0:
-        LdagL = jnp.zeros_like(H_mat)
-    else:
-        Ls_q = dq.stack(Ls)
-        LdagL = (Ls_q.dag() @ Ls_q).sum(0).to_jax()
-
-    G = -1j * H_mat - 0.5 * LdagL
-    eigvals = jnp.linalg.eigvals(G)
-
-    real_dtype = jnp.real(jnp.zeros((), dtype=eigvals.dtype)).dtype
-    atol = float(jnp.finfo(real_dtype).eps)
-
-    has_pure_imag = jnp.any(
-        jnp.isclose(jnp.real(eigvals), 0.0, rtol=0.0, atol=atol), axis=-1
-    )
-    any_batch_has_one = jnp.any(has_pure_imag)
-    if bool(jax.device_get(any_batch_has_one)):
-        raise ValueError(
-            'G has at least one purely imaginary eigenvalue within machine '
-            f'precision (atol={atol:.3e}). This can make GMRES fail.'
-        )

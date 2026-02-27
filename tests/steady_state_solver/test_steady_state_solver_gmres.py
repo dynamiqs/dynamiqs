@@ -217,9 +217,9 @@ class TestAutodiff:
         """Forward-mode autodiff gradient matches a finite-difference estimate."""
         jax.config.update('jax_enable_x64', True)
 
-        na, nb = 12, 3
+        na, nb = 12, 5
         solver = SteadyStateGMRES(
-            tol=1e-7, max_iteration=200, krylov_size=64, exact_dm=False
+            tol=1e-7, max_iteration=200, krylov_size=64, exact_dm=True
         )
         _, b = dq.destroy(na, nb)
         n_b = b.dag() @ b
