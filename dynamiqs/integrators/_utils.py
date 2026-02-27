@@ -145,7 +145,7 @@ def multi_vmap(
 
 
 def cartesian_vmap(
-    f: callable, in_axes: int | None | Sequence[Any], out_axes: Any, nvmap: PyTree[int]
+    f: callable, in_axes: int | None | Sequence[Any], out_axes: Any, nvmap: PyTree[int | object]
 ) -> callable:
     """Vectorize a function multiple time over distinct axes.
 
