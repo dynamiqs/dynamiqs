@@ -80,9 +80,9 @@ def steadystate(
     $$
         \mathcal{L}(\rho) = -i[H, \rho]
         + \sum_{k=1}^N \left(
-            L_k \rho L_k^\dag
-            - \frac{1}{2} L_k^\dag L_k \rho
-            - \frac{1}{2} \rho L_k^\dag L_k
+            L_k \rho L_k^\dagger
+            - \frac{1}{2} L_k^\dagger L_k \, \rho
+            - \frac{1}{2} \rho \, L_k^\dagger L_k
         \right).
     $$
     This function finds the steady-state density matrix $\rho_\infty$ such that
@@ -95,10 +95,11 @@ def steadystate(
         `rho0` via JAX's `vmap`, as well as gradient computation.
 
     Args:
-        H *(qarray of shape (..., n, n))*: Hamiltonian.
-        jump_ops *(list of qarray, each of shape (..., n, n))*: Jump operators.
-        rho0 *(qarray of shape (..., n, n), optional)*: Initial guess for the
-            density matrix. Defaults to `None`, which uses the vacuum state
+        H: Hamiltonian $H$, as a qarray of shape `(..., n, n)`.
+        jump_ops: Jump operators $\{L_k\}$, as a list of qarrays, each of shape
+            `(..., n, n)`.
+        rho0: Optional initial guess for the density matrix, as a qarray of
+            shape `(..., n, n)`. If `None`, uses the vacuum state
             $|0\rangle\langle 0|$.
         solver: Solver instance controlling the algorithm and its parameters.
             Defaults to `SteadyStateGMRES()`. See `SteadyStateGMRES` for
@@ -106,13 +107,10 @@ def steadystate(
         options: Generic dynamiqs solver options (e.g. `cartesian_batching`).
 
     Returns:
-        `SteadyStateResult` :
-            A subclass depending on the solver used. For the
-            default `SteadyStateGMRES` solver, returns `SteadyStateGMRESResult`
-            with fields:
-
-        **`rho`** *(qarray of shape (..., n, n))* — The steady-state density
-          matrix.
+        `SteadyStateResult`: Result object from the selected solver.
+        For the default `SteadyStateGMRES` solver, this is
+        `SteadyStateGMRESResult` and contains `rho`, the steady-state density
+        matrix of shape `(..., n, n)`.
 
     Examples:
         ```python

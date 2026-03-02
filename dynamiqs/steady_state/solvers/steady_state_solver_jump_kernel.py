@@ -72,7 +72,7 @@ class SteadyStateJumpKernel(SteadyStateSolver):
     $$
     with norm selected by `norm_type`.
 
-    Args:
+    Attributes:
         tol: Singular-value threshold used to detect the nullspace of the
             stacked jump-operator map.
         exact_dm: If `True`, project onto the set of valid density matrices.

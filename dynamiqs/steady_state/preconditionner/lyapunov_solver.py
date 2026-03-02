@@ -61,8 +61,8 @@ class LyapunovSolverEig(eqx.Module):
 
         Args:
             X: Matrix of shape (n, n) to apply the Lyapunov operator to.
-            mu: Shift parameter for the Lyapunov equation,
-            may be useful for numerical stability.
+            mu: Shift parameter for the Lyapunov equation; may be useful for
+                numerical stability.
 
         Returns:
             Result of applying the Lyapunov operator, shape (n, n).

@@ -91,15 +91,15 @@ class SteadyStateGMRES(SteadyStateSolver):
         G X + X G^\dagger = Y.
     $$
 
-    Args:
+    Attributes:
         tol: Tolerance for the stopping criterion. The solver stops when
             $\|\mathcal{L}(\rho)\| < \mathrm{tol}$. Defaults to `1e-4`.
         max_iteration: Maximum number of outer GMRES iterations. Defaults to `100`.
         krylov_size: Size of the Krylov subspace used in each GMRES restart cycle.
             Defaults to `32`. Increase to `64` or `128` if convergence is slow
-            in term of iterations.
-            Note that increasing `krylov_size` also increases memory usage and runtime
-              per iteration.
+            in terms of iterations.
+            Note that increasing `krylov_size` also increases memory usage and
+            runtime per iteration.
         exact_dm: If `True`, project the final matrix onto the set of valid density
             matrices (positive semidefinite with unit trace). If `False`, only
             Hermitization and trace normalization are applied. Defaults to `True`.
