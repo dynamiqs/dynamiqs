@@ -331,7 +331,8 @@ def _vectorized_jssesolve(
         )
         nbatch = math.prod(bshape)
         _split = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)
-        keys = _split(keys, nbatch).reshape(*bshape, keys.shape[0])
+        old_keys_shape = keys.shape
+        keys = _split(keys, nbatch).reshape(*bshape, *old_keys_shape)
         f = cartesian_vmap(_jssesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
@@ -344,7 +345,8 @@ def _vectorized_jssesolve(
         # broadcast keys to have same leading batch shape
         nbatch = math.prod(bshape)
         _split = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)
-        keys = _split(keys, nbatch).reshape(*bshape, keys.shape[0])
+        old_keys_shape = keys.shape
+        keys = _split(keys, nbatch).reshape(*bshape, *old_keys_shape)
         # vectorize the function
         f = multi_vmap(_jssesolve_many_trajectories, in_axes, out_axes, nvmap)
 
