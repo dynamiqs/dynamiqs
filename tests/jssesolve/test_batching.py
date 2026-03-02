@@ -89,17 +89,7 @@ def test_keys_batching(cartesian_batching, H_batch, Ls_batch, psi0_batch, ntrajs
     ntsave = 4
     nEs = 5  # distinct from n=2, ntrajs∈{1,3}, batch=2, ntsave=4
 
-    # create base (unbatched) operators with identical data
-    H = dq.random.herm(jax.random.key(0), (n, n))
-    Ls = [dq.random.operator(jax.random.key(i + 1), n) for i in range(len(Ls_batch))]
-    psi0 = dq.random.ket(jax.random.key(42), n)
-    Es = dq.random.operator(jax.random.key(99), n, hermitian=False, batch=nEs)
-
-    # broadcast to desired batch shapes (identical data along batch dims)
-    H = H.broadcast_to(*H_batch, n, n)
-    Ls = [L.broadcast_to(*lb, n, n) for L, lb in zip(Ls, Ls_batch, strict=False)]
-    psi0 = psi0.broadcast_to(*psi0_batch, n, 1)
-
+    H, Ls, psi0, Es, _ = rand_jssesolve_args(n, H_batch, Ls_batch, psi0_batch, nEs)
     keys = jax.random.split(jax.random.key(123), num=ntrajs)
     tsave = jnp.linspace(0.0, 0.001, ntsave)  # near-zero: only key shapes matter
     options = dq.Options(cartesian_batching=cartesian_batching)
