@@ -283,5 +283,7 @@ def _check_G_has_no_pure_imaginary_eigenvalue(H: QArray, Ls: list[QArray]) -> No
         raise ValueError(
             'G has at least one purely imaginary eigenvalue within machine '
             f'precision (atol={atol:.3e}). This can make GMRES fail ->'
-            'Use SteadyStateJumpKernelInstead'
+            'Use solver = dq.SteadyStateJumpKernel() instead. If you have many systems,'
+            'please identify the problematic ones by checking the eigenvalues of'
+            ' G separately.'
         )
