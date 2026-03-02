@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from functools import partial
 
 import jax
@@ -16,6 +17,7 @@ from ...qarrays.utils import asqarray
 from ...result import DSMESolveResult
 from ...time_qarray import TimeQArray
 from .._utils import (
+    ALWAYS_MAPPED,
     assert_method_supported,
     astimeqarray,
     cartesian_vmap,
@@ -332,12 +334,18 @@ def _vectorized_dsmesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSMESolveResult:
-    # vectorize input over H and rho0
-    in_axes = (H.in_axes, None, None, None, 0, *(None,) * 6)
+    # vectorize input over H, rho0 and keys
+    in_axes = (H.in_axes, None, None, None, 0, None, 0, *(None,) * 4)
     out_axes = DSMESolveResult.out_axes()
 
     if options.cartesian_batching:
-        nvmap = (H.ndim - 2, 0, 0, 0, rho0.ndim - 2, 0, 0, 0, 0, 0, 0)
+        nvmap = (H.ndim - 2, 0, 0, 0, rho0.ndim - 2, 0, ALWAYS_MAPPED, 0, 0, 0, 0)
+        # pre-split keys over the cartesian product of H, rho0
+        bshape = (*H.shape[:-2], *rho0.shape[:-2])
+        nbatch = math.prod(bshape)
+        _split = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)
+        old_keys_shape = keys.shape
+        keys = _split(keys, nbatch).reshape(*bshape, *old_keys_shape)
         f = cartesian_vmap(_dsmesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
@@ -346,6 +354,11 @@ def _vectorized_dsmesolve(
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         rho0 = rho0.broadcast_to(*bshape, n, n)
+        # broadcast keys to have same leading batch shape
+        nbatch = math.prod(bshape)
+        _split = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)
+        old_keys_shape = keys.shape
+        keys = _split(keys, nbatch).reshape(*bshape, *old_keys_shape)
         # vectorize the function
         f = multi_vmap(_dsmesolve_many_trajectories, in_axes, out_axes, nvmap)
 

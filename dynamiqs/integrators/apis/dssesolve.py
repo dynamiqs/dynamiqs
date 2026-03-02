@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from functools import partial
 
 import jax
@@ -16,6 +17,7 @@ from ...qarrays.utils import asqarray
 from ...result import DSSESolveResult
 from ...time_qarray import TimeQArray
 from .._utils import (
+    ALWAYS_MAPPED,
     assert_method_supported,
     astimeqarray,
     cartesian_vmap,
@@ -299,12 +301,32 @@ def _vectorized_dssesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSSESolveResult:
-    # vectorize input over H, Ls and rho0
-    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, *(None,) * 6)
+    # vectorize input over H, Ls, psi0 and keys
+    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, None, 0, *(None,) * 4)
     out_axes = DSSESolveResult.out_axes()
 
     if options.cartesian_batching:
-        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, 0, 0, 0, 0, 0, 0)
+        nvmap = (
+            H.ndim - 2,
+            [L.ndim - 2 for L in Ls],
+            psi0.ndim - 2,
+            0,
+            ALWAYS_MAPPED,
+            0,
+            0,
+            0,
+            0,
+        )
+        # pre-split keys over the cartesian product of H, Ls, psi0
+        bshape = (
+            *H.shape[:-2],
+            *(d for L in Ls for d in L.shape[:-2]),
+            *psi0.shape[:-2],
+        )
+        nbatch = math.prod(bshape)
+        _split = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)
+        old_keys_shape = keys.shape
+        keys = _split(keys, nbatch).reshape(*bshape, *old_keys_shape)
         f = cartesian_vmap(_dssesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
@@ -314,6 +336,11 @@ def _vectorized_dssesolve(
         H = H.broadcast_to(*bshape, n, n)
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
         psi0 = psi0.broadcast_to(*bshape, n, 1)
+        # broadcast keys to have same leading batch shape
+        nbatch = math.prod(bshape)
+        _split = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)
+        old_keys_shape = keys.shape
+        keys = _split(keys, nbatch).reshape(*bshape, *old_keys_shape)
         # vectorize the function
         f = multi_vmap(_dssesolve_many_trajectories, in_axes, out_axes, nvmap)
 
