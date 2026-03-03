@@ -126,7 +126,7 @@ class SteadyStateGMRES(SteadyStateSolver):
     """
 
     tol: float = 1e-4
-    max_iteration: int = 100
+    max_iteration: int = 1000
     krylov_size: int = 32
     exact_dm: bool = True
 
@@ -183,31 +183,39 @@ class SteadyStateGMRES(SteadyStateSolver):
 
         # ── custom_linear_solve ─────────────────────────────────────────────
 
-        def solve(matvec: Callable[[jax.Array], jax.Array], b: jax.Array) -> jax.Array:
-            x, _info = jax.scipy.sparse.linalg.gmres(
-                matvec,
+      
+        # Right preconditioning: solve (A @ M^{-1}) y = b, then x = M^{-1} y
+        def right_matvec(y: jax.Array) -> jax.Array:
+            return deflated_matvec(precond_fn(y))
+
+        def solve(
+            matvec: Callable[[jax.Array], jax.Array], b: jax.Array
+        ) -> jax.Array:
+            y, _info = jax.scipy.sparse.linalg.gmres(
+                right_matvec,
                 b,
                 x0=x_0,
                 tol=tol,
                 restart=krylov_size,
                 maxiter=max_iter,
-                M=precond_fn,
             )
-            return x
+            return precond_fn(y)
 
         def transpose_solve(
             matvec_adj: Callable[[jax.Array], jax.Array], b: jax.Array
         ) -> jax.Array:
+            def right_matvec_adj(y: jax.Array) -> jax.Array:
+                return precond_fn_adj(matvec_adj(y))
+
             y, _info = jax.scipy.sparse.linalg.gmres(
-                matvec_adj,
+                right_matvec_adj,
                 b,
                 x0=jnp.zeros_like(b),
                 tol=tol,
                 restart=krylov_size,
                 maxiter=max_iter,
-                M=precond_fn_adj,
             )
-            return y
+            return precond_fn_adj(y)
 
         x_sol = jax.lax.custom_linear_solve(
             deflated_matvec,
