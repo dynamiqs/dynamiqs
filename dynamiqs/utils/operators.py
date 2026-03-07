@@ -16,6 +16,8 @@ __all__ = [
     'cnot',
     'create',
     'destroy',
+    'fcreate',
+    'fdestroy',
     'displace',
     'eye',
     'eye_like',
@@ -373,6 +375,154 @@ def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
         tensor(*[adag[j] if i == j else Id[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
+
+
+def fdestroy(n: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
+    r"""Returns the fermionic annihilation operator for a single mode, or a tuple
+    of them for a multi-mode system.
+
+    For fermions, each mode is a two-level system (occupied or unoccupied).
+    The total dimension of the Hilbert space is $2^n$.
+
+    If `n > 1`, e.g., `n=3`, it returns a tuple of `n` operators
+    $(c_1, c_2, c_3)$. To ensure the anti-commutation relations
+    $\{c_i, c_j^\dag\} = \delta_{ij}$ and $\{c_i, c_j\} = 0$ for $i \neq j$,
+    the operators are constructed using the Jordan-Wigner transformation. For the
+    $k$-th mode, the operator is:
+    $$
+        c_k = (\otimes_{j=1}^{k-1} \sigma_z) \otimes c \otimes (\otimes_{j=k+1}^{N} I).
+    $$
+
+    Args:
+        n: Number of fermionic modes.
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+
+    Returns:
+        _(qarray or tuple of qarrays, each of shape (2**n, 2**n))_
+        Annihilation operator(s).
+
+    Examples:
+        Single-mode operator (n=1):
+        >>> dq.fdestroy(1)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[  ⋅    1.+0.j]
+         [  ⋅      ⋅   ]]
+
+        Multi-mode operators (n=2), returns $(c_1, c_2)$ where
+        $c_1 = c \otimes I$ and $c_2 = \sigma_z \otimes c$:
+        >>> c1, c2 = dq.fdestroy(2)
+        >>> c1
+        QArray: shape=(4, 4), dims=(2, 2), dtype=complex64, layout=dia, ndiags=1
+        [[  ⋅      ⋅    1.+0.j   ⋅   ]
+         [  ⋅      ⋅      ⋅    1.+0.j]
+         [  ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅   ]]
+        >>> c2
+        QArray: shape=(4, 4), dims=(2, 2), dtype=complex64, layout=dia, ndiags=1
+        [[   ⋅     1.+0.j    ⋅       ⋅   ]
+         [   ⋅       ⋅       ⋅       ⋅   ]
+         [   ⋅       ⋅       ⋅    -1.+0.j]
+         [   ⋅       ⋅       ⋅       ⋅   ]]
+    """
+    layout = get_layout(layout)
+
+    # For a single fermionic mode, the annihilation operator is destroy(2)
+    if n == 1:
+        return destroy(2, layout=layout)
+
+    c = destroy(2, layout=layout)  # single-mode annihilation operator
+    I = eye(2, layout=layout)  # identity operator
+    # Pauli-Z for the Jordan-Wigner string
+    diag_z = jnp.array([1.0, -1.0], dtype=cdtype())
+    if layout is dense:
+        Z = asqarray(jnp.diag(diag_z))
+    else:
+        Z = sparsedia_from_dict({0: diag_z})
+
+    # Construct operators with Jordan-Wigner strings
+    operators = [
+        tensor(*[Z if j < i else (c if i == j else I) for j in range(n)])
+        for i in range(n)
+    ]
+    return tuple(operators)
+
+
+def fcreate(n: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
+    r"""Returns the fermionic creation operator for a single mode, or a tuple
+    of them for a multi-mode system.
+
+    For fermions, each mode is a two-level system (occupied or unoccupied).
+    The total dimension of the Hilbert space is $2^n$.
+
+    If `n > 1`, e.g., `n=3`, it returns a tuple of `n` operators
+    $(c_1^\dag, c_2^\dag, c_3^\dag)$. To ensure the anti-commutation relations
+    $\{c_i^\dag, c_j^\dag\} = 0$ for $i \neq j$, the operators are constructed
+    using the Jordan-Wigner transformation. For the $k$-th mode, the operator is:
+    $$
+        c_k^\dag = (\otimes_{j=1}^{k-1} \sigma_z)
+                \otimes c^\dag \otimes (\otimes_{j=k+1}^{N} I).
+    $$
+
+    Args:
+        n: Number of fermionic modes.
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+
+    Returns:
+        _(qarray or tuple of qarrays, each of shape (2**n, 2**n))_
+        Creation operator(s).
+
+    Examples:
+        Single-mode operator (n=1):
+        >>> dq.fcreate(1)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[  ⋅      ⋅   ]
+         [1.+0.j   ⋅   ]]
+
+        Multi-mode operators (n=2), returns $(c_1^\dag, c_2^\dag)$ where
+        $c_1^\dag = c^\dag \otimes I$ and $c_2^\dag = \sigma_z \otimes c^\dag$:
+        >>> c1_dag, c2_dag = dq.fcreate(2)
+        >>> c1_dag
+        QArray: shape=(4, 4), dims=(2, 2), dtype=complex64, layout=dia, ndiags=1
+        [[  ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅   ]
+         [1.+0.j   ⋅      ⋅      ⋅   ]
+         [  ⋅    1.+0.j   ⋅      ⋅   ]]
+        >>> c2_dag
+        QArray: shape=(4, 4), dims=(2, 2), dtype=complex64, layout=dia, ndiags=1
+        [[   ⋅       ⋅       ⋅       ⋅   ]
+         [ 1.+0.j    ⋅       ⋅       ⋅   ]
+         [   ⋅       ⋅       ⋅       ⋅   ]
+         [   ⋅       ⋅    -1.+0.j    ⋅   ]]
+    """
+    layout = get_layout(layout)
+
+    def create_single(dim: int) -> QArray:
+        # Equivalent to bosonic create(dim)
+        diag = jnp.sqrt(jnp.arange(1, dim, dtype=cdtype()))
+        if layout is dense:
+            return asqarray(jnp.diag(diag, k=-1))
+        else:
+            return sparsedia_from_dict({-1: diag})
+
+    # For a single fermionic mode, the creation operator is create(2)
+    if n == 1:
+        return create_single(2)
+
+    c_dag = create_single(2)  # single-mode creation operator
+    I = eye(2, layout=layout)  # identity operator
+    # Pauli-Z for the Jordan-Wigner string
+    diag_z = jnp.array([1.0, -1.0], dtype=cdtype())
+    if layout is dense:
+        Z = asqarray(jnp.diag(diag_z))
+    else:
+        Z = sparsedia_from_dict({0: diag_z})
+
+    # Construct operators with Jordan-Wigner strings
+    operators = [
+        tensor(*[Z if j < i else (c_dag if i == j else I) for j in range(n)])
+        for i in range(n)
+    ]
+    return tuple(operators)
 
 
 def number(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
