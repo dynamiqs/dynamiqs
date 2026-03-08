@@ -505,7 +505,7 @@ class DSSESolveRouchon1Integrator(RouchonPropertiesMixin, DSSEFixedStepIntegrato
 
         # === state psi
         kraus_map = MESolveFixedRouchon1Integrator.build_kraus_map(
-            self.no_jump_propagator(t, self.dt), self.L, t, self.dt, self.identity
+            self.nojump_propagator(t, self.dt), self.L, t, self.dt, self.identity
         )
         Ms_average = kraus_map.get_kraus_operators()
         if self.method.normalize:
@@ -598,7 +598,7 @@ class DSMESolveRouchon1Integrator(
 
         # === state rho
         kraus_map = MESolveFixedRouchon1Integrator.build_kraus_map(
-            self.no_jump_propagator(t, self.dt), self.L, t, self.dt, self.identity
+            self.nojump_propagator(t, self.dt), self.L, t, self.dt, self.identity
         )
         Ms_average = kraus_map.get_kraus_operators()
         if self.method.normalize:
