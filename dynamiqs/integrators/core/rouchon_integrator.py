@@ -1,6 +1,3 @@
-# ruff: noqa: ANN001, ANN201, ANN202, ARG002
-# we mostly ignore type hinting in this file for readability purposes
-
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
@@ -28,14 +25,14 @@ class AbstractRouchonTerm(dx.AbstractTerm):
     rouchon_step: Callable[[RealScalarLike, RealScalarLike, Y], [Y, Y]]
     # should be defined as `rouchon_step(t0, t1, y0) -> y1, error`
 
-    def vf(self, t, y, args):
-        pass
+    def vf(self, t: RealScalarLike, y: Y, args: object):
+        del t, y, args
 
-    def contr(self, t0, t1, **kwargs):
-        pass
+    def contr(self, t0: RealScalarLike, t1: RealScalarLike, **kwargs: object):
+        del t0, t1, kwargs
 
-    def prod(self, vf, control):
-        pass
+    def prod(self, vf: object, control: object):
+        del vf, control
 
 
 class RouchonDXSolver(dx.AbstractSolver):
@@ -43,19 +40,36 @@ class RouchonDXSolver(dx.AbstractSolver):
     term_structure = AbstractRouchonTerm
     interpolation_cls = LocalLinearInterpolation
 
-    def init(self, terms, t0, t1, y0, args):
-        pass
+    def init(
+        self,
+        terms: AbstractRouchonTerm,
+        t0: RealScalarLike,
+        t1: RealScalarLike,
+        y0: Y,
+        args: object,
+    ):
+        del terms, t0, t1, y0, args
 
-    def step(self, terms, t0, t1, y0, args, solver_state, made_jump):
-        del solver_state, made_jump
+    def step(
+        self,
+        terms: AbstractRouchonTerm,
+        t0: RealScalarLike,
+        t1: RealScalarLike,
+        y0: Y,
+        args: object,
+        solver_state: None,
+        made_jump: bool,
+    ) -> tuple:
+        del solver_state, made_jump, args
         y1, error = terms.term.rouchon_step(t0, t1, y0)
         dense_info = dict(y0=y0, y1=y1)
         return y1, error, dense_info, None, dx.RESULTS.successful
 
-    def func(self, terms, t0, y0, args):
-        pass
+    def func(self, terms: AbstractRouchonTerm, t0: RealScalarLike, y0: Y, args: object):
+        del terms, t0, y0, args
 
-    def order(self, terms):
+    def order(self, terms: AbstractRouchonTerm) -> int:
+        del terms
         return self._order
 
 
@@ -86,7 +100,7 @@ class RKStage(eqx.Module):
     dt: float
     aii: float
 
-    def __call__(self, rho0, rhoi) -> QArray:
+    def __call__(self, rho0: QArray, rhoi: QArray) -> QArray:
         return (
             self.no_jump_0 @ rho0 @ self.no_jump_0.dag()
             + self.no_jump_i
@@ -94,32 +108,32 @@ class RKStage(eqx.Module):
             @ self.no_jump_i.dag()
         )
 
-    def S(self, O):
+    def S(self, O: QArray) -> QArray:
         return self.S_nojump(O) + self.S_jump(O)
 
-    def S_nojump(self, O):
+    def S_nojump(self, O: QArray) -> QArray:
         # Contribution from no_jump_0 operator: M0† @ O @ M0
         return self.no_jump_0.dag() @ O @ self.no_jump_0
 
-    def S_jump(self, O):
+    def S_jump(self, O: QArray) -> QArray:
         # Contribution from jump operators: sum(Mi† @ O @ Mi) for i >= 1
         O_sandwiched = self.no_jump_i.dag() @ O @ self.no_jump_i
         return (
             self.dt * self.aii * sum([_L.dag() @ O_sandwiched @ _L for _L in self.Ls])
         )
 
-    def S_composed(self, O, prev_stage_S):
+    def S_composed(self, O: QArray, prev_stage_S: Callable[[QArray], QArray]) -> QArray:
         # to compose the jump contribution of this stage with the previous stage's map
         # For add_kraus_operators: no_jump_0 is standalone, jump ops are composed
         # sum(M† @ O @ M) = no_jump_0† @ O @ no_jump_0 + prev_stage_S(S_jump(O))
         return self.S_nojump(O) + prev_stage_S(self.S_jump(O))
 
-    def get_kraus_operators(self):
+    def get_kraus_operators(self) -> list[QArray]:
         return [self.no_jump_0] + [
             jnp.sqrt(self.dt * self.aii) * self.no_jump_i @ _L for _L in self.Ls
         ]
 
-    def add_kraus_operators(self, previous_kraus_ops) -> list[QArray]:
+    def add_kraus_operators(self, previous_kraus_ops: list[QArray]) -> list[QArray]:
         # to compose the jump contribution of this stage with the previous
         # stage's Kraus operators
         res_int = [jnp.sqrt(self.dt * self.aii) * self.no_jump_i @ _L for _L in self.Ls]
@@ -131,7 +145,7 @@ class RKStage(eqx.Module):
 
 class SecondStage(RKStage):
     # In the second stage, no_jump_i is equal to no_jump_0, so it can be factorized
-    def __call__(self, rho0, rhoi) -> QArray:
+    def __call__(self, rho0: QArray, rhoi: QArray) -> QArray:
         return (
             self.no_jump_0
             @ (
@@ -141,16 +155,16 @@ class SecondStage(RKStage):
             @ self.no_jump_0.dag()
         )
 
-    def S_nojump(self, O):
+    def S_nojump(self, O: QArray) -> QArray:
         return self.no_jump_0.dag() @ O @ self.no_jump_0
 
-    def S_jump(self, O):
+    def S_jump(self, O: QArray) -> QArray:
         O_sandwiched = self.no_jump_0.dag() @ O @ self.no_jump_0
         return (
             self.dt * self.aii * sum([_L.dag() @ O_sandwiched @ _L for _L in self.Ls])
         )
 
-    def S(self, O):
+    def S(self, O: QArray) -> QArray:
         return self.S_nojump(O) + self.S_jump(O)
 
 
@@ -178,20 +192,20 @@ class KrausRK(eqx.Module):
 class KrausEuler(KrausRK):
     # Rouchon's first order method (which is just Euler's method in Kraus form)
     @property
-    def nojump_0to1(self):
+    def nojump_0to1(self) -> QArray:
         return self.no_jump_propagator(self.t + self.dt)
 
-    def __call__(self, rho0) -> QArray:
+    def __call__(self, rho0: QArray) -> QArray:
         return self.nojump_0to1 @ rho0 @ self.nojump_0to1.dag() + self.dt * sum(
             [_L @ rho0 @ _L.dag() for _L in self.Ls(self.t)]
         )
 
-    def S(self):
+    def S(self) -> QArray:
         return self.nojump_0to1.dag() @ self.nojump_0to1 + self.dt * sum(
             [_L.dag() @ _L for _L in self.Ls(self.t)]
         )
 
-    def get_kraus_operators(self):
+    def get_kraus_operators(self) -> list[QArray]:
         return [self.nojump_0to1] + [jnp.sqrt(self.dt) * _L for _L in self.Ls(self.t)]
 
 
@@ -201,19 +215,19 @@ class KrausHeun2(KrausRK):
     # the no-jump propagator between t and t+dt
     # (it needs evaluations only on the endpoints of the interval)
     @property
-    def nojump_0to1(self):
+    def nojump_0to1(self) -> QArray:
         return self.no_jump_propagator(self.t + self.dt)
 
     @property
-    def Ls0(self):
+    def Ls0(self) -> Sequence[QArray]:
         return self.Ls(self.t)
 
     @property
-    def Ls1(self):
+    def Ls1(self) -> Sequence[QArray]:
         return self.Ls(self.t + self.dt)
 
     @property
-    def stage2(self):
+    def stage2(self) -> SecondStage:
         return SecondStage(
             no_jump_0=self.nojump_0to1,
             no_jump_i=self.nojump_0to1,
@@ -222,7 +236,7 @@ class KrausHeun2(KrausRK):
             aii=1,
         )
 
-    def __call__(self, rho0) -> QArray:
+    def __call__(self, rho0: QArray) -> QArray:
         rho1 = rho0
         rho2 = self.stage2(rho0, rho1)
         return (
@@ -231,13 +245,14 @@ class KrausHeun2(KrausRK):
             @ self.nojump_0to1.dag()
         ) + (self.dt / 2 * sum(_L @ rho2 @ _L.dag() for _L in self.Ls1))
 
-    def S(self):
+    def S(self) -> QArray:
         O1 = self.nojump_0to1.dag() @ self.nojump_0to1
         O10 = sum(_L.dag() @ O1 @ _L for _L in self.Ls0)
         O11 = sum(_L.dag() @ _L for _L in self.Ls1)
         return O1 + self.dt / 2 * (O10 + self.stage2.S(O11))
 
-    def get_kraus_operators(self):  # TODO: not tested, add tests when used
+    # TODO: not tested, add tests when used
+    def get_kraus_operators(self) -> list[QArray]:
         return (
             [self.nojump_0to1]
             + [jnp.sqrt(self.dt / 2) * self.nojump_0to1 @ _L for _L in self.Ls0]
@@ -253,45 +268,45 @@ class KrausHeun3(KrausRK):
     # Chosen for the sparsity of its Butcher tableau, minimizing no-jump
     # propagator evaluations and inversions.
     @property
-    def nojump_0to1(self):
+    def nojump_0to1(self) -> QArray:
         return self.no_jump_propagator(self.t + self.dt)
 
     @property
-    def nojump_0to1o3(self):
+    def nojump_0to1o3(self) -> QArray:
         return self.no_jump_propagator(self.t + 1 / 3 * self.dt)
 
     @property
-    def nojump_0to2o3(self):
+    def nojump_0to2o3(self) -> QArray:
         return self.no_jump_propagator(self.t + 2 / 3 * self.dt)
 
     @property
-    def nojump_2o3to1(self):
+    def nojump_2o3to1(self) -> QArray:
         return solve_propagator(
             self.no_jump_propagator(self.t + self.dt),
             self.no_jump_propagator(self.t + 2 / 3 * self.dt),
         )
 
     @property
-    def nojump_1o3to2o3(self):
+    def nojump_1o3to2o3(self) -> QArray:
         return solve_propagator(
             self.no_jump_propagator(self.t + 2 / 3 * self.dt),
             self.no_jump_propagator(self.t + 1 / 3 * self.dt),
         )
 
     @property
-    def Ls0(self):
+    def Ls0(self) -> Sequence[QArray]:
         return self.Ls(self.t)
 
     @property
-    def Ls1o3(self):
+    def Ls1o3(self) -> Sequence[QArray]:
         return self.Ls(self.t + 1 / 3 * self.dt)
 
     @property
-    def Ls2o3(self):
+    def Ls2o3(self) -> Sequence[QArray]:
         return self.Ls(self.t + 2 / 3 * self.dt)
 
     @property
-    def stage2(self):
+    def stage2(self) -> SecondStage:
         return SecondStage(
             no_jump_0=self.nojump_0to1o3,
             no_jump_i=self.nojump_0to1o3,
@@ -301,7 +316,7 @@ class KrausHeun3(KrausRK):
         )
 
     @property
-    def stage3(self):
+    def stage3(self) -> RKStage:
         return RKStage(
             no_jump_0=self.nojump_0to2o3,
             no_jump_i=self.nojump_1o3to2o3,
@@ -310,7 +325,7 @@ class KrausHeun3(KrausRK):
             aii=2 / 3,
         )
 
-    def __call__(self, rho0) -> QArray:
+    def __call__(self, rho0: QArray) -> QArray:
         rho1 = rho0
         rho2 = self.stage2(rho0, rho1)
         rho3 = self.stage3(rho0, rho2)
@@ -324,7 +339,7 @@ class KrausHeun3(KrausRK):
             @ self.nojump_2o3to1.dag()
         )
 
-    def S(self):
+    def S(self) -> QArray:
         O1 = self.nojump_0to1.dag() @ self.nojump_0to1
         O2 = sum(_L.dag() @ O1 @ _L for _L in self.Ls0)
         O3_nojump = self.nojump_2o3to1.dag() @ self.nojump_2o3to1
@@ -335,7 +350,8 @@ class KrausHeun3(KrausRK):
             1 / 4 * O2 + 3 / 4 * self.stage3.S_composed(O3, self.stage2.S)
         )
 
-    def get_kraus_operators(self):  # TODO: not tested, add tests when used
+    # TODO: not tested, add tests when used
+    def get_kraus_operators(self) -> list[QArray]:
         return (
             [self.nojump_0to1]
             + [jnp.sqrt(self.dt / 4) * self.nojump_0to1 @ _L for _L in self.Ls0]
@@ -383,7 +399,7 @@ def cholesky_normalize(kraus_map: KrausRK, rho: QArray) -> jax.Array:
     return jax.lax.linalg.triangular_solve(T, rho, lower=True, left_side=False)
 
 
-def solve_propagator(U1, U2) -> QArray:
+def solve_propagator(U1: QArray, U2: QArray) -> QArray:
     """Compute the no jump propagator from t2 to t1 using LU factorization.
 
     U1: propagator from 0 to t1
@@ -403,34 +419,34 @@ class RouchonPropertiesMixin:
     """
 
     @property
-    def G(self):
-        def G_at_t(t) -> QArray:
+    def G(self) -> Callable[[RealScalarLike], QArray]:
+        def G_at_t(t) -> QArray:  # noqa: ANN001
             LdL = sum([_L.dag() @ _L for _L in self.L(t)])
             return -1j * self.H(t) - 0.5 * LdL
 
         return G_at_t
 
     @property
-    def identity(self):
+    def identity(self) -> QArray:
         return eye_like(self.H(0), layout=dense)
 
     @property
-    def no_jump_solver(self):
+    def no_jump_solver(self) -> dx.AbstractSolver:
         return Euler()
 
     @property
-    def no_jump_propagator(self):
+    def no_jump_propagator(self) -> Callable:
         # Returns a function (t, dt) -> interpolant.evaluate, where evaluate
         # maps a time in [t, t+dt] to the no-jump propagator at that time.
         # We use dense output to be able to compute the no-jump propagator
         # at any time between t and t+dt,
         # which is needed for some Rouchon schemes (RK3 for example).
-        def _no_jump_propagator_flow(t, y, *args) -> QArray:
+        def _no_jump_propagator_flow(t, y, *args) -> QArray:  # noqa: ANN001
             return self.G(t) @ y
 
         no_jump_propagator_flow = ODETerm(_no_jump_propagator_flow)
 
-        def _no_jump_propagator(t, dt) -> Callable[[RealScalarLike], QArray]:
+        def _no_jump_propagator(t, dt) -> Callable[[RealScalarLike], QArray]:  # noqa: ANN001  # noqa: ANN001
             solver = self.no_jump_solver
             solver_state = solver.init(
                 no_jump_propagator_flow, t, t + dt, self.identity, None
@@ -459,7 +475,7 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
 
     @property
     def terms(self) -> dx.AbstractTerm:
-        def rouchon_step(t0, t1, y0):
+        def rouchon_step(t0, t1, y0):  # noqa: ANN001, ANN202
             # The Rouchon update for a single loss channel is:
             #   rho_{k+1} = sum_k Mk @ rho_k @ Mk^†
             # See comment of `cholesky_normalize()` for the normalization.
@@ -513,7 +529,7 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
     _kraus_cls = KrausHeun2
 
     @property
-    def no_jump_solver(self):
+    def no_jump_solver(self) -> dx.AbstractSolver:
         return Midpoint()
 
 
@@ -523,7 +539,7 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
     _kraus_cls = KrausHeun3
 
     @property
-    def no_jump_solver(self):
+    def no_jump_solver(self) -> dx.AbstractSolver:
         return Bosh3()
 
 
@@ -538,17 +554,22 @@ class MESolveAdaptiveRouchonIntegrator(
     ``_build_dense_info_low`` for solvers that need extra interpolation data.
     """
 
-    def _build_dense_info_low(self, y0, y1_low, dense_info_high):
+    def _build_dense_info_low(
+        self,
+        y0: QArray,
+        y1_low: QArray,
+        dense_info_high: dict,  # noqa: ARG002
+    ) -> dict:
         """Build dense_info for the low-order interpolant. Override for extra keys."""
         return dict(y0=y0, y1=y1_low)
 
     @property
-    def no_jump_propagators(self):
+    def no_jump_propagators(self) -> Callable:
         """Returns embedded low/high-order propagators from a single high-order
         computation, using the embedded error estimate.
         """
 
-        def _no_jump_propagator_flow(t, y, *args) -> QArray:
+        def _no_jump_propagator_flow(t, y, *args) -> QArray:  # noqa: ANN001
             return self.G(t) @ y
 
         no_jump_propagator_term = ODETerm(_no_jump_propagator_flow)
@@ -556,7 +577,8 @@ class MESolveAdaptiveRouchonIntegrator(
         solver_high = self._solver_high
 
         def _no_jump_propagators(
-            t, dt
+            t,
+            dt,  # noqa: ANN001
         ) -> tuple[
             Callable[[RealScalarLike], QArray], Callable[[RealScalarLike], QArray]
         ]:
@@ -591,7 +613,7 @@ class MESolveAdaptiveRouchonIntegrator(
 
     @property
     def terms(self) -> dx.AbstractTerm:
-        def rouchon_step(t0, t1, y0):
+        def rouchon_step(t0, t1, y0):  # noqa: ANN001, ANN202
             rho = y0
             dt = t1 - t0
             prop_low, prop_high = self.no_jump_propagators(t0, dt)
@@ -644,13 +666,15 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
     _fixed_cls_low = MESolveFixedRouchon2Integrator
     _fixed_cls_high = MESolveFixedRouchon3Integrator
 
-    def _build_dense_info_low(self, y0, y1_low, dense_info_high):
+    def _build_dense_info_low(
+        self, y0: QArray, y1_low: QArray, dense_info_high: dict
+    ) -> dict:
         # Midpoint interpolation needs the k stages from Bosh3
         k = dense_info_high['k']
         return dict(y0=y0, y1=y1_low, k=k[:2])
 
 
-def mesolve_rouchon2_integrator_constructor(**kwargs):
+def mesolve_rouchon2_integrator_constructor(**kwargs) -> MESolveDiffraxIntegrator:
     """Factory function to create a Rouchon2 integrator."""
     if kwargs['method'].dt is not None:
         return MESolveFixedRouchon2Integrator(
@@ -661,7 +685,7 @@ def mesolve_rouchon2_integrator_constructor(**kwargs):
     )
 
 
-def mesolve_rouchon3_integrator_constructor(**kwargs):
+def mesolve_rouchon3_integrator_constructor(**kwargs) -> MESolveDiffraxIntegrator:
     """Factory function to create a Rouchon3 integrator."""
     if kwargs['method'].dt is not None:
         return MESolveFixedRouchon3Integrator(
