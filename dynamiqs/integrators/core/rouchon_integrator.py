@@ -8,10 +8,11 @@ import diffrax as dx
 import equinox as eqx
 import jax
 import jax.numpy as jnp
-from diffrax import Bosh3, Euler, Midpoint, ODETerm
+from diffrax import AbstractRungeKutta, Bosh3, Euler, Midpoint, ODETerm
 from diffrax._custom_types import RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
 
+from ...gradient import Forward
 from ...qarrays.layout import dense
 from ...qarrays.qarray import QArray
 from ...utils.operators import asqarray, eye_like
@@ -418,6 +419,22 @@ class RouchonPropertiesMixin:
     Expects ``self.H`` and ``self.L`` to be callable.
     """
 
+    def _make_forward_compatible(self, solver: dx.AbstractSolver) -> dx.AbstractSolver:
+        """Make the solver forward-mode compatible.
+
+        This is the same hack used in diffrax to make `AbstractRungeKutta` solvers
+        forward-mode compatible, see https://github.com/patrick-kidger/diffrax/blob/5ea5fcb05058bd22548300a10ea5ef5ce7fb75bb/diffrax/_adjoint.py#L381-L386.
+        """
+        if (
+            isinstance(self.gradient, Forward)
+            and isinstance(solver, AbstractRungeKutta)
+            and solver.scan_kind is None
+        ):
+            return eqx.tree_at(
+                lambda s: s.scan_kind, solver, 'bounded', is_leaf=lambda x: x is None
+            )
+        return solver
+
     @property
     def G(self) -> Callable[[RealScalarLike], QArray]:
         def G_at_t(t) -> QArray:  # noqa: ANN001
@@ -446,8 +463,8 @@ class RouchonPropertiesMixin:
 
         no_jump_propagator_flow = ODETerm(_no_jump_propagator_flow)
 
-        def _no_jump_propagator(t, dt) -> Callable[[RealScalarLike], QArray]:  # noqa: ANN001  # noqa: ANN001
-            solver = self.no_jump_solver
+        def _no_jump_propagator(t, dt) -> Callable[[RealScalarLike], QArray]:  # noqa: ANN001
+            solver = self._make_forward_compatible(self.no_jump_solver)
             solver_state = solver.init(
                 no_jump_propagator_flow, t, t + dt, self.identity, None
             )
@@ -573,12 +590,11 @@ class MESolveAdaptiveRouchonIntegrator(
             return self.G(t) @ y
 
         no_jump_propagator_term = ODETerm(_no_jump_propagator_flow)
-        solver_low = self._solver_low
-        solver_high = self._solver_high
+        solver_low = self._make_forward_compatible(self._solver_low)
+        solver_high = self._make_forward_compatible(self._solver_high)
 
         def _no_jump_propagators(
-            t,
-            dt,  # noqa: ANN001
+            t: RealScalarLike, dt: RealScalarLike
         ) -> tuple[
             Callable[[RealScalarLike], QArray], Callable[[RealScalarLike], QArray]
         ]:
