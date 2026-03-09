@@ -15,7 +15,8 @@ from diffrax._local_interpolation import LocalLinearInterpolation
 from ...gradient import Forward
 from ...qarrays.layout import dense
 from ...qarrays.qarray import QArray
-from ...utils.operators import eye_like
+from ...qarrays.utils import asqarray
+from ...utils.operators import eye
 from .diffrax_integrator import MESolveDiffraxIntegrator
 
 
@@ -90,7 +91,7 @@ class AdaptiveRouchonDXSolver(dx.AbstractAdaptiveSolver, RouchonDXSolver):
     pass
 
 
-class KrausRK(eqx.Module):
+class KrausMapRK(eqx.Module):
     r"""Kraus-form Runge-Kutta method for the Lindblad master equation.
 
     A Rouchon RK method is defined by a Butcher tableau $(c, A, b)$:
@@ -118,17 +119,17 @@ class KrausRK(eqx.Module):
     Attributes:
         nojump_propagator: Interpolant mapping an absolute time to the no-jump
             propagator from ``t`` to that time.
+        H: Function mapping an absolute time to the Hamiltonian at that time.
+        L: Function mapping an absolute time to the jump operators at that time.
         t: Beginning of the time step.
         dt: Time step.
-        Ls: Function mapping an absolute time to the jump operators at that time.
-        identity: Identity operator.
     """
 
     nojump_propagator: Callable[[RealScalarLike], QArray]
+    H: Callable[[RealScalarLike], QArray]
+    L: Callable[[RealScalarLike], Sequence[QArray]]
     t: RealScalarLike
     dt: RealScalarLike
-    Ls: Callable[[RealScalarLike], Sequence[QArray]]
-    identity: QArray
 
     # Butcher tableau — overridden by subclasses (not pytree leaves)
     _c = ()
@@ -138,6 +139,11 @@ class KrausRK(eqx.Module):
 
     # -- propagator helpers --------------------------------------------------
 
+    @property
+    def identity(self) -> QArray:
+        struct = jax.eval_shape(lambda: self.H(0.0))
+        return eye(*struct.dims, layout=dense)
+
     def U(self, c: float) -> QArray:
         r"""No-jump propagator from 0 to $c \Delta t$ (relative to $t$)."""
         if c == 0.0:
@@ -145,27 +151,24 @@ class KrausRK(eqx.Module):
         return self.nojump_propagator(self.t + c * self.dt)
 
     def propagator_ratio(self, ci: float, cj: float) -> QArray:
-        r"""Propagator ratio $U(c_i) U(c_j)^{-1}$ via Neumann approximation."""
+        r"""Propagator ratio $U(c_i) U(c_j)^{-1}$ via a dense linear solve."""
+        # deal with special cases
         if ci == cj:
             return self.identity
         U_ci = self.U(ci)
         if cj == 0.0:
             return U_ci
-        # Neumann series: U^{-1} ≈ I + W + W² + ... with W = I - U
         U_cj = self.U(cj)
-        W = self.identity - U_cj
-        inv_approx = self.identity
-        W_power = self.identity
-        for _ in range(self._neumann_order):
-            W_power = W_power @ W
-            inv_approx = inv_approx + W_power
-        return U_ci @ inv_approx
+
+        # solve X U_cj = U_ci without forming an explicit inverse.
+        ratio = jnp.linalg.solve(U_cj.to_jax().T, U_ci.to_jax().T).T
+        return asqarray(ratio, dims=U_ci.dims, layout=U_ci.layout)
 
     # -- forward pass --------------------------------------------------------
 
     def dissipator(self, c: float, rho: QArray) -> QArray:
         r"""Jump map $D_c(\rho) = \sum_k L_k \rho L_k^\dagger$ at $t + c\Delta t$."""
-        return sum(M_rho_Mdag(L, rho) for L in self.Ls(self.t + c * self.dt))
+        return sum(M_rho_Mdag(L, rho) for L in self.L(self.t + c * self.dt))
 
     def compute_stages(self, rho0: QArray) -> list[QArray]:
         r"""Compute all intermediate stages $\rho^{(0)}, \ldots, \rho^{(s-1)}$."""
@@ -201,7 +204,7 @@ class KrausRK(eqx.Module):
 
     def adjoint_dissipator(self, c: float, O: QArray) -> QArray:
         r"""Adjoint jump map $D_c^*(O) = \sum_k L_k^\dagger O L_k$."""
-        return sum(Mdag_O_M(L, O) for L in self.Ls(self.t + c * self.dt))
+        return sum(Mdag_O_M(L, O) for L in self.L(self.t + c * self.dt))
 
     def S_stage(self, i: int, O: QArray) -> QArray:
         r"""Backward propagation of observation $O$ through stage $i$.
@@ -233,39 +236,54 @@ class KrausRK(eqx.Module):
         return S
 
 
-class KrausEuler(KrausRK):
+class KrausEuler(KrausMapRK):
     r"""First-order Rouchon method (Euler in Kraus form).
+
+    This is a modified version of Euler where the right-hand-side is evaluated at the
+    midpoint, instead of at the beginning of the step interval. This effectively
+    improves accuracy in time-dependent systems at the cost of breaking the consistency
+    of the underlying Runge-Kutta method in the general case. However, because we are
+    only dealing with linear ODEs, the consistency of the scheme is still preserved.
 
     Butcher tableau::
 
-        0 | 0
-        -----
-          | 1
+        1/2 | 0
+        -------
+            | 1
     """
 
-    _c = (0.0,)
+    _c = (0.5,)
     _A = ((0.0,),)
     _b = (1.0,)
     _neumann_order = 0
 
+    @property
+    def _t_mid(self) -> RealScalarLike:
+        return self.t + 0.5 * self.dt
+
+    def U(self, c: float) -> QArray:
+        # override to enforce midpoint evaluation
+        Hnh = self.H(self._t_mid) - 0.5j * sum(Mdag_M(_L) for _L in self.L(self._t_mid))
+        return self.identity - 1j * c * self.dt * Hnh
+
     def __call__(self, rho0: QArray) -> QArray:
-        # override to avoid computing the single stage as an intermediate stage
-        return M_rho_Mdag(self.U(1.0), rho0) + self.dt * self.dissipator(0.0, rho0)
+        # override to enforce midpoint evaluation and single-stage structure
+        return M_rho_Mdag(self.U(1.0), rho0) + self.dt * self.dissipator(0.5, rho0)
 
     def S(self) -> QArray:
-        # override to avoid computing the single stage as an intermediate stage
+        # override to enforce midpoint evaluation and single-stage structure
         nojump_S = Mdag_M(self.U(1.0))
-        jump_S = self.dt * sum(Mdag_M(_L) for _L in self.Ls(self.t))
+        jump_S = self.dt * sum(Mdag_M(_L) for _L in self.L(self._t_mid))
         return nojump_S + jump_S
 
     def get_kraus_operators(self) -> list[QArray]:
         # this method is only used for stochastic solvers
         nojump_kraus_ops = [self.U(1.0)]
-        jump_kraus_ops = [jnp.sqrt(self.dt) * _L for _L in self.Ls(self.t)]
+        jump_kraus_ops = [jnp.sqrt(self.dt) * _L for _L in self.L(self._t_mid)]
         return nojump_kraus_ops + jump_kraus_ops
 
 
-class KrausHeun2(KrausRK):
+class KrausHeun2(KrausMapRK):
     r"""Second-order Rouchon method based on Heun's method.
 
     Butcher tableau::
@@ -282,7 +300,7 @@ class KrausHeun2(KrausRK):
     _neumann_order = 0
 
 
-class KrausHeun3(KrausRK):
+class KrausHeun3(KrausMapRK):
     r"""Third-order Rouchon method based on Heun's third-order method.
 
     Butcher tableau::
@@ -300,7 +318,7 @@ class KrausHeun3(KrausRK):
     _neumann_order = 2
 
 
-def cholesky_normalize(kraus_map: KrausRK, rho: QArray) -> jax.Array:
+def cholesky_normalize(kraus_map: KrausMapRK, rho: QArray) -> jax.Array:
     # To normalize the scheme, we compute
     #   S = sum_k Mk^† @ Mk
     # and replace
@@ -347,7 +365,8 @@ class RouchonPropertiesMixin:
 
     @property
     def identity(self) -> QArray:
-        return eye_like(self.H(0), layout=dense)
+        struct = jax.eval_shape(lambda: self.H(0.0))
+        return eye(*struct.dims, layout=dense)
 
     @property
     @abstractmethod
@@ -405,7 +424,7 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
     """Integrator computing the time evolution of the Lindblad master equation using a
     fixed step Rouchon method.
 
-    Subclasses must set ``_kraus_cls`` and may override ``nojump_diffrax_solver``.
+    Subclasses must set ``_kraus_map_cls`` and may override ``nojump_diffrax_solver``.
     """
 
     @property
@@ -418,9 +437,7 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
             rho = y0
             dt = t1 - t0
             nojump_propagator = self.make_nojump_propagator(t0, dt)
-            kraus_map = self.build_kraus_map(
-                nojump_propagator, self.L, t0, dt, self.identity
-            )
+            kraus_map = self.build_kraus_map(nojump_propagator, self.H, self.L, t0, dt)
 
             if self.method.normalize:
                 rho = cholesky_normalize(kraus_map, rho)
@@ -433,20 +450,18 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
     def build_kraus_map(
         cls,
         nojump_propagator: Callable[[RealScalarLike], QArray],
+        H: Callable[[RealScalarLike], QArray],
         L: Callable[[RealScalarLike], Sequence[QArray]],
         t: RealScalarLike,
         dt: RealScalarLike,
-        identity: QArray,
-    ) -> KrausRK:
-        return cls._kraus_cls(
-            nojump_propagator=nojump_propagator, t=t, dt=dt, Ls=L, identity=identity
-        )
+    ) -> KrausMapRK:
+        return cls._kraus_map_cls(nojump_propagator=nojump_propagator, L=L, H=H, t=t, dt=dt)
 
 
 class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
     """Fixed step Rouchon 1 (Euler) integrator for the Lindblad master equation."""
 
-    _kraus_cls = KrausEuler
+    _kraus_map_cls = KrausEuler
 
     @property
     def nojump_diffrax_solver(self) -> dx.AbstractSolver:
@@ -456,7 +471,7 @@ class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
 class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
     """Fixed step Rouchon 2 (Heun) integrator for the Lindblad master equation."""
 
-    _kraus_cls = KrausHeun2
+    _kraus_map_cls = KrausHeun2
 
     @property
     def nojump_diffrax_solver(self) -> dx.AbstractSolver:
@@ -466,7 +481,7 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
 class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
     """Fixed step Rouchon 3 (Heun3) integrator for the Lindblad master equation."""
 
-    _kraus_cls = KrausHeun3
+    _kraus_map_cls = KrausHeun3
 
     @property
     def nojump_diffrax_solver(self) -> dx.AbstractSolver:
@@ -539,7 +554,7 @@ class MESolveAdaptiveRouchonIntegrator(
 
             # low order
             kraus_low = self._fixed_cls_low.build_kraus_map(
-                propagator_low, self.L, t0, dt, self.identity
+                propagator_low, self.H, self.L, t0, dt
             )
             rho_low = (
                 cholesky_normalize(kraus_low, rho) if self.method.normalize else rho
@@ -548,7 +563,7 @@ class MESolveAdaptiveRouchonIntegrator(
 
             # high order
             kraus_high = self._fixed_cls_high.build_kraus_map(
-                propagator_high, self.L, t0, dt, self.identity
+                propagator_high, self.H, self.L, t0, dt
             )
             rho_high = (
                 cholesky_normalize(kraus_high, rho) if self.method.normalize else rho
