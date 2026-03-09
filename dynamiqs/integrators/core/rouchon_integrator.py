@@ -131,10 +131,10 @@ class KrausRK(eqx.Module):
     identity: QArray
 
     # Butcher tableau — overridden by subclasses (not pytree leaves)
-    _c: Sequence[float] = ()
-    _A: Sequence[Sequence[float]] = ()
-    _b: Sequence[float] = ()
-    _neumann_order: int = 0
+    _c = ()
+    _A = ()
+    _b = ()
+    _neumann_order = 0
 
     # -- propagator helpers --------------------------------------------------
 
