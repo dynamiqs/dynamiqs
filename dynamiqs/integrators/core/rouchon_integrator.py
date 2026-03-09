@@ -455,7 +455,9 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
         t: RealScalarLike,
         dt: RealScalarLike,
     ) -> KrausMapRK:
-        return cls._kraus_map_cls(nojump_propagator=nojump_propagator, L=L, H=H, t=t, dt=dt)
+        return cls._kraus_map_cls(
+            nojump_propagator=nojump_propagator, L=L, H=H, t=t, dt=dt
+        )
 
 
 class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
