@@ -6,7 +6,7 @@ import dynamiqs as dq
 
 def build_random_single_mode(n: int, seed: int = 0, gamma: float = 0.1):
     key = jax.random.PRNGKey(seed)
-    key1, key2 = jax.random.split(key)
+    key1, key2, key3, key4, key5, key6, key7, key8 = jax.random.split(key, num=8)
 
     H_real = jax.random.normal(key1, (n, n))
     H_imag = jax.random.normal(key2, (n, n))
@@ -14,12 +14,22 @@ def build_random_single_mode(n: int, seed: int = 0, gamma: float = 0.1):
     H_herm = (H_complex + H_complex.conj().T) / 2
     H = dq.asqarray(H_herm)
 
-    L_real = jax.random.normal(key1, (n, n))
-    L_imag = jax.random.normal(key2, (n, n))
-    L_complex = (L_real + 1j * L_imag) * gamma
-    L = dq.asqarray(L_complex)
+    L1_real = jax.random.normal(key3, (n, n))
+    L1_imag = jax.random.normal(key4, (n, n))
+    L1_complex = (L1_real + 1j * L1_imag) * gamma
+    L1 = dq.asqarray(L1_complex)
 
-    Ls = [L]
+    L2_real = jax.random.normal(key5, (n, n))
+    L2_imag = jax.random.normal(key6, (n, n))
+    L2_complex = (L2_real + 1j * L2_imag) * gamma
+    L2 = dq.asqarray(L2_complex)
+
+    L3_real = jax.random.normal(key7, (n, n))
+    L3_imag = jax.random.normal(key8, (n, n))
+    L3_complex = (L3_real + 1j * L3_imag) * gamma
+    L3 = dq.asqarray(L3_complex)
+
+    Ls = [L1, L2, L3]
     return H, Ls
 
 
@@ -86,3 +96,29 @@ def build_two_modes(
     Ls = [dq.asqarray(jnp.sqrt(kappa_b) * b), dq.asqarray(jnp.sqrt(kappa_a) * a)]
 
     return H0, Ls
+
+
+def build_kerr_oscillator(n_a: int = 40, delta: float = 0.0):
+    # n_detunings = 15
+    # delta_vals = jnp.linspace(-20, 20, n_detunings) * twopi
+    a = dq.destroy(n_a)
+    twopi = 2 * jnp.pi
+
+    # Precomputed operator matrices
+    a_jax = a.to_jax()
+    adag_jax = a.dag().to_jax()
+    adag2a2 = (a.dag() @ a.dag() @ a @ a).to_jax()
+    adaga = (a.dag() @ a).to_jax()
+
+    kap = 14.0 * twopi
+    kerr = -1.0 * twopi
+    ep = 16.0
+
+    H = (
+        -kerr / 2 * adag2a2
+        - delta * adaga
+        + 1j * jnp.sqrt(kap) * ep * a_jax
+        - 1j * jnp.sqrt(kap) * ep * adag_jax
+    )
+    L = jnp.sqrt(kap) * a_jax
+    return dq.asqarray(H), [dq.asqarray(L)]
