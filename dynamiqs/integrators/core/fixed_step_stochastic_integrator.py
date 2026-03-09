@@ -610,8 +610,8 @@ class DSMESolveRouchon1Integrator(
         # === state rho
         M0 = self.identity - (1j * H + 0.5 * sum(_L.dag() @ _L for _L in L)) * self.dt
         if self.method.normalize:
-            Mis = [jnp.sqrt(self.dt) * _L for _L in L]
-            S = M0.dag() @ M0 + sum([_M.dag() @ _M for _M in Mis])
+            Ms_lindblad = [jnp.sqrt(self.dt) * _L for _L in L]
+            S = M0.dag() @ M0 + sum([_M.dag() @ _M for _M in Ms_lindblad])
             rho = cholesky_normalize(S, rho)
 
         M_dY = M0 + sum(
