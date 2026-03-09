@@ -23,12 +23,7 @@ from .interfaces import (
     JSSEInterface,
     SolveInterface,
 )
-from .rouchon_integrator import (
-    KrausMapRK,
-    MESolveFixedRouchon1Integrator,
-    RouchonPropertiesMixin,
-    cholesky_normalize,
-)
+from .rouchon_integrator import RouchonPropertiesMixin, cholesky_normalize
 from .save_mixin import SolveSaveMixin
 
 
@@ -503,16 +498,27 @@ class DSSESolveRouchon1Integrator(RouchonPropertiesMixin, DSSEFixedStepIntegrato
         dY = exp * self.dt + dW
 
         if self.method.normalize:
-            M0 = self.identity - (1j * H + 0.5 * sum(_L.dag() @ _L for _L in L)) * self.dt
+            M0 = (
+                self.identity
+                - (1j * H + 0.5 * sum(_L.dag() @ _L for _L in L)) * self.dt
+            )
             M_dY = M0 + sum([_dY * _L for _dY, _L in zip(dY, L, strict=True)])
             S = M0.dag() @ M0 + sum([_L.dag() @ _L for _L in L]) * self.dt
             psi = cholesky_normalize_ket(S, psi)
             psi = (M_dY @ psi).unit()
 
-        else: # avoid computing the operators Ms_average and S, which can be costly for large systems
-            M0psi = psi + (-1j*H@psi - 0.5*sum([_L.dag()@(_L@psi) for _L in L]))*self.dt
+        else:
+            # avoid computing the operators Ms_average and S,
+            # which can be costly for large systems
+            M0psi = (
+                psi
+                + (-1j * H @ psi - 0.5 * sum([_L.dag() @ (_L @ psi) for _L in L]))
+                * self.dt
+            )
             Lpsi = [(_L @ psi) for _L in L]
-            psi = M0psi + sum([_Lpsi * _dY for _Lpsi, _dY in zip(Lpsi, dY, strict=True)])
+            psi = M0psi + sum(
+                [_Lpsi * _dY for _Lpsi, _dY in zip(Lpsi, dY, strict=True)]
+            )
             psi = psi.unit()  # normalise by norm
 
         return DiffusiveState(psi, y.Y + dY)
@@ -589,10 +595,11 @@ class DSMESolveRouchon1Integrator(
 
         rho = y.state
         dW = dX
-        Lc, Lm, L, H = (self.Lc(t + self.dt / 2), 
-                        self.Lm(t + self.dt / 2), 
-                        self.L(t + self.dt / 2), 
-                        self.H(t + self.dt / 2)
+        Lc, Lm, L, H = (
+            self.Lc(t + self.dt / 2),
+            self.Lm(t + self.dt / 2),
+            self.L(t + self.dt / 2),
+            self.H(t + self.dt / 2),
         )
 
         # === measurement Y
@@ -603,7 +610,7 @@ class DSMESolveRouchon1Integrator(
         # === state rho
         M0 = self.identity - (1j * H + 0.5 * sum(_L.dag() @ _L for _L in L)) * self.dt
         if self.method.normalize:
-            Mis = [jnp.sqrt(self.dt)*_L for _L in L]
+            Mis = [jnp.sqrt(self.dt) * _L for _L in L]
             S = M0.dag() @ M0 + sum([_Mis.dag() @ _Mis for _Mis in Mis])
             rho = cholesky_normalize(S, rho)
 

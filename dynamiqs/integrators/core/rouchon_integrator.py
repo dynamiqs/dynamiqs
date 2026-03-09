@@ -562,7 +562,9 @@ class MESolveAdaptiveRouchonIntegrator(
                 propagator_high, self.H, self.L, t0, dt
             )
             rho_high = (
-                cholesky_normalize(kraus_high.S(), rho) if self.method.normalize else rho
+                cholesky_normalize(kraus_high.S(), rho)
+                if self.method.normalize
+                else rho
             )
             rho_high = kraus_high(rho_high)
 
