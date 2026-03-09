@@ -590,7 +590,11 @@ class DSMESolveRouchon1Integrator(
 
         rho = y.state
         dW = dX
-        Lc, Lm = self.Lc(t), self.Lm(t)
+        Lc, Lm, L, H = (self.Lc(t + self.dt / 2), 
+                        self.Lm(t + self.dt / 2), 
+                        self.L(t + self.dt / 2), 
+                        self.H(t + self.dt / 2)
+        )
 
         # === measurement Y
         # dY_{k+1} = sqrt(eta) Tr[(L+Ld) @ rho_k)] dt + dW
@@ -598,14 +602,13 @@ class DSMESolveRouchon1Integrator(
         dY = jnp.sqrt(self.etas) * trace * self.dt + dW  # (nLm,)
 
         # === state rho
-        kraus_map = MESolveFixedRouchon1Integrator.build_kraus_map(
-            self.nojump_propagator(t, self.dt), self.L, t, self.dt, self.identity
-        )
-        Ms_average = kraus_map.get_kraus_operators()
+        M0 = self.identity - (1j * H + 0.5 * sum(_L.dag() @ _L for _L in L)) * self.dt
         if self.method.normalize:
-            rho = cholesky_normalize(kraus_map, rho)
+            Mis = [jnp.sqrt(self.dt)*_L for _L in L]
+            S = M0.dag() @ M0 + sum([_Mis.dag() @ _Mis for _Mis in Mis])
+            rho = cholesky_normalize(S, rho)
 
-        M_dY = Ms_average[0] + sum(
+        M_dY = M0 + sum(
             [
                 jnp.sqrt(eta) * _dY * _Lm
                 for eta, _dY, _Lm in zip(self.etas, dY, Lm, strict=True)

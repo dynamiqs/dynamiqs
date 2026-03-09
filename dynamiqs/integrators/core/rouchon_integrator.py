@@ -313,7 +313,7 @@ class KrausHeun3(KrausMapRK):
     _b = (0.25, 0.0, 0.75)
 
 
-def cholesky_normalize(kraus_map: KrausMapRK, rho: QArray) -> jax.Array:
+def cholesky_normalize(S: QArray, rho: QArray) -> jax.Array:
     # To normalize the scheme, we compute
     #   S = sum_k Mk^† @ Mk
     # and replace
@@ -334,7 +334,6 @@ def cholesky_normalize(kraus_map: KrausMapRK, rho: QArray) -> jax.Array:
     # In practice we directly replace rho_k by T^{†(-1)} @ rho_k @ T^{-1} instead of
     # computing all ~Mks.
 
-    S = kraus_map.S()
     T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
 
     # we want T^{†(-1)} @ y0 @ T^{-1}
@@ -435,7 +434,7 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
             kraus_map = self.build_kraus_map(nojump_propagator, self.H, self.L, t0, dt)
 
             if self.method.normalize:
-                rho = cholesky_normalize(kraus_map, rho)
+                rho = cholesky_normalize(kraus_map.S(), rho)
 
             return kraus_map(rho), None
 
@@ -554,7 +553,7 @@ class MESolveAdaptiveRouchonIntegrator(
                 propagator_low, self.H, self.L, t0, dt
             )
             rho_low = (
-                cholesky_normalize(kraus_low, rho) if self.method.normalize else rho
+                cholesky_normalize(kraus_low.S(), rho) if self.method.normalize else rho
             )
             rho_low = kraus_low(rho_low)
 
@@ -563,7 +562,7 @@ class MESolveAdaptiveRouchonIntegrator(
                 propagator_high, self.H, self.L, t0, dt
             )
             rho_high = (
-                cholesky_normalize(kraus_high, rho) if self.method.normalize else rho
+                cholesky_normalize(kraus_high.S(), rho) if self.method.normalize else rho
             )
             rho_high = kraus_high(rho_high)
 
