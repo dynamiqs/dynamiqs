@@ -471,7 +471,6 @@ def cholesky_normalize_ket(S: QArray, psi: QArray) -> jax.Array:
     # For a ket we compute ~M @ psi = M @ T^{†(-1)} @ psi, so we directly replace psi by
     # T^{†(-1)} @ psi.
 
-    S = kraus_map.S()
     T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
 
     psi = psi.to_jax()[:, 0]  # (n, 1) -> (n,)
