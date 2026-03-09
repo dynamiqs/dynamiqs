@@ -113,8 +113,7 @@ class KrausMapRK(eqx.Module):
     where $Q_i = U(1.0) \, U(c_i)^{-1}$.
 
     Subclasses define the Butcher tableau via class attributes ``_c``, ``_A``,
-    ``_b``, and ``_neumann_order`` (order of Neumann series for propagator
-    inverses).
+    ``_b``.
 
     Attributes:
         nojump_propagator: Interpolant mapping an absolute time to the no-jump
@@ -135,7 +134,6 @@ class KrausMapRK(eqx.Module):
     _c = ()
     _A = ()
     _b = ()
-    _neumann_order = 0
 
     # -- propagator helpers --------------------------------------------------
 
@@ -255,7 +253,6 @@ class KrausEuler(KrausMapRK):
     _c = (0.5,)
     _A = ((0.0,),)
     _b = (1.0,)
-    _neumann_order = 0
 
     @property
     def _t_mid(self) -> RealScalarLike:
@@ -297,7 +294,6 @@ class KrausHeun2(KrausMapRK):
     _c = (0.0, 1.0)
     _A = ((0.0, 0.0), (1.0, 0.0))
     _b = (0.5, 0.5)
-    _neumann_order = 0
 
 
 class KrausHeun3(KrausMapRK):
@@ -315,7 +311,6 @@ class KrausHeun3(KrausMapRK):
     _c = (0.0, 1 / 3, 2 / 3)
     _A = ((0.0, 0.0, 0.0), (1 / 3, 0.0, 0.0), (0.0, 2 / 3, 0.0))
     _b = (0.25, 0.0, 0.75)
-    _neumann_order = 2
 
 
 def cholesky_normalize(kraus_map: KrausMapRK, rho: QArray) -> jax.Array:
