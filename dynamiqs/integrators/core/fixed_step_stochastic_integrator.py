@@ -466,7 +466,7 @@ class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
         return DiffusiveState(psi + dpsi, y.Y + dY)
 
 
-def cholesky_normalize_ket(kraus_map: KrausMapRK, psi: QArray) -> jax.Array:
+def cholesky_normalize_ket(S: QArray, psi: QArray) -> jax.Array:
     # See comment of `cholesky_normalize()`.
     # For a ket we compute ~M @ psi = M @ T^{†(-1)} @ psi, so we directly replace psi by
     # T^{†(-1)} @ psi.
@@ -491,7 +491,7 @@ class DSSESolveRouchon1Integrator(RouchonPropertiesMixin, DSSEFixedStepIntegrato
     def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
         psi = y.state
         dW = dX
-        L = self.L(t)
+        L, H = self.L(t + self.dt / 2), self.H(t + self.dt / 2)
 
         # === measurement Y
         # dY = <L+Ld> dt + dW
@@ -503,17 +503,18 @@ class DSSESolveRouchon1Integrator(RouchonPropertiesMixin, DSSEFixedStepIntegrato
         exp = 2 * expect(L, psi).real  # (nL)
         dY = exp * self.dt + dW
 
-        # === state psi
-        kraus_map = MESolveFixedRouchon1Integrator.build_kraus_map(
-            self.nojump_propagator(t, self.dt), self.L, t, self.dt, self.identity
-        )
-        Ms_average = kraus_map.get_kraus_operators()
         if self.method.normalize:
-            psi = cholesky_normalize_ket(kraus_map, psi)
+            M0 = self.identity - (1j * H + 0.5 * sum(_L.dag() @ _L for _L in L)) * self.dt
+            M_dY = M0 + sum([_dY * _L for _dY, _L in zip(dY, L, strict=True)])
+            S = M0.dag() @ M0 + sum([_L.dag() @ _L for _L in L]) * self.dt
+            psi = cholesky_normalize_ket(S, psi)
+            psi = (M_dY @ psi).unit()
 
-        M_dY = Ms_average[0] + sum([_dY * _L for _dY, _L in zip(dY, L, strict=True)])
-
-        psi = (M_dY @ psi).unit()  # normalise by signal probability
+        else: # avoid computing the operators Ms_average and S, which can be costly for large systems
+            M0psi = psi + (-1j*H@psi - 0.5*sum([_L.dag()@(_L@psi) for _L in L]))*self.dt
+            Lpsi = [(_L @ psi) for _L in L]
+            psi = M0psi + sum([_Lpsi * _dY for _Lpsi, _dY in zip(Lpsi, dY, strict=True)])
+            psi = psi.unit()  # normalise by norm
 
         return DiffusiveState(psi, y.Y + dY)
 
