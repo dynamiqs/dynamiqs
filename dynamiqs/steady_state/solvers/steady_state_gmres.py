@@ -126,8 +126,8 @@ class SteadyStateGMRES(SteadyStateSolver):
     """
 
     tol: float = 1e-4
-    max_iteration: int = 1000
-    krylov_size: int = 32
+    max_iteration: int = 100
+    krylov_size: int = 64
     exact_dm: bool = True
 
     @staticmethod
