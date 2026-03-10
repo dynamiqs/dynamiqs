@@ -59,7 +59,7 @@ class LyapunovSolverEig(eqx.Module):
             ``complex128`` or ``float64``.
         n_refinement: Number of iterative refinement steps to apply after the
             initial eigendecomposition-based solve. Defaults to 0 (no
-            refinement). A value of 1–2 is usually sufficient to recover
+            refinement). A value of 1 or 2 is usually sufficient to recover
             full machine precision.
 
     Attributes:
@@ -199,7 +199,8 @@ class LyapunovSolverEig(eqx.Module):
         Given $G = U \Lambda U^{-1}$, the direct solver uses the pair
         $(\tilde{U}, \tilde{V}) = (U,\; (U^{-1})^*)$ to change basis.
         For the transpose problem, note that
-        $G^T = (U^{-1})^T \Lambda\, U^T = ((U^{-1})^*)^{-\dagger}\, \Lambda\, (U^{-1})^{*\dagger}$,
+        $G^T = (U^{-1})^T \Lambda\, U^T = ((U^{-1})^*)^{-\dagger}\, \Lambda\,
+        ((U^{-1})^*)^{\dagger}$,
         so the same ``_core`` routine applies with the substitution
         $$
             \tilde{U} \leftarrow (U^{-1})^*,

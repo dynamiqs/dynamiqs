@@ -43,32 +43,33 @@ class SteadyStateJumpKernel(SteadyStateSolver):
     r"""Steady-state solver based on the common kernel of jump operators.
 
     This solver builds a candidate state from the dark subspace of the jump
-    operators. Let $\\rho$ satisfy a Lindblad equation with jump operators
-    $\\{L_k\\}$. Define the stacked linear map
+    operators. Let $\rho$ satisfy a Lindblad equation with jump operators
+    $\{L_k\}$. Define the stacked linear map
     $$
-        \\mathcal{A} =
-        \\begin{bmatrix}
+        \mathcal{A} =
+        \begin{bmatrix}
             L_1 \\
-            \\vdots \\
+            \vdots \\
             L_m
-        \\end{bmatrix},
+        \end{bmatrix},
     $$
     and compute its singular-value decomposition. The right-singular vectors
     corresponding to singular values below `tol` span an approximation of
-    $\\bigcap_k \\ker L_k$.
+    $\bigcap_k \ker L_k$.
 
     A projector $P$ onto this subspace is built and converted to a density
     matrix candidate
     $$
-        \\rho_0 = \\frac{P}{\\operatorname{tr}(P)}.
+        \rho_0 = \frac{P}{\operatorname{tr}(P)}.
     $$
-    If no dark component is detected (`tr(P)=0`), the maximally mixed state is
-    used as a fallback. In both cases the result is Hermitized and normalized
-    (and optionally projected onto valid density matrices with `exact_dm=True`).
+    If no dark component is detected ($\operatorname{tr}(P)=0$), the maximally
+    mixed state is used as a fallback. In both cases the result is Hermitized
+    and normalized (and optionally projected onto valid density matrices with
+    `exact_dm=True`).
 
     The solver then checks the Lindbladian residual and reports success when
     $$
-        \\|\\mathcal{L}(\\rho_0)\\| < \\texttt{steady_tol},
+        \|\mathcal{L}(\rho_0)\| < \texttt{steady\_tol},
     $$
     with norm selected by `norm_type`.
 

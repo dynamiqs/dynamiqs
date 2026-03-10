@@ -96,8 +96,10 @@ class SteadyStateGMRES(SteadyStateSolver):
             $\|\mathcal{L}(\rho)\| < \mathrm{tol}$. Defaults to `1e-4`.
         max_iteration: Maximum number of outer GMRES iterations. Defaults to `100`.
         krylov_size: Size of the Krylov subspace used in each GMRES restart cycle.
-            Defaults to `32`. Increase to `64` or `128` if convergence is slow
-            in terms of iterations.
+            Defaults to `96`. Increase to `128` if convergence is slow, decrease to `64`
+              or `32` to accelerate convergence if you observe that
+              $\|\mathcal{L}(\rho)\| << \mathrm{tol}$ meaning that GMRES is doing more
+              work than necessary to reach the desired tolerance.
             Note that increasing `krylov_size` also increases memory usage and
             runtime per iteration.
         exact_dm: If `True`, project the final matrix onto the set of valid density
@@ -118,7 +120,7 @@ class SteadyStateGMRES(SteadyStateSolver):
         result = dq.steadystate(H, jump_ops, solver=solver)
 
         # Custom parameters for tighter convergence
-        solver = dq.SteadyStateGMRES(tol=1e-6, krylov_size=32, exact_dm=True)
+        solver = dq.SteadyStateGMRES(tol=1e-6, krylov_size=256)
         result = dq.steadystate(H, jump_ops, solver=solver)
 
         print(result.rho)
