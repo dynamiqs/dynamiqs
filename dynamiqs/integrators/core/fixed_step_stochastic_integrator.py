@@ -513,9 +513,13 @@ class DSSESolveRouchon1Integrator(RouchonPropertiesMixin, DSSEFixedStepIntegrato
             Lpsi = [(_L @ psi) for _L in L]
             M0psi = (
                 psi
-                + (-1j * H @ psi 
-                   - 0.5 * sum([_L.dag() @ (_Lpsi) 
-                                for _L, _Lpsi in zip(L, Lpsi, strict=True)]))
+                + (
+                    -1j * H @ psi
+                    - 0.5
+                    * sum(
+                        [_L.dag() @ (_Lpsi) for _L, _Lpsi in zip(L, Lpsi, strict=True)]
+                    )
+                )
                 * self.dt
             )
             psi = M0psi + sum(
