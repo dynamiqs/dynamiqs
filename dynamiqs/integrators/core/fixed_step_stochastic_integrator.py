@@ -510,12 +510,14 @@ class DSSESolveRouchon1Integrator(RouchonPropertiesMixin, DSSEFixedStepIntegrato
         else:
             # avoid computing the operators Ms_average and S,
             # which can be costly for large systems
+            Lpsi = [(_L @ psi) for _L in L]
             M0psi = (
                 psi
-                + (-1j * H @ psi - 0.5 * sum([_L.dag() @ (_L @ psi) for _L in L]))
+                + (-1j * H @ psi 
+                   - 0.5 * sum([_L.dag() @ (_Lpsi) 
+                                for _L, _Lpsi in zip(L, Lpsi, strict=True)]))
                 * self.dt
             )
-            Lpsi = [(_L @ psi) for _L in L]
             psi = M0psi + sum(
                 [_Lpsi * _dY for _Lpsi, _dY in zip(Lpsi, dY, strict=True)]
             )
