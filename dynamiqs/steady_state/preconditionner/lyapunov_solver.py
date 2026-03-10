@@ -4,12 +4,25 @@ import jax.numpy as jnp
 from jax import Array
 
 
+def _ensure_complex128(x: Array) -> Array:
+    """Promote an array to complex128 (double precision).
+
+    If the input is already ``complex128``, this is a no-op (JAX returns the
+    same array without a copy).  Real ``float64`` inputs are promoted to
+    ``complex128``; lower-precision dtypes (``float32``, ``complex64``, …)
+    are up-cast accordingly.
+    """
+    return jnp.asarray(x, dtype=jnp.complex128)
+
+
 class LyapunovSolverEig(eqx.Module):
     r"""Closed-form solver for continuous Lyapunov equations using eigendecomposition.
 
     This class provides an efficient solver for matrix equations of the form
     $$
-        G X + X G^\dagger + \mu X = Y,
+        \mathcal{S}(X) + \mu X = Y,
+        \qquad
+        \mathcal{S}(X) \coloneqq G X + X G^\dagger,
     $$
     where $G \in \mathbb{C}^{n\times n}$ is a fixed matrix and $\mu \in \mathbb{R}$
     is an optional shift parameter.
@@ -31,8 +44,23 @@ class LyapunovSolverEig(eqx.Module):
     eigendecomposition, but allows repeated solves with different right-hand
     sides $Y$ at low additional cost.
 
+    Optionally, iterative refinement can be applied to improve the numerical
+    accuracy of the solution. At each refinement step, the residual
+    $R = Y - \mathcal{S}(X)$ is computed and a correction
+    $\delta X = \mathcal{S}^{-1}(R)$ is added to $X$. This is particularly
+    useful when $G$ is ill-conditioned or nearly defective, as the
+    eigendecomposition-based solve may lose precision. Each refinement step
+    costs $\mathcal{O}(n^3)$ (dominated by matrix multiplications).
+
     Args:
         G: Square matrix of shape `(n, n)` defining the Lyapunov operator.
+            Automatically promoted to ``complex128`` (double precision) if
+            not already; this is a no-op when the input is already
+            ``complex128`` or ``float64``.
+        n_refinement: Number of iterative refinement steps to apply after the
+            initial eigendecomposition-based solve. Defaults to 0 (no
+            refinement). A value of 1–2 is usually sufficient to recover
+            full machine precision.
 
     Attributes:
         G: The matrix defining the Lyapunov operator.
@@ -40,6 +68,7 @@ class LyapunovSolverEig(eqx.Module):
         G_eigvecs: Right eigenvectors of `G`.
         G_eigvecs_inv: Inverse (Hermitian-transposed) eigenvector matrix
             used for basis transformations.
+        n_refinement: Number of iterative refinement steps.
     """
 
     G: Array
@@ -49,6 +78,7 @@ class LyapunovSolverEig(eqx.Module):
     n_refinement: int = 0
 
     def __init__(self, G: Array, n_refinement: int = 0):
+        G = _ensure_complex128(G)
         self.G = G
         self.n_refinement = n_refinement
 
@@ -112,7 +142,22 @@ class LyapunovSolverEig(eqx.Module):
         return G.T @ X + X @ G.conj() + mu * X
 
     def _solve(self, Y: Array, mu: float) -> Array:
-        """Solve the Lyapunov equation G X + X G.H + mu X = Y."""
+        r"""Solve the Lyapunov equation G X + X G.H + mu X = Y.
+
+        Computes the solution via eigendecomposition, then optionally applies
+        ``n_refinement`` iterative refinement steps. Each refinement step
+        computes the residual $R = Y - \mathcal{S}(X)$ and corrects
+        $X \leftarrow X + \mathcal{S}^{-1}(R)$ using the same
+        eigendecomposition-based core solver.
+
+        Args:
+            Y: Right-hand side matrix of shape `(n, n)`.
+            mu: Shift parameter.
+
+        Returns:
+            Solution matrix `X` of shape `(n, n)`.
+        """
+        Y = _ensure_complex128(Y)
         u_, v_, w_ = (self.G_eigvecs, self.G_eigvecs_inv, self.G_eigvals)
 
         def _core(Y: Array) -> Array:
@@ -149,14 +194,29 @@ class LyapunovSolverEig(eqx.Module):
         )
 
     def _solve_transpose(self, Y: Array, mu: float) -> Array:
-        """Solves the _transpose_ equation G.T X + X G* + mu X = Y.
+        r"""Solve the _transpose_ equation $G^T X + X G^* + \mu X = Y$.
 
-        Notes:
-            Uses the flip trick to transform the transpose problem.
-            The transformation uses:
-                Z_t = Z.conj()[:, ::-1]
-                T_t = T.T[::-1, ::-1]
+        Given $G = U \Lambda U^{-1}$, the direct solver uses the pair
+        $(\tilde{U}, \tilde{V}) = (U,\; (U^{-1})^*)$ to change basis.
+        For the transpose problem, note that
+        $G^T = (U^{-1})^T \Lambda\, U^T = ((U^{-1})^*)^{-\dagger}\, \Lambda\, (U^{-1})^{*\dagger}$,
+        so the same ``_core`` routine applies with the substitution
+        $$
+            \tilde{U} \leftarrow (U^{-1})^*,
+            \qquad
+            \tilde{V} \leftarrow U^*.
+        $$
+        The eigenvalues $\Lambda$ are unchanged. Iterative refinement
+        (``n_refinement`` steps) is applied identically to :meth:`_solve`.
+
+        Args:
+            Y: Right-hand side matrix of shape `(n, n)`.
+            mu: Shift parameter.
+
+        Returns:
+            Solution matrix `X` of shape `(n, n)`.
         """
+        Y = _ensure_complex128(Y)
         u_, v_, w_ = (self.G_eigvecs_inv.conj(), self.G_eigvecs.conj(), self.G_eigvals)
 
         def _core(Y: Array) -> Array:

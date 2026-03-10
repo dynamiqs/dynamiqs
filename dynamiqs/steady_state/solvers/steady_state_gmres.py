@@ -129,7 +129,7 @@ class SteadyStateGMRES(SteadyStateSolver):
     max_iteration: int = 100
     krylov_size: int = 64
     exact_dm: bool = True
-    n_refinement: int = 0
+    n_refinement: int = 2
 
     @staticmethod
     def result_type() -> type[SteadyStateGMRESResult]:
@@ -144,7 +144,7 @@ class SteadyStateGMRES(SteadyStateSolver):
         dims = H.dims
         tol = self.tol
         max_iter = self.max_iteration
-        n_refinement = self.n_refinement
+        n_refinement = max(self.n_refinement, 2)
         krylov_size = min(self.krylov_size, n * n - 1)
 
         H_jax = H.to_jax()
