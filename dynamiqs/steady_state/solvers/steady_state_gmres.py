@@ -129,6 +129,7 @@ class SteadyStateGMRES(SteadyStateSolver):
     max_iteration: int = 100
     krylov_size: int = 64
     exact_dm: bool = True
+    n_refinement: int = 0
 
     @staticmethod
     def result_type() -> type[SteadyStateGMRESResult]:
@@ -143,6 +144,7 @@ class SteadyStateGMRES(SteadyStateSolver):
         dims = H.dims
         tol = self.tol
         max_iter = self.max_iteration
+        n_refinement = self.n_refinement
         krylov_size = min(self.krylov_size, n * n - 1)
 
         H_jax = H.to_jax()
@@ -171,7 +173,7 @@ class SteadyStateGMRES(SteadyStateSolver):
         G = jax.lax.stop_gradient(1j * H_jax + 0.5 * LdagL)
 
         def make_preconditioner(G_mat: jax.Array) -> Callable[[jax.Array], jax.Array]:
-            solver = LyapunovSolverEig(G_mat)
+            solver = LyapunovSolverEig(G_mat, n_refinement=n_refinement)
 
             def precond(x: jax.Array) -> jax.Array:
                 return -from_matrix(solver.solve(to_matrix(x, n=n), mu=0.0))
@@ -183,21 +185,13 @@ class SteadyStateGMRES(SteadyStateSolver):
 
         # ── custom_linear_solve ─────────────────────────────────────────────
 
-      
         # Right preconditioning: solve (A @ M^{-1}) y = b, then x = M^{-1} y
         def right_matvec(y: jax.Array) -> jax.Array:
             return deflated_matvec(precond_fn(y))
 
-        def solve(
-            matvec: Callable[[jax.Array], jax.Array], b: jax.Array
-        ) -> jax.Array:
+        def solve(matvec: Callable[[jax.Array], jax.Array], b: jax.Array) -> jax.Array:
             y, _info = jax.scipy.sparse.linalg.gmres(
-                right_matvec,
-                b,
-                x0=x_0,
-                tol=tol,
-                restart=krylov_size,
-                maxiter=max_iter,
+                right_matvec, b, x0=x_0, tol=tol, restart=krylov_size, maxiter=max_iter
             )
             return precond_fn(y)
 

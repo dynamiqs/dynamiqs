@@ -46,9 +46,11 @@ class LyapunovSolverEig(eqx.Module):
     G_eigvals: Array
     G_eigvecs: Array
     G_eigvecs_inv: Array
+    n_refinement: int = 0
 
-    def __init__(self, G: Array):
+    def __init__(self, G: Array, n_refinement: int = 0):
         self.G = G
+        self.n_refinement = n_refinement
 
         self.G_eigvals, self.G_eigvecs = jnp.linalg.eig(self.G)
         self.G_eigvecs_inv = jnp.linalg.inv(self.G_eigvecs).mT.conj()
@@ -113,9 +115,16 @@ class LyapunovSolverEig(eqx.Module):
         """Solve the Lyapunov equation G X + X G.H + mu X = Y."""
         u_, v_, w_ = (self.G_eigvecs, self.G_eigvecs_inv, self.G_eigvals)
 
-        Y_tilde = v_.mT.conj() @ Y @ v_
-        X_tilde = Y_tilde / (w_[:, None] + w_[None, :].conj() + mu)
-        return u_ @ X_tilde @ u_.mT.conj()
+        def _core(Y: Array) -> Array:
+            Y_tilde = v_.mT.conj() @ Y @ v_
+            X_tilde = Y_tilde / (w_[:, None] + w_[None, :].conj() + mu)
+            return u_ @ X_tilde @ u_.mT.conj()
+
+        X = _core(Y)
+        for _ in range(self.n_refinement):
+            R = Y - self.lyapunov(X, mu)
+            X = X + _core(R)
+        return X
 
     def solve(self, Y: Array, mu: float) -> Array:
         return jax.lax.custom_linear_solve(
@@ -132,7 +141,6 @@ class LyapunovSolverEig(eqx.Module):
         )
 
     def solve_transpose(self, Y: Array, mu: float) -> Array:
-
         return jax.lax.custom_linear_solve(
             lambda X: self.lyapunov_transpose(X, mu),
             Y,
@@ -151,6 +159,13 @@ class LyapunovSolverEig(eqx.Module):
         """
         u_, v_, w_ = (self.G_eigvecs_inv.conj(), self.G_eigvecs.conj(), self.G_eigvals)
 
-        Y_tilde = v_.mT.conj() @ Y @ v_
-        X_tilde = Y_tilde / (w_[:, None] + w_[None, :].conj() + mu)
-        return u_ @ X_tilde @ u_.mT.conj()
+        def _core(Y: Array) -> Array:
+            Y_tilde = v_.mT.conj() @ Y @ v_
+            X_tilde = Y_tilde / (w_[:, None] + w_[None, :].conj() + mu)
+            return u_ @ X_tilde @ u_.mT.conj()
+
+        X = _core(Y)
+        for _ in range(self.n_refinement):
+            R = Y - self.lyapunov_transpose(X, mu)
+            X = X + _core(R)
+        return X
