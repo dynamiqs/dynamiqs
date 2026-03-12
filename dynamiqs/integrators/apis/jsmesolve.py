@@ -17,7 +17,6 @@ from ...qarrays.utils import asqarray
 from ...result import DSMESolveResult, JSMESolveResult
 from ...time_qarray import TimeQArray
 from .._utils import (
-    ALWAYS_MAPPED,
     assert_method_supported,
     astimeqarray,
     cartesian_vmap,
@@ -336,18 +335,34 @@ def _vectorized_jsmesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSMESolveResult:
-    # vectorize input over H, rho0 and keys
-    in_axes = (H.in_axes, None, None, None, None, 0, None, 0, *(None,) * 4)
+    H_and_index_in_axes = (H.in_axes, 0)
+    rho0_and_index_in_axes = (0, 0)
+
+    # vectorize input over H and rho0
+    in_axes = (
+        H_and_index_in_axes,
+        None,
+        None,
+        None,
+        None,
+        rho0_and_index_in_axes,
+        *(None,) * 7,
+    )
     out_axes = JSMESolveResult.out_axes()
 
     if options.cartesian_batching:
-        nvmap = (H.ndim - 2, 0, 0, 0, 0, rho0.ndim - 2, 0, ALWAYS_MAPPED, 0, 0, 0, 0)
-        # pre-split keys over the cartesian product of H, rho0
-        bshape = (*H.shape[:-2], *rho0.shape[:-2])
-        nbatch = math.prod(bshape)
-        _split = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)
-        old_keys_shape = keys.shape
-        keys = _split(keys, nbatch).reshape(*bshape, *old_keys_shape)
+        nvmap = (H.ndim - 2, 0, 0, 0, 0, rho0.ndim - 2, *(0,) * 7)
+        # creating indices and attaching them to inputs for the cartesian vmap
+        H_batch_shape = math.prod(H.shape[:-2])
+        H_index = jnp.arange(H_batch_shape, dtype=jnp.uint32).reshape(H.shape[:-2])
+        H_with_index = (H, H_index)
+        rho0_batch_shape = math.prod(rho0.shape[:-2])
+        rho0_index = jnp.arange(rho0_batch_shape, dtype=jnp.uint32).reshape(
+            rho0.shape[:-2]
+        )
+        rho0_with_index = (rho0, rho0_index)
+        # sizes needed to reconstruct unique index for key folding
+        sizes = (H_batch_shape, rho0_batch_shape)
         f = cartesian_vmap(_jsmesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
@@ -356,33 +371,59 @@ def _vectorized_jsmesolve(
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         rho0 = rho0.broadcast_to(*bshape, n, n)
-        # broadcast keys to have same leading batch shape
-        nbatch = math.prod(bshape)
-        _split = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)
-        old_keys_shape = keys.shape
-        keys = _split(keys, nbatch).reshape(*bshape, *old_keys_shape)
+        # single batch index on first input
+        idx_array = jnp.arange(math.prod(bshape), dtype=jnp.uint32).reshape(bshape)
+        H_with_index = (H, idx_array)
+        rho0_with_index = (rho0, jnp.zeros_like(idx_array))
+        sizes = (1, 1)
         # vectorize the function
         f = multi_vmap(_jsmesolve_many_trajectories, in_axes, out_axes, nvmap)
 
     return f(
-        H, Lcs, Lms, thetas, etas, rho0, tsave, keys, exp_ops, method, gradient, options
+        H_with_index,
+        Lcs,
+        Lms,
+        thetas,
+        etas,
+        rho0_with_index,
+        tsave,
+        keys,
+        exp_ops,
+        method,
+        gradient,
+        options,
+        sizes,
     )
 
 
 def _jsmesolve_many_trajectories(
-    H: TimeQArray,
+    H_with_index: tuple[TimeQArray, Array],
     Lcs: list[TimeQArray],
     Lms: list[TimeQArray],
     thetas: Array,
     etas: Array,
-    rho0: QArray,
+    rho0_with_index: tuple[QArray, Array],
     tsave: Array,
     keys: PRNGKeyArray,
     exp_ops: list[QArray] | None,
     method: Method,
     gradient: Gradient | None,
     options: Options,
+    sizes: tuple[int, ...],
 ) -> JSMESolveResult:
+    H, H_index = H_with_index
+    rho0, rho0_index = rho0_with_index
+
+    # reconstruct unique index for key folding from input indices and sizes
+    indices = (H_index, rho0_index)
+    full_index = jnp.array(0, dtype=jnp.uint32)
+    multiplier = jnp.array(1, dtype=jnp.uint32)
+    for idx, size in zip(indices, sizes, strict=True):
+        full_index = full_index + multiplier * idx
+        multiplier = multiplier * jnp.array(size, dtype=jnp.uint32)
+
+    keys = jax.vmap(jax.random.fold_in, in_axes=(0, None), out_axes=0)(keys, full_index)
+
     # vectorize input over keys
     in_axes = (None, None, None, None, None, None, None, 0, None, None, None, None)
     out_axes = JSMESolveResult(None, None, None, None, 0, 0, 0)

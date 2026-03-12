@@ -17,7 +17,6 @@ from ...qarrays.utils import asqarray
 from ...result import DSSESolveResult
 from ...time_qarray import TimeQArray
 from .._utils import (
-    ALWAYS_MAPPED,
     assert_method_supported,
     astimeqarray,
     cartesian_vmap,
@@ -301,32 +300,41 @@ def _vectorized_dssesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSSESolveResult:
+
+    H_and_index_in_axes = (H.in_axes, 0)
+    Ls_and_index_in_axes = [(L.in_axes, 0) for L in Ls]
+    psi0_and_index_in_axes = (0, 0)
+
     # vectorize input over H, Ls, psi0 and keys
-    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, None, 0, *(None,) * 4)
+    in_axes = (
+        H_and_index_in_axes,
+        Ls_and_index_in_axes,
+        psi0_and_index_in_axes,
+        *(None,) * 7,
+    )
     out_axes = DSSESolveResult.out_axes()
 
     if options.cartesian_batching:
-        nvmap = (
-            H.ndim - 2,
-            [L.ndim - 2 for L in Ls],
-            psi0.ndim - 2,
-            0,
-            ALWAYS_MAPPED,
-            0,
-            0,
-            0,
-            0,
+        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, *(0,) * 7)
+        # creating indices and attaching them to the inputs for the cartesian vmap
+        H_batch_shape = math.prod(H.shape[:-2])
+        H_index = jnp.arange(H_batch_shape, dtype=jnp.uint32).reshape(H.shape[:-2])
+        H_with_index = (H, H_index)
+        Ls_with_index = []
+        L_sizes = []
+        for L in Ls:
+            L_batch_shape = math.prod(L.shape[:-2])
+            L_sizes.append(L_batch_shape)
+            L_index = jnp.arange(L_batch_shape, dtype=jnp.uint32).reshape(L.shape[:-2])
+            Ls_with_index.append((L, L_index))
+        psi0_batch_shape = math.prod(psi0.shape[:-2])
+        psi0_index = jnp.arange(psi0_batch_shape, dtype=jnp.uint32).reshape(
+            psi0.shape[:-2]
         )
-        # pre-split keys over the cartesian product of H, Ls, psi0
-        bshape = (
-            *H.shape[:-2],
-            *(d for L in Ls for d in L.shape[:-2]),
-            *psi0.shape[:-2],
-        )
-        nbatch = math.prod(bshape)
-        _split = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)
-        old_keys_shape = keys.shape
-        keys = _split(keys, nbatch).reshape(*bshape, *old_keys_shape)
+        psi0_with_index = (psi0, psi0_index)
+        # sizes needed to reconstruct unique index for key folding
+        sizes = (H_batch_shape, *L_sizes, psi0_batch_shape)
+        # vectorize the function
         f = cartesian_vmap(_dssesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
@@ -336,28 +344,64 @@ def _vectorized_dssesolve(
         H = H.broadcast_to(*bshape, n, n)
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
         psi0 = psi0.broadcast_to(*bshape, n, 1)
-        # broadcast keys to have same leading batch shape
-        nbatch = math.prod(bshape)
-        _split = jax.vmap(jax.random.split, in_axes=(0, None), out_axes=1)
-        old_keys_shape = keys.shape
-        keys = _split(keys, nbatch).reshape(*bshape, *old_keys_shape)
+        # single batch index on first input; others use zero
+        idx_array = jnp.arange(math.prod(bshape), dtype=jnp.uint32).reshape(bshape)
+        H_with_index = (H, idx_array)
+        Ls_with_index = []
+        for L in Ls:
+            L_with_index = (L, jnp.zeros_like(idx_array))
+            Ls_with_index.append(L_with_index)
+        psi0_with_index = (psi0, jnp.zeros_like(idx_array))
+        # sizes unused for non-cartesian batching
+        sizes = (1,) * (len(Ls) + 2)
         # vectorize the function
         f = multi_vmap(_dssesolve_many_trajectories, in_axes, out_axes, nvmap)
 
-    return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
+    return f(
+        H_with_index,
+        Ls_with_index,
+        psi0_with_index,
+        tsave,
+        keys,
+        exp_ops,
+        method,
+        gradient,
+        options,
+        sizes,
+    )
 
 
 def _dssesolve_many_trajectories(
-    H: TimeQArray,
-    Ls: list[TimeQArray],
-    psi0: QArray,
+    H_with_index: tuple[TimeQArray, Array],
+    Ls_with_index: list[tuple[TimeQArray, Array]],
+    psi0_with_index: tuple[QArray, Array],
     tsave: Array,
     keys: PRNGKeyArray,
     exp_ops: list[QArray] | None,
     method: Method,
     gradient: Gradient | None,
     options: Options,
+    sizes: tuple[int, ...],
 ) -> DSSESolveResult:
+    # reconstruct unique index for key folding from input indices and sizes
+    H, H_index = H_with_index
+    if Ls_with_index:
+        Ls, L_indices = zip(*Ls_with_index, strict=True)
+        Ls = list(Ls)
+    else:
+        Ls, L_indices = (), ()
+    psi0, psi0_index = psi0_with_index
+
+    indices = (H_index, *L_indices, psi0_index)
+
+    full_index = jnp.array(0, dtype=jnp.uint32)
+    multiplier = jnp.array(1, dtype=jnp.uint32)
+
+    for idx, size in zip(indices, sizes, strict=True):
+        full_index = full_index + multiplier * idx
+        multiplier = multiplier * jnp.array(size, dtype=jnp.uint32)
+
+    keys = jax.vmap(jax.random.fold_in, in_axes=(0, None), out_axes=0)(keys, full_index)
     # vectorize input over keys
     in_axes = (None, None, None, None, 0, None, None, None, None)
     out_axes = DSSESolveResult(None, None, None, None, 0, 0, 0)
