@@ -209,7 +209,8 @@ class TestAutodiff:
         n_op = a.dag() @ a
 
         solver = SteadyStateGMRES(
-            tol=1e-8, max_iteration=100, krylov_size=32, exact_dm=False
+            tol=1e-8, max_iteration=100, krylov_size=32, exact_dm=False,
+            forward_mode=True  # Use JVP-compatible implementation
         )
 
         def loss(epsilon):
@@ -260,7 +261,8 @@ class TestAutodiff:
 
         na, nb = 12, 5
         solver = SteadyStateGMRES(
-            tol=1e-7, max_iteration=200, krylov_size=64, exact_dm=False
+            tol=1e-7, max_iteration=200, krylov_size=64, exact_dm=False,
+            forward_mode=True  # Use JVP-compatible implementation
         )
         _, b = dq.destroy(na, nb)
         n_b = b.dag() @ b
