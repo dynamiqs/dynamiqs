@@ -35,6 +35,14 @@ class SteadyStateGMRESResult(SteadyStateResult):
         return SteadyStateGMRESResult(rho=0)
 
 
+# TODO : since the GMRES from jax.scipy.sparse.linalg is not optimal and it's quality
+#       of convergence strongly depends on the krylov_size parameter, the best would be
+#       to use the gmres implemented by GASPARD BEUGNOT from Alice&Bob,
+#       which had an internal error when computing gradients (colinear basis in the
+#       Arnoldi process while convergence not reached). It needs to be fixed but at the
+#       end I'm sure it will result in better compilation and solve performances
+
+
 class SteadyStateGMRES(SteadyStateSolver):
     r"""GMRES steady-state solver.
 

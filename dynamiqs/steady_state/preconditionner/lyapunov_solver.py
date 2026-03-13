@@ -1,7 +1,20 @@
 import equinox as eqx
+
 import jax
 import jax.numpy as jnp
 from jax import Array
+
+
+# IMPORTANT Note : The eigen decomposition should be performed in double precision
+#                  (complex128) to ensure numerical stability.
+#                  The Eig method provides significalntly better performances over
+#                  the Bartel-Stewart method in order to solve the Lyapunov equation.
+#                  However, the eigendecomposition can be unstable so it needs to be in
+#                  double precision.
+#                  The rest of the algorithm can be performed in single precision
+#                  (complex64) without loss of accuracy, but the eigendecomposition step
+#                  is critical and must be in double precision to ensure the overall
+#                  stability and accuracy of the solver.
 
 
 def _ensure_complex128(x: Array) -> Array:
@@ -20,7 +33,7 @@ class LyapunovSolverEig(eqx.Module):
 
     This class provides an efficient solver for matrix equations of the form
     $$
-        \mathcal{S}(X) + \mu X = Y,
+        \mathcal{S}(X) = Y,
         \qquad
         \mathcal{S}(X) \coloneqq G X + X G^\dagger,
     $$
