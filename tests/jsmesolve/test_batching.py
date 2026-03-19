@@ -8,14 +8,18 @@ from ..order import TEST_SHORT
 
 # ── key batching test ────────────────────────────────────────────────────────
 
+
 @pytest.mark.run(order=TEST_SHORT)
 @pytest.mark.parametrize('cartesian_batching', [True, False])
-@pytest.mark.parametrize('H_batch, rho0_batch', [
-    ((), ()),       # no batch
-    ((2,), ()),     # H batched only
-    ((), (2,)),     # rho0 batched only
-    ((2,), (3,)),   # both batched (cartesian only, broadcast for flat)
-])
+@pytest.mark.parametrize(
+    ('H_batch', 'rho0_batch'),
+    [
+        ((), ()),  # no batch
+        ((2,), ()),  # H batched only
+        ((), (2,)),  # rho0 batched only
+        ((2,), (3,)),  # both batched (cartesian only, broadcast for flat)
+    ],
+)
 @pytest.mark.parametrize('ntrajs', [1, 3])
 def test_keys_batching(cartesian_batching, H_batch, rho0_batch, ntrajs):
     n = 2
@@ -42,8 +46,15 @@ def test_keys_batching(cartesian_batching, H_batch, rho0_batch, ntrajs):
     method = dq.method.EulerJump(dt=1e-1)
 
     result = dq.jsmesolve(
-        H, jump_ops, thetas, etas, rho0, tsave, keys=keys,
-        options=options, method=method,
+        H,
+        jump_ops,
+        thetas,
+        etas,
+        rho0,
+        tsave,
+        keys=keys,
+        options=options,
+        method=method,
     )
 
     # expected batch shape
@@ -74,6 +85,7 @@ def test_keys_batching(cartesian_batching, H_batch, rho0_batch, ntrajs):
 
 # ── trajectory independence test ─────────────────────────────────────────────
 
+
 @pytest.mark.run(order=TEST_SHORT)
 @pytest.mark.parametrize('cartesian_batching', [True, False])
 def test_keys_trajectory_independence(cartesian_batching):
@@ -94,8 +106,15 @@ def test_keys_trajectory_independence(cartesian_batching):
     method = dq.method.EulerJump(dt=1e-1)
 
     result = dq.jsmesolve(
-        H, jump_ops, thetas, etas, rho0, tsave, keys=keys,
-        options=options, method=method,
+        H,
+        jump_ops,
+        thetas,
+        etas,
+        rho0,
+        tsave,
+        keys=keys,
+        options=options,
+        method=method,
     )
 
     assert result.keys.shape == (2, ntrajs)
@@ -104,8 +123,7 @@ def test_keys_trajectory_independence(cartesian_batching):
     batch0 = final[0].reshape(ntrajs, -1)
     batch1 = final[1].reshape(ntrajs, -1)
     n_different = sum(
-        1 for t in range(ntrajs)
-        if not jnp.allclose(batch0[t], batch1[t], atol=1e-6)
+        1 for t in range(ntrajs) if not jnp.allclose(batch0[t], batch1[t], atol=1e-6)
     )
     assert n_different > 0, (
         'All trajectory pairs across batch elements have identical final states — '

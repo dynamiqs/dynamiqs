@@ -307,12 +307,7 @@ def _vectorized_jssesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> JSSESolveResult:
-    in_axes = (
-        (H.in_axes, 0),
-        [(L.in_axes, 0) for L in Ls],
-        (0, 0),
-        *(None,) * 6,
-    )
+    in_axes = ((H.in_axes, 0), [(L.in_axes, 0) for L in Ls], (0, 0), *(None,) * 6)
     out_axes = JSSESolveResult.out_axes()
 
     if options.cartesian_batching:
@@ -333,8 +328,15 @@ def _vectorized_jssesolve(
         f = multi_vmap(_jssesolve_many_trajectories, in_axes, out_axes, nvmap)
 
     return f(
-        H_with_index, Ls_with_index, psi0_with_index,
-        tsave, keys, exp_ops, method, gradient, options,
+        H_with_index,
+        Ls_with_index,
+        psi0_with_index,
+        tsave,
+        keys,
+        exp_ops,
+        method,
+        gradient,
+        options,
     )
 
 

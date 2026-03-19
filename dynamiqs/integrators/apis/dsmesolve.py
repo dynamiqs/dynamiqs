@@ -335,14 +335,7 @@ def _vectorized_dsmesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSMESolveResult:
-    in_axes = (
-        (H.in_axes, 0),
-        None,
-        None,
-        None,
-        (0, 0),
-        *(None,) * 6,
-    )
+    in_axes = ((H.in_axes, 0), None, None, None, (0, 0), *(None,) * 6)
     out_axes = DSMESolveResult.out_axes()
 
     if options.cartesian_batching:
@@ -359,8 +352,17 @@ def _vectorized_dsmesolve(
         f = multi_vmap(_dsmesolve_many_trajectories, in_axes, out_axes, nvmap)
 
     return f(
-        H_with_index, Lcs, Lms, etas, rho0_with_index,
-        tsave, keys, exp_ops, method, gradient, options,
+        H_with_index,
+        Lcs,
+        Lms,
+        etas,
+        rho0_with_index,
+        tsave,
+        keys,
+        exp_ops,
+        method,
+        gradient,
+        options,
     )
 
 

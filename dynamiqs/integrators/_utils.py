@@ -190,9 +190,7 @@ def cartesian_vmap(
     return f
 
 
-def attach_batch_indices(
-    x: Array, ndim_suffix: int = 2
-) -> tuple[Array, Array]:
+def attach_batch_indices(x: Array, ndim_suffix: int = 2) -> tuple[Array, Array]:
     """Bundle an array with an array of batch indices for key-folding through vmap.
 
     Returns ``(x, indices)`` where *indices* is an arange over the batch
