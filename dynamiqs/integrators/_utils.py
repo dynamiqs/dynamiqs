@@ -192,28 +192,26 @@ def cartesian_vmap(
 
 def attach_batch_indices(
     x: Array, ndim_suffix: int = 2
-) -> tuple[tuple[Array, Array], int]:
+) -> tuple[Array, Array]:
     """Bundle an array with an array of batch indices for key-folding through vmap.
 
-    Returns ``((x, indices), batch_size)`` where *indices* is an arange over the batch
+    Returns ``(x, indices)`` where *indices* is an arange over the batch
     dimensions (everything except the last *ndim_suffix* axes).
     """
     batch_size = math.prod(x.shape[:-ndim_suffix])
     indices = jnp.arange(batch_size, dtype=jnp.uint32).reshape(x.shape[:-ndim_suffix])
-    return (x, indices), batch_size
+    return x, indices
 
 
 def fold_keys_with_batch_indices(
-    keys: PRNGKeyArray, indices: tuple[Array, ...], sizes: tuple[int, ...]
+    keys: PRNGKeyArray, indices: tuple[Array, ...]
 ) -> PRNGKeyArray:
-    """Fold a unique batch index into each PRNG key.
+    """Fold batch indices into PRNG keys to ensure uniqueness across batch elements.
 
-    *indices* and *sizes* are parallel tuples: each element corresponds to one
-    batched input.  The composite index is ``sum_i(index_i * prod_{j<i} size_j)``.
+    Each index in *indices* corresponds to one batched input.  Successive
+    ``fold_in`` calls are non-commutative, so distinct index tuples always
+    produce distinct keys.
     """
-    full_index = jnp.uint32(0)
-    multiplier = jnp.uint32(1)
-    for idx, size in zip(indices, sizes, strict=True):
-        full_index = full_index + multiplier * idx
-        multiplier = multiplier * jnp.uint32(size)
-    return jax.vmap(jax.random.fold_in, in_axes=(0, None))(keys, full_index)
+    for idx in indices:
+        keys = jax.vmap(jax.random.fold_in, in_axes=(0, None))(keys, idx)
+    return keys

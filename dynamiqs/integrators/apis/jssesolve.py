@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import math
-
 import jax
 import jax.numpy as jnp
 from jax import Array
@@ -312,35 +310,30 @@ def _vectorized_jssesolve(
         (H.in_axes, 0),
         [(L.in_axes, 0) for L in Ls],
         (0, 0),
-        *(None,) * 7,
+        *(None,) * 6,
     )
     out_axes = JSSESolveResult.out_axes()
 
     if options.cartesian_batching:
-        H_with_index, H_size = attach_batch_indices(H)
-        Ls_with_index, L_sizes = zip(
-            *[attach_batch_indices(L) for L in Ls], strict=True
-        ) if Ls else ([], [])
-        Ls_with_index = list(Ls_with_index)
-        psi0_with_index, psi0_size = attach_batch_indices(psi0)
-        sizes = (H_size, *L_sizes, psi0_size)
-        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, *(0,) * 7)
+        H_with_index = attach_batch_indices(H)
+        Ls_with_index = [attach_batch_indices(L) for L in Ls]
+        psi0_with_index = attach_batch_indices(psi0)
+        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, *(0,) * 6)
         f = cartesian_vmap(_jssesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
         nvmap = len(bshape)
         n = H.shape[-1]
-        idx = jnp.arange(math.prod(bshape), dtype=jnp.uint32).reshape(bshape)
-        zeros = jnp.zeros_like(idx)
-        H_with_index = (H.broadcast_to(*bshape, n, n), idx)
-        Ls_with_index = [(L.broadcast_to(*bshape, n, n), zeros) for L in Ls]
-        psi0_with_index = (psi0.broadcast_to(*bshape, n, 1), zeros)
-        sizes = (1,) * (len(Ls) + 2)
+        H_with_index = attach_batch_indices(H.broadcast_to(*bshape, n, n))
+        Ls_with_index = [
+            attach_batch_indices(L.broadcast_to(*bshape, n, n)) for L in Ls
+        ]
+        psi0_with_index = attach_batch_indices(psi0.broadcast_to(*bshape, n, 1))
         f = multi_vmap(_jssesolve_many_trajectories, in_axes, out_axes, nvmap)
 
     return f(
         H_with_index, Ls_with_index, psi0_with_index,
-        tsave, keys, exp_ops, method, gradient, options, sizes,
+        tsave, keys, exp_ops, method, gradient, options,
     )
 
 
@@ -354,21 +347,18 @@ def _jssesolve_many_trajectories(
     method: Method,
     gradient: Gradient | None,
     options: Options,
-    sizes: tuple[int, ...],
 ) -> JSSESolveResult:
-    f = _jssesolve_single_trajectory
-
+    # extract arrays and indices
     H, H_index = H_with_index
-    if Ls_with_index:
-        Ls, L_indices = zip(*Ls_with_index, strict=True)
-        Ls = list(Ls)
-    else:
-        Ls, L_indices = (), ()
+    Ls, L_indices = zip(*Ls_with_index, strict=True)
+    Ls = list(Ls)
     psi0, psi0_index = psi0_with_index
 
+    # fold indices into keys to ensure different trajectories between batch elements
     indices = (H_index, *L_indices, psi0_index)
-    keys = fold_keys_with_batch_indices(keys, indices, sizes)
+    keys = fold_keys_with_batch_indices(keys, indices)
 
+    f = _jssesolve_single_trajectory
     if isinstance(method, Event):
         # vectorization over keys is handled by the integrator
         pass

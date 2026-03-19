@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 from functools import partial
 
 import jax
@@ -344,29 +343,26 @@ def _vectorized_jsmesolve(
         None,
         None,
         (0, 0),
-        *(None,) * 7,
+        *(None,) * 6,
     )
     out_axes = JSMESolveResult.out_axes()
 
     if options.cartesian_batching:
-        H_with_index, H_size = attach_batch_indices(H)
-        rho0_with_index, rho0_size = attach_batch_indices(rho0)
-        sizes = (H_size, rho0_size)
-        nvmap = (H.ndim - 2, 0, 0, 0, 0, rho0.ndim - 2, *(0,) * 7)
+        H_with_index = attach_batch_indices(H)
+        rho0_with_index = attach_batch_indices(rho0)
+        nvmap = (H.ndim - 2, 0, 0, 0, 0, rho0.ndim - 2, *(0,) * 6)
         f = cartesian_vmap(_jsmesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
         nvmap = len(bshape)
         n = H.shape[-1]
-        idx = jnp.arange(math.prod(bshape), dtype=jnp.uint32).reshape(bshape)
-        H_with_index = (H.broadcast_to(*bshape, n, n), idx)
-        rho0_with_index = (rho0.broadcast_to(*bshape, n, n), jnp.zeros_like(idx))
-        sizes = (1, 1)
+        H_with_index = attach_batch_indices(H.broadcast_to(*bshape, n, n))
+        rho0_with_index = attach_batch_indices(rho0.broadcast_to(*bshape, n, n))
         f = multi_vmap(_jsmesolve_many_trajectories, in_axes, out_axes, nvmap)
 
     return f(
         H_with_index, Lcs, Lms, thetas, etas, rho0_with_index,
-        tsave, keys, exp_ops, method, gradient, options, sizes,
+        tsave, keys, exp_ops, method, gradient, options,
     )
 
 
@@ -383,13 +379,14 @@ def _jsmesolve_many_trajectories(
     method: Method,
     gradient: Gradient | None,
     options: Options,
-    sizes: tuple[int, ...],
 ) -> JSMESolveResult:
+    # extract arrays and indices
     H, H_index = H_with_index
     rho0, rho0_index = rho0_with_index
 
+    # fold indices into keys to ensure different trajectories between batch elements
     indices = (H_index, rho0_index)
-    keys = fold_keys_with_batch_indices(keys, indices, sizes)
+    keys = fold_keys_with_batch_indices(keys, indices)
 
     # vectorize input over keys
     in_axes = (None, None, None, None, None, None, None, 0, None, None, None, None)
