@@ -11,7 +11,6 @@ def rand_jssesolve_args(n, nH, nLs, npsi0, nEs):
     nkeys = len(nLs) + 4
     kH, *kLs, kpsi0, kEs, kmc = jax.random.split(jax.random.key(31), nkeys)
     H = dq.random.herm(kH, (*nH, n, n))
-    # H = dq.random.operator(kH, n, batch=nH)
     Ls = [dq.random.operator(kL, n, batch=nL) for kL, nL in zip(kLs, nLs, strict=False)]
     psi0 = dq.random.ket(kpsi0, n, batch=npsi0)
     Es = dq.random.operator(kEs, n, hermitian=False, batch=nEs)
