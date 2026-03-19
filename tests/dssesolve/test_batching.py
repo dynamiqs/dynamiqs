@@ -4,72 +4,7 @@ import pytest
 
 import dynamiqs as dq
 
-from ..order import TEST_LONG, TEST_SHORT
-
-
-def rand_jssesolve_args(n, nH, nLs, npsi0, nEs):
-    nkeys = len(nLs) + 4
-    kH, *kLs, kpsi0, kEs, kmc = jax.random.split(jax.random.key(31), nkeys)
-    H = dq.random.herm(kH, (*nH, n, n))
-    Ls = [dq.random.operator(kL, n, batch=nL) for kL, nL in zip(kLs, nLs, strict=False)]
-    psi0 = dq.random.ket(kpsi0, n, batch=npsi0)
-    Es = dq.random.operator(kEs, n, hermitian=False, batch=nEs)
-    return H, Ls, psi0, Es, kmc
-
-
-@pytest.mark.run(order=TEST_LONG)
-@pytest.mark.parametrize('nH', [(), (3,), (3, 4)])
-@pytest.mark.parametrize('npsi0', [(), (5,)])
-@pytest.mark.parametrize('nL', [(), (6,)])
-def test_cartesian_batching(nH, npsi0, nL):
-    n = 2
-    nLs = [nL]
-    ntrajs = 7
-    nEs = 8
-    ntsave = 9
-
-    # run jssesolve
-    H, Ls, psi0, Es, kmc = rand_jssesolve_args(n, nH, nLs, npsi0, nEs)
-    keys = jax.random.split(kmc, num=ntrajs)
-    tsave = jnp.linspace(0.0, 0.1, ntsave)
-    method = dq.method.Event(dtmax=1e-1)
-    result = dq.jssesolve(H, Ls, psi0, tsave, keys=keys, exp_ops=Es, method=method)
-
-    # check result shape
-    assert result.states.shape == (*nH, *nL, *npsi0, ntrajs, ntsave, n, 1)
-    assert result.expects.shape == (*nH, *nL, *npsi0, ntrajs, nEs, ntsave)
-    assert result.keys.shape == (*nH, *nL, *npsi0, ntrajs)
-
-
-# H has fixed shape (3, 4, n, n) for the next test case, we test a broad ensemble of
-# compatible broadcastable shape
-@pytest.mark.run(order=TEST_LONG)
-@pytest.mark.parametrize('nL1', [(), (4, 1, 3)])
-@pytest.mark.parametrize('npsi0', [(), (1,), (3,), (2, 1), (2, 3), (4, 1, 3)])
-@pytest.mark.parametrize('ntrajs', [1, 5])
-def test_flat_batching(nL1, npsi0, ntrajs):
-    n = 2
-    nH = (2, 3)
-    nLs = [nL1, ()]
-    nEs = 7
-    ntsave = 8
-
-    # run jssesolve
-    H, Ls, psi0, Es, kmc = rand_jssesolve_args(n, nH, nLs, npsi0, nEs)
-    keys = jax.random.split(kmc, num=ntrajs)
-    tsave = jnp.linspace(0.0, 0.1, ntsave)
-    options = dq.Options(cartesian_batching=False)
-    method = dq.method.Event(dtmax=1e-1)
-    result = dq.jssesolve(
-        H, Ls, psi0, tsave, keys=keys, exp_ops=Es, options=options, method=method
-    )
-
-    # check result shape
-    broadcast_shape = jnp.broadcast_shapes(nH, nL1, npsi0)
-    assert result.states.shape == (*broadcast_shape, ntrajs, ntsave, n, 1)
-    assert result.expects.shape == (*broadcast_shape, ntrajs, nEs, ntsave)
-    assert result.keys.shape == (*broadcast_shape, ntrajs)
-
+from ..order import TEST_SHORT
 
 # ── key batching test ────────────────────────────────────────────────────────
 
@@ -102,9 +37,9 @@ def test_keys_batching(cartesian_batching, H_batch, psi0_batch, ntrajs):
     keys = jax.random.split(jax.random.key(123), num=ntrajs)
     tsave = jnp.linspace(0.0, 0.1 * (ntsave - 1), ntsave)
     options = dq.Options(cartesian_batching=cartesian_batching)
-    method = dq.method.EulerJump(dt=1e-1)
+    method = dq.method.EulerMaruyama(dt=1e-1)
 
-    result = dq.jssesolve(
+    result = dq.dssesolve(
         H, jump_ops, psi0, tsave, keys=keys, options=options, method=method
     )
 
@@ -151,9 +86,9 @@ def test_keys_trajectory_independence(cartesian_batching):
     keys = jax.random.split(jax.random.key(42), ntrajs)
     tsave = jnp.linspace(0.0, 1.0, ntsave)
     options = dq.Options(cartesian_batching=cartesian_batching)
-    method = dq.method.EulerJump(dt=1e-1)
+    method = dq.method.EulerMaruyama(dt=1e-1)
 
-    result = dq.jssesolve(
+    result = dq.dssesolve(
         H, jump_ops, psi0, tsave, keys=keys, options=options, method=method
     )
 
