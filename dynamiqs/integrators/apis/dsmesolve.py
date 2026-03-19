@@ -238,8 +238,9 @@ def dsmesolve(
     ## Running multiple simulations concurrently
 
     The Hamiltonian `H` and the initial density matrix `rho0` can be batched to
-    solve multiple SMEs concurrently. All other arguments (including the PRNG key)
-    are common to every batch. The resulting states, measurements and expectation values
+    solve multiple SMEs concurrently. Other arguments are common to every batch. The
+    `keys` argument is automatically broadcasted to ensure different trajectories
+    between batch elements. The resulting states, measurements and expectation values
     are batched according to the leading dimensions of `H` and `rho0`. The
     behaviour depends on the value of the `cartesian_batching` option.
 
