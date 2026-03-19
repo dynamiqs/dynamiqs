@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from functools import wraps
 from typing import Any
 
 import jax
+import jax.numpy as jnp
+from jax import Array
 from jax._src.lib import xla_client
-from jaxtyping import PyTree
+from jaxtyping import PRNGKeyArray, PyTree
 
 from .._utils import obj_type_str
 from ..method import Method, _DEAdaptiveStep
@@ -185,3 +188,32 @@ def cartesian_vmap(
                 f = jax.vmap(f, in_axes=in_axes_single, out_axes=out_axes)
 
     return f
+
+
+def attach_batch_indices(
+    x: Array, ndim_suffix: int = 2
+) -> tuple[tuple[Array, Array], int]:
+    """Bundle an array with an array of batch indices for key-folding through vmap.
+
+    Returns ``((x, indices), batch_size)`` where *indices* is an arange over the batch
+    dimensions (everything except the last *ndim_suffix* axes).
+    """
+    batch_size = math.prod(x.shape[:-ndim_suffix])
+    indices = jnp.arange(batch_size, dtype=jnp.uint32).reshape(x.shape[:-ndim_suffix])
+    return (x, indices), batch_size
+
+
+def fold_keys_with_batch_indices(
+    keys: PRNGKeyArray, indices: tuple[Array, ...], sizes: tuple[int, ...]
+) -> PRNGKeyArray:
+    """Fold a unique batch index into each PRNG key.
+
+    *indices* and *sizes* are parallel tuples: each element corresponds to one
+    batched input.  The composite index is ``sum_i(index_i * prod_{j<i} size_j)``.
+    """
+    full_index = jnp.uint32(0)
+    multiplier = jnp.uint32(1)
+    for idx, size in zip(indices, sizes, strict=True):
+        full_index = full_index + multiplier * idx
+        multiplier = multiplier * jnp.uint32(size)
+    return jax.vmap(jax.random.fold_in, in_axes=(0, None))(keys, full_index)

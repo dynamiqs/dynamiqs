@@ -18,8 +18,10 @@ from ...time_qarray import TimeQArray
 from .._utils import (
     assert_method_supported,
     astimeqarray,
+    attach_batch_indices,
     cartesian_vmap,
     catch_xla_runtime_error,
+    fold_keys_with_batch_indices,
     multi_vmap,
 )
 from ..core.event_integrator import jssesolve_event_integrator_constructor
@@ -306,73 +308,39 @@ def _vectorized_jssesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> JSSESolveResult:
-
-    H_and_index_in_axes = (H.in_axes, 0)
-    Ls_and_index_in_axes = [(L.in_axes, 0) for L in Ls]
-    psi0_and_index_in_axes = (0, 0)
-
-    # vectorize input over H, Ls, psi0 and keys
     in_axes = (
-        H_and_index_in_axes,
-        Ls_and_index_in_axes,
-        psi0_and_index_in_axes,
+        (H.in_axes, 0),
+        [(L.in_axes, 0) for L in Ls],
+        (0, 0),
         *(None,) * 7,
     )
     out_axes = JSSESolveResult.out_axes()
 
     if options.cartesian_batching:
+        H_with_index, H_size = attach_batch_indices(H)
+        Ls_with_index, L_sizes = zip(
+            *[attach_batch_indices(L) for L in Ls], strict=True
+        ) if Ls else ([], [])
+        Ls_with_index = list(Ls_with_index)
+        psi0_with_index, psi0_size = attach_batch_indices(psi0)
+        sizes = (H_size, *L_sizes, psi0_size)
         nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, *(0,) * 7)
-        # creating indices and attaching them to inputs for the cartesian vmap
-        H_batch_shape = math.prod(H.shape[:-2])
-        H_index = jnp.arange(H_batch_shape, dtype=jnp.uint32).reshape(H.shape[:-2])
-        H_with_index = (H, H_index)
-        Ls_with_index = []
-        L_sizes = []
-        for L in Ls:
-            L_batch_shape = math.prod(L.shape[:-2])
-            L_sizes.append(L_batch_shape)
-            L_index = jnp.arange(L_batch_shape, dtype=jnp.uint32).reshape(L.shape[:-2])
-            Ls_with_index.append((L, L_index))
-        psi0_batch_shape = math.prod(psi0.shape[:-2])
-        psi0_index = jnp.arange(psi0_batch_shape, dtype=jnp.uint32).reshape(
-            psi0.shape[:-2]
-        )
-        psi0_with_index = (psi0, psi0_index)
-        # sizes needed to reconstruct unique index for key folding
-        sizes = (H_batch_shape, *L_sizes, psi0_batch_shape)
         f = cartesian_vmap(_jssesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
         nvmap = len(bshape)
-        # broadcast all vectorized input to same shape
         n = H.shape[-1]
-        H = H.broadcast_to(*bshape, n, n)
-        Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
-        psi0 = psi0.broadcast_to(*bshape, n, 1)
-        # single batch index on first input
-        idx_array = jnp.arange(math.prod(bshape), dtype=jnp.uint32).reshape(bshape)
-        H_with_index = (H, idx_array)
-        Ls_with_index = []
-        for L in Ls:
-            L_with_index = (L, jnp.zeros_like(idx_array))
-            Ls_with_index.append(L_with_index)
-        psi0_with_index = (psi0, jnp.zeros_like(idx_array))
-        # sizes unused for non-cartesian batching; pass dummy 1s
+        idx = jnp.arange(math.prod(bshape), dtype=jnp.uint32).reshape(bshape)
+        zeros = jnp.zeros_like(idx)
+        H_with_index = (H.broadcast_to(*bshape, n, n), idx)
+        Ls_with_index = [(L.broadcast_to(*bshape, n, n), zeros) for L in Ls]
+        psi0_with_index = (psi0.broadcast_to(*bshape, n, 1), zeros)
         sizes = (1,) * (len(Ls) + 2)
-        # vectorize the function
         f = multi_vmap(_jssesolve_many_trajectories, in_axes, out_axes, nvmap)
 
     return f(
-        H_with_index,
-        Ls_with_index,
-        psi0_with_index,
-        tsave,
-        keys,
-        exp_ops,
-        method,
-        gradient,
-        options,
-        sizes,
+        H_with_index, Ls_with_index, psi0_with_index,
+        tsave, keys, exp_ops, method, gradient, options, sizes,
     )
 
 
@@ -398,17 +366,8 @@ def _jssesolve_many_trajectories(
         Ls, L_indices = (), ()
     psi0, psi0_index = psi0_with_index
 
-    # reconstruct unique index for key folding from input indices and sizes
     indices = (H_index, *L_indices, psi0_index)
-
-    full_index = jnp.array(0, dtype=jnp.uint32)
-    multiplier = jnp.array(1, dtype=jnp.uint32)
-
-    for idx, size in zip(indices, sizes, strict=True):
-        full_index = full_index + multiplier * idx
-        multiplier = multiplier * jnp.array(size, dtype=jnp.uint32)
-
-    keys = jax.vmap(jax.random.fold_in, in_axes=(0, None), out_axes=0)(keys, full_index)
+    keys = fold_keys_with_batch_indices(keys, indices, sizes)
 
     if isinstance(method, Event):
         # vectorization over keys is handled by the integrator

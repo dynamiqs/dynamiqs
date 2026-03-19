@@ -19,8 +19,10 @@ from ...time_qarray import TimeQArray
 from .._utils import (
     assert_method_supported,
     astimeqarray,
+    attach_batch_indices,
     cartesian_vmap,
     catch_xla_runtime_error,
+    fold_keys_with_batch_indices,
     multi_vmap,
 )
 from ..core.fixed_step_stochastic_integrator import (
@@ -335,64 +337,36 @@ def _vectorized_jsmesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSMESolveResult:
-    H_and_index_in_axes = (H.in_axes, 0)
-    rho0_and_index_in_axes = (0, 0)
-
-    # vectorize input over H and rho0
     in_axes = (
-        H_and_index_in_axes,
+        (H.in_axes, 0),
         None,
         None,
         None,
         None,
-        rho0_and_index_in_axes,
+        (0, 0),
         *(None,) * 7,
     )
     out_axes = JSMESolveResult.out_axes()
 
     if options.cartesian_batching:
+        H_with_index, H_size = attach_batch_indices(H)
+        rho0_with_index, rho0_size = attach_batch_indices(rho0)
+        sizes = (H_size, rho0_size)
         nvmap = (H.ndim - 2, 0, 0, 0, 0, rho0.ndim - 2, *(0,) * 7)
-        # creating indices and attaching them to inputs for the cartesian vmap
-        H_batch_shape = math.prod(H.shape[:-2])
-        H_index = jnp.arange(H_batch_shape, dtype=jnp.uint32).reshape(H.shape[:-2])
-        H_with_index = (H, H_index)
-        rho0_batch_shape = math.prod(rho0.shape[:-2])
-        rho0_index = jnp.arange(rho0_batch_shape, dtype=jnp.uint32).reshape(
-            rho0.shape[:-2]
-        )
-        rho0_with_index = (rho0, rho0_index)
-        # sizes needed to reconstruct unique index for key folding
-        sizes = (H_batch_shape, rho0_batch_shape)
         f = cartesian_vmap(_jsmesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
         nvmap = len(bshape)
-        # broadcast all vectorized input to same shape
         n = H.shape[-1]
-        H = H.broadcast_to(*bshape, n, n)
-        rho0 = rho0.broadcast_to(*bshape, n, n)
-        # single batch index on first input
-        idx_array = jnp.arange(math.prod(bshape), dtype=jnp.uint32).reshape(bshape)
-        H_with_index = (H, idx_array)
-        rho0_with_index = (rho0, jnp.zeros_like(idx_array))
+        idx = jnp.arange(math.prod(bshape), dtype=jnp.uint32).reshape(bshape)
+        H_with_index = (H.broadcast_to(*bshape, n, n), idx)
+        rho0_with_index = (rho0.broadcast_to(*bshape, n, n), jnp.zeros_like(idx))
         sizes = (1, 1)
-        # vectorize the function
         f = multi_vmap(_jsmesolve_many_trajectories, in_axes, out_axes, nvmap)
 
     return f(
-        H_with_index,
-        Lcs,
-        Lms,
-        thetas,
-        etas,
-        rho0_with_index,
-        tsave,
-        keys,
-        exp_ops,
-        method,
-        gradient,
-        options,
-        sizes,
+        H_with_index, Lcs, Lms, thetas, etas, rho0_with_index,
+        tsave, keys, exp_ops, method, gradient, options, sizes,
     )
 
 
@@ -414,15 +388,8 @@ def _jsmesolve_many_trajectories(
     H, H_index = H_with_index
     rho0, rho0_index = rho0_with_index
 
-    # reconstruct unique index for key folding from input indices and sizes
     indices = (H_index, rho0_index)
-    full_index = jnp.array(0, dtype=jnp.uint32)
-    multiplier = jnp.array(1, dtype=jnp.uint32)
-    for idx, size in zip(indices, sizes, strict=True):
-        full_index = full_index + multiplier * idx
-        multiplier = multiplier * jnp.array(size, dtype=jnp.uint32)
-
-    keys = jax.vmap(jax.random.fold_in, in_axes=(0, None), out_axes=0)(keys, full_index)
+    keys = fold_keys_with_batch_indices(keys, indices, sizes)
 
     # vectorize input over keys
     in_axes = (None, None, None, None, None, None, None, 0, None, None, None, None)
