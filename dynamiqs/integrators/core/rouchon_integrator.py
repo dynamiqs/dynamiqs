@@ -9,7 +9,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 from diffrax import AbstractRungeKutta, Bosh3, Euler, Midpoint, ODETerm
-from diffrax._custom_types import RealScalarLike, Y
+from diffrax._custom_types import VF, Args, Control, RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
 
 from ...gradient import Forward
@@ -28,13 +28,13 @@ class AbstractRouchonTerm(dx.AbstractTerm):
     rouchon_step: Callable[[RealScalarLike, RealScalarLike, Y], [Y, Y]]
     # should be defined as `rouchon_step(t0, t1, y0) -> y1, error`
 
-    def vf(self, t: RealScalarLike, y: Y, args: object):
+    def vf(self, t: RealScalarLike, y: Y, args: Args):
         del t, y, args
 
-    def contr(self, t0: RealScalarLike, t1: RealScalarLike, **kwargs: object):
+    def contr(self, t0: RealScalarLike, t1: RealScalarLike, **kwargs):
         del t0, t1, kwargs
 
-    def prod(self, vf: object, control: object):
+    def prod(self, vf: VF, control: Control):
         del vf, control
 
 
@@ -49,7 +49,7 @@ class RouchonDXSolver(dx.AbstractSolver):
         t0: RealScalarLike,
         t1: RealScalarLike,
         y0: Y,
-        args: object,
+        args: Args,
     ):
         del terms, t0, t1, y0, args
 
@@ -59,7 +59,7 @@ class RouchonDXSolver(dx.AbstractSolver):
         t0: RealScalarLike,
         t1: RealScalarLike,
         y0: Y,
-        args: object,
+        args: Args,
         solver_state: None,
         made_jump: bool,
     ) -> tuple:
@@ -68,7 +68,7 @@ class RouchonDXSolver(dx.AbstractSolver):
         dense_info = dict(y0=y0, y1=y1)
         return y1, error, dense_info, None, dx.RESULTS.successful
 
-    def func(self, terms: AbstractRouchonTerm, t0: RealScalarLike, y0: Y, args: object):
+    def func(self, terms: AbstractRouchonTerm, t0: RealScalarLike, y0: Y, args: Args):
         del terms, t0, y0, args
 
     def order(self, terms: AbstractRouchonTerm) -> int:
