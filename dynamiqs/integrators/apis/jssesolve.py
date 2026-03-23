@@ -16,8 +16,10 @@ from ...time_qarray import TimeQArray
 from .._utils import (
     assert_method_supported,
     astimeqarray,
+    attach_batch_indices,
     cartesian_vmap,
     catch_xla_runtime_error,
+    fold_keys_with_batch_indices,
     multi_vmap,
 )
 from ..core.event_integrator import jssesolve_event_integrator_constructor
@@ -221,8 +223,9 @@ def jssesolve(
     ## Running multiple simulations concurrently
 
     The Hamiltonian `H`, the jump operators `jump_ops` and the initial state `psi0` can
-    be batched to solve multiple SSEs concurrently. All other arguments (including the
-    PRNG key) are common to every batch. The resulting states, measurements and
+    be batched to solve multiple SSEs concurrently. Other arguments are common to every
+    batch. The `keys` argument is automatically broadcasted to ensure different
+    trajectories between batch elements. The resulting states, measurements and
     expectation values are batched according to the leading dimensions of `H`,
     `jump_ops` and `psi0`. The behaviour depends on the value of the
     `cartesian_batching` option.
@@ -304,31 +307,52 @@ def _vectorized_jssesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> JSSESolveResult:
-    # vectorize input over H, Ls and psi0
-    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, *(None,) * 6)
+    in_axes = ((H.in_axes, 0), [(L.in_axes, 0) for L in Ls], (0, 0), *(None,) * 6)
     out_axes = JSSESolveResult.out_axes()
 
     if options.cartesian_batching:
-        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, 0, 0, 0, 0, 0, 0)
+        # attach batch indices to vmap over independent keys
+        H_with_batch_indices = attach_batch_indices(H)
+        Ls_with_batch_indices = [attach_batch_indices(L) for L in Ls]
+        psi0_with_batch_indices = attach_batch_indices(psi0)
+
+        # compute vmap transformation
+        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, *(0,) * 6)
         f = cartesian_vmap(_jssesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
+        # broadcast H, Ls and rho0 to the same leading shape
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
-        nvmap = len(bshape)
-        # broadcast all vectorized input to same shape
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
         psi0 = psi0.broadcast_to(*bshape, n, 1)
-        # vectorize the function
+
+        # attach batch indices to vmap over independent keys
+        H_with_batch_indices = attach_batch_indices(H)
+        Ls_with_batch_indices = [attach_batch_indices(L) for L in Ls]
+        psi0_with_batch_indices = attach_batch_indices(psi0)
+
+        # compute vmap transformation
+        nvmap = len(bshape)
         f = multi_vmap(_jssesolve_many_trajectories, in_axes, out_axes, nvmap)
 
-    return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
+    return f(
+        H_with_batch_indices,
+        Ls_with_batch_indices,
+        psi0_with_batch_indices,
+        tsave,
+        keys,
+        exp_ops,
+        method,
+        gradient,
+        options,
+    )
 
 
 def _jssesolve_many_trajectories(
-    H: TimeQArray,
-    Ls: list[TimeQArray],
-    psi0: QArray,
+    H_with_batch_index: tuple[TimeQArray, Array],
+    Ls_with_batch_index: list[tuple[TimeQArray, Array]],
+    psi0_with_batch_index: tuple[QArray, Array],
     tsave: Array,
     keys: PRNGKeyArray,
     exp_ops: list[QArray] | None,
@@ -336,8 +360,17 @@ def _jssesolve_many_trajectories(
     gradient: Gradient | None,
     options: Options,
 ) -> JSSESolveResult:
-    f = _jssesolve_single_trajectory
+    # extract arrays and indices
+    H, H_batch_index = H_with_batch_index
+    Ls, Ls_batch_index = zip(*Ls_with_batch_index, strict=True)
+    Ls = list(Ls)
+    psi0, psi0_batch_index = psi0_with_batch_index
 
+    # fold indices into keys to ensure different trajectories between batch elements
+    batch_indices = (H_batch_index, *Ls_batch_index, psi0_batch_index)
+    keys = fold_keys_with_batch_indices(keys, batch_indices)
+
+    f = _jssesolve_single_trajectory
     if isinstance(method, Event):
         # vectorization over keys is handled by the integrator
         pass

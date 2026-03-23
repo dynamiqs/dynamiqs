@@ -57,7 +57,7 @@ def test_against_mesolve_qubit(smart_sampling, atol=1e-2):
     jump_ops = [0.4 * dq.sigmam()]
     psi0 = [dq.ground(), dq.excited()]
     tsave = jnp.linspace(0, 1.0, 41)
-    keys = jax.random.split(jax.random.key(31), num=ntrajs)
+    keys = jax.random.split(jax.random.key(42), num=ntrajs)
     exp_ops = [dq.excited().todm(), dq.ground().todm()]
     me_options = dq.Options(progress_meter=None)
     root_finder = optx.Newton(1e-3, 1e-3, jtu.Partial(optx.rms_norm))

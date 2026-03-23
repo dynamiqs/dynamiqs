@@ -94,6 +94,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - Event
         - JumpMonteCarlo
         - DiffusiveMonteCarlo
+        - LowRank
 
 ### Gradients (dq.gradient)
 

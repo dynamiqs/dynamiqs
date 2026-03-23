@@ -18,8 +18,10 @@ from ...time_qarray import TimeQArray
 from .._utils import (
     assert_method_supported,
     astimeqarray,
+    attach_batch_indices,
     cartesian_vmap,
     catch_xla_runtime_error,
+    fold_keys_with_batch_indices,
     multi_vmap,
 )
 from ..core.fixed_step_stochastic_integrator import (
@@ -236,8 +238,9 @@ def jsmesolve(
     ## Running multiple simulations concurrently
 
     The Hamiltonian `H` and the initial density matrix `rho0` can be batched to
-    solve multiple SMEs concurrently. All other arguments (including the PRNG key)
-    are common to every batch. The resulting states, click times and expectation values
+    solve multiple SMEs concurrently. Other arguments are common to every batch. The
+    `keys` argument is automatically broadcasted to ensure different trajectories
+    between batch elements. The resulting states, click times and expectation values
     are batched according to the leading dimensions of `H` and `rho0`. The behaviour
     depends on the value of the `cartesian_batching` option.
 
@@ -334,35 +337,54 @@ def _vectorized_jsmesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSMESolveResult:
-    # vectorize input over H and rho0
-    in_axes = (H.in_axes, None, None, None, None, 0, *(None,) * 6)
+    in_axes = ((H.in_axes, 0), None, None, None, None, (0, 0), *(None,) * 6)
     out_axes = JSMESolveResult.out_axes()
 
     if options.cartesian_batching:
-        nvmap = (H.ndim - 2, 0, 0, 0, 0, rho0.ndim - 2, 0, 0, 0, 0, 0, 0)
+        # attach batch indices to vmap over independent keys
+        H_with_batch_indices = attach_batch_indices(H)
+        rho0_with_batch_indices = attach_batch_indices(rho0)
+
+        # compute vmap transformation
+        nvmap = (H.ndim - 2, 0, 0, 0, 0, rho0.ndim - 2, *(0,) * 6)
         f = cartesian_vmap(_jsmesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
+        # broadcast H and rho0 to the same leading shape
         bshape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
-        nvmap = len(bshape)
-        # broadcast all vectorized input to same shape
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         rho0 = rho0.broadcast_to(*bshape, n, n)
-        # vectorize the function
+
+        # attach batch indices to vmap over independent keys
+        H_with_batch_indices = attach_batch_indices(H.broadcast_to(*bshape, n, n))
+        rho0_with_batch_indices = attach_batch_indices(rho0.broadcast_to(*bshape, n, n))
+
+        nvmap = len(bshape)
         f = multi_vmap(_jsmesolve_many_trajectories, in_axes, out_axes, nvmap)
 
     return f(
-        H, Lcs, Lms, thetas, etas, rho0, tsave, keys, exp_ops, method, gradient, options
+        H_with_batch_indices,
+        Lcs,
+        Lms,
+        thetas,
+        etas,
+        rho0_with_batch_indices,
+        tsave,
+        keys,
+        exp_ops,
+        method,
+        gradient,
+        options,
     )
 
 
 def _jsmesolve_many_trajectories(
-    H: TimeQArray,
+    H_with_batch_index: tuple[TimeQArray, Array],
     Lcs: list[TimeQArray],
     Lms: list[TimeQArray],
     thetas: Array,
     etas: Array,
-    rho0: QArray,
+    rho0_with_batch_index: tuple[QArray, Array],
     tsave: Array,
     keys: PRNGKeyArray,
     exp_ops: list[QArray] | None,
@@ -370,6 +392,14 @@ def _jsmesolve_many_trajectories(
     gradient: Gradient | None,
     options: Options,
 ) -> JSMESolveResult:
+    # extract arrays and indices
+    H, H_batch_index = H_with_batch_index
+    rho0, rho0_batch_index = rho0_with_batch_index
+
+    # fold indices into keys to ensure different trajectories between batch elements
+    batch_indices = (H_batch_index, rho0_batch_index)
+    keys = fold_keys_with_batch_indices(keys, batch_indices)
+
     # vectorize input over keys
     in_axes = (None, None, None, None, None, None, None, 0, None, None, None, None)
     out_axes = JSMESolveResult(None, None, None, None, 0, 0, 0)
