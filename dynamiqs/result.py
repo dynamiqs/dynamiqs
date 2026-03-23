@@ -223,7 +223,7 @@ class StochasticSolveResult(SolveResult):
 
     @classmethod
     def out_axes(cls) -> StochasticSolveResult:
-        return cls(None, None, None, None, 0, 0, None)  # ty: ignore[invalid-argument-type]
+        return cls(None, None, None, None, 0, 0, 0)  # ty: ignore[invalid-argument-type]
 
     def mean_states(self) -> QArray:
         # todo: document

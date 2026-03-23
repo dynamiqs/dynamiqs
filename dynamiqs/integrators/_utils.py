@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from functools import wraps
 from typing import Any
 
 import jax
+import jax.numpy as jnp
+from jax import Array
 from jax._src.lib import xla_client
-from jaxtyping import PyTree
+from jaxtyping import PRNGKeyArray, PyTree
 
 from .._utils import obj_type_str
 from ..method import Method, _DEAdaptiveStep
@@ -182,3 +185,28 @@ def cartesian_vmap(
                 f = jax.vmap(f, in_axes=in_axes_single, out_axes=out_axes)
 
     return f
+
+
+def attach_batch_indices(x: Array, ndim_suffix: int = 2) -> tuple[Array, Array]:
+    """Bundle an array with an array of batch indices for key-folding through vmap.
+
+    Returns ``(x, indices)`` where *indices* is an arange over the batch
+    dimensions (everything except the last *ndim_suffix* axes).
+    """
+    batch_size = math.prod(x.shape[:-ndim_suffix])
+    indices = jnp.arange(batch_size, dtype=jnp.uint32).reshape(x.shape[:-ndim_suffix])
+    return x, indices
+
+
+def fold_keys_with_batch_indices(
+    keys: PRNGKeyArray, indices: tuple[Array, ...]
+) -> PRNGKeyArray:
+    """Fold batch indices into PRNG keys to ensure uniqueness across batch elements.
+
+    Each index in *indices* corresponds to one batched input.  Successive
+    ``fold_in`` calls are non-commutative, so distinct index tuples always
+    produce distinct keys.
+    """
+    for idx in indices:
+        keys = jax.vmap(jax.random.fold_in, in_axes=(0, None))(keys, idx)
+    return keys
