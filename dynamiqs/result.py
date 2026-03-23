@@ -9,7 +9,7 @@ from .gradient import Gradient
 from .method import Event, Method
 from .options import Options
 from .qarrays.qarray import QArray
-from .qarrays.utils import to_jax
+from .qarrays.utils import asqarray, to_jax
 from .utils.general import unit
 
 __all__ = [
@@ -18,6 +18,7 @@ __all__ = [
     'JSSESolveResult',
     'DSSESolveResult',
     'JSMESolveResult',
+    'MESolveLowRankResult',
     'MESolveResult',
     'DSMESolveResult',
     'SEPropagatorResult',
@@ -191,6 +192,22 @@ class SESolveResult(SolveResult):
 
 class MESolveResult(SolveResult):
     pass
+
+
+class MESolveLowRankResult(MESolveResult):
+    @property
+    def lowrank_states(self) -> QArray:
+        return self._saved.ysave
+
+    @property
+    def states(self) -> QArray:
+        m = self.lowrank_states.to_jax()
+        rho = m @ m.conj().swapaxes(-2, -1)
+        return asqarray(rho, dims=self.lowrank_states.dims)
+
+    def _str_parts(self) -> dict[str, str | None]:
+        d = super()._str_parts()
+        return d | {'Lowrank states': _array_str(self.lowrank_states)}
 
 
 class SEPropagatorResult(PropagatorResult):

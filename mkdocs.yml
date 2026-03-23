@@ -186,6 +186,7 @@ nav:
               - Event: python_api/method/Event.md
               - JumpMonteCarlo: python_api/method/JumpMonteCarlo.md
               - DiffusiveMonteCarlo: python_api/method/DiffusiveMonteCarlo.md
+              - LowRank: python_api/method/LowRank.md
           - Gradients (dq.gradient):
               - Direct: python_api/gradient/Direct.md
               - BackwardCheckpointed: python_api/gradient/BackwardCheckpointed.md
