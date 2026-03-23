@@ -21,18 +21,6 @@ from ...utils.operators import eye
 from .diffrax_integrator import MESolveDiffraxIntegrator
 
 
-def M_rho_Mdag(M: QArray, rho: QArray) -> QArray:
-    return M @ rho @ M.dag()
-
-
-def Mdag_O_M(M: QArray, O: QArray) -> QArray:
-    return M.dag() @ O @ M
-
-
-def Mdag_M(M: QArray) -> QArray:
-    return M.dag() @ M
-
-
 class AbstractRouchonTerm(dx.AbstractTerm):
     # this class bypasses the typical Diffrax term implementation, as Rouchon schemes
     # don't match the vf/contr/prod structure
@@ -314,39 +302,6 @@ class KrausHeun3(KrausMapRK):
     _b = (0.25, 0.0, 0.75)
 
 
-def cholesky_normalize(S: QArray, rho: QArray) -> jax.Array:
-    # To normalize the scheme, we compute
-    #   S = sum_k Mk^† @ Mk
-    # and replace
-    #   Mk by ~Mk = Mk @ S^{-1/2}
-    # such that
-    #   sum_k ~Mk^† @ ~Mk = S^{†(-1/2)} @ (sum_k Mk^† @ Mk) @ S^{-1/2}
-    #                   = S^{†(-1/2)} @ S @ S^{-1/2}
-    #                   = I
-    # To (i) keep sparse matrices and (ii) have a generic implementation that also
-    # works for time-dependent systems, we use a Cholesky decomposition at each step
-    # instead of computing S^{-1/2} explicitly. We write S = T @ T^† with T lower
-    # triangular, and we replace
-    #   Mk by ~Mk = Mk @ S^{-1/2}
-    # such that
-    #   #   sum_k ~Mk^† @ ~Mk = T^{-1} @ (sum_k Mk^† @ Mk) @ T^{†(-1)}
-    #                       = T^{-1} @ T @ T^† @ T^{(-1)}
-    #                       = I
-    # In practice we directly replace rho_k by T^{†(-1)} @ rho_k @ T^{-1} instead of
-    # computing all ~Mks.
-
-    T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
-
-    # we want T^{†(-1)} @ y0 @ T^{-1}
-    rho = rho.to_jax()
-    # solve T^† @ x = rho => x = T^{†(-1)} @ rho
-    rho = jax.lax.linalg.triangular_solve(
-        T, rho, lower=True, transpose_a=True, conjugate_a=True, left_side=True
-    )
-    # solve x @ T = rho => x = rho @ T^{-1}
-    return jax.lax.linalg.triangular_solve(T, rho, lower=True, left_side=False)
-
-
 class RouchonPropertiesMixin:
     """Mixin providing shared properties for Rouchon integrators.
 
@@ -413,6 +368,18 @@ class RouchonPropertiesMixin:
                 lambda s: s.scan_kind, solver, 'bounded', is_leaf=lambda x: x is None
             )
         return solver
+
+
+def M_rho_Mdag(M: QArray, rho: QArray) -> QArray:
+    return M @ rho @ M.dag()
+
+
+def Mdag_O_M(M: QArray, O: QArray) -> QArray:
+    return M.dag() @ O @ M
+
+
+def Mdag_M(M: QArray) -> QArray:
+    return M.dag() @ M
 
 
 class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegrator):
@@ -580,6 +547,39 @@ class MESolveAdaptiveRouchonIntegrator(
         # fix incorrect default linear interpolation by stepping exactly at all times
         # in tsave, so interpolation is bypassed
         return replace(stepsize_controller, step_ts=self.ts)
+
+
+def cholesky_normalize(S: QArray, rho: QArray) -> jax.Array:
+    # To normalize the scheme, we compute
+    #   S = sum_k Mk^† @ Mk
+    # and replace
+    #   Mk by ~Mk = Mk @ S^{-1/2}
+    # such that
+    #   sum_k ~Mk^† @ ~Mk = S^{†(-1/2)} @ (sum_k Mk^† @ Mk) @ S^{-1/2}
+    #                   = S^{†(-1/2)} @ S @ S^{-1/2}
+    #                   = I
+    # To (i) keep sparse matrices and (ii) have a generic implementation that also
+    # works for time-dependent systems, we use a Cholesky decomposition at each step
+    # instead of computing S^{-1/2} explicitly. We write S = T @ T^† with T lower
+    # triangular, and we replace
+    #   Mk by ~Mk = Mk @ S^{-1/2}
+    # such that
+    #   #   sum_k ~Mk^† @ ~Mk = T^{-1} @ (sum_k Mk^† @ Mk) @ T^{†(-1)}
+    #                       = T^{-1} @ T @ T^† @ T^{(-1)}
+    #                       = I
+    # In practice we directly replace rho_k by T^{†(-1)} @ rho_k @ T^{-1} instead of
+    # computing all ~Mks.
+
+    T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
+
+    # we want T^{†(-1)} @ y0 @ T^{-1}
+    rho = rho.to_jax()
+    # solve T^† @ x = rho => x = T^{†(-1)} @ rho
+    rho = jax.lax.linalg.triangular_solve(
+        T, rho, lower=True, transpose_a=True, conjugate_a=True, left_side=True
+    )
+    # solve x @ T = rho => x = rho @ T^{-1}
+    return jax.lax.linalg.triangular_solve(T, rho, lower=True, left_side=False)
 
 
 class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
