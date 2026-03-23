@@ -19,6 +19,7 @@ from ...method import (
     JumpMonteCarlo,
     Kvaerno3,
     Kvaerno5,
+    LowRank,
     Method,
     Rouchon1,
     Rouchon2,
@@ -46,6 +47,7 @@ from ..core.diffrax_integrator import (
     mesolve_tsit5_integrator_constructor,
 )
 from ..core.expm_integrator import mesolve_expm_integrator_constructor
+from ..core.low_rank_integrator import mesolve_lowrank_integrator_constructor
 from ..core.montecarlo_integrator import (
     mesolve_diffusivemontecarlo_integrator_constructor,
     mesolve_jumpmontecarlo_integrator_constructor,
@@ -112,7 +114,8 @@ def mesolve(
             [`Rouchon3`][dynamiqs.method.Rouchon3],
             [`Expm`][dynamiqs.method.Expm],
             [`JumpMonteCarlo`][dynamiqs.method.JumpMonteCarlo],
-            [`DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo]).
+            [`DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo],
+            [`LowRank`][dynamiqs.method.LowRank]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
@@ -194,6 +197,9 @@ def mesolve(
                 - **`method`** _(Method)_ - Method used.
                 - **`gradient`** _(Gradient)_ - Gradient used.
                 - **`options`** _(Options)_ - Options used.
+                - **`lowrank_states`** _(qarray of shape (..., nsave, n, rank))_ - Only
+                    available when using [`LowRank`][dynamiqs.method.LowRank], stores
+                    the low-rank factors `m(t)`.
 
     Examples:
         ```python
@@ -354,6 +360,7 @@ def _mesolve(
         Expm: mesolve_expm_integrator_constructor,
         JumpMonteCarlo: mesolve_jumpmontecarlo_integrator_constructor,
         DiffusiveMonteCarlo: mesolve_diffusivemontecarlo_integrator_constructor,
+        LowRank: mesolve_lowrank_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
     integrator_constructor = integrator_constructors[type(method)]
@@ -367,7 +374,6 @@ def _mesolve(
         y0=rho0,
         method=method,
         gradient=gradient,
-        result_class=MESolveResult,
         options=options,
         H=H,
         Ls=Ls,
