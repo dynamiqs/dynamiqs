@@ -339,24 +339,34 @@ def _vectorized_dsmesolve(
     out_axes = DSMESolveResult.out_axes()
 
     if options.cartesian_batching:
-        H_with_index = attach_batch_indices(H)
-        rho0_with_index = attach_batch_indices(rho0)
+        # attach batch indices to vmap over independent keys
+        H_with_batch_indices = attach_batch_indices(H)
+        rho0_with_batch_indices = attach_batch_indices(rho0)
+
+        # compute vmap transformation
         nvmap = (H.ndim - 2, 0, 0, 0, rho0.ndim - 2, *(0,) * 6)
         f = cartesian_vmap(_dsmesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
+        # broadcast H and rho0 to the same leading shape
         bshape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
-        nvmap = len(bshape)
         n = H.shape[-1]
-        H_with_index = attach_batch_indices(H.broadcast_to(*bshape, n, n))
-        rho0_with_index = attach_batch_indices(rho0.broadcast_to(*bshape, n, n))
+        H = H.broadcast_to(*bshape, n, n)
+        rho0 = rho0.broadcast_to(*bshape, n, n)
+
+        # attach batch indices to vmap over independent keys
+        H_with_batch_indices = attach_batch_indices(H)
+        rho0_with_batch_indices = attach_batch_indices(rho0)
+
+        # compute vmap transformation
+        nvmap = len(bshape)
         f = multi_vmap(_dsmesolve_many_trajectories, in_axes, out_axes, nvmap)
 
     return f(
-        H_with_index,
+        H_with_batch_indices,
         Lcs,
         Lms,
         etas,
-        rho0_with_index,
+        rho0_with_batch_indices,
         tsave,
         keys,
         exp_ops,
@@ -367,11 +377,11 @@ def _vectorized_dsmesolve(
 
 
 def _dsmesolve_many_trajectories(
-    H_with_index: tuple[TimeQArray, Array],
+    H_with_batch_index: tuple[TimeQArray, Array],
     Lcs: list[TimeQArray],
     Lms: list[TimeQArray],
     etas: Array,
-    rho0_with_index: tuple[QArray, Array],
+    rho0_with_batch_index: tuple[QArray, Array],
     tsave: Array,
     keys: PRNGKeyArray,
     exp_ops: list[QArray] | None,
@@ -380,12 +390,12 @@ def _dsmesolve_many_trajectories(
     options: Options,
 ) -> DSMESolveResult:
     # extract arrays and indices
-    H, H_index = H_with_index
-    rho0, rho0_index = rho0_with_index
+    H, H_batch_index = H_with_batch_index
+    rho0, rho0_batch_index = rho0_with_batch_index
 
     # fold indices into keys to ensure different trajectories between batch elements
-    indices = (H_index, rho0_index)
-    keys = fold_keys_with_batch_indices(keys, indices)
+    batch_indices = (H_batch_index, rho0_batch_index)
+    keys = fold_keys_with_batch_indices(keys, batch_indices)
 
     # vectorize input over keys
     in_axes = (None, None, None, None, None, None, 0, None, None, None, None)

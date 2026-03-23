@@ -311,26 +311,35 @@ def _vectorized_jssesolve(
     out_axes = JSSESolveResult.out_axes()
 
     if options.cartesian_batching:
-        H_with_index = attach_batch_indices(H)
-        Ls_with_index = [attach_batch_indices(L) for L in Ls]
-        psi0_with_index = attach_batch_indices(psi0)
+        # attach batch indices to vmap over independent keys
+        H_with_batch_indices = attach_batch_indices(H)
+        Ls_with_batch_indices = [attach_batch_indices(L) for L in Ls]
+        psi0_with_batch_indices = attach_batch_indices(psi0)
+
+        # compute vmap transformation
         nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, *(0,) * 6)
         f = cartesian_vmap(_jssesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
+        # broadcast H, Ls and rho0 to the same leading shape
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
-        nvmap = len(bshape)
         n = H.shape[-1]
-        H_with_index = attach_batch_indices(H.broadcast_to(*bshape, n, n))
-        Ls_with_index = [
-            attach_batch_indices(L.broadcast_to(*bshape, n, n)) for L in Ls
-        ]
-        psi0_with_index = attach_batch_indices(psi0.broadcast_to(*bshape, n, 1))
+        H = H.broadcast_to(*bshape, n, n)
+        Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
+        psi0 = psi0.broadcast_to(*bshape, n, 1)
+
+        # attach batch indices to vmap over independent keys
+        H_with_batch_indices = attach_batch_indices(H)
+        Ls_with_batch_indices = [attach_batch_indices(L) for L in Ls]
+        psi0_with_batch_indices = attach_batch_indices(psi0)
+
+        # compute vmap transformation
+        nvmap = len(bshape)
         f = multi_vmap(_jssesolve_many_trajectories, in_axes, out_axes, nvmap)
 
     return f(
-        H_with_index,
-        Ls_with_index,
-        psi0_with_index,
+        H_with_batch_indices,
+        Ls_with_batch_indices,
+        psi0_with_batch_indices,
         tsave,
         keys,
         exp_ops,
@@ -341,9 +350,9 @@ def _vectorized_jssesolve(
 
 
 def _jssesolve_many_trajectories(
-    H_with_index: tuple[TimeQArray, Array],
-    Ls_with_index: list[tuple[TimeQArray, Array]],
-    psi0_with_index: tuple[QArray, Array],
+    H_with_batch_index: tuple[TimeQArray, Array],
+    Ls_with_batch_index: list[tuple[TimeQArray, Array]],
+    psi0_with_batch_index: tuple[QArray, Array],
     tsave: Array,
     keys: PRNGKeyArray,
     exp_ops: list[QArray] | None,
@@ -352,14 +361,14 @@ def _jssesolve_many_trajectories(
     options: Options,
 ) -> JSSESolveResult:
     # extract arrays and indices
-    H, H_index = H_with_index
-    Ls, L_indices = zip(*Ls_with_index, strict=True)
+    H, H_batch_index = H_with_batch_index
+    Ls, Ls_batch_index = zip(*Ls_with_batch_index, strict=True)
     Ls = list(Ls)
-    psi0, psi0_index = psi0_with_index
+    psi0, psi0_batch_index = psi0_with_batch_index
 
     # fold indices into keys to ensure different trajectories between batch elements
-    indices = (H_index, *L_indices, psi0_index)
-    keys = fold_keys_with_batch_indices(keys, indices)
+    batch_indices = (H_batch_index, *Ls_batch_index, psi0_batch_index)
+    keys = fold_keys_with_batch_indices(keys, batch_indices)
 
     f = _jssesolve_single_trajectory
     if isinstance(method, Event):
