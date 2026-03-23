@@ -6930,7 +6930,6 @@
     <span class="n">max_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span>
     <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">exact_expm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
 
@@ -7009,15 +7008,6 @@ and <code>max_steps</code>).</p>
           <p>If True, the scheme is trace-preserving to machine precision, which
 is the recommended option because it is much more stable. Otherwise, it is
 only trace-preserving to the scheme order in the numerical step size.</p>
-        </div>
-      </li>
-      <li class="doc-section-item field-body">
-          <b><code>exact_expm</code></b>
-        –
-        <div class="doc-md-description">
-          <p>If True, the scheme uses the exact matrix exponential internally (at
-the cost of losing sparsity), otherwise it uses a Taylor expansion up to
-the scheme order.</p>
         </div>
       </li>
   </ul>
