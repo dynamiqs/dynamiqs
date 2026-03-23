@@ -108,6 +108,7 @@ def check_options(options: Options, solver_name: str):
         'dssesolve': ('save_states', 'cartesian_batching', 'save_extra'),
         'jsmesolve': ('save_states', 'cartesian_batching', 'save_extra', 'nmaxclick'),
         'dsmesolve': ('save_states', 'cartesian_batching', 'save_extra'),
+        'steadystate': ('cartesian_batching',),
     }
     valid_options = supported_options[solver_name]
 
