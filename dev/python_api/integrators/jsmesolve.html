@@ -7336,8 +7336,9 @@ to time-arrays using <a class="autorefs autorefs-internal" title="&lt;span class
 tutorial for more details.</p>
 <h3 id="dynamiqs.integrators.jsmesolve--running-multiple-simulations-concurrently">Running multiple simulations concurrently</h3>
 <p>The Hamiltonian <code>H</code> and the initial density matrix <code>rho0</code> can be batched to
-solve multiple <abbr title="stochastic master equations">SMEs</abbr> concurrently. All other arguments (including the <abbr title="pseudorandom number generator">PRNG</abbr> key)
-are common to every batch. The resulting states, click times and expectation values
+solve multiple <abbr title="stochastic master equations">SMEs</abbr> concurrently. Other arguments are common to every batch. The
+<code>keys</code> argument is automatically broadcasted to ensure different trajectories
+between batch elements. The resulting states, click times and expectation values
 are batched according to the leading dimensions of <code>H</code> and <code>rho0</code>. The behaviour
 depends on the value of the <code>cartesian_batching</code> option.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="dynamiqs.integrators.jsmesolve--__tabbed_1_1" name="dynamiqs.integrators.jsmesolve--__tabbed_1" type="radio"><input id="dynamiqs.integrators.jsmesolve--__tabbed_1_2" name="dynamiqs.integrators.jsmesolve--__tabbed_1" type="radio"><div class="tabbed-labels"><label for="dynamiqs.integrators.jsmesolve--__tabbed_1_1">If <code>cartesian_batching = True</code> (default value)</label><label for="dynamiqs.integrators.jsmesolve--__tabbed_1_2">If <code>cartesian_batching = False</code></label></div>

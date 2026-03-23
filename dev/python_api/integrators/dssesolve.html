@@ -7303,8 +7303,9 @@ to time-arrays using <a class="autorefs autorefs-internal" title="&lt;span class
 tutorial for more details.</p>
 <h3 id="dynamiqs.integrators.dssesolve--running-multiple-simulations-concurrently">Running multiple simulations concurrently</h3>
 <p>The Hamiltonian <code>H</code>, the jump operators <code>jump_ops</code> and the initial state <code>psi0</code> can
-be batched to solve multiple <abbr title="stochastic Schrödinger equations">SSEs</abbr> concurrently. All other arguments (including the
-<abbr title="pseudorandom number generator">PRNG</abbr> key) are common to every batch. The resulting states, measurements and
+be batched to solve multiple <abbr title="stochastic Schrödinger equations">SSEs</abbr> concurrently. Other arguments are common to every
+batch. The <code>keys</code> argument is automatically broadcasted to ensure different
+trajectories between batch elements. The resulting states, measurements and
 expectation values are batched according to the leading dimensions of <code>H</code>,
 <code>jump_ops</code> and <code>psi0</code>. The behaviour depends on the value of the
 <code>cartesian_batching</code> option.</p>
