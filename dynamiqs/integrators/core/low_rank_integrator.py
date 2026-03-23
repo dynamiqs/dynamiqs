@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import warnings
 from functools import partial
+from typing import Any
 
 import diffrax as dx
 import equinox as eqx
 import jax
 import jax.numpy as jnp
-import lineax as lx
+import jax.scipy.linalg as jsp_linalg
 from jax import Array
 from jaxtyping import PyTree
 
@@ -22,18 +23,72 @@ from .interfaces import MEInterface, SolveInterface
 from .save_mixin import SolveSaveMixin
 
 
-def qr_solve(A: Array, B: Array) -> Array:
-    operator = lx.MatrixLinearOperator(A)
+def _qr_cache(A: Array) -> tuple[Array, Array]:
+    # Cache the QR factorization once per vector-field evaluation.
+    # We do this explicitly so that AD uses the JVP rule below instead of
+    # differentiating through the QR decomposition.
+    q, r = jnp.linalg.qr(A, mode='reduced')
+    q = jax.lax.stop_gradient(q)
+    r = jax.lax.stop_gradient(r)
+    return q, r
 
-    def solve_single(b: Array) -> Array:
-        return lx.linear_solve(operator, b, throw=False, solver=lx.QR()).value
 
-    return jax.vmap(solve_single, in_axes=1, out_axes=1)(B)  # vmap over columns of B
+def _cholesky_cache(A: Array) -> Array:
+    # Precompute A^+ = (A^H A)^-1 A^H once per vector-field evaluation.
+    A_pinv = jsp_linalg.solve(A.conj().T @ A, A.conj().T, assume_a='pos')
+    return jax.lax.stop_gradient(A_pinv)
 
 
-def cholesky_solve(A: Array, B: Array) -> Array:
-    A_pinv = jax.scipy.linalg.solve(A.conj().T @ A, A.conj().T, assume_a='pos')
+def _qr_pinv_apply(cache: tuple[Array, Array], rhs: Array) -> Array:
+    q, r = cache
+    return jsp_linalg.solve_triangular(r, q.conj().T @ rhs, lower=False)
+
+
+def _qr_pinv_h_apply(cache: tuple[Array, Array], rhs: Array) -> Array:
+    q, r = cache
+    # (A^+)^H rhs = Q (R^{-H} rhs), where A = Q R.
+    return q @ jsp_linalg.solve_triangular(r, rhs, trans='C', lower=False)
+
+
+@jax.custom_jvp
+def _qr_solve_cached(A: Array, cache: tuple[Array, Array], B: Array) -> Array:
+    del A
+    return _qr_pinv_apply(cache, B)
+
+
+@_qr_solve_cached.defjvp
+def _qr_solve_cached_jvp(
+    primals: tuple[Any, ...], tangents: tuple[Any, ...]
+) -> tuple[Array, Array]:
+    A, cache, B = primals
+    dA, _dcache, dB = tangents
+    x = _qr_solve_cached(A, cache, B)
+    # Pseudoinverse JVP formula (independent columns):
+    # dX = A^+ (dB - dA X + (A^+)^H (dA^H (B - A X))).
+    res = B - A @ x
+    dvec = dB - dA @ x + _qr_pinv_h_apply(cache, dA.conj().T @ res)
+    dx = _qr_pinv_apply(cache, dvec)
+    return x, dx
+
+
+@jax.custom_jvp
+def _cholesky_solve_cached(A: Array, A_pinv: Array, B: Array) -> Array:
+    del A
     return A_pinv @ B
+
+
+@_cholesky_solve_cached.defjvp
+def _cholesky_solve_cached_jvp(
+    primals: tuple[Any, ...], tangents: tuple[Any, ...]
+) -> tuple[Array, Array]:
+    A, A_pinv, B = primals
+    dA, _dA_pinv, dB = tangents
+    x = _cholesky_solve_cached(A, A_pinv, B)
+    # Same pseudoinverse formula as the QR path, but using cached A^+.
+    res = B - A @ x
+    dvec = dB - dA @ x + A_pinv.conj().T @ (dA.conj().T @ res)
+    dx = A_pinv @ dvec
+    return x, dx
 
 
 def normalize_m(m: Array) -> Array:
@@ -181,21 +236,25 @@ class MESolveLowRankIntegrator(
             rho0 = self.y0.todm().to_jax()
             m0 = initialize_m0_from_dm(rho0, self.method.rank, eps, self.method.key)
 
-        # define diffrax term
         linear_solvers = {
-            LinearSolver.CHOLESKY: cholesky_solve,
-            LinearSolver.QR: qr_solve,
+            LinearSolver.CHOLESKY: (_cholesky_cache, _cholesky_solve_cached),
+            LinearSolver.QR: (_qr_cache, _qr_solve_cached),
         }
-        linsolve = linear_solvers[self.method.linear_solver]
+        # Keep solver selection outside the ODE RHS loop while carrying both pieces
+        # required by the cached solve: (cache_builder, linsolve_with_cache).
+        solver_cache_builder, linsolve = linear_solvers[self.method.linear_solver]
 
         def vector_field(t, m, _):  # noqa: ANN001, ANN202
             H = self.H(t)
             Ls = [L(t) for L in self.Ls]
             dm = (-1j) * (H @ m).to_jax()
+            # `m` is fixed for this vector-field evaluation, so we compute and reuse
+            # the decomposition/pseudoinverse across all jump operators.
+            solve_cache = solver_cache_builder(m)
 
             for L in Ls:
                 Lm = (L @ m).to_jax()
-                tmp = linsolve(m, Lm)
+                tmp = linsolve(m, solve_cache, Lm)
                 dm += 0.5 * (Lm @ tmp.conj().T) - 0.5 * (L.dag() @ Lm).to_jax()
 
             return dm
