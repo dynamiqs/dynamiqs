@@ -27,6 +27,7 @@ __all__ = [
     'Rouchon1',
     'Rouchon2',
     'Rouchon3',
+    'Rouchon4',
     'Tsit5',
     'Event',
     'Method',
@@ -351,6 +352,64 @@ class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
         self.normalize = normalize
+
+class Rouchon4(_DEFixedStep, _DEAdaptiveStep):
+    r"""Fourth-order Rouchon method (fixed or adaptive step size ODE method).
+
+    Note:
+        By default the scheme is using adaptive step size. The error is estimated
+        using the difference between the third-order and fourth-order. To use a fixed
+        step size fourth-order method (without evaluating the third-order), set the `dt`
+        argument.
+
+    Args:
+        rtol: Relative tolerance.
+        atol: Absolute tolerance.
+        safety_factor: Safety factor for adaptive step sizing.
+        min_factor: Minimum factor for adaptive step sizing.
+        max_factor: Maximum factor for adaptive step sizing.
+        max_steps: Maximum number of steps.
+        dt: Fixed time step, if specified all arguments specific to adaptive step sizing
+            are ignored (`rtol`, `atol`, `safety_factor`, `min_factor`, `max_factor`
+            and `max_steps`).
+        normalize: If True, the scheme is trace-preserving to machine precision, which
+            is the recommended option because it is much more stable. Otherwise, it is
+            only trace-preserving to the scheme order in the numerical step size.
+
+    Note-: Supported gradients
+        This method supports differentiation with
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
+        (default)
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
+        Direct,
+        BackwardCheckpointed,
+        Forward,
+    )
+
+    normalize: bool = eqx.field(static=True, default=True)
+
+    # dummy init to have the signature in the documentation
+    def __init__(
+        self,
+        rtol: float = 1e-6,
+        atol: float = 1e-6,
+        safety_factor: float = 0.9,
+        min_factor: float = 0.2,
+        max_factor: float = 5.0,
+        max_steps: int = 100_000,
+        dt: float | None = None,
+        normalize: bool = True,
+    ):
+        _DEFixedStep.__init__(self, dt)  # ty: ignore[invalid-argument-type]
+        _DEAdaptiveStep.__init__(
+            self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
+        )
+        self.normalize = normalize
+
 
 
 class Dopri5(_DEAdaptiveStep):
