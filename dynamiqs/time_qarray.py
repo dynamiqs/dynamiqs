@@ -741,8 +741,10 @@ class PWC_new_TimeQArray(TimeQArray):
 
     @property
     def discontinuity_ts(self) -> Array:
-        return concatenate_sort(super().discontinuity_ts, 
-                                jnp.unique(self.times.reshape(-1)))
+        # Reconstruct the original [t0, t1, ..., tN] from the (nv, 2) pairs
+        # without jnp.unique (which is not JIT-traceable).
+        unique_times = jnp.concatenate([self.times[:, 0], self.times[-1:, 1]])
+        return concatenate_sort(super().discontinuity_ts, unique_times)
 
     def shift(self, tshift: float) -> TimeQArray:
         tstart, tend = self._shift_bounds(tshift)
