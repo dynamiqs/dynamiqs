@@ -353,6 +353,7 @@ class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
         )
         self.normalize = normalize
 
+
 class Rouchon4(_DEFixedStep, _DEAdaptiveStep):
     r"""Fourth-order Rouchon method (fixed or adaptive step size ODE method).
 
@@ -409,7 +410,6 @@ class Rouchon4(_DEFixedStep, _DEAdaptiveStep):
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
         self.normalize = normalize
-
 
 
 class Dopri5(_DEAdaptiveStep):

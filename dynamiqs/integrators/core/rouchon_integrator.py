@@ -12,7 +12,13 @@ import jax.numpy as jnp
 import numpy as np
 from diffrax import AbstractRungeKutta, Bosh3, Euler, Midpoint, ODETerm
 from diffrax._custom_types import VF, Args, Control, RealScalarLike, Y
-from diffrax._local_interpolation import LocalLinearInterpolation
+from diffrax._local_interpolation import (
+    LocalLinearInterpolation,
+    ThirdOrderHermitePolynomialInterpolation,
+)
+from diffrax._solver.runge_kutta import AbstractERK, ButcherTableau
+from equinox.internal import ω  # noqa: PLC2403
+from jaxtyping import Array, ArrayLike, PyTree, Shaped
 
 from ...gradient import Forward
 from ...qarrays.layout import dense
@@ -22,18 +28,9 @@ from ...result import MESolveResult
 from ...utils.operators import eye
 from .diffrax_integrator import MESolveDiffraxIntegrator
 
-from diffrax._local_interpolation import (
-    LocalLinearInterpolation,
-    ThirdOrderHermitePolynomialInterpolation,
-)
-from diffrax._solver.runge_kutta import AbstractERK, ButcherTableau
-from equinox.internal import ω  # noqa: PLC2403
-from jaxtyping import Array, ArrayLike, PyTree, Shaped
-
-
 # === Custom RK4 solver =======================================
 # diffrax does not include a 4th-order RK solver, so we define one using
-# its AbstractERK + ButcherTableau infrastructure. This is the Zonneveld RK4 
+# its AbstractERK + ButcherTableau infrastructure. This is the Zonneveld RK4
 # tableau, which is a known 4th-order Rouchon method.
 
 _Zonneveld4_tableau = ButcherTableau(
@@ -53,7 +50,7 @@ _Zonneveld4_tableau = ButcherTableau(
 
 # Custom interpolation class to extract the right stages based on
 # diffrax's ThirdOrderHermitePolynomialInterpolation. Due to the structure
-#  of _Zonneveld4_tableau, whose last stage is at c=3/4, we need to extract 
+#  of _Zonneveld4_tableau, whose last stage is at c=3/4, we need to extract
 # the k stages at indices 0 and -2 to get the correct interpolation
 class CustomThirdOrderHermitePolynomialInterpolation(
     ThirdOrderHermitePolynomialInterpolation
@@ -81,6 +78,7 @@ class Zonnenveld4(AbstractERK):
 
     def order(self, _terms):  # noqa: ANN001, ANN201
         return 4
+
 
 class AbstractRouchonTerm(dx.AbstractTerm):
     # this class bypasses the typical Diffrax term implementation, as Rouchon schemes
@@ -362,6 +360,7 @@ class KrausHeun3(KrausMapRK):
     _A = ((0.0, 0.0, 0.0), (1 / 3, 0.0, 0.0), (0.0, 2 / 3, 0.0))
     _b = (0.25, 0.0, 0.75)
 
+
 class KrausRK4(KrausMapRK):
     r"""Fourth-order Rouchon method based on the classic RK4 method.
 
@@ -383,6 +382,7 @@ class KrausRK4(KrausMapRK):
         (0.0, 0.0, 1.0, 0.0),
     )
     _b = (1 / 6, 1 / 3, 1 / 3, 1 / 6)
+
 
 class RouchonPropertiesMixin:
     """Mixin providing shared properties for Rouchon integrators.
@@ -532,7 +532,8 @@ class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
     @property
     def nojump_diffrax_solver(self) -> dx.AbstractSolver:
         return Bosh3()
-    
+
+
 class MESolveFixedRouchon4Integrator(MESolveFixedRouchonIntegrator):
     """Fixed step Rouchon 4 (RK4) integrator for the Lindblad master equation."""
 
@@ -696,7 +697,8 @@ class MESolveAdaptiveRouchon3Integrator(MESolveAdaptiveRouchonIntegrator):
         # Midpoint interpolation needs the k stages from Bosh3
         k = dense_info_high['k']
         return dict(y0=y0, y1=y1_low, k=k[:2])
-    
+
+
 class MESolveAdaptiveRouchon4Integrator(MESolveAdaptiveRouchonIntegrator):
     """Adaptive Rouchon 3-4 integrator with embedded dense outputs from ClassicRK4."""
 
@@ -711,7 +713,6 @@ class MESolveAdaptiveRouchon4Integrator(MESolveAdaptiveRouchonIntegrator):
         # Bosh3 interpolation needs k stages; reuse first 4 from ClassicRK4
         k = dense_info_high['k']
         return dict(y0=y0, y1=y1_low, k=k[:4])
-
 
 
 mesolve_rouchon1_integrator_constructor = lambda **kwargs: (
