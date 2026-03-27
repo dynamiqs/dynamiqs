@@ -3,11 +3,13 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import replace
+from typing import ClassVar
 
 import diffrax as dx
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+import numpy as np
 from diffrax import AbstractRungeKutta, Bosh3, Euler, Midpoint, ODETerm
 from diffrax._custom_types import VF, Args, Control, RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
