@@ -120,6 +120,27 @@ def pwc(times: ArrayLike, values: ArrayLike, qarray: QArrayLike) -> PWCTimeQArra
 
     return PWCTimeQArray(times, values, qarray)
 
+def pwc_new(times: ArrayLike, values: ArrayLike, qarray: QArrayLike) -> PWC_new_TimeQArray:
+    # times
+    times = jnp.asarray(times)
+    times = check_times(times, 'times')
+
+    # convert [t0, t1, ..., tN] -> [[t0, t1], [t1, t2], ..., [tN-1, tN]]
+    times = jnp.stack([times[:-1], times[1:]], axis=-1)
+
+    # values
+    values = jnp.asarray(values, dtype=cdtype())
+    if values.shape[-1] != len(times):
+        raise TypeError(
+            'Argument `values` must have shape `(..., number_of_intervals)`, but has shape'
+            f' `{values.shape}`.'
+        )
+
+    # qarray
+    qarray = asqarray(qarray)
+    check_shape(qarray, 'qarray', '(n, n)')
+
+    return PWC_new_TimeQArray(times, values, qarray)
 
 def modulated(
     f: Callable[[float], Scalar | Array],
@@ -657,6 +678,98 @@ class PWCTimeQArray(TimeQArray):
         )
 
         return super()._prefactor(t) * pwc_prefactor
+
+    def _operator(self, t: ScalarLike) -> QArray:  # noqa: ARG002
+        return self.qarray
+
+    def __mul__(self, y: QArrayLike) -> TimeQArray:
+        qarray = self.qarray * y
+        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
+    
+class PWC_new_TimeQArray(TimeQArray):
+
+    times: Array  # (nv, 2)
+    values: Array  # (..., nv)
+    qarray: QArray  # (n, n)
+
+    def __init__(
+        self,
+        times: Array,
+        values: Array,
+        qarray: QArray,
+        *,
+        tstart: float | None = None,
+        tend: float | None = None,
+    ):
+        super().__init__(tstart=tstart, tend=tend)
+        self.times = times
+        self.values = values
+        self.qarray = qarray
+
+    @property
+    def dtype(self) -> jnp.dtype:
+        return self.qarray.dtype
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return *self.values.shape[:-1], *self.qarray.shape
+
+    @property
+    def dims(self) -> tuple[int, ...]:
+        return self.qarray.dims
+
+    @property
+    def ndiags(self) -> int:
+        return self.qarray.ndiags
+
+    @property
+    def vectorized(self) -> bool:
+        return self.qarray.vectorized
+
+    @property
+    def layout(self) -> Layout:
+        return self.qarray.layout
+
+    @property
+    def mT(self) -> TimeQArray:
+        qarray = self.qarray.mT
+        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
+
+    @property
+    def in_axes(self) -> PyTree[int | None]:
+        return PWC_new_TimeQArray(None, 0, None, tstart=None, tend=None)
+
+    @property
+    def discontinuity_ts(self) -> Array:
+        return concatenate_sort(super().discontinuity_ts, 
+                                jnp.unique(self.times.reshape(-1)))
+
+    def shift(self, tshift: float) -> TimeQArray:
+        tstart, tend = self._shift_bounds(tshift)
+        return replace(self, times=self.times + tshift, tstart=tstart, tend=tend)  # ty: ignore[invalid-argument-type]
+
+    def reshape(self, *shape: int) -> TimeQArray:
+        shape = shape[:-2] + self.values.shape[-1:]  # (..., nv)
+        values = self.values.reshape(*shape)
+        return replace(self, values=values)  # ty: ignore[invalid-argument-type]
+
+    def broadcast_to(self, *shape: int) -> TimeQArray:
+        shape = shape[:-2] + self.values.shape[-1:]  # (..., nv)
+        values = jnp.broadcast_to(self.values, shape)
+        return replace(self, values=values)  # ty: ignore[invalid-argument-type]
+
+    def conj(self) -> TimeQArray:
+        values = self.values.conj()
+        qarray = self.qarray.conj()
+        return replace(self, values=values, qarray=qarray)  # ty: ignore[invalid-argument-type]
+
+    def _prefactor(self, t: ScalarLike) -> Array:
+        # self.times[:, 0] = left bounds  (nv,)
+        # self.times[:, 1] = right bounds (nv,)
+        active = (t >= self.times[:, 0]) & (t < self.times[:, 1])  # (nv,)
+        prefactor = jnp.sum(self.values * active, axis=-1)  # (...)
+
+        return super()._prefactor(t) * prefactor
 
     def _operator(self, t: ScalarLike) -> QArray:  # noqa: ARG002
         return self.qarray
