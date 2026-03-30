@@ -125,15 +125,12 @@ def pwc_new(times: ArrayLike, values: ArrayLike, qarray: QArrayLike) -> PWC_new_
     times = jnp.asarray(times)
     times = check_times(times, 'times')
 
-    # convert [t0, t1, ..., tN] -> [[t0, t1], [t1, t2], ..., [tN-1, tN]]
-    times = jnp.stack([times[:-1], times[1:]], axis=-1)
-
     # values
     values = jnp.asarray(values, dtype=cdtype())
-    if values.shape[-1] != len(times):
+    if values.shape[-1] != len(times) - 1:
         raise TypeError(
-            'Argument `values` must have shape `(..., number_of_intervals)`, but has shape'
-            f' `{values.shape}`.'
+            'Argument `values` must have shape `(..., len(times)-1)`, but has shape'
+            f' `{values.shape}.'
         )
 
     # qarray
@@ -687,8 +684,7 @@ class PWCTimeQArray(TimeQArray):
         return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
     
 class PWC_new_TimeQArray(TimeQArray):
-
-    times: Array  # (nv, 2)
+    times: Array  # (nv+1,)
     values: Array  # (..., nv)
     qarray: QArray  # (n, n)
 
@@ -705,6 +701,10 @@ class PWC_new_TimeQArray(TimeQArray):
         self.times = times
         self.values = values
         self.qarray = qarray
+
+    @property
+    def _times_reshaped(self) -> Array:
+        return jnp.stack([self.times[:-1], self.times[1:]], axis=-1)  # (nv, 2)
 
     @property
     def dtype(self) -> jnp.dtype:
@@ -741,10 +741,7 @@ class PWC_new_TimeQArray(TimeQArray):
 
     @property
     def discontinuity_ts(self) -> Array:
-        # Reconstruct the original [t0, t1, ..., tN] from the (nv, 2) pairs
-        # without jnp.unique (which is not JIT-traceable).
-        unique_times = jnp.concatenate([self.times[:, 0], self.times[-1:, 1]])
-        return concatenate_sort(super().discontinuity_ts, unique_times)
+        return concatenate_sort(super().discontinuity_ts, self.times)
 
     def shift(self, tshift: float) -> TimeQArray:
         tstart, tend = self._shift_bounds(tshift)
@@ -766,9 +763,8 @@ class PWC_new_TimeQArray(TimeQArray):
         return replace(self, values=values, qarray=qarray)  # ty: ignore[invalid-argument-type]
 
     def _prefactor(self, t: ScalarLike) -> Array:
-        # self.times[:, 0] = left bounds  (nv,)
-        # self.times[:, 1] = right bounds (nv,)
-        active = (t >= self.times[:, 0]) & (t < self.times[:, 1])  # (nv,)
+        intervals = self._times_reshaped
+        active = (t >= intervals[:, 0]) & (t < intervals[:, 1])  # (nv,)
         prefactor = jnp.sum(self.values * active, axis=-1)  # (...)
 
         return super()._prefactor(t) * prefactor
