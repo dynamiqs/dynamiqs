@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from math import prod
+from typing import overload
 
 import jax.numpy as jnp
 from jax.typing import ArrayLike
@@ -239,6 +240,12 @@ def zeros_like(
     return zeros(*dims, layout=layout)
 
 
+@overload
+def destroy(dim: int, /, *, layout: Layout | None = None) -> QArray: ...
+@overload
+def destroy(*dims: int, layout: Layout | None = None) -> tuple[QArray, ...]: ...
+
+
 def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
     r"""Returns a bosonic annihilation operator, or a tuple of annihilation operators
     for a multi-mode system.
@@ -307,6 +314,12 @@ def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, 
     )
 
 
+@overload
+def create(dim: int, /, *, layout: Layout | None = None) -> QArray: ...
+@overload
+def create(*dims: int, layout: Layout | None = None) -> tuple[QArray, ...]: ...
+
+
 def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
     r"""Returns a bosonic creation operator, or a tuple of creation operators for a
     multi-mode system.
@@ -373,6 +386,12 @@ def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
         tensor(*[adag[j] if i == j else Id[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
+
+
+@overload
+def number(dim: int, /, *, layout: Layout | None = None) -> QArray: ...
+@overload
+def number(*dims: int, layout: Layout | None = None) -> tuple[QArray, ...]: ...
 
 
 def number(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
