@@ -120,7 +120,7 @@ class Result(eqx.Module):
 
     @classmethod
     def out_axes(cls) -> Result:
-        return cls(None, None, None, None, 0, 0)  # ty: ignore[invalid-argument-type]
+        return cls(None, None, None, None, 0, 0)
 
 
 class SolveResult(Result):
@@ -183,7 +183,7 @@ class FloquetResult(Result):
 
     @classmethod
     def out_axes(cls) -> FloquetResult:
-        return cls(None, None, None, None, 0, 0, None)  # ty: ignore[invalid-argument-type]
+        return cls(None, None, None, None, 0, 0, None)
 
 
 class SESolveResult(SolveResult):
