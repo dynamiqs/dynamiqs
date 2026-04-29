@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import jax
 import numpy as np
 
 from .._checks import check_shape
@@ -210,6 +211,7 @@ def sdissipator(L: QArrayLike) -> QArray:
     return sprepost(L, Ldag) - 0.5 * spre(LdagL) - 0.5 * spost(LdagL)
 
 
+@jax.jit
 def slindbladian(H: QArrayLike, jump_ops: list[QArrayLike]) -> QArray:
     r"""Returns the Lindbladian superoperator (in matrix form).
 

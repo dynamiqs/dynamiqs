@@ -2,6 +2,7 @@ from collections import defaultdict
 from collections.abc import Sequence
 from functools import partial, reduce
 
+import jax
 import jax.numpy as jnp
 import numpy as np
 from jax._src.core import concrete_or_error
@@ -120,6 +121,7 @@ def mul_sparsedia_array(
     return offsets, out_diags
 
 
+@partial(jax.jit, static_argnums=0)
 def sparsedia_to_array(offsets: tuple[int, ...], diags: Array) -> Array:
     out = jnp.zeros(shape_sparsedia(diags), dtype=diags.dtype)
     for i, offset in enumerate(offsets):
