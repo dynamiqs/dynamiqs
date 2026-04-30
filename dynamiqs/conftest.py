@@ -20,7 +20,6 @@ def sybil_setup(namespace):
     namespace['np'] = np
     namespace['plt'] = plt
     namespace['jax'] = jax
-    namespace['jnp'] = jnp
     namespace['qt'] = qutip
 
 
