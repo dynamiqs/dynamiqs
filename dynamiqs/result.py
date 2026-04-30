@@ -6,7 +6,7 @@ from jax import Array
 from jaxtyping import PRNGKeyArray, PyTree
 
 from .gradient import Gradient
-from .method import Event, Method
+from .method import Event, Method, Tsit5
 from .options import Options
 from .qarrays.qarray import QArray
 from .qarrays.utils import asqarray, to_jax
@@ -47,6 +47,10 @@ def _array_str(x: Array | QArray | None) -> str | None:
     type_name = 'Array' if isinstance(x, Array) else 'QArray'
     x = to_jax(x)
     return f'{type_name} {x.dtype} {tuple(x.shape)} | {_memory_str(x)}'
+
+
+def _dummy_qarray() -> QArray:
+    return asqarray(jnp.zeros((1, 1), dtype=jnp.complex64))
 
 
 # the Saved object holds quantities saved during the equation integration
@@ -120,11 +124,55 @@ class Result(eqx.Module):
 
     @classmethod
     def out_axes(cls) -> Result:
-        return cls(None, None, None, None, 0, 0)
+        dummy = cls(
+            tsave=jnp.zeros((1,)),
+            method=Tsit5(),
+            gradient=None,
+            options=Options(),
+            _saved=Saved(ysave=_dummy_qarray(), extra=None),
+            infos=None,
+        )
+        return eqx.tree_at(
+            lambda result: (
+                result.tsave,
+                result.method,
+                result.gradient,
+                result.options,
+                result._saved,
+                result.infos,
+            ),
+            dummy,
+            replace=(None, None, None, None, 0, 0),
+            is_leaf=lambda x: x is None,
+        )
 
 
 class SolveResult(Result):
     _saved: SolveSaved
+
+    @classmethod
+    def out_axes(cls) -> SolveResult:
+        dummy = cls(
+            tsave=jnp.zeros((1,)),
+            method=Tsit5(),
+            gradient=None,
+            options=Options(),
+            _saved=SolveSaved(ysave=_dummy_qarray(), extra=None, Esave=None),
+            infos=None,
+        )
+        return eqx.tree_at(
+            lambda result: (
+                result.tsave,
+                result.method,
+                result.gradient,
+                result.options,
+                result._saved,
+                result.infos,
+            ),
+            dummy,
+            replace=(None, None, None, None, 0, 0),
+            is_leaf=lambda x: x is None,
+        )
 
     @property
     def states(self) -> QArray:
@@ -148,6 +196,30 @@ class SolveResult(Result):
 
 class PropagatorResult(Result):
     _saved: PropagatorSaved
+
+    @classmethod
+    def out_axes(cls) -> PropagatorResult:
+        dummy = cls(
+            tsave=jnp.zeros((1,)),
+            method=Tsit5(),
+            gradient=None,
+            options=Options(),
+            _saved=PropagatorSaved(ysave=_dummy_qarray(), extra=None),
+            infos=None,
+        )
+        return eqx.tree_at(
+            lambda result: (
+                result.tsave,
+                result.method,
+                result.gradient,
+                result.options,
+                result._saved,
+                result.infos,
+            ),
+            dummy,
+            replace=(None, None, None, None, 0, 0),
+            is_leaf=lambda x: x is None,
+        )
 
     @property
     def propagators(self) -> QArray:
@@ -183,7 +255,31 @@ class FloquetResult(Result):
 
     @classmethod
     def out_axes(cls) -> FloquetResult:
-        return cls(None, None, None, None, 0, 0, None)
+        dummy = cls(
+            tsave=jnp.zeros((1,)),
+            method=Tsit5(),
+            gradient=None,
+            options=Options(),
+            _saved=FloquetSaved(
+                ysave=_dummy_qarray(), extra=None, quasienergies=jnp.zeros((1,))
+            ),
+            infos=None,
+            T=0.0,
+        )
+        return eqx.tree_at(
+            lambda result: (
+                result.tsave,
+                result.method,
+                result.gradient,
+                result.options,
+                result._saved,
+                result.infos,
+                result.T,
+            ),
+            dummy,
+            replace=(None, None, None, None, 0, 0, None),
+            is_leaf=lambda x: x is None,
+        )
 
 
 class SESolveResult(SolveResult):
@@ -221,10 +317,6 @@ class MEPropagatorResult(PropagatorResult):
 class StochasticSolveResult(SolveResult):
     keys: PRNGKeyArray
 
-    @classmethod
-    def out_axes(cls) -> StochasticSolveResult:
-        return cls(None, None, None, None, 0, 0, 0)
-
     def mean_states(self) -> QArray:
         # todo: document
         return self.states.todm().mean(axis=-4)  # ty: ignore[invalid-return-type]
@@ -238,6 +330,37 @@ class StochasticSolveResult(SolveResult):
 
 class JumpSolveResult(StochasticSolveResult):
     _saved: JumpSolveSaved
+
+    @classmethod
+    def out_axes(cls) -> JumpSolveResult:
+        dummy = cls(
+            tsave=jnp.zeros((1,)),
+            method=Tsit5(),
+            gradient=None,
+            options=Options(),
+            _saved=JumpSolveSaved(
+                ysave=_dummy_qarray(),
+                extra=None,
+                Esave=None,
+                clicktimes=jnp.zeros((1,)),
+            ),
+            infos=None,
+            keys=jnp.zeros((2,), dtype=jnp.uint32),
+        )
+        return eqx.tree_at(
+            lambda result: (
+                result.tsave,
+                result.method,
+                result.gradient,
+                result.options,
+                result._saved,
+                result.infos,
+                result.keys,
+            ),
+            dummy,
+            replace=(None, None, None, None, 0, 0, 0),
+            is_leaf=lambda x: x is None,
+        )
 
     @property
     def clicktimes(self) -> Array:
@@ -290,6 +413,34 @@ class JSMESolveResult(JumpSolveResult):
 
 class DiffusiveSolveResult(StochasticSolveResult):
     _saved: DiffusiveSolveSaved
+
+    @classmethod
+    def out_axes(cls) -> DiffusiveSolveResult:
+        dummy = cls(
+            tsave=jnp.zeros((1,)),
+            method=Tsit5(),
+            gradient=None,
+            options=Options(),
+            _saved=DiffusiveSolveSaved(
+                ysave=_dummy_qarray(), extra=None, Esave=None, Isave=jnp.zeros((1,))
+            ),
+            infos=None,
+            keys=jnp.zeros((2,), dtype=jnp.uint32),
+        )
+        return eqx.tree_at(
+            lambda result: (
+                result.tsave,
+                result.method,
+                result.gradient,
+                result.options,
+                result._saved,
+                result.infos,
+                result.keys,
+            ),
+            dummy,
+            replace=(None, None, None, None, 0, 0, 0),
+            is_leaf=lambda x: x is None,
+        )
 
     @property
     def measurements(self) -> Array:

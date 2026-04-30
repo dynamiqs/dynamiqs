@@ -40,6 +40,7 @@ def vectorize(x: QArrayLike) -> QArray:
         (qarray of shape (..., n^2, 1)): Vectorized operator.
 
     Examples:
+        >>> import jax.numpy as jnp
         >>> A = jnp.array([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]])
         >>> A
         Array([[1.+1.j, 2.+2.j],
@@ -77,6 +78,7 @@ def unvectorize(x: QArrayLike) -> QArray:
         (qarray of shape (..., n, n)): Operator.
 
     Examples:
+        >>> import jax.numpy as jnp
         >>> Avec = jnp.array([[1 + 1j], [2 + 2j], [3 + 3j], [4 + 4j]])
         >>> Avec
         Array([[1.+1.j],

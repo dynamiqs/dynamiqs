@@ -14,18 +14,18 @@ __all__ = [
 
 class AbstractProgressMeter(eqx.Module):
     @abstractmethod
-    def to_diffrax(self) -> dx.AbstractProgressMeter:
+    def to_diffrax(self) -> eqx.Module:
         pass
 
 
 class NoProgressMeter(AbstractProgressMeter):
-    def to_diffrax(self) -> dx.AbstractProgressMeter:
-        return dx.NoProgressMeter()  # ty: ignore[invalid-return-type]
+    def to_diffrax(self) -> eqx.Module:
+        return dx.NoProgressMeter()
 
 
 class TextProgressMeter(AbstractProgressMeter):
-    def to_diffrax(self) -> dx.AbstractProgressMeter:
-        return dx.TextProgressMeter()  # ty: ignore[invalid-return-type]
+    def to_diffrax(self) -> eqx.Module:
+        return dx.TextProgressMeter()
 
 
 def _format_duration(duration_s: float) -> str:
@@ -76,5 +76,5 @@ class _DiffraxTqdmProgressMeter(dx.TqdmProgressMeter):
 
 
 class TqdmProgressMeter(AbstractProgressMeter):
-    def to_diffrax(self) -> dx.AbstractProgressMeter:
-        return _DiffraxTqdmProgressMeter()  # ty: ignore[invalid-return-type]
+    def to_diffrax(self) -> eqx.Module:
+        return _DiffraxTqdmProgressMeter()

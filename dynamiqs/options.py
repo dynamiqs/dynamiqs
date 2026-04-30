@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
 
 import equinox as eqx
 import jax.tree_util as jtu
@@ -13,6 +14,8 @@ from .utils.global_settings import get_progress_meter
 
 __all__ = ['Options']
 
+_SaveExtra = Callable[..., PyTree]
+
 
 class Options(eqx.Module):
     save_states: bool = True
@@ -20,7 +23,7 @@ class Options(eqx.Module):
     cartesian_batching: bool = True
     progress_meter: AbstractProgressMeter | bool | None = None
     t0: ScalarLike | None = None
-    save_extra: Callable[[QArray], PyTree] | None = None
+    save_extra: _SaveExtra | None = None
     nmaxclick: int = 10_000
     vectorized: bool = False
     assume_hermitian: bool = True
@@ -64,17 +67,7 @@ class Options(eqx.Module):
         #   dynamically, but then changing the default value would not change the
         #   `options` object attributes, and we would cache hit the JIT-compiled
         #   function for any previous existing `options` object.
-        return Options(  # ty: ignore[invalid-return-type]
-            save_states=self.save_states,
-            save_propagators=self.save_propagators,
-            cartesian_batching=self.cartesian_batching,
-            progress_meter=get_progress_meter(self.progress_meter),
-            t0=self.t0,
-            save_extra=self.save_extra,
-            nmaxclick=self.nmaxclick,
-            vectorized=self.vectorized,
-            assume_hermitian=self.assume_hermitian,
-        )
+        return replace(self, progress_meter=get_progress_meter(self.progress_meter))
 
 
 def check_options(options: Options, solver_name: str):
