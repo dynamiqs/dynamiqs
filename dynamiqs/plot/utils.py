@@ -101,6 +101,7 @@ def grid(
     Examples:
         For example, to plot six different curves:
 
+        >>> import jax.numpy as jnp
         >>> x = jnp.linspace(0, 1, 101)
         >>> ys = [jnp.sin(f * 2 * jnp.pi * x) for f in range(6)]  # (6, 101)
 
@@ -160,6 +161,7 @@ def mplstyle(*, usetex: bool = False, dpi: int = 72):
         Documentation redaction in progress.
 
     Examples:
+        >>> import jax.numpy as jnp
         >>> x = jnp.linspace(0, 2 * jnp.pi, 101)
         >>> ys = [jnp.sin(x), jnp.sin(2 * x), jnp.sin(3 * x)]
         >>> default_mpl_style()
@@ -358,6 +360,7 @@ def gifit(
 
         ![plot_cos](../../figs_code/cos.gif){.fig}
 
+        >>> import jax.numpy as jnp
         >>> alphas = jnp.linspace(0.0, 3.0, 51)
         >>> states = dq.coherent(24, alphas)
         >>> gif = dq.plot.gifit(dq.plot.fock)(states, fps=25)

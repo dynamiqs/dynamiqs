@@ -2,11 +2,11 @@
 name = "dynamiqs"
 description = "High-performance quantum systems simulation with JAX (GPU-accelerated & differentiable solvers)."
 authors = [
-  { name = "Pierre Guilmin", email = "pierreguilmin@gmail.com" },
-  { name = "Ronan Gautier", email = "ron.gautier@gmail.com" },
-  { name = "Adrien Bocquet", email = "adrienbocquet38@gmail.com" },
-  { name = "Elie Genois", email = "elie.genois@usherbrooke.ca" },
-  { name = "Daniel Weiss", email = "daniel.kamrath.weiss@gmail.com" },
+    { name = "Pierre Guilmin", email = "pierreguilmin@gmail.com" },
+    { name = "Ronan Gautier", email = "ron.gautier@gmail.com" },
+    { name = "Adrien Bocquet", email = "adrienbocquet38@gmail.com" },
+    { name = "Elie Genois", email = "elie.genois@usherbrooke.ca" },
+    { name = "Daniel Weiss", email = "daniel.kamrath.weiss@gmail.com" },
 ]
 dynamic = ["version"]
 license = { file = "LICENSE" }
@@ -48,7 +48,7 @@ build-backend = "flit_core.buildapi"
 
 [project.optional-dependencies]
 dev = [
-    "taskipy",
+    "taskipy==1.14.1",
     "ruff>=0.8",
     "codespell",
     "pytest>=8.0",
@@ -64,11 +64,11 @@ dev = [
     "mkdocs-glightbox",
     "mkdocs-exclude",
     "sybil>=6",
-    "black",  # needed by mkdocstrings to format function signatures
+    "black", # needed by mkdocstrings to format function signatures
     "flit",
     "mike",
-    "optax",  # for gradient descent tutorials
-    "ty",
+    "optax", # for gradient descent tutorials
+    "ty==0.0.31",
 ]
 
 [tool.ruff]
@@ -123,6 +123,7 @@ ignore-words-list = "ket, braket, SME"
 
 [tool.ty.src]
 exclude = [
+    "tests",
     "dynamiqs/integrators",
     "dynamiqs/plot",
     "dynamiqs/qarrays",
