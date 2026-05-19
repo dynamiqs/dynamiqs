@@ -51,6 +51,51 @@ def constant(qarray: QArrayLike) -> ConstantTimeQArray:
 
 
 def pwc(times: ArrayLike, values: ArrayLike, qarray: QArrayLike) -> PWCTimeQArray:
+    r"""Instantiate a piecewise constant (PWC) timeqarray.
+    A PWC timeqarray takes constant values over some time intervals. It is defined by
+    $$
+        O(t) = \left(\sum_{k=0}^{N-1} c_k\; \Omega_{[t_k, t_{k+1}[}(t)\right) O_0
+    $$
+    where $c_k$ are constant values, $\Omega_{[t_k, t_{k+1}[}$ is the rectangular
+    window function defined by $\Omega_{[t_a, t_b[}(t) = 1$ if $t \in [t_a, t_b[$ and
+    $\Omega_{[t_a, t_b[}(t) = 0$ otherwise, and $O_0$ is a constant qarray.
+    Note:
+        The argument `times` must be sorted in ascending order, but does not
+        need to be evenly spaced.
+    Note:
+        If the returned timeqarray is called for a time $t$ which does not belong to
+        any time intervals, the returned qarray is null.
+    Args:
+        times (array-like of shape (N+1,)): Time points $t_k$ defining the boundaries
+            of the time intervals, where _N_ is the number of time intervals.
+        values (array-like of shape (..., N)): Constant values $c_k$ for each time
+            interval.
+        qarray (qarray-like of shape (n, n)): Constant qarray $O_0$.
+    Returns:
+        (timeqarray of shape (..., n, n) when called): Callable returning $O(t)$ for
+            any time $t$.
+    Examples:
+        >>> times = [0.0, 1.0, 2.0]
+        >>> values = [3.0, -2.0]
+        >>> qarray = dq.sigmaz()
+        >>> H = dq.pwc(times, values, qarray)
+        >>> H(-0.5)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[  ⋅      ⋅   ]
+         [  ⋅      ⋅   ]]
+        >>> H(0.0)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[ 3.+0.j    ⋅   ]
+         [   ⋅    -3.+0.j]]
+        >>> H(0.5)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[ 3.+0.j    ⋅   ]
+         [   ⋅    -3.+0.j]]
+        >>> H(1.0)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[-2.+0.j    ⋅   ]
+         [   ⋅     2.+0.j]]
+    """
     # times
     times = jnp.asarray(times)
     times = check_times(times, 'times')
@@ -519,6 +564,8 @@ class ConstantTimeQArray(TimeQArray):
 
 
 class PWCTimeQArray(TimeQArray):
+    # note: tstart and tend can be different from times[0] and times[-1]
+
     times: Array  # (nv+1,)
     values: Array  # (..., nv)
     qarray: QArray  # (n, n)
