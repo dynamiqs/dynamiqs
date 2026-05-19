@@ -68,7 +68,7 @@ dev = [
     "flit",
     "mike",
     "optax",  # for gradient descent tutorials
-    "ty",
+    "ty==0.0.17",
 ]
 
 [tool.ruff]
