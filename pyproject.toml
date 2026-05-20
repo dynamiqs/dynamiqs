@@ -195,4 +195,4 @@ cmd = '''echo "\n>>> ruff check" && ruff check &&
          task test &&
          task doctest &&
          task docbuild'''
-help = "run all the CI checks"
+help = "run all the CI checks" 
