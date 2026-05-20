@@ -64,7 +64,7 @@ class Options(eqx.Module):
         #   dynamically, but then changing the default value would not change the
         #   `options` object attributes, and we would cache hit the JIT-compiled
         #   function for any previous existing `options` object.
-        return Options(
+        return Options(  # ty: ignore[invalid-return-type]
             save_states=self.save_states,
             save_propagators=self.save_propagators,
             cartesian_batching=self.cartesian_batching,
