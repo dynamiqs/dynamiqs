@@ -68,7 +68,7 @@ dev = [
     "flit",
     "mike",
     "optax",  # for gradient descent tutorials
-    "ty==0.0.17",
+    "ty",
 ]
 
 [tool.ruff]
@@ -139,23 +139,60 @@ unused-ignore-comment = "error"
 
 # === taskipy tasks definition ===
 
-[tool.taskipy.tasks]
-lint = 'echo "\n>>> ruff check --fix" && ruff check --fix'
-format = 'echo "\n>>> ruff format" && ruff format'
-codespell = 'echo "\n>>> codespell" && codespell tests dynamiqs'
-type = 'echo "\n>>> ty check dynamiqs" && ty check dynamiqs'
-clean = 'task lint && task format && task codespell && task type'
-test = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
-doctest-code = 'echo "\n>>> pytest dynamiqs" && python docs/remove_figs.py docs/figs_code && pytest dynamiqs'
-doctest-docs = 'echo "\n>>> pytest docs" && python docs/remove_figs.py docs/figs_docs && pytest docs'
-doctest = 'task doctest-code && task doctest-docs'
-docbuild = 'mkdocs build'
-docserve = 'mkdocs serve'
-all = 'task clean && task test && task doctest'
-ci = '''echo "\n>>> ruff check" && ruff check &&
-        echo "\n>>> ruff format --check" && ruff format --check &&
-        task codespell &&
-        task type &&
-        task test &&
-        task doctest &&
-        task docbuild'''
+[tool.taskipy.tasks.lint]
+cmd = 'echo "\n>>> ruff check --fix" && ruff check --fix'
+help = "lint the code (ruff)"
+
+[tool.taskipy.tasks.format]
+cmd = 'echo "\n>>> ruff format" && ruff format'
+help = "auto-format the code (ruff)"
+
+[tool.taskipy.tasks.codespell]
+cmd = 'echo "\n>>> codespell" && codespell tests dynamiqs'
+help = "check for misspellings (codespell)"
+
+[tool.taskipy.tasks.type]
+cmd = 'echo "\n>>> ty check dynamiqs" && ty check dynamiqs'
+help = "check types (ty)"
+
+[tool.taskipy.tasks.clean]
+cmd = 'task lint && task format && task codespell && task type'
+help = "clean the code (ruff + codespell + ty)"
+
+[tool.taskipy.tasks.test]
+cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
+help = "run the unit tests suite (pytest)"
+
+[tool.taskipy.tasks.doctest-code]
+cmd = 'echo "\n>>> pytest dynamiqs" && python docs/remove_figs.py docs/figs_code && pytest dynamiqs'
+help = "check code docstrings examples (doctest)"
+
+[tool.taskipy.tasks.doctest-docs]
+cmd = 'echo "\n>>> pytest docs" && python docs/remove_figs.py docs/figs_docs && pytest docs'
+help = "check documentation examples (doctest)"
+
+[tool.taskipy.tasks.doctest]
+cmd = 'task doctest-code && task doctest-docs'
+help = "check all examples (doctest)"
+
+[tool.taskipy.tasks.docbuild]
+cmd = 'mkdocs build'
+help = "build the documentation website"
+
+[tool.taskipy.tasks.docserve]
+cmd = 'mkdocs serve'
+help = "preview documentation website with hot-reloading"
+
+[tool.taskipy.tasks.all]
+cmd = 'task clean && task test && task doctest'
+help = "run all tasks before a commit (ruff + codespell + ty + pytest + doctest)"
+
+[tool.taskipy.tasks.ci]
+cmd = '''echo "\n>>> ruff check" && ruff check &&
+         echo "\n>>> ruff format --check" && ruff format --check &&
+         task codespell &&
+         task type &&
+         task test &&
+         task doctest &&
+         task docbuild'''
+help = "run all the CI checks"
