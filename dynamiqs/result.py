@@ -11,6 +11,7 @@ from .options import Options
 from .qarrays.qarray import QArray
 from .qarrays.utils import asqarray, to_jax
 from .utils.general import unit
+from typing import cast
 
 OutAxes = PyTree[None | int]
 
@@ -122,7 +123,7 @@ class Result(eqx.Module):
 
     @classmethod
     def out_axes(cls) -> OutAxes:
-        return cls(None, None, None, None, 0, 0)
+        return cast(OutAxes, cls(None, None, None, None, 0, 0))
 
 
 class SolveResult(Result):
@@ -185,7 +186,7 @@ class FloquetResult(Result):
 
     @classmethod
     def out_axes(cls) -> OutAxes:
-        return cls(None, None, None, None, 0, 0, None)
+        return cast(OutAxes, cls(None, None, None, None, 0, 0, None))
 
 
 class SESolveResult(SolveResult):
@@ -225,7 +226,7 @@ class StochasticSolveResult(SolveResult):
 
     @classmethod
     def out_axes(cls) -> OutAxes:
-        return cls(None, None, None, None, 0, 0, 0)
+        return cast(OutAxes, cls(None, None, None, None, 0, 0, 0))
 
     def mean_states(self) -> QArray:
         # todo: document
