@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import cast
-
 import equinox as eqx
 import jax.numpy as jnp
 from jax import Array
@@ -13,8 +11,6 @@ from .options import Options
 from .qarrays.qarray import QArray
 from .qarrays.utils import asqarray, to_jax
 from .utils.general import unit
-
-OutAxes = PyTree[None | int]
 
 __all__ = [
     'FloquetResult',
