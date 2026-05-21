@@ -11,7 +11,6 @@ from .options import Options
 from .qarrays.qarray import QArray
 from .qarrays.utils import asqarray, to_jax
 from .utils.general import unit
-from typing import Self
 
 OutAxes = PyTree[None | int]
 
