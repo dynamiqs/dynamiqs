@@ -120,7 +120,7 @@ class Result(eqx.Module):
 
     @classmethod
     def out_axes(cls) -> Result:
-        return cls(None, None, None, None, 0, 0)
+        return cls(None, None, None, None, 0, 0)  # ty: ignore[invalid-argument-type]
 
 
 class SolveResult(Result):
@@ -183,7 +183,7 @@ class FloquetResult(Result):
 
     @classmethod
     def out_axes(cls) -> FloquetResult:
-        return cls(None, None, None, None, 0, 0, None)
+        return cls(None, None, None, None, 0, 0, None)  # ty: ignore[invalid-argument-type]
 
 
 class SESolveResult(SolveResult):
@@ -223,7 +223,7 @@ class StochasticSolveResult(SolveResult):
 
     @classmethod
     def out_axes(cls) -> StochasticSolveResult:
-        return cls(None, None, None, None, 0, 0, 0)
+        return cls(None, None, None, None, 0, 0, 0)  # ty: ignore[invalid-argument-type]
 
     def mean_states(self) -> QArray:
         # todo: document

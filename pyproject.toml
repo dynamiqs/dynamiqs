@@ -48,7 +48,7 @@ build-backend = "flit_core.buildapi"
 
 [project.optional-dependencies]
 dev = [
-    "taskipy",
+    "taskipy>=1.14.1",
     "ruff>=0.8",
     "codespell",
     "pytest>=8.0",
