@@ -11,6 +11,9 @@ from .options import Options
 from .qarrays.qarray import QArray
 from .qarrays.utils import asqarray, to_jax
 from .utils.general import unit
+from typing import Self
+
+OutAxes = PyTree[None | int]
 
 __all__ = [
     'FloquetResult',
@@ -119,7 +122,7 @@ class Result(eqx.Module):
         return f'==== {self.__class__.__name__} ====\n' + parts_str
 
     @classmethod
-    def out_axes(cls) -> Result:
+    def out_axes(cls) -> OutAxes:
         return cls(None, None, None, None, 0, 0)
 
 
@@ -182,7 +185,7 @@ class FloquetResult(Result):
         }
 
     @classmethod
-    def out_axes(cls) -> FloquetResult:
+    def out_axes(cls) -> OutAxes:
         return cls(None, None, None, None, 0, 0, None)
 
 
@@ -222,7 +225,7 @@ class StochasticSolveResult(SolveResult):
     keys: PRNGKeyArray
 
     @classmethod
-    def out_axes(cls) -> StochasticSolveResult:
+    def out_axes(cls) -> OutAxes:
         return cls(None, None, None, None, 0, 0, 0)
 
     def mean_states(self) -> QArray:
