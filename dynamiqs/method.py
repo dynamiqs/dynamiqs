@@ -628,7 +628,7 @@ class Event(_DEMethod):
         (default).
     """
 
-    noclick_method: Method = Tsit5()  # ty: ignore[invalid-assignment]
+    noclick_method: Method = Tsit5()
     dtmax: float | None = eqx.field(static=True, default=None)
     root_finder: AbstractRootFinder | None = eqx.field(static=True, default=None)
     smart_sampling: bool = eqx.field(static=True, default=False)
@@ -642,7 +642,7 @@ class Event(_DEMethod):
     # dummy init to have the signature in the documentation
     def __init__(
         self,
-        noclick_method: Method = Tsit5(),  # noqa: B008  # ty: ignore[invalid-parameter-default]
+        noclick_method: Method = Tsit5(),  # noqa: B008
         dtmax: float | None = None,
         root_finder: AbstractRootFinder | None = None,
         smart_sampling: bool = False,
@@ -832,7 +832,7 @@ class LowRank(Method):
     def __init__(
         self,
         rank: int,
-        ode_method: Method = Tsit5(),  # noqa: B008  # ty: ignore[invalid-parameter-default]
+        ode_method: Method = Tsit5(),  # noqa: B008
         linear_solver: LinearSolver = LinearSolver.QR,
         perturbation_scale: float = 1e-5,
         *,
