@@ -591,6 +591,10 @@ class PWCTimeQArray(TimeQArray):
         self.qarray = qarray
 
     @property
+    def _times_reshaped(self) -> Array:
+        return jnp.stack([self.times[:-1], self.times[1:]], axis=-1)  # (nv, 2)
+
+    @property
     def dtype(self) -> jnp.dtype:
         return self.qarray.dtype
 
@@ -647,14 +651,9 @@ class PWCTimeQArray(TimeQArray):
         return replace(self, values=values, qarray=qarray)  # ty: ignore[invalid-argument-type]
 
     def _prefactor(self, t: ScalarLike) -> Array:
-        zero = jnp.zeros_like(self.values[..., 0])  # (...)
-
-        idx = jnp.searchsorted(self.times, t, side='right') - 1
-        pwc = self.values[..., idx]  # (...)
-
-        pwc_prefactor = jax.lax.select(
-            (t < self.times[0]) | (t >= self.times[-1]), zero, pwc
-        )
+        intervals = self._times_reshaped
+        active = (t >= intervals[:, 0]) & (t < intervals[:, 1])  # (nv,)
+        pwc_prefactor = jnp.sum(self.values * active, axis=-1)  # (...)
 
         return super()._prefactor(t) * pwc_prefactor
 
