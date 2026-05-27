@@ -182,7 +182,7 @@ for i, exp in enumerate(exps_adaga[:4]):
 plt.plot(tsave, exps_adaga.mean(0), label=f'Average trajectory', color='gray', **kw)
 
 # Lindblad solution
-result_lindblad = dq.mesolve(H, jump_ops, psi0, tsave, options=options, exp_ops=exp_ops)
+result_lindblad = dq.mesolve(H, jump_ops, psi0, tsave, save_states=False, exp_ops=exp_ops)
 plt.plot(tsave, result_lindblad.expects[0].real, ls='--', label=f'Lindblad', color='gray', **kw)
 
 plt.gca().set(
