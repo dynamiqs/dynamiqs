@@ -108,7 +108,8 @@ class TqdmProgressMeter(AbstractProgressMeter):
     showing percentage completion, elapsed time, and estimated remaining time.
 
     This is the default progress meter used by all solvers when `progress_meter=None`
-    (unless overridden globally with [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]).
+    (unless overridden globally with
+    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]).
 
     Pass `progress_meter=True` or `progress_meter=dq.TqdmProgressMeter()` explicitly
     to force it.
