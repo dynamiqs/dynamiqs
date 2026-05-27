@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import partial
 
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike
+from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...method import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options, check_options
+from ...progress_meter import AbstractProgressMeter
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import SESolveResult
@@ -41,7 +43,11 @@ def sesolve(
     exp_ops: list[QArrayLike] | None = None,
     method: Method = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    save_states: bool = True,
+    cartesian_batching: bool = True,
+    progress_meter: AbstractProgressMeter | bool | None = None,
+    t0: ScalarLike | None = None,
+    save_extra: Callable[[Array], PyTree] | None = None,
 ) -> SESolveResult:
     r"""Solve the Schrödinger equation.
 
@@ -217,6 +223,15 @@ def sesolve(
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+
+    # === build options
+    options = Options(
+        save_states=save_states,
+        cartesian_batching=cartesian_batching,
+        progress_meter=progress_meter,
+        t0=t0,
+        save_extra=save_extra,
+    )
 
     # === check arguments
     _check_sesolve_args(H, psi0, exp_ops)

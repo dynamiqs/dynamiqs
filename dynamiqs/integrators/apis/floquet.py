@@ -5,12 +5,13 @@ from functools import partial
 import equinox as eqx
 import jax
 import jax.numpy as jnp
-from jaxtyping import Array, ArrayLike
+from jaxtyping import Array, ArrayLike, ScalarLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options, check_options
+from ...progress_meter import AbstractProgressMeter
 from ...qarrays.qarray import QArrayLike
 from ...result import FloquetResult
 from ...time_qarray import TimeQArray
@@ -32,7 +33,8 @@ def floquet(
     *,
     method: Method = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    progress_meter: AbstractProgressMeter | bool | None = None,
+    t0: ScalarLike | None = None,
 ) -> FloquetResult:
     r"""Compute Floquet modes and quasienergies of a periodic closed system.
 
@@ -183,6 +185,9 @@ def floquet(
     # === convert arguments
     H = astimeqarray(H)
     tsave = jnp.asarray(tsave)
+
+    # === build options
+    options = Options(progress_meter=progress_meter, t0=t0)
 
     # === check arguments
     tsave = check_times(tsave, 'tsave')

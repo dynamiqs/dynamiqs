@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Callable
 
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike
+from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 from ..._checks import check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
@@ -27,6 +28,7 @@ from ...method import (
     Tsit5,
 )
 from ...options import Options, check_options
+from ...progress_meter import AbstractProgressMeter
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import MESolveResult
@@ -68,7 +70,13 @@ def mesolve(
     exp_ops: list[QArrayLike] | None = None,
     method: Method = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    save_states: bool = True,
+    cartesian_batching: bool = True,
+    progress_meter: AbstractProgressMeter | bool | None = None,
+    t0: ScalarLike | None = None,
+    save_extra: Callable[[Array], PyTree] | None = None,
+    vectorized: bool = False,
+    assume_hermitian: bool = True,
 ) -> MESolveResult:
     r"""Solve the Lindblad master equation.
 
@@ -283,6 +291,17 @@ def mesolve(
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+
+    # === build options
+    options = Options(
+        save_states=save_states,
+        cartesian_batching=cartesian_batching,
+        progress_meter=progress_meter,
+        t0=t0,
+        save_extra=save_extra,
+        vectorized=vectorized,
+        assume_hermitian=assume_hermitian,
+    )
 
     # === check arguments
     _check_mesolve_args(H, Ls, rho0, exp_ops)

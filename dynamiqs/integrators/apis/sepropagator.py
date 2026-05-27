@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import partial
 
 import jax
 import jax.numpy as jnp
-from jaxtyping import Array, ArrayLike
+from jaxtyping import Array, ArrayLike, PyTree, ScalarLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...method import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options, check_options
+from ...progress_meter import AbstractProgressMeter
 from ...qarrays.layout import dense
 from ...qarrays.qarray import QArrayLike
 from ...result import SEPropagatorResult
@@ -39,7 +41,10 @@ def sepropagator(
     *,
     method: Method | None = None,
     gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    save_propagators: bool = True,
+    progress_meter: AbstractProgressMeter | bool | None = None,
+    t0: ScalarLike | None = None,
+    save_extra: Callable[[Array], PyTree] | None = None,
 ) -> SEPropagatorResult:
     r"""Compute the propagator of the Schrödinger equation.
 
@@ -181,6 +186,14 @@ def sepropagator(
     # === convert arguments
     H = astimeqarray(H)
     tsave = jnp.asarray(tsave)
+
+    # === build options
+    options = Options(
+        save_propagators=save_propagators,
+        progress_meter=progress_meter,
+        t0=t0,
+        save_extra=save_extra,
+    )
 
     # === check arguments
     _check_sepropagator_args(H)

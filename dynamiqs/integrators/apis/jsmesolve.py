@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import partial
 
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray
+from jaxtyping import ArrayLike, PRNGKeyArray, PyTree
 
 from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
@@ -41,7 +42,10 @@ def jsmesolve(
     exp_ops: list[QArrayLike] | None = None,
     method: Method | None = None,
     gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    save_states: bool = True,
+    cartesian_batching: bool = True,
+    save_extra: Callable[[Array], PyTree] | None = None,
+    nmaxclick: int = 10_000,
 ) -> JSMESolveResult:
     r"""Solve the jump stochastic master equation (SME).
 
@@ -286,6 +290,14 @@ def jsmesolve(
     keys = jnp.asarray(keys)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+
+    # === build options
+    options = Options(
+        save_states=save_states,
+        cartesian_batching=cartesian_batching,
+        save_extra=save_extra,
+        nmaxclick=nmaxclick,
+    )
 
     # === check arguments
     _check_jsmesolve_args(H, Ls, thetas, etas, rho0, exp_ops)
