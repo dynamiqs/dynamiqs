@@ -107,7 +107,7 @@ def mesolve(
         rho0 (qarray-like of shape (...rho0, n, 1) or (...rho0, n, n)): Initial state.
         tsave (array-like of shape (ntsave,)): Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
-            `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
+            `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified.
         exp_ops (list of qarray-like, each of shape (n, n), optional): List of
             operators for which the expectation value is computed.
         method: Method for the integration. Defaults to
@@ -127,56 +127,6 @@ def mesolve(
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
-        options: Generic options (supported: `save_states`, `cartesian_batching`,
-            `progress_meter`, `t0`, `save_extra`).
-            ??? "Detailed options API"
-
-                ```
-                dq.Options(
-                    save_states: bool = True,
-                    cartesian_batching: bool = True,
-                    progress_meter: AbstractProgressMeter | bool | None = None,
-                    t0: ScalarLike | None = None,
-                    save_extra: Callable[[Array], PyTree] | None = None,
-                    vectorized: bool = False,
-                    assume_hermitian: bool = True,
-                )
-                ```
-
-                **Parameters:**
-
-                - **`save_states`** - If `True`, the state is saved at every time in
-                    `tsave`, otherwise only the final state is returned.
-                - **`cartesian_batching`** - If `True`, batched arguments are treated as
-                    separated batch dimensions, otherwise the batching is performed over
-                    a single shared batched dimension.
-                - **`progress_meter`** - Progress meter indicating how far the solve has
-                    progressed. Defaults to `None` which uses the global default
-                    progress meter (see
-                    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
-                    `True` for a [tqdm](https://github.com/tqdm/tqdm) progress meter,
-                    and `False` for no output. See other options in
-                    [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
-                    If gradients are computed, the progress meter only displays during
-                    the forward pass.
-                - **`t0`** - Initial time. If `None`, defaults to the first time in
-                    `tsave`.
-                - **`save_extra`** _(function, optional)_ - A function with signature
-                    `f(QArray) -> PyTree` that takes a state as input and returns a
-                    PyTree. This can be used to save additional arbitrary data
-                    during the integration, accessible in `result.extra`.
-                - **`vectorized`** - If `True`, the master equation is solved by
-                    vectorizing the density matrix and Liouvillian. This is usually
-                    more efficient for small Hilbert spaces but less efficient for
-                    large Hilbert spaces. This option is only supported for
-                    Diffrax-based ODE methods.
-                - **`assume_hermitian`** - If `True`, the initial density matrix `rho0`
-                    is assumed to be Hermitian. This allows to halve the number of
-                    matrix multiplications during vector field evaluation since only
-                    the  hermitian part of `rho` is evolved. If `False`, the standard
-                    evolution is performed. This option is only compatible with
-                    Diffrax-based ODE methods and with `vectorized=False`. In other
-                    cases, no assumptions are made on the hermiticity of `rho0`.
 
     Returns:
         `dq.MESolveResult` object holding the result of the
@@ -191,13 +141,12 @@ def mesolve(
                 **Attributes:**
 
                 - **`states`** _(qarray of shape (..., nsave, n, n))_ - Saved states
-                    with `nsave = ntsave`, or `nsave = 1` if
-                    `options.save_states=False`.
+                    with `nsave = ntsave`, or `nsave = 1` if `save_states=False`.
                 - **`final_state`** _(qarray of shape (..., n, n))_ - Saved final state.
                 - **`expects`** _(array of shape (..., len(exp_ops), ntsave) or None)_ -
                     Saved expectation values, if specified by `exp_ops`.
                 - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
-                    if specified in `options`.
+                    if specified.
                 - **`infos`** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
                 - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
@@ -208,6 +157,36 @@ def mesolve(
                 - **`lowrank_states`** _(qarray of shape (..., nsave, n, rank))_ - Only
                     available when using [`LowRank`][dynamiqs.method.LowRank], stores
                     the low-rank factors `m(t)`.
+
+    Other Parameters:
+        save_states (bool, optional): If `True`, the state is saved at every time in
+            `tsave`, otherwise only the final state is returned. Defaults to `True`.
+        cartesian_batching (bool, optional): If `True`, batched arguments are treated
+            as separated batch dimensions, otherwise the batching is performed over a
+            single shared batch dimension. Defaults to `True`.
+        progress_meter (AbstractProgressMeter or bool or None, optional): Progress
+            meter indicating how far the solve has progressed. Defaults to `None`
+            which uses the global default progress meter (see
+            [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to `True`
+            for a [tqdm](https://github.com/tqdm/tqdm) progress meter, and `False`
+            for no output. If gradients are computed, the progress meter only
+            displays during the forward pass.
+        t0 (float or None, optional): Initial time. If `None`, defaults to the first
+            time in `tsave`. Defaults to `None`.
+        save_extra (callable or None, optional): A function with signature
+            `f(QArray) -> PyTree` that takes a state as input and returns a PyTree.
+            This can be used to save additional arbitrary data during the integration,
+            accessible in `result.extra`. Defaults to `None`.
+        vectorized (bool, optional): If `True`, the master equation is solved by
+            vectorizing the density matrix and Liouvillian. This is usually more
+            efficient for small Hilbert spaces but less efficient for large Hilbert
+            spaces. Only supported for Diffrax-based ODE methods. Defaults to `False`.
+        assume_hermitian (bool, optional): If `True`, the initial density matrix
+            `rho0` is assumed to be Hermitian. This allows to halve the number of
+            matrix multiplications during vector field evaluation since only the
+            Hermitian part of `rho` is evolved. Only compatible with Diffrax-based
+            ODE methods and `vectorized=False`. In other cases, no assumptions are
+            made on the hermiticity of `rho0`. Defaults to `True`.
 
     Examples:
         ```python

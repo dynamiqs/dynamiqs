@@ -122,28 +122,6 @@ def dssesolve(
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
-        options: Generic options (supported: `save_states`, `cartesian_batching`,
-            `save_extra`).
-            ??? "Detailed options API"
-                ```
-                dq.Options(
-                    save_states: bool = True,
-                    cartesian_batching: bool = True,
-                    save_extra: Callable[[Array], PyTree] | None = None,
-                )
-                ```
-
-                **Parameters:**
-
-                - **`save_states`** - If `True`, the state is saved at every time in
-                    `tsave`, otherwise only the final state is returned.
-                - **`cartesian_batching`** - If `True`, batched arguments are treated as
-                    separated batch dimensions, otherwise the batching is performed over
-                    a single shared batched dimension.
-                - **`save_extra`** _(function, optional)_ - A function with signature
-                    `f(QArray) -> PyTree` that takes a state as input and returns a
-                    PyTree. This can be used to save additional arbitrary data
-                    during the integration, accessible in `result.extra`.
 
     Returns:
         `dq.DSSESolveResult` object holding the result of the diffusive SSE integration.
@@ -163,7 +141,7 @@ def dssesolve(
 
                 - **`states`** _(qarray of shape (..., ntrajs, nsave, n, 1))_ - Saved
                     states with `nsave = ntsave`, or `nsave = 1` if
-                    `options.save_states=False`.
+                    `save_states=False`.
                 - **`final_state`** _(qarray of shape (..., ntrajs, n, 1))_ - Saved
                     final state.
                 - **`expects`** _(array of shape (..., ntrajs, len(exp_ops), ntsave)
@@ -171,7 +149,7 @@ def dssesolve(
                 - **`measurements`** _(array of shape
                     (..., ntrajs, len(jump_ops), nsave-1))_ - Saved measurements.
                 - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
-                    if specified in `options`.
+                    if specified.
                 - **`keys`** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
                     sample the Wiener processes.
                 - **`infos`** _(PyTree or None)_ - Method-dependent information on the
@@ -181,6 +159,17 @@ def dssesolve(
                 - **`method`** _(Method)_ - Method used.
                 - **`gradient`** _(Gradient)_ - Gradient used.
                 - **`options`** _(Options)_ - Options used.
+
+    Other Parameters:
+        save_states (bool, optional): If `True`, the state is saved at every time in
+            `tsave`, otherwise only the final state is returned. Defaults to `True`.
+        cartesian_batching (bool, optional): If `True`, batched arguments are treated
+            as separated batch dimensions, otherwise the batching is performed over a
+            single shared batch dimension. Defaults to `True`.
+        save_extra (callable or None, optional): A function with signature
+            `f(QArray) -> PyTree` that takes a state as input and returns a PyTree.
+            This can be used to save additional arbitrary data during the integration,
+            accessible in `result.extra`. Defaults to `None`.
 
     Examples:
         ```python

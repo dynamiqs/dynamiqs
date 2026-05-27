@@ -70,28 +70,6 @@ def floquet(
             [`Kvaerno5`][dynamiqs.method.Kvaerno5],
             [`Euler`][dynamiqs.method.Euler]).
         gradient: Algorithm used to compute the gradient.
-        options: Generic options (supported: `progress_meter`, `t0`).
-            ??? "Detailed options API"
-                ```
-                dq.Options(
-                    progress_meter: AbstractProgressMeter | bool | None = None,
-                    t0: ScalarLike | None = None,
-                )
-                ```
-
-                **Parameters:**
-
-                - **`progress_meter`** - Progress meter indicating how far the solve has
-                    progressed. Defaults to `None` which uses the global default
-                    progress meter (see
-                    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
-                    `True` for a [tqdm](https://github.com/tqdm/tqdm) progress meter,
-                    and `False` for no output. See other options in
-                    [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
-                    If gradients are computed, the progress meter only displays during
-                    the forward pass.
-                - **`t0`** - Initial time. If `None`, defaults to the first time in
-                    `tsave`.
 
     Returns:
         `dq.FloquetResult` object holding the result of the Floquet computation. Use
@@ -116,6 +94,17 @@ def floquet(
                 - **`method`** _(Method)_ - Method used.
                 - **`gradient`** _(Gradient)_ - Gradient used.
                 - **`options`** _(Options)_ - Options used.
+
+    Other Parameters:
+        progress_meter (AbstractProgressMeter or bool or None, optional): Progress
+            meter indicating how far the solve has progressed. Defaults to `None`
+            which uses the global default progress meter (see
+            [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to `True`
+            for a [tqdm](https://github.com/tqdm/tqdm) progress meter, and `False`
+            for no output. If gradients are computed, the progress meter only
+            displays during the forward pass.
+        t0 (float or None, optional): Initial time. If `None`, defaults to the first
+            time in `tsave`. Defaults to `None`.
 
     Examples:
         ```python
