@@ -1,6 +1,7 @@
 from . import plot, random
 from .helpers import *
 from .integrators import *
+from .progress_meter import *
 from .options import *
 from .qarrays import *
 from .qarrays.layout import dense, dia
