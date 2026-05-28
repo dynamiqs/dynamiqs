@@ -546,6 +546,13 @@ class MESolveAdaptiveRouchonIntegrator(
         stepsize_controller = super().stepsize_controller
         # fix incorrect default linear interpolation by stepping exactly at all times
         # in tsave, so interpolation is bypassed
+        if isinstance(stepsize_controller, dx.ClipStepSizeController):
+            return eqx.tree_at(
+                lambda c: c.step_ts,
+                stepsize_controller,
+                self.ts,
+                is_leaf=lambda x: x is None,
+            )
         return replace(stepsize_controller, step_ts=self.ts)
 
 
