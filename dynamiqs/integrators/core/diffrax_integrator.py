@@ -121,10 +121,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                     else (lambda c: c.dtmax)
                 )
                 stepsize_controller = eqx.tree_at(
-                    get_dtmax,
-                    stepsize_controller,
-                    dtmax,
-                    is_leaf=lambda x: x is None,
+                    get_dtmax, stepsize_controller, dtmax, is_leaf=lambda x: x is None
                 )
 
             # === solve differential equation with diffrax
