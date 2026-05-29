@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import warnings
 from abc import abstractmethod
-from dataclasses import replace
 from functools import partial
 
 import diffrax as dx
@@ -114,7 +113,16 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             # === prepare stepsize controller
             stepsize_controller = self.stepsize_controller
             if dtmax is not None:
-                stepsize_controller = replace(stepsize_controller, dtmax=dtmax)
+                # Diffrax's ClipStepSizeController and PIDController have different
+                # APIs for setting dtmax, so we need to handle them separately
+                get_dtmax = (
+                    (lambda c: c.controller.dtmax)
+                    if isinstance(stepsize_controller, dx.ClipStepSizeController)
+                    else (lambda c: c.dtmax)
+                )
+                stepsize_controller = eqx.tree_at(
+                    get_dtmax, stepsize_controller, dtmax, is_leaf=lambda x: x is None
+                )
 
             # === solve differential equation with diffrax
             return dx.diffeqsolve(
