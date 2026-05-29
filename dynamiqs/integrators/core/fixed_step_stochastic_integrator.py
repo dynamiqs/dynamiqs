@@ -138,7 +138,7 @@ class StochasticSolveFixedStepIntegrator(
         # chunks of 1000 dts to ensure a fixed memory usage
 
         nsteps_per_chunk = 1000
-        nchunks = round(nsteps / nsteps_per_chunk)
+        nchunks = nsteps // nsteps_per_chunk
 
         # iterate over each chunk
         def step(carry, key):  # noqa: ANN001, ANN202
