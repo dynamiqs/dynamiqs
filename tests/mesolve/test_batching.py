@@ -53,8 +53,7 @@ def test_flat_batching(nL1, npsi0):
     # run mesolve
     H, Ls, psi0, Es = rand_mesolve_args(n, nH, nLs, npsi0, nEs)
     tsave = jnp.linspace(0, 0.01, ntsave)
-    options = dq.Options(cartesian_batching=False)
-    result = dq.mesolve(H, Ls, psi0, tsave, exp_ops=Es, options=options)
+    result = dq.mesolve(H, Ls, psi0, tsave, exp_ops=Es, cartesian_batching=False)
 
     # check result shape
     broadcast_shape = jnp.broadcast_shapes(nH, nL1, npsi0)

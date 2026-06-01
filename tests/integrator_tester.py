@@ -9,7 +9,6 @@ import jax.tree_util as jtu
 
 from dynamiqs.gradient import Forward, Gradient
 from dynamiqs.method import Method
-from dynamiqs.options import Options
 
 from .systems import System
 
@@ -20,12 +19,12 @@ class IntegratorTester:
         system: System,
         method: Method,
         *,
-        options: Options = Options(),  # noqa: B008
         ysave_atol: float = 1e-3,
         esave_rtol: float = 1e-3,
         esave_atol: float = 1e-4,
+        **solver_kwargs,
     ):
-        result = system.run(method, options=options)
+        result = system.run(method, **solver_kwargs)
 
         # === test ysave
         true_ysave = system.states(system.tsave)
@@ -53,9 +52,9 @@ class IntegratorTester:
         method: Method,
         gradient: Gradient,
         *,
-        options: Options = Options(),  # noqa: B008
         rtol: float = 1e-3,
         atol: float = 1e-4,
+        **solver_kwargs,
     ):
         def assert_allclose(pytree1, pytree2):
             # assert two pytrees are equal
@@ -67,7 +66,7 @@ class IntegratorTester:
 
         # === test gradients depending on final ysave
         def loss_ysave(params):
-            res = system.run(method, gradient=gradient, options=options, params=params)
+            res = system.run(method, gradient=gradient, params=params, **solver_kwargs)
             return system.loss_state(res.states[-1])
 
         # jax.grad uses reverse mode by default
@@ -86,7 +85,7 @@ class IntegratorTester:
 
         # === test gradients depending on final Esave
         def loss_Esave(params):
-            res = system.run(method, gradient=gradient, options=options, params=params)
+            res = system.run(method, gradient=gradient, params=params, **solver_kwargs)
             return system.loss_expect(res.expects[:, -1])
 
         true_grads_Esave = system.grads_expect(system.tsave[-1])

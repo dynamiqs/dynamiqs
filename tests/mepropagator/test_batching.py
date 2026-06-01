@@ -38,8 +38,7 @@ def test_flat_batching(nL1):
     # run mepropagator
     H, Ls = rand_mepropagator_args(n, nH, nLs)
     tsave = jnp.linspace(0, 0.01, ntsave)
-    options = dq.Options(cartesian_batching=False)
-    result = dq.mepropagator(H, Ls, tsave, options=options)
+    result = dq.mepropagator(H, Ls, tsave, cartesian_batching=False)
 
     # check result shape
     broadcast_shape = jnp.broadcast_shapes(nH, nL1)

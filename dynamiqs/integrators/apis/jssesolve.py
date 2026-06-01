@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray
+from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, ScalarLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
@@ -38,7 +40,11 @@ def jssesolve(
     exp_ops: list[QArrayLike] | None = None,
     method: Method | None = None,
     gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    save_states: bool = True,
+    cartesian_batching: bool = True,
+    t0: ScalarLike | None = None,
+    save_extra: Callable[[Array], PyTree] | None = None,
+    nmaxclick: int = 10_000,
 ) -> JSSESolveResult:
     r"""Solve the jump stochastic Schrödinger equation (SSE).
 
@@ -267,6 +273,15 @@ def jssesolve(
     keys = jnp.asarray(keys)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+
+    # === build options
+    options = Options(
+        save_states=save_states,
+        cartesian_batching=cartesian_batching,
+        t0=t0,
+        save_extra=save_extra,
+        nmaxclick=nmaxclick,
+    )
 
     # === check arguments
     _check_jssesolve_args(H, Ls, psi0, exp_ops)

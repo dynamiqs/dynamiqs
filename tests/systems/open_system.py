@@ -1,18 +1,19 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Callable
 from typing import NamedTuple
 
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
-from jaxtyping import ArrayLike, PyTree
+from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 import dynamiqs as dq
 from dynamiqs import QArray, asqarray, dense
 from dynamiqs.gradient import Gradient
 from dynamiqs.method import Method
-from dynamiqs.options import Options
+from dynamiqs.progress_meter import AbstractProgressMeter
 from dynamiqs.qarrays.layout import Layout
 from dynamiqs.result import Result
 from dynamiqs.time_qarray import TimeQArray
@@ -30,8 +31,14 @@ class OpenSystem(System):
         method: Method,
         *,
         gradient: Gradient | None = None,
-        options: Options = Options(),  # noqa: B008
         params: PyTree | None = None,
+        save_states: bool = True,
+        cartesian_batching: bool = True,
+        progress_meter: AbstractProgressMeter | bool | None = None,
+        t0: ScalarLike | None = None,
+        save_extra: Callable[[Array], PyTree] | None = None,
+        vectorized: bool = False,
+        assume_hermitian: bool = True,
     ) -> Result:
         params = self.params_default if params is None else params
         H = self.H(params)
@@ -46,7 +53,13 @@ class OpenSystem(System):
             exp_ops=Es,
             method=method,
             gradient=gradient,
-            options=options,
+            save_states=save_states,
+            cartesian_batching=cartesian_batching,
+            progress_meter=progress_meter,
+            t0=t0,
+            save_extra=save_extra,
+            vectorized=vectorized,
+            assume_hermitian=assume_hermitian,
         )
 
 

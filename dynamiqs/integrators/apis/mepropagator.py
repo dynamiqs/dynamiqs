@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Callable
 from functools import partial
 
 import jax
 import jax.numpy as jnp
-from jaxtyping import Array, ArrayLike
+from jaxtyping import Array, ArrayLike, PyTree, ScalarLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...method import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options, check_options
+from ...progress_meter import AbstractProgressMeter
 from ...qarrays.dense_dataarray import DenseDataArray
 from ...qarrays.qarray import QArray, QArrayLike
 from ...result import MEPropagatorResult
@@ -41,7 +43,11 @@ def mepropagator(
     *,
     method: Method | None = None,
     gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    save_propagators: bool = True,
+    cartesian_batching: bool = True,
+    progress_meter: AbstractProgressMeter | bool | None = None,
+    t0: ScalarLike | None = None,
+    save_extra: Callable[[Array], PyTree] | None = None,
 ) -> MEPropagatorResult:
     r"""Compute the propagator of the Lindblad master equation.
 
@@ -215,6 +221,15 @@ def mepropagator(
     H = astimeqarray(H)
     Ls = [astimeqarray(L) for L in jump_ops]
     tsave = jnp.asarray(tsave)
+
+    # === build options
+    options = Options(
+        save_propagators=save_propagators,
+        cartesian_batching=cartesian_batching,
+        progress_meter=progress_meter,
+        t0=t0,
+        save_extra=save_extra,
+    )
 
     # === check arguments
     _check_mepropagator_args(H, Ls)
