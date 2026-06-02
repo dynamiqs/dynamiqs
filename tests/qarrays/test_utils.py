@@ -69,6 +69,71 @@ def test_stack_double(rtol=1e-05, atol=1e-08):
 
 @pytest.mark.run(order=TEST_INSTANT)
 @pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_qarray_manipulation_preserves_batch_qarray(layout):
+    data = jnp.arange(24).reshape(2, 3, 2, 2)
+    qarray = dq.asqarray(data, dims=(2,), layout=layout)
+
+    swapped = dq.swapaxes(qarray, 0, 1)
+    assert isinstance(swapped, dq.QArray)
+    assert swapped.dims == qarray.dims
+    assert jnp.array_equal(swapped.to_jax(), jnp.swapaxes(data, 0, 1))
+
+    moved = dq.moveaxis(qarray, 0, 1)
+    assert isinstance(moved, dq.QArray)
+    assert moved.dims == qarray.dims
+    assert jnp.array_equal(moved.to_jax(), jnp.moveaxis(data, 0, 1))
+
+    expanded = dq.expand_dims(qarray, 1)
+    assert isinstance(expanded, dq.QArray)
+    assert expanded.dims == qarray.dims
+    assert jnp.array_equal(expanded.to_jax(), jnp.expand_dims(data, 1))
+
+    assert jnp.array_equal(qarray.swapaxes(0, 1).to_jax(), jnp.swapaxes(data, 0, 1))
+    assert jnp.array_equal(qarray.moveaxis(0, 1).to_jax(), jnp.moveaxis(data, 0, 1))
+    assert jnp.array_equal(qarray.expand_dims(1).to_jax(), jnp.expand_dims(data, 1))
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_qarray_manipulation_returns_array_when_quantum_shape_changes():
+    qarray = dq.asqarray(jnp.arange(24).reshape(2, 3, 2, 2), dims=(2,))
+
+    moved = dq.moveaxis(qarray, -1, 0)
+
+    assert not isinstance(moved, dq.QArray)
+    assert jnp.array_equal(moved, jnp.moveaxis(qarray.to_jax(), -1, 0))
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_qarray_where_and_concatenate(layout):
+    x = dq.asqarray(jnp.arange(8).reshape(2, 2, 2), dims=(2,), layout=layout)
+    y = dq.asqarray(jnp.arange(8, 16).reshape(2, 2, 2), dims=(2,), layout=layout)
+
+    condition = jnp.array([True, False])[:, None, None]
+    selected = dq.where(condition, x, y)
+
+    assert isinstance(selected, dq.QArray)
+    assert selected.dims == x.dims
+    assert jnp.array_equal(
+        selected.to_jax(), jnp.where(condition, x.to_jax(), y.to_jax())
+    )
+
+    selected_with_scalar = dq.where(condition, x, 0)
+    assert isinstance(selected_with_scalar, dq.QArray)
+    assert jnp.array_equal(
+        selected_with_scalar.to_jax(), jnp.where(condition, x.to_jax(), 0)
+    )
+
+    concatenated = dq.concatenate([x, y], axis=0)
+    assert isinstance(concatenated, dq.QArray)
+    assert concatenated.dims == x.dims
+    assert jnp.array_equal(
+        concatenated.to_jax(), jnp.concatenate([x.to_jax(), y.to_jax()], axis=0)
+    )
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
 def test_conversions(layout):
     sx, sy = dq.sigmax(), dq.sigmay()
     assert jnp.allclose(sx.to_jax(), dq.asqarray(sx, layout=layout).to_jax())

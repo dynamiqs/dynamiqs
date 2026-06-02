@@ -310,6 +310,52 @@ class QArray(eqx.Module):
         """
         return replace(self, data=self.data.broadcast_to(*shape))
 
+    def swapaxes(self, axis1: int, axis2: int) -> QArray | Array:
+        """Swap two axes of a qarray.
+
+        Args:
+            axis1: First axis.
+            axis2: Second axis.
+
+        Returns:
+            New qarray when the resulting shape is compatible with the original Hilbert
+                space dimensions, otherwise a JAX array.
+        """
+        from .utils import swapaxes  # noqa: PLC0415
+
+        return swapaxes(self, axis1, axis2)
+
+    def moveaxis(
+        self, source: int | Sequence[int], destination: int | Sequence[int]
+    ) -> QArray | Array:
+        """Move axes of a qarray to new positions.
+
+        Args:
+            source: Original positions of the axes to move.
+            destination: Destination positions for each original axis.
+
+        Returns:
+            New qarray when the resulting shape is compatible with the original Hilbert
+                space dimensions, otherwise a JAX array.
+        """
+        from .utils import moveaxis  # noqa: PLC0415
+
+        return moveaxis(self, source, destination)
+
+    def expand_dims(self, axis: int | Sequence[int]) -> QArray | Array:
+        """Insert one or more singleton axes into a qarray.
+
+        Args:
+            axis: Position or positions where new axes are inserted.
+
+        Returns:
+            New qarray when the resulting shape is compatible with the original Hilbert
+                space dimensions, otherwise a JAX array.
+        """
+        from .utils import expand_dims  # noqa: PLC0415
+
+        return expand_dims(self, axis)
+
     def powm(self, n: int) -> QArray:
         return replace(self, data=self.data.powm(n))
 

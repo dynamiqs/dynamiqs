@@ -5,6 +5,7 @@ from collections.abc import Sequence
 
 import jax.numpy as jnp
 import numpy as np
+from jax import Array
 from jaxtyping import ArrayLike, DTypeLike
 from qutip import Qobj
 
@@ -21,12 +22,17 @@ from .sparsedia_primitives import (
 
 __all__ = [
     'asqarray',
+    'concatenate',
+    'expand_dims',
+    'isqarraylike',
+    'moveaxis',
     'sparsedia_from_dict',
     'stack',
+    'swapaxes',
     'to_jax',
     'to_numpy',
     'to_qutip',
-    'isqarraylike',
+    'where',
 ]
 
 
@@ -200,6 +206,129 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
     else:
         raise NotImplementedError(
             'Stacking qarrays with different data types is not implemented.'
+        )
+
+
+def swapaxes(x: QArrayLike, axis1: int, axis2: int) -> QArray | Array:
+    """Swap two axes of a qarray-like object.
+
+    Args:
+        x: Qarray-like object to manipulate.
+        axis1: First axis.
+        axis2: Second axis.
+
+    Returns:
+        A qarray when the resulting shape is compatible with the input Hilbert space
+            dimensions, otherwise a JAX array.
+    """
+    x = asqarray(x)
+    data = jnp.swapaxes(x.to_jax(), axis1, axis2)
+    return _wrap_like_if_compatible(x, data)
+
+
+def moveaxis(
+    x: QArrayLike, source: int | Sequence[int], destination: int | Sequence[int]
+) -> QArray | Array:
+    """Move axes of a qarray-like object to new positions.
+
+    Args:
+        x: Qarray-like object to manipulate.
+        source: Original positions of the axes to move.
+        destination: Destination positions for each original axis.
+
+    Returns:
+        A qarray when the resulting shape is compatible with the input Hilbert space
+            dimensions, otherwise a JAX array.
+    """
+    x = asqarray(x)
+    data = jnp.moveaxis(x.to_jax(), source, destination)
+    return _wrap_like_if_compatible(x, data)
+
+
+def expand_dims(x: QArrayLike, axis: int | Sequence[int]) -> QArray | Array:
+    """Insert one or more singleton axes into a qarray-like object.
+
+    Args:
+        x: Qarray-like object to manipulate.
+        axis: Position or positions where new axes are inserted.
+
+    Returns:
+        A qarray when the resulting shape is compatible with the input Hilbert space
+            dimensions, otherwise a JAX array.
+    """
+    x = asqarray(x)
+    data = jnp.expand_dims(x.to_jax(), axis)
+    return _wrap_like_if_compatible(x, data)
+
+
+def where(condition: ArrayLike, x: QArrayLike, y: QArrayLike) -> QArray | Array:
+    """Select values from qarray-like inputs according to a condition.
+
+    Args:
+        condition: Boolean condition broadcastable against `x` and `y`.
+        x: Values chosen where `condition` is true.
+        y: Values chosen where `condition` is false.
+
+    Returns:
+        A qarray when either input is a qarray and the resulting shape remains
+            compatible with its Hilbert space dimensions, otherwise a JAX array.
+    """
+    reference = _first_qarray(x, y)
+    _check_matching_dims(x, y)
+
+    data = jnp.where(condition, to_jax(x), to_jax(y))
+    if reference is None:
+        return data
+    return _wrap_like_if_compatible(reference, data)
+
+
+def concatenate(qarrays: Sequence[QArrayLike], axis: int = 0) -> QArray | Array:
+    """Join qarray-like objects along an existing axis.
+
+    Args:
+        qarrays: Qarray-like objects to concatenate.
+        axis: Axis in the result along which the inputs are joined.
+
+    Returns:
+        A qarray when all qarray inputs have matching Hilbert space dimensions and the
+            resulting shape is compatible with those dimensions, otherwise a JAX array.
+    """
+    if len(qarrays) == 0:
+        raise ValueError('Argument `qarrays` must contain at least one element.')
+
+    reference = _first_qarray(*qarrays)
+    _check_matching_dims(*qarrays)
+
+    data = jnp.concatenate([to_jax(qarray) for qarray in qarrays], axis=axis)
+    if reference is None:
+        return data
+    return _wrap_like_if_compatible(reference, data)
+
+
+def _wrap_like_if_compatible(reference: QArray, data: Array) -> QArray | Array:
+    if data.shape[-2:] != reference.shape[-2:]:
+        return data
+
+    try:
+        return QArray(reference.dims, reference.vectorized, DenseDataArray(data))
+    except ValueError:
+        return data
+
+
+def _first_qarray(*values: QArrayLike) -> QArray | None:
+    return next((value for value in values if isinstance(value, QArray)), None)
+
+
+def _check_matching_dims(*values: QArrayLike) -> None:
+    qarrays = [value for value in values if isinstance(value, QArray)]
+    if not qarrays:
+        return
+
+    dims = qarrays[0].dims
+    if not all(qarray.dims == dims for qarray in qarrays):
+        raise ValueError(
+            f'Qarrays have incompatible Hilbert space dimensions. '
+            f'Got {[qarray.dims for qarray in qarrays]}.'
         )
 
 
