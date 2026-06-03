@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import partial
 
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray
+from jaxtyping import ArrayLike, PRNGKeyArray, PyTree
 
 from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
@@ -41,7 +42,9 @@ def dsmesolve(
     exp_ops: list[QArrayLike] | None = None,
     method: Method | None = None,
     gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    save_states: bool = True,
+    cartesian_batching: bool = True,
+    save_extra: Callable[[Array], PyTree] | None = None,
 ) -> DSMESolveResult:
     r"""Solve the diffusive stochastic master equation (SME).
 
@@ -134,28 +137,6 @@ def dsmesolve(
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
-        options: Generic options (supported: `save_states`, `cartesian_batching`,
-            `save_extra`).
-            ??? "Detailed options API"
-                ```
-                dq.Options(
-                    save_states: bool = True,
-                    cartesian_batching: bool = True,
-                    save_extra: Callable[[Array], PyTree] | None = None,
-                )
-                ```
-
-                **Parameters:**
-
-                - **`save_states`** - If `True`, the state is saved at every time in
-                    `tsave`, otherwise only the final state is returned.
-                - **`cartesian_batching`** - If `True`, batched arguments are treated as
-                    separated batch dimensions, otherwise the batching is performed over
-                    a single shared batched dimension.
-                - **`save_extra`** _(function, optional)_ - A function with signature
-                    `f(QArray) -> PyTree` that takes a state as input and returns a
-                    PyTree. This can be used to save additional arbitrary data
-                    during the integration, accessible in `result.extra`.
 
     Returns:
         `dq.DSMESolveResult` object holding the result of the diffusive SME integration.
@@ -176,7 +157,7 @@ def dsmesolve(
 
                 - **`states`** _(qarray of shape (..., ntrajs, nsave, n, n))_ - Saved
                     states with `nsave = ntsave`, or `nsave = 1` if
-                    `options.save_states=False`.
+                    `save_states=False`.
                 - **`final_state`** _(qarray of shape (..., ntrajs, n, n))_ - Saved
                     final state.
                 - **`expects`** _(array of shape (..., ntrajs, len(exp_ops), ntsave)
@@ -184,7 +165,7 @@ def dsmesolve(
                 - **`measurements`** _(array of shape (..., ntrajs, nLm, nsave-1))_ -
                     Saved measurements.
                 - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
-                    if specified in `options`.
+                    if specified.
                 - **`keys`** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
                     sample the Wiener processes.
                 - **`infos`** _(PyTree or None)_ - Method-dependent information on the
@@ -194,6 +175,17 @@ def dsmesolve(
                 - **`method`** _(Method)_ - Method used.
                 - **`gradient`** _(Gradient)_ - Gradient used.
                 - **`options`** _(Options)_ - Options used.
+
+    Other Parameters:
+        save_states: If `True`, the state is saved at every time in
+            `tsave`, otherwise only the final state is returned. Defaults to `True`.
+        cartesian_batching: If `True`, batched arguments are treated
+            as separated batch dimensions, otherwise the batching is performed over a
+            single shared batch dimension. Defaults to `True`.
+        save_extra: A function with signature
+            `f(QArray) -> PyTree` that takes a state as input and returns a PyTree.
+            This can be used to save additional arbitrary data during the integration,
+            accessible in `result.extra`. Defaults to `None`.
 
     Examples:
         ```python
@@ -285,6 +277,13 @@ def dsmesolve(
     keys = jnp.asarray(keys)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+
+    # === build options
+    options = Options(
+        save_states=save_states,
+        cartesian_batching=cartesian_batching,
+        save_extra=save_extra,
+    )
 
     # === check arguments
     _check_dsmesolve_args(H, Ls, etas, rho0, exp_ops)

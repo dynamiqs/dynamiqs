@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray
+from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, ScalarLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
@@ -38,7 +40,11 @@ def jssesolve(
     exp_ops: list[QArrayLike] | None = None,
     method: Method | None = None,
     gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    save_states: bool = True,
+    cartesian_batching: bool = True,
+    t0: ScalarLike | None = None,
+    save_extra: Callable[[Array], PyTree] | None = None,
+    nmaxclick: int = 10_000,
 ) -> JSSESolveResult:
     r"""Solve the jump stochastic Schrödinger equation (SSE).
 
@@ -112,34 +118,6 @@ def jssesolve(
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
-        options: Generic options (supported: `save_states`, `cartesian_batching`, `t0`,
-            `save_extra`, `nmaxclick`).
-            ??? "Detailed options API"
-                ```
-                dq.Options(
-                    save_states: bool = True,
-                    cartesian_batching: bool = True,
-                    t0: ScalarLike | None = None,
-                    save_extra: Callable[[Array], PyTree] | None = None,
-                    nmaxclick: int = 10_000,
-                )
-                ```
-
-                **Parameters:**
-
-                - **`save_states`** - If `True`, the state is saved at every time in
-                    `tsave`, otherwise only the final state is returned.
-                - **`cartesian_batching`** - If `True`, batched arguments are treated as
-                    separated batch dimensions, otherwise the batching is performed over
-                    a single shared batched dimension.
-                - **`t0`** - Initial time. If `None`, defaults to the first time in
-                    `tsave`.
-                - **`save_extra`** _(function, optional)_ - A function with signature
-                    `f(QArray) -> PyTree` that takes a state as input and returns a
-                    PyTree. This can be used to save additional arbitrary data
-                    during the integration, accessible in `result.extra`.
-                - **`nmaxclick`** - Maximum buffer size for `result.clicktimes`, should
-                    be set higher than the expected maximum number of clicks.
 
     Returns:
         `dq.JSSESolveResult` object holding the result of the jump SSE integration. Use
@@ -159,7 +137,7 @@ def jssesolve(
 
                 - **`states`** _(qarray of shape (..., ntrajs, nsave, n, 1))_ - Saved
                     states with `nsave = ntsave`, or `nsave = 1` if
-                    `options.save_states=False`.
+                    `save_states=False`.
                 - **`final_state`** _(qarray of shape (..., ntrajs, n, 1))_ - Saved
                     final state.
                 - **`expects`** _(array of shape (..., ntrajs, len(exp_ops), ntsave) or
@@ -170,7 +148,7 @@ def jssesolve(
                 - **`nclicks`** _(array of shape (..., ntrajs, len(jump_ops))_ - Number
                     of clicks for each jump operator.
                 - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
-                    if specified in `options`.
+                    if specified.
                 - **`keys`** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
                     sample the point processes.
                 - **`infos`** _(PyTree or None)_ - Method-dependent information on the
@@ -180,6 +158,22 @@ def jssesolve(
                 - **`method`** _(Method)_ - Method used.
                 - **`gradient`** _(Gradient)_ - Gradient used.
                 - **`options`** _(Options)_ - Options used.
+
+    Other Parameters:
+        save_states: If `True`, the state is saved at every time in
+            `tsave`, otherwise only the final state is returned. Defaults to `True`.
+        cartesian_batching: If `True`, batched arguments are treated
+            as separated batch dimensions, otherwise the batching is performed over a
+            single shared batch dimension. Defaults to `True`.
+        t0: Initial time. If `None`, defaults to the first time in
+            `tsave`.
+        save_extra: A function with signature
+            `f(QArray) -> PyTree` that takes a state as input and returns a PyTree.
+            This can be used to save additional arbitrary data during the integration,
+            accessible in `result.extra`. Defaults to `None`.
+        nmaxclick: Maximum buffer size for `result.clicktimes`, should
+            be set higher than the expected maximum number of clicks. Defaults to
+            `10_000`.
 
     Examples:
         ```python
@@ -267,6 +261,15 @@ def jssesolve(
     keys = jnp.asarray(keys)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+
+    # === build options
+    options = Options(
+        save_states=save_states,
+        cartesian_batching=cartesian_batching,
+        t0=t0,
+        save_extra=save_extra,
+        nmaxclick=nmaxclick,
+    )
 
     # === check arguments
     _check_jssesolve_args(H, Ls, psi0, exp_ops)

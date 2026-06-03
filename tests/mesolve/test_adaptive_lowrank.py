@@ -3,7 +3,6 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
-from dynamiqs import Options
 from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
 from dynamiqs.method import LowRank, Tsit5
 
@@ -37,8 +36,7 @@ class TestMESolveAdaptiveLowRank(IntegratorTester):
 
     @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
     def test_correctness(self, system):
-        options = Options()
-        self._test_correctness(system, _lowrank_method(system), options=options)
+        self._test_correctness(system, _lowrank_method(system))
 
     @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
     @pytest.mark.parametrize('gradient', [Direct(), BackwardCheckpointed(), Forward()])
@@ -47,7 +45,7 @@ class TestMESolveAdaptiveLowRank(IntegratorTester):
 
     @pytest.mark.parametrize('system', [dense_ocavity])
     def test_lowrank_states(self, system):
-        result = system.run(_lowrank_method(system), options=Options())
+        result = system.run(_lowrank_method(system))
         assert isinstance(result, dq.MESolveLowRankResult)
 
         m = result.lowrank_states.to_jax()

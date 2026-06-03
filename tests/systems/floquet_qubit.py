@@ -4,13 +4,13 @@ from typing import NamedTuple
 
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import PyTree
+from jaxtyping import PyTree, ScalarLike
 
 from dynamiqs import basis, sigmax, sigmaz, stack
 from dynamiqs.gradient import Gradient
 from dynamiqs.integrators.apis.floquet import floquet
 from dynamiqs.method import Method
-from dynamiqs.options import Options
+from dynamiqs.progress_meter import AbstractProgressMeter
 from dynamiqs.result import FloquetResult
 from dynamiqs.time_qarray import CallableTimeQArray
 
@@ -31,14 +31,21 @@ class FloquetQubit(System):
         method: Method,
         *,
         gradient: Gradient | None = None,
-        options: Options = Options(),  # noqa: B008
         params: PyTree | None = None,
+        progress_meter: AbstractProgressMeter | bool | None = None,
+        t0: ScalarLike | None = None,
     ) -> FloquetResult:
         params = self.params_default if params is None else params
         H = self.H(params)
         T = 2.0 * jnp.pi / params.omega_d
         return floquet(
-            H, T, params.tsave, method=method, gradient=gradient, options=options
+            H,
+            T,
+            params.tsave,
+            method=method,
+            gradient=gradient,
+            progress_meter=progress_meter,
+            t0=t0,
         )
 
     def __init__(

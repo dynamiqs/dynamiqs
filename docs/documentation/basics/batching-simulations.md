@@ -77,7 +77,7 @@ The simulation runs for all possible combinations of Hamiltonians, jump operator
 
 ### Flat batching
 
-The simulation runs for each set of Hamiltonians, jump operators and initial states using broadcasting. This mode can be activated by passing `options=dq.Options(cartesian_batching=False)`. In particular for [`dq.mesolve()`][dynamiqs.mesolve], each jump operator can be batched independently from the others.
+The simulation runs for each set of Hamiltonians, jump operators and initial states using broadcasting. This mode can be activated by passing `cartesian_batching=False`. In particular for [`dq.mesolve()`][dynamiqs.mesolve], each jump operator can be batched independently from the others.
 
 ??? Note "What is broadcasting?"
     JAX and NumPy broadcasting semantics are very powerful and allow you to write concise and efficient code. For more information, see the [NumPy documentation on broadcasting](https://numpy.org/doc/stable/user/basics.broadcasting.html).
@@ -228,20 +228,19 @@ H = omega * dq.sigmaz() + epsilon * dq.sigmax()  # (100, 30, 2, 2)
 # other simulation parameters
 psi0 = dq.basis(2, 0)
 tsave = jnp.linspace(0.0, 1.0, 50)
-options = dq.Options(progress_meter=False)
 
 # running the simulations successively
 def run_unbatched():
     results = []
     for i in range(len(omega)):
         for j in range(len(epsilon)):
-            result = dq.sesolve(H[i, j], psi0, tsave, options=options)
+            result = dq.sesolve(H[i, j], psi0, tsave, progress_meter=False)
             results.append(result)
     return results
 
 # running the simulations simultaneously
 def run_batched():
-    return dq.sesolve(H, psi0, tsave, options=options)
+    return dq.sesolve(H, psi0, tsave, progress_meter=False)
 
 # exclude JIT time from benchmarking by running each function once first
 %timeit -n1 -r1 -q run_unbatched()

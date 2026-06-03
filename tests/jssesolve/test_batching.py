@@ -58,10 +58,16 @@ def test_flat_batching(nL1, npsi0, ntrajs):
     H, Ls, psi0, Es, kmc = rand_jssesolve_args(n, nH, nLs, npsi0, nEs)
     keys = jax.random.split(kmc, num=ntrajs)
     tsave = jnp.linspace(0.0, 0.1, ntsave)
-    options = dq.Options(cartesian_batching=False)
     method = dq.method.Event(dtmax=1e-1)
     result = dq.jssesolve(
-        H, Ls, psi0, tsave, keys=keys, exp_ops=Es, options=options, method=method
+        H,
+        Ls,
+        psi0,
+        tsave,
+        keys=keys,
+        exp_ops=Es,
+        method=method,
+        cartesian_batching=False,
     )
 
     # check result shape
@@ -105,11 +111,16 @@ def test_keys_batching(cartesian_batching, H_batch, psi0_batch, ntrajs):
 
     keys = jax.random.split(jax.random.key(123), num=ntrajs)
     tsave = jnp.linspace(0.0, 0.1 * (ntsave - 1), ntsave)
-    options = dq.Options(cartesian_batching=cartesian_batching)
     method = dq.method.EulerJump(dt=1e-1)
 
     result = dq.jssesolve(
-        H, jump_ops, psi0, tsave, keys=keys, options=options, method=method
+        H,
+        jump_ops,
+        psi0,
+        tsave,
+        keys=keys,
+        method=method,
+        cartesian_batching=cartesian_batching,
     )
 
     # expected batch shape
@@ -155,11 +166,16 @@ def test_keys_trajectory_independence(cartesian_batching):
     ntsave = 11
     keys = jax.random.split(jax.random.key(42), ntrajs)
     tsave = jnp.linspace(0.0, 1.0, ntsave)
-    options = dq.Options(cartesian_batching=cartesian_batching)
     method = dq.method.EulerJump(dt=1e-1)
 
     result = dq.jssesolve(
-        H, jump_ops, psi0, tsave, keys=keys, options=options, method=method
+        H,
+        jump_ops,
+        psi0,
+        tsave,
+        keys=keys,
+        method=method,
+        cartesian_batching=cartesian_batching,
     )
 
     assert result.keys.shape == (2, ntrajs)

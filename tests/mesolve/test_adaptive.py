@@ -1,6 +1,5 @@
 import pytest
 
-from dynamiqs import Options
 from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
 from dynamiqs.method import Tsit5
 
@@ -19,8 +18,9 @@ class TestMESolveAdaptive(IntegratorTester):
         [(True, True), (False, True), (False, False)],
     )
     def test_correctness(self, system, vectorized, assume_hermitian):
-        options = Options(vectorized=vectorized, assume_hermitian=assume_hermitian)
-        self._test_correctness(system, Tsit5(), options=options)
+        self._test_correctness(
+            system, Tsit5(), vectorized=vectorized, assume_hermitian=assume_hermitian
+        )
 
     @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
     @pytest.mark.parametrize('gradient', [Direct(), BackwardCheckpointed(), Forward()])
