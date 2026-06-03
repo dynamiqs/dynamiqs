@@ -9,8 +9,10 @@ from .order import TEST_LONG, TEST_SHORT
 
 def _odd_parity_model():
     omega = 0.7
-    H = 0.5 * omega * (
-        dq.tensor(dq.sigmax(), dq.sigmax()) + dq.tensor(dq.sigmay(), dq.sigmay())
+    H = (
+        0.5
+        * omega
+        * (dq.tensor(dq.sigmax(), dq.sigmax()) + dq.tensor(dq.sigmay(), dq.sigmay()))
     )
     measured_op = -dq.tensor(dq.sigmaz(), dq.sigmaz())
     psi0 = dq.tensor(dq.basis(2, 0), dq.basis(2, 1))
@@ -106,12 +108,7 @@ def test_stochastic_ensembles_match_mesolve_first_and_second_moments(solver_name
     exp_ops = [dq.excited_dm()]
 
     reference = dq.mesolve(
-        H,
-        [jump_op],
-        psi0.todm(),
-        tsave,
-        exp_ops=exp_ops,
-        progress_meter=False,
+        H, [jump_op], psi0.todm(), tsave, exp_ops=exp_ops, progress_meter=False
     ).block_until_ready()
 
     result = _run_stochastic_solver(
@@ -138,6 +135,4 @@ def test_stochastic_ensembles_match_mesolve_first_and_second_moments(solver_name
     second_moment = jnp.mean(jnp.real(result.expects) ** 2, axis=0)
     repeat_second_moment = jnp.mean(jnp.real(repeat.expects) ** 2, axis=0)
     assert jnp.any(second_moment[:, 1:] > 1e-3)
-    assert jnp.allclose(
-        second_moment[:, 1:], repeat_second_moment[:, 1:], atol=7.5e-2
-    )
+    assert jnp.allclose(second_moment[:, 1:], repeat_second_moment[:, 1:], atol=7.5e-2)
