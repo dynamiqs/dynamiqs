@@ -65,7 +65,7 @@ def sepropagator(
         H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
         tsave (array-like of shape (ntsave,)): Times at which the propagators
             are saved. The equation is solved from `tsave[0]` to `tsave[-1]`,
-            or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
+            or from `t0` to `tsave[-1]` if `t0` is specified.
         method: Method for the integration. Defaults to `None` which redirects
             to [`dq.method.Expm`][dynamiqs.method.Expm] (explicit matrix
             exponentiation) or [`dq.method.Tsit5`][dynamiqs.method.Tsit5]
@@ -80,38 +80,6 @@ def sepropagator(
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
-        options: Generic options (supported: `save_propagators`, `progress_meter`, `t0`,
-            `save_extra`).
-            ??? "Detailed options API"
-                ```
-                dq.Options(
-                    save_propagators: bool = True,
-                    progress_meter: AbstractProgressMeter | bool | None = None,
-                    t0: ScalarLike | None = None,
-                    save_extra: Callable[[Array], PyTree] | None = None,
-                )
-                ```
-
-                **Parameters:**
-
-                - **`save_propagators`** - If `True`, the propagator is saved at every
-                    time in `tsave`, otherwise only the final propagator is returned.
-                - **`progress_meter`** - Progress meter indicating how far the solve has
-                    progressed. Defaults to `None` which uses the global default
-                    progress meter (see
-                    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
-                    `True` for a [tqdm](https://github.com/tqdm/tqdm) progress meter,
-                    and `False` for no output. See other options in
-                    [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
-                    If gradients are computed, the progress meter only displays during
-                    the forward pass.
-                - **`t0`** - Initial time. If `None`, defaults to the first time in
-                    `tsave`.
-                - **`save_extra`** _(function, optional)_ - A function with signature
-                    `f(QArray) -> PyTree` that takes a propagator as input and returns
-                    a PyTree. This can be used to save additional arbitrary data
-                    during the integration, accessible in `result.extra`.
-
 
     Returns:
         `dq.SEPropagatorResult` object holding the result of the propagator computation.
@@ -126,11 +94,11 @@ def sepropagator(
 
                 - **`propagators`** _(qarray of shape (..., nsave, n, n))_ - Saved
                     propagators with `nsave = ntsave`, or `nsave = 1` if
-                    `options.save_propagators=False`.
+                    `save_propagators=False`.
                 - **`final_propagator`** _(qarray of shape (..., n, n))_ - Saved final
                     propagator.
                 - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
-                    if specified in `options`.
+                    if specified.
                 - **`infos`** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
                 - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
@@ -138,6 +106,24 @@ def sepropagator(
                 - **`method`** _(Method)_ - Method used.
                 - **`gradient`** _(Gradient)_ - Gradient used.
                 - **`options`** _(Options)_ - Options used.
+
+    Other Parameters:
+        save_propagators: If `True`, the propagator is saved at every
+            time in `tsave`, otherwise only the final propagator is returned. Defaults
+            to `True`.
+        progress_meter: Progress
+            meter indicating how far the solve has progressed. Defaults to `None`
+            which uses the global default progress meter (see
+            [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to `True`
+            for a [tqdm](https://github.com/tqdm/tqdm) progress meter, and `False`
+            for no output. If gradients are computed, the progress meter only
+            displays during the forward pass.
+        t0: Initial time. If `None`, defaults to the first
+            time in `tsave`. Defaults to `None`.
+        save_extra: A function with signature
+            `f(QArray) -> PyTree` that takes a propagator as input and returns a
+            PyTree. This can be used to save additional arbitrary data during the
+            integration, accessible in `result.extra`. Defaults to `None`.
 
     Examples:
         ```python
