@@ -88,6 +88,17 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - BackwardCheckpointed
         - Forward
 
+### Progress meters
+
+::: dynamiqs.progress_meter
+    options:
+        extra:
+            table: true
+        members:
+        - NoProgressMeter
+        - TextProgressMeter
+        - TqdmProgressMeter
+
 ## Utilities
 
 ### Operators

@@ -4,26 +4,47 @@ import diffrax as dx
 import equinox as eqx
 from tqdm import tqdm
 
-__all__ = [
-    'AbstractProgressMeter',
-    'NoProgressMeter',
-    'TextProgressMeter',
-    'TqdmProgressMeter',
-]
+__all__ = ['NoProgressMeter', 'TextProgressMeter', 'TqdmProgressMeter']
 
 
 class AbstractProgressMeter(eqx.Module):
+    """Abstract base class for progress meters.
+
+    Implement this class to define a custom progress meter. Pass an instance to any
+    solver via the `progress_meter` argument.
+    """
+
     @abstractmethod
     def to_diffrax(self) -> dx.AbstractProgressMeter:
         pass
 
 
 class NoProgressMeter(AbstractProgressMeter):
+    """Progress meter that produces no output.
+
+    Pass to any solver via `progress_meter=dq.NoProgressMeter()` (or equivalently
+    `progress_meter=False`) to suppress all progress output.
+    """
+
+    # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
+
     def to_diffrax(self) -> dx.AbstractProgressMeter:
         return dx.NoProgressMeter()
 
 
 class TextProgressMeter(AbstractProgressMeter):
+    """Plain-text progress meter that prints to standard output.
+
+    Prints a simple text line updated in place during the integration. Useful in
+    environments where tqdm is not available or not desired.
+    """
+
+    # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
+
     def to_diffrax(self) -> dx.AbstractProgressMeter:
         return dx.TextProgressMeter()
 
@@ -76,5 +97,22 @@ class _DiffraxTqdmProgressMeter(dx.TqdmProgressMeter):
 
 
 class TqdmProgressMeter(AbstractProgressMeter):
+    """tqdm progress bar (default progress meter).
+
+    Displays a rich progress bar powered by [tqdm](https://github.com/tqdm/tqdm),
+    showing percentage completion, elapsed time, and estimated remaining time.
+
+    This is the default progress meter used by all solvers when `progress_meter=None`
+    (unless overridden globally with
+    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]).
+
+    Pass `progress_meter=True` or `progress_meter=dq.TqdmProgressMeter()` explicitly
+    to force it.
+    """
+
+    # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
+
     def to_diffrax(self) -> dx.AbstractProgressMeter:
         return _DiffraxTqdmProgressMeter()
