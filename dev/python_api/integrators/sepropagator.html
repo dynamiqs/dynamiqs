@@ -7087,7 +7087,7 @@ propagator is computed by solving the Schrödinger equation with an ODE method.<
         <div class="doc-md-description">
           <p>Times at which the propagators
 are saved. The equation is solved from <code>tsave[0]</code> to <code>tsave[-1]</code>,
-or from <code>t0</code> to <code>tsave[-1]</code> if <code>t0</code> is specified in <code>options</code>.</p>
+or from <code>t0</code> to <code>tsave[-1]</code> if <code>t0</code> is specified.</p>
         </div>
       </li>
       <li class="doc-section-item field-body">
@@ -7116,44 +7116,6 @@ method-dependent, refer to the documentation of the chosen method for more
 details.</p>
         </div>
       </li>
-      <li class="doc-section-item field-body">
-          <b><code>options</code></b>
-        –
-        <div class="doc-md-description">
-          <p>Generic options (supported: <code>save_propagators</code>, <code>progress_meter</code>, <code>t0</code>,
-<code>save_extra</code>).</p>
-<details>
-<summary>Detailed options API</summary>
-<div class="highlight"><pre><span></span><code>dq.Options(
-    save_propagators: bool = True,
-    progress_meter: AbstractProgressMeter | bool | None = None,
-    t0: ScalarLike | None = None,
-    save_extra: Callable[[Array], PyTree] | None = None,
-)
-</code></pre></div>
-<p><strong>Parameters:</strong></p>
-<ul>
-<li><strong><code>save_propagators</code></strong> - If <code>True</code>, the propagator is saved at every
-    time in <code>tsave</code>, otherwise only the final propagator is returned.</li>
-<li><strong><code>progress_meter</code></strong> - Progress meter indicating how far the solve has
-    progressed. Defaults to <code>None</code> which uses the global default
-    progress meter (see
-    <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.set_progress_meter&lt;/span&gt;" href="../utils/global_settings/set_progress_meter.html#dynamiqs.utils.global_settings.set_progress_meter"><code>dq.set_progress_meter()</code></a>). Set to
-    <code>True</code> for a <a href="https://github.com/tqdm/tqdm">tqdm</a> progress meter,
-    and <code>False</code> for no output. See other options in
-    <a href="https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py">dynamiqs/progress_meter.py</a>.
-    If gradients are computed, the progress meter only displays during
-    the forward pass.</li>
-<li><strong><code>t0</code></strong> - Initial time. If <code>None</code>, defaults to the first time in
-    <code>tsave</code>.</li>
-<li><strong><code>save_extra</code></strong> <em>(function, optional)</em> - A function with signature
-    <code>f(QArray) -&gt; PyTree</code> that takes a propagator as input and returns
-    a PyTree. This can be used to save additional arbitrary data
-    during the integration, accessible in <code>result.extra</code>.</li>
-</ul>
-</details>
-        </div>
-      </li>
   </ul>
 
 
@@ -7171,11 +7133,11 @@ Use <code>result.propagators</code> to access the saved propagators.</p>
 <ul>
 <li><strong><code>propagators</code></strong> <em>(qarray of shape (..., nsave, n, n))</em> - Saved
     propagators with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
-    <code>options.save_propagators=False</code>.</li>
+    <code>save_propagators=False</code>.</li>
 <li><strong><code>final_propagator</code></strong> <em>(qarray of shape (..., n, n))</em> - Saved final
     propagator.</li>
 <li><strong><code>extra</code></strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code>
-    if specified in <code>options</code>.</li>
+    if specified.</li>
 <li><strong><code>infos</code></strong> <em>(PyTree or None)</em> - Method-dependent information on the
     resolution.</li>
 <li><strong><code>tsave</code></strong> <em>(array of shape (ntsave,))</em> - Times for which results
@@ -7185,6 +7147,51 @@ Use <code>result.propagators</code> to access the saved propagators.</p>
 <li><strong><code>options</code></strong> <em>(Options)</em> - Options used.</li>
 </ul>
 </details>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Other Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>save_propagators</code></b>
+        –
+        <div class="doc-md-description">
+          <p>If <code>True</code>, the propagator is saved at every
+time in <code>tsave</code>, otherwise only the final propagator is returned. Defaults
+to <code>True</code>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>progress_meter</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Progress
+meter indicating how far the solve has progressed. Defaults to <code>None</code>
+which uses the global default progress meter (see
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.set_progress_meter&lt;/span&gt;" href="../utils/global_settings/set_progress_meter.html#dynamiqs.utils.global_settings.set_progress_meter"><code>dq.set_progress_meter()</code></a>). Set to <code>True</code>
+for a <a href="https://github.com/tqdm/tqdm">tqdm</a> progress meter, and <code>False</code>
+for no output. If gradients are computed, the progress meter only
+displays during the forward pass.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>t0</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Initial time. If <code>None</code>, defaults to the first
+time in <code>tsave</code>. Defaults to <code>None</code>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>save_extra</code></b>
+        –
+        <div class="doc-md-description">
+          <p>A function with signature
+<code>f(QArray) -&gt; PyTree</code> that takes a propagator as input and returns a
+PyTree. This can be used to save additional arbitrary data during the
+integration, accessible in <code>result.extra</code>. Defaults to <code>None</code>.</p>
         </div>
       </li>
   </ul>

@@ -7122,35 +7122,6 @@ that <code>tsave[-1] - tsave[0] &lt;= T</code>.</p>
           <p>Algorithm used to compute the gradient.</p>
         </div>
       </li>
-      <li class="doc-section-item field-body">
-          <b><code>options</code></b>
-        –
-        <div class="doc-md-description">
-          <p>Generic options (supported: <code>progress_meter</code>, <code>t0</code>).</p>
-<details>
-<summary>Detailed options API</summary>
-<div class="highlight"><pre><span></span><code>dq.Options(
-    progress_meter: AbstractProgressMeter | bool | None = None,
-    t0: ScalarLike | None = None,
-)
-</code></pre></div>
-<p><strong>Parameters:</strong></p>
-<ul>
-<li><strong><code>progress_meter</code></strong> - Progress meter indicating how far the solve has
-    progressed. Defaults to <code>None</code> which uses the global default
-    progress meter (see
-    <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.set_progress_meter&lt;/span&gt;" href="../utils/global_settings/set_progress_meter.html#dynamiqs.utils.global_settings.set_progress_meter"><code>dq.set_progress_meter()</code></a>). Set to
-    <code>True</code> for a <a href="https://github.com/tqdm/tqdm">tqdm</a> progress meter,
-    and <code>False</code> for no output. See other options in
-    <a href="https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py">dynamiqs/progress_meter.py</a>.
-    If gradients are computed, the progress meter only displays during
-    the forward pass.</li>
-<li><strong><code>t0</code></strong> - Initial time. If <code>None</code>, defaults to the first time in
-    <code>tsave</code>.</li>
-</ul>
-</details>
-        </div>
-      </li>
   </ul>
 
 
@@ -7180,6 +7151,32 @@ for the associated quasienergies.</p>
 <li><strong><code>options</code></strong> <em>(Options)</em> - Options used.</li>
 </ul>
 </details>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Other Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>progress_meter</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Progress
+meter indicating how far the solve has progressed. Defaults to <code>None</code>
+which uses the global default progress meter (see
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.set_progress_meter&lt;/span&gt;" href="../utils/global_settings/set_progress_meter.html#dynamiqs.utils.global_settings.set_progress_meter"><code>dq.set_progress_meter()</code></a>). Set to <code>True</code>
+for a <a href="https://github.com/tqdm/tqdm">tqdm</a> progress meter, and <code>False</code>
+for no output. If gradients are computed, the progress meter only
+displays during the forward pass.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>t0</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Initial time. If <code>None</code>, defaults to the first
+time in <code>tsave</code>. Defaults to <code>None</code>.</p>
         </div>
       </li>
   </ul>

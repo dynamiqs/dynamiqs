@@ -7280,7 +7280,7 @@ where <code>...x</code> indicates the batching shape of <code>x</code>, i.e. its
 </div>
 </div>
 <h3 id="flat-batching">Flat batching</h3>
-<p>The simulation runs for each set of Hamiltonians, jump operators and initial states using broadcasting. This mode can be activated by passing <code>options=dq.Options(cartesian_batching=False)</code>. In particular for <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.mesolve&lt;/span&gt;" href="../../python_api/integrators/mesolve.html#dynamiqs.integrators.mesolve"><code>dq.mesolve()</code></a>, each jump operator can be batched independently from the others.</p>
+<p>The simulation runs for each set of Hamiltonians, jump operators and initial states using broadcasting. This mode can be activated by passing <code>cartesian_batching=False</code>. In particular for <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.mesolve&lt;/span&gt;" href="../../python_api/integrators/mesolve.html#dynamiqs.integrators.mesolve"><code>dq.mesolve()</code></a>, each jump operator can be batched independently from the others.</p>
 <details class="note">
 <summary>What is broadcasting?</summary>
 <p>JAX and NumPy broadcasting semantics are very powerful and allow you to write concise and efficient code. For more information, see the <a href="https://numpy.org/doc/stable/user/basics.broadcasting.html">NumPy documentation on broadcasting</a>.</p>
@@ -7434,20 +7434,19 @@ where <code>... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)</code> is the broad
 <span class="c1"># other simulation parameters</span>
 <span class="n">psi0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="n">tsave</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
-<span class="n">options</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">Options</span><span class="p">(</span><span class="n">progress_meter</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <span class="c1"># running the simulations successively</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">run_unbatched</span><span class="p">():</span>
     <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">omega</span><span class="p">)):</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">epsilon</span><span class="p">)):</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sesolve</span><span class="p">(</span><span class="n">H</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">psi0</span><span class="p">,</span> <span class="n">tsave</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sesolve</span><span class="p">(</span><span class="n">H</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">psi0</span><span class="p">,</span> <span class="n">tsave</span><span class="p">,</span> <span class="n">progress_meter</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">results</span>
 
 <span class="c1"># running the simulations simultaneously</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">run_batched</span><span class="p">():</span>
-    <span class="k">return</span> <span class="n">dq</span><span class="o">.</span><span class="n">sesolve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">psi0</span><span class="p">,</span> <span class="n">tsave</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dq</span><span class="o">.</span><span class="n">sesolve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">psi0</span><span class="p">,</span> <span class="n">tsave</span><span class="p">,</span> <span class="n">progress_meter</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <span class="c1"># exclude JIT time from benchmarking by running each function once first</span>
 <span class="o">%</span><span class="k">timeit</span> -n1 -r1 -q run_unbatched()

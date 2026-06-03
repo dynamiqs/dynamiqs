@@ -7101,7 +7101,7 @@ where <span class="arithmatex">\(H\)</span> is the system's Hamiltonian.</p>
         <div class="doc-md-description">
           <p>Times at which the states and
 expectation values are saved. The equation is solved from <code>tsave[0]</code> to
-<code>tsave[-1]</code>, or from <code>t0</code> to <code>tsave[-1]</code> if <code>t0</code> is specified in <code>options</code>.</p>
+<code>tsave[-1]</code>, or from <code>t0</code> to <code>tsave[-1]</code> if <code>t0</code> is specified.</p>
         </div>
       </li>
       <li class="doc-section-item field-body">
@@ -7136,48 +7136,6 @@ method-dependent, refer to the documentation of the chosen method for more
 details.</p>
         </div>
       </li>
-      <li class="doc-section-item field-body">
-          <b><code>options</code></b>
-        –
-        <div class="doc-md-description">
-          <p>Generic options (supported: <code>save_states</code>, <code>cartesian_batching</code>,
-<code>progress_meter</code>, <code>t0</code>, <code>save_extra</code>).</p>
-<details>
-<summary>Detailed options API</summary>
-<div class="highlight"><pre><span></span><code>dq.Options(
-    save_states: bool = True,
-    cartesian_batching: bool = True,
-    progress_meter: AbstractProgressMeter | bool | None = None,
-    t0: ScalarLike | None = None,
-    save_extra: Callable[[Array], PyTree] | None = None,
-)
-</code></pre></div>
-<p><strong>Parameters:</strong></p>
-<ul>
-<li><strong><code>save_states</code></strong> - If <code>True</code>, the state is saved at every time in
-    <code>tsave</code>, otherwise only the final state is returned.</li>
-<li><strong><code>cartesian_batching</code></strong> - If <code>True</code>, batched arguments are treated as
-    separated batch dimensions, otherwise the batching is performed over
-    a single shared batched dimension.</li>
-<li><strong><code>progress_meter</code></strong> - Progress meter indicating how far the solve has
-    progressed. Defaults to <code>None</code> which uses the global default
-    progress meter (see
-    <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.set_progress_meter&lt;/span&gt;" href="../utils/global_settings/set_progress_meter.html#dynamiqs.utils.global_settings.set_progress_meter"><code>dq.set_progress_meter()</code></a>). Set to
-    <code>True</code> for a <a href="https://github.com/tqdm/tqdm">tqdm</a> progress meter,
-    and <code>False</code> for no output. See other options in
-    <a href="https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py">dynamiqs/progress_meter.py</a>.
-    If gradients are computed, the progress meter only displays during
-    the forward pass.</li>
-<li><strong><code>t0</code></strong> - Initial time. If <code>None</code>, defaults to the first time in
-    <code>tsave</code>.</li>
-<li><strong><code>save_extra</code></strong> <em>(function, optional)</em> - A function with signature
-    <code>f(QArray) -&gt; PyTree</code> that takes a state as input and returns a
-    PyTree. This can be used to save additional arbitrary data
-    during the integration, accessible in <code>result.extra</code>.</li>
-</ul>
-</details>
-        </div>
-      </li>
   </ul>
 
 
@@ -7186,7 +7144,7 @@ details.</p>
       <li class="doc-section-item field-body">
         <div class="doc-md-description">
           <p><code>dq.SESolveResult</code> object holding the result of the Schrödinger equation
-integration.  Use <code>result.states</code> to access the saved states and
+integration. Use <code>result.states</code> to access the saved states and
 <code>result.expects</code> to access the saved expectation values.</p>
 <details>
 <summary>Detailed result API</summary>
@@ -7195,13 +7153,12 @@ integration.  Use <code>result.states</code> to access the saved states and
 <p><strong>Attributes:</strong></p>
 <ul>
 <li><strong><code>states</code></strong> <em>(qarray of shape (..., nsave, n, 1))</em> - Saved states
-    with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
-    <code>options.save_states=False</code>.</li>
+    with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if <code>save_states=False</code>.</li>
 <li><strong><code>final_state</code></strong> <em>(qarray of shape (..., n, 1))</em> - Saved final state.</li>
 <li><strong><code>expects</code></strong> <em>(array of shape (..., len(exp_ops), ntsave) or None)</em> -
     Saved expectation values, if specified by <code>exp_ops</code>.</li>
 <li><strong><code>extra</code></strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code>
-    if specified in <code>options</code>.</li>
+    if specified.</li>
 <li><strong><code>infos</code></strong> <em>(PyTree or None)</em> - Method-dependent information on the
     resolution.</li>
 <li><strong><code>tsave</code></strong> <em>(array of shape (ntsave,))</em> - Times for which results
@@ -7211,6 +7168,59 @@ integration.  Use <code>result.states</code> to access the saved states and
 <li><strong><code>options</code></strong> <em>(Options)</em> - Options used.</li>
 </ul>
 </details>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Other Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>save_states</code></b>
+        –
+        <div class="doc-md-description">
+          <p>If <code>True</code>, the state is saved at every time in
+<code>tsave</code>, otherwise only the final state is returned. Defaults to <code>True</code>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>cartesian_batching</code></b>
+        –
+        <div class="doc-md-description">
+          <p>If <code>True</code>, batched arguments are treated
+as separated batch dimensions, otherwise the batching is performed over a
+single shared batch dimension. Defaults to <code>True</code>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>progress_meter</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Progress
+meter indicating how far the solve has progressed. Defaults to <code>None</code>
+which uses the global default progress meter (see
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.set_progress_meter&lt;/span&gt;" href="../utils/global_settings/set_progress_meter.html#dynamiqs.utils.global_settings.set_progress_meter"><code>dq.set_progress_meter()</code></a>). Set to <code>True</code>
+for a <a href="https://github.com/tqdm/tqdm">tqdm</a> progress meter, and <code>False</code>
+for no output. If gradients are computed, the progress meter only
+displays during the forward pass.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>t0</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Initial time. If <code>None</code>, defaults to the first
+time in <code>tsave</code>. Defaults to <code>None</code>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>save_extra</code></b>
+        –
+        <div class="doc-md-description">
+          <p>A function with signature
+<code>f(QArray) -&gt; PyTree</code> that takes a state as input and returns a PyTree.
+This can be used to save additional arbitrary data during the integration,
+accessible in <code>result.extra</code>. Defaults to <code>None</code>.</p>
         </div>
       </li>
   </ul>

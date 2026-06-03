@@ -7223,38 +7223,6 @@ method-dependent, refer to the documentation of the chosen method for more
 details.</p>
         </div>
       </li>
-      <li class="doc-section-item field-body">
-          <b><code>options</code></b>
-        –
-        <div class="doc-md-description">
-          <p>Generic options (supported: <code>save_states</code>, <code>cartesian_batching</code>,
-<code>save_extra</code>, <code>nmaxclick</code>).</p>
-<details>
-<summary>Detailed options API</summary>
-<div class="highlight"><pre><span></span><code>dq.Options(
-    save_states: bool = True,
-    cartesian_batching: bool = True,
-    save_extra: Callable[[Array], PyTree] | None = None,
-    nmaxclick: int = 10_000,
-)
-</code></pre></div>
-<p><strong>Parameters:</strong></p>
-<ul>
-<li><strong><code>save_states</code></strong> - If <code>True</code>, the state is saved at every time in
-    <code>tsave</code>, otherwise only the final state is returned.</li>
-<li><strong><code>cartesian_batching</code></strong> - If <code>True</code>, batched arguments are treated as
-    separated batch dimensions, otherwise the batching is performed over
-    a single shared batched dimension.</li>
-<li><strong><code>save_extra</code></strong> <em>(function, optional)</em> - A function with signature
-    <code>f(QArray) -&gt; PyTree</code> that takes a state as input and returns a
-    PyTree. This can be used to save additional arbitrary data
-    during the integration, accessible in <code>result.extra</code>.</li>
-<li><strong><code>nmaxclick</code></strong> - Maximum buffer size for <code>result.clicktimes</code>, should
-    be set higher than the expected maximum number of clicks.</li>
-</ul>
-</details>
-        </div>
-      </li>
   </ul>
 
 
@@ -7277,7 +7245,7 @@ loss channels (those for which the measurement efficiency is not zero).</p>
 <ul>
 <li><strong><code>states</code></strong> <em>(qarray of shape (..., ntrajs, nsave, n, n))</em> - Saved
     states with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
-    <code>options.save_states=False</code>.</li>
+    <code>save_states=False</code>.</li>
 <li><strong><code>final_state</code></strong> <em>(qarray of shape (..., ntrajs, n, n))</em> - Saved
     final state.</li>
 <li><strong><code>expects</code></strong> <em>(array of shape (..., ntrajs, len(exp_ops), ntsave)
@@ -7286,7 +7254,7 @@ loss channels (those for which the measurement efficiency is not zero).</p>
     Times at which the detectors clicked. Variable-length array padded
     with <code>jnp.nan</code> up to <code>nmaxclick</code>.</li>
 <li><strong><code>extra</code></strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code>
-    if specified in <code>options</code>.</li>
+    if specified.</li>
 <li><strong><code>keys</code></strong> <em>(<abbr title="pseudorandom number generator">PRNG</abbr> key array of shape (ntrajs,))</em> - <abbr title="pseudorandom number generator">PRNG</abbr> keys used to
     sample the point processes.</li>
 <li><strong><code>infos</code></strong> <em>(PyTree or None)</em> - Method-dependent information on the
@@ -7298,6 +7266,47 @@ loss channels (those for which the measurement efficiency is not zero).</p>
 <li><strong><code>options</code></strong> <em>(Options)</em> - Options used.</li>
 </ul>
 </details>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Other Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>save_states</code></b>
+        –
+        <div class="doc-md-description">
+          <p>If <code>True</code>, the state is saved at every time in
+<code>tsave</code>, otherwise only the final state is returned. Defaults to <code>True</code>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>cartesian_batching</code></b>
+        –
+        <div class="doc-md-description">
+          <p>If <code>True</code>, batched arguments are treated
+as separated batch dimensions, otherwise the batching is performed over a
+single shared batch dimension. Defaults to <code>True</code>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>save_extra</code></b>
+        –
+        <div class="doc-md-description">
+          <p>A function with signature
+<code>f(QArray) -&gt; PyTree</code> that takes a state as input and returns a PyTree.
+This can be used to save additional arbitrary data during the integration,
+accessible in <code>result.extra</code>. Defaults to <code>None</code>.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>nmaxclick</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Maximum buffer size for <code>result.clicktimes</code>, should
+be set higher than the expected maximum number of clicks. Defaults to
+<code>10_000</code>.</p>
         </div>
       </li>
   </ul>
