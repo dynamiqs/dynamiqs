@@ -269,6 +269,18 @@
          <lastmod>2026-06-03</lastmod>
     </url>
     <url>
+         <loc>https://www.dynamiqs.org/stable/python_api/progress_meter/NoProgressMeter.html</loc>
+         <lastmod>2026-06-03</lastmod>
+    </url>
+    <url>
+         <loc>https://www.dynamiqs.org/stable/python_api/progress_meter/TextProgressMeter.html</loc>
+         <lastmod>2026-06-03</lastmod>
+    </url>
+    <url>
+         <loc>https://www.dynamiqs.org/stable/python_api/progress_meter/TqdmProgressMeter.html</loc>
+         <lastmod>2026-06-03</lastmod>
+    </url>
+    <url>
          <loc>https://www.dynamiqs.org/stable/python_api/qarrays/qarray/QArray.html</loc>
          <lastmod>2026-06-03</lastmod>
     </url>
