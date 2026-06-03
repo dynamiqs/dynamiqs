@@ -160,18 +160,18 @@ def jssesolve(
                 - **`options`** _(Options)_ - Options used.
 
     Other Parameters:
-        save_states (bool, optional): If `True`, the state is saved at every time in
+        save_states: If `True`, the state is saved at every time in
             `tsave`, otherwise only the final state is returned. Defaults to `True`.
-        cartesian_batching (bool, optional): If `True`, batched arguments are treated
+        cartesian_batching: If `True`, batched arguments are treated
             as separated batch dimensions, otherwise the batching is performed over a
             single shared batch dimension. Defaults to `True`.
-        t0 (float, optional): Initial time. If `None`, defaults to the first time in
+        t0: Initial time. If `None`, defaults to the first time in
             `tsave`.
-        save_extra (callable or None, optional): A function with signature
+        save_extra: A function with signature
             `f(QArray) -> PyTree` that takes a state as input and returns a PyTree.
             This can be used to save additional arbitrary data during the integration,
             accessible in `result.extra`. Defaults to `None`.
-        nmaxclick (int, optional): Maximum buffer size for `result.clicktimes`, should
+        nmaxclick: Maximum buffer size for `result.clicktimes`, should
             be set higher than the expected maximum number of clicks. Defaults to
             `10_000`.
 

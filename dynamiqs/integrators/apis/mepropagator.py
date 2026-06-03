@@ -114,22 +114,22 @@ def mepropagator(
                 - **`options`** _(Options)_ - Options used.
 
     Other Parameters:
-        save_propagators (bool, optional): If `True`, the propagator is saved at every
+        save_propagators: If `True`, the propagator is saved at every
             time in `tsave`, otherwise only the final propagator is returned. Defaults
             to `True`.
-        cartesian_batching (bool, optional): If `True`, batched arguments are treated
+        cartesian_batching: If `True`, batched arguments are treated
             as separated batch dimensions, otherwise the batching is performed over a
             single shared batch dimension. Defaults to `True`.
-        progress_meter (AbstractProgressMeter or bool or None, optional): Progress
+        progress_meter: Progress
             meter indicating how far the solve has progressed. Defaults to `None`
             which uses the global default progress meter (see
             [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to `True`
             for a [tqdm](https://github.com/tqdm/tqdm) progress meter, and `False`
             for no output. If gradients are computed, the progress meter only
             displays during the forward pass.
-        t0 (float or None, optional): Initial time. If `None`, defaults to the first
+        t0: Initial time. If `None`, defaults to the first
             time in `tsave`. Defaults to `None`.
-        save_extra (callable or None, optional): A function with signature
+        save_extra: A function with signature
             `f(QArray) -> PyTree` that takes a propagator as input and returns a
             PyTree. This can be used to save additional arbitrary data during the
             integration, accessible in `result.extra`. Defaults to `None`.

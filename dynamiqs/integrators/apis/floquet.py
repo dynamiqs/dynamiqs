@@ -96,14 +96,14 @@ def floquet(
                 - **`options`** _(Options)_ - Options used.
 
     Other Parameters:
-        progress_meter (AbstractProgressMeter or bool or None, optional): Progress
+        progress_meter: Progress
             meter indicating how far the solve has progressed. Defaults to `None`
             which uses the global default progress meter (see
             [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to `True`
             for a [tqdm](https://github.com/tqdm/tqdm) progress meter, and `False`
             for no output. If gradients are computed, the progress meter only
             displays during the forward pass.
-        t0 (float or None, optional): Initial time. If `None`, defaults to the first
+        t0: Initial time. If `None`, defaults to the first
             time in `tsave`. Defaults to `None`.
 
     Examples:

@@ -159,29 +159,29 @@ def mesolve(
                     the low-rank factors `m(t)`.
 
     Other Parameters:
-        save_states (bool, optional): If `True`, the state is saved at every time in
+        save_states: If `True`, the state is saved at every time in
             `tsave`, otherwise only the final state is returned. Defaults to `True`.
-        cartesian_batching (bool, optional): If `True`, batched arguments are treated
+        cartesian_batching: If `True`, batched arguments are treated
             as separated batch dimensions, otherwise the batching is performed over a
             single shared batch dimension. Defaults to `True`.
-        progress_meter (AbstractProgressMeter or bool or None, optional): Progress
+        progress_meter: Progress
             meter indicating how far the solve has progressed. Defaults to `None`
             which uses the global default progress meter (see
             [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to `True`
             for a [tqdm](https://github.com/tqdm/tqdm) progress meter, and `False`
             for no output. If gradients are computed, the progress meter only
             displays during the forward pass.
-        t0 (float or None, optional): Initial time. If `None`, defaults to the first
+        t0: Initial time. If `None`, defaults to the first
             time in `tsave`. Defaults to `None`.
-        save_extra (callable or None, optional): A function with signature
+        save_extra: A function with signature
             `f(QArray) -> PyTree` that takes a state as input and returns a PyTree.
             This can be used to save additional arbitrary data during the integration,
             accessible in `result.extra`. Defaults to `None`.
-        vectorized (bool, optional): If `True`, the master equation is solved by
+        vectorized: If `True`, the master equation is solved by
             vectorizing the density matrix and Liouvillian. This is usually more
             efficient for small Hilbert spaces but less efficient for large Hilbert
             spaces. Only supported for Diffrax-based ODE methods. Defaults to `False`.
-        assume_hermitian (bool, optional): If `True`, the initial density matrix
+        assume_hermitian: If `True`, the initial density matrix
             `rho0` is assumed to be Hermitian. This allows to halve the number of
             matrix multiplications during vector field evaluation since only the
             Hermitian part of `rho` is evolved. Only compatible with Diffrax-based
