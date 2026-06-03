@@ -4,11 +4,7 @@ import diffrax as dx
 import equinox as eqx
 from tqdm import tqdm
 
-__all__ = [
-    'NoProgressMeter',
-    'TextProgressMeter',
-    'TqdmProgressMeter',
-]
+__all__ = ['NoProgressMeter', 'TextProgressMeter', 'TqdmProgressMeter']
 
 
 class AbstractProgressMeter(eqx.Module):
