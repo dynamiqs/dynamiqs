@@ -95,7 +95,6 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         extra:
             table: true
         members:
-        - AbstractProgressMeter
         - NoProgressMeter
         - TextProgressMeter
         - TqdmProgressMeter

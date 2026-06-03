@@ -5,7 +5,6 @@ import equinox as eqx
 from tqdm import tqdm
 
 __all__ = [
-    'AbstractProgressMeter',
     'NoProgressMeter',
     'TextProgressMeter',
     'TqdmProgressMeter',
