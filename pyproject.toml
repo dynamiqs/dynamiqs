@@ -163,6 +163,10 @@ help = "clean the code (ruff + codespell + ty)"
 cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
 help = "run the unit tests suite (pytest)"
 
+[tool.taskipy.tasks.benchmark]
+cmd = 'echo "\n>>> python -m tests.benchmark.runner --suite smoke --out benchmark-smoke.csv" && python -m tests.benchmark.runner --suite smoke --out benchmark-smoke.csv'
+help = "run the lightweight solver benchmark suite"
+
 [tool.taskipy.tasks.doctest-code]
 cmd = 'echo "\n>>> pytest dynamiqs" && python docs/remove_figs.py docs/figs_code && pytest dynamiqs'
 help = "check code docstrings examples (doctest)"
