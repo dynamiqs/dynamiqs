@@ -9,7 +9,7 @@ from jaxtyping import PRNGKeyArray
 from optimistix import AbstractRootFinder
 
 from ._utils import tree_str_inline
-from .gradient import BackwardCheckpointed, Direct, Forward, Gradient
+from .gradient import BackwardCheckpointed, Direct, Forward, Gradient, HigherOrder
 
 __all__ = [
     'Dopri5',
@@ -144,14 +144,16 @@ class Euler(_DEFixedStep):
         This method supports differentiation with
         [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
         [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
-        (default)
-        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
+        (default),
+        [`dq.gradient.Forward`][dynamiqs.gradient.Forward]
+        and [`dq.gradient.HigherOrder`][dynamiqs.gradient.HigherOrder].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
         Direct,
         BackwardCheckpointed,
         Forward,
+        HigherOrder,
     )
 
     # dummy init to have the signature in the documentation
@@ -371,14 +373,16 @@ class Dopri5(_DEAdaptiveStep):
         This method supports differentiation with
         [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
         [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
-        (default)
-        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
+        (default),
+        [`dq.gradient.Forward`][dynamiqs.gradient.Forward]
+        and [`dq.gradient.HigherOrder`][dynamiqs.gradient.HigherOrder].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
         Direct,
         BackwardCheckpointed,
         Forward,
+        HigherOrder,
     )
 
     # dummy init to have the signature in the documentation
@@ -412,14 +416,16 @@ class Dopri8(_DEAdaptiveStep):
         This method supports differentiation with
         [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
         [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
-        (default)
-        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
+        (default),
+        [`dq.gradient.Forward`][dynamiqs.gradient.Forward]
+        and [`dq.gradient.HigherOrder`][dynamiqs.gradient.HigherOrder].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
         Direct,
         BackwardCheckpointed,
         Forward,
+        HigherOrder,
     )
 
     # dummy init to have the signature in the documentation
@@ -453,14 +459,16 @@ class Tsit5(_DEAdaptiveStep):
         This method supports differentiation with
         [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
         [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
-        (default)
-        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
+        (default),
+        [`dq.gradient.Forward`][dynamiqs.gradient.Forward]
+        and [`dq.gradient.HigherOrder`][dynamiqs.gradient.HigherOrder].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
         Direct,
         BackwardCheckpointed,
         Forward,
+        HigherOrder,
     )
 
     # dummy init to have the signature in the documentation
@@ -505,14 +513,16 @@ class Kvaerno3(_DEAdaptiveStep):
         This method supports differentiation with
         [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
         [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
-        (default)
-        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
+        (default),
+        [`dq.gradient.Forward`][dynamiqs.gradient.Forward]
+        and [`dq.gradient.HigherOrder`][dynamiqs.gradient.HigherOrder].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
         Direct,
         BackwardCheckpointed,
         Forward,
+        HigherOrder,
     )
 
     # dummy init to have the signature in the documentation
@@ -557,14 +567,16 @@ class Kvaerno5(_DEAdaptiveStep):
         This method supports differentiation with
         [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
         [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
-        (default)
-        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
+        (default),
+        [`dq.gradient.Forward`][dynamiqs.gradient.Forward]
+        and [`dq.gradient.HigherOrder`][dynamiqs.gradient.HigherOrder].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
         Direct,
         BackwardCheckpointed,
         Forward,
+        HigherOrder,
     )
 
     # dummy init to have the signature in the documentation

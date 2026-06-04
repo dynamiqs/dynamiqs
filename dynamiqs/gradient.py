@@ -4,7 +4,7 @@ import equinox as eqx
 
 from ._utils import tree_str_inline
 
-__all__ = ['Direct', 'BackwardCheckpointed', 'Forward', 'Gradient']
+__all__ = ['Direct', 'BackwardCheckpointed', 'Forward', 'HigherOrder', 'Gradient']
 
 
 class Gradient(eqx.Module):
@@ -103,6 +103,41 @@ class Forward(Gradient):
         For Diffrax-based methods, this falls back to the
         [`diffrax.ForwardMode`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.ForwardMode)
         option.
+    """
+
+    # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
+
+
+class HigherOrder(Gradient):
+    """Automatic differentiation compatible with higher-order derivatives.
+
+    With this option, the gradient is computed by automatically differentiating
+    through the internals of the solver, using a configuration that additionally
+    supports *higher-order* and nested automatic differentiation. This is the
+    option to use to compute Hessians with
+    [`jax.hessian`](https://docs.jax.dev/en/latest/_autosummary/jax.hessian.html)
+    (or, more generally, to nest [`jax.jvp`](https://docs.jax.dev/en/latest/_autosummary/jax.jvp.html)
+    and [`jax.vjp`](https://docs.jax.dev/en/latest/_autosummary/jax.vjp.html)),
+    which the first-order modes ([`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+    [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
+    and [`dq.gradient.Forward`][dynamiqs.gradient.Forward]) do not reliably
+    support.
+
+    Note:
+        For Diffrax-based methods, this falls back to the
+        [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
+        option, and additionally instantiates the underlying Runge-Kutta method
+        with `scan_kind="bounded"`. This is the configuration recommended by
+        Diffrax for higher-order autodifferentiation (see the
+        [Diffrax Hessian example](https://docs.kidger.site/diffrax/examples/hessian/)).
+
+    Warning:
+        Supporting higher-order autodiff comes at the cost of increased memory
+        usage and slower execution than the first-order modes. Prefer a
+        first-order mode (e.g. [`dq.gradient.Direct`][dynamiqs.gradient.Direct])
+        when you only need first-order gradients.
     """
 
     # dummy init to have the signature in the documentation
