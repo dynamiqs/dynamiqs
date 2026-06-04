@@ -4,6 +4,7 @@ import functools as ft
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import replace
+from typing import cast
 
 import equinox as eqx
 import jax
@@ -477,9 +478,10 @@ class TimeQArray(eqx.Module):
         return self + y
 
     def __sub__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
-        if isqarraylike(y):
-            y = asqarray(y)
-        return self + (-y)
+        if isinstance(y, TimeQArray):
+            return self + (-y)
+        else:
+            return NotImplemented 
 
     def __rsub__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
         return y + (-self)
@@ -536,7 +538,7 @@ class ConstantTimeQArray(TimeQArray):
 
     @property
     def in_axes(self) -> PyTree[int | None]:
-        return ConstantTimeQArray(0, tstart=None, tend=None)
+        return ConstantTimeQArray(cast(QArray, 0), tstart=None, tend=None)
 
     def shift(self, tshift: float) -> TimeQArray:
         tstart, tend = self._shift_bounds(tshift)
@@ -627,7 +629,7 @@ class PWCTimeQArray(TimeQArray):
 
     @property
     def in_axes(self) -> PyTree[int | None]:
-        return PWCTimeQArray(None, 0, None, tstart=None, tend=None)
+        return PWCTimeQArray(None, 0, cast(QArray, None), tstart=None, tend=None)
 
     @property
     def discontinuity_ts(self) -> Array:
@@ -717,7 +719,7 @@ class ModulatedTimeQArray(TimeQArray):
 
     @property
     def in_axes(self) -> PyTree[int | None]:
-        return ModulatedTimeQArray(0, None, None, tstart=None, tend=None)
+        return ModulatedTimeQArray(0, cast(QArray, None), None, tstart=None, tend=None)
 
     @property
     def discontinuity_ts(self) -> Array:
