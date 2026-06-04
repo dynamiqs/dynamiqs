@@ -126,7 +126,6 @@ exclude = [
     "dynamiqs/integrators",
     "dynamiqs/plot",
     "dynamiqs/qarrays",
-    "dynamiqs/random",
     "dynamiqs/utils",
     "dynamiqs/time_qarray.py",
 ]
