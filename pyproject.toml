@@ -126,8 +126,10 @@ exclude = [
     "dynamiqs/integrators",
     "dynamiqs/plot",
     "dynamiqs/qarrays",
-    "dynamiqs/random",
-    "dynamiqs/utils",
+    "dynamiqs/utils/general.py",
+    "dynamiqs/utils/operators.py",
+    "dynamiqs/utils/states.py",
+    "dynamiqs/utils/vectorization.py",
     "dynamiqs/time_qarray.py",
     "dynamiqs/conftest.py"
 ]
