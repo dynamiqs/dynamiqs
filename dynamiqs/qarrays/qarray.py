@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import replace
 from math import prod
-from typing import Any, TypeAlias, get_args
+from typing import Any, TypeAlias, TypeGuard, get_args
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -20,7 +20,7 @@ from .layout import Layout
 __all__ = ['QArray']
 
 
-def isqarraylike(x: Any) -> bool:
+def isqarraylike(x: Any) -> TypeGuard[QArrayLike]:
     r"""Returns True if the input is a qarray-like.
 
     Args:
@@ -547,6 +547,8 @@ class QArray(eqx.Module):
         return self.__add__(y)
 
     def __sub__(self, y: QArrayLike) -> QArray:
+        if not isinstance(y, QArray) and isqarraylike(y):
+            y = to_jax(y)
         return self + (-y)
 
     def __rsub__(self, y: QArrayLike) -> QArray:

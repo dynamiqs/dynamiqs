@@ -10,6 +10,7 @@ import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
 from jax import Array
+from diffrax._custom_types import RealScalarLike
 from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
 
 from ._checks import check_shape, check_times
@@ -232,9 +233,8 @@ def timecallable(
     )
 
     # make f a valid PyTree that is vmap-compatible
-    f = BatchedCallable(f)
-
-    return CallableTimeQArray(f, discontinuity_ts)
+    pytree_f = BatchedCallable(f)
+    return CallableTimeQArray(pytree_f, discontinuity_ts)
 
 
 class TimeQArray(eqx.Module):
@@ -347,7 +347,7 @@ class TimeQArray(eqx.Module):
         Returns:
             New timeqarray with the given time bounds.
         """
-        return replace(self, tstart=tstart, tend=tend)  # ty: ignore[invalid-argument-type]
+        return replace(self, tstart=tstart, tend=tend)
 
     @abstractmethod
     def shift(self, tshift: float) -> TimeQArray:
@@ -427,7 +427,7 @@ class TimeQArray(eqx.Module):
         tend = None if self.tend is None else self.tend + tshift
         return tstart, tend
 
-    def _prefactor(self, t: ScalarLike) -> Array:
+    def _prefactor(self, t: RealScalarLike) -> Array:
         clip = False
         if self.tstart is not None:
             clip |= t < self.tstart
@@ -447,11 +447,11 @@ class TimeQArray(eqx.Module):
         ts = jnp.asarray(ts)
         return jnp.vectorize(self._prefactor)(ts)
 
-    def __call__(self, t: ScalarLike) -> QArray:
+    def __call__(self, t: RealScalarLike) -> QArray:
         return self._prefactor(t)[..., None, None] * self._operator(t)
 
     @abstractmethod
-    def _operator(self, t: ScalarLike) -> QArray:
+    def _operator(self, t: RealScalarLike) -> QArray:
         pass
 
     def __neg__(self) -> TimeQArray:
@@ -477,6 +477,8 @@ class TimeQArray(eqx.Module):
         return self + y
 
     def __sub__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
+        if isqarraylike(y):
+            y = asqarray(y)
         return self + (-y)
 
     def __rsub__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
@@ -530,7 +532,7 @@ class ConstantTimeQArray(TimeQArray):
     @property
     def mT(self) -> TimeQArray:
         qarray = self.qarray.mT
-        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
+        return replace(self, qarray=qarray)
 
     @property
     def in_axes(self) -> PyTree[int | None]:
@@ -538,26 +540,26 @@ class ConstantTimeQArray(TimeQArray):
 
     def shift(self, tshift: float) -> TimeQArray:
         tstart, tend = self._shift_bounds(tshift)
-        return replace(self, tstart=tstart, tend=tend)  # ty: ignore[invalid-argument-type]
+        return replace(self, tstart=tstart, tend=tend)
 
     def reshape(self, *shape: int) -> TimeQArray:
         qarray = self.qarray.reshape(*shape)
-        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
+        return replace(self, qarray=qarray)
 
     def broadcast_to(self, *shape: int) -> TimeQArray:
         qarray = self.qarray.broadcast_to(*shape)
-        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
+        return replace(self, qarray=qarray)
 
     def conj(self) -> TimeQArray:
         qarray = self.qarray.conj()
-        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
+        return replace(self, qarray=qarray)
 
-    def _operator(self, t: ScalarLike) -> QArray:  # noqa: ARG002
+    def _operator(self, t: RealScalarLike) -> QArray:  # noqa: ARG002
         return self.qarray
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
         qarray = self.qarray * y
-        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
+        return replace(self, qarray=qarray)
 
     def __add__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
         # handle addition with a constant object as a special case
@@ -621,7 +623,7 @@ class PWCTimeQArray(TimeQArray):
     @property
     def mT(self) -> TimeQArray:
         qarray = self.qarray.mT
-        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
+        return replace(self, qarray=qarray)
 
     @property
     def in_axes(self) -> PyTree[int | None]:
@@ -633,36 +635,36 @@ class PWCTimeQArray(TimeQArray):
 
     def shift(self, tshift: float) -> TimeQArray:
         tstart, tend = self._shift_bounds(tshift)
-        return replace(self, times=self.times + tshift, tstart=tstart, tend=tend)  # ty: ignore[invalid-argument-type]
+        return replace(self, times=self.times + tshift, tstart=tstart, tend=tend)
 
     def reshape(self, *shape: int) -> TimeQArray:
         shape = shape[:-2] + self.values.shape[-1:]  # (..., nv)
         values = self.values.reshape(*shape)
-        return replace(self, values=values)  # ty: ignore[invalid-argument-type]
+        return replace(self, values=values)
 
     def broadcast_to(self, *shape: int) -> TimeQArray:
         shape = shape[:-2] + self.values.shape[-1:]  # (..., nv)
         values = jnp.broadcast_to(self.values, shape)
-        return replace(self, values=values)  # ty: ignore[invalid-argument-type]
+        return replace(self, values=values)
 
     def conj(self) -> TimeQArray:
         values = self.values.conj()
         qarray = self.qarray.conj()
-        return replace(self, values=values, qarray=qarray)  # ty: ignore[invalid-argument-type]
+        return replace(self, values=values, qarray=qarray)
 
-    def _prefactor(self, t: ScalarLike) -> Array:
+    def _prefactor(self, t: RealScalarLike) -> Array:
         intervals = self._times_reshaped
         active = (t >= intervals[:, 0]) & (t < intervals[:, 1])  # (nv,)
         pwc_prefactor = jnp.sum(self.values * active, axis=-1)  # (...)
 
         return super()._prefactor(t) * pwc_prefactor
 
-    def _operator(self, t: ScalarLike) -> QArray:  # noqa: ARG002
+    def _operator(self, t: RealScalarLike) -> QArray:  # noqa: ARG002
         return self.qarray
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
         qarray = self.qarray * y
-        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
+        return replace(self, qarray=qarray)
 
 
 class ModulatedTimeQArray(TimeQArray):
@@ -711,7 +713,7 @@ class ModulatedTimeQArray(TimeQArray):
     @property
     def mT(self) -> TimeQArray:
         qarray = self.qarray.mT
-        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
+        return replace(self, qarray=qarray)
 
     @property
     def in_axes(self) -> PyTree[int | None]:
@@ -726,30 +728,30 @@ class ModulatedTimeQArray(TimeQArray):
         f = BatchedCallable(lambda t: self.f(t - tshift))
         return replace(
             self, f=f, _disc_ts=self._disc_ts + tshift, tstart=tstart, tend=tend
-        )  # ty: ignore[invalid-argument-type]
+        )
 
     def reshape(self, *shape: int) -> TimeQArray:
         f = self.f.reshape(*shape[:-2])
-        return replace(self, f=f)  # ty: ignore[invalid-argument-type]
+        return replace(self, f=f)
 
     def broadcast_to(self, *shape: int) -> TimeQArray:
         f = self.f.broadcast_to(*shape[:-2])
-        return replace(self, f=f)  # ty: ignore[invalid-argument-type]
+        return replace(self, f=f)
 
     def conj(self) -> TimeQArray:
         f = self.f.conj()
         qarray = self.qarray.conj()
-        return replace(self, f=f, qarray=qarray)  # ty: ignore[invalid-argument-type]
+        return replace(self, f=f, qarray=qarray)
 
-    def _prefactor(self, t: ScalarLike) -> Array:
+    def _prefactor(self, t: RealScalarLike) -> Array:
         return super()._prefactor(t) * self.f(t)
 
-    def _operator(self, t: ScalarLike) -> QArray:  # noqa: ARG002
+    def _operator(self, t: RealScalarLike) -> QArray:  # noqa: ARG002
         return self.qarray
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
         qarray = self.qarray * y
-        return replace(self, qarray=qarray)  # ty: ignore[invalid-argument-type]
+        return replace(self, qarray=qarray)
 
 
 class CallableTimeQArray(TimeQArray):
@@ -795,7 +797,7 @@ class CallableTimeQArray(TimeQArray):
     @property
     def mT(self) -> TimeQArray:
         f = jtu.Partial(lambda t: self.f(t).mT)
-        return replace(self, f=f)  # ty: ignore[invalid-argument-type]
+        return replace(self, f=f)
 
     @property
     def in_axes(self) -> PyTree[int | None]:
@@ -810,26 +812,26 @@ class CallableTimeQArray(TimeQArray):
         f = BatchedCallable(lambda t: self.f(t - tshift))
         return replace(
             self, f=f, _disc_ts=self._disc_ts + tshift, tstart=tstart, tend=tend
-        )  # ty: ignore[invalid-argument-type]
+        )
 
     def reshape(self, *shape: int) -> TimeQArray:
         f = self.f.reshape(*shape)
-        return replace(self, f=f)  # ty: ignore[invalid-argument-type]
+        return replace(self, f=f)
 
     def broadcast_to(self, *shape: int) -> TimeQArray:
         f = self.f.broadcast_to(*shape)
-        return replace(self, f=f)  # ty: ignore[invalid-argument-type]
+        return replace(self, f=f)
 
     def conj(self) -> TimeQArray:
         f = self.f.conj()
-        return replace(self, f=f)  # ty: ignore[invalid-argument-type]
+        return replace(self, f=f)
 
-    def _operator(self, t: ScalarLike) -> QArray:
+    def _operator(self, t: RealScalarLike) -> QArray:
         return self.f(t)
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
         f = self.f * y
-        return replace(self, f=f)  # ty: ignore[invalid-argument-type]
+        return replace(self, f=f)
 
 
 class SummedTimeQArray(TimeQArray):
@@ -891,7 +893,7 @@ class SummedTimeQArray(TimeQArray):
     @property
     def mT(self) -> TimeQArray:
         timeqarrays = [tqarray.mT for tqarray in self.timeqarrays]
-        return replace(self, timeqarrays=timeqarrays)  # ty: ignore[invalid-argument-type]
+        return replace(self, timeqarrays=timeqarrays)
 
     @property
     def in_axes(self) -> PyTree[int | None]:
@@ -905,37 +907,37 @@ class SummedTimeQArray(TimeQArray):
 
     def shift(self, tshift: float) -> TimeQArray:
         timeqarrays = [tqarray.shift(tshift) for tqarray in self.timeqarrays]
-        return replace(self, timeqarrays=timeqarrays)  # ty: ignore[invalid-argument-type]
+        return replace(self, timeqarrays=timeqarrays)
 
     def reshape(self, *shape: int) -> TimeQArray:
         timeqarrays = [tqarray.reshape(*shape) for tqarray in self.timeqarrays]
-        return replace(self, timeqarrays=timeqarrays)  # ty: ignore[invalid-argument-type]
+        return replace(self, timeqarrays=timeqarrays)
 
     def broadcast_to(self, *shape: int) -> TimeQArray:
         timeqarrays = [tqarray.broadcast_to(*shape) for tqarray in self.timeqarrays]
-        return replace(self, timeqarrays=timeqarrays)  # ty: ignore[invalid-argument-type]
+        return replace(self, timeqarrays=timeqarrays)
 
     def conj(self) -> TimeQArray:
         timeqarrays = [tqarray.conj() for tqarray in self.timeqarrays]
-        return replace(self, timeqarrays=timeqarrays)  # ty: ignore[invalid-argument-type]
+        return replace(self, timeqarrays=timeqarrays)
 
     def prefactor(self, ts: ArrayLike) -> Array:
         raise NotImplementedError(
             'SummedTimeQArray does not support the `prefactor` method. '
         )
 
-    def __call__(self, t: ScalarLike) -> QArray:
+    def __call__(self, t: RealScalarLike) -> QArray:
         return self._prefactor(t)[..., None, None] * ft.reduce(
             lambda x, y: x + y, [tqarray(t) for tqarray in self.timeqarrays]
         )
 
-    def _operator(self, t: ScalarLike) -> QArray:
+    def _operator(self, t: RealScalarLike) -> QArray:
         # this will never be called because we directly override __call__
         raise NotImplementedError
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
         timeqarrays = [tqarray * y for tqarray in self.timeqarrays]
-        return replace(self, timeqarrays=timeqarrays)  # ty: ignore[invalid-argument-type]
+        return replace(self, timeqarrays=timeqarrays)
 
     def __add__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
         if isqarraylike(y):
@@ -971,7 +973,7 @@ class BatchedCallable(eqx.Module):
             shape = eval_shape.shape
         self.indices = list(jnp.indices(shape))
 
-    def __call__(self, t: ScalarLike) -> QArrayLike:
+    def __call__(self, t: RealScalarLike) -> QArrayLike:
         if len(self.indices) == 0:
             return self.f(t)
         else:
@@ -1015,5 +1017,5 @@ class BatchedCallable(eqx.Module):
         return BatchedCallable(lambda t: self.f(t) + y)
 
     def __mul__(self, y: ArrayLike) -> BatchedCallable:
-        f = lambda t: self.f(t) * y
+        f = lambda t: self.f(t) * y  # ty: ignore[unsupported-operator]
         return BatchedCallable(f)

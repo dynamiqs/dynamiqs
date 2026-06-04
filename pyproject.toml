@@ -128,7 +128,6 @@ exclude = [
     "dynamiqs/qarrays",
     "dynamiqs/random",
     "dynamiqs/utils",
-    "dynamiqs/time_qarray.py",
 ]
 
 [tool.ty.rules]
