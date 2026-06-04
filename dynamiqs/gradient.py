@@ -4,7 +4,7 @@ import equinox as eqx
 
 from ._utils import tree_str_inline
 
-__all__ = ['Direct', 'BackwardCheckpointed', 'Forward', 'Gradient']
+__all__ = ['Direct', 'BackwardCheckpointed', 'Forward', 'HigherOrder', 'Gradient']
 
 
 class Gradient(eqx.Module):
@@ -103,6 +103,24 @@ class Forward(Gradient):
         For Diffrax-based methods, this falls back to the
         [`diffrax.ForwardMode`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.ForwardMode)
         option.
+    """
+
+    # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
+
+
+class HigherOrder(Gradient):
+    """Higher-order automatic differentiation.
+
+    Enables support for higher-order automatic differentiation
+    (like [`jax.hessian`](https://docs.jax.dev/en/latest/_autosummary/jax.hessian.html))
+    through Diffrax-based solvers.
+
+    Note:
+        For Diffrax-based methods, this uses
+        [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
+        and configures compatible solver scans when required by Diffrax.
     """
 
     # dummy init to have the signature in the documentation

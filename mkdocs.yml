@@ -191,6 +191,7 @@ nav:
               - Direct: python_api/gradient/Direct.md
               - BackwardCheckpointed: python_api/gradient/BackwardCheckpointed.md
               - Forward: python_api/gradient/Forward.md
+              - HigherOrder: python_api/gradient/HigherOrder.md
           - Progress meters:
               - NoProgressMeter: python_api/progress_meter/NoProgressMeter.md
               - TextProgressMeter: python_api/progress_meter/TextProgressMeter.md
