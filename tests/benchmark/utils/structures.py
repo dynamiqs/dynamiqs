@@ -1,13 +1,6 @@
 """Data structures and typing utilities used within the `benchmark` namespace."""
 
-from collections.abc import Callable
-from typing import TypeAlias, TypedDict
-
-from jax import Array
-
-from dynamiqs import QArray, TimeQArray
-
-SEProblem: TypeAlias = Callable[[], tuple[TimeQArray, QArray, Array]]
+from typing import TypedDict
 
 
 class MethodParameters(TypedDict):
@@ -49,4 +42,4 @@ class BenchmarkEntry(TypedDict):
     jax_version: str
 
 
-__all__ = ['BenchmarkEntry', 'MethodParameters', 'SEProblem']
+__all__ = ['BenchmarkEntry', 'MethodParameters']
