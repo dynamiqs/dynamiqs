@@ -3,9 +3,9 @@ import jax
 
 import dynamiqs as dq
 
-from .problems import Problem
+from ..problems import Problem
+from ..utils import BenchmarkEntry, extract_method_parameters, extract_nsteps
 from .solve import time_solving
-from .utils import BenchmarkEntry, extract_method_parameters, extract_nsteps
 
 
 def run_benchmark(problem: Problem) -> BenchmarkEntry:

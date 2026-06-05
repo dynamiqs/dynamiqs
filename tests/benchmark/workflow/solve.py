@@ -4,7 +4,7 @@ import time
 
 from dynamiqs.result import SolveResult
 
-from .problems import Problem
+from ..problems import Problem
 
 
 def time_solving(problem: Problem) -> tuple[SolveResult, float]:

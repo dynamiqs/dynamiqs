@@ -2,8 +2,8 @@
 
 from pprint import pp
 
-from .benchmark import run_benchmark
 from .problems import CrossResonanceModulatedSESolveProblem
+from .workflow import run_benchmark
 
 
 def main() -> None:
