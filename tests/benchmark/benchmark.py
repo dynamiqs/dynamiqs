@@ -1,10 +1,11 @@
 import diffrax
 import jax
-from problems import Problem
-from solve import time_solving
-from utils import BenchmarkEntry, extract_method_parameters, extract_nsteps
 
 import dynamiqs as dq
+
+from .problems import Problem
+from .solve import time_solving
+from .utils import BenchmarkEntry, extract_method_parameters, extract_nsteps
 
 
 def run_benchmark(problem: Problem) -> BenchmarkEntry:
