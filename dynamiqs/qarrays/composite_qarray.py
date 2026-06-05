@@ -16,24 +16,14 @@ __all__ = []
 
 
 class CompositeTerm(eqx.Module):
-    r"""One separable term in a :class:`CompositeQArray`.
-
-    Represents a single term of the form
-
-    $$
-        c \, A_0 \otimes A_1 \otimes \cdots \otimes A_{N-1}
-    $$
-
-    where $c$ is a scalar coefficient and each $A_k$ is a local operator acting
-    on subsystem $k$.
+    r"""One separable term $c \, A_0 \otimes \cdots \otimes A_{N-1}$ in a
+    :class:`CompositeQArray`.  Holds the bulk of the lazy logic; most ``LAZY``
+    methods on :class:`CompositeQArray` delegate to a corresponding method here.
 
     Attributes:
-        operators: Local operators $(A_0, \ldots, A_{N-1})$, one per subsystem.
-            Each is a square :class:`MaterializedQArray` of shape
-            $(\ldots, d_k, d_k)$.
-        coeff: Scalar coefficient $c$ multiplying the full tensor-product operator.
-            Can be a Python scalar or a broadcastable JAX array for batched use.
-            Defaults to $1$.
+        operators: Per-subsystem local operators (one square :class:`MaterializedQArray`
+            per subsystem).
+        coeff: Scalar coefficient; may be a JAX array for batched use. Defaults to 1.
     """
 
     operators: tuple[MaterializedQArray, ...]
@@ -42,60 +32,142 @@ class CompositeTerm(eqx.Module):
     # === Materialization ===
 
     def _materialize(self) -> MaterializedQArray:
-        r"""Build the full $n \times n$ matrix of this term as a `MaterializedQArray`.
+        """coeff * (A_0 ⊗ … ⊗ A_{N-1}); reduce via op.__and__ then __mul__(coeff)."""
+        pass
 
-        Computes the Kronecker product of all local operators, scaled by ``coeff``:
+    # === Properties ===
 
-        $$
-            c \, A_0 \otimes A_1 \otimes \cdots \otimes A_{N-1}
-        $$
+    @property
+    def dtype(self) -> jnp.dtype:
+        # jnp.result_type over each op's .dtype + coeff.
+        pass
 
-        This collapses the factored representation into a single dense (or sparse)
-        matrix, with cost exponential in the number of subsystems. It is used by
-        :meth:`CompositeQArray._materialize` and indirectly by every method whose
-        strategy is tagged ``MATERIALIZE`` below.
-        """
+    @property
+    def shape(self) -> tuple[int, ...]:
+        # (*batch, prod(d_k), prod(d_k)); batch axes broadcast across ops/coeff.
+        pass
+
+    @property
+    def layout(self) -> Layout:
+        # aggregate over op's .layout (e.g. dense if any op is dense, else dia).
+        pass
+
+    @property
+    def mT(self) -> CompositeTerm:
+        # (c·⊗A_k)^T = c·⊗A_k^T → each op's .mT.
+        pass
+
+    # === Array methods ===
+
+    def conj(self) -> CompositeTerm:
+        # conj(c·⊗A_k) = conj(c)·⊗conj(A_k) → each op's .conj() + jnp.conj(coeff).
+        pass
+
+    def broadcast_to(self, *shape: int) -> CompositeTerm:
+        # batch axes only → each op's .broadcast_to() + jnp.broadcast_to(coeff, ...).
+        pass
+
+    def trace(self) -> Array:
+        # tr(c·⊗A_k) = c·Π_k tr(A_k) → each op's .trace().
+        pass
+
+    def sum(self, axis: int | tuple[int, ...] | None = None) -> CompositeTerm:
+        # batch axes only → each op's .sum(axis) + jnp.sum(coeff, axis).
+        pass
+
+    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> CompositeTerm:
+        # batch axes only → each op's .squeeze(axis) + jnp.squeeze(coeff, axis).
+        pass
+
+    def powm(self, n: int) -> CompositeTerm:
+        # (c·⊗A_k)^n = c^n·⊗A_k^n → each op's .powm(n).
+        pass
+
+    def expm(self, *, max_squarings: int = 16) -> MaterializedQArray:
+        # exp(c·⊗A_k) = (⊗V_k)·diag(exp(c·∏λ_k))·(⊗V_k)^†; returns MaterializedQArray.
+        # → each op's ._eigh().
+        pass
+
+    def norm(self, *, psd: bool = False) -> Array:
+        # ‖c·⊗A_k‖_F = |c|·Π_k‖A_k‖_F → each op's .norm(psd=psd).
+        pass
+
+    def _eig(self) -> tuple[Array, MaterializedQArray]:
+        # eigenvalues = c·Cartesian(λ_k), eigenvectors = ⊗V_k (materialized)
+        # → each op's ._eig().
+        pass
+
+    def _eigh(self) -> tuple[Array, Array]:
+        # Hermitian variant; returns raw JAX arrays → each op's ._eigh().
+        pass
+
+    def _eigvals(self) -> Array:
+        # c · Cartesian product of per-op eigenvalues → each op's ._eigvals().
+        pass
+
+    def _eigvalsh(self) -> Array:
+        # Hermitian variant → each op's ._eigvalsh().
+        pass
+
+    def devices(self) -> set[Device]:
+        # union of each op's .devices().
+        pass
+
+    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+        # Sufficient (not necessary): coeff real AND all ops .isherm().
+        # False here is not conclusive for multi-term CompositeQArray.
+        pass
+
+    def block_until_ready(self) -> CompositeTerm:
+        # → each op's .block_until_ready().
+        pass
+
+    # === Quantum methods ===
+
+    def ptrace(self, keep: tuple[int, ...]) -> CompositeTerm:
+        # ptrace_{∉keep}(c·⊗A_j) = c·(Π_{j∉keep} tr(A_j))·⊗_{k∈keep} A_k
+        # → .trace() on each traced-out op.
+        pass
+
+    # === Indexing ===
+
+    def __getitem__(self, key: IndexType) -> CompositeTerm:
+        # batch axes only → each op's __getitem__. Matrix-axis keys: caller materializes.
+        pass
+
+    # === Arithmetic ===
+
+    def __mul__(self, y: ArrayLike) -> CompositeTerm:
+        # y·(c·⊗A_k) = (y·c)·⊗A_k; only touches coeff.
+        pass
+
+    def __matmul__(self, other: CompositeTerm) -> CompositeTerm:
+        # (c·⊗A_k)·(d·⊗B_k) = (c·d)·⊗(A_k·B_k) → each op pair's @.
+        pass
+
+    def __and__(self, other: CompositeTerm) -> CompositeTerm:
+        # (c·⊗A_k)⊗(d·⊗B_l) = (c·d)·(A_*,B_*); tuple concat + coeff multiply.
         pass
 
 
 class CompositeQArray(QArray):
     r"""Lazy sum of separable tensor-product operators.
 
-    Represents an operator acting on a composite Hilbert space
-    $\mathcal{H} = \mathcal{H}_0 \otimes \cdots \otimes \mathcal{H}_{N-1}$
-    of total dimension $n = \prod_k d_k$, written as a sum of separable terms:
+    $H = \sum_j c_j A_{j,0} \otimes \cdots \otimes A_{j,N-1}$, stored in factored form
+    to avoid the exponential cost of the full $n \times n$ matrix.
 
-    $$
-        H = \sum_{j} c_j \, A_{j,0} \otimes A_{j,1} \otimes \cdots \otimes A_{j,N-1}
-    $$
+    ``dims`` is inherited from :class:`QArray`.
 
-    where each term $j$ is a :class:`CompositeTerm`.
+    Strategy tags used in method comments:
 
-    Storing the operator in this factored form — rather than materializing the full
-    $n \times n$ Kronecker product — enables efficient matrix-vector products via
-    per-subsystem contractions, avoiding the exponential memory cost of the dense
-    representation.
-
-    Note:
-        ``dims`` is inherited from the abstract :class:`QArray` base class.
-
-    Note: Implementation strategy of contractual methods
-        Each abstract method inherited from :class:`QArray` is tagged below with
-        one of three strategies:
-
-        - ``LAZY``: implementable directly on ``terms`` (and/or operators)
-          without ever building the full $n \times n$ matrix. These exploit
-          algebraic identities such as $(A \otimes B)^T = A^T \otimes B^T$,
-          $\mathrm{tr}(A \otimes B) = \mathrm{tr}(A)\,\mathrm{tr}(B)$, or the
-          bilinearity of $\otimes$ over $+$.
-        - ``MATERIALIZE``: no closed-form lazy shortcut exists; the method
-          falls back to ``self._materialize().<method>(...)``.
-        - ``MIXED``: ``LAZY`` for some inputs (typically batch axes) and
-          ``MATERIALIZE`` for others (typically matrix axes).
+    - ``LAZY``: implemented term-wise; no full matrix built.
+    - ``MATERIALIZE``: falls back to ``_materialize().<method>(...)``.
+    - ``MIXED``: LAZY for batch axes, MATERIALIZE for matrix axes.
+    - ``1-term``: single-term fast path that skips full materialization.
+    - ``★``: big-win lazy methods (core motivation for this class).
 
     Attributes:
-        terms: Tuple of :class:`CompositeTerm` objects whose sum defines the
-            operator. All terms must have ``len(operators) == len(dims)``.
+        terms: Tuple of :class:`CompositeTerm` objects that sum to the operator.
     """
 
     terms: tuple[CompositeTerm, ...]
@@ -103,229 +175,192 @@ class CompositeQArray(QArray):
     # === Lifecycle ===
 
     def __check_init__(self):
+        # TODO: super().__check_init__(); verify len(term.operators)==len(dims)
+        # and term.operators[k] has matrix dim dims[k] for every term.
         pass
 
     # === Materialization ===
 
     def _materialize(self) -> MaterializedQArray:
-        r"""Collapse the lazy representation into a single `MaterializedQArray`.
-
-        Sums the materialized contribution of every term:
-
-        $$
-            \sum_j c_j \, A_{j,0} \otimes A_{j,1} \otimes \cdots \otimes A_{j,N-1}
-        $$
-
-        Acts as the fallback for every contractual method tagged ``MATERIALIZE``
-        below. Has cost $O(\text{n\_terms} \cdot n^2)$ in memory and produces a
-        dense $n \times n$ matrix where $n = \prod_k d_k$.
-        """
+        """Sum of term._materialize() over all terms; fallback for MATERIALIZE methods."""
         pass
 
     # === Properties ===
 
     @property
     def dtype(self) -> jnp.dtype:
-        # LAZY — promoted type over every term's coeff and operators.
+        # LAZY → term.dtype; promote across terms.
         pass
 
     @property
     def layout(self) -> Layout:
-        # CONVENTION — composite has no single underlying layout; pick a
-        # consistent rule (e.g. `dense` if any operator is dense, else `dia`)
-        # or define a dedicated `composite` layout. No materialization needed.
+        # CONVENTION → term.layout; aggregate (e.g. dense if any is dense).
         pass
 
     @property
     def shape(self) -> tuple[int, ...]:
-        # LAZY — `(*batch, n, n)` with `n = prod(dims)` and `batch` obtained by
-        # broadcasting operator/coeff batch axes across every term.
+        # LAZY → term.shape; broadcast batch axes across terms.
         pass
 
     @property
     def mT(self) -> QArray:
-        # LAZY — transpose distributes over `⊗` and `+`:
-        #   (A ⊗ B)^T = A^T ⊗ B^T   ⇒   apply `.mT` term-wise to every operator.
+        # LAZY (A⊗B)^T=A^T⊗B^T → term.mT.
         pass
 
     @property
     def ndim(self) -> int:
-        # LAZY — derived from `shape`.
+        # LAZY → len(self.shape).
         pass
 
     # === Array methods ===
 
     def conj(self) -> QArray:
-        # LAZY — conj distributes over `⊗` and `+`: apply to every `coeff` and
-        # every operator term-wise.
+        # LAZY → term.conj().
         pass
 
     def reshape(self, *shape: int) -> QArray:
-        # MATERIALIZE — arbitrary reshapes cut across factor boundaries.
+        # MATERIALIZE → _materialize().reshape(*shape).
         pass
 
     def _reshape_unchecked(self, *shape: int) -> QArray:
-        # MATERIALIZE — same rationale as `reshape`.
+        # MATERIALIZE → _materialize()._reshape_unchecked(*shape).
         pass
 
     def broadcast_to(self, *shape: int) -> QArray:
-        # LAZY (batch axes only) — broadcast each operator/coeff along leading
-        # batch dims; the trailing matrix dims must remain consistent with `dims`.
+        # LAZY batch axes only → term.broadcast_to(...).
         pass
 
     def powm(self, n: int) -> QArray:
-        # MATERIALIZE in general — `(Σ_j T_j)^n` does not factor across the sum.
-        # (Could be LAZY for a single-term composite: `(c A⊗B)^n = c^n A^n ⊗ B^n`.)
+        # MATERIALIZE | 1-term (c·⊗A_k)^n=c^n·⊗A_k^n → term.powm(n).
         pass
 
     def expm(self, *, max_squarings: int = 16) -> QArray:
-        # MATERIALIZE — `exp(Σ_j T_j)` does not distribute over `⊗` or `+`.
+        # MATERIALIZE | 1-term per-factor spectral path → term.expm(...).
         pass
 
     def norm(self, *, psd: bool = False) -> Array:
-        # MATERIALIZE in general — sums break the multiplicativity of `‖·‖`
-        # over `⊗`. (LAZY for a single Frobenius-norm term.)
+        # MATERIALIZE | 1-term ‖c·⊗A_k‖_F=|c|·Π‖A_k‖_F → term.norm(psd=psd).
         pass
 
     def trace(self) -> Array:
-        # LAZY — trace is linear and multiplicative on `⊗`:
-        #   tr(c · ⊗_k A_k) = c · Π_k tr(A_k)
-        # so the total trace is the sum of per-term contributions.
+        # LAZY tr(c·⊗A_k)=c·Π tr(A_k) → sum(term.trace()).
         pass
 
     def sum(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
-        # MIXED — LAZY for batch axes (sum each term's operators along that axis);
-        # MATERIALIZE for matrix axes.
+        # MIXED batch: term.sum(axis) | matrix: _materialize().sum(axis).
         pass
 
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
-        # LAZY — squeeze acts only on size-1 batch axes term-wise.
+        # LAZY → term.squeeze(axis).
         pass
 
     def _eig(self) -> tuple[Array, QArray]:
-        # MATERIALIZE — no closed-form factored eigendecomposition for a sum of
-        # tensor products.
+        # MATERIALIZE | 1-term eigenvalues=c·Cartesian(λ_k), eigenvecs=⊗V_k → term._eig().
         pass
 
     def _eigh(self) -> tuple[Array, Array]:
-        # MATERIALIZE — same rationale as `_eig`.
+        # MATERIALIZE | 1-term Hermitian variant → term._eigh().
         pass
 
     def _eigvals(self) -> Array:
-        # MATERIALIZE — same rationale as `_eig`.
+        # MATERIALIZE | 1-term → term._eigvals().
         pass
 
     def _eigvalsh(self) -> Array:
-        # MATERIALIZE — same rationale as `_eig`.
+        # MATERIALIZE | 1-term → term._eigvalsh().
         pass
 
     def devices(self) -> set[Device]:
-        # LAZY — union of devices across every term's operators (and coeffs).
+        # LAZY → union(term.devices()).
         pass
 
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
-        # MATERIALIZE in general — hermiticity of `Σ_j T_j` requires the assembled
-        # matrix. (LAZY shortcut: a single term is Hermitian iff its coeff is real
-        # and every operator is Hermitian.)
+        # MATERIALIZE | 1-term sufficient check → term.isherm(rtol, atol).
         pass
 
     def block_until_ready(self) -> QArray:
-        # LAZY — call `block_until_ready` on every operator (and coeff).
+        # LAZY → term.block_until_ready().
         pass
 
     # === Quantum methods ===
 
     def ptrace(self, *keep: int) -> QArray:
-        # LAZY (BIG WIN) — partial trace distributes over `⊗`:
-        #   ptrace_{not k}(c · ⊗_j A_j) = c · (Π_{j≠k} tr(A_j)) · A_k
-        # so each term contracts to a smaller composite without ever building
-        # the full n × n matrix.
+        # LAZY ★ ptrace_{∉keep}(c·⊗A_j)=c·(Π_{j∉keep}tr(A_j))·⊗_{∈keep}A_k → term.ptrace(keep).
         pass
 
-    # === Conversion methods ===
+    # === Conversion ===
 
     def to_qutip(self) -> Qobj | list[Qobj]:
-        # MATERIALIZE — QuTiP needs the assembled matrix.
+        # MATERIALIZE → _materialize().to_qutip().
         pass
 
     def to_jax(self) -> Array:
-        # MATERIALIZE — a flat JAX array is by definition the full Kronecker
-        # product summed over terms.
+        # MATERIALIZE → _materialize().to_jax().
         pass
 
     def to_numpy(self) -> np.ndarray:
-        # MATERIALIZE — same rationale as `to_jax`.
+        # MATERIALIZE → _materialize().to_numpy().
         pass
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
-        # MATERIALIZE — NumPy interop requires the full matrix.
+        # MATERIALIZE → _materialize().__array__(dtype, copy).
         pass
 
     def asdense(self) -> QArray:
-        # MATERIALIZE — returns a `MaterializedQArray` with dense layout.
+        # MATERIALIZE → _materialize().asdense().
         pass
 
     def assparsedia(self, offsets: tuple[int, ...] | None = None) -> QArray:
-        # MATERIALIZE — returns a `MaterializedQArray` with sparse-DIA layout.
+        # MATERIALIZE → _materialize().assparsedia(offsets).
         pass
 
     # === Repr ===
 
     def __repr__(self) -> str:
-        # LAZY — print structural summary (dims, n_terms, shape, dtype, ...)
-        # without materializing the full matrix.
+        # LAZY; print dims, n_terms, shape, dtype, layout.
         pass
 
-    # === Arithmetic operations ===
+    # === Arithmetic ===
 
     def __mul__(self, y: ArrayLike) -> QArray:
-        # LAZY — scalar multiplication absorbs into each term's `coeff`:
-        #   y · Σ_j c_j ⊗_k A_{j,k}  =  Σ_j (y · c_j) ⊗_k A_{j,k}.
+        # LAZY y·Σc_j⊗A_{jk}=Σ(y·c_j)⊗A_{jk} → term.__mul__(y).
         pass
 
     def __add__(self, y: QArrayLike) -> QArray:
-        # LAZY (BIG WIN) — adding two composites concatenates their `terms`.
-        # Adding a non-composite QArray wraps it as a single 1-term composite
-        # before concatenating.
+        # LAZY ★ two composites: self.terms + other.terms.
+        # Non-composite y: wrap as single-operator CompositeTerm first.
         pass
 
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
-        # LAZY (BIG WIN) — `(A⊗B)·(C⊗D) = (AC)⊗(BD)`, distributed across the
-        # outer sum:
-        #   (Σ_j c_j ⊗_k A_{j,k}) · (Σ_l d_l ⊗_k B_{l,k})
-        #     = Σ_{j,l} (c_j · d_l) ⊗_k (A_{j,k} · B_{l,k})
-        # The result is a composite with `n_terms_self · n_terms_other` terms.
+        # LAZY ★ (Σc_j⊗A_jk)·(Σd_l⊗B_lk)=Σ_{j,l}(c_j·d_l)⊗(A_jk·B_lk) → term_j @ term_l.
         pass
 
     def __rmatmul__(self, y: QArrayLike) -> QArray:
-        # LAZY — symmetric to `__matmul__`.
+        # LAZY symmetric to __matmul__ → term_other @ term_self.
         pass
 
     def __and__(self, y: QArray) -> QArray:
-        # LAZY (BIG WIN) — kron is bilinear over composite sums; concatenates
-        # per-subsystem operator tuples and multiplies coeffs:
-        #   (Σ_j c_j ⊗_k A_{j,k}) ⊗ (Σ_l d_l ⊗_k B_{l,k})
-        #     = Σ_{j,l} (c_j · d_l) ⊗ (A_{j,*}, B_{l,*}).
+        # LAZY ★ (Σc_j⊗A_jk)⊗(Σd_l⊗B_lk)=Σ_{j,l}(c_j·d_l)⊗(A_j*,B_l*) → term_j & term_l.
         pass
 
-    # === Element-wise operations ===
+    # === Element-wise ===
 
     def addscalar(self, y: ArrayLike) -> QArray:
-        # MATERIALIZE — element-wise scalar addition does not respect tensor
-        # structure (every entry shifts independently).
+        # MATERIALIZE → _materialize().addscalar(y).
         pass
 
     def elmul(self, y: QArrayLike) -> QArray:
-        # MATERIALIZE — element-wise multiplication is not Kronecker-respecting.
+        # MATERIALIZE → _materialize().elmul(y).
         pass
 
     def elpow(self, power: int) -> QArray:
-        # MATERIALIZE — element-wise power is not Kronecker-respecting.
+        # MATERIALIZE → _materialize().elpow(power).
         pass
 
     # === Indexing ===
 
     def __getitem__(self, key: IndexType) -> QArray:
-        # MIXED — LAZY when `key` only indexes batch axes (apply to each
-        # operator/coeff); MATERIALIZE when `key` reaches into matrix axes.
+        # MIXED batch: term[key] | matrix: _materialize()[key].
         pass
+
+
