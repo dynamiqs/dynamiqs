@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from abc import abstractmethod
 from collections.abc import Sequence
-from dataclasses import replace
 from math import prod
 from typing import Any, TypeAlias, get_args
 
@@ -13,8 +13,7 @@ from jax import Array, Device
 from jaxtyping import ArrayLike
 from qutip import Qobj
 
-from .._utils import is_batched_scalar
-from .dataarray import DataArray, IndexType
+from .dataarray import IndexType
 from .layout import Layout
 
 __all__ = ['QArray']
@@ -212,79 +211,57 @@ class QArray(eqx.Module):
     """  # noqa: E501
 
     dims: tuple[int, ...] = eqx.field(static=True)
-    vectorized: bool = eqx.field(static=True)
-    data: DataArray
 
     # Increase __array_priority__ to ensure that a qarray is always returned during an
     # arithmetic operation with a NumPy array. In JAX, it is set to 100 for arrays, and
     # in NumPy it is set to 0.
     __array_priority__ = 200
 
+    @abstractmethod
     def __check_init__(self):
-        # === ensure dims is a tuple of ints
-        if not isinstance(self.dims, tuple) or not all(
-            isinstance(d, int) for d in self.dims
-        ):
-            raise TypeError(
-                f'Argument `dims` must be a tuple of ints, but is {self.dims}.'
-            )
-
-        # === ensure dims is compatible with the shape
-        # for vectorized superoperators, we allow that the shape is the square
-        # of the product of all dims
-        shape = self.data.shape
-        allowed_shapes = (prod(self.dims), prod(self.dims) ** 2)
-        if not (shape[-1] in allowed_shapes or shape[-2] in allowed_shapes):
-            raise ValueError(
-                'Argument `dims` must be compatible with the shape of the qarray, but '
-                f'got dims {self.dims} and shape {shape}.'
-            )
+        pass
 
     # === Properties delegated to DataArray ===
 
     @property
+    @abstractmethod
     def dtype(self) -> jnp.dtype:
-        return self.data.dtype
+        pass
 
     @property
+    @abstractmethod
     def layout(self) -> Layout:
-        return self.data.layout
+        pass
 
     @property
+    @abstractmethod
     def shape(self) -> tuple[int, ...]:
-        return self.data.shape
+        pass
 
     @property
+    @abstractmethod
     def mT(self) -> QArray:
-        return replace(self, data=self.data.mT)
+        pass
 
     @property
+    @abstractmethod
     def ndim(self) -> int:
-        return self.data.ndim
-
-    @property
-    def ndiags(self) -> int:
-        """Number of stored diagonals (only for sparse diagonal layout)."""
-        if not hasattr(self.data, 'ndiags'):
-            raise AttributeError(
-                f"Attribute 'ndiags' is only defined for sparse diagonal layouts; "
-                f'got layout {self.layout!r}.'
-            )
-        return self.data.ndiags
+        pass
 
     # === Array methods delegated to DataArray ===
 
+    @abstractmethod
     def conj(self) -> QArray:
         """Returns the element-wise complex conjugate of the qarray.
 
         Returns:
             New qarray with element-wise complex conjuguated values.
         """
-        return replace(self, data=self.data.conj())
 
     def dag(self) -> QArray:
         return self.mT.conj()
 
+    @abstractmethod
     def reshape(self, *shape: int) -> QArray:
         """Returns a reshaped copy of a qarray.
 
@@ -294,11 +271,12 @@ class QArray(eqx.Module):
         Returns:
             New qarray with the given shape.
         """
-        return replace(self, data=self.data.reshape(*shape))
 
+    @abstractmethod
     def _reshape_unchecked(self, *shape: int) -> QArray:
-        return replace(self, data=self.data._reshape_unchecked(*shape))
+        pass
 
+    @abstractmethod
     def broadcast_to(self, *shape: int) -> QArray:
         """Broadcasts a qarray to a new shape.
 
@@ -308,25 +286,26 @@ class QArray(eqx.Module):
         Returns:
             New qarray with the given shape.
         """
-        return replace(self, data=self.data.broadcast_to(*shape))
 
+    @abstractmethod
     def powm(self, n: int) -> QArray:
-        return replace(self, data=self.data.powm(n))
+        pass
 
+    @abstractmethod
     def expm(self, *, max_squarings: int = 16) -> QArray:
-        return replace(self, data=self.data.expm(max_squarings=max_squarings))
+        pass
 
+    @abstractmethod
     def norm(self, *, psd: bool = False) -> Array:
-        return self.data.norm(psd=psd)
+        pass
 
+    @abstractmethod
     def trace(self) -> Array:
-        return self.data.trace()
+        pass
 
+    @abstractmethod
     def sum(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
-        result = self.data.sum(axis=axis)
-        if isinstance(result, DataArray):
-            return replace(self, data=result)
-        return result
+        pass
 
     def mean(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
         numerator = self.sum(axis=axis)
@@ -338,41 +317,43 @@ class QArray(eqx.Module):
             denominator = prod(self.shape[i % self.ndim] for i in axis)
         return numerator / denominator
 
+    @abstractmethod
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
-        result = self.data.squeeze(axis=axis)
-        if isinstance(result, DataArray):
-            return replace(self, data=result)
-        return result
+        pass
 
+    @abstractmethod
     def _eig(self) -> tuple[Array, QArray]:
-        evals, evecs = self.data._eig()
-        return evals, replace(self, data=evecs)
+        pass
 
+    @abstractmethod
     def _eigh(self) -> tuple[Array, Array]:
-        return self.data._eigh()
+        pass
 
+    @abstractmethod
     def _eigvals(self) -> Array:
-        return self.data._eigvals()
+        pass
 
+    @abstractmethod
     def _eigvalsh(self) -> Array:
-        return self.data._eigvalsh()
+        pass
 
+    @abstractmethod
     def devices(self) -> set[Device]:
-        return self.data.devices()
+        pass
 
+    @abstractmethod
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
-        return self.data.isherm(rtol=rtol, atol=atol)
+        pass
 
+    @abstractmethod
     def block_until_ready(self) -> QArray:
-        self.data.block_until_ready()
-        return self
+        pass
 
     # === Quantum methods ===
 
+    @abstractmethod
     def ptrace(self, *keep: int) -> QArray:
-        from ..utils.general import ptrace  # noqa: PLC0415
-
-        return ptrace(self.data.to_jax(), keep, self.dims)
+        pass
 
     def cosm(self) -> QArray:
         from ..utils import cosm  # noqa: PLC0415
@@ -434,28 +415,31 @@ class QArray(eqx.Module):
 
     # === Conversion methods ===
 
+    @abstractmethod
     def to_qutip(self) -> Qobj | list[Qobj]:
-        from .dense_dataarray import array_to_qobj_list  # noqa: PLC0415
+        pass
 
-        return array_to_qobj_list(self.data.to_jax(), self.dims)
-
+    @abstractmethod
     def to_jax(self) -> Array:
-        return self.data.to_jax()
+        pass
 
+    @abstractmethod
     def to_numpy(self) -> np.ndarray:
-        return np.asarray(self.data)
+        pass
 
+    @abstractmethod
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
-        return self.data.__array__(dtype=dtype, copy=copy)
+        pass
 
+    @abstractmethod
     def asdense(self) -> QArray:
         """Converts to a dense layout.
 
         Returns:
             A qarray with dense data layout.
         """
-        return replace(self, data=self.data.asdense())
 
+    @abstractmethod
     def assparsedia(self, offsets: tuple[int, ...] | None = None) -> QArray:
         """Converts to a sparse diagonal layout.
 
@@ -468,7 +452,6 @@ class QArray(eqx.Module):
         Returns:
             A qarray with sparse diagonal data layout.
         """
-        return replace(self, data=self.data.assparsedia(offsets))
 
     def __len__(self) -> int:
         try:
@@ -478,30 +461,18 @@ class QArray(eqx.Module):
 
     # === Repr ===
 
+    @abstractmethod
     def __repr__(self) -> str:
-        res = (
-            f'QArray: shape={self.shape}, dims={self.dims}, dtype={self.dtype}, '
-            f'layout={self.layout}'
-        )
-        if self.vectorized:
-            res += f', vectorized={self.vectorized}'
-        res += self.data._repr_extra()
-        return res
+        pass
 
     # === Arithmetic operations ===
 
     def __neg__(self) -> QArray:
         return self * (-1)
 
+    @abstractmethod
     def __mul__(self, y: ArrayLike) -> QArray:
-        if not is_batched_scalar(y):
-            raise NotImplementedError(
-                'Element-wise multiplication of two qarrays with the `*` operator is '
-                'not supported. For matrix multiplication, use `x @ y`. For '
-                'element-wise multiplication, use `x.elmul(y)`.'
-            )
-        result = self.data * y
-        return replace(self, data=result)
+        pass
 
     def __rmul__(self, y: QArrayLike) -> QArray:
         return self * y
@@ -518,30 +489,9 @@ class QArray(eqx.Module):
         for i in range(self.shape[0]):
             yield self[i]
 
+    @abstractmethod
     def __add__(self, y: QArrayLike) -> QArray:
-        if isinstance(y, int | float) and y == 0:
-            return self
-
-        if is_batched_scalar(y):
-            raise NotImplementedError(
-                'Adding a scalar to a qarray with the `+` operator is not supported. '
-                'To add a scaled identity matrix, use `x + scalar * dq.eye_like(x)`.'
-                ' To add a scalar, use `x.addscalar(scalar)`.'
-            )
-
-        if isinstance(y, QArray):
-            check_compatible_dims(self.dims, y.dims)
-            result = self.data + y.data
-        elif isqarraylike(y):
-            result = self.data + to_jax(y)
-        else:
-            return NotImplemented
-
-        if result is NotImplemented:
-            return NotImplemented
-        if isinstance(result, DataArray):
-            return replace(self, data=result)
-        return result
+        pass
 
     def __radd__(self, y: QArrayLike) -> QArray:
         return self.__add__(y)
@@ -552,79 +502,17 @@ class QArray(eqx.Module):
     def __rsub__(self, y: QArrayLike) -> QArray:
         return -self + y
 
+    @abstractmethod
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
-        if isinstance(y, QArray):
-            check_compatible_dims(self.dims, y.dims)
-            y_data = y.data
-        elif is_batched_scalar(y):
-            raise TypeError('Attempted matrix product between a scalar and a qarray.')
-        elif isqarraylike(y):
-            y_data = to_jax(y)
-        else:
-            return NotImplemented
+        pass
 
-        result = self.data @ y_data
-        if result is NotImplemented:
-            # try reverse dispatch
-            if hasattr(y_data, '__rmatmul__'):
-                result = y_data.__rmatmul__(self.data)
-            # if still NotImplemented, raise it
-            if result is NotImplemented:
-                return NotImplemented
-
-        # bra @ ket → scalar
-        if (
-            isinstance(y, QArray)
-            and self.isbra()
-            and y.isket()
-            and isinstance(result, DataArray)
-        ):
-            result = result.to_jax()
-
-        if isinstance(result, DataArray):
-            return replace(self, data=result)
-        return result
-
+    @abstractmethod
     def __rmatmul__(self, y: QArrayLike) -> QArray:
-        if isinstance(y, QArray):
-            check_compatible_dims(self.dims, y.dims)
-            y_data = y.data
-        elif is_batched_scalar(y):
-            raise TypeError('Attempted matrix product between a scalar and a qarray.')
-        elif isqarraylike(y):
-            y_data = to_jax(y)
-        else:
-            return NotImplemented
+        pass
 
-        # y_data @ self.data
-        if isinstance(y_data, DataArray):
-            result = y_data @ self.data
-        else:
-            # y_data is a raw array; use DataArray's __rmatmul__
-            result = self.data.__rmatmul__(y_data)
-
-        if result is NotImplemented:
-            return NotImplemented
-
-        if isinstance(result, DataArray):
-            return replace(self, data=result)
-        return result
-
+    @abstractmethod
     def __and__(self, y: QArray) -> QArray:
-        if not isinstance(y, QArray):
-            return NotImplemented
-
-        result = self.data & y.data
-        if result is NotImplemented:
-            # try reverse dispatch
-            if hasattr(y.data, '__rand__'):
-                result = y.data.__rand__(self.data)
-            # if still NotImplemented, raise it
-            if result is NotImplemented:
-                return NotImplemented
-
-        new_dims = self.dims + y.dims
-        return replace(self, dims=new_dims, data=result)
+        pass
 
     def __pow__(self, power: int | _Metaω) -> QArray:
         # to deal with the x**ω notation from equinox (used in diffrax internals)
@@ -637,6 +525,7 @@ class QArray(eqx.Module):
             'element-wise power, use `x.elpow(power)`.'
         )
 
+    @abstractmethod
     def addscalar(self, y: ArrayLike) -> QArray:
         """Adds a scalar.
 
@@ -646,8 +535,8 @@ class QArray(eqx.Module):
         Returns:
             New qarray resulting from the addition with the scalar.
         """
-        return replace(self, data=self.data + jnp.asarray(y))
 
+    @abstractmethod
     def elmul(self, y: QArrayLike) -> QArray:
         """Computes the element-wise multiplication.
 
@@ -657,20 +546,8 @@ class QArray(eqx.Module):
         Returns:
             New qarray resulting from the element-wise multiplication.
         """
-        if isinstance(y, QArray):
-            check_compatible_dims(self.dims, y.dims)
-            result = self.data * y.data
-        elif isqarraylike(y):
-            result = self.data * to_jax(y)
-        else:
-            return NotImplemented
 
-        if result is NotImplemented:
-            return NotImplemented
-        if isinstance(result, DataArray):
-            return replace(self, data=result)
-        return result
-
+    @abstractmethod
     def elpow(self, power: int) -> QArray:
         """Computes the element-wise power.
 
@@ -680,11 +557,10 @@ class QArray(eqx.Module):
         Returns:
             New qarray with elements raised to the specified power.
         """
-        return replace(self, data=self.data**power)
 
+    @abstractmethod
     def __getitem__(self, key: IndexType) -> QArray:
-        result = self.data[key]
-        return replace(self, data=result)
+        pass
 
 
 def check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
