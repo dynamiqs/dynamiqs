@@ -135,11 +135,11 @@ def eye_like(
         - [`dq.eye()`][dynamiqs.eye]: returns the identity operator.
     """
     xdims = get_dims(x)
-    layout = layout or x.layout
+    _layout = layout or getattr(x, 'layout', None)
     # todo: we should rather use a _get_shape util that never converts to a jax array
     x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
-    return eye(*dims, layout=layout)
+    return eye(*dims, layout=_layout)
 
 
 def zeros(*dims: int, layout: Layout | None = None) -> QArray:
@@ -233,11 +233,11 @@ def zeros_like(
         - [`dq.zeros()`][dynamiqs.zeros]: returns the null operator.
     """
     xdims = get_dims(x)
-    layout = layout or x.layout
+    _layout = layout or getattr(x, 'layout', None)
     # todo: we should rather use a _get_shape util that never converts to a jax array
     x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
-    return zeros(*dims, layout=layout)
+    return zeros(*dims, layout=_layout)
 
 
 @overload
@@ -553,7 +553,7 @@ def squeeze(dim: int, z: ArrayLike) -> QArray:
     z = jnp.asarray(z, dtype=cdtype())
     z = z[..., None, None]  # (..., 1, 1)
     a = destroy(dim, layout=dense)  # (n, n)
-    a2 = a @ a
+    a2 = asqarray(a @ a)
     return (0.5 * (z.conj() * a2 - z * a2.dag())).expm()
 
 
@@ -662,7 +662,9 @@ def sigmax(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0, 1], [1, 0]], dtype=cdtype())
         return asqarray(array)
     else:
-        return sparsedia_from_dict({-1: [1], 1: [1]}, dtype=cdtype())
+        return sparsedia_from_dict(
+            {-1: jnp.array([1]), 1: jnp.array([1])}, dtype=cdtype()
+        )
 
 
 def sigmay(*, layout: Layout | None = None) -> QArray:
@@ -687,7 +689,9 @@ def sigmay(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0, -1j], [1j, 0]], dtype=cdtype())
         return asqarray(array)
     else:
-        return sparsedia_from_dict({-1: [1j], 1: [-1j]}, dtype=cdtype())
+        return sparsedia_from_dict(
+            {-1: jnp.array([1j]), 1: jnp.array([-1j])}, dtype=cdtype()
+        )
 
 
 def sigmaz(*, layout: Layout | None = None) -> QArray:
@@ -712,7 +716,7 @@ def sigmaz(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[1, 0], [0, -1]], dtype=cdtype())
         return asqarray(array)
     else:
-        return sparsedia_from_dict({0: [1, -1]}, dtype=cdtype())
+        return sparsedia_from_dict({0: jnp.array([1, -1])}, dtype=cdtype())
 
 
 def sigmap(*, layout: Layout | None = None) -> QArray:
@@ -738,7 +742,7 @@ def sigmap(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0, 1], [0, 0]], dtype=cdtype())
         return asqarray(array)
     else:
-        return sparsedia_from_dict({1: [1]}, dtype=cdtype())
+        return sparsedia_from_dict({1: jnp.array([1])}, dtype=cdtype())
 
 
 def sigmam(*, layout: Layout | None = None) -> QArray:
@@ -764,7 +768,7 @@ def sigmam(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0, 0], [1, 0]], dtype=cdtype())
         return asqarray(array)
     else:
-        return sparsedia_from_dict({-1: [1]}, dtype=cdtype())
+        return sparsedia_from_dict({-1: jnp.array([1])}, dtype=cdtype())
 
 
 def xyz(*, layout: Layout | None = None) -> QArray:

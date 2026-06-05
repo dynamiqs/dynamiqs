@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import equinox as eqx
 import jax.numpy as jnp
+import numpy as np
 from jax import Array
 
 from .qarrays.layout import dense
@@ -34,7 +35,7 @@ _cases = {
 }
 
 
-def _has_shape(x: Array | QArray, shape: str) -> bool:
+def _has_shape(x: Array | np.ndarray | QArray, shape: str) -> bool:
     if shape in _cases:
         return _cases[shape](x)
     else:
@@ -42,8 +43,11 @@ def _has_shape(x: Array | QArray, shape: str) -> bool:
 
 
 def check_shape(
-    x: Array | QArray, argname: str, *shapes: str, subs: dict[str, str] | None = None
-):
+    x: Array | np.ndarray | QArray,
+    argname: str,
+    *shapes: str,
+    subs: dict[str, str] | None = None,
+) -> None:
     # subs is used to replace symbols in the error message, this can be used to e.g.
     # specify a shape (?, n, n) but print an error message with (nH?, n, n), by passing
     # subs={'?': 'nH?'} to replace the '?' by 'nH?' in the shape specification
@@ -91,7 +95,7 @@ def check_times(x: Array, argname: str, allow_empty: bool = False) -> Array:
     )
 
 
-def check_type_int(x: Array | QArray, argname: str):
+def check_type_int(x: Array | np.ndarray | QArray, argname: str) -> None:
     if not jnp.issubdtype(x.dtype, jnp.integer):
         raise ValueError(
             f'Argument {argname} must be of type integer, but is of type'
@@ -108,7 +112,7 @@ def check_hermitian(x: QArray, argname: str) -> QArray:
     )
 
 
-def check_qarray_is_dense(x: QArray, argname: str):
+def check_qarray_is_dense(x: QArray, argname: str) -> None:
     # check if the layout of x is dense
     if x.layout != dense:
         raise ValueError(
