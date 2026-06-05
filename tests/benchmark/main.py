@@ -5,32 +5,27 @@ from pprint import pp
 
 import diffrax
 import jax
-from cross_resonance_modulated_sesolve import build_problem as cross_resonance
-from utils import BenchmarkEntry, SEProblem, extract_nsteps, maybe_unpack
+from problems import CrossResonanceModulatedSESolveProblem, Problem
+from utils import BenchmarkEntry, extract_nsteps, maybe_unpack
 
 import dynamiqs as dq
 from dynamiqs.method import _DEAdaptiveStep
-from tests.benchmark import cross_resonance_modulated_sesolve
+from dynamiqs.result import SolveResult
 
 
-def solve_schrodinger(problem: SEProblem) -> tuple[dq.SESolveResult, float]:
-    """Solve the Schrodïnger problem given as parameter.
+def time_solving(problem: Problem) -> tuple[SolveResult, float]:
+    """Measure the time taken by a solver.
 
     Params:
-        problem: A function constructing a solvable problem. It should return in order
-                 the Hamiltonian, the initial state and the times at which states and
-                 expectation values should be saved.
+        problem: The problem to solve.
 
     Returns:
-        A tuple returning : the solution returned the solver and the computation time of
-        the solving in seconds.
+        A tuple returning : the solution returned by the solver and the computation time
+        of the solving in seconds.
     """
-    hamiltonian, initial_state, tsaves = problem()
     start_time = time.perf_counter()
 
-    result = dq.sesolve(hamiltonian, initial_state, tsaves, progress_meter=False)
-
-    result.block_until_ready()
+    result = problem.solve()
 
     end_time = time.perf_counter()
 
@@ -38,7 +33,7 @@ def solve_schrodinger(problem: SEProblem) -> tuple[dq.SESolveResult, float]:
 
 
 def extract_schrodinger_metrics(
-    result: dq.result.SolveResult, problem_name: str, computation_time: float
+    result: SolveResult, problem_name: str, computation_time: float
 ) -> BenchmarkEntry:
     """Construct a record of metrics based on a Result.
 
@@ -98,11 +93,10 @@ def extract_schrodinger_metrics(
 
 
 def main() -> None:
-    result, computation_time = solve_schrodinger(cross_resonance)
+    problem = CrossResonanceModulatedSESolveProblem()
+    result, computation_time = time_solving(problem)
 
-    metrics = extract_schrodinger_metrics(
-        result, cross_resonance_modulated_sesolve.__name__, computation_time
-    )
+    metrics = extract_schrodinger_metrics(result, problem.get_name(), computation_time)
 
     # NOTE: this is just for testing for now
     pp(metrics)
