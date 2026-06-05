@@ -95,3 +95,32 @@ class IntegratorTester:
         logging.warning(f'grads_Esave      = {grads_Esave}')
 
         assert_allclose(true_grads_ysave, grads_ysave)
+
+    def _test_hessian(
+        self, system, method, gradient, *, rtol: float = 1e-2, atol: float = 1e-2
+    ):
+        # index of the observable to test (HQubit has a single observable)
+        i_expect = 0
+        t_final = system.tsave[-1]
+
+        # scalar loss: final-time loss of the chosen expectation value, as a
+        # function of the system parameters
+        def loss(params):
+            result = system.run(method, gradient=gradient, params=params)
+            # result.expects has shape (n_expect, ntsave)
+            expect = result.expects[i_expect, -1]
+            return system.loss_expect(expect)
+
+        # computed Hessian wrt the parameters PyTree
+        computed = jax.hessian(loss)(system.params_default)
+
+        # analytical Hessian for this observable at the final time
+        expected = system.hess_expect(t_final)
+
+        # compare leaf-by-leaf over the Params PyTree
+        for c_leaf, e_leaf in zip(
+            jax.tree_util.tree_leaves(computed),
+            jax.tree_util.tree_leaves(expected),
+            strict=False,
+        ):
+            assert jnp.allclose(c_leaf, jnp.asarray(e_leaf), rtol=rtol, atol=atol)

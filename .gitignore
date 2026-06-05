@@ -40,3 +40,10 @@ docs/figs_docs/**
 
 # uv lock file
 uv.lock
+
+dynamiqs/bin/
+dynamiqs/lib/
+dynamiqs/share/
+dynamiqs/pyvenv.cfg
+dynamiqs1/
+.venv/

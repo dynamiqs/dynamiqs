@@ -4,7 +4,7 @@ import equinox as eqx
 
 from ._utils import tree_str_inline
 
-__all__ = ['Direct', 'BackwardCheckpointed', 'Forward', 'Gradient']
+__all__ = ['Direct', 'BackwardCheckpointed', 'Forward', 'Gradient', 'HigherOrder']
 
 
 class Gradient(eqx.Module):
@@ -106,5 +106,16 @@ class Forward(Gradient):
     """
 
     # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
+
+
+class HigherOrder(Gradient):
+    """Gradient mode supporting higher-order autodiff (e.g. Hessians).
+
+    Uses diffrax.DirectAdjoint with scan_kind="bounded" internally so that the
+    solve can be differentiated more than once (e.g. via jax.hessian).
+    """
+
     def __init__(self):
         pass

@@ -11,7 +11,7 @@ from jaxtyping import PyTree, Scalar
 
 from ..._checks import check_hermitian
 from ..._utils import obj_type_str
-from ...gradient import BackwardCheckpointed, Direct, Forward, Gradient
+from ...gradient import BackwardCheckpointed, Direct, Forward, Gradient, HigherOrder
 from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options
 from ...result import MESolveResult, Result, Saved
@@ -71,6 +71,17 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             )
 
     @property
+    def solver(self) -> dx.AbstractSolver:
+        if isinstance(self.gradient, HigherOrder) and not self.fixed_step:
+            return eqx.tree_at(
+                lambda s: s.scan_kind,
+                self.diffrax_solver,
+                'bounded',
+                is_leaf=lambda x: x is None,
+            )
+        return self.diffrax_solver
+
+    @property
     def dt0(self) -> float | None:
         return self.method.dt if self.fixed_step else None
 
@@ -92,7 +103,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             return dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
         elif isinstance(self.gradient, Forward):
             return dx.ForwardMode()
-        elif isinstance(self.gradient, Direct):
+        elif isinstance(self.gradient, (Direct, HigherOrder)):
             return dx.DirectAdjoint()
         else:
             raise TypeError(f'Unknown gradient type {obj_type_str(self.gradient)}.')
@@ -127,7 +138,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             # === solve differential equation with diffrax
             return dx.diffeqsolve(
                 self.terms,
-                self.diffrax_solver,
+                self.solver,
                 t0=t0,
                 t1=t1,
                 dt0=self.dt0,

@@ -9,7 +9,7 @@ from jaxtyping import PRNGKeyArray
 from optimistix import AbstractRootFinder
 
 from ._utils import tree_str_inline
-from .gradient import BackwardCheckpointed, Direct, Forward, Gradient
+from .gradient import BackwardCheckpointed, Direct, Forward, Gradient, HigherOrder
 
 __all__ = [
     'Dopri5',
@@ -152,6 +152,7 @@ class Euler(_DEFixedStep):
         Direct,
         BackwardCheckpointed,
         Forward,
+        HigherOrder,
     )
 
     # dummy init to have the signature in the documentation
@@ -379,6 +380,7 @@ class Dopri5(_DEAdaptiveStep):
         Direct,
         BackwardCheckpointed,
         Forward,
+        HigherOrder,
     )
 
     # dummy init to have the signature in the documentation
@@ -420,6 +422,7 @@ class Dopri8(_DEAdaptiveStep):
         Direct,
         BackwardCheckpointed,
         Forward,
+        HigherOrder,
     )
 
     # dummy init to have the signature in the documentation
@@ -461,6 +464,7 @@ class Tsit5(_DEAdaptiveStep):
         Direct,
         BackwardCheckpointed,
         Forward,
+        HigherOrder,
     )
 
     # dummy init to have the signature in the documentation
