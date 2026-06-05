@@ -29,6 +29,7 @@ doc_sections = {
     'utils/optimal_control': (['dynamiqs/utils/optimal_control.py'], 'dq'),
     'random': (['dynamiqs/random/'], 'dq.random'),
     'plot': (['dynamiqs/plot/'], 'dq.plot'),
+    'progress_meter': (['dynamiqs/progress_meter.py'], 'dq'),
 }
 
 
