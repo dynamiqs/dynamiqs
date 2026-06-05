@@ -10,6 +10,17 @@ from dynamiqs import QArray, TimeQArray
 SEProblem: TypeAlias = Callable[[], tuple[TimeQArray, QArray, Array]]
 
 
+class MethodParameters(TypedDict):
+    """Descriptiion of a Method configuration."""
+
+    method_name: str
+    method_atol: float
+    method_rtol: float
+    method_factor_min: float
+    method_factor_max: float
+    method_factor_safety: float
+
+
 class BenchmarkEntry(TypedDict):
     """Description of a benchmark record.
 
@@ -38,4 +49,4 @@ class BenchmarkEntry(TypedDict):
     jax_version: str
 
 
-__all__ = ['BenchmarkEntry', 'SEProblem']
+__all__ = ['BenchmarkEntry', 'MethodParameters', 'SEProblem']
