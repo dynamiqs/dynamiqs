@@ -124,7 +124,6 @@ ignore-words-list = "ket, braket, SME"
 [tool.ty.src]
 exclude = [
     "dynamiqs/integrators",
-    "dynamiqs/plot",
     "dynamiqs/utils",
     "dynamiqs/time_qarray.py",
 ]

@@ -19,7 +19,12 @@ if TYPE_CHECKING:
     from .sparsedia_dataarray import SparseDIADataArray
 
 IndexType: TypeAlias = (
-    int | slice | EllipsisType | None | tuple[int | slice | EllipsisType | None, ...]
+    int
+    | slice
+    | ArrayLike
+    | EllipsisType
+    | None
+    | tuple[int | slice | EllipsisType | None, ...]
 )
 
 

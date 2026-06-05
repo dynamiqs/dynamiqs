@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import jax.numpy as jnp
 from jax import Array
 from jax.typing import ArrayLike
@@ -70,6 +72,8 @@ def fock(
 
         ![plot_fock_coherent](../../figs_code/plot_fock_coherent.png){.fig}
     """
+    assert ax is not None
+
     state = to_jax(state)
     check_shape(state, 'state', '(n, 1)', '(n, n)')
 
@@ -127,6 +131,8 @@ def fock_evolution(
 
         ![plot_fock_evolution_log](../../figs_code/plot_fock_evolution_log.png){.fig}
     """
+    assert ax is not None
+
     states = to_jax(states)
     times = jnp.asarray(times) if times is not None else None
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
@@ -142,14 +148,15 @@ def fock_evolution(
     if logscale:
         norm = LogNorm(vmin=logvmin, vmax=1.0, clip=True)
         # stepped cmap
-        ncolors = jnp.round(jnp.log10(1 / logvmin)).astype(int)
+        ncolors = round(math.log10(1 / logvmin))
         clist = sample_cmap(cmap, ncolors + 2)[1:-1]  # remove extremal colors
-        cmap = ListedColormap(clist)
+        _cmap = ListedColormap(clist)
     else:
         norm = Normalize(vmin=0.0, vmax=1.0)
+        _cmap = cmap
 
     # plot
-    ax.pcolormesh(x, y, z, cmap=cmap, norm=norm)
+    ax.pcolormesh(x, y, z, cmap=_cmap, norm=norm)
     ax.grid(False)
 
     # set y ticks
@@ -157,4 +164,4 @@ def fock_evolution(
     ket_ticks(ax.yaxis)
 
     if colorbar:
-        add_colorbar(ax, cmap, norm, size=0.02, pad=0.02)
+        add_colorbar(ax, _cmap, norm, size=0.02, pad=0.02)
