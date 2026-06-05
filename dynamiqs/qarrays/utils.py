@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Sequence
+from typing import cast
 
 import jax.numpy as jnp
 import numpy as np
@@ -188,12 +189,14 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
 
     # stack inputs depending on data type
     if all(isinstance(q.data, DenseDataArray) for q in qarrays):
-        data = jnp.stack([q.data.data for q in qarrays], axis=axis)
+        data = jnp.stack(
+            [cast(DenseDataArray, q.data).data for q in qarrays], axis=axis
+        )
         return QArray(dims, False, DenseDataArray(data))
     elif all(isinstance(q.data, SparseDIADataArray) for q in qarrays):
         offsets, diags = stack_sparsedia(
-            [q.data.offsets for q in qarrays],
-            [q.data.diags for q in qarrays],
+            [cast(SparseDIADataArray, q.data).offsets for q in qarrays],
+            [cast(SparseDIADataArray, q.data).diags for q in qarrays],
             axis=axis,
         )
         return QArray(dims, False, SparseDIADataArray(offsets, diags))

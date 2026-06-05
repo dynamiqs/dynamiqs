@@ -10,8 +10,8 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
-from jax import Array
 from diffrax._custom_types import RealScalarLike
+from jax import Array
 from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
 
 from ._checks import check_shape, check_times
@@ -481,7 +481,7 @@ class TimeQArray(eqx.Module):
         if isinstance(y, TimeQArray):
             return self + (-y)
         else:
-            return NotImplemented 
+            return NotImplemented
 
     def __rsub__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
         return y + (-self)

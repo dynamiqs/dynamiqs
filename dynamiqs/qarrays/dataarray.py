@@ -204,7 +204,7 @@ class DataArray(eqx.Module):
         return self * y
 
     def __truediv__(self, y: ArrayLike) -> DataArray:
-        return self * (1 / y)
+        return self * (1 / jnp.asarray(y))
 
     @abstractmethod
     def __add__(self, y: DataArrayLike) -> DataArray:
@@ -214,6 +214,8 @@ class DataArray(eqx.Module):
         return self.__add__(y)
 
     def __sub__(self, y: DataArrayLike) -> DataArray:
+        if not isinstance(y, DataArray):
+            y = jnp.asarray(y)
         return self + (-y)
 
     def __rsub__(self, y: DataArrayLike) -> DataArray:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from math import prod
+from typing import cast
 
 import jax
 from jax import Array
@@ -148,7 +149,7 @@ def psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
             f'Argument `shape` must be of the form (..., n, n), but is shape={shape}.'
         )
     x = complex(key, shape)
-    return x @ dag(x)
+    return cast(QArray, x @ dag(x))
 
 
 def dm(
