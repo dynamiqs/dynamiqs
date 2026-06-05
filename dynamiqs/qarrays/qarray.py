@@ -211,15 +211,24 @@ class QArray(eqx.Module):
     """  # noqa: E501
 
     dims: tuple[int, ...] = eqx.field(static=True)
+    # TODO: make `vectorized` compatible with `CompositeQArray`. For now, the two
+    # are mutually exclusive (a composite qarray cannot be vectorized), so this
+    # attribute lives only on `MaterializedQArray`. Supporting both together will
+    # require careful handling of shapes and indexing across subsystems.
 
     # Increase __array_priority__ to ensure that a qarray is always returned during an
     # arithmetic operation with a NumPy array. In JAX, it is set to 100 for arrays, and
     # in NumPy it is set to 0.
     __array_priority__ = 200
 
-    @abstractmethod
     def __check_init__(self):
-        pass
+        # === ensure dims is a tuple of ints
+        if not isinstance(self.dims, tuple) or not all(
+            isinstance(d, int) for d in self.dims
+        ):
+            raise TypeError(
+                f'Argument `dims` must be a tuple of ints, but is {self.dims}.'
+            )
 
     # === Properties delegated to DataArray ===
 

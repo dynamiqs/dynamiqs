@@ -23,14 +23,6 @@ class MaterializedQArray(QArray):
     data: DataArray
 
     def __check_init__(self):
-        # === ensure dims is a tuple of ints
-        if not isinstance(self.dims, tuple) or not all(
-            isinstance(d, int) for d in self.dims
-        ):
-            raise TypeError(
-                f'Argument `dims` must be a tuple of ints, but is {self.dims}.'
-            )
-
         # === ensure dims is compatible with the shape
         # for vectorized superoperators, we allow that the shape is the square
         # of the product of all dims
