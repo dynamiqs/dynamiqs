@@ -4,7 +4,7 @@ import equinox as eqx
 
 from ._utils import tree_str_inline
 
-__all__ = ['Direct', 'BackwardCheckpointed', 'Forward', 'Gradient']
+__all__ = ['Direct', 'BackwardCheckpointed', 'Forward', 'HigherOrder', 'Gradient']
 
 
 class Gradient(eqx.Module):
@@ -22,6 +22,12 @@ class Direct(Gradient):
         For Diffrax-based methods, this falls back to the
         [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
         option.
+
+    Note:
+        For supported explicit Diffrax ODE methods, this path is also compatible with
+        higher-order automatic differentiation. Use
+        [`dq.gradient.HigherOrder`][dynamiqs.gradient.HigherOrder] to make this
+        intent explicit.
     """
 
     # dummy init to have the signature in the documentation
@@ -103,6 +109,26 @@ class Forward(Gradient):
         For Diffrax-based methods, this falls back to the
         [`diffrax.ForwardMode`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.ForwardMode)
         option.
+    """
+
+    # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
+
+
+class HigherOrder(Gradient):
+    """Higher-order automatic differentiation.
+
+    Enables support for higher-order automatic differentiation, such as
+    [`jax.hessian`](https://docs.jax.dev/en/latest/_autosummary/jax.hessian.html).
+
+    Note:
+        For supported explicit Diffrax ODE methods, this is the documented
+        Hessian-compatible mode. Like
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct], it uses
+        [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
+        with Hessian-compatible solver internals. Use this mode to make the
+        higher-order differentiation requirement explicit.
     """
 
     # dummy init to have the signature in the documentation

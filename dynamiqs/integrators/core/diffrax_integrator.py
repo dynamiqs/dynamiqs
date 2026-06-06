@@ -11,7 +11,7 @@ from jaxtyping import PyTree, Scalar
 
 from ..._checks import check_hermitian
 from ..._utils import obj_type_str
-from ...gradient import BackwardCheckpointed, Direct, Forward, Gradient
+from ...gradient import BackwardCheckpointed, Direct, Forward, Gradient, HigherOrder
 from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options
 from ...result import MESolveResult, Result, Saved
@@ -47,6 +47,23 @@ class AdaptiveStepInfos(eqx.Module):
             f'{self.nsteps} steps ({self.naccepted} accepted,'
             f' {self.nrejected} rejected)'
         )
+
+
+def hessian_compatible_solver(
+    solver: dx.AbstractSolver, gradient: Gradient | None
+) -> dx.AbstractSolver:
+    if (
+        isinstance(gradient, HigherOrder)
+        and hasattr(solver, 'scan_kind')
+        and solver.scan_kind is None
+    ):
+        # DirectAdjoint currently applies the same bounded scan internally; setting
+        # it here keeps HigherOrder's Hessian contract explicit and satisfies the
+        # issue's requested solver configuration.
+        return eqx.tree_at(
+            lambda s: s.scan_kind, solver, 'bounded', is_leaf=lambda x: x is None
+        )
+    return solver
 
 
 class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
@@ -92,10 +109,14 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             return dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
         elif isinstance(self.gradient, Forward):
             return dx.ForwardMode()
-        elif isinstance(self.gradient, Direct):
+        elif isinstance(self.gradient, Direct | HigherOrder):
             return dx.DirectAdjoint()
         else:
             raise TypeError(f'Unknown gradient type {obj_type_str(self.gradient)}.')
+
+    @property
+    def solver(self) -> dx.AbstractSolver:
+        return hessian_compatible_solver(self.diffrax_solver, self.gradient)
 
     def diffeqsolve(
         self,
@@ -127,7 +148,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             # === solve differential equation with diffrax
             return dx.diffeqsolve(
                 self.terms,
-                self.diffrax_solver,
+                self.solver,
                 t0=t0,
                 t1=t1,
                 dt0=self.dt0,
