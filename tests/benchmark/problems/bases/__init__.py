@@ -2,6 +2,12 @@
 
 See the `concrete` sibling namespace for concrete problems used in the
 benchmarking.
+
+Classes
+-------
+
+* Problem
+* SESolveProblem
 """
 
 from .problem import Problem

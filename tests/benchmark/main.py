@@ -1,4 +1,10 @@
-"""Main logic to run during benchmark processes."""
+"""Main logic to run during benchmark processes.
+
+Functions
+---------
+
+* main
+"""
 
 from pprint import pp
 

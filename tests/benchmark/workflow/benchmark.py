@@ -1,3 +1,11 @@
+"""Benchmark core orchestestration.
+
+Functions
+---------
+
+* run_benchmark
+"""
+
 import diffrax
 import jax
 

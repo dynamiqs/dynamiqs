@@ -1,4 +1,10 @@
-"""Generic definition of a solvable problem."""
+"""Generic definition of a solvable problem.
+
+Classes
+-------
+
+- Problem
+"""
 
 from abc import ABC, abstractmethod
 from collections.abc import Collection
@@ -12,8 +18,8 @@ from dynamiqs.result import SolveResult
 class Problem(ABC):
     """General structure of a benchmarkable problem handled by a solver.
 
-    Problem can be any type of mathematical problem that can be solved. In the context
-    of the benchmark, such examples could be Schrodinger and Linbad equations.
+    A Problem can be any type of mathematical problem that can be solved. In the
+    context of the benchmark, such examples could be Schrödinger and Linblad equations.
     """
 
     problem_name: ClassVar[str]

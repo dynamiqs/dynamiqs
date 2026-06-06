@@ -1,4 +1,11 @@
-"""Utilitary methods to extract information from Result object's `infos` attribute."""
+"""Utilitary methods to extract information from Result object's `infos` attribute.
+
+Functions
+---------
+
+* extract_method_parameters
+* extract_nsteps
+"""
 
 from dynamiqs.method import Method, _DEAdaptiveStep
 from dynamiqs.result import Result

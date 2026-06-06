@@ -1,4 +1,10 @@
-"""Implementation of a Schrödinger equation problem and its solving."""
+"""Implementation of a Schrödinger equation problem and its solving.
+
+Classes
+-------
+
+* SESolveProblem
+"""
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass

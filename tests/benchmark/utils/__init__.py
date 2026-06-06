@@ -1,4 +1,18 @@
-"""Utilitary methods for benchmarking processes."""
+"""Utilitary methods for benchmarking processes.
+
+Classes
+-------
+
+* BenchmarkEntry
+* MethodParameters
+
+Functions
+---------
+
+* extract_method_parameters
+* extract_nsteps
+* maybe_unpack
+"""
 
 from .infos import extract_method_parameters, extract_nsteps
 from .structures import BenchmarkEntry, MethodParameters

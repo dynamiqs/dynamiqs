@@ -1,4 +1,10 @@
-"""Measured solving of problems."""
+"""Measured problems solving (i.e. computation time, memory...).
+
+Functions
+---------
+
+* time_solving
+"""
 
 import time
 
@@ -8,7 +14,7 @@ from ..problems import Problem
 
 
 def time_solving(problem: Problem) -> tuple[SolveResult, float]:
-    """Measure the time taken by a solver.
+    """Run a solver over a problem and measure its computation time.
 
     Params:
         problem: The problem to solve.

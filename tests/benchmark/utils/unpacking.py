@@ -1,4 +1,10 @@
-"""Utilitary methods to extract values from wrappers."""
+"""Utilitary methods to extract values from wrappers.
+
+Functions
+---------
+
+* maybe_unpack
+"""
 
 import jax
 

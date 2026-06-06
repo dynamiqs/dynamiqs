@@ -1,4 +1,11 @@
-"""Data structures and typing utilities used within the `benchmark` namespace."""
+"""Data structures and typing utilities used within the `benchmark` namespace.
+
+Classes
+-------
+
+* BenchmarkEntry
+* MethodParameters
+"""
 
 from typing import TypedDict
 
