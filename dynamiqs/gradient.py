@@ -4,7 +4,7 @@ import equinox as eqx
 
 from ._utils import tree_str_inline
 
-__all__ = ['Direct', 'BackwardCheckpointed', 'Forward', 'Gradient']
+__all__ = ['Direct', 'BackwardCheckpointed', 'Forward', 'Hessian', 'Gradient']
 
 
 class Gradient(eqx.Module):
@@ -70,6 +70,24 @@ class BackwardCheckpointed(Gradient):
     # dummy init to have the signature in the documentation
     def __init__(self, ncheckpoints: int | None = None):
         self.ncheckpoints = ncheckpoints
+
+
+class Hessian(Gradient):
+    """Higher-order automatic differentiation.
+
+    Enables support for higher-order automatic differentiation through Diffrax-based
+    solvers, for example applying
+    [`jax.hessian`](https://docs.jax.dev/en/latest/_autosummary/jax.hessian.html)
+    to a scalar-valued function that calls a Dynamiqs solver.
+
+    With Diffrax-based methods, this uses
+    [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
+    together with Hessian-compatible solver scans where required.
+    """
+
+    # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
 
 
 class Forward(Gradient):

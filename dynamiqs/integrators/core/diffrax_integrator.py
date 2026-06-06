@@ -11,7 +11,7 @@ from jaxtyping import PyTree, Scalar
 
 from ..._checks import check_hermitian
 from ..._utils import obj_type_str
-from ...gradient import BackwardCheckpointed, Direct, Forward, Gradient
+from ...gradient import BackwardCheckpointed, Direct, Forward, Gradient, Hessian
 from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options
 from ...result import MESolveResult, Result, Saved
@@ -92,10 +92,20 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             return dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
         elif isinstance(self.gradient, Forward):
             return dx.ForwardMode()
-        elif isinstance(self.gradient, Direct):
+        elif isinstance(self.gradient, Direct | Hessian):
             return dx.DirectAdjoint()
         else:
             raise TypeError(f'Unknown gradient type {obj_type_str(self.gradient)}.')
+
+    @property
+    def solver(self) -> dx.AbstractSolver:
+        if isinstance(self.gradient, Hessian) and hasattr(
+            self.diffrax_solver, 'scan_kind'
+        ):
+            return eqx.tree_at(
+                lambda solver: solver.scan_kind, self.diffrax_solver, 'bounded'
+            )
+        return self.diffrax_solver
 
     def diffeqsolve(
         self,
@@ -127,7 +137,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             # === solve differential equation with diffrax
             return dx.diffeqsolve(
                 self.terms,
-                self.diffrax_solver,
+                self.solver,
                 t0=t0,
                 t1=t1,
                 dt0=self.dt0,
@@ -196,11 +206,21 @@ def call_diffeqsolve(
     # === set Diffrax solver
     diffrax_solver, fixed_step = {
         Euler: (dx.Euler(), True),
-        Dopri5: (dx.Dopri5(), False),
-        Dopri8: (dx.Dopri8(), False),
-        Tsit5: (dx.Tsit5(), False),
-        Kvaerno3: (dx.Kvaerno3(), False),
-        Kvaerno5: (dx.Kvaerno5(), False),
+        Dopri5: (dx.Dopri5(scan_kind='bounded'), False)
+        if isinstance(gradient, Hessian)
+        else (dx.Dopri5(), False),
+        Dopri8: (dx.Dopri8(scan_kind='bounded'), False)
+        if isinstance(gradient, Hessian)
+        else (dx.Dopri8(), False),
+        Tsit5: (dx.Tsit5(scan_kind='bounded'), False)
+        if isinstance(gradient, Hessian)
+        else (dx.Tsit5(), False),
+        Kvaerno3: (dx.Kvaerno3(scan_kind='bounded'), False)
+        if isinstance(gradient, Hessian)
+        else (dx.Kvaerno3(), False),
+        Kvaerno5: (dx.Kvaerno5(scan_kind='bounded'), False)
+        if isinstance(gradient, Hessian)
+        else (dx.Kvaerno5(), False),
     }[type(method)]
 
     # === init integrator
