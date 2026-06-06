@@ -8,7 +8,6 @@ from ..order import TEST_SHORT
 
 # ── key batching test ────────────────────────────────────────────────────────
 
-
 @pytest.mark.run(order=TEST_SHORT)
 @pytest.mark.parametrize('cartesian_batching', [True, False])
 @pytest.mark.parametrize(
