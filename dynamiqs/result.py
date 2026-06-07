@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import cast
+
 import equinox as eqx
 import jax.numpy as jnp
 from jax import Array
@@ -223,11 +225,12 @@ class StochasticSolveResult(SolveResult):
 
     @classmethod
     def out_axes(cls) -> StochasticSolveResult:
-        return cls(None, None, None, None, 0, 0, 0)  # ty: ignore[invalid-argument-type]
+        return cls(None, None, None, None, 0, 0, 0)   # ty: ignore[invalid-argument-type]
 
     def mean_states(self) -> QArray:
         # todo: document
-        return self.states.todm().mean(axis=-4)  # ty: ignore[invalid-return-type]
+        result = cast(QArray, self.states.todm().mean(axis=-4))
+        return result
 
     def mean_expects(self) -> Array | None:
         # todo: document
@@ -255,9 +258,10 @@ class JumpSolveResult(StochasticSolveResult):
         mean_states = super().mean_states()
 
         if isinstance(self.method, Event) and self.method.smart_sampling:
-            noclick_prob = self.infos.noclick_prob[..., None, None, None]  # ty: ignore[unresolved-attribute]
+            assert self.infos is not None
+            noclick_prob = self.infos.noclick_prob[..., None, None, None]
             return unit(
-                noclick_prob * self.infos.noclick_states.todm()  # ty: ignore[unresolved-attribute]
+                noclick_prob * self.infos.noclick_states.todm()
                 + (1 - noclick_prob) * mean_states,
                 psd=True,
             )
@@ -271,9 +275,10 @@ class JumpSolveResult(StochasticSolveResult):
         mean_expect = super().mean_expects()
 
         if isinstance(self.method, Event) and self.method.smart_sampling:
-            noclick_prob = self.infos.noclick_prob[..., None, None]  # ty: ignore[unresolved-attribute]
+            assert self.infos is not None
+            noclick_prob = self.infos.noclick_prob[..., None, None]
             return (
-                noclick_prob * self.infos.noclick_expects  # ty: ignore[unresolved-attribute]
+                noclick_prob * self.infos.noclick_expects
                 + (1 - noclick_prob) * mean_expect
             )
         else:

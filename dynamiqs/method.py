@@ -289,6 +289,7 @@ class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
         normalize: bool = True,
     ):
         _DEFixedStep.__init__(self, dt)  # ty: ignore[invalid-argument-type]
+
         _DEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
@@ -347,6 +348,7 @@ class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
         normalize: bool = True,
     ):
         _DEFixedStep.__init__(self, dt)  # ty: ignore[invalid-argument-type]
+
         _DEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
