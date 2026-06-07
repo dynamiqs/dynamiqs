@@ -23,6 +23,11 @@ __all__ = [
     'asqarray',
     'sparsedia_from_dict',
     'stack',
+    'swapaxes',
+    'moveaxis',
+    'expand_dims',
+    'where',
+    'concatenate',
     'to_jax',
     'to_numpy',
     'to_qutip',
@@ -143,6 +148,142 @@ def init_dims(
     _assert_dims_match_shape(dims, shape)
 
     return dims
+
+
+def _first_qarray(*xs: object) -> QArray | None:
+    for x in xs:
+        if isinstance(x, QArray):
+            return x
+        if isinstance(x, Sequence) and not isinstance(x, str | bytes):
+            qarray = _first_qarray(*x)
+            if qarray is not None:
+                return qarray
+    return None
+
+
+def _wrap_like(
+    reference: QArray | None, data: jnp.ndarray, *, quantum_axes_preserved: bool = True
+) -> QArray | jnp.ndarray:
+    if reference is None or not quantum_axes_preserved:
+        return data
+    try:
+        return QArray(reference.dims, reference.vectorized, DenseDataArray(data))
+    except ValueError:
+        return data
+
+
+def swapaxes(x: QArrayLike, axis1: int, axis2: int) -> QArray | jnp.ndarray:
+    """Interchange two axes of a qarray-like object.
+
+    Args:
+        x: Qarray-like object.
+        axis1: First axis.
+        axis2: Second axis.
+
+    Returns:
+        A qarray when the result is compatible with the input Hilbert space dimensions,
+        otherwise a JAX array.
+    """
+    if isinstance(x, QArray):
+        return x.swapaxes(axis1, axis2)
+    return jnp.swapaxes(to_jax(x), axis1, axis2)
+
+
+def moveaxis(
+    x: QArrayLike, source: int | Sequence[int], destination: int | Sequence[int]
+) -> QArray | jnp.ndarray:
+    """Move axes of a qarray-like object to new positions.
+
+    Args:
+        x: Qarray-like object.
+        source: Original positions of the axes to move.
+        destination: Destination positions for each original axis.
+
+    Returns:
+        A qarray when the result is compatible with the input Hilbert space dimensions,
+        otherwise a JAX array.
+    """
+    if isinstance(x, QArray):
+        return x.moveaxis(source, destination)
+    return jnp.moveaxis(to_jax(x), source, destination)
+
+
+def expand_dims(x: QArrayLike, axis: int | Sequence[int]) -> QArray | jnp.ndarray:
+    """Expand the shape of a qarray-like object by inserting new axes.
+
+    Args:
+        x: Qarray-like object.
+        axis: Position or positions where new axes are inserted.
+
+    Returns:
+        A qarray when the result is compatible with the input Hilbert space dimensions,
+        otherwise a JAX array.
+    """
+    if isinstance(x, QArray):
+        return x.expand_dims(axis)
+    return jnp.expand_dims(to_jax(x), axis)
+
+
+def where(
+    condition: ArrayLike, x: QArrayLike | None = None, y: QArrayLike | None = None
+) -> QArray | jnp.ndarray | tuple[jnp.ndarray, ...]:
+    """Select elements from qarray-like inputs according to a condition.
+
+    Args:
+        condition: Condition selecting values from ``x`` or ``y``.
+        x: Values selected where ``condition`` is true. If omitted together with ``y``,
+            returns condition indices like ``jax.numpy.where``.
+        y: Values selected where ``condition`` is false.
+
+    Returns:
+        A qarray when ``x`` or ``y`` is a qarray and the result is compatible with its
+        Hilbert space dimensions, otherwise the corresponding JAX result.
+    """
+    if x is None and y is None:
+        return jnp.where(condition)
+    if x is None or y is None:
+        raise TypeError('Either both or neither of `x` and `y` should be given.')
+
+    if isinstance(x, QArray) and isinstance(y, QArray) and x.dims != y.dims:
+        raise ValueError(
+            f'Qarrays have incompatible Hilbert space dimensions. Got {x.dims} and '
+            f'{y.dims}.'
+        )
+
+    reference = _first_qarray(x, y)
+    data = jnp.where(condition, to_jax(x), to_jax(y))
+    return _wrap_like(reference, data)
+
+
+def concatenate(qarrays: Sequence[QArrayLike], axis: int = 0) -> QArray | jnp.ndarray:
+    """Join qarray-like objects along an existing axis.
+
+    Args:
+        qarrays: Qarray-like objects to concatenate.
+        axis: Axis along which the inputs are joined.
+
+    Returns:
+        A qarray when the result is compatible with the input Hilbert space dimensions,
+        otherwise a JAX array.
+    """
+    if len(qarrays) == 0:
+        raise ValueError('Argument `qarrays` must contain at least one element.')
+
+    reference = _first_qarray(qarrays)
+    if reference is not None:
+        for qarray in qarrays:
+            if isinstance(qarray, QArray) and qarray.dims != reference.dims:
+                raise ValueError(
+                    'Argument `qarrays` must contain qarrays with identical `dims` '
+                    'attributes.'
+                )
+
+    data = jnp.concatenate([to_jax(qarray) for qarray in qarrays], axis=axis)
+    quantum_axes_preserved = True
+    if reference is not None:
+        normalized_axis = axis % reference.ndim
+        quantum_axes_preserved = normalized_axis < reference.ndim - 2
+    return _wrap_like(reference, data, quantum_axes_preserved=quantum_axes_preserved)
 
 
 def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:

@@ -15,6 +15,7 @@ from qutip import Qobj
 
 from .._utils import is_batched_scalar
 from .dataarray import DataArray, IndexType
+from .dense_dataarray import DenseDataArray
 from .layout import Layout
 
 __all__ = ['QArray']
@@ -195,6 +196,9 @@ class QArray(eqx.Module):
     | `x.todm()`                                               | Alias of [`dq.todm(x)`][dynamiqs.todm].                        |
     | `x.proj()`                                               | Alias of [`dq.proj(x)`][dynamiqs.proj].                        |
     | [`x.reshape(*shape)`][dynamiqs.qarrays.qarray.QArray.reshape] | Returns a reshaped copy of a qarray.                           |
+    | [`x.swapaxes(axis1, axis2)`][dynamiqs.qarrays.qarray.QArray.swapaxes] | Interchanges two axes of a qarray.                             |
+    | [`x.moveaxis(source, destination)`][dynamiqs.qarrays.qarray.QArray.moveaxis] | Moves axes of a qarray to new positions.                       |
+    | [`x.expand_dims(axis)`][dynamiqs.qarrays.qarray.QArray.expand_dims] | Expands the shape of a qarray by inserting new axes.           |
     | [`x.broadcast_to(*shape)`][dynamiqs.qarrays.qarray.QArray.broadcast_to] | Broadcasts a qarray to a new shape.                            |
     | [`x.addscalar(y)`][dynamiqs.qarrays.qarray.QArray.addscalar] | Adds a scalar.                                                 |
     | [`x.elmul(y)`][dynamiqs.qarrays.qarray.QArray.elmul]     | Computes the element-wise multiplication.                      |
@@ -309,6 +313,89 @@ class QArray(eqx.Module):
             New qarray with the given shape.
         """
         return replace(self, data=self.data.broadcast_to(*shape))
+
+    def _wrap_jax_result(
+        self, data: Array, *, quantum_axes_preserved: bool = True
+    ) -> QArray | Array:
+        if not quantum_axes_preserved:
+            return data
+        try:
+            return replace(self, data=DenseDataArray(data))
+        except ValueError:
+            return data
+
+    def swapaxes(self, axis1: int, axis2: int) -> QArray | Array:
+        """Interchange two axes of a qarray.
+
+        Args:
+            axis1: First axis.
+            axis2: Second axis.
+
+        Returns:
+            A qarray when the resulting shape is compatible with the original Hilbert
+            space dimensions, otherwise a JAX array.
+        """
+        permutation = list(range(self.ndim))
+        axis1 %= self.ndim
+        axis2 %= self.ndim
+        permutation[axis1], permutation[axis2] = permutation[axis2], permutation[axis1]
+        quantum_axes_preserved = set(permutation[-2:]) == {self.ndim - 2, self.ndim - 1}
+        return self._wrap_jax_result(
+            jnp.swapaxes(self.to_jax(), axis1, axis2),
+            quantum_axes_preserved=quantum_axes_preserved,
+        )
+
+    def moveaxis(
+        self, source: int | Sequence[int], destination: int | Sequence[int]
+    ) -> QArray | Array:
+        """Move axes of a qarray to new positions.
+
+        Args:
+            source: Original positions of the axes to move.
+            destination: Destination positions for each original axis.
+
+        Returns:
+            A qarray when the resulting shape is compatible with the original Hilbert
+            space dimensions, otherwise a JAX array.
+        """
+        source_axes = (source,) if isinstance(source, int) else tuple(source)
+        destination_axes = (
+            (destination,) if isinstance(destination, int) else tuple(destination)
+        )
+        source_axes = tuple(axis % self.ndim for axis in source_axes)
+        destination_axes = tuple(axis % self.ndim for axis in destination_axes)
+        permutation = [axis for axis in range(self.ndim) if axis not in source_axes]
+        for destination_axis, source_axis in sorted(
+            zip(destination_axes, source_axes, strict=True)
+        ):
+            permutation.insert(destination_axis, source_axis)
+        quantum_axes_preserved = set(permutation[-2:]) == {self.ndim - 2, self.ndim - 1}
+        return self._wrap_jax_result(
+            jnp.moveaxis(self.to_jax(), source, destination),
+            quantum_axes_preserved=quantum_axes_preserved,
+        )
+
+    def expand_dims(self, axis: int | Sequence[int]) -> QArray | Array:
+        """Expand the shape of a qarray by inserting new axes.
+
+        Args:
+            axis: Position or positions where new axes are inserted.
+
+        Returns:
+            A qarray when the resulting shape is compatible with the original Hilbert
+            space dimensions, otherwise a JAX array.
+        """
+        result_ndim = self.ndim + (1 if isinstance(axis, int) else len(tuple(axis)))
+        axes = (axis,) if isinstance(axis, int) else tuple(axis)
+        axes = tuple(a if a >= 0 else a + result_ndim for a in axes)
+        labels: list[int | None] = list(range(self.ndim))
+        for insert_axis in sorted(axes):
+            labels.insert(insert_axis, None)
+        quantum_axes_preserved = set(labels[-2:]) == {self.ndim - 2, self.ndim - 1}
+        return self._wrap_jax_result(
+            jnp.expand_dims(self.to_jax(), axis),
+            quantum_axes_preserved=quantum_axes_preserved,
+        )
 
     def powm(self, n: int) -> QArray:
         return replace(self, data=self.data.powm(n))
