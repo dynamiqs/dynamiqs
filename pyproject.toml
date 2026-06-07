@@ -68,7 +68,7 @@ dev = [
     "flit",
     "mike",
     "optax",  # for gradient descent tutorials
-    "ty",
+    "ty==0.0.44",
 ]
 
 [tool.ruff]
@@ -123,13 +123,45 @@ ignore-words-list = "ket, braket, SME"
 
 [tool.ty.src]
 exclude = [
-    "dynamiqs/integrators",
-    "dynamiqs/plot",
-    "dynamiqs/qarrays",
-    "dynamiqs/random",
-    "dynamiqs/utils",
+    "dynamiqs/conftest.py",
+    "dynamiqs/integrators/_utils.py",
+    "dynamiqs/integrators/apis/dsmesolve.py",
+    "dynamiqs/integrators/apis/dssesolve.py",
+    "dynamiqs/integrators/apis/floquet.py",
+    "dynamiqs/integrators/apis/jsmesolve.py",
+    "dynamiqs/integrators/apis/jssesolve.py",
+    "dynamiqs/integrators/apis/mepropagator.py",
+    "dynamiqs/integrators/apis/mesolve.py",
+    "dynamiqs/integrators/apis/sepropagator.py",
+    "dynamiqs/integrators/apis/sesolve.py",
+    "dynamiqs/integrators/core/abstract_integrator.py",
+    "dynamiqs/integrators/core/diffrax_integrator.py",
+    "dynamiqs/integrators/core/event_integrator.py",
+    "dynamiqs/integrators/core/expm_integrator.py",
+    "dynamiqs/integrators/core/fixed_step_stochastic_integrator.py",
+    "dynamiqs/integrators/core/floquet_integrator.py",
+    "dynamiqs/integrators/core/low_rank_integrator.py",
+    "dynamiqs/integrators/core/montecarlo_integrator.py",
+    "dynamiqs/integrators/core/rouchon_integrator.py",
+    "dynamiqs/integrators/core/save_mixin.py",
+    "dynamiqs/plot/fock_plots.py",
+    "dynamiqs/plot/hinton_plots.py",
+    "dynamiqs/plot/misc_plots.py",
+    "dynamiqs/plot/qubit_plots.py",
+    "dynamiqs/plot/utils.py",
+    "dynamiqs/plot/wigner_plots.py",
+    "dynamiqs/qarrays/dataarray.py",
+    "dynamiqs/qarrays/dense_dataarray.py",
+    "dynamiqs/qarrays/qarray.py",
+    "dynamiqs/qarrays/sparsedia_dataarray.py",
+    "dynamiqs/qarrays/sparsedia_primitives.py",
+    "dynamiqs/qarrays/utils.py",
     "dynamiqs/time_qarray.py",
-    "dynamiqs/conftest.py"
+    "dynamiqs/utils/general.py",
+    "dynamiqs/utils/operators.py",
+    "dynamiqs/utils/states.py",
+    "dynamiqs/utils/vectorization.py",
+    "dynamiqs/utils/wigner_utils.py"
 ]
 
 [tool.ty.rules]
