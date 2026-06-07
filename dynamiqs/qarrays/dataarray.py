@@ -24,7 +24,7 @@ IndexType: TypeAlias = (
     | ArrayLike
     | EllipsisType
     | None
-    | tuple[int | slice | EllipsisType | None, ...]
+    | tuple[int | slice | ArrayLike | EllipsisType | None, ...]
 )
 
 

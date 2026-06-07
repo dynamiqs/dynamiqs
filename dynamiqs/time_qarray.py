@@ -124,7 +124,7 @@ def pwc(times: ArrayLike, values: ArrayLike, qarray: QArrayLike) -> PWCTimeQArra
 
 
 def modulated(
-    f: Callable[[float], Scalar | Array],
+    f: Callable[[RealScalarLike], Array | QArray],
     qarray: QArrayLike,
     *,
     discontinuity_ts: ArrayLike | None = None,
@@ -184,7 +184,9 @@ def modulated(
 
 
 def timecallable(
-    f: Callable[[float], QArray], *, discontinuity_ts: ArrayLike | None = None
+    f: Callable[[RealScalarLike], Array | QArray],
+    *,
+    discontinuity_ts: ArrayLike | None = None,
 ) -> CallableTimeQArray:
     r"""Instantiate a callable timeqarray.
 
@@ -459,10 +461,10 @@ class TimeQArray(eqx.Module):
         return self * (-1)
 
     @abstractmethod
-    def __mul__(self, y: QArrayLike) -> TimeQArray:
+    def __mul__(self, y: ArrayLike) -> TimeQArray:
         pass
 
-    def __rmul__(self, y: QArrayLike) -> TimeQArray:
+    def __rmul__(self, y: ArrayLike) -> TimeQArray:
         return self * y
 
     def __add__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
@@ -559,7 +561,7 @@ class ConstantTimeQArray(TimeQArray):
     def _operator(self, t: RealScalarLike) -> QArray:  # noqa: ARG002
         return self.qarray
 
-    def __mul__(self, y: QArrayLike) -> TimeQArray:
+    def __mul__(self, y: ArrayLike) -> TimeQArray:
         qarray = self.qarray * y
         return replace(self, qarray=qarray)
 
@@ -629,7 +631,13 @@ class PWCTimeQArray(TimeQArray):
 
     @property
     def in_axes(self) -> PyTree[int | None]:
-        return PWCTimeQArray(None, 0, cast(QArray, None), tstart=None, tend=None)
+        return PWCTimeQArray(
+            cast(Array, None),
+            cast(Array, 0),
+            cast(QArray, None),
+            tstart=None,
+            tend=None,
+        )
 
     @property
     def discontinuity_ts(self) -> Array:
@@ -664,7 +672,7 @@ class PWCTimeQArray(TimeQArray):
     def _operator(self, t: RealScalarLike) -> QArray:  # noqa: ARG002
         return self.qarray
 
-    def __mul__(self, y: QArrayLike) -> TimeQArray:
+    def __mul__(self, y: ArrayLike) -> TimeQArray:
         qarray = self.qarray * y
         return replace(self, qarray=qarray)
 
@@ -719,7 +727,13 @@ class ModulatedTimeQArray(TimeQArray):
 
     @property
     def in_axes(self) -> PyTree[int | None]:
-        return ModulatedTimeQArray(0, cast(QArray, None), None, tstart=None, tend=None)
+        return ModulatedTimeQArray(
+            cast(BatchedCallable, 0),
+            cast(QArray, None),
+            cast(Array, None),
+            tstart=None,
+            tend=None,
+        )
 
     @property
     def discontinuity_ts(self) -> Array:
@@ -746,12 +760,12 @@ class ModulatedTimeQArray(TimeQArray):
         return replace(self, f=f, qarray=qarray)
 
     def _prefactor(self, t: RealScalarLike) -> Array:
-        return super()._prefactor(t) * self.f(t)
+        return super()._prefactor(t) * jnp.asarray(self.f(t))
 
     def _operator(self, t: RealScalarLike) -> QArray:  # noqa: ARG002
         return self.qarray
 
-    def __mul__(self, y: QArrayLike) -> TimeQArray:
+    def __mul__(self, y: ArrayLike) -> TimeQArray:
         qarray = self.qarray * y
         return replace(self, qarray=qarray)
 
@@ -803,7 +817,9 @@ class CallableTimeQArray(TimeQArray):
 
     @property
     def in_axes(self) -> PyTree[int | None]:
-        return CallableTimeQArray(0, None, tstart=None, tend=None)
+        return CallableTimeQArray(
+            cast(BatchedCallable, 0), cast(Array, None), tstart=None, tend=None
+        )
 
     @property
     def discontinuity_ts(self) -> Array:
@@ -829,9 +845,9 @@ class CallableTimeQArray(TimeQArray):
         return replace(self, f=f)
 
     def _operator(self, t: RealScalarLike) -> QArray:
-        return self.f(t)
+        return asqarray(self.f(t))
 
-    def __mul__(self, y: QArrayLike) -> TimeQArray:
+    def __mul__(self, y: ArrayLike) -> TimeQArray:
         f = self.f * y
         return replace(self, f=f)
 
@@ -937,7 +953,7 @@ class SummedTimeQArray(TimeQArray):
         # this will never be called because we directly override __call__
         raise NotImplementedError
 
-    def __mul__(self, y: QArrayLike) -> TimeQArray:
+    def __mul__(self, y: ArrayLike) -> TimeQArray:
         timeqarrays = [tqarray * y for tqarray in self.timeqarrays]
         return replace(self, timeqarrays=timeqarrays)
 
@@ -953,19 +969,22 @@ class SummedTimeQArray(TimeQArray):
                 tqarray.clip(y.tstart, y.tend) for tqarray in y.timeqarrays
             ]
             return SummedTimeQArray(self_timeqarrays + y_timeqarrays)
+
         self_timeqarrays = [
             tqarray.clip(self.tstart, self.tend) for tqarray in self.timeqarrays
         ]
+        if not isinstance(y, TimeQArray):
+            return NotImplemented
         return SummedTimeQArray([*self_timeqarrays, y])
 
 
 class BatchedCallable(eqx.Module):
     # this class turns a callable into a PyTree that is vmap-compatible
 
-    f: Callable[[float], QArrayLike]
+    f: Callable[[RealScalarLike], Array | QArray]
     indices: list[Array]
 
-    def __init__(self, f: Callable[[float], QArrayLike]):
+    def __init__(self, f: Callable[[RealScalarLike], Array | QArray]):
         # make f a valid PyTree with `Partial` and convert its output to a qarray
         self.f = jtu.Partial(f)
         eval_shape = jax.eval_shape(f, 0.0)
@@ -975,7 +994,7 @@ class BatchedCallable(eqx.Module):
             shape = eval_shape.shape
         self.indices = list(jnp.indices(shape))
 
-    def __call__(self, t: RealScalarLike) -> QArrayLike:
+    def __call__(self, t: RealScalarLike) -> Array | QArray:
         if len(self.indices) == 0:
             return self.f(t)
         else:
@@ -998,7 +1017,7 @@ class BatchedCallable(eqx.Module):
         return BatchedCallable(f)
 
     def broadcast_to(self, *shape: int) -> BatchedCallable:
-        def f(t: float) -> QArrayLike:
+        def f(t: RealScalarLike) -> Array | QArray:
             res = self.f(t)
             if isinstance(res, QArray):
                 return res.broadcast_to(*shape)
@@ -1012,12 +1031,17 @@ class BatchedCallable(eqx.Module):
         return BatchedCallable(f)
 
     def squeeze(self, i: int) -> BatchedCallable:
-        f = lambda t: jnp.squeeze(self.f(t), i)
+        def f(t: RealScalarLike) -> Array | QArray:
+            res = self.f(t)
+            if isinstance(res, QArray):
+                return res.squeeze(i)
+            return jnp.squeeze(res, i)
+
         return BatchedCallable(f)
 
     def __add__(self, y: ScalarLike) -> BatchedCallable:
         return BatchedCallable(lambda t: self.f(t) + y)
 
     def __mul__(self, y: ArrayLike) -> BatchedCallable:
-        f = lambda t: self.f(t) * y  # ty: ignore[unsupported-operator]
+        f = lambda t: self.f(t) * y
         return BatchedCallable(f)
