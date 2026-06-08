@@ -157,6 +157,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - thermal_dm
         - vacuum
         - vacuum_dm
+        - cat
+        - cat_dm
 
 
 ### Quantum utilities

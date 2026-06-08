@@ -12,7 +12,7 @@ from .._checks import check_type_int
 from .._utils import cdtype
 from ..qarrays.qarray import QArray
 from ..qarrays.utils import asqarray
-from .general import tensor
+from .general import tensor, unit
 from .operators import displace
 
 __all__ = [
@@ -29,6 +29,8 @@ __all__ = [
     'thermal_dm',
     'vacuum',
     'vacuum_dm',
+    'cat',
+    'cat_dm',
 ]
 
 
@@ -530,3 +532,105 @@ def vacuum_dm(dim: int) -> QArray:
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j]]
     """
     return vacuum(dim).todm()
+
+
+def cat(dim: int, alpha: ArrayLike, theta: ArrayLike = 0.0) -> QArray:
+    r"""Returns the ket of a Schrödinger cat state.
+
+    A cat state is the superposition of two coherent states of opposite amplitudes,
+    $$
+        \ket{\mathrm{cat}(\alpha, \theta)} \propto
+            \ket{\alpha} + e^{i\theta} \ket{-\alpha},
+    $$
+    where $\theta=0$ gives the even cat state and $\theta=\pi$ the odd cat state.
+
+    Args:
+        dim: Hilbert space dimension of the mode.
+        alpha (array-like of shape (...)): Coherent state amplitude.
+        theta (array-like of shape (...)): Relative phase between the two coherent
+            states.
+
+    Note:
+        Arguments `alpha` and `theta` are broadcast together following NumPy
+        broadcasting rules, allowing batching over either or both.
+
+    Returns:
+        (qarray of shape (..., dim, 1)): Ket of the cat state.
+
+    Examples:
+        Even cat state $\ket{\mathrm{cat}(2, 0)}$:
+        >>> dq.cat(4, 2.0)
+        QArray: shape=(4, 1), dims=(4,), dtype=complex64, layout=dense
+        [[0.893+0.j]
+         [0.   +0.j]
+         [0.449+0.j]
+         [0.   +0.j]]
+
+        Batched over the amplitude $\{\ket{\mathrm{cat}(1, 0)}\!,
+        \ket{\mathrm{cat}(2, 0)}\}$:
+        >>> dq.cat(4, [1.0, 2.0]).shape
+        (2, 4, 1)
+
+        Batched over the amplitude and phase, broadcast to a common shape:
+        >>> alpha = [1.0, 2.0, 3.0]
+        >>> theta = [[0.0], [3.14]]
+        >>> dq.cat(8, alpha, theta).shape
+        (2, 3, 8, 1)
+    """
+    alpha = jnp.asarray(alpha, dtype=cdtype())
+    theta = jnp.asarray(theta)
+
+    # broadcast alpha and theta to a common batch shape
+    bshape = jnp.broadcast_shapes(alpha.shape, theta.shape)
+    alpha = jnp.broadcast_to(alpha, bshape)
+    theta = jnp.broadcast_to(theta, bshape)
+
+    # compute the two coherent components, each of shape (..., dim, 1)
+    plus_alpha = coherent(dim, alpha)
+    minus_alpha = coherent(dim, -alpha)
+
+    # reshape the phase as a batched scalar of shape (..., 1, 1)
+    phase = jnp.exp(1j * theta)[..., None, None]
+
+    return unit(plus_alpha + minus_alpha * phase)
+
+
+def cat_dm(dim: int, alpha: ArrayLike, theta: ArrayLike = 0.0) -> QArray:
+    r"""Returns the density matrix of a Schrödinger cat state.
+
+    A cat state is the superposition of two coherent states of opposite amplitudes,
+    $$
+        \ket{\mathrm{cat}(\alpha, \theta)} \propto
+            \ket{\alpha} + e^{i\theta} \ket{-\alpha},
+    $$
+    where $\theta=0$ gives the even cat state and $\theta=\pi$ the odd cat state.
+
+    Args:
+        dim: Hilbert space dimension of the mode.
+        alpha (array-like of shape (...)): Coherent state amplitude.
+        theta (array-like of shape (...)): Relative phase between the two coherent
+            states.
+
+    Note:
+        Arguments `alpha` and `theta` are broadcast together following NumPy
+        broadcasting rules, allowing batching over either or both.
+
+    Returns:
+        (qarray of shape (..., dim, dim)): Density matrix of the cat state.
+
+    Examples:
+        Even cat state $\ket{\mathrm{cat}(2, 0)}\bra{\mathrm{cat}(2, 0)}$:
+        >>> dq.cat_dm(4, 2.0)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        [[0.798+0.j 0.   +0.j 0.401+0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
+         [0.401+0.j 0.   +0.j 0.202+0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]]
+
+        Batched over the phase $\{\ket{\mathrm{cat}(2, 0)}\bra{\mathrm{cat}(2, 0)}\!,
+        \ket{\mathrm{cat}(2, \pi)}\bra{\mathrm{cat}(2, \pi)}\}$:
+        >>> import numpy as np
+        >>> dq.cat_dm(4, 2.0, [0.0, np.pi]).shape
+        (2, 4, 4)
+    """
+    return cat(dim, alpha, theta).todm()
