@@ -9,19 +9,24 @@ from .utils import (
     JUMP_SOLVERS,
     SOLVERS,
     backaction_system,
+    cross_trajectory_infidelity,
     decay_system,
     infidelity_with_state,
     protected_subspace_state,
     protected_subspace_system,
     qnd_system,
+    trajectory_norms,
 )
 
 # ── ensemble convergence to mesolve ──────────────────────────────────────────
 
 
-# the diffusive solvers use the weak-order-1 EulerMaruyama method, whose dt=1e-3
-# bias on the ensemble average (~1e-2) dominates the Monte Carlo error here, so
-# the tolerance is set a bit above it
+# this is a Monte Carlo estimate of the ensemble average, so the error is
+# dominated by sampling fluctuation rather than a fixed bias: at 2000 trajectories
+# the max deviation of the diffusive solvers ranges over ~0.008-0.028 depending on
+# the seed (the jump solvers sit around ~0.004-0.006). 3e-2 is therefore the
+# tightest tolerance that stays robust across RNG seeds; the deterministic
+# trajectory-level test (test_no_backaction) is tightened to 1e-4 instead.
 @pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('solver', list(SOLVERS))
 def test_convergence_to_mesolve(solver, atol=3e-2):
@@ -52,7 +57,7 @@ def test_convergence_to_mesolve(solver, atol=3e-2):
 
 @pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('solver', list(SOLVERS))
-def test_no_backaction(solver, atol=1e-2):
+def test_no_backaction(solver, atol=1e-4, atol_norm=2e-2):
     omega = 1.0
     H, jump_ops, psi0 = protected_subspace_system(omega)
     tsave = jnp.linspace(0.0, 1.0, 11)
@@ -61,18 +66,48 @@ def test_no_backaction(solver, atol=1e-2):
     result = SOLVERS[solver](H, jump_ops, psi0, tsave, keys, None)
 
     exact = dq.stack([protected_subspace_state(t.item(), omega) for t in tsave])
-    infidelity = infidelity_with_state(result, exact)
 
-    # every trajectory stays on the deterministic trajectory at every time
-    # (a spurious back-action would inject an O(1) random deviation)
-    assert jnp.all(infidelity < atol)
+    # direction: every trajectory follows the deterministic analytical state
+    assert jnp.all(infidelity_with_state(result, exact) < atol)
+
+    # scale: probability is conserved (fixed-step Euler methods conserve the norm
+    # only to O(dt) ~ 1e-2, the norm-preserving Rouchon/Event methods to ~1e-6)
+    assert jnp.allclose(trajectory_norms(result), 1.0, atol=atol_norm)
+
+    # no back-action: all trajectories follow the same deterministic evolution, so
+    # they differ only at the integrator's floating-point level — a spurious
+    # back-action would instead make them diverge from each other
+    assert jnp.all(cross_trajectory_infidelity(result) < atol)
 
 
 # ── statistics: common QND problem, one per unraveling ───────────────────────
 
+# jsse with Event(smart_sampling=True) returns a biased *raw* click ensemble (the
+# no-click trajectory is sampled separately), so the per-trajectory click
+# statistics are wrong: the Poisson click count is ~7 sigma high and the
+# Bernoulli population is off. This is a solver bug, tracked in dynamiqs#1113;
+# the tests are correct to catch it, so the affected parametrizations are marked
+# xfail (strict, so a future fix surfaces as an xpass). mean_expects()/
+# mean_states() are corrected for smart sampling, so the convergence and
+# no-back-action tests still pass.
+_CLICK_STATS_XFAIL = {'jsse_event_smart'}
+
+
+def _click_stats_param(name):
+    if name in _CLICK_STATS_XFAIL:
+        return pytest.param(
+            name,
+            marks=pytest.mark.xfail(
+                reason='Event(smart_sampling=True) raw click-statistics bias, '
+                'dynamiqs#1113',
+                strict=True,
+            ),
+        )
+    return name
+
 
 @pytest.mark.run(order=TEST_LONG)
-@pytest.mark.parametrize('solver', list(SOLVERS))
+@pytest.mark.parametrize('solver', [_click_stats_param(s) for s in SOLVERS])
 def test_statistics(solver):
     # single common physical problem for all four solvers: a QND measurement of
     # sz on a sz eigenstate (H = 0, L = sqrt(gamma) sz, psi0 = |e>). The state is
@@ -114,14 +149,15 @@ def test_statistics(solver):
 
 
 @pytest.mark.run(order=TEST_LONG)
-@pytest.mark.parametrize('solver', JUMP_SOLVERS)
-def test_jump_bernoulli_statistics(solver, atol=3e-2):
+@pytest.mark.parametrize('solver', [_click_stats_param(s) for s in JUMP_SOLVERS])
+def test_jump_bernoulli_statistics(solver):
     gamma = 1.0
     H, jump_ops, psi0 = decay_system(gamma)
     Pe = dq.excited().todm()
     tsave = jnp.linspace(0.0, 1.0, 11)
 
-    keys = jax.random.split(jax.random.key(3), num=4000)
+    ntrajs = 4000
+    keys = jax.random.split(jax.random.key(3), num=ntrajs)
     result = SOLVERS[solver](H, jump_ops, psi0, tsave, keys, [Pe])
 
     # excited population is exactly 0 or 1 on each trajectory, Bernoulli(e^{-gt})
@@ -130,8 +166,11 @@ def test_jump_bernoulli_statistics(solver, atol=3e-2):
     var = pe.var(axis=0)
 
     p = jnp.exp(-gamma * tsave)
-    assert jnp.allclose(mean, p, atol=atol)
-    assert jnp.allclose(var, p * (1 - p), atol=atol)
+    # 5-sigma Bernoulli Monte Carlo bound (scales as 1/sqrt(ntrajs)); the small
+    # floor absorbs the t=0 point (zero variance) and the O(dt) fixed-step bias
+    bound = 5 * jnp.sqrt(p * (1 - p) / ntrajs) + 1e-3
+    assert jnp.all(jnp.abs(mean - p) < bound)
+    assert jnp.all(jnp.abs(var - p * (1 - p)) < bound)
 
 
 # ── negative controls (discriminating power) ─────────────────────────────────
@@ -139,10 +178,11 @@ def test_jump_bernoulli_statistics(solver, atol=3e-2):
 
 @pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('solver', list(SOLVERS))
-def test_backaction_is_detected(solver, atol=1e-2):
+def test_backaction_is_detected(solver, atol=0.1):
     # control for test_no_backaction: with a loss operator that is not the
     # identity on the subspace, genuine back-action makes trajectories deviate
-    # from the deterministic curve, so the no-back-action assertion must fail
+    # from the deterministic curve AND from each other, so both no-back-action
+    # assertions must fail
     omega = 1.0
     H, jump_ops, psi0 = backaction_system(omega)
     tsave = jnp.linspace(0.0, 1.0, 11)
@@ -151,8 +191,8 @@ def test_backaction_is_detected(solver, atol=1e-2):
     result = SOLVERS[solver](H, jump_ops, psi0, tsave, keys, None)
 
     exact = dq.stack([protected_subspace_state(t.item(), omega) for t in tsave])
-    infidelity = infidelity_with_state(result, exact)
-    assert jnp.max(infidelity) > atol
+    assert jnp.max(infidelity_with_state(result, exact)) > atol
+    assert jnp.max(cross_trajectory_infidelity(result)) > atol
 
 
 @pytest.mark.run(order=TEST_LONG)

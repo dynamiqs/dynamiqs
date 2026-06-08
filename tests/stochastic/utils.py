@@ -1,4 +1,6 @@
 import jax.numpy as jnp
+import jax.tree_util as jtu
+import optimistix as optx
 
 import dynamiqs as dq
 
@@ -53,8 +55,51 @@ def run_dsme(H, jump_ops, psi0, tsave, keys, exp_ops):
     )
 
 
-SOLVERS = {'jsse': run_jsse, 'dsse': run_dsse, 'jsme': run_jsme, 'dsme': run_dsme}
-JUMP_SOLVERS = ['jsse', 'jsme']
+def _event_root_finder():
+    # same root finder as tests/jssesolve/test_jssesolve.py
+    return optx.Newton(1e-4, 1e-4, jtu.Partial(optx.rms_norm))
+
+
+def run_jsse_event_no_smart(H, jump_ops, psi0, tsave, keys, exp_ops):
+    method = dq.method.Event(root_finder=_event_root_finder(), smart_sampling=False)
+    return dq.jssesolve(
+        H, jump_ops, psi0, tsave, keys=keys, exp_ops=exp_ops, method=method
+    )
+
+
+def run_jsse_event_smart(H, jump_ops, psi0, tsave, keys, exp_ops):
+    method = dq.method.Event(root_finder=_event_root_finder(), smart_sampling=True)
+    return dq.jssesolve(
+        H, jump_ops, psi0, tsave, keys=keys, exp_ops=exp_ops, method=method
+    )
+
+
+def run_dsse_rouchon1(H, jump_ops, psi0, tsave, keys, exp_ops):
+    method = dq.method.Rouchon1(dt=DT)
+    return dq.dssesolve(
+        H, jump_ops, psi0, tsave, keys=keys, exp_ops=exp_ops, method=method
+    )
+
+
+def run_dsme_rouchon1(H, jump_ops, psi0, tsave, keys, exp_ops):
+    etas = jnp.ones(len(jump_ops))
+    method = dq.method.Rouchon1(dt=DT)
+    return dq.dsmesolve(
+        H, jump_ops, etas, psi0, tsave, keys=keys, exp_ops=exp_ops, method=method
+    )
+
+
+SOLVERS = {
+    'jsse': run_jsse,
+    'jsse_event_no_smart': run_jsse_event_no_smart,
+    'jsse_event_smart': run_jsse_event_smart,
+    'dsse': run_dsse,
+    'dsse_rouchon1': run_dsse_rouchon1,
+    'jsme': run_jsme,
+    'dsme': run_dsme,
+    'dsme_rouchon1': run_dsme_rouchon1,
+}
+JUMP_SOLVERS = ['jsse', 'jsse_event_no_smart', 'jsse_event_smart', 'jsme']
 
 
 # ── physical systems ─────────────────────────────────────────────────────────
@@ -123,3 +168,30 @@ def infidelity_with_state(result, exact_states):
     num = (bra @ states @ exact)[..., 0, 0].real  # (ntrajs, ntsave)
     tr = jnp.trace(states, axis1=-2, axis2=-1).real
     return 1 - num / tr
+
+
+def trajectory_norms(result):
+    # state norm per trajectory and time: <psi|psi> for kets, Tr[rho] for density
+    # matrices. Probability conservation requires this to stay 1.
+    states = result.states.to_jax()
+    if states.shape[-1] == 1:
+        bra = jnp.conj(jnp.swapaxes(states, -1, -2))
+        return (bra @ states)[..., 0, 0].real
+    return jnp.trace(states, axis1=-2, axis2=-1).real
+
+
+def cross_trajectory_infidelity(result):
+    # infidelity between every trajectory and the first one, per saved time. With
+    # no back-action all trajectories follow the same deterministic evolution, so
+    # this is ~0; genuine back-action makes the trajectories differ.
+    states = result.states.to_jax()  # (ntrajs, ntsave, n, k)
+    if states.shape[-1] == 1:  # ket
+        states = states / jnp.linalg.norm(states, axis=-2, keepdims=True)
+        ref = states[0:1]
+        overlap = jnp.abs((jnp.conj(jnp.swapaxes(ref, -1, -2)) @ states)[..., 0, 0])
+        return 1 - overlap**2
+    # density matrix: 1 - Tr[rho_0 rho_i] with unit-trace normalisation
+    tr = jnp.trace(states, axis1=-2, axis2=-1).real[..., None, None]
+    states = states / tr
+    ref = states[0:1]
+    return 1 - jnp.trace(ref @ states, axis1=-2, axis2=-1).real
