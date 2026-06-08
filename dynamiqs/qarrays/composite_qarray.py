@@ -32,8 +32,7 @@ class CompositeTerm(eqx.Module):
     # === Materialization ===
 
     def _materialize(self) -> MaterializedQArray:
-        """coeff * (A_0 ⊗ … ⊗ A_{N-1}); reduce via op.__and__ then __mul__(coeff)."""
-        pass
+        """Coeff * (A_0 ⊗ … ⊗ A_{N-1}); reduce via op.__and__ then __mul__(coeff)."""
 
     # === Properties ===
 
@@ -132,7 +131,8 @@ class CompositeTerm(eqx.Module):
     # === Indexing ===
 
     def __getitem__(self, key: IndexType) -> CompositeTerm:
-        # batch axes only → each op's __getitem__. Matrix-axis keys: caller materializes.
+        # batch axes only → each op's __getitem__.
+        # Matrix-axis keys: caller materializes.
         pass
 
     # === Arithmetic ===
@@ -182,8 +182,10 @@ class CompositeQArray(QArray):
     # === Materialization ===
 
     def _materialize(self) -> MaterializedQArray:
-        """Sum of term._materialize() over all terms; fallback for MATERIALIZE methods."""
-        pass
+        """Sum of term._materialize() over all terms.
+
+        Fallback for MATERIALIZE methods.
+        """
 
     # === Properties ===
 
@@ -255,7 +257,8 @@ class CompositeQArray(QArray):
         pass
 
     def _eig(self) -> tuple[Array, QArray]:
-        # MATERIALIZE | 1-term eigenvalues=c·Cartesian(λ_k), eigenvecs=⊗V_k → term._eig().
+        # MATERIALIZE | 1-term eigenvalues=c·Cartesian(λ_k), eigenvecs=⊗V_k
+        # → term._eig().
         pass
 
     def _eigh(self) -> tuple[Array, Array]:
@@ -285,7 +288,8 @@ class CompositeQArray(QArray):
     # === Quantum methods ===
 
     def ptrace(self, *keep: int) -> QArray:
-        # LAZY ★ ptrace_{∉keep}(c·⊗A_j)=c·(Π_{j∉keep}tr(A_j))·⊗_{∈keep}A_k → term.ptrace(keep).
+        # LAZY ★ ptrace_{∉keep}(c·⊗A_j)=c·(Π_{j∉keep}tr(A_j))·⊗_{∈keep}A_k
+        # → term.ptrace(keep).
         pass
 
     # === Conversion ===
@@ -362,5 +366,3 @@ class CompositeQArray(QArray):
     def __getitem__(self, key: IndexType) -> QArray:
         # MIXED batch: term[key] | matrix: _materialize()[key].
         pass
-
-
