@@ -157,3 +157,24 @@ def test_excited():
 def test_excited_dm():
     # check that no error is raised while tracing the function
     jax.jit(dq.excited_dm).trace()
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_vacuum():
+    dim = 4
+
+    # vacuum is the zero-photon Fock state
+    assert np.allclose(dq.vacuum(dim), dq.fock(dim, 0))
+
+    # check that no error is raised while tracing the function
+    jax.jit(dq.vacuum, static_argnums=(0,)).trace(dim)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_vacuum_dm():
+    dim = 4
+
+    assert np.allclose(dq.vacuum_dm(dim), dq.fock_dm(dim, 0))
+
+    # check that no error is raised while tracing the function
+    jax.jit(dq.vacuum_dm, static_argnums=(0,)).trace(dim)

@@ -27,6 +27,8 @@ __all__ = [
     'ground',
     'ground_dm',
     'thermal_dm',
+    'vacuum',
+    'vacuum_dm',
 ]
 
 
@@ -481,3 +483,50 @@ def _single_thermal_dm(dim: int, nth: Array) -> QArray:
 
     # normalize the density matrix
     return rho / rho.trace()
+
+
+def vacuum(dim: int) -> QArray:
+    r"""Returns the ket of the vacuum state.
+
+    It is the Fock state with zero photon, defined by
+    $\ket{0} = \begin{pmatrix}1\\0\\\vdots\end{pmatrix}$.
+
+    Args:
+        dim: Hilbert space dimension of the mode.
+
+    Returns:
+        (qarray of shape (dim, 1)): Ket $\ket{0}$.
+
+    Examples:
+        >>> dq.vacuum(4)
+        QArray: shape=(4, 1), dims=(4,), dtype=complex64, layout=dense
+        [[1.+0.j]
+         [0.+0.j]
+         [0.+0.j]
+         [0.+0.j]]
+    """
+    return fock(dim, 0)
+
+
+def vacuum_dm(dim: int) -> QArray:
+    r"""Returns the density matrix of the vacuum state.
+
+    It is the Fock state with zero photon, defined by $\ket{0}\bra{0} =
+    \begin{pmatrix}1 & 0 & \cdots\\0 & 0 & \cdots\\\vdots & \vdots & \ddots
+    \end{pmatrix}$.
+
+    Args:
+        dim: Hilbert space dimension of the mode.
+
+    Returns:
+        (qarray of shape (dim, dim)): Density matrix $\ket{0}\bra{0}$.
+
+    Examples:
+        >>> dq.vacuum_dm(4)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        [[1.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]]
+    """
+    return vacuum(dim).todm()
