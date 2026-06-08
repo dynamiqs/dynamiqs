@@ -23,10 +23,6 @@ class MaterializedQArray(QArray):
     vectorized: bool = eqx.field(static=True)
     data: DataArray
 
-class MaterializedQArray(QArray):
-    vectorized: bool = eqx.field(static=True)
-    data: DataArray
-
     def __check_init__(self):
 
         super().__check_init__()
