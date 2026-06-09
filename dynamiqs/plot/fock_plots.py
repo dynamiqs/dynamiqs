@@ -4,7 +4,7 @@ import jax.numpy as jnp
 from jax import Array
 from jax.typing import ArrayLike
 from matplotlib.axes import Axes
-from matplotlib.colors import ListedColormap, LogNorm, Normalize
+from matplotlib.colors import Colormap, ListedColormap, LogNorm, Normalize
 
 from .._checks import check_shape, check_times
 from ..qarrays.qarray import QArrayLike
@@ -70,6 +70,9 @@ def fock(
 
         ![plot_fock_coherent](../../figs_code/plot_fock_coherent.png){.fig}
     """
+    # `ax` is always set by the `@optional_ax` decorator
+    assert ax is not None
+
     state = to_jax(state)
     check_shape(state, 'state', '(n, 1)', '(n, n)')
 
@@ -127,6 +130,9 @@ def fock_evolution(
 
         ![plot_fock_evolution_log](../../figs_code/plot_fock_evolution_log.png){.fig}
     """
+    # `ax` is always set by the `@optional_ax` decorator
+    assert ax is not None
+
     states = to_jax(states)
     times = jnp.asarray(times) if times is not None else None
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
@@ -139,17 +145,19 @@ def fock_evolution(
     z = _populations(states).T
 
     # set norm and colormap
+    colormap: str | Colormap
     if logscale:
         norm = LogNorm(vmin=logvmin, vmax=1.0, clip=True)
         # stepped cmap
-        ncolors = jnp.round(jnp.log10(1 / logvmin)).astype(int)
+        ncolors = int(jnp.round(jnp.log10(1 / logvmin)))
         clist = sample_cmap(cmap, ncolors + 2)[1:-1]  # remove extremal colors
-        cmap = ListedColormap(clist)
+        colormap = ListedColormap(clist)
     else:
         norm = Normalize(vmin=0.0, vmax=1.0)
+        colormap = cmap
 
     # plot
-    ax.pcolormesh(x, y, z, cmap=cmap, norm=norm)
+    ax.pcolormesh(x, y, z, cmap=colormap, norm=norm)
     ax.grid(False)
 
     # set y ticks
@@ -157,4 +165,4 @@ def fock_evolution(
     ket_ticks(ax.yaxis)
 
     if colorbar:
-        add_colorbar(ax, cmap, norm, size=0.02, pad=0.02)
+        add_colorbar(ax, colormap, norm, size=0.02, pad=0.02)

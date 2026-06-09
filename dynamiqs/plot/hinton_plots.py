@@ -86,6 +86,9 @@ def _plot_hinton(
 ):
     # areas: 2D array (n, n) with real values in [0, 1]
     # colors: 2D array (n, n) with real values in [0, 1]
+    # `ax` is always set by the `@optional_ax` decorator
+    assert ax is not None
+
     areas = jnp.asarray(areas)
     colors = jnp.asarray(colors)
 
@@ -109,14 +112,15 @@ def _plot_hinton(
     # squares areas
     areas = areas.T.flatten()
     # squares colors
-    cmap = mpl.colormaps[cmap]
-    colors = cmap(colors.T).reshape(-1, 4)
+    colormap = mpl.colormaps[cmap]
+    # `colormap` returns an RGBA array since `colors.T` is an array (not a scalar)
+    colors = np.asarray(colormap(colors.T)).reshape(-1, 4)
     _plot_squares(ax, areas, colors, offsets, ecolor=ecolor, ewidth=ewidth)
 
     # === colorbar
     if colorbar:
         norm = Normalize(colors_vmin, colors_vmax)
-        cax = add_colorbar(ax, cmap, norm, size=0.04, pad=0.04)
+        cax = add_colorbar(ax, colormap, norm, size=0.04, pad=0.04)
         if colors_vmin == -jnp.pi and colors_vmax == jnp.pi:
             cax.set_yticks([-jnp.pi, 0.0, jnp.pi], labels=[r'$-\pi$', r'$0$', r'$\pi$'])
 
@@ -193,6 +197,9 @@ def hinton(
 
         ![plot_hinton_large](../../figs_code/plot_hinton_large.png){.fig}
     """
+    # `ax` is always set by the `@optional_ax` decorator
+    assert ax is not None
+
     x = to_jax(x)
     check_shape(x, 'x', '(n, n)')
 
@@ -205,10 +212,8 @@ def hinton(
         if cmap is None:
             # sequential colormap for positive data, diverging colormap otherwise
             cmap = 'Blues' if all_positive else 'dq'
-        if vmin is None:
-            vmin = 0.0 if all_positive else jnp.min(x)
-
-        vmax = jnp.max(x) if vmax is None else vmax
+        vmin = (0.0 if all_positive else float(jnp.min(x))) if vmin is None else vmin
+        vmax = float(jnp.max(x)) if vmax is None else vmax
 
         # areas: absolute value of x
         area_max = max(abs(vmin), abs(vmax))
@@ -225,13 +230,15 @@ def hinton(
 
         # areas: magnitude of x
         magnitude = jnp.abs(x)
-        areas_max = jnp.max(magnitude) if vmax is None else vmax
+        areas_max = float(jnp.max(magnitude)) if vmax is None else vmax
         areas = _normalize(magnitude, 0.0, areas_max)
 
         # colors: phase of x
         phase = jnp.angle(x)
-        colors = _normalize(phase, -jnp.pi, jnp.pi)
-        colors_vmin, colors_vmax = -jnp.pi, jnp.pi
+        colors = _normalize(phase, -float(jnp.pi), float(jnp.pi))
+        colors_vmin, colors_vmax = -float(jnp.pi), float(jnp.pi)
+    else:
+        raise TypeError('Argument `x` must be a real or complex matrix.')
 
     if clear:
         colorbar = False

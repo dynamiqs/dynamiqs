@@ -44,6 +44,9 @@ def wigner_data(
         - [`dq.plot.wigner()`][dynamiqs.plot.wigner]: plot the Wigner function of a
             state.
     """
+    # `ax` is always set by the `@optional_ax` decorator
+    assert ax is not None
+
     w = to_jax(wigner)
     check_shape(w, 'wigner', '(n, n)')
     if w.dtype not in (jnp.float32, jnp.float64):
@@ -67,7 +70,7 @@ def wigner_data(
         origin='lower',
         aspect='equal',
         interpolation=interpolation,
-        extent=[-xmax, xmax, -ymax, ymax],
+        extent=(-xmax, xmax, -ymax, ymax),
     )
 
     # remove grid by default
@@ -242,7 +245,10 @@ def wigner_mosaic(
 
     ymax = xmax if ymax is None else ymax
     selected_indexes = np.linspace(0, nstates, n, dtype=int)
-    _, _, wig = compute_wigner(states[selected_indexes], xmax, ymax, npixels, hbar=hbar)
+    # `QArray` supports array (fancy) indexing at runtime; its `__getitem__` type hint
+    # is conservative and does not advertise it
+    selected_states = states[selected_indexes]  # ty: ignore[invalid-argument-type]
+    _, _, wig = compute_wigner(selected_states, xmax, ymax, npixels, hbar=hbar)
 
     # plot individual wigner
     for i, ax in enumerate(axs):
@@ -317,10 +323,13 @@ def wigner_gif(
     ymax = xmax if ymax is None else ymax
     nframes = int(gif_duration * fps)
     indices = gif_indices(len(states), nframes)
-    _, _, wig = compute_wigner(states[indices], xmax, ymax, npixels, hbar=hbar)
+    # `QArray` supports array (fancy) indexing at runtime; its `__getitem__` type hint
+    # is conservative and does not advertise it
+    selected_states = states[indices]  # ty: ignore[invalid-argument-type]
+    _, _, wig = compute_wigner(selected_states, xmax, ymax, npixels, hbar=hbar)
 
     return gifit(wigner_data)(
-        wig,
+        wig,  # ty: ignore[invalid-argument-type]
         w=w,
         h=ymax / xmax * w,
         xmax=xmax,
