@@ -200,6 +200,15 @@ def test_cat():
     assert np.allclose(dq.norm(even_cat), 1.0)
     assert np.allclose(dq.norm(odd_cat), 1.0)
 
+    # edge case: in the vanishing-amplitude limit the even cat is the vacuum |0>
+    # and the odd cat is the single-photon Fock state |1>
+    assert np.allclose(dq.cat(dim, 0.0), dq.fock(dim, 0))
+    assert np.allclose(dq.cat(dim, 0.0, jnp.pi), dq.fock(dim, 1))
+    # batching over alpha still resolves the limit for the zero entry
+    zero_batch = dq.cat(dim, jnp.array([0.0, 2.0]), jnp.pi)
+    assert np.allclose(zero_batch[0], dq.fock(dim, 1))
+    assert np.allclose(dq.norm(zero_batch), 1.0)
+
     # batching over alpha matches the manually stacked result
     state1 = dq.cat(dim, alphas)
     state2 = dq.stack([dq.cat(dim, a) for a in alphas])

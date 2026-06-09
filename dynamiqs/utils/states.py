@@ -554,6 +554,12 @@ def cat(dim: int, alpha: ArrayLike, theta: ArrayLike = 0.0) -> QArray:
         Arguments `alpha` and `theta` are broadcast together following NumPy
         broadcasting rules, allowing batching over either or both.
 
+    Note:
+        In the vanishing-amplitude limit $\alpha\to 0$ the two coherent states
+        collapse onto the vacuum. The returned state is then the vacuum
+        $\ket{0}$ for the even cat, and the single-photon Fock state $\ket{1}$
+        for the odd cat ($\theta=\pi$), where the vacuum contributions cancel.
+
     Returns:
         (qarray of shape (..., dim, 1)): Ket of the cat state.
 
@@ -576,6 +582,14 @@ def cat(dim: int, alpha: ArrayLike, theta: ArrayLike = 0.0) -> QArray:
         >>> theta = [[0.0], [3.14]]
         >>> dq.cat(8, alpha, theta).shape
         (2, 3, 8, 1)
+
+        Vanishing-amplitude odd cat $\ket{\mathrm{cat}(0, \pi)} = \ket{1}$:
+        >>> dq.cat(4, 0.0, np.pi)
+        QArray: shape=(4, 1), dims=(4,), dtype=complex64, layout=dense
+        [[0.+0.j]
+         [1.+0.j]
+         [0.+0.j]
+         [0.+0.j]]
     """
     alpha = jnp.asarray(alpha, dtype=cdtype())
     theta = jnp.asarray(theta)
@@ -592,7 +606,18 @@ def cat(dim: int, alpha: ArrayLike, theta: ArrayLike = 0.0) -> QArray:
     # reshape the phase as a batched scalar of shape (..., 1, 1)
     phase = jnp.exp(1j * theta)[..., None, None]
 
-    return unit(plus_alpha + minus_alpha * phase)
+    psi = unit(plus_alpha + minus_alpha * phase)
+
+    # edge case: as alpha -> 0 both coherent states collapse onto the vacuum and
+    # their superposition becomes ill-defined to normalize. The limit is the vacuum
+    # |0> in general, except for the odd cat (theta = pi) where the vacuum
+    # contributions cancel exactly and the limit is the single-photon Fock state
+    # |1>. We substitute these limits explicitly to avoid normalizing numerical
+    # noise for vanishingly small amplitudes.
+    is_odd = jnp.isclose(jnp.cos(theta), -1.0)[..., None, None]
+    limit = fock(dim, 1) * is_odd + fock(dim, 0) * ~is_odd
+    small_alpha = jnp.isclose(alpha, 0.0)[..., None, None]
+    return limit * small_alpha + psi * ~small_alpha
 
 
 def cat_dm(dim: int, alpha: ArrayLike, theta: ArrayLike = 0.0) -> QArray:
