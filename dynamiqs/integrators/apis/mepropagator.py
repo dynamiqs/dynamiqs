@@ -14,7 +14,8 @@ from ...method import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Method, T
 from ...options import Options, check_options
 from ...progress_meter import AbstractProgressMeter
 from ...qarrays.dense_dataarray import DenseDataArray
-from ...qarrays.qarray import QArray, QArrayLike
+from ...qarrays.materialized_qarray import MaterializedQArray
+from ...qarrays.qarray import QArrayLike
 from ...result import MEPropagatorResult
 from ...time_qarray import TimeQArray
 from .._utils import (
@@ -288,7 +289,7 @@ def _mepropagator(
     # === init integrator
     # todo: replace with vectorized utils constructor for eye
     data = jnp.eye(H.shape[-1] ** 2, dtype=H.dtype)
-    y0 = QArray(H.dims, True, DenseDataArray(data))
+    y0 = MaterializedQArray(H.dims, True, DenseDataArray(data))
     integrator = integrator_constructor(
         ts=tsave,
         y0=y0,

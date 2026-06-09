@@ -10,6 +10,7 @@ from qutip import Qobj
 
 from .dense_dataarray import DenseDataArray, array_to_qobj_list
 from .layout import Layout, dense
+from .materialized_qarray import MaterializedQArray
 from .qarray import QArray, QArrayLike, get_dims, isqarraylike, to_jax, to_numpy
 from .sparsedia_dataarray import SparseDIADataArray
 from .sparsedia_primitives import (
@@ -98,7 +99,7 @@ def _asdense(x: QArrayLike, dims: tuple[int, ...] | None) -> QArray:
     xdims = get_dims(x)
     x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
-    return QArray(dims, False, DenseDataArray(x))
+    return MaterializedQArray(dims, False, DenseDataArray(x))
 
 
 def _assparsedia(
@@ -114,13 +115,13 @@ def _assparsedia(
         x_jax = x.to_jax()
         dims = init_dims(xdims, dims, x_jax.shape)
         offsets, diags = array_to_sparsedia(x_jax, offsets)
-        return QArray(dims, False, SparseDIADataArray(offsets, diags))
+        return MaterializedQArray(dims, False, SparseDIADataArray(offsets, diags))
 
     xdims = get_dims(x)
     x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
     offsets, diags = array_to_sparsedia(x, offsets)
-    return QArray(dims, False, SparseDIADataArray(offsets, diags))
+    return MaterializedQArray(dims, False, SparseDIADataArray(offsets, diags))
 
 
 def init_dims(
@@ -189,14 +190,14 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
     # stack inputs depending on data type
     if all(isinstance(q.data, DenseDataArray) for q in qarrays):
         data = jnp.stack([q.data.data for q in qarrays], axis=axis)
-        return QArray(dims, False, DenseDataArray(data))
+        return MaterializedQArray(dims, False, DenseDataArray(data))
     elif all(isinstance(q.data, SparseDIADataArray) for q in qarrays):
         offsets, diags = stack_sparsedia(
             [q.data.offsets for q in qarrays],
             [q.data.diags for q in qarrays],
             axis=axis,
         )
-        return QArray(dims, False, SparseDIADataArray(offsets, diags))
+        return MaterializedQArray(dims, False, SparseDIADataArray(offsets, diags))
     else:
         raise NotImplementedError(
             'Stacking qarrays with different data types is not implemented.'
@@ -305,7 +306,7 @@ def sparsedia_from_dict(
     dims = (shape[-1],) if dims is None else dims
     _assert_dims_match_shape(dims, shape)
 
-    return QArray(dims, False, SparseDIADataArray(offsets, diags))
+    return MaterializedQArray(dims, False, SparseDIADataArray(offsets, diags))
 
 
 def _assert_dims_match_shape(dims: tuple[int, ...], shape: tuple[int, ...]):
