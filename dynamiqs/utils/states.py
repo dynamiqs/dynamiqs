@@ -12,7 +12,7 @@ from .._checks import check_type_int
 from .._utils import cdtype
 from ..qarrays.qarray import QArray
 from ..qarrays.utils import asqarray
-from .general import tensor
+from .general import tensor, unit
 from .operators import displace
 
 __all__ = [
@@ -27,6 +27,10 @@ __all__ = [
     'ground',
     'ground_dm',
     'thermal_dm',
+    'vacuum',
+    'vacuum_dm',
+    'cat',
+    'cat_dm',
 ]
 
 
@@ -481,3 +485,177 @@ def _single_thermal_dm(dim: int, nth: Array) -> QArray:
 
     # normalize the density matrix
     return rho / rho.trace()
+
+
+def vacuum(dim: int) -> QArray:
+    r"""Returns the ket of the vacuum state.
+
+    It is the Fock state with zero photon, defined by
+    $\ket{0} = \begin{pmatrix}1\\0\\\vdots\end{pmatrix}$.
+
+    Args:
+        dim: Hilbert space dimension of the mode.
+
+    Returns:
+        (qarray of shape (dim, 1)): Ket $\ket{0}$.
+
+    Examples:
+        >>> dq.vacuum(4)
+        QArray: shape=(4, 1), dims=(4,), dtype=complex64, layout=dense
+        [[1.+0.j]
+         [0.+0.j]
+         [0.+0.j]
+         [0.+0.j]]
+    """
+    return fock(dim, 0)
+
+
+def vacuum_dm(dim: int) -> QArray:
+    r"""Returns the density matrix of the vacuum state.
+
+    It is the Fock state with zero photon, defined by $\ket{0}\bra{0} =
+    \begin{pmatrix}1 & 0 & \cdots\\0 & 0 & \cdots\\\vdots & \vdots & \ddots
+    \end{pmatrix}$.
+
+    Args:
+        dim: Hilbert space dimension of the mode.
+
+    Returns:
+        (qarray of shape (dim, dim)): Density matrix $\ket{0}\bra{0}$.
+
+    Examples:
+        >>> dq.vacuum_dm(4)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        [[1.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]]
+    """
+    return vacuum(dim).todm()
+
+
+def cat(dim: int, alpha: ArrayLike, theta: ArrayLike = 0.0) -> QArray:
+    r"""Returns the ket of a Schrödinger cat state.
+
+    A cat state is the superposition of two coherent states of opposite amplitudes,
+    $$
+        \ket{\mathrm{cat}(\alpha, \theta)} \propto
+            \ket{\alpha} + e^{i\theta} \ket{-\alpha},
+    $$
+    where $\theta=0$ gives the even cat state and $\theta=\pi$ the odd cat state.
+
+    Args:
+        dim: Hilbert space dimension of the mode.
+        alpha (array-like of shape (...)): Coherent state amplitude.
+        theta (array-like of shape (...)): Relative phase between the two coherent
+            states.
+
+    Note:
+        Arguments `alpha` and `theta` are broadcast together following NumPy
+        broadcasting rules, allowing batching over either or both.
+
+    Note:
+        In the vanishing-amplitude limit $\alpha\to 0$ the two coherent states
+        collapse onto the vacuum. The returned state is then the vacuum
+        $\ket{0}$ for the even cat, and the single-photon Fock state $\ket{1}$
+        for the odd cat ($\theta=\pi$), where the vacuum contributions cancel.
+
+    Returns:
+        (qarray of shape (..., dim, 1)): Ket of the cat state.
+
+    Examples:
+        Even cat state $\ket{\mathrm{cat}(2, 0)}$:
+        >>> dq.cat(4, 2.0)
+        QArray: shape=(4, 1), dims=(4,), dtype=complex64, layout=dense
+        [[0.893+0.j]
+         [0.   +0.j]
+         [0.449+0.j]
+         [0.   +0.j]]
+
+        Batched over the amplitude $\{\ket{\mathrm{cat}(1, 0)}\!,
+        \ket{\mathrm{cat}(2, 0)}\}$:
+        >>> dq.cat(4, [1.0, 2.0]).shape
+        (2, 4, 1)
+
+        Batched over the amplitude and phase, broadcast to a common shape:
+        >>> alpha = [1.0, 2.0, 3.0]
+        >>> theta = [[0.0], [3.14]]
+        >>> dq.cat(8, alpha, theta).shape
+        (2, 3, 8, 1)
+
+        Vanishing-amplitude odd cat $\ket{\mathrm{cat}(0, \pi)} = \ket{1}$:
+        >>> dq.cat(4, 0.0, np.pi)
+        QArray: shape=(4, 1), dims=(4,), dtype=complex64, layout=dense
+        [[0.+0.j]
+         [1.+0.j]
+         [0.+0.j]
+         [0.+0.j]]
+    """
+    alpha = jnp.asarray(alpha, dtype=cdtype())
+    theta = jnp.asarray(theta)
+
+    # broadcast alpha and theta to a common batch shape
+    bshape = jnp.broadcast_shapes(alpha.shape, theta.shape)
+    alpha = jnp.broadcast_to(alpha, bshape)
+    theta = jnp.broadcast_to(theta, bshape)
+
+    # compute the two coherent components, each of shape (..., dim, 1)
+    plus_alpha = coherent(dim, alpha)
+    minus_alpha = coherent(dim, -alpha)
+
+    # reshape the phase as a batched scalar of shape (..., 1, 1)
+    phase = jnp.exp(1j * theta)[..., None, None]
+
+    psi = unit(plus_alpha + minus_alpha * phase)
+
+    # edge case: as alpha -> 0 both coherent states collapse onto the vacuum and
+    # their superposition becomes ill-defined to normalize. The limit is the vacuum
+    # |0> in general, except for the odd cat (theta = pi) where the vacuum
+    # contributions cancel exactly and the limit is the single-photon Fock state
+    # |1>. We substitute these limits explicitly to avoid normalizing numerical
+    # noise for vanishingly small amplitudes.
+    is_odd = jnp.isclose(jnp.cos(theta), -1.0)[..., None, None]
+    limit = fock(dim, 1) * is_odd + fock(dim, 0) * ~is_odd
+    small_alpha = jnp.isclose(alpha, 0.0)[..., None, None]
+    return limit * small_alpha + psi * ~small_alpha
+
+
+def cat_dm(dim: int, alpha: ArrayLike, theta: ArrayLike = 0.0) -> QArray:
+    r"""Returns the density matrix of a Schrödinger cat state.
+
+    A cat state is the superposition of two coherent states of opposite amplitudes,
+    $$
+        \ket{\mathrm{cat}(\alpha, \theta)} \propto
+            \ket{\alpha} + e^{i\theta} \ket{-\alpha},
+    $$
+    where $\theta=0$ gives the even cat state and $\theta=\pi$ the odd cat state.
+
+    Args:
+        dim: Hilbert space dimension of the mode.
+        alpha (array-like of shape (...)): Coherent state amplitude.
+        theta (array-like of shape (...)): Relative phase between the two coherent
+            states.
+
+    Note:
+        Arguments `alpha` and `theta` are broadcast together following NumPy
+        broadcasting rules, allowing batching over either or both.
+
+    Returns:
+        (qarray of shape (..., dim, dim)): Density matrix of the cat state.
+
+    Examples:
+        Even cat state $\ket{\mathrm{cat}(2, 0)}\bra{\mathrm{cat}(2, 0)}$:
+        >>> dq.cat_dm(4, 2.0)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        [[0.798+0.j 0.   +0.j 0.401+0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
+         [0.401+0.j 0.   +0.j 0.202+0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]]
+
+        Batched over the phase $\{\ket{\mathrm{cat}(2, 0)}\bra{\mathrm{cat}(2, 0)}\!,
+        \ket{\mathrm{cat}(2, \pi)}\bra{\mathrm{cat}(2, \pi)}\}$:
+        >>> import numpy as np
+        >>> dq.cat_dm(4, 2.0, [0.0, np.pi]).shape
+        (2, 4, 4)
+    """
+    return cat(dim, alpha, theta).todm()
