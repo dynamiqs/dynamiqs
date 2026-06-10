@@ -29,30 +29,16 @@ class StochasticSystem(System):
     def Ls(self, params: PyTree) -> list[QArray | TimeQArray]:
         """Compute the jump operators."""
 
-    def run(self, solver: str, method: Method, keys: Array, **kwargs) -> Result:
+    def run(self, solver: str, method: Method, keys: Array) -> Result:
         H, Ls, y0 = self.H(None), self.Ls(None), self.y0(None)
         exp_ops = self.Es(None) or None
         if solver == 'jsse':
             return dq.jssesolve(
-                H,
-                Ls,
-                y0,
-                self.tsave,
-                keys=keys,
-                exp_ops=exp_ops,
-                method=method,
-                **kwargs,
+                H, Ls, y0, self.tsave, keys=keys, exp_ops=exp_ops, method=method
             )
         if solver == 'dsse':
             return dq.dssesolve(
-                H,
-                Ls,
-                y0,
-                self.tsave,
-                keys=keys,
-                exp_ops=exp_ops,
-                method=method,
-                **kwargs,
+                H, Ls, y0, self.tsave, keys=keys, exp_ops=exp_ops, method=method
             )
         if solver == 'jsme':
             thetas, etas = jnp.zeros(len(Ls)), jnp.ones(len(Ls))
@@ -66,20 +52,11 @@ class StochasticSystem(System):
                 keys=keys,
                 exp_ops=exp_ops,
                 method=method,
-                **kwargs,
             )
         if solver == 'dsme':
             etas = jnp.ones(len(Ls))
             return dq.dsmesolve(
-                H,
-                Ls,
-                etas,
-                y0,
-                self.tsave,
-                keys=keys,
-                exp_ops=exp_ops,
-                method=method,
-                **kwargs,
+                H, Ls, etas, y0, self.tsave, keys=keys, exp_ops=exp_ops, method=method
             )
         raise ValueError(f'unknown stochastic solver {solver!r}')
 

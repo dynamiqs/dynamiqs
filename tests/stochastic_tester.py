@@ -4,6 +4,7 @@ import jax
 import jax.numpy as jnp
 from jax import Array
 
+import dynamiqs as dq
 from dynamiqs.method import Method
 
 from .systems.stochastic_system import StochasticSystem
@@ -12,47 +13,22 @@ from .systems.stochastic_system import StochasticSystem
 
 
 def infidelity_with_state(result, exact_states) -> Array:
-    # infidelity with a pure target, for every trajectory and saved time;
-    # normalized by the state norm/trace to be robust to Euler norm drift
-    states = result.states.to_jax()  # (ntrajs, ntsave, n, k), k=1 (ket) or n (dm)
-    exact = exact_states.to_jax()  # (ntsave, n, 1)
-    bra = jnp.conj(jnp.swapaxes(exact, -1, -2))  # (ntsave, 1, n)
-    if states.shape[-1] == 1:  # ket (SSE)
-        overlap = (bra @ states)[..., 0, 0]  # (ntrajs, ntsave)
-        bra_psi = jnp.conj(jnp.swapaxes(states, -1, -2))
-        norm2 = (bra_psi @ states)[..., 0, 0].real
-        return 1 - jnp.abs(overlap) ** 2 / norm2
-    # density matrix (SME)
-    num = (bra @ states @ exact)[..., 0, 0].real  # (ntrajs, ntsave)
-    tr = jnp.trace(states, axis1=-2, axis2=-1).real
-    return 1 - num / tr
+    # 1 - fidelity between each (unit-normalized) trajectory state and the analytical
+    # pure target, for every trajectory and saved time
+    return 1 - dq.overlap(exact_states, dq.unit(result.states, psd=True))
 
 
 def trajectory_norms(result) -> Array:
-    # state norm per trajectory and time: <psi|psi> for kets, Tr[rho] for density
-    # matrices. Probability conservation requires this to stay 1.
-    states = result.states.to_jax()
-    if states.shape[-1] == 1:
-        bra = jnp.conj(jnp.swapaxes(states, -1, -2))
-        return (bra @ states)[..., 0, 0].real
-    return jnp.trace(states, axis1=-2, axis2=-1).real
+    # state norm per trajectory and time (must stay 1 if probability is conserved)
+    return dq.norm(result.states, psd=True)
 
 
 def cross_trajectory_infidelity(result) -> Array:
-    # infidelity between every trajectory and the first one, per saved time. With no
-    # back-action all trajectories follow the same deterministic evolution, so this
-    # is ~0; genuine back-action makes the trajectories differ.
-    states = result.states.to_jax()  # (ntrajs, ntsave, n, k)
-    if states.shape[-1] == 1:  # ket
-        states = states / jnp.linalg.norm(states, axis=-2, keepdims=True)
-        ref = states[0:1]
-        overlap = jnp.abs((jnp.conj(jnp.swapaxes(ref, -1, -2)) @ states)[..., 0, 0])
-        return 1 - overlap**2
-    # density matrix: 1 - Tr[rho_0 rho_i] with unit-trace normalisation
-    tr = jnp.trace(states, axis1=-2, axis2=-1).real[..., None, None]
-    states = states / tr
-    ref = states[0:1]
-    return 1 - jnp.trace(ref @ states, axis1=-2, axis2=-1).real
+    # 1 - fidelity between every trajectory and the first one, per saved time. With no
+    # back-action all trajectories follow the same evolution, so this is ~0; genuine
+    # back-action makes the trajectories differ.
+    states = dq.unit(result.states, psd=True)
+    return 1 - dq.overlap(states[0:1], states)
 
 
 def _keys(seed: int, ntrajs: int) -> Array:
@@ -144,12 +120,13 @@ class StochasticTester:
         # tolerances are 5-sigma Monte Carlo confidence bounds (scale as 1/sqrt(N)).
         result = system.run(self.SOLVER, method, _keys(seed, ntrajs))
         nclicks = result.nclicks[..., 0]
-        n = nclicks.shape[0]
-        lam = system.poisson_lambda()
-        sem = jnp.sqrt(lam / n)
-        sev = jnp.sqrt((lam + 2 * lam**2) / n)
-        assert jnp.abs(nclicks.mean() - lam) < 5 * sem
-        assert jnp.abs(nclicks.var() - lam) < 5 * sev
+        poisson_lambda = system.poisson_lambda()
+        mean_standard_error = jnp.sqrt(poisson_lambda / ntrajs)
+        variance_standard_error = jnp.sqrt(
+            (poisson_lambda + 2 * poisson_lambda**2) / ntrajs
+        )
+        assert jnp.abs(nclicks.mean() - poisson_lambda) < 5 * mean_standard_error
+        assert jnp.abs(nclicks.var() - poisson_lambda) < 5 * variance_standard_error
 
     def _test_diffusive_statistics(
         self,
@@ -163,12 +140,13 @@ class StochasticTester:
         # known mean and variance; 5-sigma Monte Carlo confidence bounds
         result = system.run(self.SOLVER, method, _keys(seed, ntrajs))
         samples = result.measurements[..., 0, :].reshape(-1)
-        n = samples.shape[0]
-        mean, var = system.record_mean(), system.record_variance()
-        sem = jnp.sqrt(var / n)
-        sev = var * jnp.sqrt(2 / n)
-        assert jnp.abs(samples.mean() - mean) < 5 * sem
-        assert jnp.abs(samples.var() - var) < 5 * sev
+        nsamples = samples.shape[0]
+        expected_mean = system.record_mean()
+        expected_variance = system.record_variance()
+        mean_standard_error = jnp.sqrt(expected_variance / nsamples)
+        variance_standard_error = expected_variance * jnp.sqrt(2 / nsamples)
+        assert jnp.abs(samples.mean() - expected_mean) < 5 * mean_standard_error
+        assert jnp.abs(samples.var() - expected_variance) < 5 * variance_standard_error
 
     def _test_bernoulli_statistics(
         self,
