@@ -14,7 +14,7 @@ from dynamiqs._utils import concatenate_sort
 
 from ..._checks import check_hermitian
 from ...qarrays.qarray import QArray
-from ...result import MESolveResult, Result, Saved
+from ...result import MESolveResult, Result, Saved, SolveSaved
 from ...utils.general import expm
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .._utils import ispwc
@@ -165,7 +165,7 @@ class MESolveExpmIntegrator(MEExpmIntegrator, SolveSaveMixin, SolveInterface):
         # convert to vectorized form
         self.y0 = vectorize(self.y0)  # (n^2, 1)
 
-    def save(self, y: PyTree) -> Saved:
+    def save(self, y: PyTree) -> SolveSaved:
         # TODO: implement bexpect for vectorized operators and convert at the end
         # instead of at each step
         y = unvectorize(y)

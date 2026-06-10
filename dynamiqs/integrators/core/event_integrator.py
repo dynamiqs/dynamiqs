@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import replace
-from typing import cast
 
 import diffrax as dx
 import equinox as eqx
@@ -114,7 +113,7 @@ class JSSESolveEventIntegrator(
             dtmax=self.method.dtmax,
         )
 
-    def save(self, y: PyTree) -> Saved:
+    def save(self, y: PyTree) -> SolveSaved:
         return super().save(y.unit())
 
     def _solve_until_click(self, y: JumpState, rand: Array) -> tuple[JumpState, bool]:
@@ -199,7 +198,6 @@ class JSSESolveEventIntegrator(
         indices = jnp.zeros(len(self.Ls), dtype=int)
         y = stack([self.y0] * len(self.ts))
         saved = self.reorder_Esave(self.save(y))
-        saved = cast(SolveSaved, saved)
         y0 = JumpState(self.y0, self.t0, key, clicktimes, indices, saved, 0)
 
         # === loop over no-click evolutions until the final time is reached
@@ -215,7 +213,6 @@ class JSSESolveEventIntegrator(
 
         # === return result
         saved = self.postprocess_saved(yend.saved, yend.psi[None, ...])
-        saved = cast(SolveSaved, saved)
         return JumpSolveSaved(saved.ysave, saved.extra, saved.Esave, yend.clicktimes)
 
 

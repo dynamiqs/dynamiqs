@@ -27,7 +27,7 @@ from ...method import (
 )
 from ...options import Options
 from ...progress_meter import AbstractProgressMeter
-from ...result import MESolveResult, Result, Saved
+from ...result import MESolveResult, Result, Saved, SolveSaved
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
@@ -369,7 +369,7 @@ class MESolveDiffraxIntegrator(
         if self.options.vectorized:
             self.y0 = vectorize(self.y0)  # (n^2, 1)
 
-    def save(self, y: PyTree) -> Saved:
+    def save(self, y: PyTree) -> SolveSaved:
         # TODO: implement bexpect for vectorized operators and convert at the end
         # instead of at each step
         if self.options.vectorized:
