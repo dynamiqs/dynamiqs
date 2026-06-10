@@ -68,13 +68,13 @@ class SMEInterface(AbstractTimeInterface):
     def Ls(self) -> list[TimeQArray]:
         return self.Lcs + self.Lms  # (nLc + nLm, n, n)
 
-    def L(self, t: Scalar) -> list[QArray]:
+    def L(self, t: RealScalarLike) -> list[QArray]:
         return [_L(t) for _L in self.Ls]  # (nLs, n, n)
 
-    def Lc(self, t: Scalar) -> list[QArray]:
+    def Lc(self, t: RealScalarLike) -> list[QArray]:
         return [_L(t) for _L in self.Lcs]  # (nLc, n, n)
 
-    def Lm(self, t: Scalar) -> list[QArray]:
+    def Lm(self, t: RealScalarLike) -> list[QArray]:
         return [_L(t) for _L in self.Lms]  # (nLm, n, n)
 
     @property
