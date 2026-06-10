@@ -1,19 +1,23 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import replace
+from typing import cast
 
 import diffrax as dx
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+from diffrax._custom_types import RealScalarLike
 from equinox.internal import while_loop
 from jax import Array
 from jaxtyping import PRNGKeyArray, PyTree
 
+from ...method import Event
 from ...options import Options
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import stack
-from ...result import JSSESolveResult, JumpSolveSaved, Result, Saved, SolveSaved
+from ...result import JumpSolveSaved, Result, Saved, SolveSaved
 from ...utils.general import expect
 from .abstract_integrator import StochasticBaseIntegrator
 from .diffrax_integrator import call_diffeqsolve
@@ -35,14 +39,14 @@ class JumpState(eqx.Module):
     """State for the jump SSE event integrator."""
 
     psi: QArray  # state (integrated from initial to current time)
-    t: float  # current time
+    t: RealScalarLike  # current time
     key: PRNGKeyArray  # active key
     clicktimes: Array  # click times of shape (nLs, nmaxclick)
     indices: Array  # last click time indices of shape (nLs,)
     saved: SolveSaved  # saved states, expectation values and extras
     save_index: int
 
-    def new_click(self, idx: int, t: float) -> tuple[Array, Array]:
+    def new_click(self, idx: Array, t: RealScalarLike) -> tuple[Array, Array]:
         clicktimes = self.clicktimes.at[idx, self.indices[idx]].set(t)
         indices = self.indices.at[idx].add(1)
         return clicktimes, indices
@@ -60,10 +64,14 @@ class JSSESolveEventIntegrator(
 ):
     """Integrator computing the time evolution of the Jump SSE using Diffrax events."""
 
+    method: Event
+
     def run(self) -> Result:
         if self.method.smart_sampling:
             # sample a no-click trajectory and compute its probability
             solution = self._solve_noclick(self.ts, self.y0)
+
+            assert solution.ys is not None  # Only for the typechecker
             psis = solution.ys[0]
             noclick_psis = psis.unit()
             noclick_prob = psis[-1].norm() ** 2
@@ -74,7 +82,7 @@ class JSSESolveEventIntegrator(
             infos = None
 
         # vectorize over keys
-        out_axes = JumpSolveSaved(0, 0, 0, 0)
+        out_axes = JumpSolveSaved(0, 0, 0, 0)  # ty: ignore[invalid-argument-type]
         f = lambda key: self._solve_single_trajectory(key, noclick_prob)
         saved = jax.vmap(f, 0, out_axes)(self.key)
         return self.result(saved, infos)
@@ -82,9 +90,9 @@ class JSSESolveEventIntegrator(
     def _solve_noclick(
         self,
         ts: Array,
-        psi0: Array,
+        psi0: QArray,
         event: dx.Event | None = None,
-        save: callable | None = None,
+        save: Callable | None = None,
     ) -> dx.Solution:
         terms = dx.ODETerm(
             lambda t, y, _: (
@@ -109,9 +117,7 @@ class JSSESolveEventIntegrator(
     def save(self, y: PyTree) -> Saved:
         return super().save(y.unit())
 
-    def _solve_until_click(
-        self, y: JumpState, rand: float
-    ) -> tuple[JumpState, SolveSaved, bool]:
+    def _solve_until_click(self, y: JumpState, rand: Array) -> tuple[JumpState, bool]:
         # === solve until the next click event
         cond_fn = lambda t, y, *a, **kw: y.norm() ** 2 - rand  # noqa: ARG005
         event = dx.Event(cond_fn, self.method.root_finder)
@@ -119,10 +125,14 @@ class JSSESolveEventIntegrator(
         solution = self._solve_noclick(ts, y.psi, event=event, save=self.save)
 
         # === collect solve result
+        assert solution.ys is not None  # Only for the typechecker
+        assert solution.ts is not None  # Only for the typechecker
         new_saved = solution.ys[0]
         psiclick, tclick = solution.ys[1][0], solution.ts[1][0]
+
         y = replace(y, psi=psiclick, t=tclick)
         click_occurred = solution.event_mask
+        assert click_occurred is not None  # Only for the typechecker
 
         # === save intermediate states, expectation values and extras
         save_cond = lambda y: (
@@ -142,7 +152,7 @@ class JSSESolveEventIntegrator(
 
     def _solve_single_trajectory(
         self, key: PRNGKeyArray, noclick_prob: float | None
-    ) -> JSSESolveResult:
+    ) -> JumpSolveSaved:
         def loop_body(y: JumpState) -> JumpState:
             # === pick a random number for the next click event
             newkey, key_click, key_jump_choice = jax.random.split(y.key, 3)
@@ -189,6 +199,7 @@ class JSSESolveEventIntegrator(
         indices = jnp.zeros(len(self.Ls), dtype=int)
         y = stack([self.y0] * len(self.ts))
         saved = self.reorder_Esave(self.save(y))
+        saved = cast(SolveSaved, saved)
         y0 = JumpState(self.y0, self.t0, key, clicktimes, indices, saved, 0)
 
         # === loop over no-click evolutions until the final time is reached
@@ -204,6 +215,7 @@ class JSSESolveEventIntegrator(
 
         # === return result
         saved = self.postprocess_saved(yend.saved, yend.psi[None, ...])
+        saved = cast(SolveSaved, saved)
         return JumpSolveSaved(saved.ysave, saved.extra, saved.Esave, yend.clicktimes)
 
 
