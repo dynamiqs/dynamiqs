@@ -12,7 +12,7 @@ import jax.numpy as jnp
 import jax.tree_util as jtu
 from diffrax._custom_types import RealScalarLike
 from jax import Array
-from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
+from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 from ._checks import check_shape, check_times
 from ._utils import cdtype, concatenate_sort, obj_type_str
