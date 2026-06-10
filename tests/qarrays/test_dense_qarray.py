@@ -136,3 +136,67 @@ class TestDenseQArray:
     def test_elpow(self):
         assert jnp.array_equal(self.qarray.elpow(2).to_jax(), self.data**2)
         assert jnp.array_equal(self.qarray.elpow(3).to_jax(), self.data**3)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_dense_qarray_axis_manipulation_methods():
+    data = jnp.arange(2 * 3 * 4 * 4).reshape(2, 3, 4, 4) * (1 + 1j)
+    x = asqarray(data, dims=(4,))
+
+    # batch-axis swapaxes preserves qarray structure
+    y = x.swapaxes(0, 1)
+    expected = jnp.swapaxes(data, 0, 1)
+    assert y.shape == expected.shape
+    assert y.dims == x.dims
+    assert jnp.array_equal(y.to_jax(), expected)
+
+    # final-two-axis swapaxes preserves qarray structure
+    y = x.swapaxes(-1, -2)
+    expected = jnp.swapaxes(data, -1, -2)
+    assert y.shape == expected.shape
+    assert y.dims == x.dims
+    assert jnp.array_equal(y.to_jax(), expected)
+
+    # moving batch axes preserves qarray structure
+    y = x.moveaxis(0, 1)
+    expected = jnp.moveaxis(data, 0, 1)
+    assert y.shape == expected.shape
+    assert y.dims == x.dims
+    assert jnp.array_equal(y.to_jax(), expected)
+
+    # inserting batch axes preserves qarray structure
+    y = x.expand_dims(0)
+    expected = jnp.expand_dims(data, 0)
+    assert y.shape == expected.shape
+    assert y.dims == x.dims
+    assert jnp.array_equal(y.to_jax(), expected)
+
+    y = x.expand_dims(2)
+    expected = jnp.expand_dims(data, 2)
+    assert y.shape == expected.shape
+    assert y.dims == x.dims
+    assert jnp.array_equal(y.to_jax(), expected)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_dense_qarray_axis_manipulation_raw_array_fallback():
+    data = jnp.arange(2 * 3 * 4 * 4).reshape(2, 3, 4, 4) * (1 + 1j)
+    x = asqarray(data, dims=(4,))
+
+    y = x.swapaxes(0, -1)
+    expected = jnp.swapaxes(data, 0, -1)
+    assert not hasattr(y, 'to_jax')
+    assert y.shape == expected.shape
+    assert jnp.array_equal(y, expected)
+
+    y = x.moveaxis(-1, 0)
+    expected = jnp.moveaxis(data, -1, 0)
+    assert not hasattr(y, 'to_jax')
+    assert y.shape == expected.shape
+    assert jnp.array_equal(y, expected)
+
+    y = x.expand_dims(-1)
+    expected = jnp.expand_dims(data, -1)
+    assert not hasattr(y, 'to_jax')
+    assert y.shape == expected.shape
+    assert jnp.array_equal(y, expected)

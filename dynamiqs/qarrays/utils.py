@@ -24,6 +24,8 @@ __all__ = [
     'asqarray',
     'sparsedia_from_dict',
     'stack',
+    'concatenate',
+    'where',
     'to_jax',
     'to_numpy',
     'to_qutip',
@@ -202,6 +204,123 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
         raise NotImplementedError(
             'Stacking qarrays with different data types is not implemented.'
         )
+
+
+def concatenate(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
+    """Join a sequence of qarrays along an existing batch axis.
+
+    Warning:
+        All elements of the sequence `qarrays` must have identical data types and `dims`
+        attributes. Qarrays with sparse diagonal data must also have identical `offsets`
+        attributes.
+
+    Args:
+        qarrays: Qarrays to concatenate.
+        axis: Existing batch axis along which the input qarrays are concatenated.
+
+    Returns:
+        Concatenated qarray.
+    """
+    if len(qarrays) == 0:
+        raise ValueError('Argument `qarrays` must contain at least one element.')
+    if not all(isinstance(q, QArray) for q in qarrays):
+        raise ValueError(
+            'Argument `qarrays` must contain only elements of type `QArray`.'
+        )
+
+    first = qarrays[0]
+    axis = _normalize_batch_axis(axis, first.ndim)
+
+    dims = first.dims
+    if not all(q.dims == dims for q in qarrays):
+        raise ValueError(
+            'Argument `qarrays` must contain elements with identical `dims` attribute.'
+        )
+
+    expected_shape = first.shape
+    for qarray in qarrays:
+        if qarray.ndim != first.ndim:
+            raise ValueError('All input qarrays must have the same number of axes.')
+        if qarray.shape[:axis] + qarray.shape[axis + 1 :] != (
+            expected_shape[:axis] + expected_shape[axis + 1 :]
+        ):
+            raise ValueError(
+                'All input qarrays must have matching shapes except along the '
+                'concatenation axis.'
+            )
+
+    if all(isinstance(q.data, DenseDataArray) for q in qarrays):
+        data = jnp.concatenate([q.data.data for q in qarrays], axis=axis)
+        return MaterializedQArray(dims, False, DenseDataArray(data))
+    elif all(isinstance(q.data, SparseDIADataArray) for q in qarrays):
+        offsets = first.data.offsets
+        if not all(q.data.offsets == offsets for q in qarrays):
+            raise ValueError(
+                'Sparse diagonal qarrays must have identical `offsets` attributes.'
+            )
+        diags = jnp.concatenate([q.data.diags for q in qarrays], axis=axis)
+        return MaterializedQArray(dims, False, SparseDIADataArray(offsets, diags))
+    else:
+        raise NotImplementedError(
+            'Concatenating qarrays with different data types is not implemented.'
+        )
+
+
+def where(condition: ArrayLike, x: QArray, y: QArray) -> QArray:
+    """Select values from two qarrays according to a condition.
+
+    Args:
+        condition: Condition broadcastable to the qarray data shape.
+        x: Qarray containing values selected where condition is true.
+        y: Qarray containing values selected where condition is false.
+
+    Returns:
+        Qarray with values selected from `x` and `y`.
+    """
+    if not isinstance(x, QArray) or not isinstance(y, QArray):
+        raise TypeError('Arguments `x` and `y` must both be of type `QArray`.')
+    if x.dims != y.dims:
+        raise ValueError('Arguments `x` and `y` must have identical `dims` attributes.')
+
+    if isinstance(x.data, DenseDataArray) and isinstance(y.data, DenseDataArray):
+        data = jnp.where(condition, x.data.data, y.data.data)
+        return MaterializedQArray(x.dims, False, DenseDataArray(data))
+    elif isinstance(x.data, SparseDIADataArray) and isinstance(
+        y.data, SparseDIADataArray
+    ):
+        if x.data.offsets != y.data.offsets:
+            raise ValueError(
+                'Sparse diagonal qarrays must have identical `offsets` attributes.'
+            )
+        try:
+            diags = jnp.where(condition, x.data.diags, y.data.diags)
+        except (TypeError, ValueError):
+            warnings.warn(
+                'Sparse diagonal qarrays have been converted to dense layout while '
+                'applying `where` with a condition that is not broadcastable to sparse '
+                'diagonal data.',
+                stacklevel=2,
+            )
+            data = jnp.where(condition, x.to_jax(), y.to_jax())
+            return MaterializedQArray(x.dims, False, DenseDataArray(data))
+
+        return MaterializedQArray(
+            x.dims, False, SparseDIADataArray(x.data.offsets, diags)
+        )
+    else:
+        raise NotImplementedError(
+            'Calling `where` on qarrays with different data types is not implemented.'
+        )
+
+
+def _normalize_batch_axis(axis: int, ndim: int) -> int:
+    axis = axis + ndim if axis < 0 else axis
+    if axis < 0 or axis >= ndim - 2:
+        raise ValueError(
+            'Axis must be a batch axis and cannot refer to the final two qarray '
+            'dimensions.'
+        )
+    return axis
 
 
 def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:

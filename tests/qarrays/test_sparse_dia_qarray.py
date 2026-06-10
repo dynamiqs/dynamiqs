@@ -239,3 +239,73 @@ class TestSparseDIAQArray:
 
 def _allclose(a, b, rtol=1e-05, atol=1e-08):
     return jnp.allclose(a, b, rtol=rtol, atol=atol)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_sparse_dia_qarray_axis_manipulation_methods():
+    data = jnp.arange(2 * 3 * 4 * 4).reshape(2, 3, 4, 4) * (1 + 1j)
+    dense = dq.asqarray(data, dims=(4,), layout=dq.dense)
+    sparse = dq.asqarray(data, dims=(4,), layout=dq.dia)
+
+    # batch-axis swapaxes preserves sparse qarray structure
+    y_dense = dense.swapaxes(0, 1)
+    y_sparse = sparse.swapaxes(0, 1)
+    assert y_sparse.shape == y_dense.shape
+    assert y_sparse.dims == sparse.dims
+    assert y_sparse.layout == dq.dia
+    assert _allclose(y_sparse.to_jax(), y_dense.to_jax())
+
+    # final-two-axis swapaxes preserves sparse qarray structure
+    y_dense = dense.swapaxes(-1, -2)
+    y_sparse = sparse.swapaxes(-1, -2)
+    assert y_sparse.shape == y_dense.shape
+    assert y_sparse.dims == sparse.dims
+    assert y_sparse.layout == dq.dia
+    assert _allclose(y_sparse.to_jax(), y_dense.to_jax())
+
+    # moving batch axes preserves sparse qarray structure
+    y_dense = dense.moveaxis(0, 1)
+    y_sparse = sparse.moveaxis(0, 1)
+    assert y_sparse.shape == y_dense.shape
+    assert y_sparse.dims == sparse.dims
+    assert y_sparse.layout == dq.dia
+    assert _allclose(y_sparse.to_jax(), y_dense.to_jax())
+
+    # inserting batch axes preserves sparse qarray structure
+    y_dense = dense.expand_dims(0)
+    y_sparse = sparse.expand_dims(0)
+    assert y_sparse.shape == y_dense.shape
+    assert y_sparse.dims == sparse.dims
+    assert y_sparse.layout == dq.dia
+    assert _allclose(y_sparse.to_jax(), y_dense.to_jax())
+
+    y_dense = dense.expand_dims(2)
+    y_sparse = sparse.expand_dims(2)
+    assert y_sparse.shape == y_dense.shape
+    assert y_sparse.dims == sparse.dims
+    assert y_sparse.layout == dq.dia
+    assert _allclose(y_sparse.to_jax(), y_dense.to_jax())
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_sparse_dia_qarray_axis_manipulation_raw_array_fallback():
+    data = jnp.arange(2 * 3 * 4 * 4).reshape(2, 3, 4, 4) * (1 + 1j)
+    x = dq.asqarray(data, dims=(4,), layout=dq.dia)
+
+    y = x.swapaxes(0, -1)
+    expected = jnp.swapaxes(data, 0, -1)
+    assert not hasattr(y, 'to_jax')
+    assert y.shape == expected.shape
+    assert _allclose(y, expected)
+
+    y = x.moveaxis(-1, 0)
+    expected = jnp.moveaxis(data, -1, 0)
+    assert not hasattr(y, 'to_jax')
+    assert y.shape == expected.shape
+    assert _allclose(y, expected)
+
+    y = x.expand_dims(-1)
+    expected = jnp.expand_dims(data, -1)
+    assert not hasattr(y, 'to_jax')
+    assert y.shape == expected.shape
+    assert _allclose(y, expected)

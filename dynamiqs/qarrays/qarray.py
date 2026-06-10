@@ -331,6 +331,31 @@ class QArray(eqx.Module):
         pass
 
     @abstractmethod
+    def swapaxes(self, axis1: int, axis2: int) -> QArray | Array:
+        """Interchange two axes of a qarray.
+
+        Returns a qarray when the operation preserves qarray structure, otherwise a
+        JAX array.
+        """
+
+    @abstractmethod
+    def moveaxis(
+        self, source: int | tuple[int, ...], destination: int | tuple[int, ...]
+    ) -> QArray | Array:
+        """Move axes of a qarray to new positions.
+
+        Returns a qarray when the operation preserves qarray structure, otherwise a
+        JAX array.
+        """
+
+    @abstractmethod
+    def expand_dims(self, axis: int) -> QArray | Array:
+        """Expand the shape of a qarray by inserting a new axis.
+
+        Returns a qarray when the new axis is a batch axis, otherwise a JAX array.
+        """
+
+    @abstractmethod
     def _eig(self) -> tuple[Array, QArray]:
         pass
 

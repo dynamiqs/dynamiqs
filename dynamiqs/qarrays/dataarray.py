@@ -135,6 +135,20 @@ class DataArray(eqx.Module):
         pass
 
     @abstractmethod
+    def swapaxes(self, axis1: int, axis2: int) -> DataArray | Array:
+        pass
+
+    @abstractmethod
+    def moveaxis(
+        self, source: int | tuple[int, ...], destination: int | tuple[int, ...]
+    ) -> DataArray | Array:
+        pass
+
+    @abstractmethod
+    def expand_dims(self, axis: int) -> DataArray | Array:
+        pass
+
+    @abstractmethod
     def _eig(self) -> tuple[Array, DataArray]:
         pass
 

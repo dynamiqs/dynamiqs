@@ -19,7 +19,13 @@ from .dataarray import (
     in_last_two_dims,
     include_last_two_dims,
 )
-from .dense_dataarray import DenseDataArray
+from .dense_dataarray import (
+    DenseDataArray,
+    _normalize_axis,
+    _preserves_qarray_axes_after_expand_dims,
+    _preserves_qarray_axes_after_moveaxis,
+    _preserves_qarray_axes_after_swapaxes,
+)
 from .layout import Layout, dia
 from .sparsedia_primitives import (
     add_sparsedia_sparsedia,
@@ -153,6 +159,34 @@ class SparseDIADataArray(DataArray):
         else:
             diags = self.diags.squeeze(axis)
             return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+
+    def swapaxes(self, axis1: int, axis2: int) -> DataArray | Array:
+        if not _preserves_qarray_axes_after_swapaxes(self.ndim, axis1, axis2):
+            return jnp.swapaxes(self.to_jax(), axis1, axis2)
+
+        axis1 = _normalize_axis(axis1, self.ndim)
+        axis2 = _normalize_axis(axis2, self.ndim)
+        if {axis1, axis2} == {self.ndim - 2, self.ndim - 1}:
+            return self.mT
+
+        diags = jnp.swapaxes(self.diags, axis1, axis2)
+        return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+
+    def moveaxis(
+        self, source: int | tuple[int, ...], destination: int | tuple[int, ...]
+    ) -> DataArray | Array:
+        if not _preserves_qarray_axes_after_moveaxis(self.ndim, source, destination):
+            return jnp.moveaxis(self.to_jax(), source, destination)
+
+        diags = jnp.moveaxis(self.diags, source, destination)
+        return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+
+    def expand_dims(self, axis: int) -> DataArray | Array:
+        if not _preserves_qarray_axes_after_expand_dims(self.ndim, axis):
+            return jnp.expand_dims(self.to_jax(), axis)
+
+        diags = jnp.expand_dims(self.diags, axis)
+        return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
 
     def _eig(self) -> tuple[Array, DataArray]:
         warnings.warn(

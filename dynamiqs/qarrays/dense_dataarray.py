@@ -90,6 +90,26 @@ class DenseDataArray(DataArray):
         else:
             return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
+    def swapaxes(self, axis1: int, axis2: int) -> DataArray | Array:
+        data = jnp.swapaxes(self.data, axis1, axis2)
+        if _preserves_qarray_axes_after_swapaxes(self.ndim, axis1, axis2):
+            return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return data
+
+    def moveaxis(
+        self, source: int | tuple[int, ...], destination: int | tuple[int, ...]
+    ) -> DataArray | Array:
+        data = jnp.moveaxis(self.data, source, destination)
+        if _preserves_qarray_axes_after_moveaxis(self.ndim, source, destination):
+            return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return data
+
+    def expand_dims(self, axis: int) -> DataArray | Array:
+        data = jnp.expand_dims(self.data, axis)
+        if _preserves_qarray_axes_after_expand_dims(self.ndim, axis):
+            return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return data
+
     def _eig(self) -> tuple[Array, DataArray]:
         evals, evecs = jax.lax.linalg.eig(self.data, compute_left_eigenvectors=False)
         return evals, replace(self, data=evecs)  # ty: ignore[invalid-argument-type]
@@ -227,3 +247,55 @@ def array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:
 def _bkron(a: Array, b: Array) -> Array:
     # batched kronecker product
     return jnp.kron(a, b)
+
+
+def _normalize_axis(axis: int, ndim: int) -> int:
+    axis = axis + ndim if axis < 0 else axis
+    if axis < 0 or axis >= ndim:
+        raise np.exceptions.AxisError(axis, ndim=ndim)
+    return axis
+
+
+def _normalize_axis_tuple(axis: int | tuple[int, ...], ndim: int) -> tuple[int, ...]:
+    axes = (axis,) if isinstance(axis, int) else axis
+    normalized = tuple(_normalize_axis(a, ndim) for a in axes)
+    if len(set(normalized)) != len(normalized):
+        raise ValueError('repeated axis')
+    return normalized
+
+
+def _moveaxis_order(
+    ndim: int, source: int | tuple[int, ...], destination: int | tuple[int, ...]
+) -> tuple[int, ...]:
+    source = _normalize_axis_tuple(source, ndim)
+    destination = _normalize_axis_tuple(destination, ndim)
+    if len(source) != len(destination):
+        raise ValueError(
+            '`source` and `destination` arguments must have the same size.'
+        )
+
+    order = [i for i in range(ndim) if i not in source]
+    for dest, src in sorted(zip(destination, source, strict=True)):
+        order.insert(dest, src)
+    return tuple(order)
+
+
+def _preserves_qarray_axes_after_swapaxes(ndim: int, axis1: int, axis2: int) -> bool:
+    axis1 = _normalize_axis(axis1, ndim)
+    axis2 = _normalize_axis(axis2, ndim)
+    order = list(range(ndim))
+    order[axis1], order[axis2] = order[axis2], order[axis1]
+    return set(order[-2:]) == {ndim - 2, ndim - 1}
+
+
+def _preserves_qarray_axes_after_moveaxis(
+    ndim: int, source: int | tuple[int, ...], destination: int | tuple[int, ...]
+) -> bool:
+    order = _moveaxis_order(ndim, source, destination)
+    return tuple(order[-2:]) == (ndim - 2, ndim - 1)
+
+
+def _preserves_qarray_axes_after_expand_dims(ndim: int, axis: int) -> bool:
+    new_ndim = ndim + 1
+    axis = _normalize_axis(axis, new_ndim)
+    return axis <= ndim - 2

@@ -126,6 +126,26 @@ class MaterializedQArray(QArray):
             return replace(self, data=result)
         return result
 
+    def swapaxes(self, axis1: int, axis2: int) -> QArray | Array:
+        result = self.data.swapaxes(axis1, axis2)
+        if isinstance(result, DataArray):
+            return replace(self, data=result)
+        return result
+
+    def moveaxis(
+        self, source: int | tuple[int, ...], destination: int | tuple[int, ...]
+    ) -> QArray | Array:
+        result = self.data.moveaxis(source, destination)
+        if isinstance(result, DataArray):
+            return replace(self, data=result)
+        return result
+
+    def expand_dims(self, axis: int) -> QArray | Array:
+        result = self.data.expand_dims(axis)
+        if isinstance(result, DataArray):
+            return replace(self, data=result)
+        return result
+
     def _eig(self) -> tuple[Array, QArray]:
         evals, evecs = self.data._eig()
         return evals, replace(self, data=evecs)
