@@ -10,12 +10,12 @@ import jax.numpy as jnp
 import numpy as np
 from diffrax._custom_types import RealScalarLike
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
+from jaxtyping import ArrayLike, PRNGKeyArray, PyTree
 
-from ...method import _DEFixedStep, Rouchon1
+from ...method import Rouchon1, _DEFixedStep
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import stack
-from ...result import DiffusiveSolveSaved, JumpSolveSaved, Result, Saved, SolveSaved
+from ...result import DiffusiveSolveSaved, JumpSolveSaved, Result, SolveSaved
 from ...utils.general import dag, expect
 from ...utils.operators import eye_like
 from .abstract_integrator import StochasticBaseIntegrator
@@ -47,6 +47,7 @@ def _is_linearly_spaced(
 
 class SDEState(eqx.Module):
     """State for the jump/diffusive SSE/SME fixed step integrators."""
+
     state: QArray
 
 
@@ -101,7 +102,7 @@ class StochasticSolveFixedStepIntegrator(
     @property
     def total_nsteps(self) -> int:
         # total number of steps of length dt
-        return int(round((self.t1 - self.t0) / self.dt))
+        return round((self.t1 - self.t0) / self.dt)  # ty: ignore
 
     @abstractmethod
     def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> PyTree:
@@ -408,10 +409,11 @@ class DiffusiveSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
         saved = super().save(y.state)
         return DiffusiveSolveSaved(saved.ysave, saved.extra, saved.Esave, y.Y)
 
-    def postprocess_saved(self, saved: SolveSaved, ylast: PyTree) -> DiffusiveSolveSaved:
+    def postprocess_saved(
+        self, saved: SolveSaved, ylast: PyTree
+    ) -> DiffusiveSolveSaved:
         saved = cast(
-            DiffusiveSolveSaved, 
-            super().postprocess_saved(saved, ylast.state[None, :])
+            DiffusiveSolveSaved, super().postprocess_saved(saved, ylast.state[None, :])
         )
 
         # The averaged measurement I^{(ta, tb)} is recovered by diffing the measurement
@@ -488,6 +490,7 @@ def cholesky_normalize_ket(S: QArray, psi: QArray) -> jax.Array:
 
 class DSSESolveRouchon1Integrator(RouchonPropertiesMixin, DSSEFixedStepIntegrator):
     """Integrator solving the diffusive SSE with the Rouchon1 method."""
+
     method: Rouchon1
 
     @property
@@ -599,6 +602,7 @@ class DSMESolveRouchon1Integrator(
     RouchonPropertiesMixin, DSMEFixedStepIntegrator, SolveInterface
 ):
     """Integrator solving the diffusive SME with the Rouchon1 method."""
+
     method: Rouchon1
 
     @property

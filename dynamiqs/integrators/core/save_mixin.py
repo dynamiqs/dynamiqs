@@ -7,7 +7,6 @@ import equinox as eqx
 import jax.numpy as jnp
 from jaxtyping import PyTree
 
-from ...qarrays.qarray import QArray
 from ...result import PropagatorSaved, Saved, SolveSaved
 from ...utils.general import expect
 from .interfaces import OptionsInterface
@@ -35,7 +34,9 @@ class PropagatorSaveMixin(AbstractSaveMixin[PropagatorSaved]):
         extra = self.options.save_extra(y) if self.options.save_extra else None
         return PropagatorSaved(ysave, extra)
 
-    def postprocess_saved(self, saved: PropagatorSaved, ylast: PyTree) -> PropagatorSaved:
+    def postprocess_saved(
+        self, saved: PropagatorSaved, ylast: PyTree
+    ) -> PropagatorSaved:
         # if save_propagators is False save only last propagator
         if not self.options.save_propagators:
             saved = eqx.tree_at(

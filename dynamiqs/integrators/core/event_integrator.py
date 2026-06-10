@@ -16,7 +16,7 @@ from ...method import Event
 from ...options import Options
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import stack
-from ...result import JumpSolveSaved, Result, Saved, SolveSaved
+from ...result import JumpSolveSaved, Result, SolveSaved
 from ...utils.general import expect
 from .abstract_integrator import StochasticBaseIntegrator
 from .diffrax_integrator import call_diffeqsolve

@@ -27,7 +27,7 @@ from ...method import (
 )
 from ...options import Options
 from ...progress_meter import AbstractProgressMeter
-from ...result import MESolveResult, Result, Saved, SolveSaved
+from ...result import MESolveResult, Result, SolveSaved
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
@@ -200,7 +200,7 @@ def call_diffeqsolve(
     dtmax: float | None = None,
 ) -> dx.Solution:
     # === define custom diffrax integrator
-    class BasicDiffraxIntegrator(DiffraxIntegrator, SolveSaveMixin):
+    class BasicDiffraxIntegrator(DiffraxIntegrator):
         @property
         def terms(self) -> dx.AbstractTerm:
             return terms
@@ -208,6 +208,12 @@ def call_diffeqsolve(
         @property
         def discontinuity_ts(self) -> Array:
             return discontinuity_ts
+
+        def save(self, y: PyTree) -> PyTree:
+            pass
+
+        def postprocess_saved(self, saved: PyTree, ylast: PyTree) -> PyTree:
+            pass
 
     # === set Diffrax solver
     solvers: dict[type[Method], tuple[dx.AbstractSolver, bool]] = {

@@ -5,7 +5,6 @@ from abc import abstractmethod
 import equinox as eqx
 from diffrax._custom_types import RealScalarLike
 from jax import Array
-from jaxtyping import Scalar
 
 from ..._utils import concatenate_sort
 from ...options import Options
