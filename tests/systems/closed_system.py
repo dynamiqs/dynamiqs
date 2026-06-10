@@ -112,6 +112,21 @@ class Cavity(ClosedSystem):
 
         return self.Params([grad_x_delta, grad_p_delta], [grad_x_alpha0, grad_p_alpha0])
 
+    def hessian_expect(self, t: float) -> PyTree:
+        # second derivatives of (<x>, <p>) = alpha0 * (cos(delta t), -sin(delta t))
+        cdt = jnp.cos(self.delta * t)
+        sdt = jnp.sin(self.delta * t)
+        a0 = self.alpha0
+
+        d2_delta2 = jnp.array([-a0 * t**2 * cdt, a0 * t**2 * sdt])
+        d2_delta_alpha0 = jnp.array([-t * sdt, -t * cdt])
+        d2_alpha02 = jnp.array([0.0, 0.0])
+
+        return self.Params(
+            self.Params(d2_delta2, d2_delta_alpha0),
+            self.Params(d2_delta_alpha0, d2_alpha02),
+        )
+
 
 class TDQubit(ClosedSystem):
     class Params(NamedTuple):

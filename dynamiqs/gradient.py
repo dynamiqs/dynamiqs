@@ -24,10 +24,11 @@ class Direct(Gradient):
         option.
 
     Note:
-        For supported explicit Diffrax ODE methods, this path is also compatible with
-        higher-order automatic differentiation. Use
-        [`dq.gradient.HigherOrder`][dynamiqs.gradient.HigherOrder] to make this
-        intent explicit.
+        For supported explicit Diffrax ODE methods, this option also supports
+        higher-order automatic differentiation (e.g.
+        [`jax.hessian`](https://docs.jax.dev/en/latest/_autosummary/jax.hessian.html)).
+        Prefer [`dq.gradient.HigherOrder`][dynamiqs.gradient.HigherOrder] to make that
+        requirement explicit.
     """
 
     # dummy init to have the signature in the documentation
@@ -126,9 +127,10 @@ class HigherOrder(Gradient):
         For supported explicit Diffrax ODE methods, this is the documented
         Hessian-compatible mode. Like
         [`dq.gradient.Direct`][dynamiqs.gradient.Direct], it uses
-        [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
-        with Hessian-compatible solver internals. Use this mode to make the
-        higher-order differentiation requirement explicit.
+        [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint),
+        which already configures the solver for higher-order differentiation. Use this
+        mode to make the higher-order differentiation requirement explicit and to
+        restrict to the methods on which it is supported.
     """
 
     # dummy init to have the signature in the documentation

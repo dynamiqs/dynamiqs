@@ -143,6 +143,26 @@ class OCavity(OpenSystem):
             [grad_x_kappa, grad_p_kappa],
         )
 
+    def hessian_expect(self, t: float) -> PyTree:
+        # second derivatives of (<x>, <p>) = alpha0 e^{-kappa t/2} (cos, -sin)(delta t)
+        c = jnp.cos(self.delta * t)
+        s = jnp.sin(self.delta * t)
+        e = jnp.exp(-0.5 * self.kappa * t)
+        a0 = self.alpha0
+
+        d2_delta2 = jnp.array([-a0 * e * t**2 * c, a0 * e * t**2 * s])
+        d2_delta_alpha0 = jnp.array([-e * t * s, -e * t * c])
+        d2_delta_kappa = jnp.array([0.5 * a0 * t**2 * e * s, 0.5 * a0 * t**2 * e * c])
+        d2_alpha02 = jnp.array([0.0, 0.0])
+        d2_alpha0_kappa = jnp.array([-0.5 * t * e * c, 0.5 * t * e * s])
+        d2_kappa2 = jnp.array([0.25 * a0 * t**2 * e * c, -0.25 * a0 * t**2 * e * s])
+
+        return self.Params(
+            self.Params(d2_delta2, d2_delta_alpha0, d2_delta_kappa),
+            self.Params(d2_delta_alpha0, d2_alpha02, d2_alpha0_kappa),
+            self.Params(d2_delta_kappa, d2_alpha0_kappa, d2_kappa2),
+        )
+
 
 class OTDQubit(OpenSystem):
     class Params(NamedTuple):

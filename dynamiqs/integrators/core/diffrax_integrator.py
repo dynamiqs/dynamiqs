@@ -49,23 +49,6 @@ class AdaptiveStepInfos(eqx.Module):
         )
 
 
-def hessian_compatible_solver(
-    solver: dx.AbstractSolver, gradient: Gradient | None
-) -> dx.AbstractSolver:
-    if (
-        isinstance(gradient, HigherOrder)
-        and hasattr(solver, 'scan_kind')
-        and solver.scan_kind is None
-    ):
-        # DirectAdjoint currently applies the same bounded scan internally; setting
-        # it here keeps HigherOrder's Hessian contract explicit and satisfies the
-        # issue's requested solver configuration.
-        return eqx.tree_at(
-            lambda s: s.scan_kind, solver, 'bounded', is_leaf=lambda x: x is None
-        )
-    return solver
-
-
 class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
     """Integrator using the Diffrax library."""
 
@@ -114,10 +97,6 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         else:
             raise TypeError(f'Unknown gradient type {obj_type_str(self.gradient)}.')
 
-    @property
-    def solver(self) -> dx.AbstractSolver:
-        return hessian_compatible_solver(self.diffrax_solver, self.gradient)
-
     def diffeqsolve(
         self,
         t0: Scalar,
@@ -148,7 +127,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             # === solve differential equation with diffrax
             return dx.diffeqsolve(
                 self.terms,
-                self.solver,
+                self.diffrax_solver,
                 t0=t0,
                 t1=t1,
                 dt0=self.dt0,
