@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 
 import equinox as eqx
+from diffrax._custom_types import RealScalarLike
 from jax import Array
 from jaxtyping import Scalar
 
@@ -39,7 +40,7 @@ class MEInterface(AbstractTimeInterface):
     H: TimeQArray
     Ls: list[TimeQArray]
 
-    def L(self, t: Scalar) -> list[QArray]:
+    def L(self, t: RealScalarLike) -> list[QArray]:
         return [_L(t) for _L in self.Ls]  # (nLs, n, n)
 
     @property

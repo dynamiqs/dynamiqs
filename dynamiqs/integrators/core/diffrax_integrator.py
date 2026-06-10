@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import warnings
 from abc import abstractmethod
+from collections.abc import Callable
 from functools import partial
+from typing import cast
 
 import diffrax as dx
 import equinox as eqx
@@ -12,8 +14,19 @@ from jaxtyping import PyTree, Scalar
 from ..._checks import check_hermitian
 from ..._utils import obj_type_str
 from ...gradient import BackwardCheckpointed, Direct, Forward, Gradient
-from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
+from ...method import (
+    Dopri5,
+    Dopri8,
+    Euler,
+    Kvaerno3,
+    Kvaerno5,
+    Method,
+    Tsit5,
+    _DEAdaptiveStep,
+    _DEFixedStep,
+)
 from ...options import Options
+from ...progress_meter import AbstractProgressMeter
 from ...result import MESolveResult, Result, Saved
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
@@ -60,24 +73,30 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         if self.fixed_step:
             return dx.ConstantStepSize()
         else:
-            jump_ts = None if len(self.discontinuity_ts) == 0 else self.discontinuity_ts
+            method = cast(_DEAdaptiveStep, self.method)
             return dx.PIDController(
-                rtol=self.method.rtol,
-                atol=self.method.atol,
-                safety=self.method.safety_factor,
-                factormin=self.method.min_factor,
-                factormax=self.method.max_factor,
-                jump_ts=jump_ts,
+                rtol=method.rtol,
+                atol=method.atol,
+                safety=method.safety_factor,
+                factormin=method.min_factor,
+                factormax=method.max_factor,
             )
 
     @property
     def dt0(self) -> float | None:
-        return self.method.dt if self.fixed_step else None
+        if self.fixed_step:
+            method = cast(_DEFixedStep, self.method)
+            return method.dt
+        return None
 
     @property
     def max_steps(self) -> int:
-        # TODO: fix hard-coded max_steps for fixed methods
-        return 100_000 if self.fixed_step else self.method.max_steps
+        if self.fixed_step:
+            # TODO: fix hard-coded max_steps for fixed methods
+            return 100_000
+        else:
+            assert isinstance(self.method, _DEAdaptiveStep)
+            return self.method.max_steps
 
     @property
     @abstractmethod
@@ -137,7 +156,9 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                 adjoint=self.adjoint,
                 event=event,
                 max_steps=self.max_steps,
-                progress_meter=self.options.progress_meter.to_diffrax(),
+                progress_meter=cast(
+                    AbstractProgressMeter, self.options.progress_meter
+                ).to_diffrax(),
             )
 
     def run(self) -> Result:
@@ -151,7 +172,8 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         solution = self.diffeqsolve(self.t0, self.t1, self.y0, saveat)
 
         # === collect and return results
-        saved = self.postprocess_saved(*solution.ys)
+        ys = cast(tuple, solution.ys)
+        saved = self.postprocess_saved(*ys)
         return self.result(saved, infos=self.infos(solution.stats))
 
     def infos(self, stats: dict[str, Array]) -> PyTree:
@@ -170,15 +192,15 @@ def call_diffeqsolve(
     y0: PyTree,
     terms: dx.AbstractTerm,
     method: Method,
-    gradient: Gradient,
+    gradient: Gradient | None,
     options: Options,
     discontinuity_ts: Array,
     event: dx.Event | None = None,
-    save: callable | None = None,
+    save: Callable | None = None,
     dtmax: float | None = None,
 ) -> dx.Solution:
     # === define custom diffrax integrator
-    class BasicDiffraxIntegrator(DiffraxIntegrator):
+    class BasicDiffraxIntegrator(DiffraxIntegrator, SolveSaveMixin):
         @property
         def terms(self) -> dx.AbstractTerm:
             return terms
@@ -187,21 +209,16 @@ def call_diffeqsolve(
         def discontinuity_ts(self) -> Array:
             return discontinuity_ts
 
-        def save(self, y: PyTree) -> Saved:
-            pass
-
-        def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
-            pass
-
     # === set Diffrax solver
-    diffrax_solver, fixed_step = {
+    solvers: dict[type[Method], tuple[dx.AbstractSolver, bool]] = {
         Euler: (dx.Euler(), True),
         Dopri5: (dx.Dopri5(), False),
         Dopri8: (dx.Dopri8(), False),
         Tsit5: (dx.Tsit5(), False),
         Kvaerno3: (dx.Kvaerno3(), False),
         Kvaerno5: (dx.Kvaerno5(), False),
-    }[type(method)]
+    }
+    diffrax_solver, fixed_step = solvers[type(method)]
 
     # === init integrator
     integrator = BasicDiffraxIntegrator(
@@ -209,7 +226,7 @@ def call_diffeqsolve(
         y0=y0,
         method=method,
         gradient=gradient,
-        result_class=None,
+        result_class=Result,
         options=options,
         diffrax_solver=diffrax_solver,
         fixed_step=fixed_step,

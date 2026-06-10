@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import replace
 
 import numpy as np
@@ -210,7 +211,7 @@ def sdissipator(L: QArrayLike) -> QArray:
     return sprepost(L, Ldag) - 0.5 * spre(LdagL) - 0.5 * spost(LdagL)
 
 
-def slindbladian(H: QArrayLike, jump_ops: list[QArrayLike]) -> QArray:
+def slindbladian(H: QArrayLike, jump_ops: Sequence[QArrayLike]) -> QArray:
     r"""Returns the Lindbladian superoperator (in matrix form).
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:
