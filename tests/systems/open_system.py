@@ -261,6 +261,66 @@ class OTDQubit(OpenSystem):
             [grad_x_gamma, grad_y_gamma, grad_z_gamma],
         )
 
+    def hessian_expect(self, t: float) -> PyTree:
+        # second derivatives of (<x>, <y>, <z>) = (0, -eta sin(theta), eta cos(theta))
+        # with theta = 2 eps/omega sin(omega t) and eta = exp(-2 gamma t)
+        st, ct = jnp.sin(self.omega * t), jnp.cos(self.omega * t)
+        theta = 2 * self.eps / self.omega * st
+        eta = jnp.exp(-2 * self.gamma * t)
+        sth, cth = jnp.sin(theta), jnp.cos(theta)
+
+        # first derivatives (theta depends on eps/omega, eta depends on gamma)
+        th_eps = 2 * st / self.omega
+        th_omega = 2 * self.eps * (t * ct / self.omega - st / self.omega**2)
+        eta_gamma = -2 * t * eta
+        # second derivatives
+        th_eps_omega = 2 * (t * ct / self.omega - st / self.omega**2)
+        th_omega_omega = (
+            2
+            * self.eps
+            * (
+                -(t**2) * st / self.omega
+                - 2 * t * ct / self.omega**2
+                + 2 * st / self.omega**3
+            )
+        )
+        eta_gamma_gamma = 4 * t**2 * eta
+
+        def leaf(theta_p, theta_q, theta_pq, eta_p, eta_q, eta_pq):
+            # second derivative of (0, -eta sin(theta), eta cos(theta)) w.r.t. params
+            d2y = -(
+                eta_pq * sth
+                + cth * (eta_p * theta_q + eta_q * theta_p)
+                - eta * sth * theta_p * theta_q
+                + eta * cth * theta_pq
+            )
+            d2z = (
+                eta_pq * cth
+                - sth * (eta_p * theta_q + eta_q * theta_p)
+                - eta * cth * theta_p * theta_q
+                - eta * sth * theta_pq
+            )
+            return jnp.array([0.0, d2y, d2z])
+
+        # parameter order: (eps, omega, gamma)
+        return self.Params(
+            self.Params(
+                leaf(th_eps, th_eps, 0.0, 0.0, 0.0, 0.0),
+                leaf(th_eps, th_omega, th_eps_omega, 0.0, 0.0, 0.0),
+                leaf(th_eps, 0.0, 0.0, 0.0, eta_gamma, 0.0),
+            ),
+            self.Params(
+                leaf(th_omega, th_eps, th_eps_omega, 0.0, 0.0, 0.0),
+                leaf(th_omega, th_omega, th_omega_omega, 0.0, 0.0, 0.0),
+                leaf(th_omega, 0.0, 0.0, 0.0, eta_gamma, 0.0),
+            ),
+            self.Params(
+                leaf(0.0, th_eps, 0.0, eta_gamma, 0.0, 0.0),
+                leaf(0.0, th_omega, 0.0, eta_gamma, 0.0, 0.0),
+                leaf(0.0, 0.0, 0.0, eta_gamma, eta_gamma, eta_gamma_gamma),
+            ),
+        )
+
 
 # # we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null
 # # gradients

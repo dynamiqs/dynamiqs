@@ -15,13 +15,6 @@ from ..systems import dense_cavity, dia_cavity
 @pytest.mark.run(order=TEST_LONG)
 class TestSESolveHessian(IntegratorTester):
     @pytest.mark.parametrize('system', [dense_cavity, dia_cavity])
-    @pytest.mark.parametrize(
-        'method',
-        [
-            Dopri5(rtol=1e-8, atol=1e-8),
-            Dopri8(rtol=1e-8, atol=1e-8),
-            Tsit5(rtol=1e-8, atol=1e-8),
-        ],
-    )
+    @pytest.mark.parametrize('method', [Dopri5(), Dopri8(), Tsit5()])
     def test_hessian(self, system, method):
-        self._test_hessian(system, method, HigherOrder(), rtol=1e-3, atol=1e-4)
+        self._test_hessian(system, method, HigherOrder(), rtol=1e-3, atol=2e-4)

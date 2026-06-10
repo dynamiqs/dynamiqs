@@ -128,6 +128,10 @@ class _DEAdaptiveStep(_DEMethod):
 
 
 _DIFFRAX_ODE_GRADIENTS = (Direct, BackwardCheckpointed, Forward)
+# TODO: `HigherOrder` is currently restricted to the explicit adaptive ODE methods whose
+# higher-order AD path is tested. Validate implicit solvers (e.g. `Kvaerno3`/`Kvaerno5`)
+# and `LowRank` before broadening this; if all `Direct`-compatible methods turn out
+# compatible with higher-order differentiation, it could fold back into `Direct`.
 _DIFFRAX_EXPLICIT_ODE_GRADIENTS = (*_DIFFRAX_ODE_GRADIENTS, HigherOrder)
 _ROUCHON_GRADIENTS = (Direct, BackwardCheckpointed, Forward)
 
