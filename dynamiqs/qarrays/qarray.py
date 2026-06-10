@@ -195,6 +195,11 @@ class QArray(eqx.Module):
     | `x.proj()`                                               | Alias of [`dq.proj(x)`][dynamiqs.proj].                        |
     | [`x.reshape(*shape)`][dynamiqs.qarrays.qarray.QArray.reshape] | Returns a reshaped copy of a qarray.                           |
     | [`x.broadcast_to(*shape)`][dynamiqs.qarrays.qarray.QArray.broadcast_to] | Broadcasts a qarray to a new shape.                            |
+    | `x.swapaxes(axis1, axis2)`                               | Alias of [`dq.swapaxes(x, axis1, axis2)`][dynamiqs.swapaxes].  |
+    | `x.moveaxis(source, destination)`                        | Alias of [`dq.moveaxis(x, source, destination)`][dynamiqs.moveaxis]. |
+    | `x.expand_dims(axis)`                                    | Alias of [`dq.expand_dims(x, axis)`][dynamiqs.expand_dims].    |
+    | `x.where(condition, y)`                                  | Alias of [`dq.where(condition, x, y)`][dynamiqs.where].        |
+    | `x.concatenate(qarrays, axis)`                           | Alias of [`dq.concatenate((x, *qarrays), axis)`][dynamiqs.concatenate]. |
     | [`x.addscalar(y)`][dynamiqs.qarrays.qarray.QArray.addscalar] | Adds a scalar.                                                 |
     | [`x.elmul(y)`][dynamiqs.qarrays.qarray.QArray.elmul]     | Computes the element-wise multiplication.                      |
     | [`x.elpow(power)`][dynamiqs.qarrays.qarray.QArray.elpow] | Computes the element-wise power.                               |
@@ -295,6 +300,33 @@ class QArray(eqx.Module):
         Returns:
             New qarray with the given shape.
         """
+
+    def swapaxes(self, axis1: int, axis2: int) -> QArray:
+        from .utils import swapaxes  # noqa: PLC0415
+
+        return swapaxes(self, axis1, axis2)
+
+    def moveaxis(
+        self, source: int | Sequence[int], destination: int | Sequence[int]
+    ) -> QArray:
+        from .utils import moveaxis  # noqa: PLC0415
+
+        return moveaxis(self, source, destination)
+
+    def expand_dims(self, axis: int | Sequence[int]) -> QArray:
+        from .utils import expand_dims  # noqa: PLC0415
+
+        return expand_dims(self, axis)
+
+    def where(self, condition: ArrayLike, y: QArrayLike) -> QArray:
+        from .utils import where  # noqa: PLC0415
+
+        return where(condition, self, y)
+
+    def concatenate(self, qarrays: Sequence[QArrayLike], axis: int = 0) -> QArray:
+        from .utils import concatenate  # noqa: PLC0415
+
+        return concatenate((self, *qarrays), axis=axis)
 
     @abstractmethod
     def powm(self, n: int) -> QArray:
