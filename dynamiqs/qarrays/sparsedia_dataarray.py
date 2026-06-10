@@ -109,6 +109,20 @@ class SparseDIADataArray(DataArray):
         offsets, diags = broadcast_sparsedia(self.offsets, self.diags, shape)
         return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
 
+    def swapaxes(self, axis1: int, axis2: int) -> DataArray:
+        diags = jnp.swapaxes(self.diags, axis1, axis2)
+        return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+
+    def moveaxis(
+        self, source: int | tuple[int, ...], destination: int | tuple[int, ...]
+    ) -> DataArray:
+        diags = jnp.moveaxis(self.diags, source, destination)
+        return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+
+    def expand_dims(self, axis: int | tuple[int, ...]) -> DataArray:
+        diags = jnp.expand_dims(self.diags, axis=axis)
+        return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+
     def powm(self, n: int) -> DataArray:
         offsets, diags = powm_sparsedia(self.offsets, self.diags, n)
         return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]

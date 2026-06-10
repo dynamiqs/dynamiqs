@@ -101,6 +101,20 @@ class DataArray(eqx.Module):
         """Broadcasts to a new shape."""
 
     @abstractmethod
+    def swapaxes(self, axis1: int, axis2: int) -> DataArray:
+        """Interchanges two axes."""
+
+    @abstractmethod
+    def moveaxis(
+        self, source: int | tuple[int, ...], destination: int | tuple[int, ...]
+    ) -> DataArray:
+        """Moves axes to new positions."""
+
+    @abstractmethod
+    def expand_dims(self, axis: int | tuple[int, ...]) -> DataArray:
+        """Expands the shape by inserting new axes."""
+
+    @abstractmethod
     def powm(self, n: int) -> DataArray:
         pass
 

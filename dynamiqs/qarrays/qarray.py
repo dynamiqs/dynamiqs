@@ -195,11 +195,10 @@ class QArray(eqx.Module):
     | `x.proj()`                                               | Alias of [`dq.proj(x)`][dynamiqs.proj].                        |
     | [`x.reshape(*shape)`][dynamiqs.qarrays.qarray.QArray.reshape] | Returns a reshaped copy of a qarray.                           |
     | [`x.broadcast_to(*shape)`][dynamiqs.qarrays.qarray.QArray.broadcast_to] | Broadcasts a qarray to a new shape.                            |
-    | `x.swapaxes(axis1, axis2)`                               | Alias of [`dq.swapaxes(x, axis1, axis2)`][dynamiqs.swapaxes].  |
-    | `x.moveaxis(source, destination)`                        | Alias of [`dq.moveaxis(x, source, destination)`][dynamiqs.moveaxis]. |
-    | `x.expand_dims(axis)`                                    | Alias of [`dq.expand_dims(x, axis)`][dynamiqs.expand_dims].    |
+    | [`x.swapaxes(axis1, axis2)`][dynamiqs.qarrays.qarray.QArray.swapaxes] | Interchanges two axes of a qarray.                            |
+    | [`x.moveaxis(source, destination)`][dynamiqs.qarrays.qarray.QArray.moveaxis] | Moves axes of a qarray to new positions.                      |
+    | [`x.expand_dims(axis)`][dynamiqs.qarrays.qarray.QArray.expand_dims] | Expands the shape of a qarray by inserting new axes.           |
     | `x.where(condition, y)`                                  | Alias of [`dq.where(condition, x, y)`][dynamiqs.where].        |
-    | `x.concatenate(qarrays, axis)`                           | Alias of [`dq.concatenate((x, *qarrays), axis)`][dynamiqs.concatenate]. |
     | [`x.addscalar(y)`][dynamiqs.qarrays.qarray.QArray.addscalar] | Adds a scalar.                                                 |
     | [`x.elmul(y)`][dynamiqs.qarrays.qarray.QArray.elmul]     | Computes the element-wise multiplication.                      |
     | [`x.elpow(power)`][dynamiqs.qarrays.qarray.QArray.elpow] | Computes the element-wise power.                               |
@@ -301,32 +300,47 @@ class QArray(eqx.Module):
             New qarray with the given shape.
         """
 
+    @abstractmethod
     def swapaxes(self, axis1: int, axis2: int) -> QArray:
-        from .utils import swapaxes  # noqa: PLC0415
+        """Interchange two axes of a qarray.
 
-        return swapaxes(self, axis1, axis2)
+        Args:
+            axis1: First axis.
+            axis2: Second axis.
 
+        Returns:
+            Qarray with axes `axis1` and `axis2` interchanged.
+        """
+
+    @abstractmethod
     def moveaxis(
         self, source: int | Sequence[int], destination: int | Sequence[int]
     ) -> QArray:
-        from .utils import moveaxis  # noqa: PLC0415
+        """Move axes of a qarray to new positions.
 
-        return moveaxis(self, source, destination)
+        Args:
+            source: Original positions of the axes to move.
+            destination: Destination positions for each moved axis.
 
+        Returns:
+            Qarray with moved axes.
+        """
+
+    @abstractmethod
     def expand_dims(self, axis: int | Sequence[int]) -> QArray:
-        from .utils import expand_dims  # noqa: PLC0415
+        """Expand the shape of a qarray by inserting new axes.
 
-        return expand_dims(self, axis)
+        Args:
+            axis: Axis or axes where new dimensions are inserted.
+
+        Returns:
+            Qarray with additional dimensions.
+        """
 
     def where(self, condition: ArrayLike, y: QArrayLike) -> QArray:
         from .utils import where  # noqa: PLC0415
 
         return where(condition, self, y)
-
-    def concatenate(self, qarrays: Sequence[QArrayLike], axis: int = 0) -> QArray:
-        from .utils import concatenate  # noqa: PLC0415
-
-        return concatenate((self, *qarrays), axis=axis)
 
     @abstractmethod
     def powm(self, n: int) -> QArray:

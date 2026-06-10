@@ -90,9 +90,6 @@ def test_concatenate_dense_matches_jax():
     assert result.layout == dq.dense
     assert jnp.array_equal(result.to_jax(), jnp.concatenate([x_data, y_data], axis=0))
 
-    method_result = x.concatenate([y], axis=0)
-    assert jnp.array_equal(method_result.to_jax(), result.to_jax())
-
 
 @pytest.mark.run(order=TEST_INSTANT)
 @pytest.mark.parametrize('operation', ['swapaxes', 'moveaxis', 'expand_dims'])
@@ -177,6 +174,12 @@ def test_where_rejects_incompatible_quantum_shapes():
 
     with pytest.raises(ValueError, match='final two dimensions'):
         dq.where(True, operator, ket)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_where_requires_qarray_operand():
+    with pytest.raises(TypeError, match=r'jax\.numpy\.where'):
+        dq.where(True, 1.0, 2.0)
 
 
 @pytest.mark.run(order=TEST_INSTANT)

@@ -11,7 +11,15 @@ from qutip import Qobj
 from .dense_dataarray import DenseDataArray, array_to_qobj_list
 from .layout import Layout, dense
 from .materialized_qarray import MaterializedQArray
-from .qarray import QArray, QArrayLike, get_dims, isqarraylike, to_jax, to_numpy
+from .qarray import (
+    QArray,
+    QArrayLike,
+    check_compatible_dims,
+    get_dims,
+    isqarraylike,
+    to_jax,
+    to_numpy,
+)
 from .sparsedia_dataarray import SparseDIADataArray
 from .sparsedia_primitives import (
     array_to_sparsedia,
@@ -220,28 +228,7 @@ def swapaxes(x: QArrayLike, axis1: int, axis2: int) -> QArray:
     Returns:
         Qarray with axes `axis1` and `axis2` interchanged.
     """
-    x = asqarray(x)
-    axis1 = _normalize_axis(axis1, x.ndim)
-    axis2 = _normalize_axis(axis2, x.ndim)
-
-    if axis1 == axis2:
-        return x
-    if not (
-        _axes_are_batch_axes((axis1, axis2), x.ndim)
-        or {axis1, axis2} == {x.ndim - 2, x.ndim - 1}
-    ):
-        _raise_quantum_axis_error('swapaxes')
-
-    if isinstance(x.data, DenseDataArray):
-        data = DenseDataArray(jnp.swapaxes(x.data.data, axis1, axis2))
-    elif _axes_are_batch_axes((axis1, axis2), x.ndim):
-        data = SparseDIADataArray(
-            x.data.offsets, jnp.swapaxes(x.data.diags, axis1, axis2)
-        )
-    else:
-        data = x.data.mT
-
-    return MaterializedQArray(x.dims, x.vectorized, data)
+    return asqarray(x).swapaxes(axis1, axis2)
 
 
 def moveaxis(
@@ -257,25 +244,7 @@ def moveaxis(
     Returns:
         Qarray with moved axes.
     """
-    x = asqarray(x)
-    source_axes = _normalize_axes(source, x.ndim)
-    destination_axes = _normalize_axes(destination, x.ndim)
-    _check_axis_tuples(source_axes, destination_axes)
-    axis_order = _moveaxis_order(source_axes, destination_axes, x.ndim)
-    if not _preserves_quantum_axes(axis_order, x.ndim):
-        _raise_quantum_axis_error('moveaxis')
-
-    if isinstance(x.data, DenseDataArray):
-        data = DenseDataArray(jnp.moveaxis(x.data.data, source_axes, destination_axes))
-    else:
-        sparse_data = (
-            x.data.mT if axis_order[-2:] == (x.ndim - 1, x.ndim - 2) else x.data
-        )
-        batch_order = axis_order[:-2]
-        diags = jnp.transpose(sparse_data.diags, (*batch_order, x.ndim - 2, x.ndim - 1))
-        data = SparseDIADataArray(sparse_data.offsets, diags)
-
-    return MaterializedQArray(x.dims, x.vectorized, data)
+    return asqarray(x).moveaxis(source, destination)
 
 
 def expand_dims(x: QArrayLike, axis: int | Sequence[int]) -> QArray:
@@ -288,20 +257,7 @@ def expand_dims(x: QArrayLike, axis: int | Sequence[int]) -> QArray:
     Returns:
         Qarray with additional dimensions.
     """
-    x = asqarray(x)
-    axes = _normalize_insert_axes(axis, x.ndim)
-    out_ndim = x.ndim + len(axes)
-    if not all(a < out_ndim - 2 for a in axes):
-        _raise_quantum_axis_error('expand_dims')
-
-    if isinstance(x.data, DenseDataArray):
-        data = DenseDataArray(jnp.expand_dims(x.data.data, axis=axes))
-    else:
-        data = SparseDIADataArray(
-            x.data.offsets, jnp.expand_dims(x.data.diags, axis=axes)
-        )
-
-    return MaterializedQArray(x.dims, x.vectorized, data)
+    return asqarray(x).expand_dims(axis)
 
 
 def where(condition: ArrayLike, x: QArrayLike, y: QArrayLike) -> QArray:
@@ -319,20 +275,21 @@ def where(condition: ArrayLike, x: QArrayLike, y: QArrayLike) -> QArray:
     y_is_qarray = isinstance(y, QArray)
 
     if not x_is_qarray and not y_is_qarray:
-        x = asqarray(x)
-        y = asqarray(y)
-        x_is_qarray = y_is_qarray = True
+        raise TypeError(
+            'At least one of `x` or `y` must be a QArray. For non-qarray operands, '
+            'use `jax.numpy.where` directly.'
+        )
 
     if x_is_qarray and y_is_qarray:
         _check_compatible_qarray_metadata(x, y)
         dims = x.dims
         vectorized = x.vectorized
     elif x_is_qarray:
-        _check_compatible_operand_dims(x, y)
+        _check_qarraylike_dims(x, y)
         dims = x.dims
         vectorized = x.vectorized
     else:
-        _check_compatible_operand_dims(y, x)
+        _check_qarraylike_dims(y, x)
         dims = y.dims
         vectorized = y.vectorized
 
@@ -552,12 +509,6 @@ def _moveaxis_order(
     return tuple(order)
 
 
-def _preserves_quantum_axes(axis_order: tuple[int, ...], ndim: int) -> bool:
-    return all(axis < ndim - 2 for axis in axis_order[:-2]) and set(
-        axis_order[-2:]
-    ) == {ndim - 2, ndim - 1}
-
-
 def _contains_sparse_qarray(*xs: QArrayLike) -> bool:
     return any(
         isinstance(x, QArray) and isinstance(x.data, SparseDIADataArray) for x in xs
@@ -573,11 +524,7 @@ def _raise_quantum_axis_error(operation: str) -> None:
 
 
 def _check_compatible_qarray_metadata(x: QArray, y: QArray) -> None:
-    if x.dims != y.dims:
-        raise ValueError(
-            f'Qarrays have incompatible Hilbert space dimensions. '
-            f'Got {x.dims} and {y.dims}.'
-        )
+    check_compatible_dims(x.dims, y.dims)
     if x.shape[-2:] != y.shape[-2:]:
         raise ValueError(
             'Qarrays have incompatible final two dimensions. '
@@ -590,23 +537,10 @@ def _check_compatible_qarray_metadata(x: QArray, y: QArray) -> None:
         )
 
 
-def _check_compatible_operand_dims(reference: QArray, other: QArrayLike) -> None:
+def _check_qarraylike_dims(reference: QArray, other: QArrayLike) -> None:
     other_dims = get_dims(other)
-    if other_dims is not None and reference.dims != other_dims:
-        raise ValueError(
-            f'Qarrays have incompatible Hilbert space dimensions. '
-            f'Got {reference.dims} and {other_dims}.'
-        )
-    other_shape = to_jax(other).shape
-    if (
-        len(other_shape) >= 2
-        and other_shape[-2:] != (1, 1)
-        and other_shape[-2:] != reference.shape[-2:]
-    ):
-        raise ValueError(
-            'Qarrays have incompatible final two dimensions. '
-            f'Got {reference.shape[-2:]} and {other_shape[-2:]}.'
-        )
+    if other_dims is not None:
+        check_compatible_dims(reference.dims, other_dims)
 
 
 def _warn_sparse_to_dense(operation: str) -> None:
