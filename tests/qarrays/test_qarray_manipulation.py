@@ -45,6 +45,19 @@ def test_moveaxis_dense_matches_jax(batched_data, batched_qarray):
 
 
 @pytest.mark.run(order=TEST_INSTANT)
+def test_moveaxis_dense_multi_axis_matches_jax():
+    data = jnp.arange(2 * 3 * 5 * 4 * 4, dtype=jnp.float32).reshape(2, 3, 5, 4, 4)
+    qarray = dq.asqarray(data, dims=(2, 2))
+
+    result = qarray.moveaxis((0, 1), (2, 0))
+
+    assert result.shape == (3, 5, 2, 4, 4)
+    assert result.dims == (2, 2)
+    assert result.layout == dq.dense
+    assert jnp.array_equal(result.to_jax(), jnp.moveaxis(data, (0, 1), (2, 0)))
+
+
+@pytest.mark.run(order=TEST_INSTANT)
 def test_expand_dims_dense_matches_jax(batched_data, batched_qarray):
     result = dq.expand_dims(batched_qarray, axis=(0, 2))
 
@@ -161,7 +174,7 @@ def test_where_sparse_converts_to_dense_with_warning():
     ],
 )
 def test_quantum_axis_manipulation_raises(batched_qarray, operation, args):
-    match = 'final two dimensions represent the quantum object'
+    match = 'final two dimensions'
 
     with pytest.raises(ValueError, match=match):
         _apply_quantum_axis_operation(batched_qarray, operation, args)

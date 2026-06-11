@@ -56,17 +56,17 @@ class DenseDataArray(DataArray):
         data = jnp.broadcast_to(self.data, shape)
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def swapaxes(self, axis1: int, axis2: int) -> DataArray:
+    def _swapaxes_unchecked(self, axis1: int, axis2: int) -> DataArray:
         data = jnp.swapaxes(self.data, axis1, axis2)
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def moveaxis(
-        self, source: int | tuple[int, ...], destination: int | tuple[int, ...]
+    def _moveaxis_unchecked(
+        self, source: tuple[int, ...], destination: tuple[int, ...]
     ) -> DataArray:
         data = jnp.moveaxis(self.data, source, destination)
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 
-    def expand_dims(self, axis: int | tuple[int, ...]) -> DataArray:
+    def _expand_dims_unchecked(self, axis: tuple[int, ...]) -> DataArray:
         data = jnp.expand_dims(self.data, axis=axis)
         return replace(self, data=data)  # ty: ignore[invalid-argument-type]
 

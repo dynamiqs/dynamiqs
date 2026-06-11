@@ -285,11 +285,15 @@ def where(condition: ArrayLike, x: QArrayLike, y: QArrayLike) -> QArray:
         dims = x.dims
         vectorized = x.vectorized
     elif x_is_qarray:
-        _check_qarraylike_dims(x, y)
+        y_dims = get_dims(y)
+        if y_dims is not None:
+            check_compatible_dims(x.dims, y_dims)
         dims = x.dims
         vectorized = x.vectorized
     else:
-        _check_qarraylike_dims(y, x)
+        x_dims = get_dims(x)
+        if x_dims is not None:
+            check_compatible_dims(y.dims, x_dims)
         dims = y.dims
         vectorized = y.vectorized
 
@@ -316,9 +320,15 @@ def concatenate(qarrays: Sequence[QArrayLike], axis: int = 0) -> QArray:
     qarrays = tuple(asqarray(q) for q in qarrays)
     dims = qarrays[0].dims
     vectorized = qarrays[0].vectorized
-    axis = _normalize_axis(axis, qarrays[0].ndim)
-    if not _axes_are_batch_axes((axis,), qarrays[0].ndim):
-        _raise_quantum_axis_error('concatenate')
+    ndim = qarrays[0].ndim
+    if not -ndim <= axis < ndim:
+        raise ValueError(f'axis {axis} is out of bounds for array of dimension {ndim}')
+    axis = axis % ndim
+    if axis >= ndim - 2:
+        raise ValueError(
+            '`concatenate` can only manipulate batching dimensions of a qarray; the '
+            'final two dimensions are matrix dimensions.'
+        )
 
     if not all(q.dims == dims for q in qarrays):
         raise ValueError(
@@ -465,61 +475,9 @@ def _assert_dims_match_shape(dims: tuple[int, ...], shape: tuple[int, ...]):
         )
 
 
-def _normalize_axis(axis: int, ndim: int) -> int:
-    if not -ndim <= axis < ndim:
-        raise ValueError(f'axis {axis} is out of bounds for array of dimension {ndim}')
-    return axis % ndim
-
-
-def _normalize_axes(axis: int | Sequence[int], ndim: int) -> tuple[int, ...]:
-    axes = (axis,) if isinstance(axis, int) else tuple(axis)
-    return tuple(_normalize_axis(a, ndim) for a in axes)
-
-
-def _normalize_insert_axes(axis: int | Sequence[int], ndim: int) -> tuple[int, ...]:
-    axes = (axis,) if isinstance(axis, int) else tuple(axis)
-    out_ndim = ndim + len(axes)
-    normalized_axes = tuple(_normalize_axis(a, out_ndim) for a in axes)
-    if len(set(normalized_axes)) != len(normalized_axes):
-        raise ValueError('repeated axis')
-    return normalized_axes
-
-
-def _check_axis_tuples(source: tuple[int, ...], destination: tuple[int, ...]) -> None:
-    if len(source) != len(destination):
-        raise ValueError(
-            '`source` and `destination` arguments must have the same number of axes.'
-        )
-    if len(set(source)) != len(source):
-        raise ValueError('repeated axis in `source` argument')
-    if len(set(destination)) != len(destination):
-        raise ValueError('repeated axis in `destination` argument')
-
-
-def _axes_are_batch_axes(axes: tuple[int, ...], ndim: int) -> bool:
-    return all(a < ndim - 2 for a in axes)
-
-
-def _moveaxis_order(
-    source: tuple[int, ...], destination: tuple[int, ...], ndim: int
-) -> tuple[int, ...]:
-    order = [axis for axis in range(ndim) if axis not in source]
-    for destination_axis, source_axis in sorted(zip(destination, source, strict=True)):
-        order.insert(destination_axis, source_axis)
-    return tuple(order)
-
-
 def _contains_sparse_qarray(*xs: QArrayLike) -> bool:
     return any(
         isinstance(x, QArray) and isinstance(x.data, SparseDIADataArray) for x in xs
-    )
-
-
-def _raise_quantum_axis_error(operation: str) -> None:
-    raise ValueError(
-        f'`{operation}` can only manipulate batching dimensions of a qarray; the '
-        'final two dimensions represent the quantum object. Use `swapaxes(-1, -2)` '
-        'or `.mT` to transpose those final dimensions.'
     )
 
 
@@ -535,12 +493,6 @@ def _check_compatible_qarray_metadata(x: QArray, y: QArray) -> None:
             'Qarrays have incompatible `vectorized` attributes. '
             f'Got {x.vectorized} and {y.vectorized}.'
         )
-
-
-def _check_qarraylike_dims(reference: QArray, other: QArrayLike) -> None:
-    other_dims = get_dims(other)
-    if other_dims is not None:
-        check_compatible_dims(reference.dims, other_dims)
 
 
 def _warn_sparse_to_dense(operation: str) -> None:

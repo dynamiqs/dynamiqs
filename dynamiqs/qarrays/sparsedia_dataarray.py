@@ -109,17 +109,17 @@ class SparseDIADataArray(DataArray):
         offsets, diags = broadcast_sparsedia(self.offsets, self.diags, shape)
         return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
 
-    def swapaxes(self, axis1: int, axis2: int) -> DataArray:
+    def _swapaxes_unchecked(self, axis1: int, axis2: int) -> DataArray:
         diags = jnp.swapaxes(self.diags, axis1, axis2)
         return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
 
-    def moveaxis(
-        self, source: int | tuple[int, ...], destination: int | tuple[int, ...]
+    def _moveaxis_unchecked(
+        self, source: tuple[int, ...], destination: tuple[int, ...]
     ) -> DataArray:
         diags = jnp.moveaxis(self.diags, source, destination)
         return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
 
-    def expand_dims(self, axis: int | tuple[int, ...]) -> DataArray:
+    def _expand_dims_unchecked(self, axis: tuple[int, ...]) -> DataArray:
         diags = jnp.expand_dims(self.diags, axis=axis)
         return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
 

@@ -105,60 +105,17 @@ class MaterializedQArray(QArray):
 
     def swapaxes(self, axis1: int, axis2: int) -> QArray:
         """Interchange two axes of a qarray."""
-        from .utils import (  # noqa: PLC0415
-            _axes_are_batch_axes,
-            _normalize_axis,
-            _raise_quantum_axis_error,
-        )
-
-        axis1 = _normalize_axis(axis1, self.ndim)
-        axis2 = _normalize_axis(axis2, self.ndim)
-        if axis1 == axis2:
-            return self
-        if {axis1, axis2} == {self.ndim - 2, self.ndim - 1}:
-            return self.mT
-        if not _axes_are_batch_axes((axis1, axis2), self.ndim):
-            _raise_quantum_axis_error('swapaxes')
         return replace(self, data=self.data.swapaxes(axis1, axis2))
 
     def moveaxis(
         self, source: int | Sequence[int], destination: int | Sequence[int]
     ) -> QArray:
         """Move axes of a qarray to new positions."""
-        from .utils import (  # noqa: PLC0415
-            _check_axis_tuples,
-            _moveaxis_order,
-            _normalize_axes,
-            _raise_quantum_axis_error,
-        )
-
-        source_axes = _normalize_axes(source, self.ndim)
-        destination_axes = _normalize_axes(destination, self.ndim)
-        _check_axis_tuples(source_axes, destination_axes)
-
-        axis_order = _moveaxis_order(source_axes, destination_axes, self.ndim)
-        identity_order = tuple(range(self.ndim))
-        final_swap_order = (*range(self.ndim - 2), self.ndim - 1, self.ndim - 2)
-        if axis_order == identity_order:
-            return self
-        if axis_order == final_swap_order:
-            return self.mT
-        if not all(axis < self.ndim - 2 for axis in (*source_axes, *destination_axes)):
-            _raise_quantum_axis_error('moveaxis')
-        return replace(self, data=self.data.moveaxis(source_axes, destination_axes))
+        return replace(self, data=self.data.moveaxis(source, destination))
 
     def expand_dims(self, axis: int | Sequence[int]) -> QArray:
         """Expand the shape of a qarray by inserting new axes."""
-        from .utils import (  # noqa: PLC0415
-            _normalize_insert_axes,
-            _raise_quantum_axis_error,
-        )
-
-        axes = _normalize_insert_axes(axis, self.ndim)
-        out_ndim = self.ndim + len(axes)
-        if not all(axis < out_ndim - 2 for axis in axes):
-            _raise_quantum_axis_error('expand_dims')
-        return replace(self, data=self.data.expand_dims(axes))
+        return replace(self, data=self.data.expand_dims(axis))
 
     def powm(self, n: int) -> QArray:
         return replace(self, data=self.data.powm(n))
