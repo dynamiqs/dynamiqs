@@ -365,8 +365,8 @@ def _dssesolve_many_trajectories(
     keys = fold_keys_with_batch_indices(keys, batch_indices)
 
     # vectorize input over keys
-    in_axes = (None, None, None, None, 0, None, None, None, None)
-    out_axes = DSSESolveResult(None, None, None, None, 0, 0, 0)
+    in_axes = (None, None, None, None, 0, None, None, None, None)  # ty: ignore[invalid-argument-type]
+    out_axes = DSSESolveResult(None, None, None, None, 0, 0, 0)  # ty: ignore[invalid-argument-type]
     f = jax.vmap(_dssesolve_single_trajectory, in_axes, out_axes)
     return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 

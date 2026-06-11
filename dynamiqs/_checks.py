@@ -7,6 +7,7 @@ from jax import Array
 
 from .qarrays.layout import dense
 from .qarrays.qarray import QArray
+from .time_qarray import TimeQArray
 
 _is_perfect_square = lambda n: int(n**0.5) ** 2 == n
 
@@ -35,7 +36,7 @@ _cases = {
 }
 
 
-def _has_shape(x: Array | np.ndarray | QArray, shape: str) -> bool:
+def _has_shape(x: Array | np.ndarray | QArray | TimeQArray, shape: str) -> bool:
     if shape in _cases:
         return _cases[shape](x)
     else:
@@ -43,7 +44,7 @@ def _has_shape(x: Array | np.ndarray | QArray, shape: str) -> bool:
 
 
 def check_shape(
-    x: Array | np.ndarray | QArray,
+    x: Array | np.ndarray | QArray | TimeQArray,
     argname: str,
     *shapes: str,
     subs: dict[str, str] | None = None,

@@ -86,6 +86,11 @@ class Result(eqx.Module):
     infos: PyTree | None
 
     @property
+    def _ysave(self) -> QArray:
+        ysave = self._saved.ysave
+        return cast(QArray, ysave)
+
+    @property
     def extra(self) -> PyTree | None:
         return self._saved.extra
 
@@ -96,7 +101,7 @@ class Result(eqx.Module):
         raise NotImplementedError
 
     def block_until_ready(self) -> Result:
-        _ = self._saved.ysave.block_until_ready()
+        _ = self._ysave.block_until_ready()
         return self
 
     def _str_parts(self) -> dict[str, str | None]:
@@ -130,7 +135,7 @@ class SolveResult(Result):
 
     @property
     def states(self) -> QArray:
-        return self._saved.ysave
+        return self._ysave
 
     @property
     def final_state(self) -> QArray:
@@ -153,7 +158,7 @@ class PropagatorResult(Result):
 
     @property
     def propagators(self) -> QArray:
-        return self._saved.ysave
+        return self._ysave
 
     @property
     def final_propagator(self) -> QArray:
@@ -170,7 +175,7 @@ class FloquetResult(Result):
 
     @property
     def modes(self) -> QArray:
-        return self._saved.ysave
+        return self._ysave
 
     @property
     def quasienergies(self) -> Array:
@@ -199,7 +204,7 @@ class MESolveResult(SolveResult):
 class MESolveLowRankResult(MESolveResult):
     @property
     def lowrank_states(self) -> QArray:
-        return self._saved.ysave
+        return self._ysave
 
     @property
     def states(self) -> QArray:
