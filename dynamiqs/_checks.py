@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import equinox as eqx
 import jax.numpy as jnp
 import numpy as np
@@ -7,7 +9,9 @@ from jax import Array
 
 from .qarrays.layout import dense
 from .qarrays.qarray import QArray
-from .time_qarray import TimeQArray
+
+if TYPE_CHECKING:
+    from .time_qarray import TimeQArray
 
 _is_perfect_square = lambda n: int(n**0.5) ** 2 == n
 

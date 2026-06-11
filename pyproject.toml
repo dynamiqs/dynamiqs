@@ -121,11 +121,6 @@ convention = "google"
 skip = ".git,*.ipynb"
 ignore-words-list = "ket, braket, SME"
 
-[tool.ty.src]
-exclude = [
-    # "dynamiqs/integrators",
-]
-
 [tool.ty.rules]
 division-by-zero = "error"
 possibly-unresolved-reference = "error"

@@ -3,6 +3,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Callable
 from functools import partial
+from typing import cast
 
 import jax
 import jax.numpy as jnp
@@ -280,7 +281,7 @@ def _mepropagator(
         Kvaerno5: mepropagator_kvaerno5_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    integrator_constructor = integrator_constructors[type(method)]  # ty: ignore
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -301,10 +302,7 @@ def _mepropagator(
     )
 
     # === run integrator
-    result = integrator.run()
-
-    # === return result
-    return result  # noqa: RET504
+    return cast(MEPropagatorResult, integrator.run())
 
 
 def _check_mepropagator_args(H: TimeQArray, Ls: list[TimeQArray]):
