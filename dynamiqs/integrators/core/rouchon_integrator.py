@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import functools
+import operator
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import replace
@@ -20,7 +22,7 @@ from ...qarrays.layout import dense
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import asqarray
 from ...result import MESolveResult
-from ...utils.operators import eye, zeros_like
+from ...utils.operators import eye
 from .diffrax_integrator import MESolveDiffraxIntegrator
 
 
@@ -158,9 +160,8 @@ class KrausMapRK(eqx.Module):
 
     def dissipator(self, c: float, rho: QArray) -> QArray:
         r"""Jump map $D_c(\rho) = \sum_k L_k \rho L_k^\dagger$ at $t + c\Delta t$."""
-        return sum(
-            (M_rho_Mdag(L, rho) for L in self.L(self.t + c * self.dt)),
-            start=zeros_like(rho),
+        return functools.reduce(
+            operator.add, (M_rho_Mdag(L, rho) for L in self.L(self.t + c * self.dt))
         )
 
     def compute_stages(self, rho0: QArray) -> list[QArray]:
@@ -197,8 +198,8 @@ class KrausMapRK(eqx.Module):
 
     def adjoint_dissipator(self, c: float, O: QArray) -> QArray:
         r"""Adjoint jump map $D_c^*(O) = \sum_k L_k^\dagger O L_k$."""
-        return sum(
-            (Mdag_O_M(L, O) for L in self.L(self.t + c * self.dt)), start=zeros_like(O)
+        return functools.reduce(
+            operator.add, (Mdag_O_M(L, O) for L in self.L(self.t + c * self.dt))
         )
 
     def S_stage(self, i: int, O: QArray) -> QArray:

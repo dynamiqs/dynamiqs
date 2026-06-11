@@ -270,9 +270,9 @@ def mesolve(
     rho0 = asqarray(rho0)
     tsave = jnp.asarray(tsave)
 
-    exp_ops_ = None
+    _exp_ops = None
     if exp_ops is not None:
-        exp_ops_ = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+        _exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === build options
     options = Options(
@@ -286,7 +286,7 @@ def mesolve(
     )
 
     # === check arguments
-    _check_mesolve_args(H, Ls, rho0, exp_ops_)
+    _check_mesolve_args(H, Ls, rho0, _exp_ops)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'mesolve')
     options = options.initialise()
@@ -294,16 +294,16 @@ def mesolve(
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
     f = _vectorized_mesolve
-    tsave_ = tsave
+    _tsave = tsave
     if isinstance(method, DiffusiveMonteCarlo) or (
         isinstance(method, JumpMonteCarlo) and isinstance(method.jsse_method, EulerJump)
     ):
-        tsave_ = tuple(tsave.tolist())  # todo: fix static tsave
+        _tsave = tuple(tsave.tolist())  # todo: fix static tsave
         f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
     else:
         f = jax.jit(f, static_argnames=('gradient', 'options'))
 
-    return f(H, Ls, rho0, tsave_, exp_ops_, method, gradient, options)
+    return f(H, Ls, rho0, _tsave, _exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error

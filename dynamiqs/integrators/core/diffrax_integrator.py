@@ -72,8 +72,10 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
     def stepsize_controller(self) -> dx.AbstractStepSizeController:
         if self.fixed_step:
             return dx.ConstantStepSize()
+
         else:
             method = cast(_DEAdaptiveStep, self.method)
+
             return dx.PIDController(
                 rtol=method.rtol,
                 atol=method.atol,
@@ -95,8 +97,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             # TODO: fix hard-coded max_steps for fixed methods
             return 100_000
         else:
-            assert isinstance(self.method, _DEAdaptiveStep)
-            return self.method.max_steps
+            return cast(_DEAdaptiveStep, self.method).max_steps
 
     @property
     @abstractmethod

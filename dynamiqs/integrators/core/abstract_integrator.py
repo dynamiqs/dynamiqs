@@ -13,6 +13,10 @@ from ...method import Method
 from ...result import Result, Saved, SolveSaved, StochasticSolveResult
 from .interfaces import OptionsInterface
 
+# _SavedT lets BaseIntegrator subclasses specify which concrete Saved type they work
+# with (e.g. SolveSaved, PropagatorSaved). Making BaseIntegrator generic over
+# _SavedT, methods like `result()` and `postprocess_saved()` gets per-subclass
+# type signatures instead of accepting/returning the broad Saved base class.
 _SavedT = TypeVar('_SavedT', bound=Saved)
 
 

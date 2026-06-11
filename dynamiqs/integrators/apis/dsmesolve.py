@@ -277,9 +277,9 @@ def dsmesolve(
     rho0 = asqarray(rho0)
     keys = jnp.asarray(keys)
 
-    exp_ops_ = None
+    _exp_ops = None
     if exp_ops is not None:
-        exp_ops_ = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+        _exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === build options
     options = Options(
@@ -289,18 +289,18 @@ def dsmesolve(
     )
 
     # === check arguments
-    _check_dsmesolve_args(H, Ls, etas, rho0, exp_ops_)
+    _check_dsmesolve_args(H, Ls, etas, rho0, _exp_ops)
     check_options(options, 'dsmesolve')
     options = options.initialise()
 
     # todo: fix static tsave
     # this condition allows the user to pass a tuple for tsave to bypass this bit of
     # code (e.g., to JIT-compile this function)
-    tsave_ = tsave
+    _tsave = tsave
     if not isinstance(tsave, tuple):
-        tsave_ = jnp.asarray(tsave)
-        tsave_ = check_times(tsave_, 'tsave')
-        tsave_ = tuple(tsave_.tolist())
+        _tsave = jnp.asarray(tsave)
+        _tsave = check_times(_tsave, 'tsave')
+        _tsave = tuple(_tsave.tolist())
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
@@ -318,7 +318,7 @@ def dsmesolve(
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
     return _vectorized_dsmesolve(
-        H, Lcs, Lms, etas, rho0, tsave_, keys, exp_ops_, method, gradient, options
+        H, Lcs, Lms, etas, rho0, _tsave, keys, _exp_ops, method, gradient, options
     )
 
 

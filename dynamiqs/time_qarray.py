@@ -480,6 +480,8 @@ class TimeQArray(eqx.Module):
         return self + y
 
     def __sub__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
+        if isqarraylike(y):
+            y = ConstantTimeQArray(asqarray(y))
         if isinstance(y, TimeQArray):
             return self + (-y)
         else:

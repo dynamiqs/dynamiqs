@@ -261,9 +261,9 @@ def jssesolve(
     psi0 = asqarray(psi0)
     keys = jnp.asarray(keys)
 
-    exp_ops_ = None
+    _exp_ops = None
     if exp_ops is not None:
-        exp_ops_ = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+        _exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === build options
     options = Options(
@@ -275,19 +275,19 @@ def jssesolve(
     )
 
     # === check arguments
-    _check_jssesolve_args(H, Ls, psi0, exp_ops_)
+    _check_jssesolve_args(H, Ls, psi0, _exp_ops)
     check_options(options, 'jssesolve')
     options = options.initialise()
 
     # todo: fix static tsave
     # this condition allows the user to pass a tuple for tsave to bypass this bit of
     # code (e.g., to JIT-compile this function)
-    tsave_ = tsave
+    _tsave = tsave
     if not isinstance(tsave, tuple):
-        tsave_ = jnp.asarray(tsave)
-        tsave_ = check_times(tsave_, 'tsave')
+        _tsave = jnp.asarray(tsave)
+        _tsave = check_times(_tsave, 'tsave')
         if isinstance(method, EulerJump):
-            tsave_ = tuple(tsave_.tolist())
+            _tsave = tuple(_tsave.tolist())
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
@@ -299,7 +299,7 @@ def jssesolve(
         f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
     else:
         f = jax.jit(f, static_argnames=('gradient', 'options'))
-    return f(H, Ls, psi0, tsave_, keys, exp_ops_, method, gradient, options)
+    return f(H, Ls, psi0, _tsave, keys, _exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error

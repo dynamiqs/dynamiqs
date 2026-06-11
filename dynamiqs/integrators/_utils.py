@@ -27,7 +27,7 @@ class HasShape(Protocol):
     shape: tuple[int, ...]
 
 
-T = TypeVar('T', bound=HasShape)
+HasShapeType = TypeVar('HasShapeType', bound=HasShape)
 
 
 def astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
@@ -194,7 +194,9 @@ def cartesian_vmap(
     return f
 
 
-def attach_batch_indices(x: T, ndim_suffix: int = 2) -> tuple[T, Array]:
+def attach_batch_indices(
+    x: HasShapeType, ndim_suffix: int = 2
+) -> tuple[HasShapeType, Array]:
     """Bundle an array with an array of batch indices for key-folding through vmap.
 
     Returns ``(x, indices)`` where *indices* is an arange over the batch

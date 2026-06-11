@@ -197,6 +197,9 @@ class StochasticSolveFixedStepIntegrator(
         saved = jax.tree.map(lambda x, y: jnp.insert(x, 0, y, axis=0), saved, saved0)
 
         # postprocess the saved results
+        saved = self.postprocess_saved(saved, ylast)
+
+        # postprocess the saved results
         return self.result(saved, infos=self.Infos(jnp.asarray(self.total_nsteps)))
 
 

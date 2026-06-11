@@ -207,9 +207,9 @@ def sesolve(
     psi0 = asqarray(psi0)
     tsave = jnp.asarray(tsave)
 
-    exp_ops_ = None
+    _exp_ops = None
     if exp_ops is not None:
-        exp_ops_ = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+        _exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === build options
     options = Options(
@@ -221,14 +221,14 @@ def sesolve(
     )
 
     # === check arguments
-    _check_sesolve_args(H, psi0, exp_ops_)
+    _check_sesolve_args(H, psi0, _exp_ops)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'sesolve')
     options = options.initialise()
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
-    return _vectorized_sesolve(H, psi0, tsave, exp_ops_, method, gradient, options)
+    return _vectorized_sesolve(H, psi0, tsave, _exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error
