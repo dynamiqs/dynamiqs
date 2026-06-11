@@ -81,7 +81,7 @@ def catch_xla_runtime_error(func: callable) -> callable:
     return wrapper
 
 
-def assert_method_supported(method: Method, supported_methods: Sequence[Method]):
+def assert_method_supported(method: Method, supported_methods: Sequence[type[Method]]):
     if not isinstance(method, tuple(supported_methods)):
         supported_str = ', '.join(f'`{x.__name__}`' for x in supported_methods)
         raise TypeError(
