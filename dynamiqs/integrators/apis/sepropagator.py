@@ -13,7 +13,7 @@ from ...method import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Method, T
 from ...options import Options, check_options
 from ...progress_meter import AbstractProgressMeter
 from ...qarrays.layout import dense
-from ...qarrays.qarray import QArrayLike
+from ...qarrays.qarray import QArray, QArrayLike
 from ...result import SEPropagatorResult
 from ...time_qarray import TimeQArray
 from ...utils.operators import eye
@@ -44,7 +44,7 @@ def sepropagator(
     save_propagators: bool = True,
     progress_meter: AbstractProgressMeter | bool | None = None,
     t0: ScalarLike | None = None,
-    save_extra: Callable[[Array], PyTree] | None = None,
+    save_extra: Callable[[QArray], PyTree] | None = None,
 ) -> SEPropagatorResult:
     r"""Compute the propagator of the Schrödinger equation.
 

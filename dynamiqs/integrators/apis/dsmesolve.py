@@ -44,7 +44,7 @@ def dsmesolve(
     gradient: Gradient | None = None,
     save_states: bool = True,
     cartesian_batching: bool = True,
-    save_extra: Callable[[Array], PyTree] | None = None,
+    save_extra: Callable[[QArray], PyTree] | None = None,
 ) -> DSMESolveResult:
     r"""Solve the diffusive stochastic master equation (SME).
 
@@ -398,7 +398,7 @@ def _dsmesolve_many_trajectories(
 
     # vectorize input over keys
     in_axes = (None, None, None, None, None, None, 0, None, None, None, None)
-    out_axes = DSMESolveResult(None, None, None, None, 0, 0, 0)
+    out_axes = DSMESolveResult(None, None, None, None, 0, 0, 0)  # ty: ignore
     f = jax.vmap(_dsmesolve_single_trajectory, in_axes, out_axes)
     return f(H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, method, gradient, options)
 

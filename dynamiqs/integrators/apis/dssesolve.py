@@ -43,7 +43,7 @@ def dssesolve(
     gradient: Gradient | None = None,
     save_states: bool = True,
     cartesian_batching: bool = True,
-    save_extra: Callable[[Array], PyTree] | None = None,
+    save_extra: Callable[[QArray], PyTree] | None = None,
 ) -> DSSESolveResult:
     r"""Solve the diffusive stochastic Schrödinger equation (SSE).
 

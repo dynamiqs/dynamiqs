@@ -47,7 +47,7 @@ def sesolve(
     cartesian_batching: bool = True,
     progress_meter: AbstractProgressMeter | bool | None = None,
     t0: ScalarLike | None = None,
-    save_extra: Callable[[Array], PyTree] | None = None,
+    save_extra: Callable[[QArray], PyTree] | None = None,
 ) -> SESolveResult:
     r"""Solve the Schrödinger equation.
 

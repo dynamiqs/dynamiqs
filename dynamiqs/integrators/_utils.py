@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from functools import wraps
 from typing import Any
 
@@ -48,7 +48,7 @@ def ispwc(x: TimeQArray) -> bool:
         return False
 
 
-def catch_xla_runtime_error(func: callable) -> callable:
+def catch_xla_runtime_error(func: Callable) -> Callable:
     # Decorator to catch `XlaRuntimeError`` exceptions, and set a more friendly
     # exception message. Note that this will not work for jitted function, as the
     # exception code will be traced out.
@@ -91,8 +91,8 @@ def assert_method_supported(method: Method, supported_methods: Sequence[type[Met
 
 
 def multi_vmap(
-    f: callable, in_axes: int | None | Sequence[Any], out_axes: Any, nvmap: int
-) -> callable:
+    f: Callable, in_axes: int | None | Sequence[Any], out_axes: Any, nvmap: int
+) -> Callable:
     """Vectorize a function multiple time over multiple shared axes (similar to
     jnp.vectorize).
 
@@ -142,8 +142,8 @@ def multi_vmap(
 
 
 def cartesian_vmap(
-    f: callable, in_axes: int | None | Sequence[Any], out_axes: Any, nvmap: PyTree[int]
-) -> callable:
+    f: Callable, in_axes: int | None | Sequence[Any], out_axes: Any, nvmap: PyTree[int]
+) -> Callable:
     """Vectorize a function multiple time over distinct axes.
 
     The function `f` is mapped multiple time over on each input specified by `nvmap`

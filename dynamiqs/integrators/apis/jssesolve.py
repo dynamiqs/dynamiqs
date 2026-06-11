@@ -43,7 +43,7 @@ def jssesolve(
     save_states: bool = True,
     cartesian_batching: bool = True,
     t0: ScalarLike | None = None,
-    save_extra: Callable[[Array], PyTree] | None = None,
+    save_extra: Callable[[QArray], PyTree] | None = None,
     nmaxclick: int = 10_000,
 ) -> JSSESolveResult:
     r"""Solve the jump stochastic Schrödinger equation (SSE).
