@@ -33,7 +33,7 @@ def test_keys_batching(cartesian_batching, H_batch, psi0_batch, ntrajs):
             pytest.skip('non-broadcastable shapes for flat batching')
 
     H = dq.random.herm(jax.random.key(0), (*H_batch, n, n))
-    jump_ops = [dq.destroy(n)]
+    jump_ops = [dq.destroy(n, layout=dq.dense)]
     psi0 = dq.fock(n, 1)
     if psi0_batch:
         psi0 = psi0.broadcast_to(*psi0_batch, n, 1)
