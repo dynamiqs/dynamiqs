@@ -6,6 +6,7 @@ import pytest
 from equinox import EquinoxRuntimeError
 
 import dynamiqs as dq
+from dynamiqs.qarrays.materialized_qarray import MaterializedQArray
 from dynamiqs.qarrays.sparsedia_dataarray import SparseDIADataArray
 
 from ..order import TEST_SHORT
@@ -52,7 +53,7 @@ class TestSparseDIAQArray:
             batch_broadcast=dq.stack([x, 2 * x]).reshape(2, 1, N, N),
         )
 
-        sparseA = dq.QArray((N,), False, SparseDIADataArray(offsetsA, diagsA))
+        sparseA = MaterializedQArray((N,), False, SparseDIADataArray(offsetsA, diagsA))
         denseA = sparseA.asdense()
 
         self.denseA = make_dictA(denseA)
@@ -65,7 +66,7 @@ class TestSparseDIAQArray:
             batch_broadcast=dq.stack([x, 2 * x, 3 * x]).reshape(1, 3, N, N),
         )
 
-        sparseB = dq.QArray((N,), False, SparseDIADataArray(offsetsB, diagsB))
+        sparseB = MaterializedQArray((N,), False, SparseDIADataArray(offsetsB, diagsB))
         denseB = sparseB.asdense()
 
         self.denseB = make_dictB(denseB)
