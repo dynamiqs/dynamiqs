@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import partial
+from typing import cast
 
 import jax
 import jax.numpy as jnp
@@ -275,8 +276,10 @@ def dsmesolve(
     etas = jnp.asarray(etas)
     rho0 = asqarray(rho0)
     keys = jnp.asarray(keys)
+
+    exp_ops_ = None
     if exp_ops is not None:
-        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+        exp_ops_ = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === build options
     options = Options(
@@ -286,18 +289,18 @@ def dsmesolve(
     )
 
     # === check arguments
-    _check_dsmesolve_args(H, Ls, etas, rho0, exp_ops)
-    tsave = check_times(tsave, 'tsave')
+    _check_dsmesolve_args(H, Ls, etas, rho0, exp_ops_)
     check_options(options, 'dsmesolve')
     options = options.initialise()
 
     # todo: fix static tsave
     # this condition allows the user to pass a tuple for tsave to bypass this bit of
     # code (e.g., to JIT-compile this function)
+    tsave_ = tsave
     if not isinstance(tsave, tuple):
-        tsave = jnp.asarray(tsave)
-        tsave = check_times(tsave, 'tsave')
-        tsave = tuple(tsave.tolist())
+        tsave_ = jnp.asarray(tsave)
+        tsave_ = check_times(tsave_, 'tsave')
+        tsave_ = tuple(tsave_.tolist())
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
@@ -315,7 +318,7 @@ def dsmesolve(
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
     return _vectorized_dsmesolve(
-        H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, method, gradient, options
+        H, Lcs, Lms, etas, rho0, tsave_, keys, exp_ops_, method, gradient, options
     )
 
 
@@ -422,7 +425,7 @@ def _dsmesolve_single_trajectory(
         Rouchon1: dsmesolve_rouchon1_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    integrator_constructor = integrator_constructors[type(method)]  # ty: ignore
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -444,10 +447,7 @@ def _dsmesolve_single_trajectory(
     )
 
     # === run solver
-    result = integrator.run()
-
-    # === return result
-    return result  # noqa: RET504
+    return cast(DSMESolveResult, integrator.run())
 
 
 def _check_dsmesolve_args(

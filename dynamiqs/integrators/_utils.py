@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from functools import wraps
-from typing import Any
+from typing import Any, Protocol, TypeVar
 
 import jax
 import jax.numpy as jnp
@@ -21,6 +21,13 @@ from ..time_qarray import (
     SummedTimeQArray,
     TimeQArray,
 )
+
+
+class HasShape(Protocol):
+    shape: tuple[int, ...]
+
+
+T = TypeVar('T', bound=HasShape)
 
 
 def astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
@@ -81,7 +88,7 @@ def catch_xla_runtime_error(func: Callable) -> Callable:
     return wrapper
 
 
-def assert_method_supported(method: Method, supported_methods: Sequence[type[Method]]):
+def assert_method_supported(method: Method, supported_methods: Iterable[type[Method]]):
     if not isinstance(method, tuple(supported_methods)):
         supported_str = ', '.join(f'`{x.__name__}`' for x in supported_methods)
         raise TypeError(
@@ -187,7 +194,7 @@ def cartesian_vmap(
     return f
 
 
-def attach_batch_indices(x: Array, ndim_suffix: int = 2) -> tuple[Array, Array]:
+def attach_batch_indices(x: T, ndim_suffix: int = 2) -> tuple[T, Array]:
     """Bundle an array with an array of batch indices for key-folding through vmap.
 
     Returns ``(x, indices)`` where *indices* is an arange over the batch
