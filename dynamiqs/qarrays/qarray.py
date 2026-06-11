@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import replace
 from math import prod
-from typing import Any, TypeAlias, TypeGuard, cast, get_args
+from typing import Any, TypeAlias, TypeGuard, cast, get_args, overload
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -553,6 +553,12 @@ class QArray(eqx.Module):
 
     def __rsub__(self, y: QArrayLike) -> QArray:
         return -self + y
+
+    @overload
+    def __matmul__(self, y: QArray) -> QArray: ...
+
+    @overload
+    def __matmul__(self, y: ArrayLike) -> Array: ...
 
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
         if isinstance(y, QArray):

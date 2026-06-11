@@ -519,7 +519,6 @@ class DSSESolveRouchon1Integrator(RouchonPropertiesMixin, DSSEFixedStepIntegrato
             )
             M_dY = M0 + sum([_dY * _L for _dY, _L in zip(dY, L, strict=True)])
             S = M0.dag() @ M0 + sum([_L.dag() @ _L for _L in L]) * self.dt
-            S = cast(QArray, S)
 
             psi = cholesky_normalize_ket(S, psi)
             psi = (M_dY @ psi).unit()
@@ -581,7 +580,7 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
         Lcal_rho = tmp + dag(tmp)
 
         # === Ccal(rho)
-        Lm_rho = stack([cast(QArray, _Lm @ rho) for _Lm in Lm])
+        Lm_rho = stack([_Lm @ rho for _Lm in Lm])
         etas = self.etas[:, None, None]  # (nLm, 1, 1)
         Ccal_rho = jnp.sqrt(etas) * (Lm_rho + Lm_rho.dag())  # (nLm, n, n)
         tr_Ccal_rho = Ccal_rho.trace().real  # (nLm,)
@@ -639,8 +638,6 @@ class DSMESolveRouchon1Integrator(
         if self.method.normalize:
             Ms_lindblad = [jnp.sqrt(self.dt) * _L for _L in L]
             S = M0.dag() @ M0 + sum([_M.dag() @ _M for _M in Ms_lindblad])
-            S = cast(QArray, S)
-
             rho = cholesky_normalize(S, rho)
 
         M_dY = M0 + sum(

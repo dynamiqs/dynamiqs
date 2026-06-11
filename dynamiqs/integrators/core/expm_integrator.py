@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from functools import partial
-from typing import cast
 
 import equinox as eqx
 import jax
@@ -78,7 +77,6 @@ class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
         def step(carry: QArray, x: QArray) -> tuple[QArray, Saved]:
             # note the ordering x @ carry: we accumulate propagators from the left
             x_next = x @ carry
-            x_next = cast(QArray, x_next)
             return x_next, self.save(x_next)
 
         ylast, saved = jax.lax.scan(step, self.y0, step_propagators)
