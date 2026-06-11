@@ -200,6 +200,45 @@ class TDQubit(ClosedSystem):
             [grad_x_omega, grad_y_omega, grad_z_omega],
         )
 
+    def hessian_expect(self, t: float) -> PyTree:
+        # second derivatives of (<x>, <y>, <z>) = (0, -sin(theta), cos(theta))
+        # with theta = 2 eps/omega sin(omega t)
+        st, ct = jnp.sin(self.omega * t), jnp.cos(self.omega * t)
+        theta = 2 * self.eps / self.omega * st
+        sth, cth = jnp.sin(theta), jnp.cos(theta)
+
+        # first derivatives (theta is linear in eps, so th_eps_eps = 0)
+        th_eps = 2 * st / self.omega
+        th_omega = 2 * self.eps * (t * ct / self.omega - st / self.omega**2)
+        # second derivatives
+        th_eps_omega = 2 * (t * ct / self.omega - st / self.omega**2)
+        th_omega_omega = (
+            2
+            * self.eps
+            * (
+                -(t**2) * st / self.omega
+                - 2 * t * ct / self.omega**2
+                + 2 * st / self.omega**3
+            )
+        )
+
+        def leaf(theta_p, theta_q, theta_pq):
+            # second derivative of (0, -sin(theta), cos(theta)) w.r.t. params
+            d2y = sth * theta_p * theta_q - cth * theta_pq
+            d2z = -cth * theta_p * theta_q - sth * theta_pq
+            return jnp.array([0.0, d2y, d2z])
+
+        # parameter order: (eps, omega)
+        return self.Params(
+            self.Params(
+                leaf(th_eps, th_eps, 0.0), leaf(th_eps, th_omega, th_eps_omega)
+            ),
+            self.Params(
+                leaf(th_omega, th_eps, th_eps_omega),
+                leaf(th_omega, th_omega, th_omega_omega),
+            ),
+        )
+
 
 # we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null
 # gradients
