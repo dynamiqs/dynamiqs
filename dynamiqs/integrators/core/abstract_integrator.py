@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Generic, TypeVar
+from typing import Generic
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -10,14 +10,9 @@ from jaxtyping import PRNGKeyArray, PyTree, Scalar
 
 from ...gradient import Gradient
 from ...method import Method
-from ...result import Result, Saved, SolveSaved, StochasticSolveResult
+from ...result import Result, SolveSaved, StochasticSolveResult
 from .interfaces import OptionsInterface
-
-# _SavedT lets BaseIntegrator subclasses specify which concrete Saved type they work
-# with (e.g. SolveSaved, PropagatorSaved). Making BaseIntegrator generic over
-# _SavedT, methods like `result()` and `postprocess_saved()` gets per-subclass
-# type signatures instead of accepting/returning the broad Saved base class.
-_SavedT = TypeVar('_SavedT', bound=Saved)
+from .save_mixin import SavedT
 
 
 class AbstractIntegrator(eqx.Module):
@@ -33,7 +28,7 @@ class AbstractIntegrator(eqx.Module):
         pass
 
 
-class BaseIntegrator(AbstractIntegrator, OptionsInterface, Generic[_SavedT]):
+class BaseIntegrator(AbstractIntegrator, OptionsInterface, Generic[SavedT]):
     """Integrator evolving an initial state over a set of times.
 
     This integrator evolves the initial pytree `y0` over a set of times specified by
@@ -55,7 +50,7 @@ class BaseIntegrator(AbstractIntegrator, OptionsInterface, Generic[_SavedT]):
     def t1(self) -> Scalar:
         return self.ts[-1]
 
-    def result(self, saved: _SavedT, infos: PyTree | None = None) -> Result:
+    def result(self, saved: SavedT, infos: PyTree | None = None) -> Result:
         return self.result_class(
             self.ts, self.method, self.gradient, self.options, saved, infos
         )

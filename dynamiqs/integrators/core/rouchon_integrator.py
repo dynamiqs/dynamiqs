@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import functools
-import operator
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import replace
@@ -23,6 +21,7 @@ from ...qarrays.qarray import QArray
 from ...qarrays.utils import asqarray
 from ...result import MESolveResult
 from ...utils.operators import eye
+from .._utils import sum_qarrays
 from .diffrax_integrator import MESolveDiffraxIntegrator
 
 
@@ -160,9 +159,7 @@ class KrausMapRK(eqx.Module):
 
     def dissipator(self, c: float, rho: QArray) -> QArray:
         r"""Jump map $D_c(\rho) = \sum_k L_k \rho L_k^\dagger$ at $t + c\Delta t$."""
-        return functools.reduce(
-            operator.add, (M_rho_Mdag(L, rho) for L in self.L(self.t + c * self.dt))
-        )
+        return sum_qarrays([M_rho_Mdag(L, rho) for L in self.L(self.t + c * self.dt)])
 
     def compute_stages(self, rho0: QArray) -> list[QArray]:
         r"""Compute all intermediate stages $\rho^{(0)}, \ldots, \rho^{(s-1)}$."""
@@ -198,9 +195,7 @@ class KrausMapRK(eqx.Module):
 
     def adjoint_dissipator(self, c: float, O: QArray) -> QArray:
         r"""Adjoint jump map $D_c^*(O) = \sum_k L_k^\dagger O L_k$."""
-        return functools.reduce(
-            operator.add, (Mdag_O_M(L, O) for L in self.L(self.t + c * self.dt))
-        )
+        return sum_qarrays([Mdag_O_M(L, O) for L in self.L(self.t + c * self.dt)])
 
     def S_stage(self, i: int, O: QArray) -> QArray:
         r"""Backward propagation of observation $O$ through stage $i$.

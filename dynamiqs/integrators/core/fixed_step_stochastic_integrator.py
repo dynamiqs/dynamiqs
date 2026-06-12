@@ -102,6 +102,8 @@ class StochasticSolveFixedStepIntegrator(
     @property
     def total_nsteps(self) -> int:
         # total number of steps of length dt
+        # Currently ty is not able to infer round returns an int
+        # TODO: Remove the ignore flag when fixed in ty
         return round((self.t1 - self.t0) / self.dt)  # ty: ignore
 
     @abstractmethod

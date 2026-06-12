@@ -11,18 +11,22 @@ from ...result import PropagatorSaved, Saved, SolveSaved
 from ...utils.general import expect
 from .interfaces import OptionsInterface
 
-_SavedT = TypeVar('_SavedT', bound=Saved)
+# SavedT lets BaseIntegrator subclasses specify which concrete Saved type they work
+# with (e.g. SolveSaved, PropagatorSaved). Making BaseIntegrator generic over
+# SavedT, methods like `result()` and `postprocess_saved()` gets per-subclass
+# type signatures instead of accepting/returning the broad Saved base class.
+SavedT = TypeVar('SavedT', bound=Saved)
 
 
-class AbstractSaveMixin(OptionsInterface, Generic[_SavedT]):
+class AbstractSaveMixin(OptionsInterface, Generic[SavedT]):
     """Mixin to assist integrators with data saving."""
 
     @abstractmethod
-    def save(self, y: PyTree) -> _SavedT:
+    def save(self, y: PyTree) -> SavedT:
         pass
 
     @abstractmethod
-    def postprocess_saved(self, saved: _SavedT, ylast: PyTree) -> _SavedT:
+    def postprocess_saved(self, saved: SavedT, ylast: PyTree) -> SavedT:
         pass
 
 

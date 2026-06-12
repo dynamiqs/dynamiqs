@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import functools
 import math
+import operator
 from collections.abc import Callable, Iterable, Sequence
 from functools import wraps
 from typing import Any, Protocol, TypeVar
@@ -13,7 +15,7 @@ from jaxtyping import PRNGKeyArray, PyTree
 
 from .._utils import obj_type_str
 from ..method import Method, _DEAdaptiveStep
-from ..qarrays.qarray import QArrayLike
+from ..qarrays.qarray import QArray, QArrayLike
 from ..qarrays.utils import asqarray
 from ..time_qarray import (
     ConstantTimeQArray,
@@ -27,7 +29,11 @@ class HasShape(Protocol):
     shape: tuple[int, ...]
 
 
-HasShapeType = TypeVar('HasShapeType', bound=HasShape)
+HasShapeT = TypeVar('HasShapeT', bound=HasShape)
+
+
+def sum_qarrays(qarrays: list[QArray]) -> QArray:
+    return functools.reduce(operator.add, qarrays)
 
 
 def astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
@@ -194,9 +200,7 @@ def cartesian_vmap(
     return f
 
 
-def attach_batch_indices(
-    x: HasShapeType, ndim_suffix: int = 2
-) -> tuple[HasShapeType, Array]:
+def attach_batch_indices(x: HasShapeT, ndim_suffix: int = 2) -> tuple[HasShapeT, Array]:
     """Bundle an array with an array of batch indices for key-folding through vmap.
 
     Returns ``(x, indices)`` where *indices* is an arange over the batch
