@@ -8,6 +8,7 @@ from jax.typing import ArrayLike
 
 from .._utils import cdtype
 from ..qarrays.layout import Layout, dense, get_layout
+from ..qarrays.materialized_qarray import MaterializedQArray
 from ..qarrays.qarray import QArray, QArrayLike, get_dims
 from ..qarrays.sparsedia_dataarray import SparseDIADataArray
 from ..qarrays.utils import asqarray, init_dims, sparsedia_from_dict, stack, to_jax
@@ -188,7 +189,7 @@ def zeros(*dims: int, layout: Layout | None = None) -> QArray:
         return asqarray(array, dims=dims)
     else:
         diags = jnp.zeros((0, dim), dtype=cdtype())
-        return QArray(dims, False, SparseDIADataArray((), diags))
+        return MaterializedQArray(dims, False, SparseDIADataArray((), diags))
 
 
 def zeros_like(
