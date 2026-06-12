@@ -2466,6 +2466,8 @@
       
         
       
+        
+      
     
     
     
@@ -2582,6 +2584,34 @@
     
   
     Forward
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gradient/HigherOrder.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HigherOrder
   
 
     
@@ -7153,7 +7183,12 @@ to <code>1e-5</code>.</p>
 
 <details class="note" open="">
   <summary>Supported gradients</summary>
-  <p>This method supports the same gradients as the chosen <code>ode_method</code>.</p>
+  <p>This method supports
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.gradient.Direct&lt;/span&gt;" href="../gradient/Direct.html#dynamiqs.gradient.Direct"><code>dq.gradient.Direct</code></a>,
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.gradient.BackwardCheckpointed&lt;/span&gt;" href="../gradient/BackwardCheckpointed.html#dynamiqs.gradient.BackwardCheckpointed"><code>dq.gradient.BackwardCheckpointed</code></a>
+(default)
+and <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.gradient.Forward&lt;/span&gt;" href="../gradient/Forward.html#dynamiqs.gradient.Forward"><code>dq.gradient.Forward</code></a>. These are supported
+for all <code>ode_method</code> choices accepted by <code>LowRank</code>.</p>
 </details>  
 
 <details class="warning" open="">

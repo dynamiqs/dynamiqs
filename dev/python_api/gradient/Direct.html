@@ -2456,6 +2456,8 @@
       
         
       
+        
+      
     
     
     
@@ -2582,6 +2584,34 @@
     
   
     Forward
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="HigherOrder.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HigherOrder
   
 
     
@@ -7092,6 +7122,15 @@ through the internals of the solver.</p>
   <p>For Diffrax-based methods, this falls back to the
 <a href="https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint"><code>diffrax.DirectAdjoint</code></a>
 option.</p>
+</details>  
+
+<details class="note" open="">
+  <summary>Note</summary>
+  <p>For supported explicit Diffrax ODE methods, this option also supports
+higher-order automatic differentiation (e.g.
+<a href="https://docs.jax.dev/en/latest/_autosummary/jax.hessian.html"><code>jax.hessian</code></a>).
+Prefer <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.gradient.HigherOrder&lt;/span&gt;" href="HigherOrder.html#dynamiqs.gradient.HigherOrder"><code>dq.gradient.HigherOrder</code></a> to make that
+requirement explicit.</p>
 </details>
 
 
