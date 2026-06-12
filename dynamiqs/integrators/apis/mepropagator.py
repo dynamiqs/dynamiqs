@@ -16,7 +16,7 @@ from ...options import Options, check_options
 from ...progress_meter import AbstractProgressMeter
 from ...qarrays.dense_dataarray import DenseDataArray
 from ...qarrays.materialized_qarray import MaterializedQArray
-from ...qarrays.qarray import QArrayLike
+from ...qarrays.qarray import QArray, QArrayLike
 from ...result import MEPropagatorResult
 from ...time_qarray import TimeQArray
 from .._utils import (

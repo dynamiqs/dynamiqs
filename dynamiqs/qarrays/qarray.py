@@ -258,14 +258,10 @@ class QArray(eqx.Module):
         pass
 
     @property
+    @abstractmethod
     def ndiags(self) -> int:
         """Number of stored diagonals (only for sparse diagonal layout)."""
-        if not hasattr(self.data, 'ndiags'):
-            raise AttributeError(
-                f"Attribute 'ndiags' is only defined for sparse diagonal layouts; "
-                f'got layout {self.layout!r}.'
-            )
-        return cast(int, self.data.ndiags)
+        ...
 
     # === Array methods delegated to DataArray ===
 
@@ -529,11 +525,18 @@ class QArray(eqx.Module):
     @overload
     def __matmul__(self, y: ArrayLike) -> Array: ...
 
+    @abstractmethod
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
         pass
 
+    @overload
+    def __rmatmul__(self, y: QArray) -> QArray: ...
+
+    @overload
+    def __rmatmul__(self, y: ArrayLike) -> Array: ...
+
     @abstractmethod
-    def __rmatmul__(self, y: QArrayLike) -> QArray:
+    def __rmatmul__(self, y: QArrayLike) -> QArray | Array:
         pass
 
     @abstractmethod

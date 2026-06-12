@@ -529,7 +529,7 @@ class ConstantTimeQArray(TimeQArray):
 
     @property
     def vectorized(self) -> bool:
-        return self.qarray.vectorized
+        return getattr(self.qarray, 'vectorized', False)
 
     @property
     def layout(self) -> Layout:
@@ -620,7 +620,7 @@ class PWCTimeQArray(TimeQArray):
 
     @property
     def vectorized(self) -> bool:
-        return self.qarray.vectorized
+        return getattr(self.qarray, 'vectorized', False)
 
     @property
     def layout(self) -> Layout:
@@ -716,7 +716,7 @@ class ModulatedTimeQArray(TimeQArray):
 
     @property
     def vectorized(self) -> bool:
-        return self.qarray.vectorized
+        return getattr(self.qarray, 'vectorized', False)
 
     @property
     def layout(self) -> Layout:
