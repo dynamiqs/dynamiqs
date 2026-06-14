@@ -305,9 +305,6 @@ def add_colorbar(
     return cax
 
 
-T = TypeVar('T')
-
-
 def gif_indices(nitems: int, nframes: int) -> np.ndarray:
     # generate indices for GIF frames
     if nframes < nitems:
@@ -387,7 +384,6 @@ def gifit(
         for idx in tqdm(indices):
             plt.close()
             plot_function(items[idx], *args, **kwargs)  # plot frame
-            canvas = plt.gcf().canvas
             canvas = cast(FigureCanvasAgg, plt.gcf().canvas)
             canvas.draw()  # ensure the figure is drawn
             frame = np.array(canvas.buffer_rgba())  # capture the RGBA buffer

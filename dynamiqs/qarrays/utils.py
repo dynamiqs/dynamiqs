@@ -193,18 +193,20 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
         isinstance(q, MaterializedQArray) and isinstance(q.data, DenseDataArray)
         for q in qarrays
     ):
-        mats = cast(list[MaterializedQArray], qarrays)
-        data = jnp.stack([cast(DenseDataArray, q.data).data for q in mats], axis=axis)
+        _qarrays = cast(list[MaterializedQArray], qarrays)
+        data = jnp.stack(
+            [cast(DenseDataArray, q.data).data for q in _qarrays], axis=axis
+        )
         return MaterializedQArray(dims, False, DenseDataArray(data))
 
     elif all(
         isinstance(q, MaterializedQArray) and isinstance(q.data, SparseDIADataArray)
         for q in qarrays
     ):
-        mats = cast(list[MaterializedQArray], qarrays)
+        _qarrays = cast(list[MaterializedQArray], qarrays)
         offsets, diags = stack_sparsedia(
-            [cast(SparseDIADataArray, q.data).offsets for q in mats],
-            [cast(SparseDIADataArray, q.data).diags for q in mats],
+            [cast(SparseDIADataArray, q.data).offsets for q in _qarrays],
+            [cast(SparseDIADataArray, q.data).diags for q in _qarrays],
             axis=axis,
         )
         return MaterializedQArray(dims, False, SparseDIADataArray(offsets, diags))
