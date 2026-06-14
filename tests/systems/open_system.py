@@ -138,9 +138,9 @@ class OCavity(OpenSystem):
         grad_p_kappa = 0.5 * self.alpha0 * t * sdt * emkt
 
         return self.Params(
-            [grad_x_delta, grad_p_delta],
-            [grad_x_alpha0, grad_p_alpha0],
-            [grad_x_kappa, grad_p_kappa],
+            jnp.array([grad_x_delta, grad_p_delta]),
+            jnp.array([grad_x_alpha0, grad_p_alpha0]),
+            jnp.array([grad_x_kappa, grad_p_kappa]),
         )
 
     def hessian_expect(self, t: float) -> PyTree:
@@ -256,9 +256,9 @@ class OTDQubit(OpenSystem):
         grad_x_omega = 0
         grad_x_gamma = 0
         return self.Params(
-            [grad_x_eps, grad_y_eps, grad_z_eps],
-            [grad_x_omega, grad_y_omega, grad_z_omega],
-            [grad_x_gamma, grad_y_gamma, grad_z_gamma],
+            jnp.array([grad_x_eps, grad_y_eps, grad_z_eps]),
+            jnp.array([grad_x_omega, grad_y_omega, grad_z_omega]),
+            jnp.array([grad_x_gamma, grad_y_gamma, grad_z_gamma]),
         )
 
     def hessian_expect(self, t: float) -> PyTree:

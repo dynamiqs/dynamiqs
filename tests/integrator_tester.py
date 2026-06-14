@@ -94,7 +94,7 @@ class IntegratorTester:
         logging.warning(f'true_grads_Esave = {true_grads_Esave}')
         logging.warning(f'grads_Esave      = {grads_Esave}')
 
-        assert_allclose(true_grads_ysave, grads_ysave)
+        assert_allclose(true_grads_Esave, grads_Esave)
 
     def _test_hessian(
         self,
