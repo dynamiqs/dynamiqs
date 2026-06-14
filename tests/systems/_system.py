@@ -65,6 +65,17 @@ class System(ABC):
         """
         raise NotImplementedError
 
+    def hessian_expect(self, t: float) -> PyTree:
+        """Compute the exact Hessian of the example expectation values loss functions
+        with respect to the system parameters.
+
+        The returned pytree must match the structure of
+        `jax.hessian(loss_expect)(params)`: a nested `params x params` mapping whose
+        leaves are arrays holding, for each pair of parameters, the second derivatives
+        of every expectation value.
+        """
+        raise NotImplementedError
+
     @abstractmethod
     def run(
         self,
