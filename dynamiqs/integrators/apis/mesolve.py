@@ -25,6 +25,7 @@ from ...method import (
     Rouchon1,
     Rouchon2,
     Rouchon3,
+    Rouchon4,
     Tsit5,
 )
 from ...options import Options, check_options
@@ -58,6 +59,7 @@ from ..core.rouchon_integrator import (
     mesolve_rouchon1_integrator_constructor,
     mesolve_rouchon2_integrator_constructor,
     mesolve_rouchon3_integrator_constructor,
+    mesolve_rouchon4_integrator_constructor,
 )
 
 
@@ -120,6 +122,7 @@ def mesolve(
             [`Rouchon1`][dynamiqs.method.Rouchon1],
             [`Rouchon2`][dynamiqs.method.Rouchon2],
             [`Rouchon3`][dynamiqs.method.Rouchon3],
+            [`Rouchon4`][dynamiqs.method.Rouchon4],
             [`Expm`][dynamiqs.method.Expm],
             [`JumpMonteCarlo`][dynamiqs.method.JumpMonteCarlo],
             [`DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo],
@@ -350,6 +353,7 @@ def _mesolve(
         Rouchon1: mesolve_rouchon1_integrator_constructor,
         Rouchon2: mesolve_rouchon2_integrator_constructor,
         Rouchon3: mesolve_rouchon3_integrator_constructor,
+        Rouchon4: mesolve_rouchon4_integrator_constructor,
         Dopri5: mesolve_dopri5_integrator_constructor,
         Dopri8: mesolve_dopri8_integrator_constructor,
         Tsit5: mesolve_tsit5_integrator_constructor,
