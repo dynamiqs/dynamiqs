@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from math import prod
+from typing import cast, overload
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -65,7 +66,7 @@ class MaterializedQArray(QArray):
                 f"Attribute 'ndiags' is only defined for sparse diagonal layouts; "
                 f'got layout {self.layout!r}.'
             )
-        return self.data.ndiags
+        return cast(int, self.data.ndiags)
 
     # === Array methods delegated to DataArray ===
 
@@ -223,7 +224,7 @@ class MaterializedQArray(QArray):
                 ' To add a scalar, use `x.addscalar(scalar)`.'
             )
 
-        if isinstance(y, QArray):
+        if isinstance(y, MaterializedQArray):
             check_compatible_dims(self.dims, y.dims)
             result = self.data + y.data
         elif isqarraylike(y):
@@ -237,8 +238,14 @@ class MaterializedQArray(QArray):
             return replace(self, data=result)
         return result
 
+    @overload
+    def __matmul__(self, y: QArray) -> QArray: ...
+
+    @overload
+    def __matmul__(self, y: ArrayLike) -> Array: ...
+
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
-        if isinstance(y, QArray):
+        if isinstance(y, MaterializedQArray):
             check_compatible_dims(self.dims, y.dims)
             y_data = y.data
         elif is_batched_scalar(y):
@@ -252,7 +259,7 @@ class MaterializedQArray(QArray):
         if result is NotImplemented:
             # try reverse dispatch
             if hasattr(y_data, '__rmatmul__'):
-                result = y_data.__rmatmul__(self.data)
+                result = y_data.__rmatmul__(self.data.to_jax())
             # if still NotImplemented, raise it
             if result is NotImplemented:
                 return NotImplemented
@@ -270,8 +277,14 @@ class MaterializedQArray(QArray):
             return replace(self, data=result)
         return result
 
-    def __rmatmul__(self, y: QArrayLike) -> QArray:
-        if isinstance(y, QArray):
+    @overload
+    def __rmatmul__(self, y: QArray) -> QArray: ...
+
+    @overload
+    def __rmatmul__(self, y: ArrayLike) -> Array: ...
+
+    def __rmatmul__(self, y: QArrayLike) -> QArray | Array:
+        if isinstance(y, MaterializedQArray):
             check_compatible_dims(self.dims, y.dims)
             y_data = y.data
         elif is_batched_scalar(y):
@@ -296,7 +309,7 @@ class MaterializedQArray(QArray):
         return result
 
     def __and__(self, y: QArray) -> QArray:
-        if not isinstance(y, QArray):
+        if not isinstance(y, MaterializedQArray):
             return NotImplemented
 
         result = self.data & y.data
@@ -331,7 +344,7 @@ class MaterializedQArray(QArray):
         Returns:
             New qarray resulting from the element-wise multiplication.
         """
-        if isinstance(y, QArray):
+        if isinstance(y, MaterializedQArray):
             check_compatible_dims(self.dims, y.dims)
             result = self.data * y.data
         elif isqarraylike(y):

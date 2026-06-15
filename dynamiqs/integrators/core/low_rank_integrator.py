@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from functools import partial
+from typing import cast
 
 import diffrax as dx
 import equinox as eqx
@@ -12,9 +13,19 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ..._checks import check_hermitian
-from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, LinearSolver, Tsit5
+from ...method import (
+    Dopri5,
+    Dopri8,
+    Euler,
+    Kvaerno3,
+    Kvaerno5,
+    LinearSolver,
+    LowRank,
+    Tsit5,
+    _DEFixedStep,
+)
 from ...qarrays.utils import asqarray
-from ...result import MESolveLowRankResult, Result, Saved, SolveSaved
+from ...result import MESolveLowRankResult, Result, SolveSaved
 from .._utils import assert_method_supported
 from .abstract_integrator import BaseIntegrator
 from .diffrax_integrator import AdaptiveStepInfos, FixedStepInfos, call_diffeqsolve
@@ -126,6 +137,8 @@ class MESolveLowRankIntegrator(
     https://github.com/leogoutte/low_rank/blob/main/src/low_rank.jl
     """
 
+    method: LowRank
+
     @property
     def dims(self) -> tuple[int, ...]:
         return self.H.dims
@@ -214,10 +227,12 @@ class MESolveLowRankIntegrator(
             save=self.save,
         )
 
-        saved = self.postprocess_saved(*solution.ys)
+        ys = cast(tuple, solution.ys)
+        saved = self.postprocess_saved(*ys)
         return self.result(saved, infos=self.infos(solution.stats))
 
-    def save(self, m: PyTree) -> SolveSaved:
+    def save(self, y: PyTree) -> SolveSaved:
+        m = y
         m = normalize_m(m)
 
         msave = None
@@ -236,7 +251,9 @@ class MESolveLowRankIntegrator(
 
         return SolveSaved(ysave=msave, extra=extra, Esave=Esave)
 
-    def postprocess_saved(self, saved: Saved, mlast: PyTree) -> Saved:
+    def postprocess_saved(self, saved: SolveSaved, ylast: PyTree) -> SolveSaved:
+        mlast = ylast
+
         if not self.options.save_states:
             mlast_save = asqarray(normalize_m(mlast), dims=self.dims)
             saved = eqx.tree_at(
@@ -246,14 +263,7 @@ class MESolveLowRankIntegrator(
         return self.reorder_Esave(saved)
 
     def infos(self, stats: dict[str, Array]) -> PyTree:
-        fixed_step = {
-            Euler: True,
-            Dopri5: False,
-            Dopri8: False,
-            Tsit5: False,
-            Kvaerno3: False,
-            Kvaerno5: False,
-        }[type(self.method.ode_method)]
+        fixed_step = isinstance(self.method.ode_method, _DEFixedStep)
 
         if fixed_step:
             return FixedStepInfos(stats['num_steps'])

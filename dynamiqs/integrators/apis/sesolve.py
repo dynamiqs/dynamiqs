@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import partial
+from typing import cast
 
 import jax
 import jax.numpy as jnp
@@ -47,7 +48,7 @@ def sesolve(
     cartesian_batching: bool = True,
     progress_meter: AbstractProgressMeter | bool | None = None,
     t0: ScalarLike | None = None,
-    save_extra: Callable[[Array], PyTree] | None = None,
+    save_extra: Callable[[QArray], PyTree] | None = None,
 ) -> SESolveResult:
     r"""Solve the Schrödinger equation.
 
@@ -205,8 +206,10 @@ def sesolve(
     H = astimeqarray(H)
     psi0 = asqarray(psi0)
     tsave = jnp.asarray(tsave)
+
+    _exp_ops = None
     if exp_ops is not None:
-        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+        _exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === build options
     options = Options(
@@ -218,14 +221,14 @@ def sesolve(
     )
 
     # === check arguments
-    _check_sesolve_args(H, psi0, exp_ops)
+    _check_sesolve_args(H, psi0, _exp_ops)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'sesolve')
     options = options.initialise()
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
-    return _vectorized_sesolve(H, psi0, tsave, exp_ops, method, gradient, options)
+    return _vectorized_sesolve(H, psi0, tsave, _exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error
@@ -279,7 +282,7 @@ def _sesolve(
         Expm: sesolve_expm_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    integrator_constructor = integrator_constructors[type(method)]  # ty: ignore
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -297,10 +300,7 @@ def _sesolve(
     )
 
     # === run integrator
-    result = integrator.run()
-
-    # === return result
-    return result  # noqa: RET504
+    return cast(SESolveResult, integrator.run())
 
 
 def _check_sesolve_args(H: TimeQArray, psi0: QArray, exp_ops: list[QArray] | None):

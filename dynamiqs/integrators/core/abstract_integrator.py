@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from typing import Generic
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -9,8 +10,9 @@ from jaxtyping import PRNGKeyArray, PyTree, Scalar
 
 from ...gradient import Gradient
 from ...method import Method
-from ...result import Result, Saved
+from ...result import Result, SolveSaved, StochasticSolveResult
 from .interfaces import OptionsInterface
+from .save_mixin import SavedT
 
 
 class AbstractIntegrator(eqx.Module):
@@ -26,7 +28,7 @@ class AbstractIntegrator(eqx.Module):
         pass
 
 
-class BaseIntegrator(AbstractIntegrator, OptionsInterface):
+class BaseIntegrator(AbstractIntegrator, OptionsInterface, Generic[SavedT]):
     """Integrator evolving an initial state over a set of times.
 
     This integrator evolves the initial pytree `y0` over a set of times specified by
@@ -42,19 +44,19 @@ class BaseIntegrator(AbstractIntegrator, OptionsInterface):
 
     @property
     def t0(self) -> Scalar:
-        return self.ts[0] if self.options.t0 is None else self.options.t0
+        return self.ts[0] if self.options.t0 is None else jnp.asarray(self.options.t0)
 
     @property
     def t1(self) -> Scalar:
         return self.ts[-1]
 
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+    def result(self, saved: SavedT, infos: PyTree | None = None) -> Result:
         return self.result_class(
             self.ts, self.method, self.gradient, self.options, saved, infos
         )
 
 
-class StochasticBaseIntegrator(BaseIntegrator):
+class StochasticBaseIntegrator(BaseIntegrator[SolveSaved]):
     """Integrator stochastically evolving an initial state over a set of times.
 
     In addition to `BaseIntegrator`, it includes a PRNG key for the stochastic
@@ -62,8 +64,9 @@ class StochasticBaseIntegrator(BaseIntegrator):
     """
 
     key: PRNGKeyArray
+    result_class: type[StochasticSolveResult]
 
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+    def result(self, saved: SolveSaved, infos: PyTree | None = None) -> Result:
         ts = jnp.asarray(self.ts)  # todo: fix static tsave
         return self.result_class(
             ts, self.method, self.gradient, self.options, saved, infos, self.key

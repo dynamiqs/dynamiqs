@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Callable
+from typing import cast
 
 import jax
 import jax.numpy as jnp
@@ -74,7 +75,7 @@ def mesolve(
     cartesian_batching: bool = True,
     progress_meter: AbstractProgressMeter | bool | None = None,
     t0: ScalarLike | None = None,
-    save_extra: Callable[[Array], PyTree] | None = None,
+    save_extra: Callable[[QArray], PyTree] | None = None,
     vectorized: bool = False,
     assume_hermitian: bool = True,
 ) -> MESolveResult:
@@ -268,8 +269,10 @@ def mesolve(
     Ls = [astimeqarray(L) for L in jump_ops]
     rho0 = asqarray(rho0)
     tsave = jnp.asarray(tsave)
+
+    _exp_ops = None
     if exp_ops is not None:
-        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+        _exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === build options
     options = Options(
@@ -283,7 +286,7 @@ def mesolve(
     )
 
     # === check arguments
-    _check_mesolve_args(H, Ls, rho0, exp_ops)
+    _check_mesolve_args(H, Ls, rho0, _exp_ops)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'mesolve')
     options = options.initialise()
@@ -291,15 +294,16 @@ def mesolve(
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
     f = _vectorized_mesolve
+    _tsave = tsave
     if isinstance(method, DiffusiveMonteCarlo) or (
         isinstance(method, JumpMonteCarlo) and isinstance(method.jsse_method, EulerJump)
     ):
-        tsave = tuple(tsave.tolist())  # todo: fix static tsave
+        _tsave = tuple(tsave.tolist())  # todo: fix static tsave
         f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
     else:
         f = jax.jit(f, static_argnames=('gradient', 'options'))
 
-    return f(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
+    return f(H, Ls, rho0, _tsave, _exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error
@@ -361,7 +365,7 @@ def _mesolve(
         LowRank: mesolve_lowrank_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    integrator_constructor = integrator_constructors[type(method)]  # ty: ignore
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -379,10 +383,7 @@ def _mesolve(
     )
 
     # === run integrator
-    result = integrator.run()
-
-    # === return result
-    return result  # noqa: RET504
+    return cast(MESolveResult, integrator.run())
 
 
 def _check_mesolve_args(

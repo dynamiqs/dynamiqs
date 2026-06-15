@@ -15,7 +15,7 @@ def pwc_pulse(
     times: ArrayLike,
     values: ArrayLike,
     *,
-    ax: Axes = None,
+    ax: Axes | None = None,
     ycenter: bool = True,
     real_color: str = colors['blue'],
     imag_color: str = colors['purple'],
@@ -35,6 +35,8 @@ def pwc_pulse(
 
         ![plot_pwc_pulse](../../figs_code/plot_pwc_pulse.png){.fig}
     """
+    assert ax is not None
+
     times = jnp.asarray(times)  # (n + 1)
     values = jnp.asarray(values)  # (n)
     times = check_times(times, 'times')

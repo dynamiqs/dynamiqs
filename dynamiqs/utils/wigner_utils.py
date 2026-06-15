@@ -98,14 +98,16 @@ def _wigner(state: Array, xvec: Array, yvec: Array, g: float = 2.0) -> Array:
     return w.real * jnp.exp(-2 * a2) * 0.5 * g**2 / jnp.pi
 
 
-def _diag_element(mat: jnp.array, diag: int, element: int) -> float:
+def _diag_element(mat: Array, diag: int, element: int) -> Array:
     r"""Return the element of a matrix `mat` at `jnp.diag(mat, diag)[element]`.
     This function is jittable for `diag` while it is not for the `jnp.diag` version.
     """
     assert mat.shape[0] == mat.shape[1], 'Matrix must be square.'
     n = mat.shape[0]
-    element = jax.lax.select(element < 0, n - jnp.abs(diag) - jnp.abs(element), element)
-    return mat[jnp.maximum(-diag, 0) + element, jnp.maximum(diag, 0) + element]
+    _element = jax.lax.select(
+        element < 0, n - jnp.abs(diag) - jnp.abs(element), element
+    )
+    return mat[jnp.maximum(-diag, 0) + _element, jnp.maximum(diag, 0) + _element]
 
 
 def _laguerre_series(i: int, x: Array, rho: Array, n: int) -> Array:

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import partial
+from typing import cast
 
 import jax
 import jax.numpy as jnp
@@ -13,7 +14,7 @@ from ...method import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Method, T
 from ...options import Options, check_options
 from ...progress_meter import AbstractProgressMeter
 from ...qarrays.layout import dense
-from ...qarrays.qarray import QArrayLike
+from ...qarrays.qarray import QArray, QArrayLike
 from ...result import SEPropagatorResult
 from ...time_qarray import TimeQArray
 from ...utils.operators import eye
@@ -44,7 +45,7 @@ def sepropagator(
     save_propagators: bool = True,
     progress_meter: AbstractProgressMeter | bool | None = None,
     t0: ScalarLike | None = None,
-    save_extra: Callable[[Array], PyTree] | None = None,
+    save_extra: Callable[[QArray], PyTree] | None = None,
 ) -> SEPropagatorResult:
     r"""Compute the propagator of the Schrödinger equation.
 
@@ -233,7 +234,7 @@ def _sepropagator(
         Kvaerno5: sepropagator_kvaerno5_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    integrator_constructor = integrator_constructors[type(method)]  # ty: ignore
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -251,10 +252,7 @@ def _sepropagator(
     )
 
     # === run integrator
-    result = integrator.run()
-
-    # === return result
-    return result  # noqa: RET504
+    return cast(SEPropagatorResult, integrator.run())
 
 
 def _check_sepropagator_args(H: TimeQArray):

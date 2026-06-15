@@ -44,6 +44,8 @@ def wigner_data(
         - [`dq.plot.wigner()`][dynamiqs.plot.wigner]: plot the Wigner function of a
             state.
     """
+    assert ax is not None
+
     w = to_jax(wigner)
     check_shape(w, 'wigner', '(n, n)')
     if w.dtype not in (jnp.float32, jnp.float64):
@@ -67,7 +69,7 @@ def wigner_data(
         origin='lower',
         aspect='equal',
         interpolation=interpolation,
-        extent=[-xmax, xmax, -ymax, ymax],
+        extent=(-xmax, xmax, -ymax, ymax),
     )
 
     # remove grid by default
@@ -150,6 +152,8 @@ def wigner(
 
         ![plot_wigner_4legged](../../figs_code/plot_wigner_4legged.png){.fig-half}
     """
+    assert ax is not None
+
     state = asqarray(state)
     check_shape(state, 'state', '(n, 1)', '(n, n)')
 
@@ -320,7 +324,7 @@ def wigner_gif(
     _, _, wig = compute_wigner(states[indices], xmax, ymax, npixels, hbar=hbar)
 
     return gifit(wigner_data)(
-        wig,
+        list(wig),
         w=w,
         h=ymax / xmax * w,
         xmax=xmax,

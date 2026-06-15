@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Sequence
+from typing import cast
 
 import jax.numpy as jnp
 import numpy as np
@@ -90,7 +91,7 @@ def asqarray(
 
 
 def _asdense(x: QArrayLike, dims: tuple[int, ...] | None) -> QArray:
-    if isinstance(x, QArray):
+    if isinstance(x, MaterializedQArray):
         if isinstance(x.data, DenseDataArray):
             return x
         else:
@@ -107,7 +108,7 @@ def _assparsedia(
 ) -> QArray:
     # TODO: improve this by directly extracting the diags and offsets in case
     # the Qobj is already in sparse DIA format (only for QuTiP 5)
-    if isinstance(x, QArray):
+    if isinstance(x, MaterializedQArray):
         if isinstance(x.data, SparseDIADataArray):
             return x
         # convert dense to sparse
@@ -188,13 +189,24 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
         raise ValueError('All input qarrays must have the same shape.')
 
     # stack inputs depending on data type
-    if all(isinstance(q.data, DenseDataArray) for q in qarrays):
-        data = jnp.stack([q.data.data for q in qarrays], axis=axis)
+    if all(
+        isinstance(q, MaterializedQArray) and isinstance(q.data, DenseDataArray)
+        for q in qarrays
+    ):
+        _qarrays = cast(list[MaterializedQArray], qarrays)
+        data = jnp.stack(
+            [cast(DenseDataArray, q.data).data for q in _qarrays], axis=axis
+        )
         return MaterializedQArray(dims, False, DenseDataArray(data))
-    elif all(isinstance(q.data, SparseDIADataArray) for q in qarrays):
+
+    elif all(
+        isinstance(q, MaterializedQArray) and isinstance(q.data, SparseDIADataArray)
+        for q in qarrays
+    ):
+        _qarrays = cast(list[MaterializedQArray], qarrays)
         offsets, diags = stack_sparsedia(
-            [q.data.offsets for q in qarrays],
-            [q.data.diags for q in qarrays],
+            [cast(SparseDIADataArray, q.data).offsets for q in _qarrays],
+            [cast(SparseDIADataArray, q.data).diags for q in _qarrays],
             axis=axis,
         )
         return MaterializedQArray(dims, False, SparseDIADataArray(offsets, diags))

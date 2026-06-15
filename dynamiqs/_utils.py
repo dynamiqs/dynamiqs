@@ -45,7 +45,7 @@ def concatenate_sort(*args: Array) -> Array:
     return jnp.sort(jnp.concatenate(args))
 
 
-def is_batched_scalar(y: ArrayLike) -> bool:
+def is_batched_scalar(y: Any) -> bool:
     # check if a qarray-like is a scalar or a set of scalars of shape (..., 1, 1)
     return isinstance(y, get_args(ScalarLike)) or (
         isinstance(y, get_args(ArrayLike))

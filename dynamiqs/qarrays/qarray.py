@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Sequence
 from math import prod
-from typing import Any, TypeAlias, get_args
+from typing import Any, TypeAlias, TypeGuard, cast, get_args, overload
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -19,7 +19,7 @@ from .layout import Layout
 __all__ = ['QArray']
 
 
-def isqarraylike(x: Any) -> bool:
+def isqarraylike(x: Any) -> TypeGuard[QArrayLike]:
     r"""Returns True if the input is a qarray-like.
 
     Args:
@@ -77,21 +77,21 @@ def to_jax(x: QArrayLike) -> Array:
     elif isinstance(x, Qobj):
         return jnp.asarray(x.full())
     elif isinstance(x, Sequence):
-        return jnp.asarray([to_jax(sub_x) for sub_x in x])
+        return jnp.asarray([to_jax(cast(QArrayLike, sub_x)) for sub_x in x])
     else:
         return jnp.asarray(x)
 
 
 def get_dims(x: QArrayLike) -> tuple[int, ...] | None:
     if isinstance(x, Sequence):
-        sub_dims = [get_dims(sub_x) for sub_x in x]
+        sub_dims = [get_dims(cast(QArrayLike, sub_x)) for sub_x in x]
         return sub_dims[0] if all(sd == sub_dims[0] for sd in sub_dims) else None
     if isinstance(x, QArray):
         return x.dims
     elif isinstance(x, Qobj):
         # handle [[3, 2], [1, 1]] or [[1, 1], [3, 2]] when `auto_tidyup_dims=False`
         # or [[3, 2], [1]] or [[1], [3, 2]] when `auto_tidyup_dims=True`
-        return tuple(next(dims for dims in x.dims if set(dims) != {1}))
+        return tuple(cast(list[int], next(dims for dims in x.dims if set(dims) != {1})))
     else:
         return None
 
@@ -125,7 +125,7 @@ def to_numpy(x: QArrayLike) -> np.ndarray:
     elif isinstance(x, Qobj):
         return np.asarray(x.full())
     elif isinstance(x, Sequence):
-        return np.asarray([to_numpy(sub_x) for sub_x in x])
+        return np.asarray([to_numpy(cast(QArrayLike, sub_x)) for sub_x in x])
     else:
         return np.asarray(x)
 
@@ -256,6 +256,12 @@ class QArray(eqx.Module):
     @abstractmethod
     def ndim(self) -> int:
         pass
+
+    @property
+    @abstractmethod
+    def ndiags(self) -> int:
+        """Number of stored diagonals (only for sparse diagonal layout)."""
+        ...
 
     # === Array methods delegated to DataArray ===
 
@@ -483,7 +489,7 @@ class QArray(eqx.Module):
     def __mul__(self, y: ArrayLike) -> QArray:
         pass
 
-    def __rmul__(self, y: QArrayLike) -> QArray:
+    def __rmul__(self, y: ArrayLike) -> QArray:
         return self * y
 
     def __truediv__(self, y: ArrayLike) -> QArray:
@@ -506,17 +512,31 @@ class QArray(eqx.Module):
         return self.__add__(y)
 
     def __sub__(self, y: QArrayLike) -> QArray:
+        if not isinstance(y, QArray):
+            y = to_jax(y)
         return self + (-y)
 
     def __rsub__(self, y: QArrayLike) -> QArray:
         return -self + y
 
+    @overload
+    def __matmul__(self, y: QArray) -> QArray: ...
+
+    @overload
+    def __matmul__(self, y: ArrayLike) -> Array: ...
+
     @abstractmethod
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
         pass
 
+    @overload
+    def __rmatmul__(self, y: QArray) -> QArray: ...
+
+    @overload
+    def __rmatmul__(self, y: ArrayLike) -> Array: ...
+
     @abstractmethod
-    def __rmatmul__(self, y: QArrayLike) -> QArray:
+    def __rmatmul__(self, y: QArrayLike) -> QArray | Array:
         pass
 
     @abstractmethod
