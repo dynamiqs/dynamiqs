@@ -5,7 +5,7 @@ import pytest
 import dynamiqs as dq
 from dynamiqs import Options
 from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
-from dynamiqs.method import LowRank, Tsit5
+from dynamiqs.method import LinearSolver, LowRank, Tsit5
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
@@ -24,9 +24,14 @@ def _double_precision():
     dq.set_precision('double' if prev_x64 else 'single')
 
 
-def _lowrank_method(system):
+def _lowrank_method(system, linear_solver=LinearSolver.QR):
     rank = 2 if system is otdqubit else system.n // 2
-    return LowRank(rank=rank, ode_method=Tsit5(), key=jax.random.PRNGKey(0))
+    return LowRank(
+        rank=rank,
+        ode_method=Tsit5(),
+        linear_solver=linear_solver,
+        key=jax.random.PRNGKey(0),
+    )
 
 
 @pytest.mark.run(order=TEST_LONG)
@@ -35,15 +40,19 @@ class TestMESolveAdaptiveLowRank(IntegratorTester):
         with pytest.raises(TypeError):
             LowRank(rank=2, ode_method=Tsit5())
 
+    @pytest.mark.parametrize('linear_solver', [LinearSolver.QR, LinearSolver.CHOLESKY])
     @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
-    def test_correctness(self, system):
+    def test_correctness(self, system, linear_solver):
         options = Options()
-        self._test_correctness(system, _lowrank_method(system), options=options)
+        self._test_correctness(
+            system, _lowrank_method(system, linear_solver), options=options
+        )
 
+    @pytest.mark.parametrize('linear_solver', [LinearSolver.QR, LinearSolver.CHOLESKY])
     @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
     @pytest.mark.parametrize('gradient', [Direct(), BackwardCheckpointed(), Forward()])
-    def test_gradient(self, system, gradient):
-        self._test_gradient(system, _lowrank_method(system), gradient)
+    def test_gradient(self, system, gradient, linear_solver):
+        self._test_gradient(system, _lowrank_method(system, linear_solver), gradient)
 
     @pytest.mark.parametrize('system', [dense_ocavity])
     def test_lowrank_states(self, system):
