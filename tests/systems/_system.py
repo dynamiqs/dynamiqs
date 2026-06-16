@@ -9,7 +9,6 @@ from jaxtyping import PyTree
 from dynamiqs import QArray, stack
 from dynamiqs.gradient import Gradient
 from dynamiqs.method import Method
-from dynamiqs.options import Options
 from dynamiqs.result import Result
 from dynamiqs.time_qarray import TimeQArray
 
@@ -66,13 +65,23 @@ class System(ABC):
         """
         raise NotImplementedError
 
+    def hessian_expect(self, t: float) -> PyTree:
+        """Compute the exact Hessian of the example expectation values loss functions
+        with respect to the system parameters.
+
+        The returned pytree must match the structure of
+        `jax.hessian(loss_expect)(params)`: a nested `params x params` mapping whose
+        leaves are arrays holding, for each pair of parameters, the second derivatives
+        of every expectation value.
+        """
+        raise NotImplementedError
+
     @abstractmethod
     def run(
         self,
         method: Method,
         *,
         gradient: Gradient | None = None,
-        options: Options = Options(),  # noqa: B008
         params: PyTree | None = None,
     ) -> Result:
         pass

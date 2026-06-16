@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from math import prod
+from typing import overload
 
 import jax.numpy as jnp
 from jax.typing import ArrayLike
 
 from .._utils import cdtype
 from ..qarrays.layout import Layout, dense, get_layout
+from ..qarrays.materialized_qarray import MaterializedQArray
 from ..qarrays.qarray import QArray, QArrayLike, get_dims
 from ..qarrays.sparsedia_dataarray import SparseDIADataArray
 from ..qarrays.utils import asqarray, init_dims, sparsedia_from_dict, stack, to_jax
@@ -134,11 +136,11 @@ def eye_like(
         - [`dq.eye()`][dynamiqs.eye]: returns the identity operator.
     """
     xdims = get_dims(x)
-    layout = layout or x.layout
+    _layout = layout or getattr(x, 'layout', None)
     # todo: we should rather use a _get_shape util that never converts to a jax array
     x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
-    return eye(*dims, layout=layout)
+    return eye(*dims, layout=_layout)
 
 
 def zeros(*dims: int, layout: Layout | None = None) -> QArray:
@@ -187,7 +189,7 @@ def zeros(*dims: int, layout: Layout | None = None) -> QArray:
         return asqarray(array, dims=dims)
     else:
         diags = jnp.zeros((0, dim), dtype=cdtype())
-        return QArray(dims, False, SparseDIADataArray((), diags))
+        return MaterializedQArray(dims, False, SparseDIADataArray((), diags))
 
 
 def zeros_like(
@@ -232,11 +234,17 @@ def zeros_like(
         - [`dq.zeros()`][dynamiqs.zeros]: returns the null operator.
     """
     xdims = get_dims(x)
-    layout = layout or x.layout
+    _layout = layout or getattr(x, 'layout', None)
     # todo: we should rather use a _get_shape util that never converts to a jax array
     x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
-    return zeros(*dims, layout=layout)
+    return zeros(*dims, layout=_layout)
+
+
+@overload
+def destroy(dim: int, /, *, layout: Layout | None = None) -> QArray: ...
+@overload
+def destroy(*dims: int, layout: Layout | None = None) -> tuple[QArray, ...]: ...
 
 
 def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
@@ -307,6 +315,12 @@ def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, 
     )
 
 
+@overload
+def create(dim: int, /, *, layout: Layout | None = None) -> QArray: ...
+@overload
+def create(*dims: int, layout: Layout | None = None) -> tuple[QArray, ...]: ...
+
+
 def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
     r"""Returns a bosonic creation operator, or a tuple of creation operators for a
     multi-mode system.
@@ -373,6 +387,12 @@ def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
         tensor(*[adag[j] if i == j else Id[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
+
+
+@overload
+def number(dim: int, /, *, layout: Layout | None = None) -> QArray: ...
+@overload
+def number(*dims: int, layout: Layout | None = None) -> tuple[QArray, ...]: ...
 
 
 def number(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
@@ -534,7 +554,7 @@ def squeeze(dim: int, z: ArrayLike) -> QArray:
     z = jnp.asarray(z, dtype=cdtype())
     z = z[..., None, None]  # (..., 1, 1)
     a = destroy(dim, layout=dense)  # (n, n)
-    a2 = a @ a
+    a2 = asqarray(a @ a)
     return (0.5 * (z.conj() * a2 - z * a2.dag())).expm()
 
 
@@ -643,7 +663,9 @@ def sigmax(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0, 1], [1, 0]], dtype=cdtype())
         return asqarray(array)
     else:
-        return sparsedia_from_dict({-1: [1], 1: [1]}, dtype=cdtype())
+        return sparsedia_from_dict(
+            {-1: jnp.array([1]), 1: jnp.array([1])}, dtype=cdtype()
+        )
 
 
 def sigmay(*, layout: Layout | None = None) -> QArray:
@@ -668,7 +690,9 @@ def sigmay(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0, -1j], [1j, 0]], dtype=cdtype())
         return asqarray(array)
     else:
-        return sparsedia_from_dict({-1: [1j], 1: [-1j]}, dtype=cdtype())
+        return sparsedia_from_dict(
+            {-1: jnp.array([1j]), 1: jnp.array([-1j])}, dtype=cdtype()
+        )
 
 
 def sigmaz(*, layout: Layout | None = None) -> QArray:
@@ -693,7 +717,7 @@ def sigmaz(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[1, 0], [0, -1]], dtype=cdtype())
         return asqarray(array)
     else:
-        return sparsedia_from_dict({0: [1, -1]}, dtype=cdtype())
+        return sparsedia_from_dict({0: jnp.array([1, -1])}, dtype=cdtype())
 
 
 def sigmap(*, layout: Layout | None = None) -> QArray:
@@ -719,7 +743,7 @@ def sigmap(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0, 1], [0, 0]], dtype=cdtype())
         return asqarray(array)
     else:
-        return sparsedia_from_dict({1: [1]}, dtype=cdtype())
+        return sparsedia_from_dict({1: jnp.array([1])}, dtype=cdtype())
 
 
 def sigmam(*, layout: Layout | None = None) -> QArray:
@@ -745,7 +769,7 @@ def sigmam(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0, 0], [1, 0]], dtype=cdtype())
         return asqarray(array)
     else:
-        return sparsedia_from_dict({-1: [1]}, dtype=cdtype())
+        return sparsedia_from_dict({-1: jnp.array([1])}, dtype=cdtype())
 
 
 def xyz(*, layout: Layout | None = None) -> QArray:

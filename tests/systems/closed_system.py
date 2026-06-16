@@ -1,17 +1,18 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import NamedTuple
 
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
-from jaxtyping import ArrayLike, PyTree
+from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 import dynamiqs as dq
 from dynamiqs import QArray
 from dynamiqs.gradient import Gradient
 from dynamiqs.method import Method
-from dynamiqs.options import Options
+from dynamiqs.progress_meter import AbstractProgressMeter
 from dynamiqs.qarrays.layout import Layout
 from dynamiqs.result import Result
 from dynamiqs.time_qarray import TimeQArray
@@ -25,8 +26,12 @@ class ClosedSystem(System):
         method: Method,
         *,
         gradient: Gradient | None = None,
-        options: Options = Options(),  # noqa: B008
         params: PyTree | None = None,
+        save_states: bool = True,
+        cartesian_batching: bool = True,
+        progress_meter: AbstractProgressMeter | bool | None = None,
+        t0: ScalarLike | None = None,
+        save_extra: Callable[[Array], PyTree] | None = None,
     ) -> Result:
         params = self.params_default if params is None else params
         H = self.H(params)
@@ -39,7 +44,11 @@ class ClosedSystem(System):
             exp_ops=Es,
             method=method,
             gradient=gradient,
-            options=options,
+            save_states=save_states,
+            cartesian_batching=cartesian_batching,
+            progress_meter=progress_meter,
+            t0=t0,
+            save_extra=save_extra,
         )
 
 
@@ -101,7 +110,25 @@ class Cavity(ClosedSystem):
         grad_x_alpha0 = cdt
         grad_p_alpha0 = -sdt
 
-        return self.Params([grad_x_delta, grad_p_delta], [grad_x_alpha0, grad_p_alpha0])
+        return self.Params(
+            jnp.array([grad_x_delta, grad_p_delta]),
+            jnp.array([grad_x_alpha0, grad_p_alpha0]),
+        )
+
+    def hessian_expect(self, t: float) -> PyTree:
+        # second derivatives of (<x>, <p>) = alpha0 * (cos(delta t), -sin(delta t))
+        cdt = jnp.cos(self.delta * t)
+        sdt = jnp.sin(self.delta * t)
+        a0 = self.alpha0
+
+        d2_delta2 = jnp.array([-a0 * t**2 * cdt, a0 * t**2 * sdt])
+        d2_delta_alpha0 = jnp.array([-t * sdt, -t * cdt])
+        d2_alpha02 = jnp.array([0.0, 0.0])
+
+        return self.Params(
+            self.Params(d2_delta2, d2_delta_alpha0),
+            self.Params(d2_delta_alpha0, d2_alpha02),
+        )
 
 
 class TDQubit(ClosedSystem):
@@ -172,8 +199,47 @@ class TDQubit(ClosedSystem):
         grad_x_eps = 0
         grad_x_omega = 0
         return self.Params(
-            [grad_x_eps, grad_y_eps, grad_z_eps],
-            [grad_x_omega, grad_y_omega, grad_z_omega],
+            jnp.array([grad_x_eps, grad_y_eps, grad_z_eps]),
+            jnp.array([grad_x_omega, grad_y_omega, grad_z_omega]),
+        )
+
+    def hessian_expect(self, t: float) -> PyTree:
+        # second derivatives of (<x>, <y>, <z>) = (0, -sin(theta), cos(theta))
+        # with theta = 2 eps/omega sin(omega t)
+        st, ct = jnp.sin(self.omega * t), jnp.cos(self.omega * t)
+        theta = 2 * self.eps / self.omega * st
+        sth, cth = jnp.sin(theta), jnp.cos(theta)
+
+        # first derivatives (theta is linear in eps, so th_eps_eps = 0)
+        th_eps = 2 * st / self.omega
+        th_omega = 2 * self.eps * (t * ct / self.omega - st / self.omega**2)
+        # second derivatives
+        th_eps_omega = 2 * (t * ct / self.omega - st / self.omega**2)
+        th_omega_omega = (
+            2
+            * self.eps
+            * (
+                -(t**2) * st / self.omega
+                - 2 * t * ct / self.omega**2
+                + 2 * st / self.omega**3
+            )
+        )
+
+        def leaf(theta_p, theta_q, theta_pq):
+            # second derivative of (0, -sin(theta), cos(theta)) w.r.t. params
+            d2y = sth * theta_p * theta_q - cth * theta_pq
+            d2z = -cth * theta_p * theta_q - sth * theta_pq
+            return jnp.array([0.0, d2y, d2z])
+
+        # parameter order: (eps, omega)
+        return self.Params(
+            self.Params(
+                leaf(th_eps, th_eps, 0.0), leaf(th_eps, th_omega, th_eps_omega)
+            ),
+            self.Params(
+                leaf(th_omega, th_eps, th_eps_omega),
+                leaf(th_omega, th_omega, th_omega_omega),
+            ),
         )
 
 

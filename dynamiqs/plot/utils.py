@@ -4,7 +4,7 @@ from collections.abc import Callable, Iterable, Sequence
 from functools import wraps
 from io import BytesIO
 from math import ceil
-from typing import TypeVar
+from typing import Concatenate, ParamSpec, TypeVar, cast
 
 import matplotlib
 import matplotlib as mpl
@@ -14,7 +14,8 @@ from IPython.display import Image
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
-from matplotlib.colors import Normalize
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.colors import Colormap, Normalize
 from matplotlib.figure import Figure
 from matplotlib.ticker import FixedLocator, MaxNLocator, MultipleLocator, NullLocator
 from PIL import Image as PILImage
@@ -48,7 +49,7 @@ def figax(w: float = 7.0, h: float | None = None, **kwargs) -> tuple[Figure, Axe
     return plt.subplots(1, 1, figsize=(w, h), constrained_layout=True, **kwargs)
 
 
-def optional_ax(func: callable) -> callable:
+def optional_ax(func: Callable) -> Callable:
     """Decorator to build an `Axes` object to pass as an argument to a plot
     function if it wasn't passed by the user.
 
@@ -262,7 +263,7 @@ def integer_ticks(axis: Axis, n: int, all: bool = True):  # noqa: A002
 
 def ket_ticks(axis: Axis):
     # fix ticks location
-    axis.set_major_locator(FixedLocator(axis.get_ticklocs()))
+    axis.set_major_locator(FixedLocator(axis.get_ticklocs().tolist()))
 
     # format ticks as ket
     new_labels = [rf'$| {label.get_text()} \rangle$' for label in axis.get_ticklabels()]
@@ -271,7 +272,7 @@ def ket_ticks(axis: Axis):
 
 def bra_ticks(axis: Axis):
     # fix ticks location
-    axis.set_major_locator(FixedLocator(axis.get_ticklocs()))
+    axis.set_major_locator(FixedLocator(axis.get_ticklocs().tolist()))
 
     # format ticks as ket
     new_labels = [rf'$\langle {label.get_text()} |$' for label in axis.get_ticklabels()]
@@ -289,17 +290,19 @@ def minorticks_off(axis: Axis):
 
 
 def add_colorbar(
-    ax: Axes, cmap: str, norm: Normalize, *, size: float = 0.05, pad: float = 0.05
+    ax: Axes,
+    cmap: str | Colormap,
+    norm: Normalize,
+    *,
+    size: float = 0.05,
+    pad: float = 0.05,
 ) -> Axes:
     # insert a new axes on the right with the same height
-    cax = ax.inset_axes([1 + size, 0, pad, 1])
+    cax = ax.inset_axes((1 + size, 0, pad, 1))
     mappable = mpl.cm.ScalarMappable(norm=norm, cmap=cmap)
     plt.colorbar(mappable=mappable, cax=cax)
     cax.grid(False)
     return cax
-
-
-T = TypeVar('T')
 
 
 def gif_indices(nitems: int, nframes: int) -> np.ndarray:
@@ -310,9 +313,13 @@ def gif_indices(nitems: int, nframes: int) -> np.ndarray:
         return np.arange(nitems)
 
 
+T = TypeVar('T')
+P = ParamSpec('P')
+
+
 def gifit(
-    plot_function: Callable[[T, ...], None],
-) -> Callable[[Sequence[T], ...], Image]:
+    plot_function: Callable[Concatenate[T, P], None],
+) -> Callable[Concatenate[Sequence[T], P], Image]:
     """Transform a plot function into a new function that returns an animated GIF.
 
     This function takes a plot function that normally operates on a single input and
@@ -377,7 +384,7 @@ def gifit(
         for idx in tqdm(indices):
             plt.close()
             plot_function(items[idx], *args, **kwargs)  # plot frame
-            canvas = plt.gcf().canvas
+            canvas = cast(FigureCanvasAgg, plt.gcf().canvas)
             canvas.draw()  # ensure the figure is drawn
             frame = np.array(canvas.buffer_rgba())  # capture the RGBA buffer
             frames.append(frame)

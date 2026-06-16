@@ -151,9 +151,8 @@ keys = jax.random.split(key, ntrajs)
 
 # simulate trajectories
 method = dq.method.EulerJump(dt=1e-3)
-options = dq.Options(save_states=False)
 exp_ops = [a.dag() @ a]
-result = dq.jssesolve(H, jump_ops, psi0, tsave, keys, method=method, options=options, exp_ops=exp_ops)
+result = dq.jssesolve(H, jump_ops, psi0, tsave, keys, method=method, save_states=False, exp_ops=exp_ops)
 print(result)
 ```
 
@@ -183,7 +182,7 @@ for i, exp in enumerate(exps_adaga[:4]):
 plt.plot(tsave, exps_adaga.mean(0), label=f'Average trajectory', color='gray', **kw)
 
 # Lindblad solution
-result_lindblad = dq.mesolve(H, jump_ops, psi0, tsave, options=options, exp_ops=exp_ops)
+result_lindblad = dq.mesolve(H, jump_ops, psi0, tsave, save_states=False, exp_ops=exp_ops)
 plt.plot(tsave, result_lindblad.expects[0].real, ls='--', label=f'Lindblad', color='gray', **kw)
 
 plt.gca().set(

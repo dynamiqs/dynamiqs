@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import partial
+from typing import cast
 
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray
+from jaxtyping import ArrayLike, PRNGKeyArray, PyTree
 
 from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
@@ -18,8 +20,10 @@ from ...time_qarray import TimeQArray
 from .._utils import (
     assert_method_supported,
     astimeqarray,
+    attach_batch_indices,
     cartesian_vmap,
     catch_xla_runtime_error,
+    fold_keys_with_batch_indices,
     multi_vmap,
 )
 from ..core.fixed_step_stochastic_integrator import (
@@ -39,7 +43,10 @@ def jsmesolve(
     exp_ops: list[QArrayLike] | None = None,
     method: Method | None = None,
     gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    save_states: bool = True,
+    cartesian_batching: bool = True,
+    save_extra: Callable[[QArray], PyTree] | None = None,
+    nmaxclick: int = 10_000,
 ) -> JSMESolveResult:
     r"""Solve the jump stochastic master equation (SME).
 
@@ -127,31 +134,6 @@ def jsmesolve(
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
-        options: Generic options (supported: `save_states`, `cartesian_batching`,
-            `save_extra`, `nmaxclick`).
-            ??? "Detailed options API"
-                ```
-                dq.Options(
-                    save_states: bool = True,
-                    cartesian_batching: bool = True,
-                    save_extra: Callable[[Array], PyTree] | None = None,
-                    nmaxclick: int = 10_000,
-                )
-                ```
-
-                **Parameters:**
-
-                - **`save_states`** - If `True`, the state is saved at every time in
-                    `tsave`, otherwise only the final state is returned.
-                - **`cartesian_batching`** - If `True`, batched arguments are treated as
-                    separated batch dimensions, otherwise the batching is performed over
-                    a single shared batched dimension.
-                - **`save_extra`** _(function, optional)_ - A function with signature
-                    `f(QArray) -> PyTree` that takes a state as input and returns a
-                    PyTree. This can be used to save additional arbitrary data
-                    during the integration, accessible in `result.extra`.
-                - **`nmaxclick`** - Maximum buffer size for `result.clicktimes`, should
-                    be set higher than the expected maximum number of clicks.
 
     Returns:
         `dq.JSMESolveResult` object holding the result of the jump SME integration. Use
@@ -172,7 +154,7 @@ def jsmesolve(
 
                 - **`states`** _(qarray of shape (..., ntrajs, nsave, n, n))_ - Saved
                     states with `nsave = ntsave`, or `nsave = 1` if
-                    `options.save_states=False`.
+                    `save_states=False`.
                 - **`final_state`** _(qarray of shape (..., ntrajs, n, n))_ - Saved
                     final state.
                 - **`expects`** _(array of shape (..., ntrajs, len(exp_ops), ntsave)
@@ -181,7 +163,7 @@ def jsmesolve(
                     Times at which the detectors clicked. Variable-length array padded
                     with `jnp.nan` up to `nmaxclick`.
                 - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
-                    if specified in `options`.
+                    if specified.
                 - **`keys`** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
                     sample the point processes.
                 - **`infos`** _(PyTree or None)_ - Method-dependent information on the
@@ -191,6 +173,20 @@ def jsmesolve(
                 - **`method`** _(Method)_ - Method used.
                 - **`gradient`** _(Gradient)_ - Gradient used.
                 - **`options`** _(Options)_ - Options used.
+
+    Other Parameters:
+        save_states: If `True`, the state is saved at every time in
+            `tsave`, otherwise only the final state is returned. Defaults to `True`.
+        cartesian_batching: If `True`, batched arguments are treated
+            as separated batch dimensions, otherwise the batching is performed over a
+            single shared batch dimension. Defaults to `True`.
+        save_extra: A function with signature
+            `f(QArray) -> PyTree` that takes a state as input and returns a PyTree.
+            This can be used to save additional arbitrary data during the integration,
+            accessible in `result.extra`. Defaults to `None`.
+        nmaxclick: Maximum buffer size for `result.clicktimes`, should
+            be set higher than the expected maximum number of clicks. Defaults to
+            `10_000`.
 
     Examples:
         ```python
@@ -236,8 +232,9 @@ def jsmesolve(
     ## Running multiple simulations concurrently
 
     The Hamiltonian `H` and the initial density matrix `rho0` can be batched to
-    solve multiple SMEs concurrently. All other arguments (including the PRNG key)
-    are common to every batch. The resulting states, click times and expectation values
+    solve multiple SMEs concurrently. Other arguments are common to every batch. The
+    `keys` argument is automatically broadcasted to ensure different trajectories
+    between batch elements. The resulting states, click times and expectation values
     are batched according to the leading dimensions of `H` and `rho0`. The behaviour
     depends on the value of the `cartesian_batching` option.
 
@@ -281,21 +278,32 @@ def jsmesolve(
     etas = jnp.asarray(etas)
     rho0 = asqarray(rho0)
     keys = jnp.asarray(keys)
+
+    _exp_ops = None
     if exp_ops is not None:
-        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+        _exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+
+    # === build options
+    options = Options(
+        save_states=save_states,
+        cartesian_batching=cartesian_batching,
+        save_extra=save_extra,
+        nmaxclick=nmaxclick,
+    )
 
     # === check arguments
-    _check_jsmesolve_args(H, Ls, thetas, etas, rho0, exp_ops)
+    _check_jsmesolve_args(H, Ls, thetas, etas, rho0, _exp_ops)
     check_options(options, 'jsmesolve')
     options = options.initialise()
 
     # todo: fix static tsave
     # this condition allows the user to pass a tuple for tsave to bypass this bit of
     # code (e.g., to JIT-compile this function)
+    _tsave = tsave
     if not isinstance(tsave, tuple):
-        tsave = jnp.asarray(tsave)
-        tsave = check_times(tsave, 'tsave')
-        tsave = tuple(tsave.tolist())
+        _tsave = jnp.asarray(tsave)
+        _tsave = check_times(_tsave, 'tsave')
+        _tsave = tuple(_tsave.tolist())
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
@@ -314,7 +322,18 @@ def jsmesolve(
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
     return _vectorized_jsmesolve(
-        H, Lcs, Lms, thetas, etas, rho0, tsave, keys, exp_ops, method, gradient, options
+        H,
+        Lcs,
+        Lms,
+        thetas,
+        etas,
+        rho0,
+        _tsave,
+        keys,
+        _exp_ops,
+        method,
+        gradient,
+        options,
     )
 
 
@@ -334,35 +353,54 @@ def _vectorized_jsmesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSMESolveResult:
-    # vectorize input over H and rho0
-    in_axes = (H.in_axes, None, None, None, None, 0, *(None,) * 6)
+    in_axes = ((H.in_axes, 0), None, None, None, None, (0, 0), *(None,) * 6)
     out_axes = JSMESolveResult.out_axes()
 
     if options.cartesian_batching:
-        nvmap = (H.ndim - 2, 0, 0, 0, 0, rho0.ndim - 2, 0, 0, 0, 0, 0, 0)
+        # attach batch indices to vmap over independent keys
+        H_with_batch_indices = attach_batch_indices(H)
+        rho0_with_batch_indices = attach_batch_indices(rho0)
+
+        # compute vmap transformation
+        nvmap = (H.ndim - 2, 0, 0, 0, 0, rho0.ndim - 2, *(0,) * 6)
         f = cartesian_vmap(_jsmesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
+        # broadcast H and rho0 to the same leading shape
         bshape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
-        nvmap = len(bshape)
-        # broadcast all vectorized input to same shape
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         rho0 = rho0.broadcast_to(*bshape, n, n)
-        # vectorize the function
+
+        # attach batch indices to vmap over independent keys
+        H_with_batch_indices = attach_batch_indices(H.broadcast_to(*bshape, n, n))
+        rho0_with_batch_indices = attach_batch_indices(rho0.broadcast_to(*bshape, n, n))
+
+        nvmap = len(bshape)
         f = multi_vmap(_jsmesolve_many_trajectories, in_axes, out_axes, nvmap)
 
     return f(
-        H, Lcs, Lms, thetas, etas, rho0, tsave, keys, exp_ops, method, gradient, options
+        H_with_batch_indices,
+        Lcs,
+        Lms,
+        thetas,
+        etas,
+        rho0_with_batch_indices,
+        tsave,
+        keys,
+        exp_ops,
+        method,
+        gradient,
+        options,
     )
 
 
 def _jsmesolve_many_trajectories(
-    H: TimeQArray,
+    H_with_batch_index: tuple[TimeQArray, Array],
     Lcs: list[TimeQArray],
     Lms: list[TimeQArray],
     thetas: Array,
     etas: Array,
-    rho0: QArray,
+    rho0_with_batch_index: tuple[QArray, Array],
     tsave: Array,
     keys: PRNGKeyArray,
     exp_ops: list[QArray] | None,
@@ -370,9 +408,17 @@ def _jsmesolve_many_trajectories(
     gradient: Gradient | None,
     options: Options,
 ) -> JSMESolveResult:
+    # extract arrays and indices
+    H, H_batch_index = H_with_batch_index
+    rho0, rho0_batch_index = rho0_with_batch_index
+
+    # fold indices into keys to ensure different trajectories between batch elements
+    batch_indices = (H_batch_index, rho0_batch_index)
+    keys = fold_keys_with_batch_indices(keys, batch_indices)
+
     # vectorize input over keys
     in_axes = (None, None, None, None, None, None, None, 0, None, None, None, None)
-    out_axes = JSMESolveResult(None, None, None, None, 0, 0, 0)
+    out_axes = JSMESolveResult(None, None, None, None, 0, 0, 0)  # ty: ignore
     f = jax.vmap(_jsmesolve_single_trajectory, in_axes, out_axes)
     return f(
         H, Lcs, Lms, thetas, etas, rho0, tsave, keys, exp_ops, method, gradient, options
@@ -396,7 +442,7 @@ def _jsmesolve_single_trajectory(
     # === select integrator constructor
     integrator_constructors = {EulerJump: jsmesolve_euler_jump_integrator_constructor}
     assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    integrator_constructor = integrator_constructors[type(method)]  # ty: ignore
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -419,10 +465,7 @@ def _jsmesolve_single_trajectory(
     )
 
     # === run solver
-    result = integrator.run()
-
-    # === return result
-    return result  # noqa: RET504
+    return cast(JSMESolveResult, integrator.run())
 
 
 def _check_jsmesolve_args(  # noqa: C901

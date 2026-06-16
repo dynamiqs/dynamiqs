@@ -1,0 +1,35 @@
+{% extends "_base/docstring/other_parameters.html.jinja" %}
+
+{% block list_style scoped %}
+  {#- Block for the `list` section style. -#}
+  <p><span class="doc-section-title">{{ section.title or lang.t("Other Parameters:") }}</span></p>
+  <ul>
+    {% for parameter in section.value %}
+      <li class="doc-section-item field-body">
+        {% if config.parameter_headings %}
+          {% filter heading(
+              heading_level + 1,
+              role="param",
+              id=html_id ~ "(" ~ parameter.name ~ ")",
+              class="doc doc-heading doc-heading-parameter",
+              toc_label=('<code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;'|safe if config.show_symbol_type_toc else '') + parameter.name,
+              skip_inventory=config.skip_local_inventory,
+            ) %}
+            <b><code>{{ parameter.name }}</code></b>
+          {% endfilter %}
+        {% else %}
+          <b><code>{{ parameter.name }}</code></b>
+        {% endif %}
+        {% if parameter.annotation is string %}
+          {% with expression = parameter.annotation %}
+            (<i>{% include "expression.html.jinja" with context %}</i>)
+          {% endwith %}
+        {% endif %}
+        –
+        <div class="doc-md-description">
+          {{ parameter.description|convert_markdown(heading_level, html_id, autoref_hook=autoref_hook) }}
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock list_style %}

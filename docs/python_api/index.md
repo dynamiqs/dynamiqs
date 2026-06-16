@@ -87,6 +87,18 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - Direct
         - BackwardCheckpointed
         - Forward
+        - HigherOrder
+
+### Progress meters
+
+::: dynamiqs.progress_meter
+    options:
+        extra:
+            table: true
+        members:
+        - NoProgressMeter
+        - TextProgressMeter
+        - TqdmProgressMeter
 
 ## Utilities
 
@@ -144,6 +156,10 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - excited
         - excited_dm
         - thermal_dm
+        - vacuum
+        - vacuum_dm
+        - cat
+        - cat_dm
 
 
 ### Quantum utilities

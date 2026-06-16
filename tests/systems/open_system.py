@@ -1,18 +1,19 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Callable
 from typing import NamedTuple
 
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
-from jaxtyping import ArrayLike, PyTree
+from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 import dynamiqs as dq
 from dynamiqs import QArray, asqarray, dense
 from dynamiqs.gradient import Gradient
 from dynamiqs.method import Method
-from dynamiqs.options import Options
+from dynamiqs.progress_meter import AbstractProgressMeter
 from dynamiqs.qarrays.layout import Layout
 from dynamiqs.result import Result
 from dynamiqs.time_qarray import TimeQArray
@@ -30,8 +31,14 @@ class OpenSystem(System):
         method: Method,
         *,
         gradient: Gradient | None = None,
-        options: Options = Options(),  # noqa: B008
         params: PyTree | None = None,
+        save_states: bool = True,
+        cartesian_batching: bool = True,
+        progress_meter: AbstractProgressMeter | bool | None = None,
+        t0: ScalarLike | None = None,
+        save_extra: Callable[[Array], PyTree] | None = None,
+        vectorized: bool = False,
+        assume_hermitian: bool = True,
     ) -> Result:
         params = self.params_default if params is None else params
         H = self.H(params)
@@ -46,7 +53,13 @@ class OpenSystem(System):
             exp_ops=Es,
             method=method,
             gradient=gradient,
-            options=options,
+            save_states=save_states,
+            cartesian_batching=cartesian_batching,
+            progress_meter=progress_meter,
+            t0=t0,
+            save_extra=save_extra,
+            vectorized=vectorized,
+            assume_hermitian=assume_hermitian,
         )
 
 
@@ -125,9 +138,29 @@ class OCavity(OpenSystem):
         grad_p_kappa = 0.5 * self.alpha0 * t * sdt * emkt
 
         return self.Params(
-            [grad_x_delta, grad_p_delta],
-            [grad_x_alpha0, grad_p_alpha0],
-            [grad_x_kappa, grad_p_kappa],
+            jnp.array([grad_x_delta, grad_p_delta]),
+            jnp.array([grad_x_alpha0, grad_p_alpha0]),
+            jnp.array([grad_x_kappa, grad_p_kappa]),
+        )
+
+    def hessian_expect(self, t: float) -> PyTree:
+        # second derivatives of (<x>, <p>) = alpha0 e^{-kappa t/2} (cos, -sin)(delta t)
+        c = jnp.cos(self.delta * t)
+        s = jnp.sin(self.delta * t)
+        e = jnp.exp(-0.5 * self.kappa * t)
+        a0 = self.alpha0
+
+        d2_delta2 = jnp.array([-a0 * e * t**2 * c, a0 * e * t**2 * s])
+        d2_delta_alpha0 = jnp.array([-e * t * s, -e * t * c])
+        d2_delta_kappa = jnp.array([0.5 * a0 * t**2 * e * s, 0.5 * a0 * t**2 * e * c])
+        d2_alpha02 = jnp.array([0.0, 0.0])
+        d2_alpha0_kappa = jnp.array([-0.5 * t * e * c, 0.5 * t * e * s])
+        d2_kappa2 = jnp.array([0.25 * a0 * t**2 * e * c, -0.25 * a0 * t**2 * e * s])
+
+        return self.Params(
+            self.Params(d2_delta2, d2_delta_alpha0, d2_delta_kappa),
+            self.Params(d2_delta_alpha0, d2_alpha02, d2_alpha0_kappa),
+            self.Params(d2_delta_kappa, d2_alpha0_kappa, d2_kappa2),
         )
 
 
@@ -223,9 +256,69 @@ class OTDQubit(OpenSystem):
         grad_x_omega = 0
         grad_x_gamma = 0
         return self.Params(
-            [grad_x_eps, grad_y_eps, grad_z_eps],
-            [grad_x_omega, grad_y_omega, grad_z_omega],
-            [grad_x_gamma, grad_y_gamma, grad_z_gamma],
+            jnp.array([grad_x_eps, grad_y_eps, grad_z_eps]),
+            jnp.array([grad_x_omega, grad_y_omega, grad_z_omega]),
+            jnp.array([grad_x_gamma, grad_y_gamma, grad_z_gamma]),
+        )
+
+    def hessian_expect(self, t: float) -> PyTree:
+        # second derivatives of (<x>, <y>, <z>) = (0, -eta sin(theta), eta cos(theta))
+        # with theta = 2 eps/omega sin(omega t) and eta = exp(-2 gamma t)
+        st, ct = jnp.sin(self.omega * t), jnp.cos(self.omega * t)
+        theta = 2 * self.eps / self.omega * st
+        eta = jnp.exp(-2 * self.gamma * t)
+        sth, cth = jnp.sin(theta), jnp.cos(theta)
+
+        # first derivatives (theta depends on eps/omega, eta depends on gamma)
+        th_eps = 2 * st / self.omega
+        th_omega = 2 * self.eps * (t * ct / self.omega - st / self.omega**2)
+        eta_gamma = -2 * t * eta
+        # second derivatives
+        th_eps_omega = 2 * (t * ct / self.omega - st / self.omega**2)
+        th_omega_omega = (
+            2
+            * self.eps
+            * (
+                -(t**2) * st / self.omega
+                - 2 * t * ct / self.omega**2
+                + 2 * st / self.omega**3
+            )
+        )
+        eta_gamma_gamma = 4 * t**2 * eta
+
+        def leaf(theta_p, theta_q, theta_pq, eta_p, eta_q, eta_pq):
+            # second derivative of (0, -eta sin(theta), eta cos(theta)) w.r.t. params
+            d2y = -(
+                eta_pq * sth
+                + cth * (eta_p * theta_q + eta_q * theta_p)
+                - eta * sth * theta_p * theta_q
+                + eta * cth * theta_pq
+            )
+            d2z = (
+                eta_pq * cth
+                - sth * (eta_p * theta_q + eta_q * theta_p)
+                - eta * cth * theta_p * theta_q
+                - eta * sth * theta_pq
+            )
+            return jnp.array([0.0, d2y, d2z])
+
+        # parameter order: (eps, omega, gamma)
+        return self.Params(
+            self.Params(
+                leaf(th_eps, th_eps, 0.0, 0.0, 0.0, 0.0),
+                leaf(th_eps, th_omega, th_eps_omega, 0.0, 0.0, 0.0),
+                leaf(th_eps, 0.0, 0.0, 0.0, eta_gamma, 0.0),
+            ),
+            self.Params(
+                leaf(th_omega, th_eps, th_eps_omega, 0.0, 0.0, 0.0),
+                leaf(th_omega, th_omega, th_omega_omega, 0.0, 0.0, 0.0),
+                leaf(th_omega, 0.0, 0.0, 0.0, eta_gamma, 0.0),
+            ),
+            self.Params(
+                leaf(0.0, th_eps, 0.0, eta_gamma, 0.0, 0.0),
+                leaf(0.0, th_omega, 0.0, eta_gamma, 0.0, 0.0),
+                leaf(0.0, 0.0, 0.0, eta_gamma, eta_gamma, eta_gamma_gamma),
+            ),
         )
 
 

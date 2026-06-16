@@ -3,21 +3,25 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import replace
+from typing import ClassVar
 
 import diffrax as dx
 import equinox as eqx
 import jax
 import jax.numpy as jnp
 from diffrax import AbstractRungeKutta, Bosh3, Euler, Midpoint, ODETerm
-from diffrax._custom_types import VF, Args, Control, RealScalarLike, Y
+from diffrax._custom_types import VF, Args, BoolScalarLike, Control, RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
+from jaxtyping import PyTree
 
-from ...gradient import Forward
+from ...gradient import Forward, Gradient
+from ...method import Rouchon1, Rouchon2, Rouchon3
 from ...qarrays.layout import dense
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import asqarray
 from ...result import MESolveResult
 from ...utils.operators import eye
+from .._utils import sum_qarrays
 from .diffrax_integrator import MESolveDiffraxIntegrator
 
 
@@ -25,7 +29,7 @@ class AbstractRouchonTerm(dx.AbstractTerm):
     # this class bypasses the typical Diffrax term implementation, as Rouchon schemes
     # don't match the vf/contr/prod structure
 
-    rouchon_step: Callable[[RealScalarLike, RealScalarLike, Y], [Y, Y]]
+    rouchon_step: Callable[[RealScalarLike, RealScalarLike, Y], tuple[Y, Y]]
     # should be defined as `rouchon_step(t0, t1, y0) -> y1, error`
 
     def vf(self, t: RealScalarLike, y: Y, args: Args):
@@ -60,11 +64,11 @@ class RouchonDXSolver(dx.AbstractSolver):
         t1: RealScalarLike,
         y0: Y,
         args: Args,
-        solver_state: None,
-        made_jump: bool,
+        solver_state: PyTree | None,
+        made_jump: BoolScalarLike,
     ) -> tuple:
         del solver_state, made_jump, args
-        y1, error = terms.term.rouchon_step(t0, t1, y0)
+        y1, error = terms.term.rouchon_step(t0, t1, y0)  # ty: ignore
         dense_info = dict(y0=y0, y1=y1)
         return y1, error, dense_info, None, dx.RESULTS.successful
 
@@ -155,7 +159,7 @@ class KrausMapRK(eqx.Module):
 
     def dissipator(self, c: float, rho: QArray) -> QArray:
         r"""Jump map $D_c(\rho) = \sum_k L_k \rho L_k^\dagger$ at $t + c\Delta t$."""
-        return sum(M_rho_Mdag(L, rho) for L in self.L(self.t + c * self.dt))
+        return sum_qarrays([M_rho_Mdag(L, rho) for L in self.L(self.t + c * self.dt)])
 
     def compute_stages(self, rho0: QArray) -> list[QArray]:
         r"""Compute all intermediate stages $\rho^{(0)}, \ldots, \rho^{(s-1)}$."""
@@ -191,7 +195,7 @@ class KrausMapRK(eqx.Module):
 
     def adjoint_dissipator(self, c: float, O: QArray) -> QArray:
         r"""Adjoint jump map $D_c^*(O) = \sum_k L_k^\dagger O L_k$."""
-        return sum(Mdag_O_M(L, O) for L in self.L(self.t + c * self.dt))
+        return sum_qarrays([Mdag_O_M(L, O) for L in self.L(self.t + c * self.dt)])
 
     def S_stage(self, i: int, O: QArray) -> QArray:
         r"""Backward propagation of observation $O$ through stage $i$.
@@ -309,6 +313,12 @@ class RouchonPropertiesMixin:
     Expects ``self.H`` and ``self.L`` to be callable.
     """
 
+    H: Callable[[RealScalarLike], QArray]
+    L: Callable[[RealScalarLike], Sequence[QArray]]
+    gradient: Gradient | None
+
+    method: Rouchon1 | Rouchon2 | Rouchon3
+
     def G(self, t: RealScalarLike) -> QArray:
         LdL = sum(Mdag_M(_L) for _L in self.L(t))
         return -1j * self.H(t) - 0.5 * LdL
@@ -389,6 +399,8 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
     Subclasses must set ``_kraus_map_cls`` and may override ``nojump_diffrax_solver``.
     """
 
+    _kraus_map_cls: ClassVar[type[KrausMapRK]]
+
     @property
     def terms(self) -> dx.AbstractTerm:
         def rouchon_step(t0, t1, y0):  # noqa: ANN001, ANN202
@@ -462,6 +474,11 @@ class MESolveAdaptiveRouchonIntegrator(
     and ``_fixed_cls_high`` as class attributes, and may override
     ``_build_dense_info_low`` for solvers that need extra interpolation data.
     """
+
+    _solver_low: ClassVar[dx.AbstractSolver]
+    _solver_high: ClassVar[dx.AbstractSolver]
+    _fixed_cls_low: ClassVar[type[MESolveFixedRouchonIntegrator]]
+    _fixed_cls_high: ClassVar[type[MESolveFixedRouchonIntegrator]]
 
     def _build_dense_info_low(
         self,
@@ -546,10 +563,17 @@ class MESolveAdaptiveRouchonIntegrator(
         stepsize_controller = super().stepsize_controller
         # fix incorrect default linear interpolation by stepping exactly at all times
         # in tsave, so interpolation is bypassed
+        if isinstance(stepsize_controller, dx.ClipStepSizeController):
+            return eqx.tree_at(
+                lambda c: c.step_ts,
+                stepsize_controller,
+                self.ts,
+                is_leaf=lambda x: x is None,
+            )
         return replace(stepsize_controller, step_ts=self.ts)
 
 
-def cholesky_normalize(S: QArray, rho: QArray) -> jax.Array:
+def cholesky_normalize(S: QArray, rho: QArray) -> QArray:
     # To normalize the scheme, we compute
     #   S = sum_k Mk^† @ Mk
     # and replace
@@ -571,15 +595,19 @@ def cholesky_normalize(S: QArray, rho: QArray) -> jax.Array:
     # computing all ~Mks.
 
     T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
+    dims = rho.dims
+    layout = rho.layout
 
     # we want T^{†(-1)} @ y0 @ T^{-1}
-    rho = rho.to_jax()
+    rho_jax = rho.to_jax()
+
     # solve T^† @ x = rho => x = T^{†(-1)} @ rho
-    rho = jax.lax.linalg.triangular_solve(
-        T, rho, lower=True, transpose_a=True, conjugate_a=True, left_side=True
+    rho_jax = jax.lax.linalg.triangular_solve(
+        T, rho_jax, lower=True, transpose_a=True, conjugate_a=True, left_side=True
     )
     # solve x @ T = rho => x = rho @ T^{-1}
-    return jax.lax.linalg.triangular_solve(T, rho, lower=True, left_side=False)
+    rho_jax = jax.lax.linalg.triangular_solve(T, rho_jax, lower=True, left_side=False)
+    return asqarray(rho_jax, dims=dims, layout=layout)
 
 
 class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
