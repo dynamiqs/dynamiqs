@@ -15,8 +15,9 @@
 from __future__ import annotations
 
 import csv
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from pathlib import Path
+from typing import ClassVar
 
 import jax
 
@@ -29,17 +30,17 @@ class BenchmarkResult:
     method: str
     runtime_s: float
     nsteps: int
+    fidelity_error: float
     state_error: float
-    expect_error: float
     status: str
 
+    CSV_HEADER: ClassVar[list[str]] = [
+        'problem', 'method', 'runtime_s', 'nsteps',
+        'fidelity_error', 'state_error', 'status',
+    ]
 
-class BenchmarkProblem:
-    name: str
-    description: str
-
-    def run(self, method) -> tuple:
-        raise NotImplementedError
+    def to_row(self) -> list:
+        return [getattr(self, f.name) for f in fields(self) if f.name != 'CSV_HEADER']
 
 
 class BenchmarkRunner:
@@ -48,24 +49,13 @@ class BenchmarkRunner:
         self.output_dir.mkdir(exist_ok=True)
         self.results: list[BenchmarkResult] = []
 
-    def add_result(self, result: BenchmarkResult) -> None:
-        self.results.append(result)
-
     def save_csv(self) -> None:
         csv_path = self.output_dir / 'benchmark_results.csv'
         with csv_path.open('w', newline='') as f:
             writer = csv.writer(f)
-            header = [
-                'problem', 'method', 'runtime_s', 'nsteps',
-                'state_rel_error', 'expect_rel_error', 'status'
-            ]
-            writer.writerow(header)
+            writer.writerow(BenchmarkResult.CSV_HEADER)
             for r in self.results:
-                row = [
-                    r.problem, r.method, r.runtime_s, r.nsteps,
-                    r.state_error, r.expect_error, r.status
-                ]
-                writer.writerow(row)
+                writer.writerow(r.to_row())
 
     def print_leaderboard(self) -> None:
         print('\n=== Dynamiqs Solver Benchmark Results ===\n')
@@ -75,16 +65,13 @@ class BenchmarkRunner:
             print('=' * 70)
             header = (
                 f'{"Method":<16} | {"Runtime (s)":<12} | {"Steps":<8} | '
-                f'{"State Error":<12} | {"Expect Error":<12} | {"Status"}'
+                f'{"Fidelity Err":<12} | {"L2 Err":<12} | {"Status"}'
             )
             print(header)
             print('-' * 70)
             for r in sorted(problem_results, key=lambda x: x.runtime_s):
-                state_err_str = f'{r.state_error:.2e}'
-                expect_err_str = f'{r.expect_error:.2e}'
                 print(
-                    f'{r.method:<16} | {r.runtime_s:<12.4f} | '
-                    f'{r.nsteps:<8} | {state_err_str:<12} | '
-                    f'{expect_err_str:<12} | {r.status}'
+                    f'{r.method:<16} | {r.runtime_s:<12.4f} | {r.nsteps:<8} | '
+                    f'{r.fidelity_error:<12.2e} | {r.state_error:<12.2e} | {r.status}'
                 )
             print()

@@ -19,19 +19,54 @@ from typing import Any
 import jax.numpy as jnp
 
 import dynamiqs as dq
+from dynamiqs.method import (
+    Dopri5,
+    Dopri8,
+    Euler,
+    Expm,
+    Kvaerno3,
+    Kvaerno5,
+    Method,
+    Rouchon1,
+    Rouchon2,
+    Rouchon3,
+    Tsit5,
+)
 
 
 class BenchmarkProblem:
+    """Base class for a benchmark problem.
+
+    Each subclass must define:
+    - name, description
+    - methods: a dict mapping method name -> (method_instance, reference_precedence)
+      where reference_precedence is 'analytical' (gold standard), 'expm' (diagonalisation),
+      or 'high_order' (high-tolerance adaptive).
+    - run(method) that returns the solver result.
+    """
+
     name: str
     description: str
+    methods: dict[str, tuple[Method, str]]
 
-    def run(self, method) -> tuple[Any, Any, Any]:
+    def run(self, method: Method) -> Any:
         raise NotImplementedError
 
 
 class ClosedTwoQubit(BenchmarkProblem):
     name = 'closed_two_qubit'
     description = 'Closed two-qubit Schrödinger dynamics (cross-resonance inspired)'
+    methods = {
+        'Tsit5': (Tsit5(), 'analytical'),
+        'Dopri5': (Dopri5(), 'analytical'),
+        'Dopri8': (Dopri8(), 'analytical'),
+        'Kvaerno3': (Kvaerno3(), 'analytical'),
+        'Kvaerno5': (Kvaerno5(), 'analytical'),
+        'Euler': (Euler(dt=1e-4), 'analytical'),
+        'Rouchon1': (Rouchon1(dt=1e-4), 'analytical'),
+        'Rouchon2': (Rouchon2(dt=1e-4), 'analytical'),
+        'Expm': (Expm(), 'expm'),
+    }
 
     def __init__(self):
         self.tsave = jnp.linspace(0.0, 0.3, 7)
@@ -47,15 +82,26 @@ class ClosedTwoQubit(BenchmarkProblem):
             dq.tensor(dq.sigmaz(), dq.eye(2)),
             dq.tensor(dq.eye(2), dq.sigmaz()),
         ]
+        self._reference = None
 
-    def run(self, method) -> tuple[Any, Any, Any]:
-        result = dq.sesolve(self.H, self.y0, self.tsave, exp_ops=self.Es, method=method)
-        return result, None, None
+    def run(self, method: Method) -> Any:
+        return dq.sesolve(self.H, self.y0, self.tsave, exp_ops=self.Es, method=method)
 
 
 class DrivenDampedHarmonicOscillator(BenchmarkProblem):
     name = 'driven_damped_oscillator'
     description = 'Driven-damped harmonic oscillator Lindblad dynamics'
+    methods = {
+        'Tsit5': (Tsit5(), 'analytical'),
+        'Dopri5': (Dopri5(), 'analytical'),
+        'Dopri8': (Dopri8(), 'analytical'),
+        'Kvaerno3': (Kvaerno3(), 'analytical'),
+        'Kvaerno5': (Kvaerno5(), 'analytical'),
+        'Euler': (Euler(dt=1e-4), 'analytical'),
+        'Rouchon1': (Rouchon1(dt=1e-4), 'analytical'),
+        'Rouchon2': (Rouchon2(dt=1e-4), 'analytical'),
+        'Expm': (Expm(), 'expm'),
+    }
 
     def __init__(self):
         self.tsave = jnp.linspace(0.0, 1.2, 9)
@@ -66,17 +112,26 @@ class DrivenDampedHarmonicOscillator(BenchmarkProblem):
         self.H = self.delta * dq.number(self.n)
         self.Ls = [jnp.sqrt(self.kappa) * dq.destroy(self.n)]
         self.Es = [dq.position(self.n), dq.momentum(self.n)]
+        self._reference = None
 
-    def run(self, method) -> tuple[Any, Any, Any]:
-        result = dq.mesolve(
+    def run(self, method: Method) -> Any:
+        return dq.mesolve(
             self.H, self.Ls, self.y0, self.tsave, exp_ops=self.Es, method=method
         )
-        return result, None, None
 
 
 class BatchedKerrOscillator(BenchmarkProblem):
     name = 'batched_kerr_oscillator'
-    description = 'Batched Kerr oscillator mesolve'
+    description = 'Batched Kerr oscillator mesolve (min/max/avg stats recorded)'
+    methods = {
+        'Tsit5': (Tsit5(), 'analytical'),
+        'Dopri5': (Dopri5(), 'analytical'),
+        'Dopri8': (Dopri8(), 'analytical'),
+        'Kvaerno3': (Kvaerno3(), 'analytical'),
+        'Euler': (Euler(dt=1e-4), 'analytical'),
+        'Rouchon2': (Rouchon2(dt=1e-4), 'analytical'),
+        'Expm': (Expm(), 'expm'),
+    }
 
     def __init__(self):
         self.tsave = jnp.linspace(0.0, 0.6, 7)
@@ -86,17 +141,22 @@ class BatchedKerrOscillator(BenchmarkProblem):
         self.H = dq.number(self.n) + 0.5 * self.omegas[..., None, None] * dq.number(self.n).elpow(2)
         self.Ls = [jnp.sqrt(0.3) * dq.destroy(self.n)]
         self.Es = [dq.number(self.n)]
+        self._reference = None
 
-    def run(self, method) -> tuple[Any, Any, Any]:
-        result = dq.mesolve(
+    def run(self, method: Method) -> Any:
+        return dq.mesolve(
             self.H, self.Ls, self.y0, self.tsave, exp_ops=self.Es, method=method
         )
-        return result, None, None
 
 
 class LargeScaleClosed(BenchmarkProblem):
     name = 'large_scale_closed'
-    description = 'Large-scale closed system Schrodinger dynamics'
+    description = 'Large-scale (12-qubit) closed-system Schrödinger dynamics'
+    methods = {
+        'Tsit5': (Tsit5(), 'high_order'),
+        'Dopri5': (Dopri5(), 'high_order'),
+        'Dopri8': (Dopri8(rtol=1e-8, atol=1e-8), 'high_order'),
+    }
 
     def __init__(self):
         self.tsave = jnp.linspace(0.0, 0.3, 7)
@@ -104,15 +164,20 @@ class LargeScaleClosed(BenchmarkProblem):
         self.H = dq.number(n) + 0.5 * dq.number(n).elpow(2)
         self.y0 = dq.coherent(n, 1.5)
         self.Es = [dq.destroy(n), dq.number(n)]
+        self._reference = None
 
-    def run(self, method) -> tuple[Any, Any, Any]:
-        result = dq.sesolve(self.H, self.y0, self.tsave, exp_ops=self.Es, method=method)
-        return result, None, None
+    def run(self, method: Method) -> Any:
+        return dq.sesolve(self.H, self.y0, self.tsave, exp_ops=self.Es, method=method)
 
 
 class TimeDependentQubit(BenchmarkProblem):
     name = 'time_dependent_qubit'
-    description = 'Time-dependent qubit Schrodinger dynamics'
+    description = 'Time-dependent qubit Schrödinger dynamics'
+    methods = {
+        'Tsit5': (Tsit5(), 'high_order'),
+        'Dopri5': (Dopri5(), 'high_order'),
+        'Dopri8': (Dopri8(rtol=1e-8, atol=1e-8), 'high_order'),
+    }
 
     def __init__(self):
         self.tsave = jnp.linspace(0.0, 1.0, 9)
@@ -121,15 +186,20 @@ class TimeDependentQubit(BenchmarkProblem):
         self.y0 = dq.fock(2, 0)
         self.H = dq.timecallable(lambda t: self.eps * jnp.cos(self.omega * t) * dq.sigmax())
         self.Es = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
+        self._reference = None
 
-    def run(self, method) -> tuple[Any, Any, Any]:
-        result = dq.sesolve(self.H, self.y0, self.tsave, exp_ops=self.Es, method=method)
-        return result, None, None
+    def run(self, method: Method) -> Any:
+        return dq.sesolve(self.H, self.y0, self.tsave, exp_ops=self.Es, method=method)
 
 
 class OpenTimeDependentQubit(BenchmarkProblem):
     name = 'open_time_dependent_qubit'
     description = 'Open time-dependent qubit Lindblad dynamics'
+    methods = {
+        'Tsit5': (Tsit5(), 'high_order'),
+        'Dopri5': (Dopri5(), 'high_order'),
+        'Dopri8': (Dopri8(rtol=1e-8, atol=1e-8), 'high_order'),
+    }
 
     def __init__(self):
         self.tsave = jnp.linspace(0.0, 1.0, 9)
@@ -140,9 +210,20 @@ class OpenTimeDependentQubit(BenchmarkProblem):
         self.H = dq.timecallable(lambda t: self.eps * jnp.cos(self.omega * t) * dq.sigmax())
         self.Ls = [jnp.sqrt(self.gamma) * dq.sigmax()]
         self.Es = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
+        self._reference = None
 
-    def run(self, method) -> tuple[Any, Any, Any]:
-        result = dq.mesolve(
+    def run(self, method: Method) -> Any:
+        return dq.mesolve(
             self.H, self.Ls, self.y0, self.tsave, exp_ops=self.Es, method=method
         )
-        return result, None, None
+
+
+# Registry of all benchmark problems
+ALL_PROBLEMS: list[type[BenchmarkProblem]] = [
+    ClosedTwoQubit,
+    DrivenDampedHarmonicOscillator,
+    BatchedKerrOscillator,
+    LargeScaleClosed,
+    TimeDependentQubit,
+    OpenTimeDependentQubit,
+]
