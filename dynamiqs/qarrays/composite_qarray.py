@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import overload
+
 import equinox as eqx
 import jax.numpy as jnp
 import numpy as np
@@ -33,122 +35,123 @@ class CompositeTerm(eqx.Module):
 
     def _materialize(self) -> MaterializedQArray:
         """Coeff * (A_0 ⊗ … ⊗ A_{N-1}); reduce via op.__and__ then __mul__(coeff)."""
+        raise NotImplementedError
 
     # === Properties ===
 
     @property
     def dtype(self) -> jnp.dtype:
         # jnp.result_type over each op's .dtype + coeff.
-        pass
+        raise NotImplementedError
 
     @property
     def shape(self) -> tuple[int, ...]:
         # (*batch, prod(d_k), prod(d_k)); batch axes broadcast across ops/coeff.
-        pass
+        raise NotImplementedError
 
     @property
     def layout(self) -> Layout:
         # aggregate over op's .layout (e.g. dense if any op is dense, else dia).
-        pass
+        raise NotImplementedError
 
     @property
     def mT(self) -> CompositeTerm:
         # (c·⊗A_k)^T = c·⊗A_k^T → each op's .mT.
-        pass
+        raise NotImplementedError
 
     # === Array methods ===
 
     def conj(self) -> CompositeTerm:
         # conj(c·⊗A_k) = conj(c)·⊗conj(A_k) → each op's .conj() + jnp.conj(coeff).
-        pass
+        raise NotImplementedError
 
     def broadcast_to(self, *shape: int) -> CompositeTerm:
         # batch axes only → each op's .broadcast_to() + jnp.broadcast_to(coeff, ...).
-        pass
+        raise NotImplementedError
 
     def trace(self) -> Array:
         # tr(c·⊗A_k) = c·Π_k tr(A_k) → each op's .trace().
-        pass
+        raise NotImplementedError
 
     def sum(self, axis: int | tuple[int, ...] | None = None) -> CompositeTerm:
         # MATERIALIZE → _materialize().sum(axis).
-        pass
+        raise NotImplementedError
 
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> CompositeTerm:
         # batch axes only → each op's .squeeze(axis) + jnp.squeeze(coeff, axis).
-        pass
+        raise NotImplementedError
 
     def powm(self, n: int) -> CompositeTerm:
         # (c·⊗A_k)^n = c^n·⊗A_k^n → each op's .powm(n).
-        pass
+        raise NotImplementedError
 
     def expm(self, *, max_squarings: int = 16) -> MaterializedQArray:
         # exp(c·⊗A_k) = (⊗V_k)·diag(exp(c·∏λ_k))·(⊗V_k)^†; returns MaterializedQArray.
         # → each op's ._eigh().
-        pass
+        raise NotImplementedError
 
     def norm(self, *, psd: bool = False) -> Array:
         # LAZY if psd=False: ‖c·⊗A_k‖_F = |c|·Π_k‖A_k‖_F.
         # psd=True: trace shortcut only if known PSD; otherwise materialize.
-        pass
+        raise NotImplementedError
 
     def _eig(self) -> tuple[Array, MaterializedQArray]:
         # eigenvalues = c·Cartesian(λ_k), eigenvectors = ⊗V_k (materialized)
         # → each op's ._eig().
-        pass
+        raise NotImplementedError
 
     def _eigh(self) -> tuple[Array, Array]:
         # Hermitian variant; returns raw JAX arrays → each op's ._eigh().
-        pass
+        raise NotImplementedError
 
     def _eigvals(self) -> Array:
         # c · Cartesian product of per-op eigenvalues → each op's ._eigvals().
-        pass
+        raise NotImplementedError
 
     def _eigvalsh(self) -> Array:
         # Hermitian variant → each op's ._eigvalsh().
-        pass
+        raise NotImplementedError
 
     def devices(self) -> set[Device]:
         # must all be the same by convention ?
-        pass
+        raise NotImplementedError
 
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         # Sufficient (not necessary): coeff real AND all ops .isherm().
         # False here is not conclusive for multi-term CompositeQArray.
-        pass
+        raise NotImplementedError
 
     def block_until_ready(self) -> CompositeTerm:
         # → each op's .block_until_ready().
-        pass
+        raise NotImplementedError
 
     # === Quantum methods ===
 
     def ptrace(self, keep: tuple[int, ...]) -> CompositeTerm:
         # ptrace_{∉keep}(c·⊗A_j) = c·(Π_{j∉keep} tr(A_j))·⊗_{k∈keep} A_k
         # → .trace() on each traced-out op.
-        pass
+        raise NotImplementedError
 
     # === Indexing ===
 
     def __getitem__(self, key: IndexType) -> CompositeTerm:
         # batch axes only → each op's __getitem__.
         # Matrix-axis keys: caller materializes.
-        pass
+        raise NotImplementedError
 
     # === Arithmetic ===
 
     def __mul__(self, y: ArrayLike) -> CompositeTerm:
         # y·(c·⊗A_k) = (y·c)·⊗A_k; only touches coeff.
-        pass
+        raise NotImplementedError
 
     def __matmul__(self, other: CompositeTerm) -> CompositeTerm:
         # is the main mpoint of the feature
-        pass
+        raise NotImplementedError
 
     def __and__(self, other: CompositeTerm) -> CompositeTerm:
         # (c·⊗A_k)⊗(d·⊗B_l) = (c·d)·(A_*,B_*); tuple concat + coeff multiply.
-        pass
+        raise NotImplementedError
 
 
 class CompositeQArray(QArray):
@@ -186,184 +189,197 @@ class CompositeQArray(QArray):
 
         Fallback for MATERIALIZE methods.
         """
+        raise NotImplementedError
 
     # === Properties ===
 
     @property
     def dtype(self) -> jnp.dtype:
         # LAZY → term.dtype; must all match
-        pass
+        raise NotImplementedError
 
     @property
     def layout(self) -> Layout:
         # CONVENTION → term.layout; aggregate (e.g. dense if any is dense).
-        pass
+        raise NotImplementedError
 
     @property
     def shape(self) -> tuple[int, ...]:
         # LAZY → term.shape; broadcast batch axes across terms.
-        pass
+        raise NotImplementedError
 
     @property
     def mT(self) -> QArray:
         # LAZY (A⊗B)^T=A^T⊗B^T → term.mT.
-        pass
+        raise NotImplementedError
 
     @property
     def ndim(self) -> int:
         # LAZY → term.ndim; must all match.
-        pass
+        raise NotImplementedError
 
     # === Array methods ===
 
     def conj(self) -> QArray:
         # LAZY → term.conj().
-        pass
+        raise NotImplementedError
 
     def reshape(self, *shape: int) -> QArray:
         # MATERIALIZE → _materialize().reshape(*shape).
-        pass
+        raise NotImplementedError
 
     def _reshape_unchecked(self, *shape: int) -> QArray:
         # MATERIALIZE → _materialize()._reshape_unchecked(*shape).
-        pass
+        raise NotImplementedError
 
     def broadcast_to(self, *shape: int) -> QArray:
         # LAZY batch axes only → term.broadcast_to(...).
-        pass
+        raise NotImplementedError
 
     def powm(self, n: int) -> QArray:
         # MATERIALIZE | 1-term (c·⊗A_k)^n=c^n·⊗A_k^n → term.powm(n).
-        pass
+        raise NotImplementedError
 
     def expm(self, *, max_squarings: int = 16) -> QArray:
         # MATERIALIZE | 1-term per-factor spectral path → term.expm(...).
-        pass
+        raise NotImplementedError
 
     def norm(self, *, psd: bool = False) -> Array:
         # LAZY if psd=False: Gram sum over term pairs using local traces.
         # psd=True: trace shortcut only if known PSD; otherwise materialize.
         # can be unstable
-        pass
+        raise NotImplementedError
 
     def trace(self) -> Array:
         # LAZY tr(c·⊗A_k)=c·Π tr(A_k) → sum(term.trace()).
-        pass
+        raise NotImplementedError
 
     def sum(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
         # MATERIALIZE → _materialize().sum(axis).
-        pass
+        raise NotImplementedError
 
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
         # LAZY → term.squeeze(axis).
-        pass
+        raise NotImplementedError
 
     def _eig(self) -> tuple[Array, QArray]:
         # MATERIALIZE | 1-term eigenvalues=c·Cartesian(λ_k), eigenvecs=⊗V_k
         # → term._eig().
-        pass
+        raise NotImplementedError
 
     def _eigh(self) -> tuple[Array, Array]:
         # MATERIALIZE | 1-term Hermitian variant → term._eigh().
-        pass
+        raise NotImplementedError
 
     def _eigvals(self) -> Array:
         # MATERIALIZE | 1-term → term._eigvals().
-        pass
+        raise NotImplementedError
 
     def _eigvalsh(self) -> Array:
         # MATERIALIZE | 1-term → term._eigvalsh().
-        pass
+        raise NotImplementedError
 
     def devices(self) -> set[Device]:
         # LAZY → all must be on same device ? .
-        pass
+        raise NotImplementedError
 
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         # MATERIALIZE | 1-term sufficient check → term.isherm(rtol, atol).
-        pass
+        raise NotImplementedError
 
     def block_until_ready(self) -> QArray:
         # LAZY → term.block_until_ready().
-        pass
+        raise NotImplementedError
 
     # === Quantum methods ===
 
     def ptrace(self, *keep: int) -> QArray:
         # LAZY → term.ptrace(keep).
-        pass
+        raise NotImplementedError
 
     # === Conversion ===
 
     def to_qutip(self) -> Qobj | list[Qobj]:
         # MATERIALIZE → _materialize().to_qutip().
-        pass
+        raise NotImplementedError
 
     def to_jax(self) -> Array:
         # MATERIALIZE → _materialize().to_jax().
-        pass
+        raise NotImplementedError
 
     def to_numpy(self) -> np.ndarray:
         # MATERIALIZE → _materialize().to_numpy().
-        pass
+        raise NotImplementedError
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         # MATERIALIZE → _materialize().__array__(dtype, copy).
-        pass
+        raise NotImplementedError
 
     def asdense(self) -> QArray:
         # MATERIALIZE → _materialize().asdense().
-        pass
+        raise NotImplementedError
 
     def assparsedia(self, offsets: tuple[int, ...] | None = None) -> QArray:
         # MATERIALIZE → _materialize().assparsedia(offsets).
-        pass
+        raise NotImplementedError
 
     # === Repr ===
 
     def __repr__(self) -> str:
         # LAZY; print dims, n_terms, shape, dtype, layout.
-        pass
+        raise NotImplementedError
 
     # === Arithmetic ===
 
     def __mul__(self, y: ArrayLike) -> QArray:
         # LAZY y·Σc_j⊗A_{jk}=Σ(y·c_j)⊗A_{jk} → term.__mul__(y).
-        pass
+        raise NotImplementedError
 
     def __add__(self, y: QArrayLike) -> QArray:
         # LAZY ★ two composites: self.terms + other.terms.
         # Non-composite y: wrap as single-operator CompositeTerm first.
-        pass
+        raise NotImplementedError
+
+    @overload
+    def __matmul__(self, y: QArray) -> QArray: ...
+
+    @overload
+    def __matmul__(self, y: ArrayLike) -> Array: ...
 
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
         # LAZY ★ (Σc_j⊗A_jk)·(Σd_l⊗B_lk)=Σ_{j,l}(c_j·d_l)⊗(A_jk·B_lk) → term_j @ term_l.
-        pass
+        raise NotImplementedError
 
-    def __rmatmul__(self, y: QArrayLike) -> QArray:
+    @overload
+    def __rmatmul__(self, y: QArray) -> QArray: ...
+
+    @overload
+    def __rmatmul__(self, y: ArrayLike) -> Array: ...
+
+    def __rmatmul__(self, y: QArrayLike) -> QArray | Array:
         # LAZY symmetric to __matmul__ → term_other @ term_self.
-        pass
+        raise NotImplementedError
 
     def __and__(self, y: QArray) -> QArray:
         # LAZY ★ (Σc_j⊗A_jk)⊗(Σd_l⊗B_lk)=Σ_{j,l}(c_j·d_l)⊗(A_j*,B_l*) → term_j & term_l.
-        pass
+        raise NotImplementedError
 
     # === Element-wise ===
 
     def addscalar(self, y: ArrayLike) -> QArray:
         # MATERIALIZE → _materialize().addscalar(y).
-        pass
+        raise NotImplementedError
 
     def elmul(self, y: QArrayLike) -> QArray:
         # MATERIALIZE → _materialize().elmul(y).
-        pass
+        raise NotImplementedError
 
     def elpow(self, power: int) -> QArray:
         # MATERIALIZE → _materialize().elpow(power).
-        pass
+        raise NotImplementedError
 
     # === Indexing ===
 
     def __getitem__(self, key: IndexType) -> QArray:
         # MIXED batch: term[key] | matrix: _materialize()[key].
-        pass
+        raise NotImplementedError
