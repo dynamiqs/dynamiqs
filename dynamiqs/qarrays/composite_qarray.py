@@ -71,7 +71,7 @@ class CompositeTerm(eqx.Module):
         pass
 
     def sum(self, axis: int | tuple[int, ...] | None = None) -> CompositeTerm:
-        # batch axes only → each op's .sum(axis) + jnp.sum(coeff, axis).
+        # MATERIALIZE → _materialize().sum(axis).
         pass
 
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> CompositeTerm:
@@ -88,7 +88,8 @@ class CompositeTerm(eqx.Module):
         pass
 
     def norm(self, *, psd: bool = False) -> Array:
-        # ‖c·⊗A_k‖_F = |c|·Π_k‖A_k‖_F → each op's .norm(psd=psd).
+        # LAZY if psd=False: ‖c·⊗A_k‖_F = |c|·Π_k‖A_k‖_F.
+        # psd=True: trace shortcut only if known PSD; otherwise materialize.
         pass
 
     def _eig(self) -> tuple[Array, MaterializedQArray]:
@@ -109,7 +110,7 @@ class CompositeTerm(eqx.Module):
         pass
 
     def devices(self) -> set[Device]:
-        # union of each op's .devices().
+        # must all be the same by convention ?
         pass
 
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
@@ -142,7 +143,7 @@ class CompositeTerm(eqx.Module):
         pass
 
     def __matmul__(self, other: CompositeTerm) -> CompositeTerm:
-        # (c·⊗A_k)·(d·⊗B_k) = (c·d)·⊗(A_k·B_k) → each op pair's @.
+        # is the main mpoint of the feature
         pass
 
     def __and__(self, other: CompositeTerm) -> CompositeTerm:
@@ -175,8 +176,7 @@ class CompositeQArray(QArray):
     # === Lifecycle ===
 
     def __check_init__(self):
-        # TODO: super().__check_init__(); verify len(term.operators)==len(dims)
-        # and term.operators[k] has matrix dim dims[k] for every term.
+        # Check types in sum are the same and check init of terms is ok
         pass
 
     # === Materialization ===
@@ -191,7 +191,7 @@ class CompositeQArray(QArray):
 
     @property
     def dtype(self) -> jnp.dtype:
-        # LAZY → term.dtype; promote across terms.
+        # LAZY → term.dtype; must all match
         pass
 
     @property
@@ -211,7 +211,7 @@ class CompositeQArray(QArray):
 
     @property
     def ndim(self) -> int:
-        # LAZY → len(self.shape).
+        # LAZY → term.ndim; must all match.
         pass
 
     # === Array methods ===
@@ -241,7 +241,9 @@ class CompositeQArray(QArray):
         pass
 
     def norm(self, *, psd: bool = False) -> Array:
-        # MATERIALIZE | 1-term ‖c·⊗A_k‖_F=|c|·Π‖A_k‖_F → term.norm(psd=psd).
+        # LAZY if psd=False: Gram sum over term pairs using local traces.
+        # psd=True: trace shortcut only if known PSD; otherwise materialize.
+        # can be unstable
         pass
 
     def trace(self) -> Array:
@@ -249,7 +251,7 @@ class CompositeQArray(QArray):
         pass
 
     def sum(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
-        # MIXED batch: term.sum(axis) | matrix: _materialize().sum(axis).
+        # MATERIALIZE → _materialize().sum(axis).
         pass
 
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
@@ -274,7 +276,7 @@ class CompositeQArray(QArray):
         pass
 
     def devices(self) -> set[Device]:
-        # LAZY → union(term.devices()).
+        # LAZY → all must be on same device ? .
         pass
 
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
@@ -288,8 +290,7 @@ class CompositeQArray(QArray):
     # === Quantum methods ===
 
     def ptrace(self, *keep: int) -> QArray:
-        # LAZY ★ ptrace_{∉keep}(c·⊗A_j)=c·(Π_{j∉keep}tr(A_j))·⊗_{∈keep}A_k
-        # → term.ptrace(keep).
+        # LAZY → term.ptrace(keep).
         pass
 
     # === Conversion ===
