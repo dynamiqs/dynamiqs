@@ -21,11 +21,11 @@ import jax.numpy as jnp
 
 jax.config.update('jax_enable_x64', True)
 
-import dynamiqs as dq
-from dynamiqs.method import Dopri8, Expm, Method, Tsit5
+from problems import ALL_PROBLEMS, BenchmarkProblem  # noqa: E402
+from runner import BenchmarkResult, BenchmarkRunner  # noqa: E402
 
-from problems import ALL_PROBLEMS, BenchmarkProblem
-from runner import BenchmarkResult, BenchmarkRunner
+import dynamiqs as dq  # noqa: E402
+from dynamiqs.method import Dopri8, Expm, Method  # noqa: E402
 
 
 def _fidelity_error(sim_states, ref_states):
@@ -77,13 +77,22 @@ def compute_reference(problem: BenchmarkProblem, method: Method, tag: str):
         try:
             if hasattr(problem, 'Ls'):
                 ref = dq.mesolve(
-                    problem.H, problem.Ls, problem.y0, problem.tsave,
-                    exp_ops=problem.Es, method=Expm(), progress_meter=False
+                    problem.H,
+                    problem.Ls,
+                    problem.y0,
+                    problem.tsave,
+                    exp_ops=problem.Es,
+                    method=Expm(),
+                    progress_meter=False,
                 )
             else:
                 ref = dq.sesolve(
-                    problem.H, problem.y0, problem.tsave,
-                    exp_ops=problem.Es, method=Expm(), progress_meter=False
+                    problem.H,
+                    problem.y0,
+                    problem.tsave,
+                    exp_ops=problem.Es,
+                    method=Expm(),
+                    progress_meter=False,
                 )
             ref.block_until_ready()
             ref_states = ref.states
@@ -97,13 +106,22 @@ def compute_reference(problem: BenchmarkProblem, method: Method, tag: str):
             high_order = Dopri8(rtol=1e-10, atol=1e-10)
             if hasattr(problem, 'Ls'):
                 ref = dq.mesolve(
-                    problem.H, problem.Ls, problem.y0, problem.tsave,
-                    exp_ops=problem.Es, method=high_order, progress_meter=False
+                    problem.H,
+                    problem.Ls,
+                    problem.y0,
+                    problem.tsave,
+                    exp_ops=problem.Es,
+                    method=high_order,
+                    progress_meter=False,
                 )
             else:
                 ref = dq.sesolve(
-                    problem.H, problem.y0, problem.tsave,
-                    exp_ops=problem.Es, method=high_order, progress_meter=False
+                    problem.H,
+                    problem.y0,
+                    problem.tsave,
+                    exp_ops=problem.Es,
+                    method=high_order,
+                    progress_meter=False,
                 )
             ref.block_until_ready()
             ref_states = ref.states
@@ -121,28 +139,42 @@ def run_benchmark() -> list[BenchmarkResult]:
 
     for problem in problems:
         for method_name, (method_instance, ref_tag) in problem.methods.items():
-            ref_states, ref_expects = compute_reference(problem, method_instance, ref_tag)
+            ref_states, _ = compute_reference(problem, method_instance, ref_tag)
 
             # JIT compile the solver call
             try:
                 if hasattr(problem, 'Ls'):
                     compiled = dq.mesolve(
-                        problem.H, problem.Ls, problem.y0, problem.tsave,
-                        exp_ops=problem.Es, method=method_instance, progress_meter=False
+                        problem.H,
+                        problem.Ls,
+                        problem.y0,
+                        problem.tsave,
+                        exp_ops=problem.Es,
+                        method=method_instance,
+                        progress_meter=False,
                     )
                 else:
                     compiled = dq.sesolve(
-                        problem.H, problem.y0, problem.tsave,
-                        exp_ops=problem.Es, method=method_instance, progress_meter=False
+                        problem.H,
+                        problem.y0,
+                        problem.tsave,
+                        exp_ops=problem.Es,
+                        method=method_instance,
+                        progress_meter=False,
                     )
                 compiled.block_until_ready()
             except (TypeError, ValueError) as e:
-                runner.results.append(BenchmarkResult(
-                    problem=problem.name, method=method_name,
-                    runtime_s=0.0, nsteps=0,
-                    fidelity_error=float('nan'), state_error=float('nan'),
-                    status=f'fail: {e!r}'[:60]
-                ))
+                runner.results.append(
+                    BenchmarkResult(
+                        problem=problem.name,
+                        method=method_name,
+                        runtime_s=0.0,
+                        nsteps=0,
+                        fidelity_error=float('nan'),
+                        state_error=float('nan'),
+                        status=f'fail: {e!r}'[:60],
+                    )
+                )
                 continue
 
             # Timed run
@@ -150,13 +182,22 @@ def run_benchmark() -> list[BenchmarkResult]:
                 t0 = time_module.perf_counter()
                 if hasattr(problem, 'Ls'):
                     result = dq.mesolve(
-                        problem.H, problem.Ls, problem.y0, problem.tsave,
-                        exp_ops=problem.Es, method=method_instance, progress_meter=False
+                        problem.H,
+                        problem.Ls,
+                        problem.y0,
+                        problem.tsave,
+                        exp_ops=problem.Es,
+                        method=method_instance,
+                        progress_meter=False,
                     )
                 else:
                     result = dq.sesolve(
-                        problem.H, problem.y0, problem.tsave,
-                        exp_ops=problem.Es, method=method_instance, progress_meter=False
+                        problem.H,
+                        problem.y0,
+                        problem.tsave,
+                        exp_ops=problem.Es,
+                        method=method_instance,
+                        progress_meter=False,
                     )
                 result.block_until_ready()
                 elapsed = time_module.perf_counter() - t0
@@ -166,19 +207,29 @@ def run_benchmark() -> list[BenchmarkResult]:
                 fidel_err = _fidelity_error(result.states, ref_states)
                 l2_err = _l2_state_error(result.states, ref_states)
 
-                runner.results.append(BenchmarkResult(
-                    problem=problem.name, method=method_name,
-                    runtime_s=elapsed, nsteps=nsteps,
-                    fidelity_error=fidel_err, state_error=l2_err,
-                    status='pass'
-                ))
+                runner.results.append(
+                    BenchmarkResult(
+                        problem=problem.name,
+                        method=method_name,
+                        runtime_s=elapsed,
+                        nsteps=nsteps,
+                        fidelity_error=fidel_err,
+                        state_error=l2_err,
+                        status='pass',
+                    )
+                )
             except (TypeError, ValueError) as e:
-                runner.results.append(BenchmarkResult(
-                    problem=problem.name, method=method_name,
-                    runtime_s=0.0, nsteps=0,
-                    fidelity_error=float('nan'), state_error=float('nan'),
-                    status=f'fail: {e!r}'[:60]
-                ))
+                runner.results.append(
+                    BenchmarkResult(
+                        problem=problem.name,
+                        method=method_name,
+                        runtime_s=0.0,
+                        nsteps=0,
+                        fidelity_error=float('nan'),
+                        state_error=float('nan'),
+                        status=f'fail: {e!r}'[:60],
+                    )
+                )
 
     runner.save_csv()
     runner.print_leaderboard()

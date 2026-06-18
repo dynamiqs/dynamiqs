@@ -29,7 +29,6 @@ from dynamiqs.method import (
     Method,
     Rouchon1,
     Rouchon2,
-    Rouchon3,
     Tsit5,
 )
 
@@ -40,8 +39,8 @@ class BenchmarkProblem:
     Each subclass must define:
     - name, description
     - methods: a dict mapping method name -> (method_instance, reference_precedence)
-      where reference_precedence is 'analytical' (gold standard), 'expm' (diagonalisation),
-      or 'high_order' (high-tolerance adaptive).
+      where reference_precedence is 'analytical' (gold standard), 'expm'
+      (diagonalisation), or 'high_order' (high-tolerance adaptive).
     - run(method) that returns the solver result.
     """
 
@@ -56,7 +55,7 @@ class BenchmarkProblem:
 class ClosedTwoQubit(BenchmarkProblem):
     name = 'closed_two_qubit'
     description = 'Closed two-qubit Schrödinger dynamics (cross-resonance inspired)'
-    methods = {
+    methods: dict[str, tuple[Method, str]] = {  # noqa: RUF012
         'Tsit5': (Tsit5(), 'analytical'),
         'Dopri5': (Dopri5(), 'analytical'),
         'Dopri8': (Dopri8(), 'analytical'),
@@ -78,10 +77,7 @@ class ClosedTwoQubit(BenchmarkProblem):
         H12 = g * dq.tensor(dq.sigmax(), dq.sigmax())
         self.H = dq.tensor(H1, dq.eye(2)) + dq.tensor(dq.eye(2), H2) + H12
         self.y0 = dq.tensor(dq.basis(2, 0), dq.basis(2, 1))
-        self.Es = [
-            dq.tensor(dq.sigmaz(), dq.eye(2)),
-            dq.tensor(dq.eye(2), dq.sigmaz()),
-        ]
+        self.Es = [dq.tensor(dq.sigmaz(), dq.eye(2)), dq.tensor(dq.eye(2), dq.sigmaz())]
         self._reference = None
 
     def run(self, method: Method) -> Any:
@@ -91,7 +87,7 @@ class ClosedTwoQubit(BenchmarkProblem):
 class DrivenDampedHarmonicOscillator(BenchmarkProblem):
     name = 'driven_damped_oscillator'
     description = 'Driven-damped harmonic oscillator Lindblad dynamics'
-    methods = {
+    methods: dict[str, tuple[Method, str]] = {  # noqa: RUF012
         'Tsit5': (Tsit5(), 'analytical'),
         'Dopri5': (Dopri5(), 'analytical'),
         'Dopri8': (Dopri8(), 'analytical'),
@@ -123,7 +119,7 @@ class DrivenDampedHarmonicOscillator(BenchmarkProblem):
 class BatchedKerrOscillator(BenchmarkProblem):
     name = 'batched_kerr_oscillator'
     description = 'Batched Kerr oscillator mesolve (min/max/avg stats recorded)'
-    methods = {
+    methods: dict[str, tuple[Method, str]] = {  # noqa: RUF012
         'Tsit5': (Tsit5(), 'analytical'),
         'Dopri5': (Dopri5(), 'analytical'),
         'Dopri8': (Dopri8(), 'analytical'),
@@ -138,7 +134,9 @@ class BatchedKerrOscillator(BenchmarkProblem):
         self.n = 4
         self.omegas = jnp.linspace(0.8, 1.2, 2)
         self.y0 = dq.coherent(self.n, 1.0)
-        self.H = dq.number(self.n) + 0.5 * self.omegas[..., None, None] * dq.number(self.n).elpow(2)
+        self.H = dq.number(self.n) + 0.5 * self.omegas[..., None, None] * dq.number(
+            self.n
+        ).elpow(2)
         self.Ls = [jnp.sqrt(0.3) * dq.destroy(self.n)]
         self.Es = [dq.number(self.n)]
         self._reference = None
@@ -152,7 +150,7 @@ class BatchedKerrOscillator(BenchmarkProblem):
 class LargeScaleClosed(BenchmarkProblem):
     name = 'large_scale_closed'
     description = 'Large-scale (12-qubit) closed-system Schrödinger dynamics'
-    methods = {
+    methods: dict[str, tuple[Method, str]] = {  # noqa: RUF012
         'Tsit5': (Tsit5(), 'high_order'),
         'Dopri5': (Dopri5(), 'high_order'),
         'Dopri8': (Dopri8(rtol=1e-8, atol=1e-8), 'high_order'),
@@ -173,7 +171,7 @@ class LargeScaleClosed(BenchmarkProblem):
 class TimeDependentQubit(BenchmarkProblem):
     name = 'time_dependent_qubit'
     description = 'Time-dependent qubit Schrödinger dynamics'
-    methods = {
+    methods: dict[str, tuple[Method, str]] = {  # noqa: RUF012
         'Tsit5': (Tsit5(), 'high_order'),
         'Dopri5': (Dopri5(), 'high_order'),
         'Dopri8': (Dopri8(rtol=1e-8, atol=1e-8), 'high_order'),
@@ -184,7 +182,9 @@ class TimeDependentQubit(BenchmarkProblem):
         self.eps = 2.0
         self.omega = 5.0
         self.y0 = dq.fock(2, 0)
-        self.H = dq.timecallable(lambda t: self.eps * jnp.cos(self.omega * t) * dq.sigmax())
+        self.H = dq.timecallable(
+            lambda t: self.eps * jnp.cos(self.omega * t) * dq.sigmax()
+        )
         self.Es = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
         self._reference = None
 
@@ -195,7 +195,7 @@ class TimeDependentQubit(BenchmarkProblem):
 class OpenTimeDependentQubit(BenchmarkProblem):
     name = 'open_time_dependent_qubit'
     description = 'Open time-dependent qubit Lindblad dynamics'
-    methods = {
+    methods: dict[str, tuple[Method, str]] = {  # noqa: RUF012
         'Tsit5': (Tsit5(), 'high_order'),
         'Dopri5': (Dopri5(), 'high_order'),
         'Dopri8': (Dopri8(rtol=1e-8, atol=1e-8), 'high_order'),
@@ -207,7 +207,9 @@ class OpenTimeDependentQubit(BenchmarkProblem):
         self.omega = 5.0
         self.gamma = 0.5
         self.y0 = dq.fock(2, 0)
-        self.H = dq.timecallable(lambda t: self.eps * jnp.cos(self.omega * t) * dq.sigmax())
+        self.H = dq.timecallable(
+            lambda t: self.eps * jnp.cos(self.omega * t) * dq.sigmax()
+        )
         self.Ls = [jnp.sqrt(self.gamma) * dq.sigmax()]
         self.Es = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
         self._reference = None

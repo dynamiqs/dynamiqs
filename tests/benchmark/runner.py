@@ -35,8 +35,13 @@ class BenchmarkResult:
     status: str
 
     CSV_HEADER: ClassVar[list[str]] = [
-        'problem', 'method', 'runtime_s', 'nsteps',
-        'fidelity_error', 'state_error', 'status',
+        'problem',
+        'method',
+        'runtime_s',
+        'nsteps',
+        'fidelity_error',
+        'state_error',
+        'status',
     ]
 
     def to_row(self) -> list:
@@ -45,7 +50,9 @@ class BenchmarkResult:
 
 class BenchmarkRunner:
     def __init__(self, output_dir: str | None = None):
-        self.output_dir = Path(output_dir) if output_dir else Path(__file__).parent / 'results'
+        self.output_dir = (
+            Path(output_dir) if output_dir else Path(__file__).parent / 'results'
+        )
         self.output_dir.mkdir(exist_ok=True)
         self.results: list[BenchmarkResult] = []
 
@@ -58,6 +65,7 @@ class BenchmarkRunner:
                 writer.writerow(r.to_row())
 
     def print_leaderboard(self) -> None:
+        # ruff: noqa: T201 - CLI output is intentionally printed to stdout
         print('\n=== Dynamiqs Solver Benchmark Results ===\n')
         for problem_name in sorted({r.problem for r in self.results}):
             problem_results = [r for r in self.results if r.problem == problem_name]
