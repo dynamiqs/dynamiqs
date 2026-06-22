@@ -6,7 +6,6 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
-
 from tests.order import TEST_LONG
 
 from .metrics import extract_nsteps_stats, state_infidelity_stats

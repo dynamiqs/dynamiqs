@@ -68,10 +68,7 @@ def _target_complex_dtype(precision: Precision) -> Any:
 
 
 def _reference(
-    problem: BenchmarkProblem,
-    *,
-    precision: Precision,
-    reference_precision: Precision,
+    problem: BenchmarkProblem, *, precision: Precision, reference_precision: Precision
 ) -> Any:
     with _precision(reference_precision):
         reference = dq.to_jax(problem.reference())
@@ -251,9 +248,7 @@ def parse_args() -> argparse.Namespace:
         nargs='*',
         help='Method names or families, for example Euler or "Euler(dt=1e-03)".',
     )
-    parser.add_argument(
-        '--precision', choices=('single', 'double'), default='single'
-    )
+    parser.add_argument('--precision', choices=('single', 'double'), default='single')
     parser.add_argument(
         '--reference-precision', choices=('single', 'double'), default='double'
     )

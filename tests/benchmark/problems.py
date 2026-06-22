@@ -109,9 +109,7 @@ class CrossResonanceModulatedSESolve(BenchmarkProblem):
         omega_2 = 6.0
         coupling = 0.4
         epsilon = 0.4
-        gate_time = 0.5 * jnp.pi * jnp.abs(omega_2 - omega_1) / (
-            coupling * epsilon
-        )
+        gate_time = 0.5 * jnp.pi * jnp.abs(omega_2 - omega_1) / (coupling * epsilon)
         tsave = jnp.linspace(0.0, gate_time, self.nsave)
 
         sz1 = dq.tensor(dq.sigmaz(), dq.eye(2))
@@ -187,9 +185,7 @@ class BatchedKerrOscillatorMESolve(BenchmarkProblem):
         h0 = 0.4 * number
         h0 += 0.5 * 0.08 * destroy.dag() @ destroy.dag() @ destroy @ destroy
         drive_amplitudes = jnp.asarray([0.4, 0.7, 1.0])
-        hamiltonian = h0 + drive_amplitudes[:, None, None] * (
-            destroy + destroy.dag()
-        )
+        hamiltonian = h0 + drive_amplitudes[:, None, None] * (destroy + destroy.dag())
         return dq.mesolve(
             hamiltonian,
             [jnp.sqrt(0.12) * destroy],
@@ -213,26 +209,18 @@ class IsingChainSESolve(BenchmarkProblem):
     def run(self, method: Method) -> Any:
         sx = [
             dq.tensor(
-                *[
-                    dq.sigmax() if i == j else dq.eye(2)
-                    for i in range(self.num_qubits)
-                ]
+                *[dq.sigmax() if i == j else dq.eye(2) for i in range(self.num_qubits)]
             )
             for j in range(self.num_qubits)
         ]
         sz = [
             dq.tensor(
-                *[
-                    dq.sigmaz() if i == j else dq.eye(2)
-                    for i in range(self.num_qubits)
-                ]
+                *[dq.sigmaz() if i == j else dq.eye(2) for i in range(self.num_qubits)]
             )
             for j in range(self.num_qubits)
         ]
         hamiltonian = sum(0.7 * x for x in sx)
-        hamiltonian += sum(
-            0.2 * sz[i] @ sz[i + 1] for i in range(self.num_qubits - 1)
-        )
+        hamiltonian += sum(0.2 * sz[i] @ sz[i + 1] for i in range(self.num_qubits - 1))
         plus = (dq.basis(2, 0) + dq.basis(2, 1)).unit()
         psi0 = dq.tensor(*[plus for _ in range(self.num_qubits)])
         return dq.sesolve(
@@ -258,9 +246,7 @@ class TwoModePWCMESolve(BenchmarkProblem):
         nb = b.dag() @ b
         h0 = 0.04 * (na @ na + nb @ nb) + 0.03 * na @ nb
         pulse_times = jnp.asarray([0.0, 0.8, 1.6, 2.4, 3.2])
-        pulse_values = jnp.asarray(
-            [[0.2, 0.5, 0.1, 0.0], [0.1, 0.2, 0.4, 0.1]]
-        )
+        pulse_values = jnp.asarray([[0.2, 0.5, 0.1, 0.0], [0.1, 0.2, 0.4, 0.1]])
         hamiltonian = h0 + dq.pwc(pulse_times, pulse_values, a + a.dag())
         return dq.mesolve(
             hamiltonian,
