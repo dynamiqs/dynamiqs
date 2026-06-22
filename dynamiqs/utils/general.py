@@ -336,27 +336,27 @@ def ptrace(
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     # convert keep and dims to numpy arrays
-    keep = np.asarray([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]
-    dims = np.asarray(dims)  # e.g. [20, 2, 5]
-    ndims = len(dims)  # e.g. 3
+    _keep = np.asarray([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]
+    _dims = np.asarray(dims)  # e.g. [20, 2, 5]
+    ndims = len(_dims)  # e.g. 3
 
     # check that input dimensions match
     hdim = _hdim(x)
-    prod_dims = np.prod(dims)
+    prod_dims = np.prod(_dims)
     if prod_dims != hdim:
-        dims_prod_str = '*'.join(str(d) for d in dims) + f'={prod_dims}'
+        dims_prod_str = '*'.join(str(d) for d in _dims) + f'={prod_dims}'
         raise ValueError(
             'Argument `dims` must match the Hilbert space dimension of `x` of'
             f' {hdim}, but the product of its values is {dims_prod_str}.'
         )
-    if np.any(keep < 0) or np.any(keep > len(dims) - 1):
+    if np.any(_keep < 0) or np.any(_keep > len(_dims) - 1):
         raise ValueError(
             'Argument `keep` must match the Hilbert space structure specified by'
             ' `dims`.'
         )
 
     # sort keep
-    keep.sort()
+    _keep.sort()
 
     # create einsum alphabet
     alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -365,22 +365,22 @@ def ptrace(
     eq1 = alphabet[:ndims]  # e.g. 'abc'
     unused = iter(alphabet[ndims:])
     eq2 = ''.join(
-        [next(unused) if i in keep else eq1[i] for i in range(ndims)]
+        [next(unused) if i in _keep else eq1[i] for i in range(ndims)]
     )  # e.g. 'ade'
 
     bshape = x.shape[:-2]
 
     # trace out x over unkept dimensions
     if isket(x) or isbra(x):
-        x = x.reshape(*bshape, *dims)  # e.g. (..., 20, 2, 5)
+        x = x.reshape(*bshape, *_dims)  # e.g. (..., 20, 2, 5)
         eq = f'...{eq1},...{eq2}'  # e.g. '...abc,...ade'
         x = jnp.einsum(eq, x, x.conj())  # e.g. (..., 2, 5, 2, 5)
     else:
-        x = x.reshape(*bshape, *dims, *dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
+        x = x.reshape(*bshape, *_dims, *_dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
         eq = f'...{eq1}{eq2}'  # e.g. '...abcade'
         x = jnp.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
 
-    new_dims = tuple(dims[keep].tolist())
+    new_dims = tuple(_dims[_keep].tolist())
     prod_new_dims = np.prod(new_dims)  # e.g. 10
     x = x.reshape(*bshape, prod_new_dims, prod_new_dims)  # e.g. (..., 10, 10)
 
@@ -413,8 +413,8 @@ def tensor(*args: QArrayLike) -> QArray:
         >>> psi.shape
         (60, 1)
     """
-    args = [asqarray(arg) for arg in args]
-    return reduce(lambda x, y: x & y, args)  # TODO: (guilmin) use jax.lax.reduce
+    _args = [asqarray(arg) for arg in args]
+    return reduce(lambda x, y: x & y, _args)  # TODO: (guilmin) use jax.lax.reduce
 
 
 def expect(O: QArrayLike, x: QArrayLike) -> Array:
@@ -467,9 +467,9 @@ def expect(O: QArrayLike, x: QArrayLike) -> Array:
 def _expect_single(O: QArray, x: QArray) -> Array:
     # O: (n, n), x: (..., n, m)
     if isket(x):
-        return (dag(x) @ O @ x).squeeze((-1, -2))  # <x|O|x>
+        return to_jax(dag(x) @ O @ x).squeeze((-1, -2))  # <x|O|x>
     elif isbra(x):
-        return (x @ O @ dag(x)).squeeze((-1, -2))
+        return to_jax(x @ O @ dag(x)).squeeze((-1, -2))
     else:
         return tracemm(O, x)  # tr(Ox)
 
@@ -594,7 +594,7 @@ def dissipator(L: QArrayLike, rho: QArrayLike) -> QArray:
 
     Ldag = dag(L)
     LdagL = Ldag @ L
-    return L @ rho @ Ldag - 0.5 * LdagL @ rho - 0.5 * rho @ LdagL
+    return asqarray(L @ rho @ Ldag - 0.5 * LdagL @ rho - 0.5 * rho @ LdagL)
 
 
 def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> QArray:
@@ -638,20 +638,22 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
          [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]]
     """
     H = asqarray(H)
-    jump_ops = [asqarray(L) for L in jump_ops]
+    _jump_ops = [asqarray(L) for L in jump_ops]
     rho = asqarray(rho)
 
     # === check H shape
     check_shape(H, 'H', '(..., n, n)')
 
     # === check jump_ops shape
-    for i, L in enumerate(jump_ops):
+    for i, L in enumerate(_jump_ops):
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
 
     # === check rho shape
     check_shape(rho, 'rho', '(..., n, n)')
 
-    return -1j * H @ rho + 1j * rho @ H + sum([dissipator(L, rho) for L in jump_ops])
+    return asqarray(
+        -1j * H @ rho + 1j * rho @ H + sum([dissipator(L, rho) for L in _jump_ops])
+    )
 
 
 def isket(x: QArrayLike) -> bool:
@@ -878,9 +880,9 @@ def proj(x: QArrayLike) -> QArray:
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)')
 
     if isbra(x):
-        return dag(x) @ x
+        return asqarray(dag(x) @ x)
     else:
-        return x @ dag(x)
+        return asqarray(x @ dag(x))
 
 
 def braket(x: QArrayLike, y: QArrayLike) -> Array:
@@ -904,7 +906,7 @@ def braket(x: QArrayLike, y: QArrayLike) -> Array:
     check_shape(x, 'x', '(..., n, 1)')
     check_shape(y, 'y', '(..., n, 1)')
 
-    return (dag(x) @ y).squeeze((-1, -2))
+    return to_jax(dag(x) @ y).squeeze((-1, -2))
 
 
 def overlap(x: QArrayLike, y: QArrayLike) -> Array:
@@ -940,11 +942,11 @@ def overlap(x: QArrayLike, y: QArrayLike) -> Array:
     check_shape(y, 'y', '(..., n, 1)', '(..., n, n)')
 
     if isket(x) and isket(y):
-        return jnp.abs((dag(x) @ y).squeeze((-1, -2))) ** 2
+        return jnp.abs(to_jax(dag(x) @ y).squeeze((-1, -2))) ** 2
     elif isket(x):
-        return jnp.abs((dag(x) @ y @ x).squeeze((-1, -2)))
+        return jnp.abs(to_jax(dag(x) @ y @ x).squeeze((-1, -2)))
     elif isket(y):
-        return jnp.abs((dag(y) @ x @ y).squeeze((-1, -2)))
+        return jnp.abs(to_jax(dag(y) @ x @ y).squeeze((-1, -2)))
     else:
         return tracemm(dag(x), y).real
 
@@ -1003,7 +1005,7 @@ def _dm_fidelity(x: QArray, y: QArray) -> Array:
     # F = (\sum_i \sqrt{w_i})^2.
 
     # note that we can't use `eigvalsh` here because x @ y is not necessarily Hermitian
-    w = (x @ y)._eigvals().real
+    w = asqarray(x @ y)._eigvals().real
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
     w = jnp.where(w < 0, 0, w)
     return jnp.sqrt(w).sum(-1) ** 2
@@ -1229,7 +1231,8 @@ def bloch_coordinates(x: QArrayLike) -> Array:
         r = 1  # for a pure state
         theta = 2 * jnp.acos(ra)
         phi = jax.lax.select(rb != 0, tb - ta, 0.0)
-    elif isdm(x):
+
+    else:
         # cartesian coordinates
         # see https://en.wikipedia.org/wiki/Bloch_sphere#u,_v,_w_representation
         rx = 2 * x[0, 1].real

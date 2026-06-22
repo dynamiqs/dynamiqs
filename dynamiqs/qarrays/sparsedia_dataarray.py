@@ -85,7 +85,7 @@ class SparseDIADataArray(DataArray):
     @property
     def mT(self) -> DataArray:
         offsets, diags = transpose_sparsedia(self.offsets, self.diags)
-        return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+        return replace(self, offsets=offsets, diags=diags)
 
     @property
     def ndiags(self) -> int:
@@ -93,11 +93,11 @@ class SparseDIADataArray(DataArray):
 
     def conj(self) -> DataArray:
         diags = self.diags.conj()
-        return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+        return replace(self, diags=diags)
 
     def _reshape_unchecked(self, *shape: int) -> DataArray:
         offsets, diags = reshape_sparsedia(self.offsets, self.diags, shape)
-        return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+        return replace(self, offsets=offsets, diags=diags)
 
     def broadcast_to(self, *shape: int) -> DataArray:
         if shape[-2:] != self.shape[-2:]:
@@ -107,7 +107,7 @@ class SparseDIADataArray(DataArray):
             )
 
         offsets, diags = broadcast_sparsedia(self.offsets, self.diags, shape)
-        return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+        return replace(self, offsets=offsets, diags=diags)
 
     def _swapaxes_unchecked(self, axis1: int, axis2: int) -> DataArray:
         diags = jnp.swapaxes(self.diags, axis1, axis2)
@@ -125,7 +125,7 @@ class SparseDIADataArray(DataArray):
 
     def powm(self, n: int) -> DataArray:
         offsets, diags = powm_sparsedia(self.offsets, self.diags, n)
-        return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+        return replace(self, offsets=offsets, diags=diags)
 
     def expm(self, *, max_squarings: int = 16) -> DataArray:
         warnings.warn(
@@ -155,7 +155,7 @@ class SparseDIADataArray(DataArray):
                 return self.to_jax().sum(axis)
         else:
             diags = self.diags.sum(axis)
-            return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+            return replace(self, diags=diags)
 
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> DataArray | Array:
         # return array if last two dimensions are modified, DataArray otherwise
@@ -166,7 +166,7 @@ class SparseDIADataArray(DataArray):
                 return self.to_jax().squeeze(axis)
         else:
             diags = self.diags.squeeze(axis)
-            return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+            return replace(self, diags=diags)
 
     def _eig(self) -> tuple[Array, DataArray]:
         warnings.warn(
@@ -253,10 +253,10 @@ class SparseDIADataArray(DataArray):
             offsets, diags = mul_sparsedia_sparsedia(
                 self.offsets, self.diags, y.offsets, y.diags
             )
-            return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+            return replace(self, offsets=offsets, diags=diags)
         elif isinstance(y, DenseDataArray):
             offsets, diags = mul_sparsedia_array(self.offsets, self.diags, y.data)
-            return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+            return replace(self, offsets=offsets, diags=diags)
         elif isinstance(y, get_args(ArrayLike)):
             y_arr = jnp.asarray(y)
             if (
@@ -266,11 +266,11 @@ class SparseDIADataArray(DataArray):
             ):
                 # scalar or batched scalar: broadcast onto diags directly
                 diags = y_arr * self.diags
-                return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+                return replace(self, diags=diags)
             else:
                 # full matrix: extract matching diagonals and multiply
                 offsets, diags = mul_sparsedia_array(self.offsets, self.diags, y_arr)
-                return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+                return replace(self, offsets=offsets, diags=diags)
 
         return NotImplemented
 
@@ -282,7 +282,7 @@ class SparseDIADataArray(DataArray):
             offsets, diags = add_sparsedia_sparsedia(
                 self.offsets, self.diags, y.offsets, y.diags
             )
-            return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+            return replace(self, offsets=offsets, diags=diags)
         elif isinstance(y, DenseDataArray):
             warnings.warn(
                 'A sparse data array has been converted to dense layout due to '
@@ -305,7 +305,7 @@ class SparseDIADataArray(DataArray):
             offsets, diags = matmul_sparsedia_sparsedia(
                 self.offsets, self.diags, y.offsets, y.diags
             )
-            return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+            return replace(self, offsets=offsets, diags=diags)
         elif isinstance(y, DenseDataArray):
             data = matmul_sparsedia_array(self.offsets, self.diags, y.data)
             return DenseDataArray(data)
@@ -330,7 +330,7 @@ class SparseDIADataArray(DataArray):
             offsets, diags = and_sparsedia_sparsedia(
                 self.offsets, self.diags, y.offsets, y.diags
             )
-            return replace(self, offsets=offsets, diags=diags)  # ty: ignore[invalid-argument-type]
+            return replace(self, offsets=offsets, diags=diags)
         elif isinstance(y, DenseDataArray):
             return self.asdense() & y
 
@@ -348,7 +348,7 @@ class SparseDIADataArray(DataArray):
             return _Metaω.__rpow__(power, self)
 
         diags = self.diags**power
-        return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+        return replace(self, diags=diags)
 
     def __getitem__(self, key: IndexType) -> DataArray:
         if key in (slice(None, None, None), Ellipsis):
@@ -356,7 +356,7 @@ class SparseDIADataArray(DataArray):
 
         _check_key_in_batch_dims(key, self.ndim)
         diags = self.diags[key]
-        return replace(self, diags=diags)  # ty: ignore[invalid-argument-type]
+        return replace(self, diags=diags)
 
 
 def _check_key_in_batch_dims(key: IndexType, ndim: int):
@@ -366,10 +366,11 @@ def _check_key_in_batch_dims(key: IndexType, ndim: int):
         valid_key = ndim > 2
     if isinstance(key, Array):
         valid_key = key.ndim == 0 and ndim > 2
+
     elif isinstance(key, tuple):
         if Ellipsis in key:
             ellipsis_key = key.index(Ellipsis)
-            key = (
+            _key = (
                 key[:ellipsis_key]
                 + (full_slice,) * (ndim - len(key) + 1)
                 + key[ellipsis_key + 1 :]

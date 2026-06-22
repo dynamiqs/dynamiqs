@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import functools
 import math
-from collections.abc import Sequence
+import operator
+from collections.abc import Callable, Iterable, Sequence
 from functools import wraps
-from typing import Any
+from typing import Any, Protocol, TypeVar
 
 import jax
 import jax.numpy as jnp
@@ -13,7 +15,7 @@ from jaxtyping import PRNGKeyArray, PyTree
 
 from .._utils import obj_type_str
 from ..method import Method, _DEAdaptiveStep
-from ..qarrays.qarray import QArrayLike
+from ..qarrays.qarray import QArray, QArrayLike
 from ..qarrays.utils import asqarray
 from ..time_qarray import (
     ConstantTimeQArray,
@@ -21,6 +23,17 @@ from ..time_qarray import (
     SummedTimeQArray,
     TimeQArray,
 )
+
+
+class HasShape(Protocol):
+    shape: tuple[int, ...]
+
+
+HasShapeT = TypeVar('HasShapeT', bound=HasShape)
+
+
+def sum_qarrays(qarrays: list[QArray]) -> QArray:
+    return functools.reduce(operator.add, qarrays)
 
 
 def astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
@@ -48,7 +61,7 @@ def ispwc(x: TimeQArray) -> bool:
         return False
 
 
-def catch_xla_runtime_error(func: callable) -> callable:
+def catch_xla_runtime_error(func: Callable) -> Callable:
     # Decorator to catch `XlaRuntimeError`` exceptions, and set a more friendly
     # exception message. Note that this will not work for jitted function, as the
     # exception code will be traced out.
@@ -81,7 +94,7 @@ def catch_xla_runtime_error(func: callable) -> callable:
     return wrapper
 
 
-def assert_method_supported(method: Method, supported_methods: Sequence[Method]):
+def assert_method_supported(method: Method, supported_methods: Iterable[type[Method]]):
     if not isinstance(method, tuple(supported_methods)):
         supported_str = ', '.join(f'`{x.__name__}`' for x in supported_methods)
         raise TypeError(
@@ -91,8 +104,8 @@ def assert_method_supported(method: Method, supported_methods: Sequence[Method])
 
 
 def multi_vmap(
-    f: callable, in_axes: int | None | Sequence[Any], out_axes: Any, nvmap: int
-) -> callable:
+    f: Callable, in_axes: int | None | Sequence[Any], out_axes: Any, nvmap: int
+) -> Callable:
     """Vectorize a function multiple time over multiple shared axes (similar to
     jnp.vectorize).
 
@@ -142,8 +155,8 @@ def multi_vmap(
 
 
 def cartesian_vmap(
-    f: callable, in_axes: int | None | Sequence[Any], out_axes: Any, nvmap: PyTree[int]
-) -> callable:
+    f: Callable, in_axes: int | None | Sequence[Any], out_axes: Any, nvmap: PyTree[int]
+) -> Callable:
     """Vectorize a function multiple time over distinct axes.
 
     The function `f` is mapped multiple time over on each input specified by `nvmap`
@@ -187,7 +200,7 @@ def cartesian_vmap(
     return f
 
 
-def attach_batch_indices(x: Array, ndim_suffix: int = 2) -> tuple[Array, Array]:
+def attach_batch_indices(x: HasShapeT, ndim_suffix: int = 2) -> tuple[HasShapeT, Array]:
     """Bundle an array with an array of batch indices for key-folding through vmap.
 
     Returns ``(x, indices)`` where *indices* is an arange over the batch

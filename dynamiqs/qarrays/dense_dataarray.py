@@ -42,19 +42,19 @@ class DenseDataArray(DataArray):
     @property
     def mT(self) -> DataArray:
         data = self.data.mT
-        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return replace(self, data=data)
 
     def conj(self) -> DataArray:
         data = self.data.conj()
-        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return replace(self, data=data)
 
     def _reshape_unchecked(self, *shape: int) -> DataArray:
         data = jnp.reshape(self.data, shape)
-        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return replace(self, data=data)
 
     def broadcast_to(self, *shape: int) -> DataArray:
         data = jnp.broadcast_to(self.data, shape)
-        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return replace(self, data=data)
 
     def _swapaxes_unchecked(self, axis1: int, axis2: int) -> DataArray:
         data = jnp.swapaxes(self.data, axis1, axis2)
@@ -72,11 +72,11 @@ class DenseDataArray(DataArray):
 
     def powm(self, n: int) -> DataArray:
         data = jnp.linalg.matrix_power(self.data, n)
-        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return replace(self, data=data)
 
     def expm(self, *, max_squarings: int = 16) -> DataArray:
         data = jax.scipy.linalg.expm(self.data, max_squarings=max_squarings)
-        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return replace(self, data=data)
 
     def norm(self, *, psd: bool = False) -> Array:
         from ..utils.general import norm  # noqa: PLC0415
@@ -93,7 +93,7 @@ class DenseDataArray(DataArray):
         if in_last_two_dims(axis, self.ndim):
             return data
         else:
-            return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+            return replace(self, data=data)
 
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> DataArray | Array:
         data = self.data.squeeze(axis=axis)
@@ -102,11 +102,11 @@ class DenseDataArray(DataArray):
         if in_last_two_dims(axis, self.ndim):
             return data
         else:
-            return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+            return replace(self, data=data)
 
     def _eig(self) -> tuple[Array, DataArray]:
         evals, evecs = jax.lax.linalg.eig(self.data, compute_left_eigenvectors=False)
-        return evals, replace(self, data=evecs)  # ty: ignore[invalid-argument-type]
+        return evals, replace(self, data=evecs)
 
     def _eigh(self) -> tuple[Array, Array]:
         return jnp.linalg.eigh(self.data)
@@ -120,7 +120,7 @@ class DenseDataArray(DataArray):
     def devices(self) -> set[Device]:
         return self.data.devices()
 
-    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> Array[bool]:
         return jnp.allclose(self.data, self.data.mT.conj(), rtol=rtol, atol=atol)
 
     def to_jax(self) -> Array:
@@ -158,7 +158,7 @@ class DenseDataArray(DataArray):
         else:
             return NotImplemented
 
-        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return replace(self, data=data)
 
     def __add__(self, y: DataArrayLike) -> DataArray:
         if isinstance(y, int | float) and y == 0:
@@ -171,13 +171,10 @@ class DenseDataArray(DataArray):
         else:
             return NotImplemented
 
-        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return replace(self, data=data)
 
     def __matmul__(self, y: DataArrayLike) -> DataArray | Array:
-        if (
-            hasattr(y, '_matmul_priority')
-            and self._matmul_priority < y._matmul_priority
-        ):
+        if isinstance(y, DataArray) and self._matmul_priority < y._matmul_priority:
             return NotImplemented
 
         if isinstance(y, DenseDataArray):
@@ -187,7 +184,7 @@ class DenseDataArray(DataArray):
         else:
             return NotImplemented
 
-        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return replace(self, data=data)
 
     def __rmatmul__(self, y: DataArrayLike) -> DataArray:
         if isinstance(y, DenseDataArray):
@@ -197,7 +194,7 @@ class DenseDataArray(DataArray):
         else:
             return NotImplemented
 
-        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return replace(self, data=data)
 
     def __and__(self, y: DataArray) -> DataArray:
         if isinstance(y, DenseDataArray):
@@ -205,7 +202,7 @@ class DenseDataArray(DataArray):
         else:
             return NotImplemented
 
-        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return replace(self, data=data)
 
     def __pow__(self, power: int | _Metaω) -> DataArray:
         # to deal with the x**ω notation from equinox (used in diffrax internals)
@@ -213,25 +210,25 @@ class DenseDataArray(DataArray):
             return _Metaω.__rpow__(power, self)
 
         data = self.data**power
-        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return replace(self, data=data)
 
     def __getitem__(self, key: IndexType) -> DataArray:
         data = self.data[key]
-        return replace(self, data=data)  # ty: ignore[invalid-argument-type]
+        return replace(self, data=data)
 
 
 def array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:
     # convert dims to qutip
-    dims = list(dims)
+    qobj_dims = list(dims)
     if x.shape[-1] == 1:  # [[3], [1]] or [[3, 4], [1, 1]]
-        dims = [dims, [1] * len(dims)]
+        qobj_dims = [qobj_dims, [1] * len(qobj_dims)]
     elif x.shape[-2] == 1:  # [[1], [3]] or [[1, 1], [3, 4]]
-        dims = [[1] * len(dims), dims]
+        qobj_dims = [[1] * len(qobj_dims), qobj_dims]
     elif x.shape[-1] == x.shape[-2]:  # [[3], [3]] or [[3, 4], [3, 4]]
-        dims = [dims, dims]
+        qobj_dims = [qobj_dims, qobj_dims]
 
     return jax.tree.map(
-        lambda x: Qobj(x, dims=dims),
+        lambda x: Qobj(x, dims=qobj_dims),
         x.tolist(),
         is_leaf=lambda x: jnp.asarray(x).ndim == 2,
     )

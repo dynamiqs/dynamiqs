@@ -33,7 +33,7 @@ def test_keys_batching(cartesian_batching, H_batch, rho0_batch, ntrajs):
             pytest.skip('non-broadcastable shapes for flat batching')
 
     H = dq.random.herm(jax.random.key(0), (*H_batch, n, n))
-    jump_ops = [dq.destroy(n)]
+    jump_ops = [dq.destroy(n, layout=dq.dense)]
     thetas = jnp.zeros(1)
     etas = jnp.ones(1)
     rho0 = dq.fock_dm(n, 1)

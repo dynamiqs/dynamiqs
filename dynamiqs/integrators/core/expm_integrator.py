@@ -13,7 +13,7 @@ from dynamiqs._utils import concatenate_sort
 
 from ..._checks import check_hermitian
 from ...qarrays.qarray import QArray
-from ...result import MESolveResult, Result, Saved
+from ...result import MESolveResult, Result, Saved, SolveSaved
 from ...utils.general import expm
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .._utils import ispwc
@@ -74,7 +74,7 @@ class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
         step_propagators = expm(delta_ts[:, None, None] * As)  # (ntimes-1, N, N)
 
         # === combine the propagators together
-        def step(carry: QArray, x: QArray) -> tuple[QArray, QArray]:
+        def step(carry: QArray, x: QArray) -> tuple[QArray, Saved]:
             # note the ordering x @ carry: we accumulate propagators from the left
             x_next = x @ carry
             return x_next, self.save(x_next)
@@ -163,7 +163,7 @@ class MESolveExpmIntegrator(MEExpmIntegrator, SolveSaveMixin, SolveInterface):
         # convert to vectorized form
         self.y0 = vectorize(self.y0)  # (n^2, 1)
 
-    def save(self, y: PyTree) -> Saved:
+    def save(self, y: PyTree) -> SolveSaved:
         # TODO: implement bexpect for vectorized operators and convert at the end
         # instead of at each step
         y = unvectorize(y)

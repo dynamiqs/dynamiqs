@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import cast
+
 import equinox as eqx
 import jax.numpy as jnp
 from jax import Array
@@ -51,7 +53,7 @@ def _array_str(x: Array | QArray | None) -> str | None:
 
 # the Saved object holds quantities saved during the equation integration
 class Saved(eqx.Module):
-    ysave: QArray
+    ysave: PyTree | None
     extra: PyTree | None
 
 
@@ -84,6 +86,11 @@ class Result(eqx.Module):
     infos: PyTree | None
 
     @property
+    def _ysave(self) -> QArray:
+        ysave = self._saved.ysave
+        return cast(QArray, ysave)
+
+    @property
     def extra(self) -> PyTree | None:
         return self._saved.extra
 
@@ -94,7 +101,7 @@ class Result(eqx.Module):
         raise NotImplementedError
 
     def block_until_ready(self) -> Result:
-        _ = self._saved.ysave.block_until_ready()
+        _ = self._ysave.block_until_ready()
         return self
 
     def _str_parts(self) -> dict[str, str | None]:
@@ -128,7 +135,7 @@ class SolveResult(Result):
 
     @property
     def states(self) -> QArray:
-        return self._saved.ysave
+        return self._ysave
 
     @property
     def final_state(self) -> QArray:
@@ -151,7 +158,7 @@ class PropagatorResult(Result):
 
     @property
     def propagators(self) -> QArray:
-        return self._saved.ysave
+        return self._ysave
 
     @property
     def final_propagator(self) -> QArray:
@@ -168,7 +175,7 @@ class FloquetResult(Result):
 
     @property
     def modes(self) -> QArray:
-        return self._saved.ysave
+        return self._ysave
 
     @property
     def quasienergies(self) -> Array:
@@ -197,7 +204,7 @@ class MESolveResult(SolveResult):
 class MESolveLowRankResult(MESolveResult):
     @property
     def lowrank_states(self) -> QArray:
-        return self._saved.ysave
+        return self._ysave
 
     @property
     def states(self) -> QArray:
@@ -227,7 +234,7 @@ class StochasticSolveResult(SolveResult):
 
     def mean_states(self) -> QArray:
         # todo: document
-        return self.states.todm().mean(axis=-4)  # ty: ignore[invalid-return-type]
+        return cast(QArray, self.states.todm().mean(axis=-4))
 
     def mean_expects(self) -> Array | None:
         # todo: document
@@ -255,9 +262,10 @@ class JumpSolveResult(StochasticSolveResult):
         mean_states = super().mean_states()
 
         if isinstance(self.method, Event) and self.method.smart_sampling:
-            noclick_prob = self.infos.noclick_prob[..., None, None, None]  # ty: ignore[unresolved-attribute]
+            assert self.infos is not None
+            noclick_prob = self.infos.noclick_prob[..., None, None, None]
             return unit(
-                noclick_prob * self.infos.noclick_states.todm()  # ty: ignore[unresolved-attribute]
+                noclick_prob * self.infos.noclick_states.todm()
                 + (1 - noclick_prob) * mean_states,
                 psd=True,
             )
@@ -271,9 +279,10 @@ class JumpSolveResult(StochasticSolveResult):
         mean_expect = super().mean_expects()
 
         if isinstance(self.method, Event) and self.method.smart_sampling:
-            noclick_prob = self.infos.noclick_prob[..., None, None]  # ty: ignore[unresolved-attribute]
+            assert self.infos is not None
+            noclick_prob = self.infos.noclick_prob[..., None, None]
             return (
-                noclick_prob * self.infos.noclick_expects  # ty: ignore[unresolved-attribute]
+                noclick_prob * self.infos.noclick_expects
                 + (1 - noclick_prob) * mean_expect
             )
         else:

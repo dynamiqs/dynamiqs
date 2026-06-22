@@ -5,6 +5,7 @@ from functools import partial
 
 import jax.numpy as jnp
 
+from ...method import DiffusiveMonteCarlo, JumpMonteCarlo
 from ...result import MESolveResult, Result, SolveSaved, StochasticSolveResult
 from ..apis.dssesolve import _vectorized_dssesolve
 from ..apis.jssesolve import _vectorized_jssesolve
@@ -54,6 +55,8 @@ class MESolveMonteCarloIntegrator(BaseIntegrator, MEInterface, SolveInterface):
 
 
 class MESolveJumpMonteCarloIntegrator(MESolveMonteCarloIntegrator):
+    method: JumpMonteCarlo
+
     def _run_stochastic(self) -> StochasticSolveResult:
         # modify nmaxclick in the options passed to jssesolve
         jsse_options = replace(
@@ -82,6 +85,8 @@ mesolve_jumpmontecarlo_integrator_constructor = partial(
 
 
 class MESolveDiffusiveMonteCarloIntegrator(MESolveMonteCarloIntegrator):
+    method: DiffusiveMonteCarlo
+
     def _run_stochastic(self) -> StochasticSolveResult:
         keys = jnp.asarray(self.method.keys)
 

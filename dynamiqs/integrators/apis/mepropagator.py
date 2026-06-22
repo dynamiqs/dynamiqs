@@ -3,6 +3,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Callable
 from functools import partial
+from typing import cast
 
 import jax
 import jax.numpy as jnp
@@ -15,7 +16,7 @@ from ...options import Options, check_options
 from ...progress_meter import AbstractProgressMeter
 from ...qarrays.dense_dataarray import DenseDataArray
 from ...qarrays.materialized_qarray import MaterializedQArray
-from ...qarrays.qarray import QArrayLike
+from ...qarrays.qarray import QArray, QArrayLike
 from ...result import MEPropagatorResult
 from ...time_qarray import TimeQArray
 from .._utils import (
@@ -48,7 +49,7 @@ def mepropagator(
     cartesian_batching: bool = True,
     progress_meter: AbstractProgressMeter | bool | None = None,
     t0: ScalarLike | None = None,
-    save_extra: Callable[[Array], PyTree] | None = None,
+    save_extra: Callable[[QArray], PyTree] | None = None,
 ) -> MEPropagatorResult:
     r"""Compute the propagator of the Lindblad master equation.
 
@@ -281,7 +282,7 @@ def _mepropagator(
         Kvaerno5: mepropagator_kvaerno5_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    integrator_constructor = integrator_constructors[type(method)]  # ty: ignore
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -302,10 +303,7 @@ def _mepropagator(
     )
 
     # === run integrator
-    result = integrator.run()
-
-    # === return result
-    return result  # noqa: RET504
+    return cast(MEPropagatorResult, integrator.run())
 
 
 def _check_mepropagator_args(H: TimeQArray, Ls: list[TimeQArray]):

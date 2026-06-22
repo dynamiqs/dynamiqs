@@ -84,6 +84,8 @@ def _plot_hinton(
     ecolor: str = 'white',
     ewidth: float = 0.5,
 ):
+    assert ax is not None
+
     # areas: 2D array (n, n) with real values in [0, 1]
     # colors: 2D array (n, n) with real values in [0, 1]
     areas = jnp.asarray(areas)
@@ -109,14 +111,14 @@ def _plot_hinton(
     # squares areas
     areas = areas.T.flatten()
     # squares colors
-    cmap = mpl.colormaps[cmap]
-    colors = cmap(colors.T).reshape(-1, 4)
+    _cmap = mpl.colormaps[cmap]
+    colors = np.asarray(_cmap(colors.T)).reshape(-1, 4)
     _plot_squares(ax, areas, colors, offsets, ecolor=ecolor, ewidth=ewidth)
 
     # === colorbar
     if colorbar:
         norm = Normalize(colors_vmin, colors_vmax)
-        cax = add_colorbar(ax, cmap, norm, size=0.04, pad=0.04)
+        cax = add_colorbar(ax, _cmap, norm, size=0.04, pad=0.04)
         if colors_vmin == -jnp.pi and colors_vmax == jnp.pi:
             cax.set_yticks([-jnp.pi, 0.0, jnp.pi], labels=[r'$-\pi$', r'$0$', r'$\pi$'])
 
@@ -193,6 +195,8 @@ def hinton(
 
         ![plot_hinton_large](../../figs_code/plot_hinton_large.png){.fig}
     """
+    assert ax is not None
+
     x = to_jax(x)
     check_shape(x, 'x', '(n, n)')
 
@@ -206,9 +210,9 @@ def hinton(
             # sequential colormap for positive data, diverging colormap otherwise
             cmap = 'Blues' if all_positive else 'dq'
         if vmin is None:
-            vmin = 0.0 if all_positive else jnp.min(x)
+            vmin = 0.0 if all_positive else jnp.min(x).item()
 
-        vmax = jnp.max(x) if vmax is None else vmax
+        vmax = jnp.max(x).item() if vmax is None else vmax
 
         # areas: absolute value of x
         area_max = max(abs(vmin), abs(vmax))
@@ -217,7 +221,8 @@ def hinton(
         # colors: value of x
         colors = _normalize(x, vmin, vmax)
         colors_vmin, colors_vmax = vmin, vmax
-    elif jnp.iscomplexobj(x):
+
+    else:
         # x: 2D array with complex data
 
         # cyclic colormap for the phase
@@ -225,7 +230,7 @@ def hinton(
 
         # areas: magnitude of x
         magnitude = jnp.abs(x)
-        areas_max = jnp.max(magnitude) if vmax is None else vmax
+        areas_max = jnp.max(magnitude).item() if vmax is None else vmax
         areas = _normalize(magnitude, 0.0, areas_max)
 
         # colors: phase of x

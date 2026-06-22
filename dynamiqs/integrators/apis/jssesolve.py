@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import cast
 
 import jax
 import jax.numpy as jnp
@@ -43,7 +44,7 @@ def jssesolve(
     save_states: bool = True,
     cartesian_batching: bool = True,
     t0: ScalarLike | None = None,
-    save_extra: Callable[[Array], PyTree] | None = None,
+    save_extra: Callable[[QArray], PyTree] | None = None,
     nmaxclick: int = 10_000,
 ) -> JSSESolveResult:
     r"""Solve the jump stochastic Schrödinger equation (SSE).
@@ -259,8 +260,10 @@ def jssesolve(
     Ls = [astimeqarray(L) for L in jump_ops]
     psi0 = asqarray(psi0)
     keys = jnp.asarray(keys)
+
+    _exp_ops = None
     if exp_ops is not None:
-        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+        _exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === build options
     options = Options(
@@ -272,18 +275,19 @@ def jssesolve(
     )
 
     # === check arguments
-    _check_jssesolve_args(H, Ls, psi0, exp_ops)
+    _check_jssesolve_args(H, Ls, psi0, _exp_ops)
     check_options(options, 'jssesolve')
     options = options.initialise()
 
     # todo: fix static tsave
     # this condition allows the user to pass a tuple for tsave to bypass this bit of
     # code (e.g., to JIT-compile this function)
+    _tsave = tsave
     if not isinstance(tsave, tuple):
-        tsave = jnp.asarray(tsave)
-        tsave = check_times(tsave, 'tsave')
+        _tsave = jnp.asarray(tsave)
+        _tsave = check_times(_tsave, 'tsave')
         if isinstance(method, EulerJump):
-            tsave = tuple(tsave.tolist())
+            _tsave = tuple(_tsave.tolist())
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
@@ -295,7 +299,7 @@ def jssesolve(
         f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
     else:
         f = jax.jit(f, static_argnames=('gradient', 'options'))
-    return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
+    return f(H, Ls, psi0, _tsave, keys, _exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error
@@ -380,7 +384,7 @@ def _jssesolve_many_trajectories(
     else:
         # vectorize input over keys
         in_axes = (None, None, None, None, 0, None, None, None, None)
-        out_axes = JSSESolveResult(None, None, None, None, 0, 0, 0)
+        out_axes = JSSESolveResult(None, None, None, None, 0, 0, 0)  # ty: ignore
         f = jax.vmap(f, in_axes, out_axes)
 
     return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
@@ -403,7 +407,7 @@ def _jssesolve_single_trajectory(
         Event: jssesolve_event_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    integrator_constructor = integrator_constructors[type(method)]  # ty: ignore
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -423,10 +427,7 @@ def _jssesolve_single_trajectory(
     )
 
     # === run integrator
-    result = integrator.run()
-
-    # === return result
-    return result  # noqa: RET504
+    return cast(JSSESolveResult, integrator.run())
 
 
 def _check_jssesolve_args(

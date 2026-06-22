@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import partial
+from typing import cast
 
 import jax
 import jax.numpy as jnp
@@ -43,7 +44,7 @@ def dssesolve(
     gradient: Gradient | None = None,
     save_states: bool = True,
     cartesian_batching: bool = True,
-    save_extra: Callable[[Array], PyTree] | None = None,
+    save_extra: Callable[[QArray], PyTree] | None = None,
 ) -> DSSESolveResult:
     r"""Solve the diffusive stochastic Schrödinger equation (SSE).
 
@@ -255,8 +256,10 @@ def dssesolve(
     Ls = [astimeqarray(L) for L in jump_ops]
     psi0 = asqarray(psi0)
     keys = jnp.asarray(keys)
+
+    _exp_ops = None
     if exp_ops is not None:
-        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+        _exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === build options
     options = Options(
@@ -266,17 +269,18 @@ def dssesolve(
     )
 
     # === check arguments
-    _check_dssesolve_args(H, Ls, psi0, exp_ops)
+    _check_dssesolve_args(H, Ls, psi0, _exp_ops)
     check_options(options, 'dssesolve')
     options = options.initialise()
 
     # todo: fix static tsave
     # this condition allows the user to pass a tuple for tsave to bypass this bit of
     # code (e.g., to JIT-compile this function)
+    _tsave = tsave
     if not isinstance(tsave, tuple):
-        tsave = jnp.asarray(tsave)
-        tsave = check_times(tsave, 'tsave')
-        tsave = tuple(tsave.tolist())
+        _tsave = jnp.asarray(tsave)
+        _tsave = check_times(_tsave, 'tsave')
+        _tsave = tuple(_tsave.tolist())
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
@@ -284,7 +288,7 @@ def dssesolve(
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
     return _vectorized_dssesolve(
-        H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options
+        H, Ls, psi0, _tsave, keys, _exp_ops, method, gradient, options
     )
 
 
@@ -366,7 +370,7 @@ def _dssesolve_many_trajectories(
 
     # vectorize input over keys
     in_axes = (None, None, None, None, 0, None, None, None, None)
-    out_axes = DSSESolveResult(None, None, None, None, 0, 0, 0)
+    out_axes = DSSESolveResult(None, None, None, None, 0, 0, 0)  # ty: ignore[invalid-argument-type]
     f = jax.vmap(_dssesolve_single_trajectory, in_axes, out_axes)
     return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
@@ -388,7 +392,7 @@ def _dssesolve_single_trajectory(
         Rouchon1: dssesolve_rouchon1_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    integrator_constructor = integrator_constructors[type(method)]  # ty: ignore
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -408,10 +412,7 @@ def _dssesolve_single_trajectory(
     )
 
     # === run solver
-    result = integrator.run()
-
-    # === return result
-    return result  # noqa: RET504
+    return cast(DSSESolveResult, integrator.run())
 
 
 def _check_dssesolve_args(

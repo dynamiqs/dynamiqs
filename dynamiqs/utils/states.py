@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from math import prod
+from typing import cast
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -86,22 +88,22 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
         >>> dq.fock((3, 2), number).shape
         (4, 6, 1)
     """
-    dim = np.asarray(dim)
+    _dim = np.asarray(dim)
     number = jnp.asarray(number)
-    check_type_int(dim, 'dim')
+    check_type_int(_dim, 'dim')
     check_type_int(number, 'number')
 
     # check if dim is a single value or a tuple
-    if dim.ndim > 1:
+    if _dim.ndim > 1:
         raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
 
     # if dim is an integer, convert shapes dim: () -> (1,) and number: (...) -> (..., 1)
-    if dim.ndim == 0:
-        dim = dim[None]
+    if _dim.ndim == 0:
+        _dim = _dim[None]
         number = number[..., None]
 
     # check if number has shape (..., len(ndim))
-    if number.shape[-1] != dim.shape[-1]:
+    if number.shape[-1] != _dim.shape[-1]:
         raise ValueError(
             'Argument `number` must have shape `(...)` or `(..., len(dim))`, but'
             f' has shape number.shape={number.shape}.'
@@ -110,7 +112,7 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
     # check if 0 <= number[..., i] < dim[i] for all i
     number = eqx.error_if(
         number,
-        dim - number <= 0,
+        _dim - number <= 0,
         'Argument `number` must be in the range [0, dim[i]) for each mode i:'
         ' 0 <= number[..., i] < dim[i].',
     )
@@ -121,11 +123,11 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
         # has shape (ndim,), number has shape (ndim,) and number = [n0, n1,..., nf]
         # this is the unbatched version of fock()
         idx = 0
-        for d, n in zip(dim, number, strict=True):
+        for d, n in zip(_dim, number, strict=True):
             idx = d * idx + n
-        ket = jnp.zeros((prod(dim), 1), dtype=cdtype())
+        ket = jnp.zeros((prod(_dim), 1), dtype=cdtype())
         array = ket.at[idx].set(1.0)
-        return asqarray(array, dims=tuple(dim.tolist()))
+        return asqarray(array, dims=tuple(_dim.tolist()))
 
     _vectorized_fock = jnp.vectorize(_fock, signature='(ndim)->(prod_ndim,1)')
     return _vectorized_fock(number)
@@ -253,19 +255,21 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
         >>> dq.coherent((8, 8), (alpha1[None, :], alpha2[:, None])).shape
         (7, 5, 64, 1)
     """
-    dim = np.asarray(dim)
-    check_type_int(dim, 'dim')
+    _dim = np.asarray(dim)
+    check_type_int(_dim, 'dim')
 
     # check if dim is a single value or a tuple
-    if dim.ndim > 1:
+    if _dim.ndim > 1:
         raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
 
     # tackle multi-modes
-    if dim.ndim == 1:
-        return tensor(*[coherent(d, a) for d, a in zip(dim, alpha, strict=True)])
+    if _dim.ndim == 1:
+        return tensor(
+            *[coherent(d, a) for d, a in zip(_dim, cast(Iterable, alpha), strict=True)]
+        )
 
     # fact: dim is now an integer
-    return displace(int(dim), alpha) @ fock(int(dim), 0)
+    return asqarray(displace(int(_dim), jnp.asarray(alpha)) @ fock(int(_dim), 0))
 
 
 def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
@@ -439,21 +443,21 @@ def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> QArray:
         >>> dq.thermal_dm((4, 3), nth).shape
         (3, 12, 12)
     """
-    dim = np.asarray(dim)
+    _dim = np.asarray(dim)
     nth = jnp.asarray(nth)
-    check_type_int(dim, 'dim')
+    check_type_int(_dim, 'dim')
 
     # check if dim is a single value or a tuple
-    if dim.ndim > 1:
+    if _dim.ndim > 1:
         raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
 
     # if dim is an integer, convert shapes dim: () -> (1,) and nth: (...) -> (..., 1)
-    if dim.ndim == 0:
-        dim = dim[None]
+    if _dim.ndim == 0:
+        _dim = _dim[None]
         nth = nth[..., None]
 
     # check if nth has shape (..., len(ndim))
-    if nth.shape[-1] != dim.shape[-1]:
+    if nth.shape[-1] != _dim.shape[-1]:
         raise ValueError(
             'Argument `nth` must have shape `(...)` or `(..., len(dim))`, but'
             f' has shape nth.shape={nth.shape}.'
@@ -461,7 +465,7 @@ def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> QArray:
 
     # compute all density matrices
     def _thermal_dm(nth: Array) -> QArray:
-        dms = [_single_thermal_dm(d, n) for d, n in zip(dim, nth, strict=True)]
+        dms = [_single_thermal_dm(int(d), n) for d, n in zip(_dim, nth, strict=True)]
         return tensor(*dms)
 
     _vectorized_thermal_dm = jnp.vectorize(
@@ -481,7 +485,7 @@ def _single_thermal_dm(dim: int, nth: Array) -> QArray:
 
     # construct the density matrix
     bdiag = jnp.vectorize(jnp.diag, signature='(a)->(a,a)')
-    rho = asqarray(bdiag(rho_diag), dims=(dim.item(),))
+    rho = asqarray(bdiag(rho_diag), dims=(dim,))
 
     # normalize the density matrix
     return rho / rho.trace()

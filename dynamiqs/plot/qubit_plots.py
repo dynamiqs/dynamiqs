@@ -39,6 +39,8 @@ def xyz(
 
         ![plot_xyz](../../figs_code/plot_xyz.png){.fig}
     """
+    assert ax is not None
+
     states = to_jax(states)
     times = jnp.asarray(times) if times is not None else None
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')

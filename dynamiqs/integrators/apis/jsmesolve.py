@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import partial
+from typing import cast
 
 import jax
 import jax.numpy as jnp
@@ -44,7 +45,7 @@ def jsmesolve(
     gradient: Gradient | None = None,
     save_states: bool = True,
     cartesian_batching: bool = True,
-    save_extra: Callable[[Array], PyTree] | None = None,
+    save_extra: Callable[[QArray], PyTree] | None = None,
     nmaxclick: int = 10_000,
 ) -> JSMESolveResult:
     r"""Solve the jump stochastic master equation (SME).
@@ -277,8 +278,10 @@ def jsmesolve(
     etas = jnp.asarray(etas)
     rho0 = asqarray(rho0)
     keys = jnp.asarray(keys)
+
+    _exp_ops = None
     if exp_ops is not None:
-        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+        _exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === build options
     options = Options(
@@ -289,17 +292,18 @@ def jsmesolve(
     )
 
     # === check arguments
-    _check_jsmesolve_args(H, Ls, thetas, etas, rho0, exp_ops)
+    _check_jsmesolve_args(H, Ls, thetas, etas, rho0, _exp_ops)
     check_options(options, 'jsmesolve')
     options = options.initialise()
 
     # todo: fix static tsave
     # this condition allows the user to pass a tuple for tsave to bypass this bit of
     # code (e.g., to JIT-compile this function)
+    _tsave = tsave
     if not isinstance(tsave, tuple):
-        tsave = jnp.asarray(tsave)
-        tsave = check_times(tsave, 'tsave')
-        tsave = tuple(tsave.tolist())
+        _tsave = jnp.asarray(tsave)
+        _tsave = check_times(_tsave, 'tsave')
+        _tsave = tuple(_tsave.tolist())
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
@@ -318,7 +322,18 @@ def jsmesolve(
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
     return _vectorized_jsmesolve(
-        H, Lcs, Lms, thetas, etas, rho0, tsave, keys, exp_ops, method, gradient, options
+        H,
+        Lcs,
+        Lms,
+        thetas,
+        etas,
+        rho0,
+        _tsave,
+        keys,
+        _exp_ops,
+        method,
+        gradient,
+        options,
     )
 
 
@@ -403,7 +418,7 @@ def _jsmesolve_many_trajectories(
 
     # vectorize input over keys
     in_axes = (None, None, None, None, None, None, None, 0, None, None, None, None)
-    out_axes = JSMESolveResult(None, None, None, None, 0, 0, 0)
+    out_axes = JSMESolveResult(None, None, None, None, 0, 0, 0)  # ty: ignore
     f = jax.vmap(_jsmesolve_single_trajectory, in_axes, out_axes)
     return f(
         H, Lcs, Lms, thetas, etas, rho0, tsave, keys, exp_ops, method, gradient, options
@@ -427,7 +442,7 @@ def _jsmesolve_single_trajectory(
     # === select integrator constructor
     integrator_constructors = {EulerJump: jsmesolve_euler_jump_integrator_constructor}
     assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    integrator_constructor = integrator_constructors[type(method)]  # ty: ignore
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -450,10 +465,7 @@ def _jsmesolve_single_trajectory(
     )
 
     # === run solver
-    result = integrator.run()
-
-    # === return result
-    return result  # noqa: RET504
+    return cast(JSMESolveResult, integrator.run())
 
 
 def _check_jsmesolve_args(  # noqa: C901

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import replace
 
 import numpy as np
@@ -210,7 +211,7 @@ def sdissipator(L: QArrayLike) -> QArray:
     return sprepost(L, Ldag) - 0.5 * spre(LdagL) - 0.5 * spost(LdagL)
 
 
-def slindbladian(H: QArrayLike, jump_ops: list[QArrayLike]) -> QArray:
+def slindbladian(H: QArrayLike, jump_ops: Sequence[QArrayLike]) -> QArray:
     r"""Returns the Lindbladian superoperator (in matrix form).
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:
@@ -247,13 +248,13 @@ def slindbladian(H: QArrayLike, jump_ops: list[QArrayLike]) -> QArray:
             superoperator to a state using only $n\times n$ matrix multiplications.
     """
     H = asqarray(H)
-    jump_ops = [asqarray(L) for L in jump_ops]
+    _jump_ops = [asqarray(L) for L in jump_ops]
 
     # === check H shape
     check_shape(H, 'H', '(..., n, n)')
 
     # === check jump_ops shape
-    for i, L in enumerate(jump_ops):
+    for i, L in enumerate(_jump_ops):
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
 
-    return -1j * spre(H) + 1j * spost(H) + sum([sdissipator(L) for L in jump_ops])
+    return -1j * spre(H) + 1j * spost(H) + sum([sdissipator(L) for L in _jump_ops])
