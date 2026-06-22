@@ -24,6 +24,7 @@ from .sparsedia_dataarray import SparseDIADataArray
 from .sparsedia_primitives import (
     array_to_sparsedia,
     autopad_sparsedia_diags,
+    concatenate_sparsedia,
     shape_sparsedia,
     stack_sparsedia,
 )
@@ -304,20 +305,16 @@ def where(condition: ArrayLike, x: QArrayLike, y: QArrayLike) -> QArray:
     return MaterializedQArray(dims, vectorized, DenseDataArray(data))
 
 
-def concatenate(qarrays: Sequence[QArrayLike], axis: int = 0) -> QArray:
-    """Join a sequence of qarrays along an existing axis.
-
-    Args:
-        qarrays: Qarrays to concatenate.
-        axis: Axis in the result along which the input qarrays are concatenated.
-
-    Returns:
-        Concatenated qarray.
-    """
+def _check_concatenate_input(
+    qarrays: Sequence[QArray], axis: int
+) -> tuple[tuple[int, ...], bool, int]:
     if len(qarrays) == 0:
         raise ValueError('Argument `qarrays` must contain at least one element.')
+    if not all(isinstance(q, QArray) for q in qarrays):
+        raise ValueError(
+            'Argument `qarrays` must contain only elements of type `QArray`.'
+        )
 
-    qarrays = tuple(asqarray(q) for q in qarrays)
     dims = qarrays[0].dims
     vectorized = qarrays[0].vectorized
     ndim = qarrays[0].ndim
@@ -334,6 +331,11 @@ def concatenate(qarrays: Sequence[QArrayLike], axis: int = 0) -> QArray:
         raise ValueError(
             'Argument `qarrays` must contain elements with identical `dims` attribute.'
         )
+    if not all(q.ndim == ndim for q in qarrays):
+        raise ValueError(
+            'Argument `qarrays` must contain elements with the same number of '
+            'batching dimensions.'
+        )
     if not all(q.shape[-2:] == qarrays[0].shape[-2:] for q in qarrays):
         raise ValueError(
             'Argument `qarrays` must contain elements with identical final two '
@@ -345,15 +347,30 @@ def concatenate(qarrays: Sequence[QArrayLike], axis: int = 0) -> QArray:
             'attribute.'
         )
 
+    return dims, vectorized, axis
+
+
+def concatenate(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
+    """Join a sequence of qarrays along an existing axis.
+
+    Args:
+        qarrays: Qarrays to concatenate.
+        axis: Axis in the result along which the input qarrays are concatenated.
+
+    Returns:
+        Concatenated qarray.
+    """
+    dims, vectorized, axis = _check_concatenate_input(qarrays, axis)
+
     if all(isinstance(q.data, DenseDataArray) for q in qarrays):
         data = DenseDataArray(jnp.concatenate([q.data.data for q in qarrays], axis))
-    elif all(isinstance(q.data, SparseDIADataArray) for q in qarrays) and all(
-        q.data.offsets == qarrays[0].data.offsets for q in qarrays
-    ):
-        data = SparseDIADataArray(
-            qarrays[0].data.offsets,
-            jnp.concatenate([q.data.diags for q in qarrays], axis),
+    elif all(isinstance(q.data, SparseDIADataArray) for q in qarrays):
+        offsets, diags = concatenate_sparsedia(
+            [q.data.offsets for q in qarrays],
+            [q.data.diags for q in qarrays],
+            axis=axis,
         )
+        data = SparseDIADataArray(offsets, diags)
     else:
         _warn_sparse_to_dense('concatenate')
         data = DenseDataArray(jnp.concatenate([q.to_jax() for q in qarrays], axis))

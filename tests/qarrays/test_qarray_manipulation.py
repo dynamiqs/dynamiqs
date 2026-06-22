@@ -138,6 +138,20 @@ def test_sparse_concatenate_batch_axis_preserves_sparse_layout():
 
 
 @pytest.mark.run(order=TEST_INSTANT)
+def test_sparse_concatenate_merges_different_offsets():
+    x = dq.sparsedia_from_dict({0: jnp.ones((2, 4))})
+    y = dq.sparsedia_from_dict({1: jnp.ones((3, 3))})
+
+    result = dq.concatenate([x, y], axis=0)
+
+    assert result.layout == dq.dia
+    assert result.data.offsets == (0, 1)
+    assert jnp.array_equal(
+        result.to_jax(), jnp.concatenate([x.to_jax(), y.to_jax()], axis=0)
+    )
+
+
+@pytest.mark.run(order=TEST_INSTANT)
 def test_sparse_moveaxis_final_axes_preserves_sparse_layout():
     data = jnp.arange(2 * 4 * 4, dtype=jnp.float32).reshape(2, 4, 4)
     qarray = dq.asqarray(data, layout=dq.dia)
@@ -202,6 +216,21 @@ def test_concatenate_rejects_incompatible_dims():
 
     with pytest.raises(ValueError, match='identical `dims`'):
         dq.concatenate([dq.stack([x]), dq.stack([y])], axis=0)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_concatenate_rejects_non_qarray_input():
+    with pytest.raises(ValueError, match='type `QArray`'):
+        dq.concatenate([jnp.ones((2, 2)), jnp.ones((2, 2))], axis=0)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_concatenate_rejects_incompatible_batch_ndim():
+    x = dq.stack([dq.eye(2)])
+    y = dq.stack([dq.stack([dq.eye(2)])])
+
+    with pytest.raises(ValueError, match='batching dimensions'):
+        dq.concatenate([x, y], axis=0)
 
 
 def _apply_quantum_axis_operation(qarray, operation, args):
