@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 import jax.numpy as jnp
 import pytest
 
@@ -106,6 +108,56 @@ def test_concatenate_dense_matches_jax():
 
 @pytest.mark.run(order=TEST_INSTANT)
 @pytest.mark.parametrize('operation', ['swapaxes', 'moveaxis', 'expand_dims'])
+def test_vectorized_axis_manipulation_preserves_vectorized(operation):
+    data = jnp.arange(2 * 3 * 4 * 4, dtype=jnp.float32).reshape(2, 3, 4, 4)
+    qarray = dq.vectorize(dq.asqarray(data, dims=(2, 2)))
+
+    if operation == 'swapaxes':
+        result = qarray.swapaxes(0, 1)
+        expected = jnp.swapaxes(qarray.to_jax(), 0, 1)
+    elif operation == 'moveaxis':
+        result = qarray.moveaxis(0, 1)
+        expected = jnp.moveaxis(qarray.to_jax(), 0, 1)
+    else:
+        result = qarray.expand_dims(0)
+        expected = jnp.expand_dims(qarray.to_jax(), 0)
+
+    assert result.vectorized
+    assert result.shape == expected.shape
+    assert jnp.array_equal(result.to_jax(), expected)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_vectorized_concatenate_preserves_vectorized():
+    x_data = jnp.arange(2 * 4 * 4, dtype=jnp.float32).reshape(2, 4, 4)
+    y_data = -x_data
+    x = dq.vectorize(dq.asqarray(x_data, dims=(2, 2)))
+    y = dq.vectorize(dq.asqarray(y_data, dims=(2, 2)))
+
+    result = dq.concatenate([x, y], axis=0)
+
+    assert result.vectorized
+    assert jnp.array_equal(result.to_jax(), jnp.concatenate([x.to_jax(), y.to_jax()]))
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_vectorized_where_preserves_vectorized():
+    x_data = jnp.arange(2 * 4 * 4, dtype=jnp.float32).reshape(2, 4, 4)
+    y_data = -x_data
+    condition = jnp.asarray([True, False])[:, None, None]
+    x = dq.vectorize(dq.asqarray(x_data, dims=(2, 2)))
+    y = dq.vectorize(dq.asqarray(y_data, dims=(2, 2)))
+
+    result = dq.where(condition, x, y)
+
+    assert result.vectorized
+    assert jnp.array_equal(
+        result.to_jax(), jnp.where(condition, x.to_jax(), y.to_jax())
+    )
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('operation', ['swapaxes', 'moveaxis', 'expand_dims'])
 def test_sparse_batch_axis_manipulation_preserves_sparse_layout(operation):
     data = jnp.arange(2 * 3 * 4 * 4, dtype=jnp.float32).reshape(2, 3, 4, 4)
     qarray = dq.asqarray(data, dims=(4,), layout=dq.dia)
@@ -122,6 +174,39 @@ def test_sparse_batch_axis_manipulation_preserves_sparse_layout(operation):
 
     assert result.layout == dq.dia
     assert jnp.array_equal(result.to_jax(), expected)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_sparse_swapaxes_final_axes_preserves_sparse_layout():
+    data = jnp.arange(2 * 4 * 4, dtype=jnp.float32).reshape(2, 4, 4)
+    qarray = dq.asqarray(data, layout=dq.dia)
+
+    result = dq.swapaxes(qarray, -1, -2)
+
+    assert result.layout == dq.dia
+    assert jnp.array_equal(result.to_jax(), jnp.swapaxes(data, -1, -2))
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_sparse_moveaxis_multi_axis_matches_jax():
+    data = jnp.arange(2 * 3 * 5 * 4 * 4, dtype=jnp.float32).reshape(2, 3, 5, 4, 4)
+    qarray = dq.asqarray(data, dims=(4,), layout=dq.dia)
+
+    result = qarray.moveaxis((0, 1), (2, 0))
+
+    assert result.layout == dq.dia
+    assert jnp.array_equal(result.to_jax(), jnp.moveaxis(data, (0, 1), (2, 0)))
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_sparse_expand_dims_tuple_axis_matches_jax():
+    data = jnp.arange(2 * 3 * 4 * 4, dtype=jnp.float32).reshape(2, 3, 4, 4)
+    qarray = dq.asqarray(data, dims=(4,), layout=dq.dia)
+
+    result = qarray.expand_dims(axis=(0, 2))
+
+    assert result.layout == dq.dia
+    assert jnp.array_equal(result.to_jax(), jnp.expand_dims(data, axis=(0, 2)))
 
 
 @pytest.mark.run(order=TEST_INSTANT)
@@ -210,6 +295,16 @@ def test_where_requires_qarray_operand():
 
 
 @pytest.mark.run(order=TEST_INSTANT)
+def test_where_rejects_mismatched_vectorized_metadata():
+    x_data = jnp.arange(2 * 4 * 4, dtype=jnp.float32).reshape(2, 4, 4)
+    x = dq.vectorize(dq.asqarray(x_data, dims=(2, 2)))
+    y = replace(x, vectorized=False)
+
+    with pytest.raises(ValueError, match='incompatible `vectorized`'):
+        dq.where(True, x, y)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
 def test_concatenate_rejects_incompatible_dims():
     x = dq.eye(2)
     y = dq.eye(3)
@@ -230,6 +325,16 @@ def test_concatenate_rejects_incompatible_batch_ndim():
     y = dq.stack([dq.stack([dq.eye(2)])])
 
     with pytest.raises(ValueError, match='batching dimensions'):
+        dq.concatenate([x, y], axis=0)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_concatenate_rejects_mismatched_vectorized_metadata():
+    x_data = jnp.arange(2 * 4 * 4, dtype=jnp.float32).reshape(2, 4, 4)
+    x = dq.vectorize(dq.asqarray(x_data, dims=(2, 2)))
+    y = replace(x, vectorized=False)
+
+    with pytest.raises(ValueError, match='identical `vectorized`'):
         dq.concatenate([x, y], axis=0)
 
 
