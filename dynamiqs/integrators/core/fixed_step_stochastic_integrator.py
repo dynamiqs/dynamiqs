@@ -657,7 +657,7 @@ class DSMESolveRouchon1Integrator(
                 jnp.sqrt((1 - eta) * self.dt) * _Lm
                 for eta, _Lm in zip(self.etas, Lm, strict=True)
             ]
-            + [self.dt * _Lc for _Lc in Lc]
+            + [jnp.sqrt(self.dt) * _Lc for _Lc in Lc]
         )
 
         rho = sum([M @ rho @ M.dag() for M in Ms])
