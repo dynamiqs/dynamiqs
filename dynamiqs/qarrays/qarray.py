@@ -13,6 +13,7 @@ from jax import Array, Device
 from jaxtyping import ArrayLike
 from qutip import Qobj
 
+from .._utils import is_batched_scalar
 from .dataarray import IndexType
 from .layout import Layout
 
@@ -43,7 +44,8 @@ def isqarraylike(x: Any) -> TypeGuard[QArrayLike]:
     """
     if isinstance(x, get_args(_QArrayLike)):
         return True
-    elif isinstance(x, Sequence):
+    elif isinstance(x, Sequence) and not isinstance(x, str):
+        # strings yield infinite recursion, so we exclude them from the sequence check
         return all(isqarraylike(sub_x) for sub_x in x)
     return False
 
@@ -76,14 +78,14 @@ def to_jax(x: QArrayLike) -> Array:
         return x.to_jax()
     elif isinstance(x, Qobj):
         return jnp.asarray(x.full())
-    elif isinstance(x, Sequence):
+    elif isinstance(x, Sequence) and not isinstance(x, str):
         return jnp.asarray([to_jax(cast(QArrayLike, sub_x)) for sub_x in x])
     else:
         return jnp.asarray(x)
 
 
 def get_dims(x: QArrayLike) -> tuple[int, ...] | None:
-    if isinstance(x, Sequence):
+    if isinstance(x, Sequence) and not isinstance(x, str):
         sub_dims = [get_dims(cast(QArrayLike, sub_x)) for sub_x in x]
         return sub_dims[0] if all(sd == sub_dims[0] for sd in sub_dims) else None
     if isinstance(x, QArray):
@@ -124,7 +126,7 @@ def to_numpy(x: QArrayLike) -> np.ndarray:
         return x.to_numpy()
     elif isinstance(x, Qobj):
         return np.asarray(x.full())
-    elif isinstance(x, Sequence):
+    elif isinstance(x, Sequence) and not isinstance(x, str):
         return np.asarray([to_numpy(cast(QArrayLike, sub_x)) for sub_x in x])
     else:
         return np.asarray(x)
@@ -486,13 +488,20 @@ class QArray(eqx.Module):
         return self * (-1)
 
     @abstractmethod
-    def __mul__(self, y: ArrayLike) -> QArray:
+    def __mul__(self, y: QArrayLike) -> QArray:
         pass
 
-    def __rmul__(self, y: ArrayLike) -> QArray:
+    def __rmul__(self, y: QArrayLike) -> QArray:
         return self * y
 
-    def __truediv__(self, y: ArrayLike) -> QArray:
+    def __truediv__(self, y: QArrayLike) -> QArray:
+        if not is_batched_scalar(y):
+            if not isqarraylike(y):
+                return NotImplemented
+            raise NotImplementedError(
+                'Division of a qarray by a non-scalar with the `/` operator is not '
+                'supported.'
+            )
         return self * (1 / y)
 
     def __rtruediv__(self, y: QArrayLike) -> QArray:
@@ -512,6 +521,8 @@ class QArray(eqx.Module):
         return self.__add__(y)
 
     def __sub__(self, y: QArrayLike) -> QArray:
+        if not isqarraylike(y):
+            return NotImplemented
         if not isinstance(y, QArray):
             y = to_jax(y)
         return self + (-y)
@@ -547,6 +558,9 @@ class QArray(eqx.Module):
         # to deal with the x**ω notation from equinox (used in diffrax internals)
         if isinstance(power, _Metaω):
             return _Metaω.__rpow__(power, self)
+
+        if not isqarraylike(power):
+            return NotImplemented
 
         raise NotImplementedError(
             'Computing the element-wise power of a qarray with the `**` operator is '
