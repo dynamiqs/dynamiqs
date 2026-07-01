@@ -12,7 +12,13 @@ from jax import Array, Device
 from jaxtyping import ArrayLike
 from qutip import Qobj
 
-from .dataarray import DataArray, DataArrayLike, IndexType, in_last_two_dims
+from .dataarray import (
+    DataArray,
+    DataArrayLike,
+    IndexType,
+    in_last_two_dims,
+    key_touches_last_two_dims,
+)
 from .layout import Layout, dense
 from .sparsedia_primitives import array_to_sparsedia
 
@@ -198,9 +204,10 @@ class DenseDataArray(DataArray):
         data = self.data**power
         return replace(self, data=data)
 
-    def __getitem__(self, key: IndexType) -> DataArray:
-        data = self.data[key]
-        return replace(self, data=data)
+    def __getitem__(self, key: IndexType) -> DataArray | Array:
+        if key_touches_last_two_dims(key, self.ndim):
+            return self.data[key]
+        return replace(self, data=self.data[key])
 
 
 def array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:

@@ -18,6 +18,7 @@ from .dataarray import (
     IndexType,
     in_last_two_dims,
     include_last_two_dims,
+    key_touches_last_two_dims,
 )
 from .dense_dataarray import DenseDataArray
 from .layout import Layout, dia
@@ -336,40 +337,12 @@ class SparseDIADataArray(DataArray):
         diags = self.diags**power
         return replace(self, diags=diags)
 
-    def __getitem__(self, key: IndexType) -> DataArray:
+    def __getitem__(self, key: IndexType) -> DataArray | Array:
         if key in (slice(None, None, None), Ellipsis):
             return self
 
-        _check_key_in_batch_dims(key, self.ndim)
+        if key_touches_last_two_dims(key, self.ndim):
+            return self.to_jax()[key]
+
         diags = self.diags[key]
         return replace(self, diags=diags)
-
-
-def _check_key_in_batch_dims(key: IndexType, ndim: int):
-    full_slice = slice(None, None, None)
-    valid_key = False
-    if isinstance(key, int | slice):
-        valid_key = ndim > 2
-    if isinstance(key, Array):
-        valid_key = key.ndim == 0 and ndim > 2
-
-    elif isinstance(key, tuple):
-        if Ellipsis in key:
-            ellipsis_key = key.index(Ellipsis)
-            _key = (
-                key[:ellipsis_key]
-                + (full_slice,) * (ndim - len(key) + 1)
-                + key[ellipsis_key + 1 :]
-            )
-
-        valid_key = (
-            len(key) <= ndim - 2
-            or (len(key) == ndim - 1 and key[-1] == full_slice)
-            or (len(key) == ndim and key[-2] == full_slice and key[-1] == full_slice)
-        )
-
-    if not valid_key:
-        raise NotImplementedError(
-            'Getting items from non batching dimensions of a `SparseDIADataArray` is '
-            'not supported.'
-        )

@@ -247,7 +247,7 @@ class DataArray(eqx.Module):
         pass
 
     @abstractmethod
-    def __getitem__(self, key: IndexType) -> DataArray:
+    def __getitem__(self, key: IndexType) -> DataArray | Array:
         pass
 
 
@@ -261,6 +261,31 @@ def include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> bool
     return axis is None or (
         ndim - 1 in [a % ndim for a in axis] and ndim - 2 in [a % ndim for a in axis]
     )
+
+
+def key_touches_last_two_dims(key: IndexType, ndim: int) -> bool:
+    # returns True if `key` applies a non-trivial index (i.e. anything other than a
+    # full slice) to either of the last two dimensions of an array of `ndim`
+    # dimensions
+    full_slice = slice(None, None, None)
+    items: tuple = key if isinstance(key, tuple) else (key,)
+
+    if Ellipsis in items:
+        i = items.index(Ellipsis)
+        n_specified = sum(k is not None for k in items) - 1
+        items = items[:i] + (full_slice,) * max(ndim - n_specified, 0) + items[i + 1 :]
+
+    axis = 0
+    for k in items:
+        if k is None:  # newaxis, does not consume an existing dimension
+            continue
+        if axis in (ndim - 1, ndim - 2) and not (
+            isinstance(k, slice) and k == full_slice
+        ):
+            return True
+        axis += 1
+
+    return False
 
 
 # A type alias for DataArray or raw JAX/NumPy array-like values.

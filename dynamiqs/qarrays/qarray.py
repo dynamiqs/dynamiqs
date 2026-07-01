@@ -588,7 +588,7 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def __getitem__(self, key: IndexType) -> QArray:
+    def __getitem__(self, key: IndexType) -> QArray | Array:
         pass
 
 

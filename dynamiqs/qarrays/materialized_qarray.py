@@ -369,6 +369,8 @@ class MaterializedQArray(QArray):
         """
         return replace(self, data=self.data**power)
 
-    def __getitem__(self, key: IndexType) -> QArray:
+    def __getitem__(self, key: IndexType) -> QArray | Array:
         result = self.data[key]
-        return replace(self, data=result)
+        if isinstance(result, DataArray):
+            return replace(self, data=result)
+        return result
