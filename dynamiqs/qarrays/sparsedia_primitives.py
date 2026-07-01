@@ -334,7 +334,7 @@ def concatenate_sparsedia(
     axis: int,
 ) -> tuple[tuple[int, ...], Array]:
     # compute unique offsets of the output
-    out_offsets = np.asarray(reduce(np.union1d, offsets_sequence))
+    out_offsets = np.asarray(sorted(reduce(set.union, map(set, offsets_sequence))))
     offset_to_index = {offset: idx for idx, offset in enumerate(out_offsets)}
 
     # prepare input diagonals with matching offsets before concatenating

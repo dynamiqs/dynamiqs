@@ -248,6 +248,18 @@ def test_sparse_moveaxis_final_axes_preserves_sparse_layout():
 
 
 @pytest.mark.run(order=TEST_INSTANT)
+def test_moveaxis_can_swap_final_axes_while_moving_batch_axes():
+    qarray = dq.eye(4).broadcast_to(1, 1, 4, 4)
+
+    result = qarray.moveaxis((0, -1, -2), (1, -2, -1))
+
+    assert result.layout == dq.dia
+    assert jnp.array_equal(
+        result.to_jax(), jnp.moveaxis(qarray.to_jax(), (0, -1, -2), (1, -2, -1))
+    )
+
+
+@pytest.mark.run(order=TEST_INSTANT)
 def test_where_sparse_converts_to_dense_with_warning():
     x_data = jnp.arange(2 * 4 * 4, dtype=jnp.float32).reshape(2, 4, 4)
     y_data = -x_data

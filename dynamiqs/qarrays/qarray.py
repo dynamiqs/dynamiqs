@@ -344,6 +344,15 @@ class QArray(eqx.Module):
         """
 
     def where(self, condition: ArrayLike, y: QArrayLike) -> QArray:
+        """Select values from this qarray or another operand depending on a condition.
+
+        Args:
+            condition: Boolean array-like condition.
+            y: Values selected when `condition` is false.
+
+        Returns:
+            Qarray with values chosen from `self` and `y`.
+        """
         from .utils import where  # noqa: PLC0415
 
         return where(condition, self, y)

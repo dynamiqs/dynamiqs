@@ -293,73 +293,33 @@ def where(condition: ArrayLike, x: QArrayLike, y: QArrayLike) -> QArray:
             'use `jax.numpy.where` directly.'
         )
 
-    if x_is_qarray and y_is_qarray:
+    if isinstance(x, MaterializedQArray) and isinstance(y, MaterializedQArray):
         _check_compatible_qarray_metadata(x, y)
         dims = x.dims
         vectorized = x.vectorized
-    elif x_is_qarray:
+    elif isinstance(x, MaterializedQArray):
         y_dims = get_dims(y)
         if y_dims is not None:
             check_compatible_dims(x.dims, y_dims)
         dims = x.dims
         vectorized = x.vectorized
-    else:
+    elif isinstance(y, MaterializedQArray):
         x_dims = get_dims(x)
         if x_dims is not None:
             check_compatible_dims(y.dims, x_dims)
         dims = y.dims
         vectorized = y.vectorized
+    else:
+        raise NotImplementedError(
+            '`where` is only implemented for materialized qarrays.'
+        )
 
     if _contains_sparse_qarray(x, y):
+        # TODO: Generalize implementation of `dq.where` to sparse dia layout.
         _warn_sparse_to_dense('where')
 
     data = jnp.where(condition, to_jax(x), to_jax(y))
     return MaterializedQArray(dims, vectorized, DenseDataArray(data))
-
-
-def _check_concatenate_input(
-    qarrays: Sequence[QArray], axis: int
-) -> tuple[tuple[int, ...], bool, int]:
-    if len(qarrays) == 0:
-        raise ValueError('Argument `qarrays` must contain at least one element.')
-    if not all(isinstance(q, QArray) for q in qarrays):
-        raise ValueError(
-            'Argument `qarrays` must contain only elements of type `QArray`.'
-        )
-
-    dims = qarrays[0].dims
-    vectorized = qarrays[0].vectorized
-    ndim = qarrays[0].ndim
-    if not -ndim <= axis < ndim:
-        raise ValueError(f'axis {axis} is out of bounds for array of dimension {ndim}')
-    axis = axis % ndim
-    if axis >= ndim - 2:
-        raise ValueError(
-            '`concatenate` can only manipulate batching dimensions of a qarray; the '
-            'final two dimensions are matrix dimensions.'
-        )
-
-    if not all(q.dims == dims for q in qarrays):
-        raise ValueError(
-            'Argument `qarrays` must contain elements with identical `dims` attribute.'
-        )
-    if not all(q.ndim == ndim for q in qarrays):
-        raise ValueError(
-            'Argument `qarrays` must contain elements with the same number of '
-            'batching dimensions.'
-        )
-    if not all(q.shape[-2:] == qarrays[0].shape[-2:] for q in qarrays):
-        raise ValueError(
-            'Argument `qarrays` must contain elements with identical final two '
-            'dimensions.'
-        )
-    if not all(q.vectorized == vectorized for q in qarrays):
-        raise ValueError(
-            'Argument `qarrays` must contain elements with identical `vectorized` '
-            'attribute.'
-        )
-
-    return dims, vectorized, axis
 
 
 def concatenate(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
@@ -372,14 +332,16 @@ def concatenate(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
     Returns:
         Concatenated qarray.
     """
-    dims, vectorized, axis = _check_concatenate_input(qarrays, axis)
+    qarrays, dims, vectorized, axis = _check_concatenate_input(qarrays, axis)
 
     if all(isinstance(q.data, DenseDataArray) for q in qarrays):
-        data = DenseDataArray(jnp.concatenate([q.data.data for q in qarrays], axis))
+        data = DenseDataArray(
+            jnp.concatenate([cast(DenseDataArray, q.data).data for q in qarrays], axis)
+        )
     elif all(isinstance(q.data, SparseDIADataArray) for q in qarrays):
         offsets, diags = concatenate_sparsedia(
-            [q.data.offsets for q in qarrays],
-            [q.data.diags for q in qarrays],
+            [cast(SparseDIADataArray, q.data).offsets for q in qarrays],
+            [cast(SparseDIADataArray, q.data).diags for q in qarrays],
             axis=axis,
         )
         data = SparseDIADataArray(offsets, diags)
@@ -388,6 +350,52 @@ def concatenate(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
         data = DenseDataArray(jnp.concatenate([q.to_jax() for q in qarrays], axis))
 
     return MaterializedQArray(dims, vectorized, data)
+
+
+def _check_concatenate_input(
+    qarrays: Sequence[QArray], axis: int
+) -> tuple[list[MaterializedQArray], tuple[int, ...], bool, int]:
+    if len(qarrays) == 0:
+        raise ValueError('Argument `qarrays` must contain at least one element.')
+    if not all(isinstance(q, MaterializedQArray) for q in qarrays):
+        raise ValueError(
+            'Argument `qarrays` must contain only elements of type `QArray`.'
+        )
+
+    materialized_qarrays = cast(list[MaterializedQArray], qarrays)
+    dims = materialized_qarrays[0].dims
+    vectorized = materialized_qarrays[0].vectorized
+    ndim = materialized_qarrays[0].ndim
+    if not -ndim <= axis < ndim:
+        raise ValueError(f'axis {axis} is out of bounds for array of dimension {ndim}')
+    axis = axis % ndim
+    if axis >= ndim - 2:
+        raise ValueError(
+            '`concatenate` can only manipulate batching dimensions of a qarray; the '
+            'final two dimensions are matrix dimensions.'
+        )
+
+    if not all(q.dims == dims for q in materialized_qarrays):
+        raise ValueError(
+            'Argument `qarrays` must contain elements with identical `dims` attribute.'
+        )
+    if not all(q.ndim == ndim for q in materialized_qarrays):
+        raise ValueError(
+            'Argument `qarrays` must contain elements with the same number of '
+            'batching dimensions.'
+        )
+    if not all(q.shape[-2:] == materialized_qarrays[0].shape[-2:] for q in qarrays):
+        raise ValueError(
+            'Argument `qarrays` must contain elements with identical final two '
+            'dimensions.'
+        )
+    if not all(q.vectorized == vectorized for q in materialized_qarrays):
+        raise ValueError(
+            'Argument `qarrays` must contain elements with identical `vectorized` '
+            'attribute.'
+        )
+
+    return materialized_qarrays, dims, vectorized, axis
 
 
 def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
@@ -506,11 +514,14 @@ def _assert_dims_match_shape(dims: tuple[int, ...], shape: tuple[int, ...]):
 
 def _contains_sparse_qarray(*xs: QArrayLike) -> bool:
     return any(
-        isinstance(x, QArray) and isinstance(x.data, SparseDIADataArray) for x in xs
+        isinstance(x, MaterializedQArray) and isinstance(x.data, SparseDIADataArray)
+        for x in xs
     )
 
 
-def _check_compatible_qarray_metadata(x: QArray, y: QArray) -> None:
+def _check_compatible_qarray_metadata(
+    x: MaterializedQArray, y: MaterializedQArray
+) -> None:
     check_compatible_dims(x.dims, y.dims)
     if x.shape[-2:] != y.shape[-2:]:
         raise ValueError(

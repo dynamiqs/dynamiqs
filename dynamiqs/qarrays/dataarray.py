@@ -126,15 +126,13 @@ class DataArray(eqx.Module):
         self, source: int | Sequence[int], destination: int | Sequence[int]
     ) -> DataArray:
         """Moves axes to new positions."""
-        source_axes = tuple(
-            _normalize_axis(axis, self.ndim)
-            for axis in ((source,) if isinstance(source, int) else tuple(source))
+        source_axes = (source,) if isinstance(source, int) else tuple(source)
+        source_axes = tuple(_normalize_axis(axis, self.ndim) for axis in source_axes)
+        destination_axes = (
+            (destination,) if isinstance(destination, int) else tuple(destination)
         )
         destination_axes = tuple(
-            _normalize_axis(axis, self.ndim)
-            for axis in (
-                (destination,) if isinstance(destination, int) else tuple(destination)
-            )
+            _normalize_axis(axis, self.ndim) for axis in destination_axes
         )
         _check_axis_tuples(source_axes, destination_axes)
 
@@ -145,9 +143,18 @@ class DataArray(eqx.Module):
             return self
         if axis_order == final_swap_order:
             return self.mT
-        if in_last_two_dims((*source_axes, *destination_axes), self.ndim):
+        if set(axis_order[:-2]) != set(range(self.ndim - 2)):
             _raise_matrix_axis_error('moveaxis')
-        return self._moveaxis_unchecked(source_axes, destination_axes)
+
+        batch_source = tuple(range(self.ndim - 2))
+        batch_destination = tuple(axis_order[:-2].index(axis) for axis in batch_source)
+        if axis_order[-2:] == identity_order[-2:]:
+            return self._moveaxis_unchecked(batch_source, batch_destination)
+        elif axis_order[-2:] == final_swap_order[-2:]:
+            return self.mT._moveaxis_unchecked(batch_source, batch_destination)
+        else:
+            _raise_matrix_axis_error('moveaxis')
+        raise AssertionError('unreachable')
 
     @abstractmethod
     def _moveaxis_unchecked(
@@ -333,9 +340,9 @@ def _normalize_axis(axis: int, ndim: int) -> int:
 def _normalize_insert_axes(axis: int | Sequence[int], ndim: int) -> tuple[int, ...]:
     axes = (axis,) if isinstance(axis, int) else tuple(axis)
     out_ndim = ndim + len(axes)
-    normalized_axes = tuple(_normalize_axis(a, out_ndim) for a in axes)
+    normalized_axes = tuple(_normalize_axis(ax, out_ndim) for ax in axes)
     if len(set(normalized_axes)) != len(normalized_axes):
-        raise ValueError('repeated axis')
+        raise ValueError(f'Repeated axis found in axes to insert. Got `axis={axis}`.')
     return normalized_axes
 
 
@@ -345,9 +352,11 @@ def _check_axis_tuples(source: tuple[int, ...], destination: tuple[int, ...]) ->
             '`source` and `destination` arguments must have the same number of axes.'
         )
     if len(set(source)) != len(source):
-        raise ValueError('repeated axis in `source` argument')
+        raise ValueError(f'Repeated axis found in `source` argument. Got {source}.')
     if len(set(destination)) != len(destination):
-        raise ValueError('repeated axis in `destination` argument')
+        raise ValueError(
+            f'Repeated axis found in `destination` argument. Got {destination}.'
+        )
 
 
 def _moveaxis_order(
