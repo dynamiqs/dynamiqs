@@ -8,7 +8,7 @@ import diffrax as dx
 import equinox as eqx
 import jax
 import jax.numpy as jnp
-import lineax as lx
+import jax.scipy.linalg as jsp_linalg
 from jax import Array
 from jaxtyping import PyTree
 
@@ -33,18 +33,80 @@ from .interfaces import MEInterface, SolveInterface
 from .save_mixin import SolveSaveMixin
 
 
-def qr_solve(A: Array, B: Array) -> Array:
-    operator = lx.MatrixLinearOperator(A)
+def _qr_cache(A: Array) -> tuple[Array, Array]:
+    # Cache the QR factorization once per vector-field evaluation.
+    # We do this explicitly so that AD uses the JVP rule below instead of
+    # differentiating through the QR decomposition.
+    q, r = jnp.linalg.qr(A, mode='reduced')
+    q = jax.lax.stop_gradient(q)
+    r = jax.lax.stop_gradient(r)
+    return q, r
 
-    def solve_single(b: Array) -> Array:
-        return lx.linear_solve(operator, b, throw=False, solver=lx.QR()).value
 
-    return jax.vmap(solve_single, in_axes=1, out_axes=1)(B)  # vmap over columns of B
+def _cholesky_cache(A: Array) -> Array:
+    # Precompute A^+ = (A^H A)^-1 A^H once per vector-field evaluation.
+    a_pseudoinverse = jsp_linalg.solve(A.conj().T @ A, A.conj().T, assume_a='pos')
+    return jax.lax.stop_gradient(a_pseudoinverse)
 
 
-def cholesky_solve(A: Array, B: Array) -> Array:
-    A_pinv = jax.scipy.linalg.solve(A.conj().T @ A, A.conj().T, assume_a='pos')
-    return A_pinv @ B
+def _qr_pseudoinverse_apply(cache: tuple[Array, Array], rhs: Array) -> Array:
+    q, r = cache
+    return jsp_linalg.solve_triangular(r, q.conj().T @ rhs, lower=False)
+
+
+def _qr_pseudoinverse_adjoint_apply(cache: tuple[Array, Array], rhs: Array) -> Array:
+    q, r = cache
+    # (A^+)^H rhs = Q (R^{-H} rhs), where A = Q R.
+    return q @ jsp_linalg.solve_triangular(r, rhs, trans='C', lower=False)
+
+
+# TODO: Extend these cached custom JVP rules to higher-order AD
+@jax.custom_jvp
+def _qr_solve_cached(A: Array, cache: tuple[Array, Array], B: Array) -> Array:
+    del A
+    return _qr_pseudoinverse_apply(cache, B)
+
+
+@_qr_solve_cached.defjvp
+def _qr_solve_cached_jvp(
+    primals: tuple[Array, tuple[Array, Array], Array],
+    tangents: tuple[Array, tuple[Array, Array], Array],
+) -> tuple[Array, Array]:
+    A, cache, B = primals
+    dA, _cache_tangent, dB = tangents
+    solution = _qr_solve_cached(A, cache, B)
+    # Pseudoinverse JVP formula (independent columns):
+    # dX = A^+ (dB - dA X + (A^+)^H (dA^H (B - A X))).
+    residual = B - A @ solution
+    tangent_rhs = (
+        dB
+        - dA @ solution
+        + _qr_pseudoinverse_adjoint_apply(cache, dA.conj().T @ residual)
+    )
+    solution_tangent = _qr_pseudoinverse_apply(cache, tangent_rhs)
+    return solution, solution_tangent
+
+
+@jax.custom_jvp
+def _cholesky_solve_cached(A: Array, a_pseudoinverse: Array, B: Array) -> Array:
+    del A
+    return a_pseudoinverse @ B
+
+
+@_cholesky_solve_cached.defjvp
+def _cholesky_solve_cached_jvp(
+    primals: tuple[Array, Array, Array], tangents: tuple[Array, Array, Array]
+) -> tuple[Array, Array]:
+    A, a_pseudoinverse, B = primals
+    dA, _pseudoinverse_tangent, dB = tangents
+    solution = _cholesky_solve_cached(A, a_pseudoinverse, B)
+    # Same pseudoinverse formula as the QR path, but using cached A^+.
+    residual = B - A @ solution
+    tangent_rhs = (
+        dB - dA @ solution + a_pseudoinverse.conj().T @ (dA.conj().T @ residual)
+    )
+    solution_tangent = a_pseudoinverse @ tangent_rhs
+    return solution, solution_tangent
 
 
 def normalize_m(m: Array) -> Array:
@@ -194,22 +256,27 @@ class MESolveLowRankIntegrator(
             rho0 = self.y0.todm().to_jax()
             m0 = initialize_m0_from_dm(rho0, self.method.rank, eps, self.method.key)
 
-        # define diffrax term
         linear_solvers = {
-            LinearSolver.CHOLESKY: cholesky_solve,
-            LinearSolver.QR: qr_solve,
+            LinearSolver.CHOLESKY: (_cholesky_cache, _cholesky_solve_cached),
+            LinearSolver.QR: (_qr_cache, _qr_solve_cached),
         }
-        linsolve = linear_solvers[self.method.linear_solver]
+        # Keep solver selection outside the ODE RHS loop while carrying both pieces
+        # required by the cached solve: (cache_builder, linsolve_with_cache).
+        solver_cache_builder, linsolve = linear_solvers[self.method.linear_solver]
 
         def vector_field(t, m, _):  # noqa: ANN001, ANN202
             H = self.H(t)
             Ls = [L(t) for L in self.Ls]
             dm = (-1j) * (H @ m).to_jax()
+            # `m` is fixed for this vector-field evaluation, so we compute and reuse
+            # the decomposition/pseudoinverse across all jump operators.
+            solve_cache = solver_cache_builder(m)
 
             for L in Ls:
-                Lm = (L @ m).to_jax()
-                tmp = linsolve(m, Lm)
-                dm += 0.5 * (Lm @ tmp.conj().T) - 0.5 * (L.dag() @ Lm).to_jax()
+                jump_action = (L @ m).to_jax()
+                projected_jump_action = linsolve(m, solve_cache, jump_action)
+                dm += 0.5 * (jump_action @ projected_jump_action.conj().T)
+                dm -= 0.5 * (L.dag() @ jump_action).to_jax()
 
             return dm
 
