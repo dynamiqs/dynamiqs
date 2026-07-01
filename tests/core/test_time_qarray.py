@@ -502,7 +502,8 @@ class TestModulatedTimeQArray:
         assert isinstance(x, SummedTimeQArray)
         assert_equal(x(0.0), [[1.0 - 1.0j, 1.0 - 2.0j], [1.0 - 3.0j, 1.0 - 4.0j]])
 
-        # test type `QArray` — regression test for QArray.__sub__ returning NotImplemented
+        # test type `QArray` — regression test for QArray.__sub__ returning
+        # NotImplemented
         # for TimeQArray instead of crashing with to_jax()
         y = asqarray(jnp.array([[1, 1], [1, 1]]))
         x = y - self.x
