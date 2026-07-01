@@ -512,6 +512,8 @@ class QArray(eqx.Module):
         return self.__add__(y)
 
     def __sub__(self, y: QArrayLike) -> QArray:
+        if not isqarraylike(y):
+            return NotImplemented
         if not isinstance(y, QArray):
             y = to_jax(y)
         return self + (-y)
