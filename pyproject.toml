@@ -34,7 +34,6 @@ dependencies = [
     "cmap",
     "ipython",
     "tqdm",
-    "lineax",
 ]
 
 [project.urls]
