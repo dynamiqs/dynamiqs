@@ -236,6 +236,16 @@ class TestSparseDIAQArray:
 
         assert _allclose(out_dia, out_dense)
 
+    @pytest.mark.parametrize('k', ['simple', 'batch', 'batch_broadcast'])
+    def test_newaxis_getitem(self, k):
+        d, s = self.denseA[k], self.sparseA[k]
+
+        # None (np.newaxis) should add a batch dimension
+        assert s[None].shape == (1, *d.shape)
+        assert s[None, ...].shape == (1, *d.shape)
+        assert s[None, None].shape == (1, 1, *d.shape)
+        assert _allclose(s[None].to_jax(), d[None].to_jax())
+
 
 def _allclose(a, b, rtol=1e-05, atol=1e-08):
     return jnp.allclose(a, b, rtol=rtol, atol=atol)

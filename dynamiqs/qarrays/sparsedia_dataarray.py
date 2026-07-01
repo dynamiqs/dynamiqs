@@ -347,28 +347,26 @@ class SparseDIADataArray(DataArray):
 
 def _check_key_in_batch_dims(key: IndexType, ndim: int):
     full_slice = slice(None, None, None)
-    valid_key = False
-    if isinstance(key, int | slice):
-        valid_key = ndim > 2
-    if isinstance(key, Array):
-        valid_key = key.ndim == 0 and ndim > 2
 
+    # Normalize to a tuple, stripping None (newaxis - only adds batch dims)
+    if key is None:
+        return
     elif isinstance(key, tuple):
-        if Ellipsis in key:
-            ellipsis_key = key.index(Ellipsis)
-            _key = (
-                key[:ellipsis_key]
-                + (full_slice,) * (ndim - len(key) + 1)
-                + key[ellipsis_key + 1 :]
-            )
+        t: tuple = tuple(k for k in key if k is not None)
+    else:
+        t = (key,)  # int, slice, Array, EllipsisType
 
-        valid_key = (
-            len(key) <= ndim - 2
-            or (len(key) == ndim - 1 and key[-1] == full_slice)
-            or (len(key) == ndim and key[-2] == full_slice and key[-1] == full_slice)
-        )
+    if not t:  # all None (newaxis) - no need to check anything
+        return
 
-    if not valid_key:
+    # Expand Ellipsis into full slices
+    if Ellipsis in t:
+        ellipsis_idx = t.index(Ellipsis)
+        n_fills = max(0, ndim - (len(t) - 1))
+        t = t[:ellipsis_idx] + (full_slice,) * n_fills + t[ellipsis_idx + 1 :]
+
+    # Valid if every element addressing a matrix dim (last 2) is a full slice
+    if not all(k == full_slice for k in t[ndim - 2 :]):
         raise NotImplementedError(
             'Getting items from non batching dimensions of a `SparseDIADataArray` is '
             'not supported.'
