@@ -129,6 +129,7 @@ class OCavity(OpenSystem):
     def grads_state(self, t: float) -> PyTree:
         def _loss_state(params: PyTree) -> Array:
             return self.loss_state(self._state(params, t))
+
         return jax.grad(_loss_state)(self.params_default)
 
     def grads_expect(self, t: float) -> PyTree:
@@ -201,6 +202,7 @@ class OTDQubit(OpenSystem):
     def grads_state(self, t: float) -> PyTree:
         def _loss_state(params: PyTree) -> Array:
             return self.loss_state(self._state(params, t))
+
         return jax.grad(_loss_state)(self.params_default)
 
     def grads_expect(self, t: float) -> PyTree:
