@@ -29,6 +29,11 @@ class StochasticSystem(System):
     def Ls(self, params: PyTree) -> list[QArray | TimeQArray]:
         """Compute the jump operators."""
 
+    @property
+    @abstractmethod
+    def etas(self) -> Array:
+        """Compute the efficiencies for each jump operator."""
+
     def run(self, solver: str, method: Method, keys: Array) -> Result:
         H, Ls, y0 = self.H(None), self.Ls(None), self.y0(None)
         exp_ops = self.Es(None) or None
@@ -41,12 +46,12 @@ class StochasticSystem(System):
                 H, Ls, y0, self.tsave, keys=keys, exp_ops=exp_ops, method=method
             )
         if solver == 'jsme':
-            thetas, etas = jnp.zeros(len(Ls)), jnp.ones(len(Ls))
+            thetas = jnp.zeros(len(Ls))
             return dq.jsmesolve(
                 H,
                 Ls,
                 thetas,
-                etas,
+                self.etas,
                 y0,
                 self.tsave,
                 keys=keys,
@@ -54,9 +59,15 @@ class StochasticSystem(System):
                 method=method,
             )
         if solver == 'dsme':
-            etas = jnp.ones(len(Ls))
             return dq.dsmesolve(
-                H, Ls, etas, y0, self.tsave, keys=keys, exp_ops=exp_ops, method=method
+                H,
+                Ls,
+                self.etas,
+                y0,
+                self.tsave,
+                keys=keys,
+                exp_ops=exp_ops,
+                method=method,
             )
         raise ValueError(f'unknown stochastic solver {solver!r}')
 
@@ -81,6 +92,10 @@ class ProtectedSubspace(StochasticSystem):
         sz = dq.sigmaz()
         return [-(sz & sz)]
 
+    @property
+    def etas(self) -> Array:
+        return jnp.array([1.0])
+
     def y0(self, params: PyTree) -> QArray:  # noqa: ARG002
         return dq.fock(2, 0) & dq.fock(2, 1)  # |01>
 
@@ -103,6 +118,10 @@ class BackactionQubit(ProtectedSubspace):
     def Ls(self, params: PyTree) -> list[QArray | TimeQArray]:  # noqa: ARG002
         return [dq.sigmaz() & dq.eye(2)]
 
+    @property
+    def etas(self) -> Array:
+        return jnp.array([1.0])
+
 
 class DampedOscillator(StochasticSystem):
     """Driven-damped harmonic oscillator. The trajectory-averaged amplitude has the
@@ -123,10 +142,17 @@ class DampedOscillator(StochasticSystem):
         return self.omega * a.dag() @ a + self.eps * (a + a.dag())
 
     def Ls(self, params: PyTree) -> list[QArray | TimeQArray]:  # noqa: ARG002
-        return [jnp.sqrt(self.kappa) * dq.destroy(self.n)]
+        return [
+            jnp.sqrt(0.5 * self.kappa) * dq.destroy(self.n),
+            jnp.sqrt(0.5 * self.kappa) * dq.destroy(self.n),
+        ]
+
+    @property
+    def etas(self) -> Array:
+        return jnp.array([1.0, 0.0])
 
     def y0(self, params: PyTree) -> QArray:  # noqa: ARG002
-        return dq.fock(self.n, 0)
+        return dq.coherent(self.n, 0)
 
     def Es(self, params: PyTree) -> list[QArray]:  # noqa: ARG002
         return [dq.destroy(self.n)]
@@ -161,6 +187,10 @@ class DecayQubit(StochasticSystem):
     def Ls(self, params: PyTree) -> list[QArray | TimeQArray]:  # noqa: ARG002
         return [jnp.sqrt(self.gamma) * dq.sigmam()]
 
+    @property
+    def etas(self) -> Array:
+        return jnp.array([1.0])
+
     def y0(self, params: PyTree) -> QArray:  # noqa: ARG002
         return dq.excited()
 
@@ -190,6 +220,10 @@ class QNDQubit(StochasticSystem):
 
     def Ls(self, params: PyTree) -> list[QArray | TimeQArray]:  # noqa: ARG002
         return [jnp.sqrt(self.gamma) * dq.sigmaz()]
+
+    @property
+    def etas(self) -> Array:
+        return jnp.array([1.0])
 
     def y0(self, params: PyTree) -> QArray:  # noqa: ARG002
         return dq.excited()
