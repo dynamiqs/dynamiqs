@@ -270,11 +270,14 @@ def key_touches_last_two_dims(key: IndexType, ndim: int) -> bool:
     full_slice = slice(None, None, None)
     items: tuple = key if isinstance(key, tuple) else (key,)
 
-    if Ellipsis in items:
-        i = items.index(Ellipsis)
+    # first, expand any ellipsis into full slices for the missing dimensions
+    ellipsis_indices = [i for i, k in enumerate(items) if k is Ellipsis]
+    if len(ellipsis_indices) > 0:
+        i = ellipsis_indices[0]
         n_specified = sum(k is not None for k in items) - 1
         items = items[:i] + (full_slice,) * max(ndim - n_specified, 0) + items[i + 1 :]
 
+    # then, check if any of the last two dimensions are indexed non-trivially
     axis = 0
     for k in items:
         if k is None:  # newaxis, does not consume an existing dimension
