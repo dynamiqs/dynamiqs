@@ -6,6 +6,7 @@ from jax import Array
 
 import dynamiqs as dq
 from dynamiqs import QArray
+from dynamiqs.qarrays.layout import Layout
 
 from ..order import TEST_INSTANT
 
@@ -55,7 +56,7 @@ MATRIX_KEYS = [
 ]
 
 
-def _qarray(layout: dq.Layout) -> QArray:
+def _qarray(layout: Layout) -> QArray:
     data = jr.normal(jr.key(42), _SHAPE)
     if layout == dq.dia:
         # batch of diagonal matrices, so the dia layout is preserved under stacking
