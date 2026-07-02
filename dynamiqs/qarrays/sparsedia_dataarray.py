@@ -338,7 +338,7 @@ class SparseDIADataArray(DataArray):
         return replace(self, diags=diags)
 
     def __getitem__(self, key: IndexType) -> DataArray | Array:
-        if key in (slice(None, None, None), Ellipsis):
+        if key is Ellipsis or (isinstance(key, slice) and key == slice(None)):
             return self
 
         if key_touches_last_two_dims(key, self.ndim):

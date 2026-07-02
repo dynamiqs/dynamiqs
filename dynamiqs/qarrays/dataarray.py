@@ -18,14 +18,8 @@ if TYPE_CHECKING:
     from .dense_dataarray import DenseDataArray
     from .sparsedia_dataarray import SparseDIADataArray
 
-IndexType: TypeAlias = (
-    int
-    | slice
-    | ArrayLike
-    | EllipsisType
-    | None
-    | tuple[int | slice | ArrayLike | EllipsisType | None, ...]
-)
+_IndexItemType: TypeAlias = int | slice | ArrayLike | EllipsisType | None
+IndexType: TypeAlias = _IndexItemType | tuple[_IndexItemType, ...]
 
 
 class DataArray(eqx.Module):
@@ -264,31 +258,54 @@ def include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> bool
 
 
 def key_touches_last_two_dims(key: IndexType, ndim: int) -> bool:
-    # returns True if `key` applies a non-trivial index (i.e. anything other than a
-    # full slice) to either of the last two dimensions of an array of `ndim`
-    # dimensions
-    full_slice = slice(None, None, None)
+    # returns True if `key` modifies either of the last two dimensions of an array of
+    # `ndim` dimensions: indexing them with anything other than a full slice, or
+    # inserting a new axis between or after them
     items: tuple = key if isinstance(key, tuple) else (key,)
 
     # first, expand any ellipsis into full slices for the missing dimensions
     ellipsis_indices = [i for i, k in enumerate(items) if k is Ellipsis]
     if len(ellipsis_indices) > 0:
         i = ellipsis_indices[0]
-        n_specified = sum(k is not None for k in items) - 1
-        items = items[:i] + (full_slice,) * max(ndim - n_specified, 0) + items[i + 1 :]
+        n_consumed = sum(_consumed_ndim(k) for k in items if k is not Ellipsis)
+        fill = (slice(None),) * max(ndim - n_consumed, 0)
+        items = items[:i] + fill + items[i + 1 :]
 
-    # then, check if any of the last two dimensions are indexed non-trivially
+    # then, walk the key while tracking the axis each item applies to
     axis = 0
     for k in items:
-        if k is None:  # newaxis, does not consume an existing dimension
+        n = _consumed_ndim(k)
+        if n == 0:
+            # newaxis-like item: breaks the matrix structure if the new axis is
+            # inserted between or after the last two dimensions
+            if axis >= ndim - 1:
+                return True
             continue
-        if axis in (ndim - 1, ndim - 2) and not (
-            isinstance(k, slice) and k == full_slice
-        ):
+        # the item consumes axes [axis, axis + n): non-trivial if it overlaps the
+        # last two dimensions
+        if axis + n > ndim - 2 and not _is_full_slice(k):
             return True
-        axis += 1
+        axis += n
 
     return False
+
+
+def _consumed_ndim(k: object) -> int:
+    # number of array dimensions consumed by a single index item
+    if k is None or isinstance(k, bool):
+        return 0  # newaxis-like: inserts a dimension, consumes none
+    if isinstance(k, np.ndarray | np.generic | Array) and k.dtype == bool:
+        return k.ndim  # boolean mask: consumes as many dimensions as its ndim
+    return 1  # int, slice or integer array (advanced indexing consumes one dim)
+
+
+def _is_full_slice(k: object) -> bool:
+    return (
+        isinstance(k, slice)
+        and k.start in (None, 0)
+        and k.stop is None
+        and k.step in (None, 1)
+    )
 
 
 # A type alias for DataArray or raw JAX/NumPy array-like values.
