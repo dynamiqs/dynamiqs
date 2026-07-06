@@ -56,6 +56,20 @@ class DenseDataArray(DataArray):
         data = jnp.broadcast_to(self.data, shape)
         return replace(self, data=data)
 
+    def _swapaxes_unchecked(self, axis1: int, axis2: int) -> DataArray:
+        data = jnp.swapaxes(self.data, axis1, axis2)
+        return replace(self, data=data)
+
+    def _moveaxis_unchecked(
+        self, source: tuple[int, ...], destination: tuple[int, ...]
+    ) -> DataArray:
+        data = jnp.moveaxis(self.data, source, destination)
+        return replace(self, data=data)
+
+    def _expand_dims_unchecked(self, axis: tuple[int, ...]) -> DataArray:
+        data = jnp.expand_dims(self.data, axis=axis)
+        return replace(self, data=data)
+
     def powm(self, n: int) -> DataArray:
         data = jnp.linalg.matrix_power(self.data, n)
         return replace(self, data=data)
