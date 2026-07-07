@@ -20,6 +20,20 @@ from .qarray import QArray, QArrayLike, check_compatible_dims, isqarraylike, to_
 __all__ = []
 
 
+def _resolve_operand(dims: tuple[int, ...], y: QArrayLike) -> DataArray | Array:
+    """Resolves `y` into raw data compatible with a qarray of Hilbert dims `dims`.
+
+    Checks Hilbert space dimension compatibility if `y` is itself a materialized
+    qarray. Returns `NotImplemented` if `y` is not a recognized qarray-like.
+    """
+    if isinstance(y, MaterializedQArray):
+        check_compatible_dims(dims, y.dims)
+        return y.data
+    if isqarraylike(y):
+        return to_jax(y)
+    return NotImplemented
+
+
 class MaterializedQArray(QArray):
     vectorized: bool = eqx.field(static=True)
     data: DataArray
@@ -218,8 +232,10 @@ class MaterializedQArray(QArray):
         res += self.data._repr_extra()
         return res
 
-    def __mul__(self, y: ArrayLike) -> QArray:
+    def __mul__(self, y: QArrayLike) -> QArray:
         if not is_batched_scalar(y):
+            if not isqarraylike(y):
+                return NotImplemented
             raise NotImplementedError(
                 'Element-wise multiplication of two qarrays with the `*` operator is '
                 'not supported. For matrix multiplication, use `x @ y`. For '
@@ -239,16 +255,11 @@ class MaterializedQArray(QArray):
                 ' To add a scalar, use `x.addscalar(scalar)`.'
             )
 
-        if isinstance(y, MaterializedQArray):
-            check_compatible_dims(self.dims, y.dims)
-            result = self.data + y.data
-        elif isqarraylike(y):
-            result = self.data + to_jax(y)
-        else:
+        y_data = _resolve_operand(self.dims, y)
+        if y_data is NotImplemented:
             return NotImplemented
 
-        if result is NotImplemented:
-            return NotImplemented
+        result = self.data + y_data
         if isinstance(result, DataArray):
             return replace(self, data=result)
         return result
@@ -260,14 +271,11 @@ class MaterializedQArray(QArray):
     def __matmul__(self, y: ArrayLike) -> Array: ...
 
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
-        if isinstance(y, MaterializedQArray):
-            check_compatible_dims(self.dims, y.dims)
-            y_data = y.data
-        elif is_batched_scalar(y):
+        if is_batched_scalar(y):
             raise TypeError('Attempted matrix product between a scalar and a qarray.')
-        elif isqarraylike(y):
-            y_data = to_jax(y)
-        else:
+
+        y_data = _resolve_operand(self.dims, y)
+        if y_data is NotImplemented:
             return NotImplemented
 
         result = self.data @ y_data
@@ -299,14 +307,11 @@ class MaterializedQArray(QArray):
     def __rmatmul__(self, y: ArrayLike) -> Array: ...
 
     def __rmatmul__(self, y: QArrayLike) -> QArray | Array:
-        if isinstance(y, MaterializedQArray):
-            check_compatible_dims(self.dims, y.dims)
-            y_data = y.data
-        elif is_batched_scalar(y):
+        if is_batched_scalar(y):
             raise TypeError('Attempted matrix product between a scalar and a qarray.')
-        elif isqarraylike(y):
-            y_data = to_jax(y)
-        else:
+
+        y_data = _resolve_operand(self.dims, y)
+        if y_data is NotImplemented:
             return NotImplemented
 
         # y_data @ self.data
@@ -315,9 +320,6 @@ class MaterializedQArray(QArray):
         else:
             # y_data is a raw array; use DataArray's __rmatmul__
             result = self.data.__rmatmul__(y_data)
-
-        if result is NotImplemented:
-            return NotImplemented
 
         if isinstance(result, DataArray):
             return replace(self, data=result)
@@ -359,16 +361,11 @@ class MaterializedQArray(QArray):
         Returns:
             New qarray resulting from the element-wise multiplication.
         """
-        if isinstance(y, MaterializedQArray):
-            check_compatible_dims(self.dims, y.dims)
-            result = self.data * y.data
-        elif isqarraylike(y):
-            result = self.data * to_jax(y)
-        else:
+        y_data = _resolve_operand(self.dims, y)
+        if y_data is NotImplemented:
             return NotImplemented
 
-        if result is NotImplemented:
-            return NotImplemented
+        result = self.data * y_data
         if isinstance(result, DataArray):
             return replace(self, data=result)
         return result
