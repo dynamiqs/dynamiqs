@@ -4,6 +4,7 @@ import pytest
 import qutip as qt
 
 import dynamiqs as dq
+from dynamiqs.qarrays.qarray import get_dims, to_jax, to_numpy
 
 from ..order import TEST_INSTANT
 
@@ -126,3 +127,17 @@ def test_qutip_tensor_compatibility():
     expected_tensor = jnp.zeros((6, 1), dtype=complex)
     expected_tensor = expected_tensor.at[1].set(1.0)  # |01⟩ state
     assert jnp.allclose(tensor_result.to_jax(), expected_tensor)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_string_does_not_recurse():
+    # strings are `Sequence`s of single-character strings, so a naive recursive
+    # walk over `Sequence` elements never bottoms out; these helpers must special
+    # case `str` to avoid a `RecursionError`
+    assert dq.isqarraylike('not a qarray') is False
+    with pytest.raises(TypeError):
+        to_jax('not a qarray')
+    assert to_numpy('not a qarray').item() == 'not a qarray'
+    assert get_dims('not a qarray') is None
+    with pytest.raises(TypeError):
+        dq.asqarray('not a qarray')
