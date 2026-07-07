@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import replace
 from math import prod
 from typing import cast, overload
@@ -102,6 +103,20 @@ class MaterializedQArray(QArray):
             New qarray with the given shape.
         """
         return replace(self, data=self.data.broadcast_to(*shape))
+
+    def swapaxes(self, axis1: int, axis2: int) -> QArray:
+        """Interchange two axes of a qarray."""
+        return replace(self, data=self.data.swapaxes(axis1, axis2))
+
+    def moveaxis(
+        self, source: int | Sequence[int], destination: int | Sequence[int]
+    ) -> QArray:
+        """Move axes of a qarray to new positions."""
+        return replace(self, data=self.data.moveaxis(source, destination))
+
+    def expand_dims(self, axis: int | Sequence[int]) -> QArray:
+        """Expand the shape of a qarray by inserting new axes."""
+        return replace(self, data=self.data.expand_dims(axis))
 
     def powm(self, n: int) -> QArray:
         return replace(self, data=self.data.powm(n))

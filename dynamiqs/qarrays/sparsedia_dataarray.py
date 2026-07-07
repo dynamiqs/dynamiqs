@@ -110,6 +110,20 @@ class SparseDIADataArray(DataArray):
         offsets, diags = broadcast_sparsedia(self.offsets, self.diags, shape)
         return replace(self, offsets=offsets, diags=diags)
 
+    def _swapaxes_unchecked(self, axis1: int, axis2: int) -> DataArray:
+        diags = jnp.swapaxes(self.diags, axis1, axis2)
+        return replace(self, diags=diags)
+
+    def _moveaxis_unchecked(
+        self, source: tuple[int, ...], destination: tuple[int, ...]
+    ) -> DataArray:
+        diags = jnp.moveaxis(self.diags, source, destination)
+        return replace(self, diags=diags)
+
+    def _expand_dims_unchecked(self, axis: tuple[int, ...]) -> DataArray:
+        diags = jnp.expand_dims(self.diags, axis=axis)
+        return replace(self, diags=diags)
+
     def powm(self, n: int) -> DataArray:
         offsets, diags = powm_sparsedia(self.offsets, self.diags, n)
         return replace(self, offsets=offsets, diags=diags)
