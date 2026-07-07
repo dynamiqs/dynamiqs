@@ -141,7 +141,7 @@ class CompositeTerm(eqx.Module):
 
     # === Arithmetic ===
 
-    def __mul__(self, y: ArrayLike) -> CompositeTerm:
+    def __mul__(self, y: QArrayLike) -> CompositeTerm:
         # y·(c·⊗A_k) = (y·c)·⊗A_k; only touches coeff.
         raise NotImplementedError
 
@@ -331,7 +331,7 @@ class CompositeQArray(QArray):
 
     # === Arithmetic ===
 
-    def __mul__(self, y: ArrayLike) -> QArray:
+    def __mul__(self, y: QArrayLike) -> QArray:
         # LAZY y·Σc_j⊗A_{jk}=Σ(y·c_j)⊗A_{jk} → term.__mul__(y).
         raise NotImplementedError
 
