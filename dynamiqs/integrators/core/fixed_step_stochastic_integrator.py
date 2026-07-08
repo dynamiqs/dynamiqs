@@ -336,6 +336,7 @@ class JSMESolveEulerJumpIntegrator(JSMESolveFixedStepIntegrator):
         Lm = stack(self.Lm(t))
 
         # === Ccal(rho)
+        L_rho_Ldag = L @ rho @ L.dag()  # (nL, n, n)
         Lm_rho_Lmdag = Lm @ rho @ Lm.dag()  # (nLm, n, n)
         thetas = self.thetas[:, None, None]  # (nLm, 1, 1)
         etas = self.etas[:, None, None]  # (nLm, 1, 1)
@@ -366,7 +367,7 @@ class JSMESolveEulerJumpIntegrator(JSMESolveFixedStepIntegrator):
         # compute Lcal(rho), see `MESolveDiffraxIntegrator` in
         # `integrators/core/diffrax_integrator.py`
         Hnh = -1j * H - 0.5 * sum(L.dag() @ L)
-        tmp = Hnh @ rho + 0.5 * sum(Lm_rho_Lmdag)
+        tmp = Hnh @ rho + 0.5 * sum(L_rho_Ldag)
         Lcal_rho = tmp + dag(tmp)
         rho_noclick = (
             rho
