@@ -328,6 +328,30 @@ def stack_sparsedia(
     return _numpy_to_tuple(out_offsets), out_diags
 
 
+def concatenate_sparsedia(
+    offsets_sequence: Sequence[tuple[int, ...]],
+    diags_sequence: Sequence[Array],
+    axis: int,
+) -> tuple[tuple[int, ...], Array]:
+    # compute unique offsets of the output
+    out_offsets = np.asarray(sorted(reduce(set.union, map(set, offsets_sequence))))
+    offset_to_index = {offset: idx for idx, offset in enumerate(out_offsets)}
+
+    # prepare input diagonals with matching offsets before concatenating
+    dtype = reduce(jnp.promote_types, [diags.dtype for diags in diags_sequence])
+    expanded_diags = []
+    for offsets, diags in zip(offsets_sequence, diags_sequence, strict=True):
+        out_shape = (*diags.shape[:-2], len(out_offsets), diags.shape[-1])
+        out_diags = jnp.zeros(out_shape, dtype=dtype)
+        for i, offset in enumerate(offsets):
+            idx = offset_to_index[offset]
+            out_diags = out_diags.at[..., idx, :].add(diags[..., i, :])
+        expanded_diags.append(out_diags)
+
+    diags = jnp.concatenate(expanded_diags, axis=axis)
+    return _numpy_to_tuple(out_offsets), diags
+
+
 def autopad_sparsedia_diags(offsets: tuple[int, ...], diags: Sequence[Array]) -> Array:
     # stack diags in a square matrix by padding each according to its offset
     pads_width = [(abs(k), 0) if k >= 0 else (0, abs(k)) for k in offsets]

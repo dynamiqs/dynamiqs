@@ -13,6 +13,7 @@ from jax import Array, Device
 from jaxtyping import ArrayLike
 from qutip import Qobj
 
+from .._utils import is_batched_scalar
 from .dataarray import IndexType
 from .layout import Layout
 
@@ -43,7 +44,8 @@ def isqarraylike(x: Any) -> TypeGuard[QArrayLike]:
     """
     if isinstance(x, get_args(_QArrayLike)):
         return True
-    elif isinstance(x, Sequence):
+    elif isinstance(x, Sequence) and not isinstance(x, str):
+        # strings yield infinite recursion, so we exclude them from the sequence check
         return all(isqarraylike(sub_x) for sub_x in x)
     return False
 
@@ -76,14 +78,14 @@ def to_jax(x: QArrayLike) -> Array:
         return x.to_jax()
     elif isinstance(x, Qobj):
         return jnp.asarray(x.full())
-    elif isinstance(x, Sequence):
+    elif isinstance(x, Sequence) and not isinstance(x, str):
         return jnp.asarray([to_jax(cast(QArrayLike, sub_x)) for sub_x in x])
     else:
         return jnp.asarray(x)
 
 
 def get_dims(x: QArrayLike) -> tuple[int, ...] | None:
-    if isinstance(x, Sequence):
+    if isinstance(x, Sequence) and not isinstance(x, str):
         sub_dims = [get_dims(cast(QArrayLike, sub_x)) for sub_x in x]
         return sub_dims[0] if all(sd == sub_dims[0] for sd in sub_dims) else None
     if isinstance(x, QArray):
@@ -124,7 +126,7 @@ def to_numpy(x: QArrayLike) -> np.ndarray:
         return x.to_numpy()
     elif isinstance(x, Qobj):
         return np.asarray(x.full())
-    elif isinstance(x, Sequence):
+    elif isinstance(x, Sequence) and not isinstance(x, str):
         return np.asarray([to_numpy(cast(QArrayLike, sub_x)) for sub_x in x])
     else:
         return np.asarray(x)
@@ -195,6 +197,10 @@ class QArray(eqx.Module):
     | `x.proj()`                                               | Alias of [`dq.proj(x)`][dynamiqs.proj].                        |
     | [`x.reshape(*shape)`][dynamiqs.qarrays.qarray.QArray.reshape] | Returns a reshaped copy of a qarray.                           |
     | [`x.broadcast_to(*shape)`][dynamiqs.qarrays.qarray.QArray.broadcast_to] | Broadcasts a qarray to a new shape.                            |
+    | [`x.swapaxes(axis1, axis2)`][dynamiqs.qarrays.qarray.QArray.swapaxes] | Interchanges two axes of a qarray.                            |
+    | [`x.moveaxis(source, destination)`][dynamiqs.qarrays.qarray.QArray.moveaxis] | Moves axes of a qarray to new positions.                      |
+    | [`x.expand_dims(axis)`][dynamiqs.qarrays.qarray.QArray.expand_dims] | Expands the shape of a qarray by inserting new axes.           |
+    | `x.where(condition, y)`                                  | Alias of [`dq.where(condition, x, y)`][dynamiqs.where].        |
     | [`x.addscalar(y)`][dynamiqs.qarrays.qarray.QArray.addscalar] | Adds a scalar.                                                 |
     | [`x.elmul(y)`][dynamiqs.qarrays.qarray.QArray.elmul]     | Computes the element-wise multiplication.                      |
     | [`x.elpow(power)`][dynamiqs.qarrays.qarray.QArray.elpow] | Computes the element-wise power.                               |
@@ -301,6 +307,57 @@ class QArray(eqx.Module):
         Returns:
             New qarray with the given shape.
         """
+
+    @abstractmethod
+    def swapaxes(self, axis1: int, axis2: int) -> QArray:
+        """Interchange two axes of a qarray.
+
+        Args:
+            axis1: First axis.
+            axis2: Second axis.
+
+        Returns:
+            Qarray with axes `axis1` and `axis2` interchanged.
+        """
+
+    @abstractmethod
+    def moveaxis(
+        self, source: int | Sequence[int], destination: int | Sequence[int]
+    ) -> QArray:
+        """Move axes of a qarray to new positions.
+
+        Args:
+            source: Original positions of the axes to move.
+            destination: Destination positions for each moved axis.
+
+        Returns:
+            Qarray with moved axes.
+        """
+
+    @abstractmethod
+    def expand_dims(self, axis: int | Sequence[int]) -> QArray:
+        """Expand the shape of a qarray by inserting new axes.
+
+        Args:
+            axis: Axis or axes where new dimensions are inserted.
+
+        Returns:
+            Qarray with additional dimensions.
+        """
+
+    def where(self, condition: ArrayLike, y: QArrayLike) -> QArray:
+        """Select values from this qarray or another operand depending on a condition.
+
+        Args:
+            condition: Boolean array-like condition.
+            y: Values selected when `condition` is false.
+
+        Returns:
+            Qarray with values chosen from `self` and `y`.
+        """
+        from .utils import where  # noqa: PLC0415
+
+        return where(condition, self, y)
 
     @abstractmethod
     def powm(self, n: int) -> QArray:
@@ -486,13 +543,20 @@ class QArray(eqx.Module):
         return self * (-1)
 
     @abstractmethod
-    def __mul__(self, y: ArrayLike) -> QArray:
+    def __mul__(self, y: QArrayLike) -> QArray:
         pass
 
-    def __rmul__(self, y: ArrayLike) -> QArray:
+    def __rmul__(self, y: QArrayLike) -> QArray:
         return self * y
 
-    def __truediv__(self, y: ArrayLike) -> QArray:
+    def __truediv__(self, y: QArrayLike) -> QArray:
+        if not is_batched_scalar(y):
+            if not isqarraylike(y):
+                return NotImplemented
+            raise NotImplementedError(
+                'Division of a qarray by a non-scalar with the `/` operator is not '
+                'supported.'
+            )
         return self * (1 / y)
 
     def __rtruediv__(self, y: QArrayLike) -> QArray:
@@ -512,6 +576,8 @@ class QArray(eqx.Module):
         return self.__add__(y)
 
     def __sub__(self, y: QArrayLike) -> QArray:
+        if not isqarraylike(y):
+            return NotImplemented
         if not isinstance(y, QArray):
             y = to_jax(y)
         return self + (-y)
@@ -547,6 +613,9 @@ class QArray(eqx.Module):
         # to deal with the x**ω notation from equinox (used in diffrax internals)
         if isinstance(power, _Metaω):
             return _Metaω.__rpow__(power, self)
+
+        if not isqarraylike(power):
+            return NotImplemented
 
         raise NotImplementedError(
             'Computing the element-wise power of a qarray with the `**` operator is '

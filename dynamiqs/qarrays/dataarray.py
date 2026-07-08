@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Sequence
 from math import prod
 from types import EllipsisType
 from typing import TYPE_CHECKING, ClassVar, TypeAlias
@@ -104,6 +105,73 @@ class DataArray(eqx.Module):
     @abstractmethod
     def broadcast_to(self, *shape: int) -> DataArray:
         """Broadcasts to a new shape."""
+
+    def swapaxes(self, axis1: int, axis2: int) -> DataArray:
+        """Interchanges two axes."""
+        axis1 = _normalize_axis(axis1, self.ndim)
+        axis2 = _normalize_axis(axis2, self.ndim)
+        if axis1 == axis2:
+            return self
+        if {axis1, axis2} == {self.ndim - 2, self.ndim - 1}:
+            return self.mT
+        if in_last_two_dims((axis1, axis2), self.ndim):
+            _raise_matrix_axis_error('swapaxes')
+        return self._swapaxes_unchecked(axis1, axis2)
+
+    @abstractmethod
+    def _swapaxes_unchecked(self, axis1: int, axis2: int) -> DataArray:
+        """Does the heavy-lifting for `swapaxes` but skips all checks."""
+
+    def moveaxis(
+        self, source: int | Sequence[int], destination: int | Sequence[int]
+    ) -> DataArray:
+        """Moves axes to new positions."""
+        source_axes = (source,) if isinstance(source, int) else tuple(source)
+        source_axes = tuple(_normalize_axis(axis, self.ndim) for axis in source_axes)
+        destination_axes = (
+            (destination,) if isinstance(destination, int) else tuple(destination)
+        )
+        destination_axes = tuple(
+            _normalize_axis(axis, self.ndim) for axis in destination_axes
+        )
+        _check_axis_tuples(source_axes, destination_axes)
+
+        axis_order = _moveaxis_order(source_axes, destination_axes, self.ndim)
+        identity_order = tuple(range(self.ndim))
+        final_swap_order = (*range(self.ndim - 2), self.ndim - 1, self.ndim - 2)
+        if axis_order == identity_order:
+            return self
+        if axis_order == final_swap_order:
+            return self.mT
+        if set(axis_order[:-2]) != set(range(self.ndim - 2)):
+            _raise_matrix_axis_error('moveaxis')
+
+        batch_source = tuple(range(self.ndim - 2))
+        batch_destination = tuple(axis_order[:-2].index(axis) for axis in batch_source)
+        if axis_order[-2:] == identity_order[-2:]:
+            return self._moveaxis_unchecked(batch_source, batch_destination)
+        elif axis_order[-2:] == final_swap_order[-2:]:
+            return self.mT._moveaxis_unchecked(batch_source, batch_destination)
+        else:
+            _raise_matrix_axis_error('moveaxis')
+        raise AssertionError('unreachable')
+
+    @abstractmethod
+    def _moveaxis_unchecked(
+        self, source: tuple[int, ...], destination: tuple[int, ...]
+    ) -> DataArray:
+        """Does the heavy-lifting for `moveaxis` but skips all checks."""
+
+    def expand_dims(self, axis: int | Sequence[int]) -> DataArray:
+        """Expands the shape by inserting new axes."""
+        axes = _normalize_insert_axes(axis, self.ndim)
+        if in_last_two_dims(axes, self.ndim + len(axes)):
+            _raise_matrix_axis_error('expand_dims')
+        return self._expand_dims_unchecked(axes)
+
+    @abstractmethod
+    def _expand_dims_unchecked(self, axis: tuple[int, ...]) -> DataArray:
+        """Does the heavy-lifting for `expand_dims` but skips all checks."""
 
     @abstractmethod
     def powm(self, n: int) -> DataArray:
@@ -260,6 +328,51 @@ def include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> bool
     axis = (axis,) if isinstance(axis, int) else axis
     return axis is None or (
         ndim - 1 in [a % ndim for a in axis] and ndim - 2 in [a % ndim for a in axis]
+    )
+
+
+def _normalize_axis(axis: int, ndim: int) -> int:
+    if not -ndim <= axis < ndim:
+        raise ValueError(f'axis {axis} is out of bounds for array of dimension {ndim}')
+    return axis % ndim
+
+
+def _normalize_insert_axes(axis: int | Sequence[int], ndim: int) -> tuple[int, ...]:
+    axes = (axis,) if isinstance(axis, int) else tuple(axis)
+    out_ndim = ndim + len(axes)
+    normalized_axes = tuple(_normalize_axis(ax, out_ndim) for ax in axes)
+    if len(set(normalized_axes)) != len(normalized_axes):
+        raise ValueError(f'Repeated axis found in axes to insert. Got `axis={axis}`.')
+    return normalized_axes
+
+
+def _check_axis_tuples(source: tuple[int, ...], destination: tuple[int, ...]) -> None:
+    if len(source) != len(destination):
+        raise ValueError(
+            '`source` and `destination` arguments must have the same number of axes.'
+        )
+    if len(set(source)) != len(source):
+        raise ValueError(f'Repeated axis found in `source` argument. Got {source}.')
+    if len(set(destination)) != len(destination):
+        raise ValueError(
+            f'Repeated axis found in `destination` argument. Got {destination}.'
+        )
+
+
+def _moveaxis_order(
+    source: tuple[int, ...], destination: tuple[int, ...], ndim: int
+) -> tuple[int, ...]:
+    order = [axis for axis in range(ndim) if axis not in source]
+    for destination_axis, source_axis in sorted(zip(destination, source, strict=True)):
+        order.insert(destination_axis, source_axis)
+    return tuple(order)
+
+
+def _raise_matrix_axis_error(operation: str) -> None:
+    raise ValueError(
+        f'`{operation}` can only manipulate batching dimensions of a data array; the '
+        'final two dimensions are matrix dimensions. Use `swapaxes(-1, -2)` or '
+        '`.mT` to transpose those final dimensions.'
     )
 
 

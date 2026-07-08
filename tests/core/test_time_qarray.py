@@ -484,6 +484,32 @@ class TestModulatedTimeQArray:
         assert isinstance(x, SummedTimeQArray)
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
 
+    def test_sub(self):
+        # test type `ArrayLike`
+        x = self.x - jnp.ones_like(self.x)
+        assert isinstance(x, SummedTimeQArray)
+        assert_equal(x(0.0), [[-1.0 + 1.0j, -1.0 + 2.0j], [-1.0 + 3.0j, -1.0 + 4.0j]])
+
+        # test type `QArray`
+        y = asqarray(jnp.array([[1, 1], [1, 1]]))
+        x = self.x - y
+        assert isinstance(x, SummedTimeQArray)
+        assert_equal(x(0.0), [[-1.0 + 1.0j, -1.0 + 2.0j], [-1.0 + 3.0j, -1.0 + 4.0j]])
+
+    def test_rsub(self):
+        # test type `ArrayLike`
+        x = jnp.ones_like(self.x) - self.x
+        assert isinstance(x, SummedTimeQArray)
+        assert_equal(x(0.0), [[1.0 - 1.0j, 1.0 - 2.0j], [1.0 - 3.0j, 1.0 - 4.0j]])
+
+        # test type `QArray` — regression test for QArray.__sub__ returning
+        # NotImplemented
+        # for TimeQArray instead of crashing with to_jax()
+        y = asqarray(jnp.array([[1, 1], [1, 1]]))
+        x = y - self.x
+        assert isinstance(x, SummedTimeQArray)
+        assert_equal(x(0.0), [[1.0 - 1.0j, 1.0 - 2.0j], [1.0 - 3.0j, 1.0 - 4.0j]])
+
     def test_clip(self):
         f = lambda t: 1.0 + 2.0 * t
         qarray = jnp.array([[1.0, 2.0], [3.0, 4.0]])
