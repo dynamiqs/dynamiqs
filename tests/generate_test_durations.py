@@ -15,9 +15,9 @@ from pathlib import Path
 
 # rough relative cost per priority category (seconds, only ratios matter)
 WEIGHTS = {
-    0: 0.1, # instant tests
-    1: 2.0, # short tests
-    2: 15.0 # long tests
+    0: 0.1,  # instant tests
+    1: 2.0,  # short tests
+    2: 15.0,  # long tests
 }
 
 

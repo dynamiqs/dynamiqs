@@ -160,7 +160,7 @@ cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
 help = "run the unit tests suite (pytest)"
 
 [tool.taskipy.tasks.durations]
-cmd = 'echo "\n>>> generate .test_durations" && pytest tests --collect-only -q -p tests.duration_gen'
+cmd = 'echo "\n>>> generate .test_durations" && pytest tests --collect-only -q -p tests.generate_test_durations'
 help = "regenerate .test_durations for CI test sharding (pytest-split)"
 
 [tool.taskipy.tasks.doctest-code]
