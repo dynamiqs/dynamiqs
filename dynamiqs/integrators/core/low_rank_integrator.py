@@ -24,6 +24,7 @@ from ...method import (
     Tsit5,
     _DEFixedStep,
 )
+from ...qarrays.qarray import QArray
 from ...qarrays.utils import asqarray
 from ...result import MESolveLowRankResult, Result, SolveSaved
 from .._utils import assert_method_supported
@@ -308,8 +309,11 @@ class MESolveLowRankIntegrator(
 
         extra = None
         if self.options.save_extra:
-            rho = asqarray(rho_from_m(m), dims=self.dims)
-            extra = self.options.save_extra(rho)
+            if self.method.save_extra_low_rank:
+                extra = self.options.save_extra(cast(QArray, m))
+            else:
+                rho = asqarray(rho_from_m(m), dims=self.dims)
+                extra = self.options.save_extra(rho)
 
         if self.Es_jax is not None:
             Esave = jnp.stack([expval_from_m(m, E) for E in self.Es_jax])
