@@ -657,8 +657,20 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def __getitem__(self, key: IndexType) -> QArray:
-        pass
+    def __getitem__(self, key: IndexType) -> QArray | Array:
+        """Get item from the qarray.
+
+        Note:
+            If the indexing operation modifies the last two dimensions of the qarray,
+            an array is returned instead of a qarray.
+
+        Args:
+            key: Indexing key, which can be an int, slice, array-like, ellipsis, None,
+                or a tuple of these.
+
+        Returns:
+            New qarray or array resulting from the indexing operation.
+        """
 
 
 def check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
