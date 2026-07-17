@@ -139,7 +139,7 @@ class SolveResult(Result):
 
     @property
     def final_state(self) -> QArray:
-        return self.states[..., -1, :, :]
+        return cast(QArray, self.states[..., -1, :, :])
 
     @property
     def expects(self) -> Array | None:
@@ -162,7 +162,7 @@ class PropagatorResult(Result):
 
     @property
     def final_propagator(self) -> QArray:
-        return self.propagators[..., -1, :, :]
+        return cast(QArray, self.propagators[..., -1, :, :])
 
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()

@@ -52,6 +52,7 @@ dev = [
     "codespell",
     "pytest>=8.0",
     "pytest-ordering",
+    "pytest-split",
     "pytest-sugar",
     "pytest-xdist",
     "mkdocs-material",
@@ -147,9 +148,20 @@ help = "check types (ty)"
 cmd = 'task lint && task format && task codespell && task type'
 help = "clean the code (ruff + codespell + ty)"
 
+[tool.taskipy.tasks.check]
+cmd = '''echo "\n>>> ruff check" && ruff check &&
+         echo "\n>>> ruff format --check" && ruff format --check &&
+         task codespell &&
+         task type'''
+help = "run the static checks (ruff + codespell + ty)"
+
 [tool.taskipy.tasks.test]
 cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
 help = "run the unit tests suite (pytest)"
+
+[tool.taskipy.tasks.durations]
+cmd = 'echo "\n>>> generate .test_durations" && pytest tests --collect-only -q -p tests.generate_test_durations'
+help = "regenerate .test_durations for CI test sharding (pytest-split)"
 
 [tool.taskipy.tasks.doctest-code]
 cmd = 'echo "\n>>> pytest dynamiqs" && python docs/remove_figs.py docs/figs_code && pytest dynamiqs'
