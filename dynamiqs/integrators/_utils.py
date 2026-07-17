@@ -26,7 +26,8 @@ from ..time_qarray import (
 
 
 class HasShape(Protocol):
-    shape: tuple[int, ...]
+    @property
+    def shape(self) -> tuple[int, ...]: ...
 
 
 HasShapeT = TypeVar('HasShapeT', bound=HasShape)

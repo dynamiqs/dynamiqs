@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+from typing import cast
+
 import equinox as eqx
 import jax.numpy as jnp
 from jaxtyping import PyTree
 
 from dynamiqs.result import FloquetSaved
 
+from ...qarrays.qarray import QArray
+from ...qarrays.utils import asqarray
 from ...result import FloquetResult, Result
 from ..apis.sepropagator import _sepropagator
 from .abstract_integrator import BaseIntegrator
@@ -44,9 +48,10 @@ class SEFloquetIntegrator(FloquetIntegrator, SEInterface):
         quasienergies = jnp.mod(quasienergies + 0.5 * omega, omega) - 0.5 * omega
 
         # propagate the Floquet modes to all times in tsave
-        propagators = seprop_result.propagators[:-1, :, :]
+        propagators = cast(QArray, seprop_result.propagators[:-1, :, :])
         modes = propagators @ evecs  # (ntsave, n, n) @ (n, m) = (ntsave, n, m)
-        modes = modes.mT[..., None]  # (ntsave, m, n, 1)
+        # convert each mode to a ket of shape (n, 1)
+        modes = asqarray(modes.mT.to_jax()[..., None], dims=propagators.dims)
         modes = modes * jnp.exp(
             1j * quasienergies[:, None, None] * self.ts[:, None, None, None]
         )
