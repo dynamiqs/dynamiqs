@@ -6,6 +6,7 @@ from functools import partial
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+from diffrax._custom_types import RealScalarLike
 from jax import Array
 from jaxtyping import PyTree
 
@@ -55,7 +56,7 @@ class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
             return f'{self.nsteps} steps'
 
     @abstractmethod
-    def generator(self, t: float) -> QArray:
+    def generator(self, t: RealScalarLike) -> QArray:
         pass
 
     def run(self) -> Result:
@@ -106,7 +107,7 @@ class SEExpmIntegrator(ExpmIntegrator, SEInterface):
                 'Method `Expm` requires a constant or piecewise constant Hamiltonian.'
             )
 
-    def generator(self, t: float) -> QArray:
+    def generator(self, t: RealScalarLike) -> QArray:
         return -1j * self.H(t)  # (n, n)
 
 
@@ -146,7 +147,7 @@ class MEExpmIntegrator(ExpmIntegrator, MEInterface):
                 'Method `Expm` requires constant or piecewise constant jump operators.'
             )
 
-    def generator(self, t: float) -> QArray:
+    def generator(self, t: RealScalarLike) -> QArray:
         return slindbladian(self.H(t), self.L(t))  # (n^2, n^2)
 
 
