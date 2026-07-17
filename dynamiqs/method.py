@@ -808,7 +808,7 @@ class LowRank(Method):
     key: PRNGKeyArray
     linear_solver: LinearSolver = eqx.field(static=True, default=LinearSolver.QR)
     perturbation_scale: float = eqx.field(static=True, default=1e-5)
-    save_extra_low_rank: bool = eqx.field(static=True, default=False)
+    is_save_extra_low_rank: bool = eqx.field(static=True, default=False)
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_ODE_GRADIENTS
 
