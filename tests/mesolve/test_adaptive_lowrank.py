@@ -4,6 +4,7 @@ import pytest
 
 import dynamiqs as dq
 from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
+from dynamiqs.integrators.core.low_rank_integrator import expval_from_m
 from dynamiqs.method import LinearSolver, LowRank, Tsit5
 
 from ..integrator_tester import IntegratorTester
@@ -58,3 +59,14 @@ class TestMESolveAdaptiveLowRank(IntegratorTester):
         m = result.lowrank_states.to_jax()
         rho = m @ m.conj().swapaxes(-2, -1)
         assert jnp.allclose(result.states.to_jax(), rho)
+
+
+def test_expval_from_m_accepts_qarray():
+    # expval_from_m must accept a QArray operator directly (e.g. dia layout)
+    # without densifying it first
+    n, rank = 4, 2
+    op = dq.number(n, layout=dq.dia)
+    m = jax.random.normal(jax.random.PRNGKey(0), (n, rank), dtype=jnp.complex128)
+
+    expect = jnp.sum(jnp.conj(m) * (op.to_jax() @ m))
+    assert jnp.allclose(expval_from_m(m, op), expect)

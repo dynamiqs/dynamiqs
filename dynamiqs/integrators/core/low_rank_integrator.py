@@ -24,6 +24,7 @@ from ...method import (
     Tsit5,
     _DEFixedStep,
 )
+from ...qarrays.qarray import QArray
 from ...qarrays.utils import asqarray
 from ...result import MESolveLowRankResult, Result, SolveSaved
 from .._utils import assert_method_supported
@@ -186,8 +187,9 @@ def initialize_m0_from_dm(
     return normalize_m(cols)
 
 
-def expval_from_m(m: Array, op: Array) -> Array:
-    return jnp.sum(jnp.conj(m) * (op @ m))
+def expval_from_m(m: Array, op: QArray) -> Array:
+    op_m = cast(QArray, op @ m).to_jax()
+    return jnp.sum(jnp.conj(m) * op_m)
 
 
 class MESolveLowRankIntegrator(
@@ -204,10 +206,6 @@ class MESolveLowRankIntegrator(
     @property
     def dims(self) -> tuple[int, ...]:
         return self.H.dims
-
-    @property
-    def Es_jax(self) -> list[Array] | None:
-        return [E.to_jax() for E in self.Es] if self.Es is not None else None
 
     def __post_init__(self):
         # check that assume_hermitian is True (required for the low-rank solver)
@@ -311,8 +309,8 @@ class MESolveLowRankIntegrator(
             rho = asqarray(rho_from_m(m), dims=self.dims)
             extra = self.options.save_extra(rho)
 
-        if self.Es_jax is not None:
-            Esave = jnp.stack([expval_from_m(m, E) for E in self.Es_jax])
+        if self.Es is not None:
+            Esave = jnp.stack([expval_from_m(m, E) for E in self.Es])
         else:
             Esave = None
 
