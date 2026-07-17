@@ -1866,6 +1866,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#dynamiqs.qarrays.qarray.QArray.__getitem__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __getitem__
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -7406,6 +7417,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#dynamiqs.qarrays.qarray.QArray.__getitem__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __getitem__
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -8229,6 +8251,55 @@ which require static offset values.</p>
       <li class="doc-section-item field-body">
         <div class="doc-md-description">
           <p>New qarray with elements raised to the specified power.</p>
+        </div>
+      </li>
+  </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="dynamiqs.qarrays.qarray.QArray.__getitem__" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">QArray.__getitem__</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">__getitem__</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="n">IndexType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span> <span class="o">|</span> <span class="n">Array</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Get item from the qarray.</p>
+  
+
+<details class="note" open="">
+  <summary>Note</summary>
+  <p>If the indexing operation modifies the last two dimensions of the qarray,
+an array is returned instead of a qarray.</p>
+</details>
+
+<p><span class="doc-section-title">Parameters:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+          <b><code>key</code></b>
+        –
+        <div class="doc-md-description">
+          <p>Indexing key, which can be an int, slice, <abbr title="a Python list, a NumPy or JAX array, or any (potentially nested) sequence of these types">array-like</abbr>, ellipsis, None,
+or a tuple of these.</p>
+        </div>
+      </li>
+  </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+  <ul>
+      <li class="doc-section-item field-body">
+        <div class="doc-md-description">
+          <p>New qarray or array resulting from the indexing operation.</p>
         </div>
       </li>
   </ul>
