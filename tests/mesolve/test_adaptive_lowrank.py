@@ -75,12 +75,11 @@ class TestMESolveAdaptiveLowRank(IntegratorTester):
     @pytest.mark.parametrize('system', [dense_ocavity])
     def test_save_extra_full_rank_by_default(self, system):
         method = LowRank(
-            rank=system.n // 2,
-            ode_method=Tsit5(),
-            key=jax.random.PRNGKey(0),
+            rank=system.n // 2, ode_method=Tsit5(), key=jax.random.PRNGKey(0)
         )
         result = system.run(method, save_extra=lambda rho: rho)
         assert result.extra.shape[-2:] == (system.n, system.n)
+
 
 def test_expval_from_m_accepts_qarray():
     # expval_from_m must accept a QArray operator directly (e.g. dia layout)
