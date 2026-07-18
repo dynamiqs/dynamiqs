@@ -769,7 +769,7 @@ class LowRank(Method):
             norm `perturbation_scale` to avoid $m^\dag m$ being singular. Defaults
             to `1e-5`.
         key: PRNG key used for random initialization of the low-rank factors.
-        save_extra_low_rank: If `True`, `dq.Options(save_extra=...)` receives the
+        is_save_extra_low_rank: If `True`, `dq.Options(save_extra=...)` receives the
             low-rank factor `m(t)` directly instead of the full-rank density matrix
             `rho(t)`, avoiding its reconstruction. Defaults to `False`.
 
@@ -821,7 +821,7 @@ class LowRank(Method):
         perturbation_scale: float = 1e-5,
         *,
         key: PRNGKeyArray,
-        save_extra_low_rank: bool = False,
+        is_save_extra_low_rank: bool = False,
     ):
         self.ode_method = ode_method
 
@@ -853,4 +853,4 @@ class LowRank(Method):
         self.perturbation_scale = perturbation_scale
 
         self.key = jnp.asarray(key)
-        self.save_extra_low_rank = save_extra_low_rank
+        self.is_save_extra_low_rank = is_save_extra_low_rank

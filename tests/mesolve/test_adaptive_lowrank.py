@@ -67,7 +67,7 @@ class TestMESolveAdaptiveLowRank(IntegratorTester):
             rank=rank,
             ode_method=Tsit5(),
             key=jax.random.PRNGKey(0),
-            save_extra_low_rank=True,
+            is_save_extra_low_rank=True,
         )
         result = system.run(method, save_extra=lambda m: m)
         assert result.extra.shape[-2:] == (system.n, rank)

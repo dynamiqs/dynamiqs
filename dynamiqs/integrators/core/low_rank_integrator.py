@@ -306,7 +306,7 @@ class MESolveLowRankIntegrator(
 
         extra = None
         if self.options.save_extra:
-            if self.method.save_extra_low_rank:
+            if self.method.is_save_extra_low_rank:
                 extra = self.options.save_extra(cast(QArray, m))
             else:
                 rho = asqarray(rho_from_m(m), dims=self.dims)
