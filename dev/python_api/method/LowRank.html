@@ -7111,7 +7111,8 @@
     <span class="n">linear_solver</span><span class="p">:</span> <span class="n">LinearSolver</span> <span class="o">=</span> <span class="n">LinearSolver</span><span class="o">.</span><span class="n">QR</span><span class="p">,</span>
     <span class="n">perturbation_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-05</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">key</span><span class="p">:</span> <span class="n">PRNGKeyArray</span>
+    <span class="n">key</span><span class="p">:</span> <span class="n">PRNGKeyArray</span><span class="p">,</span>
+    <span class="n">is_save_extra_low_rank</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="p">)</span>
 </code></pre></div>
 
@@ -7169,6 +7170,15 @@ to <code>1e-5</code>.</p>
         –
         <div class="doc-md-description">
           <p><abbr title="pseudorandom number generator">PRNG</abbr> key used for random initialization of the low-rank factors.</p>
+        </div>
+      </li>
+      <li class="doc-section-item field-body">
+          <b><code>is_save_extra_low_rank</code></b>
+        –
+        <div class="doc-md-description">
+          <p>If <code>True</code>, <code>dq.Options(save_extra=...)</code> receives the
+low-rank factor <code>m(t)</code> directly instead of the full-rank density matrix
+<code>rho(t)</code>, avoiding its reconstruction. Defaults to <code>False</code>.</p>
         </div>
       </li>
   </ul>
