@@ -306,8 +306,11 @@ class MESolveLowRankIntegrator(
 
         extra = None
         if self.options.save_extra:
-            rho = asqarray(rho_from_m(m), dims=self.dims)
-            extra = self.options.save_extra(rho)
+            if self.method.is_save_extra_low_rank:
+                extra = self.options.save_extra(cast(QArray, m))
+            else:
+                rho = asqarray(rho_from_m(m), dims=self.dims)
+                extra = self.options.save_extra(rho)
 
         if self.Es is not None:
             Esave = jnp.stack([expval_from_m(m, E) for E in self.Es])
