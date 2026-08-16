@@ -68,7 +68,7 @@ class SparseDIADataArray(DataArray):
         )
         for i, offset in enumerate(self.offsets):
             zero_slice = slice(None, offset) if offset >= 0 else slice(offset, None)
-            check = self.diags[..., i, zero_slice] != 0
+            check = jnp.any(self.diags[..., i, zero_slice] != 0)
             eqx.error_if(self.diags, check, error)
 
     @property
