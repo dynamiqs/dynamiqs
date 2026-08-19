@@ -1,7 +1,10 @@
 from abc import abstractmethod
+from typing import Any
 
 import diffrax as dx
 import equinox as eqx
+import jax
+from diffrax._custom_types import FloatScalarLike
 from tqdm import tqdm
 
 __all__ = ['NoProgressMeter', 'TextProgressMeter', 'TqdmProgressMeter']
@@ -116,3 +119,24 @@ class TqdmProgressMeter(AbstractProgressMeter):
 
     def to_diffrax(self) -> dx.AbstractProgressMeter:
         return _DiffraxTqdmProgressMeter()
+
+
+class _ForwardModeProgressMeter(dx.AbstractProgressMeter):
+    """Wrapper making any Diffrax progress meter forward-mode differentiable.
+
+    Diffrax reduces the progress over the batch dimensions with `unvmap_max`, which has
+    no JVP rule. This raises a `NotImplementedError` whenever the progress carries a
+    tangent, which is the case with `gradient=Forward()` for any parameter entering the
+    time grid. The progress is a display-only quantity, so we drop its tangent.
+    """
+
+    meter: dx.AbstractProgressMeter
+
+    def init(self) -> Any:
+        return self.meter.init()
+
+    def step(self, state: Any, progress: FloatScalarLike) -> Any:
+        return self.meter.step(state, jax.lax.stop_gradient(progress))
+
+    def close(self, state: Any):
+        self.meter.close(state)
