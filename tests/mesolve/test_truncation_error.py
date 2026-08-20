@@ -1,10 +1,20 @@
+import itertools
+
 import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
 
 import dynamiqs as dq
-from dynamiqs.truncation_error import inner_outer_indices, truncation_error_rate
+from dynamiqs.integrators._utils import astimeqarray
+from dynamiqs.truncation_error import (
+    assumed_degree,
+    extend_qarray,
+    extension_buffer,
+    inner_outer_indices,
+    offset_digits,
+    truncation_error_rate,
+)
 
 
 # the estimator compares a residual against zero, so single precision would drown the
@@ -23,6 +33,16 @@ def pad(rho, dims, extended_dims):
     width = [(0, e - d) for d, e in zip(dims, extended_dims, strict=True)] * 2
     n_extended = int(np.prod(extended_dims))
     return jnp.pad(rho, width).reshape(n_extended, n_extended)
+
+
+def restrict(qarray, dims, restricted_dims):
+    """Exact truncation of an operator built on a much larger Fock space."""
+    flat = [
+        np.ravel_multi_index(occupation, dims)
+        for occupation in itertools.product(*[range(d) for d in restricted_dims])
+    ]
+    matrix = np.asarray(qarray.to_jax())[np.ix_(flat, flat)]
+    return dq.asqarray(matrix, dims=restricted_dims, layout=dq.dia)
 
 
 def lindbladian(H, Ls, rho):
@@ -127,42 +147,174 @@ def test_rate_matches_dense_residual_multimode(dims, extended_dims):
     assert np.allclose(rate, expected, rtol=1e-10, atol=1e-12)
 
 
+# === deriving the extended-space operators
+
+
+def polynomial_models():
+    """Normal-ordered operators built on a large space, with a per-mode degree."""
+    a, alpha = dq.destroy(80), 1.0
+    adag, eye = a.dag(), dq.eye(80)
+    cosh, sinh = np.cosh(1.25), np.sinh(1.25)
+    A, B = dq.destroy(60, 30)
+    coupling = (A @ A - alpha**2 * dq.eye(60, 30)) @ B.dag()
+    sz, osc = dq.tensor(dq.sigmaz(), dq.eye(40)), dq.tensor(dq.eye(2), dq.destroy(40))
+    return {
+        'two_photon': (a @ a - alpha**2 * eye, (80,), (16,), (20,), 2),
+        'squeezed_cat': (
+            cosh**2 * (a @ a)
+            + 2 * cosh * sinh * (adag @ a)
+            + sinh**2 * (adag @ adag)
+            + (cosh * sinh - alpha**2) * eye,
+            (80,),
+            (16,),
+            (20,),
+            2,
+        ),
+        'kerr_drive': (adag @ adag @ a @ a + a + adag, (80,), (16,), (20,), 4),
+        'cat_with_buffer': (coupling + coupling.dag(), (60, 30), (16, 8), (20, 10), 4),
+        'qubit_oscillator': (sz @ (osc + osc.dag()), (2, 40), (2, 16), (2, 20), 4),
+    }
+
+
+@pytest.mark.parametrize('model', polynomial_models())
+def test_extension_reproduces_the_operator_at_the_larger_dimension(model):
+    operator, dims, truncated_dims, extended_dims, degree = polynomial_models()[model]
+    truncated = restrict(operator, dims, truncated_dims)
+    expected = restrict(operator, dims, extended_dims)
+
+    extended = extend_qarray(truncated, extended_dims, degree, 'H')
+
+    assert extended.dims == extended_dims
+    assert extended.layout == dq.dia
+    assert np.allclose(extended.to_jax(), expected.to_jax(), rtol=1e-8, atol=1e-10)
+
+
+def test_extension_carries_the_operator_batch_dimensions():
+    dim, extended_dim = (12,), (14,)
+    drives = jnp.array([0.5, 1.0, 2.0])[:, None, None]
+    a = dq.destroy(*dim)
+    batched = drives * (a + a.dag())
+
+    extended = extend_qarray(batched, extended_dim, 2, 'H')
+
+    assert extended.shape == (3, 14, 14)
+    expected = (
+        jnp.array([0.5, 1.0, 2.0])[:, None, None]
+        * (dq.destroy(*extended_dim) + dq.destroy(*extended_dim).dag()).to_jax()
+    )
+    assert np.allclose(extended.to_jax(), expected, rtol=1e-8, atol=1e-10)
+
+
+def test_offset_digits_splits_a_flat_offset_per_mode():
+    single = [offset_digits(o, (8,)) for o in (-7, -1, 0, 3)]
+    assert single == [(-7,), (-1,), (0,), (3,)]
+    # with dims=(16, 8) the second mode's stride is 8, so -15 = -2 * 8 + 1
+    assert offset_digits(-15, (16, 8)) == (-2, 1)
+    assert offset_digits(15, (16, 8)) == (2, -1)
+    assert offset_digits(1, (16, 8)) == (0, 1)
+
+
+@pytest.mark.parametrize(
+    ('name', 'buffer'),
+    [
+        # every case is the buffer stated by the paper for that model
+        ('driven', (1,)),
+        ('lowering', (1,)),
+        ('two_photon', (2,)),
+        ('squeezed_cat', (4,)),
+        ('cat_with_buffer', (2, 1)),
+        ('number_conserving', (0,)),
+    ],
+)
+def test_buffer_matches_the_paper(name, buffer):
+    alpha = 1.0
+    a = dq.destroy(16)
+    cosh, sinh = np.cosh(1.25), np.sinh(1.25)
+    A, B = dq.destroy(16, 8)
+    coupling = (A @ A - alpha**2 * dq.eye(16, 8)) @ B.dag()
+    zero = 0.0 * dq.eye(16)
+    models = {
+        'driven': (a + a.dag(), []),
+        'lowering': (zero, [a]),
+        'two_photon': (zero, [a @ a - alpha**2 * dq.eye(16)]),
+        'squeezed_cat': (
+            zero,
+            [
+                cosh**2 * (a @ a)
+                + 2 * cosh * sinh * (a.dag() @ a)
+                + sinh**2 * (a.dag() @ a.dag())
+                + (cosh * sinh - alpha**2) * dq.eye(16)
+            ],
+        ),
+        'cat_with_buffer': (coupling + coupling.dag(), [B]),
+        'number_conserving': (a.dag() @ a, [a.dag() @ a]),
+    }
+    H, Ls = models[name]
+    H, Ls = astimeqarray(H), [astimeqarray(L) for L in Ls]
+    assert extension_buffer(H, Ls) == buffer
+
+
+def test_derived_buffer_is_large_enough():
+    # the derived buffer must saturate the rate: enlarging the extended space past it
+    # cannot change the residual
+    dim, alpha = 10, 1.0
+    a = dq.destroy(dim)
+    rho = random_density_matrix(dim, seed=5)
+    H, Ls = 0.4 * (a + a.dag()), [a @ a - alpha**2 * dq.eye(dim), a.dag()]
+    buffer = extension_buffer(astimeqarray(H), [astimeqarray(L) for L in Ls])
+    assert buffer == (2,)
+
+    def rate_at(extra):
+        extended_dim = dim + buffer[0] + extra
+        big = dq.destroy(extended_dim)
+        return truncation_error_rate(
+            0.0,
+            rho,
+            dq.constant(0.4 * (big + big.dag())),
+            [
+                dq.constant(big @ big - alpha**2 * dq.eye(extended_dim)),
+                dq.constant(big.dag()),
+            ],
+            *inner_outer_indices((dim,), (extended_dim,)),
+        )
+
+    assert np.allclose(rate_at(0), rate_at(4), rtol=1e-10, atol=1e-12)
+
+
+def test_assumed_degree_covers_the_offsets_present():
+    a = dq.destroy(16)
+    # nothing above degree 4 in the offsets, so the default is kept
+    assert assumed_degree(astimeqarray(a + a.dag()), []) == 4
+    # a bare power reaches further than the default, and is picked up on its own
+    sixth = astimeqarray(a @ a @ a @ a @ a @ a)
+    assert assumed_degree(sixth, []) == 6
+
+
+# === end-to-end through `dq.mesolve()`
+
+
 def driven_oscillator(dim, drive=2.0):
     a = dq.destroy(dim)
     return drive * (a + a.dag()), [a]
 
 
-def solve_with_estimate(dim, buffer, tsave, **kwargs):
+def solve_with_estimate(dim, tsave, truncation_error=True, **kwargs):
     H, Ls = driven_oscillator(dim)
-    H_extended, Ls_extended = driven_oscillator(dim + buffer)
     return dq.mesolve(
-        H,
-        Ls,
-        dq.fock(dim, 0),
-        tsave,
-        truncation_error=dq.TruncationError(H_extended, Ls_extended),
-        **kwargs,
+        H, Ls, dq.fock(dim, 0), tsave, truncation_error=truncation_error, **kwargs
     )
 
 
 def test_estimate_is_zero_for_a_number_conserving_model():
     dim, tsave = 8, jnp.linspace(0.0, 1.0, 11)
-    a, a_extended = dq.destroy(dim), dq.destroy(dim + 2)
-    result = dq.mesolve(
-        a.dag() @ a,
-        [a],
-        dq.fock(dim, 3),
-        tsave,
-        truncation_error=dq.TruncationError(
-            a_extended.dag() @ a_extended, [a_extended]
-        ),
-    )
+    a = dq.destroy(dim)
+    result = dq.mesolve(a.dag() @ a, [a], dq.fock(dim, 3), tsave, truncation_error=True)
     assert np.allclose(result.truncation_error, 0.0, atol=1e-12)
 
 
 def test_estimate_is_monotone_and_bounds_the_true_error():
     dim, tsave = 8, jnp.linspace(0.0, 1.0, 11)
-    result = solve_with_estimate(dim, 1, tsave)
+    result = solve_with_estimate(dim, tsave)
     xi = result.truncation_error
 
     assert xi.shape == tsave.shape
@@ -183,20 +335,22 @@ def test_estimate_is_monotone_and_bounds_the_true_error():
 def test_estimate_decreases_with_the_truncature():
     tsave = jnp.linspace(0.0, 1.0, 11)
     finals = [
-        solve_with_estimate(dim, 1, tsave).truncation_error[-1].item()
+        solve_with_estimate(dim, tsave).truncation_error[-1].item()
         for dim in (6, 10, 14)
     ]
     assert finals[0] > finals[1] > finals[2]
 
 
-def test_estimate_is_unchanged_by_a_larger_buffer():
-    # the residual is exactly representable with a buffer of 1 for `H = u (a + a^dag)`
-    # and `L = a`, so enlarging the extended space must not change the estimate
+def test_estimate_is_unchanged_by_a_larger_declared_degree():
+    # over-declaring the degree only adds monomials that are fitted to zero
     tsave = jnp.linspace(0.0, 1.0, 11)
     estimates = [
-        solve_with_estimate(8, buffer, tsave).truncation_error for buffer in (1, 6)
+        solve_with_estimate(8, tsave, truncation_error=degree) for degree in (2, 4, 8)
     ]
-    assert np.allclose(estimates[0], estimates[1], rtol=1e-6, atol=1e-12)
+    for other in estimates[1:]:
+        assert np.allclose(
+            estimates[0].truncation_error, other.truncation_error, rtol=1e-6, atol=1e-12
+        )
 
 
 def test_rate_matches_the_driven_oscillator_closed_form():
@@ -220,17 +374,11 @@ def test_rate_matches_the_driven_oscillator_closed_form():
 
 
 def test_estimate_is_batched_with_the_operators():
-    dim, buffer, tsave = 8, 1, jnp.linspace(0.0, 1.0, 11)
+    dim, tsave = 8, jnp.linspace(0.0, 1.0, 11)
     drives = jnp.array([0.5, 1.0, 2.0])[:, None, None]
-    a, a_extended = dq.destroy(dim), dq.destroy(dim + buffer)
+    a = dq.destroy(dim)
     result = dq.mesolve(
-        drives * (a + a.dag()).to_jax(),
-        [a],
-        dq.fock(dim, 0),
-        tsave,
-        truncation_error=dq.TruncationError(
-            drives * (a_extended + a_extended.dag()).to_jax(), [a_extended]
-        ),
+        drives * (a + a.dag()), [a], dq.fock(dim, 0), tsave, truncation_error=True
     )
     xi = result.truncation_error
     assert xi.shape == (3, 11)
@@ -239,22 +387,32 @@ def test_estimate_is_batched_with_the_operators():
     # and each batch element matches the same solve run on its own
     for index, drive in enumerate([0.5, 1.0, 2.0]):
         single = dq.mesolve(
-            drive * (a + a.dag()),
-            [a],
-            dq.fock(dim, 0),
-            tsave,
-            truncation_error=dq.TruncationError(
-                drive * (a_extended + a_extended.dag()), [a_extended]
-            ),
+            drive * (a + a.dag()), [a], dq.fock(dim, 0), tsave, truncation_error=True
         )
         assert np.allclose(xi[index], single.truncation_error, rtol=1e-6, atol=1e-12)
+
+
+@pytest.mark.parametrize('kind', ['constant', 'pwc', 'modulated', 'summed'])
+def test_estimate_supports_time_dependent_operators(kind):
+    dim, tsave = 8, jnp.linspace(0.0, 1.0, 11)
+    a = dq.destroy(dim)
+    drive = a + a.dag()
+    H = {
+        'constant': 2.0 * drive,
+        'pwc': dq.pwc([0.0, 0.5, 1.0], [1.0, 3.0], drive),
+        'modulated': dq.modulated(lambda t: 2.0 * jnp.cos(t), drive),
+        'summed': dq.modulated(lambda t: 2.0 * jnp.cos(t), drive) + a.dag() @ a,
+    }[kind]
+    xi = dq.mesolve(
+        H, [a], dq.fock(dim, 0), tsave, truncation_error=True
+    ).truncation_error
+    assert bool(jnp.all(jnp.diff(xi) >= -1e-12))
+    assert xi[-1] > 0.0
 
 
 def test_estimate_is_rejected_for_unsupported_methods():
     dim, tsave = 4, jnp.linspace(0.0, 1.0, 3)
     H, Ls = driven_oscillator(dim)
-    H_extended, Ls_extended = driven_oscillator(dim + 1)
-    spec = dq.TruncationError(H_extended, Ls_extended)
     with pytest.raises(TypeError, match='not supported for the method `Expm`'):
         dq.mesolve(
             H,
@@ -262,33 +420,59 @@ def test_estimate_is_rejected_for_unsupported_methods():
             dq.fock(dim, 0),
             tsave,
             method=dq.method.Expm(),
-            truncation_error=spec,
+            truncation_error=True,
         )
     with pytest.raises(
         ValueError, match='not supported together with `vectorized=True`'
     ):
         dq.mesolve(
-            H, Ls, dq.fock(dim, 0), tsave, vectorized=True, truncation_error=spec
+            H, Ls, dq.fock(dim, 0), tsave, vectorized=True, truncation_error=True
         )
-    with pytest.raises(
-        ValueError, match='one extended jump operator per jump operator'
-    ):
+    with pytest.raises(TypeError, match='must be a bool or an int'):
+        dq.mesolve(H, Ls, dq.fock(dim, 0), tsave, truncation_error='2')
+
+
+def test_estimate_is_rejected_for_operators_it_cannot_derive():
+    dim, tsave = 8, jnp.linspace(0.0, 1.0, 3)
+    a = dq.destroy(dim)
+    rho0 = dq.fock(dim, 0)
+    drive = a + a.dag()
+
+    with pytest.raises(ValueError, match='must have layout `dia`'):
+        dq.mesolve(drive.to_jax(), [a], rho0, tsave, truncation_error=True)
+
+    with pytest.raises(ValueError, match='does not support'):
         dq.mesolve(
-            H,
-            [],
-            dq.fock(dim, 0),
+            dq.timecallable(lambda t: 2.0 * jnp.cos(t) * drive),
+            [a],
+            rho0,
             tsave,
-            truncation_error=dq.TruncationError(H_extended, Ls_extended),
+            truncation_error=True,
         )
+
+    # degree 8 needs more entries on a diagonal than a 3-level mode provides
+    small = dq.destroy(3)
+    with pytest.raises(ValueError, match='usable entries on the diagonal'):
+        dq.mesolve(
+            small + small.dag(), [small], dq.fock(3, 0), tsave, truncation_error=8
+        )
+
+    # `H` is a polynomial of degree 6, and the default degree of 4 cannot fit it
+    kerr = a.dag() @ a.dag() @ a.dag() @ a @ a @ a + drive
+    with pytest.raises(Exception, match='not a normal-ordered polynomial'):
+        dq.mesolve(kerr, [a], rho0, tsave, truncation_error=True)
+    # declaring the right degree fixes it
+    xi = dq.mesolve(kerr, [a], rho0, tsave, truncation_error=6).truncation_error
+    assert xi[-1] > 0.0
 
 
 def test_estimate_works_with_rouchon():
     dim, tsave = 8, jnp.linspace(0.0, 1.0, 11)
     reference = solve_with_estimate(
-        dim, 1, tsave, method=dq.method.Tsit5(rtol=1e-10, atol=1e-12)
+        dim, tsave, method=dq.method.Tsit5(rtol=1e-10, atol=1e-12)
     ).truncation_error
     xi = solve_with_estimate(
-        dim, 1, tsave, method=dq.method.Rouchon1(dt=1e-4)
+        dim, tsave, method=dq.method.Rouchon1(dt=1e-4)
     ).truncation_error
 
     assert bool(jnp.all(jnp.diff(xi) >= -1e-12))

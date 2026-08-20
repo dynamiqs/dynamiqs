@@ -170,8 +170,6 @@ nav:
               - pwc: python_api/time_qarray/pwc.md
               - modulated: python_api/time_qarray/modulated.md
               - timecallable: python_api/time_qarray/timecallable.md
-          - Truncation error estimate:
-              - TruncationError: python_api/truncation_error/TruncationError.md
           - Methods (dq.method):
               - Tsit5: python_api/method/Tsit5.md
               - Dopri5: python_api/method/Dopri5.md

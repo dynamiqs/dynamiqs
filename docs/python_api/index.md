@@ -53,15 +53,6 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - modulated
         - timecallable
 
-### Truncation error estimate
-
-::: dynamiqs.truncation_error
-    options:
-        extra:
-            table: true
-        members:
-        - TruncationError
-
 ### Methods (dq.method)
 
 ::: dynamiqs.method
