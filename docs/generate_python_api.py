@@ -14,6 +14,7 @@ doc_sections = {
     'integrators': (['dynamiqs/integrators/'], 'dq'),
     'qarrays/qarray': (['dynamiqs/qarrays/qarray.py'], 'dq'),
     'time_qarray': (['dynamiqs/time_qarray.py'], 'dq'),
+    'truncation_error': (['dynamiqs/truncation_error.py'], 'dq'),
     'method': (['dynamiqs/method.py'], 'dq.method'),
     'gradient': (['dynamiqs/gradient.py'], 'dq.gradient'),
     'helpers': (['dynamiqs/helpers.py'], 'dq'),

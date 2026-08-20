@@ -34,6 +34,7 @@ from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import MESolveResult
 from ...time_qarray import TimeQArray
+from ...truncation_error import TruncationError
 from .._utils import (
     assert_method_supported,
     astimeqarray,
@@ -78,6 +79,7 @@ def mesolve(
     save_extra: Callable[[QArray], PyTree] | None = None,
     vectorized: bool = False,
     assume_hermitian: bool = True,
+    truncation_error: TruncationError | None = None,
 ) -> MESolveResult:
     r"""Solve the Lindblad master equation.
 
@@ -188,6 +190,12 @@ def mesolve(
             Hermitian part of `rho` is evolved. Only compatible with Diffrax-based
             ODE methods and `vectorized=False`. In other cases, no assumptions are
             made on the hermiticity of `rho0`. Defaults to `True`.
+        truncation_error: Extended-space operators enabling the a posteriori Fock
+            truncation error estimate of
+            [arXiv:2501.09607](https://arxiv.org/abs/2501.09607), see
+            [`dq.TruncationError`][dynamiqs.TruncationError]. The bound is accumulated
+            during the solve and returned in `result.truncation_error`. Only supported
+            for Diffrax-based ODE methods and `vectorized=False`. Defaults to `None`.
 
     Examples:
         ```python
@@ -289,6 +297,7 @@ def mesolve(
     _check_mesolve_args(H, Ls, rho0, _exp_ops)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'mesolve')
+    truncation_error = _check_truncation_error(truncation_error, Ls, method, vectorized)
     options = options.initialise()
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
@@ -303,7 +312,7 @@ def mesolve(
     else:
         f = jax.jit(f, static_argnames=('gradient', 'options'))
 
-    return f(H, Ls, rho0, _tsave, _exp_ops, method, gradient, options)
+    return f(H, Ls, rho0, _tsave, _exp_ops, method, gradient, options, truncation_error)
 
 
 @catch_xla_runtime_error
@@ -316,31 +325,66 @@ def _vectorized_mesolve(
     method: Method,
     gradient: Gradient | None,
     options: Options,
+    truncation_error: TruncationError | None,
 ) -> MESolveResult:
-    # vectorize input over H, Ls and rho0
-    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, None, None, None, None, None)
-    out_axes = MESolveResult.out_axes()
+    # save the batch structure before any bundling below, it drives the vmaps
+    nvmap_H, nvmap_Ls, nvmap_rho0 = (
+        H.ndim - 2,
+        [L.ndim - 2 for L in Ls],
+        rho0.ndim - 2,
+    )
 
-    if options.cartesian_batching:
-        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0.ndim - 2, 0, 0, 0, 0, 0)
-        f = cartesian_vmap(_mesolve, in_axes, out_axes, nvmap)
-    else:
-        bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, rho0]])
-        nvmap = len(bshape)
+    nvmap_flat = 0
+    if not options.cartesian_batching:
         # broadcast all vectorized input to same shape
+        bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, rho0]])
+        nvmap_flat = len(bshape)
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
         rho0 = rho0.broadcast_to(*bshape, *rho0.shape[-2:])
-        # vectorize the function
-        f = multi_vmap(_mesolve, in_axes, out_axes, nvmap)
+        if truncation_error is not None:
+            n_extended = truncation_error.H.shape[-1]
+            truncation_error = TruncationError(
+                truncation_error.H.broadcast_to(*bshape, n_extended, n_extended),
+                [
+                    L.broadcast_to(*bshape, n_extended, n_extended)
+                    for L in truncation_error.Ls
+                ],
+            )
 
-    return f(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
+    # The extended operators of the truncation error estimate are batched exactly like
+    # the operators they mirror, so each one travels bundled with its counterpart. The
+    # vmap machinery then maps a pair as a single unit and cannot form a spurious
+    # cartesian product between an operator and its extended twin.
+    if truncation_error is None:
+        H_arg, Ls_arg = H, Ls
+        H_axes, Ls_axes = H.in_axes, [L.in_axes for L in Ls]
+    else:
+        extended_Ls = truncation_error.Ls
+        H_arg = (H, truncation_error.H)
+        Ls_arg = list(zip(Ls, extended_Ls, strict=True))
+        H_axes = (H.in_axes, truncation_error.H.in_axes)
+        Ls_axes = [
+            (L.in_axes, Le.in_axes) for L, Le in zip(Ls, extended_Ls, strict=True)
+        ]
+
+    # vectorize input over H, Ls and rho0
+    in_axes = (H_axes, Ls_axes, 0, None, None, None, None, None)
+    out_axes = MESolveResult.out_axes()
+
+    if options.cartesian_batching:
+        nvmap = (nvmap_H, nvmap_Ls, nvmap_rho0, 0, 0, 0, 0, 0)
+        f = cartesian_vmap(_mesolve, in_axes, out_axes, nvmap)
+    else:
+        f = multi_vmap(_mesolve, in_axes, out_axes, nvmap_flat)
+
+    return f(H_arg, Ls_arg, rho0, tsave, exp_ops, method, gradient, options)
 
 
 def _mesolve(
-    H: TimeQArray,
-    Ls: list[TimeQArray],
+    H: TimeQArray | tuple[TimeQArray, TimeQArray],
+    Ls: list[TimeQArray] | list[tuple[TimeQArray, TimeQArray]],
     rho0: QArray,
     tsave: Array,
     exp_ops: list[QArray] | None,
@@ -348,6 +392,18 @@ def _mesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> MESolveResult:
+    # === unbundle the extended operators of the truncation error estimate, if any
+    extended = {}
+    if isinstance(H, tuple):
+        bundled_H = cast(tuple[TimeQArray, TimeQArray], H)
+        bundled_Ls = cast(list[tuple[TimeQArray, TimeQArray]], Ls)
+        extended = {
+            'H_extended': bundled_H[1],
+            'Ls_extended': [Le for _, Le in bundled_Ls],
+        }
+        H = bundled_H[0]
+        Ls = [L for L, _ in bundled_Ls]
+
     # === select integrator constructor
     integrator_constructors = {
         Euler: mesolve_euler_integrator_constructor,
@@ -380,10 +436,64 @@ def _mesolve(
         H=H,
         Ls=Ls,
         Es=exp_ops,
+        **extended,
     )
 
     # === run integrator
     return cast(MESolveResult, integrator.run())
+
+
+def _check_truncation_error(
+    truncation_error: TruncationError | None,
+    Ls: list[TimeQArray],
+    method: Method,
+    vectorized: bool,
+) -> TruncationError | None:
+    if truncation_error is None:
+        return None
+
+    # every other method overrides `DiffraxIntegrator.run()`, where the estimate is
+    # accumulated. `Rouchon` only overrides `terms`, so it is supported.
+    supported = (
+        Euler,
+        Dopri5,
+        Dopri8,
+        Tsit5,
+        Kvaerno3,
+        Kvaerno5,
+        Rouchon1,
+        Rouchon2,
+        Rouchon3,
+    )
+    if not isinstance(method, supported):
+        supported_str = ', '.join(f'`{x.__name__}`' for x in supported)
+        # a method type mismatch, as in `assert_method_supported`
+        raise TypeError(
+            f'The `truncation_error` argument of `dq.mesolve()` is not supported for'
+            f' the method `{type(method).__name__}` (supported methods:'
+            f' {supported_str}).'
+        )
+    if vectorized:
+        raise ValueError(
+            'The `truncation_error` argument of `dq.mesolve()` is not supported'
+            ' together with `vectorized=True`, because the estimate is computed from'
+            ' the unvectorized density matrix.'
+        )
+    if len(truncation_error.Ls) != len(Ls):
+        raise ValueError(
+            f'Argument `truncation_error` must hold one extended jump operator per jump'
+            f' operator, in the same order, but got {len(truncation_error.Ls)} extended'
+            f' jump operators for {len(Ls)} jump operators.'
+        )
+
+    # === normalize to timeqarrays, as `mesolve` does for `H` and `jump_ops`
+    truncation_error = TruncationError(
+        astimeqarray(truncation_error.H), [astimeqarray(L) for L in truncation_error.Ls]
+    )
+    check_shape(truncation_error.H, 'truncation_error.H', '(..., n, n)')
+    for i, L in enumerate(truncation_error.Ls):
+        check_shape(L, f'truncation_error.Ls[{i}]', '(..., n, n)')
+    return truncation_error
 
 
 def _check_mesolve_args(

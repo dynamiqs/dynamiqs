@@ -69,6 +69,10 @@ class DiffusiveSolveSaved(SolveSaved):
     Isave: Array
 
 
+class TruncationErrorSolveSaved(SolveSaved):
+    truncation_error: Array
+
+
 class PropagatorSaved(Saved):
     pass
 
@@ -198,7 +202,21 @@ class SESolveResult(SolveResult):
 
 
 class MESolveResult(SolveResult):
-    pass
+    @property
+    def truncation_error(self) -> Array | None:
+        """A posteriori Fock truncation error bound, if it was requested.
+
+        Non-decreasing array aligned with `tsave`: entry `k` upper-bounds
+        `|| rho(t_k) - rho_N(t_k) ||_1`. `None` unless the `truncation_error` argument
+        of [`dq.mesolve()`][dynamiqs.mesolve] was set.
+        """
+        if isinstance(self._saved, TruncationErrorSolveSaved):
+            return self._saved.truncation_error
+        return None
+
+    def _str_parts(self) -> dict[str, str | None]:
+        d = super()._str_parts()
+        return d | {'Truncation error': _array_str(self.truncation_error)}
 
 
 class MESolveLowRankResult(MESolveResult):

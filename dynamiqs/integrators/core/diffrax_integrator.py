@@ -27,7 +27,10 @@ from ...method import (
 )
 from ...options import Options
 from ...progress_meter import AbstractProgressMeter
-from ...result import MESolveResult, Result, SolveSaved
+from ...result import MESolveResult, Result, SolveSaved, TruncationErrorSolveSaved
+from ...time_qarray import TimeQArray
+from ...truncation_error import accumulate_truncation_error, inner_outer_indices
+from ...truncation_error import truncation_error_rate as truncation_error_rate_of
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
@@ -162,19 +165,42 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                 ).to_diffrax(),
             )
 
+    def truncation_error_rate(self) -> Callable | None:
+        """Rate of the a posteriori truncation error estimate, if it was requested."""
+        return None
+
     def run(self) -> Result:
         # === prepare diffrax arguments
         fn = lambda t, y, args: self.save(y)  # noqa: ARG005
         subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
         subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-        saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+        subs = [subsaveat_a, subsaveat_b]
+
+        # The truncation error estimate is accumulated from its rate, evaluated once per
+        # accepted step. Saving it rather than augmenting the ODE state keeps it out of
+        # the stepsize controller's error norm, and works for every method inheriting
+        # this `run()` — including Rouchon, which only overrides `terms`.
+        rate = self.truncation_error_rate()
+        if rate is not None:
+            subs.append(dx.SubSaveAt(t0=True, steps=True, fn=rate))
+
+        saveat = dx.SaveAt(subs=subs)
 
         # === solve differential equation
         solution = self.diffeqsolve(self.t0, self.t1, self.y0, saveat)
 
         # === collect and return results
         ys = cast(tuple, solution.ys)
-        saved = self.postprocess_saved(*ys)
+        saved = self.postprocess_saved(ys[0], ys[1])
+        if rate is not None:
+            saved = TruncationErrorSolveSaved(
+                saved.ysave,
+                saved.extra,
+                saved.Esave,
+                accumulate_truncation_error(
+                    cast(tuple, solution.ts)[2], ys[2], self.ts
+                ),
+            )
         return self.result(saved, infos=self.infos(solution.stats))
 
     def infos(self, stats: dict[str, Array]) -> PyTree:
@@ -318,6 +344,20 @@ class MESolveDiffraxIntegrator(
     """Integrator computing the time evolution of the Lindblad master equation using the
     Diffrax library.
     """
+
+    # extended-space operators for the a posteriori truncation error estimate
+    H_extended: TimeQArray | None = None
+    Ls_extended: list[TimeQArray] = eqx.field(default_factory=list)
+
+    def truncation_error_rate(self) -> Callable | None:
+        H_extended = self.H_extended
+        if H_extended is None:
+            return None
+
+        inner, outer = inner_outer_indices(self.y0.dims, H_extended.dims)
+        return lambda t, y, args: truncation_error_rate_of(  # noqa: ARG005
+            t, y.to_jax(), H_extended, self.Ls_extended, inner, outer
+        )
 
     @property
     def terms(self) -> dx.AbstractTerm:
