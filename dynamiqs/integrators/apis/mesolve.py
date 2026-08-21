@@ -439,7 +439,7 @@ def _check_truncation_error(
     degree = None
     if truncation_error is not True:
         try:
-            # `operator.index` also accepts integers of another flavour, such as `np.int`
+            # `operator.index` also accepts other integer flavours, e.g. `np.int64`
             degree = operator.index(truncation_error)
         except TypeError:
             raise TypeError(
@@ -453,26 +453,13 @@ def _check_truncation_error(
                 f' {truncation_error}.'
             )
 
-    # every other method overrides `DiffraxIntegrator.run()`, where the estimate is
-    # accumulated. `Rouchon` only overrides `terms`, so it is supported.
-    supported = (
-        Euler,
-        Dopri5,
-        Dopri8,
-        Tsit5,
-        Kvaerno3,
-        Kvaerno5,
-        Rouchon1,
-        Rouchon2,
-        Rouchon3,
-    )
-    if not isinstance(method, supported):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in supported)
+    if not method.SUPPORTS_TRUNCATION_ERROR:
         # a method type mismatch, as in `assert_method_supported`
         raise TypeError(
             f'The `truncation_error` argument of `dq.mesolve()` is not supported for'
-            f' the method `{type(method).__name__}` (supported methods:'
-            f' {supported_str}).'
+            f' the method `{type(method).__name__}`, which does not accumulate the'
+            f' estimate during the solve. It is available for the Diffrax-based ODE'
+            f' methods.'
         )
     if vectorized:
         raise ValueError(

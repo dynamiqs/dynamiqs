@@ -41,6 +41,10 @@ class Method(eqx.Module):
     # should be eqx.AbstractClassVar, but this conflicts with the __future__ imports
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient]
 
+    # whether the method's integrator accumulates the a posteriori Fock truncation error
+    # estimate, which every integrator inheriting `DiffraxIntegrator.run()` does
+    SUPPORTS_TRUNCATION_ERROR: ClassVar[bool] = False
+
     @classmethod
     def supports_gradient(cls, gradient: Gradient | None) -> bool:
         return isinstance(gradient, cls.SUPPORTED_GRADIENT)
@@ -159,6 +163,7 @@ class Euler(_DEFixedStep):
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_EXPLICIT_ODE_GRADIENTS
+    SUPPORTS_TRUNCATION_ERROR: ClassVar[bool] = True
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
@@ -228,6 +233,7 @@ class Rouchon1(_DEFixedStep):
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _ROUCHON_GRADIENTS
+    SUPPORTS_TRUNCATION_ERROR: ClassVar[bool] = True
 
     # todo: fix static dt (similar issue as static tsave in dssesolve)
     dt: float = eqx.field(static=True)
@@ -271,6 +277,7 @@ class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _ROUCHON_GRADIENTS
+    SUPPORTS_TRUNCATION_ERROR: ClassVar[bool] = True
 
     normalize: bool = eqx.field(static=True, default=True)
 
@@ -326,6 +333,7 @@ class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _ROUCHON_GRADIENTS
+    SUPPORTS_TRUNCATION_ERROR: ClassVar[bool] = True
 
     normalize: bool = eqx.field(static=True, default=True)
 
@@ -373,6 +381,7 @@ class Dopri5(_DEAdaptiveStep):
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_EXPLICIT_ODE_GRADIENTS
+    SUPPORTS_TRUNCATION_ERROR: ClassVar[bool] = True
 
     # dummy init to have the signature in the documentation
     def __init__(
@@ -411,6 +420,7 @@ class Dopri8(_DEAdaptiveStep):
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_EXPLICIT_ODE_GRADIENTS
+    SUPPORTS_TRUNCATION_ERROR: ClassVar[bool] = True
 
     # dummy init to have the signature in the documentation
     def __init__(
@@ -449,6 +459,7 @@ class Tsit5(_DEAdaptiveStep):
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_EXPLICIT_ODE_GRADIENTS
+    SUPPORTS_TRUNCATION_ERROR: ClassVar[bool] = True
 
     # dummy init to have the signature in the documentation
     def __init__(
@@ -497,6 +508,7 @@ class Kvaerno3(_DEAdaptiveStep):
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_ODE_GRADIENTS
+    SUPPORTS_TRUNCATION_ERROR: ClassVar[bool] = True
 
     # dummy init to have the signature in the documentation
     def __init__(
@@ -545,6 +557,7 @@ class Kvaerno5(_DEAdaptiveStep):
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_ODE_GRADIENTS
+    SUPPORTS_TRUNCATION_ERROR: ClassVar[bool] = True
 
     # dummy init to have the signature in the documentation
     def __init__(
