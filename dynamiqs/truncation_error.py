@@ -19,8 +19,10 @@ space are derived here from the truncated operators themselves, see
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import replace
 from functools import lru_cache
+from typing import NamedTuple
 
 import equinox as eqx
 import jax
@@ -191,26 +193,33 @@ def offset_digits(
     )
 
 
-def _leaf_qarrays(timeqarray: TimeQArray, argname: str) -> list[QArray]:
-    """The constant carrier qarrays of a timeqarray.
+def _leaves(timeqarray: TimeQArray, argname: str) -> list[tuple[Callable, QArray]]:
+    """The constant carrier qarrays of a timeqarray, with their scalar prefactor.
 
     Constant, piecewise-constant and modulated timeqarrays are a fixed qarray times a
-    scalar prefactor, so extending them is extending that qarray.
+    scalar prefactor, so extending them is extending that qarray. A sum applies its own
+    prefactor — its clipping — on top of the prefactors of its terms.
     """
     if isinstance(timeqarray, SummedTimeQArray):
+        clip = timeqarray._prefactor
         return [
-            qarray
+            (lambda t, clip=clip, term=prefactor: clip(t) * term(t), qarray)
             for term in timeqarray.timeqarrays
-            for qarray in _leaf_qarrays(term, argname)
+            for prefactor, qarray in _leaves(term, argname)
         ]
     if isinstance(timeqarray, (ConstantTimeQArray, PWCTimeQArray, ModulatedTimeQArray)):
-        return [timeqarray.qarray]
+        return [(timeqarray._prefactor, timeqarray.qarray)]
     raise ValueError(
         f'Argument `{argname}` is a `{type(timeqarray).__name__}`, which the truncation'
         f' error estimate does not support because its extension to a larger Fock space'
         f' cannot be derived. Use `dq.constant()`, `dq.pwc()` or `dq.modulated()`'
         f' instead of `dq.timecallable()`.'
     )
+
+
+def _leaf_qarrays(timeqarray: TimeQArray, argname: str) -> list[QArray]:
+    """The constant carrier qarrays of a timeqarray."""
+    return [qarray for _, qarray in _leaves(timeqarray, argname)]
 
 
 def _dia_data(qarray: QArray, argname: str) -> SparseDIADataArray:
@@ -422,13 +431,79 @@ def inner_outer_indices(
     return jnp.asarray(np.nonzero(inside)[0]), jnp.asarray(np.nonzero(~inside)[0])
 
 
-def truncation_error_rate(
-    t: RealScalarLike,
-    rho: Array,
-    H_extended: TimeQArray,
-    Ls_extended: list[TimeQArray],
-    inner: Array,
-    outer: Array,
+class JumpBlocks(NamedTuple):
+    """Blocks of one jump operator, as `(prefactor, block)` terms to sum at a time."""
+
+    qp: list[tuple[Callable, Array]]
+    pp: list[tuple[Callable, Array]]
+    dagger_product_qp: list[tuple[Callable, Array]]
+
+
+class ResidualBlocks(NamedTuple):
+    """Blocks of the extended-space operators the residual is built from."""
+
+    hamiltonian_qp: list[tuple[Callable, Array]]
+    jumps: list[JumpBlocks]
+
+
+def residual_blocks(
+    H_extended: TimeQArray, Ls_extended: list[TimeQArray], inner: Array, outer: Array
+) -> ResidualBlocks:
+    """Blocks of the extended-space operators the truncation error rate needs.
+
+    Only thin `QP` blocks and the `PP` block enter the residual (see
+    `truncation_error_rate_of_blocks()`), and the operators are a fixed qarray per term
+    times a scalar prefactor, so the blocks are built once here rather than at every
+    solver step: what is left to do per step is scaling them by their prefactor.
+
+    Note:
+        The `L^dag L` blocks are quadratic in the number of terms of a summed jump
+        operator, which is a handful in practice.
+    """
+    inner_rows, inner_columns = inner[:, None], inner[None, :]
+    outer_rows = outer[:, None]
+
+    hamiltonian_qp = [
+        (prefactor, qarray.to_jax()[outer_rows, inner_columns])
+        for prefactor, qarray in _leaves(H_extended, 'H')
+    ]
+
+    jumps = []
+    for i, jump_operator in enumerate(Ls_extended):
+        terms = [
+            (prefactor, qarray.to_jax())
+            for prefactor, qarray in _leaves(jump_operator, f'jump_ops[{i}]')
+        ]
+        # (L^dag L)_QP = sum_jk conj(f_j) f_k L_j[:, Q]^dag L_k[:, P], never forming the
+        # full product
+        dagger_product_qp: list[tuple[Callable, Array]] = [
+            (
+                lambda t, left=left, right=right: jnp.conj(left(t)) * right(t),
+                jump_left[:, outer].conj().mT @ jump_right[:, inner],
+            )
+            for left, jump_left in terms
+            for right, jump_right in terms
+        ]
+        jumps.append(
+            JumpBlocks(
+                qp=[(f, jump[outer_rows, inner_columns]) for f, jump in terms],
+                pp=[(f, jump[inner_rows, inner_columns]) for f, jump in terms],
+                dagger_product_qp=dagger_product_qp,
+            )
+        )
+    return ResidualBlocks(hamiltonian_qp, jumps)
+
+
+def _at(terms: list[tuple[Callable, Array]], t: RealScalarLike) -> Array:
+    """Sum of `(prefactor, block)` terms, evaluated at time `t`."""
+    first, *rest = [
+        jnp.asarray(prefactor(t))[..., None, None] * block for prefactor, block in terms
+    ]
+    return sum(rest, start=first)
+
+
+def truncation_error_rate_of_blocks(
+    t: RealScalarLike, rho: Array, blocks: ResidualBlocks
 ) -> Array:
     r"""Compute $\| (\mathcal{L} - \mathcal{L}_N)\rho \|_1$, the estimator's integrand.
 
@@ -450,44 +525,35 @@ def truncation_error_rate(
     Args:
         t: Time at which to evaluate the operators.
         rho: Density matrix on the truncated space, of shape _(n, n)_.
-        H_extended: Hamiltonian on the extended space.
-        Ls_extended: Jump operators on the extended space.
-        inner: Flat extended-space indices of the truncated space.
-        outer: Flat extended-space indices of its complement.
+        blocks: Blocks of the extended-space operators, see `residual_blocks()`.
 
     Returns:
         The trace norm of the residual, a non-negative scalar.
     """
-    inner_rows, inner_columns = inner[:, None], inner[None, :]
-    outer_rows = outer[:, None]
-
-    hamiltonian = H_extended(t).to_jax()
     # -i H rho, restricted to the rows that leak out of the truncated space
-    border = -1j * (hamiltonian[outer_rows, inner_columns] @ rho)
+    border = -1j * (_at(blocks.hamiltonian_qp, t) @ rho)
 
-    # per jump operator: the QP block, the PP block, the QP block of L^dag L, and
-    # `L_QP rho`, which is both a range generator and the factor of every product below
-    blocks = []
-    for jump_operator in Ls_extended:
-        jump = jump_operator(t).to_jax()
-        jump_qp = jump[outer_rows, inner_columns]
-        jump_pp = jump[inner_rows, inner_columns]
-        # (L^dag L)_QP = L[:, Q]^dag L[:, P], never forming the full product
-        dagger_product_qp = jump[:, outer].conj().mT @ jump[:, inner]
-        blocks.append((jump_qp, jump_pp, dagger_product_qp, jump_qp @ rho))
+    # per jump operator: the QP block, and `L_QP rho`, which is both a range generator
+    # and the factor of every product below
+    leaks = []
+    for jump in blocks.jumps:
+        jump_qp = _at(jump.qp, t)
+        leaked = jump_qp @ rho
+        border += leaked @ _at(jump.pp, t).conj().mT - 0.5 * (
+            _at(jump.dagger_product_qp, t) @ rho
+        )
+        leaks.append((jump_qp, leaked))
 
-    for _, jump_pp, dagger_product_qp, leaked in blocks:
-        border += leaked @ jump_pp.conj().mT - 0.5 * (dagger_product_qp @ rho)
-
-    corner = jnp.zeros((outer.size, outer.size), dtype=border.dtype)
-    for jump_qp, _, _, leaked in blocks:
+    outer_size, inner_size = border.shape[-2], border.shape[-1]
+    corner = jnp.zeros((outer_size, outer_size), dtype=border.dtype)
+    for jump_qp, leaked in leaks:
         corner += leaked @ jump_qp.conj().mT
 
-    number_of_generators = outer.size * (1 + 2 * len(blocks))
-    if number_of_generators < inner.size:
+    number_of_generators = outer_size * (1 + 2 * len(leaks))
+    if number_of_generators < inner_size:
         # compress the truncated-space block onto the range of the residual
         generators = [border.conj().mT]
-        for jump_qp, _, _, leaked in blocks:
+        for jump_qp, leaked in leaks:
             generators += [jump_qp.conj().mT, leaked.conj().mT]
         # the generators are rank deficient whenever a `QP` block vanishes (any purely
         # lowering jump operator) or `rho` is close to pure, and the backward pass of a
@@ -500,11 +566,11 @@ def truncation_error_rate(
         border = border @ basis
         # basis^dag M rho basis = sum_i (L_QP basis)^dag (L_QP rho basis)
         weighted = jnp.zeros((basis.shape[-1],) * 2, dtype=border.dtype)
-        for jump_qp, _, _, leaked in blocks:
+        for jump_qp, leaked in leaks:
             weighted += (jump_qp @ basis).conj().mT @ (leaked @ basis)
     else:
         weighted = jnp.zeros_like(rho)
-        for jump_qp, _, _, leaked in blocks:
+        for jump_qp, leaked in leaks:
             weighted += jump_qp.conj().mT @ leaked
 
     # R_PP = -1/2 (M rho + rho M) and rho M = (M rho)^dag for hermitian rho and M
@@ -520,6 +586,23 @@ def truncation_error_rate(
     residual = 0.5 * (residual + residual.conj().mT)
     # the residual is hermitian: its trace norm is the sum of its absolute eigenvalues
     return jnp.abs(jnp.linalg.eigvalsh(residual)).sum(-1)
+
+
+def truncation_error_rate(
+    t: RealScalarLike,
+    rho: Array,
+    H_extended: TimeQArray,
+    Ls_extended: list[TimeQArray],
+    inner: Array,
+    outer: Array,
+) -> Array:
+    r"""Compute the estimator's integrand from the extended-space operators.
+
+    A solve builds the blocks once with `residual_blocks()` and calls
+    `truncation_error_rate_of_blocks()` at every step; this is the one-shot version.
+    """
+    blocks = residual_blocks(H_extended, Ls_extended, inner, outer)
+    return truncation_error_rate_of_blocks(t, rho, blocks)
 
 
 def accumulate_truncation_error(step_ts: Array, rates: Array, ts: Array) -> Array:

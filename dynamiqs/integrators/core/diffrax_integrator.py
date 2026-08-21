@@ -36,8 +36,12 @@ from ...result import (
     TruncationErrorSolveSaved,
 )
 from ...time_qarray import TimeQArray
-from ...truncation_error import accumulate_truncation_error, inner_outer_indices
-from ...truncation_error import truncation_error_rate as truncation_error_rate_of
+from ...truncation_error import (
+    accumulate_truncation_error,
+    inner_outer_indices,
+    residual_blocks,
+    truncation_error_rate_of_blocks,
+)
 from ...utils.operators import zeros_like
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
@@ -228,7 +232,8 @@ def _sum_qarrays(terms: list[QArray], like: QArray) -> QArray:
     """
     if len(terms) == 0:
         return zeros_like(like)
-    return sum(terms)
+    first, *rest = terms
+    return sum(rest, start=first)
 
 
 def call_diffeqsolve(
@@ -375,8 +380,11 @@ class MESolveDiffraxIntegrator(
             return None
 
         inner, outer = inner_outer_indices(self.y0.dims, H_extended.dims)
-        return lambda t, y, args: truncation_error_rate_of(  # noqa: ARG005
-            t, y.to_jax(), H_extended, self.Ls_extended, inner, outer
+        # the operator blocks the rate needs are constant, so they are built once here
+        # rather than at every step
+        blocks = residual_blocks(H_extended, self.Ls_extended, inner, outer)
+        return lambda t, y, args: truncation_error_rate_of_blocks(  # noqa: ARG005
+            t, y.to_jax(), blocks
         )
 
     def postprocess_steps(self, saved: Saved, ts: Array, values: PyTree) -> Saved:
