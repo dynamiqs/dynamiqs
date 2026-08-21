@@ -420,6 +420,28 @@ def test_estimate_supports_time_dependent_operators(kind):
     assert xi[-1] > 0.0
 
 
+@pytest.mark.parametrize('dim', [3, 6])  # the dense path, then the compressed one
+def test_estimate_is_differentiable(dim):
+    # the residual is low rank by construction, so the range generators of its
+    # compressed form are rank deficient and must not be differentiated through
+    tsave = jnp.linspace(0.0, 1.0, 5)
+
+    def final_estimate(drive):
+        a = dq.destroy(dim)
+        return dq.mesolve(
+            drive * (a + a.dag()),
+            [a],
+            dq.fock(dim, 0),
+            tsave,
+            method=dq.method.Rouchon1(dt=1e-2),  # fixed steps, for a clean comparison
+            truncation_error=True,
+        ).truncation_error[-1]
+
+    grad = jax.grad(final_estimate)(0.8)
+    finite_difference = (final_estimate(0.8 + 1e-5) - final_estimate(0.8 - 1e-5)) / 2e-5
+    assert np.allclose(grad, finite_difference, rtol=1e-5)
+
+
 def test_estimate_respects_the_clipping_of_a_summed_operator():
     # the clipping of a sum lives on the sum itself, and must survive the extension
     dim, tsave = 8, jnp.linspace(0.0, 1.0, 11)

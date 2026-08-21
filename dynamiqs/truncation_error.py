@@ -23,6 +23,7 @@ from dataclasses import replace
 from functools import lru_cache
 
 import equinox as eqx
+import jax
 import jax.numpy as jnp
 import numpy as np
 from diffrax._custom_types import RealScalarLike
@@ -428,7 +429,14 @@ def truncation_error_rate(
         generators = [border.conj().mT]
         for jump_qp, _, _, leaked in blocks:
             generators += [jump_qp.conj().mT, leaked.conj().mT]
+        # the generators are rank deficient whenever a `QP` block vanishes (any purely
+        # lowering jump operator) or `rho` is close to pure, and the backward pass of a
+        # rank-deficient `qr` is `nan`. The basis is only a frame in which the residual's
+        # spectrum is read off, so freezing it leaves the value untouched and yields the
+        # same subgradient as the dense branch (differentiating |eigenvalues| through a
+        # fixed frame), instead of poisoning the whole gradient.
         basis, _ = jnp.linalg.qr(jnp.concatenate(generators, axis=-1))
+        basis = jax.lax.stop_gradient(basis)
         border = border @ basis
         # basis^dag M rho basis = sum_i (L_QP basis)^dag (L_QP rho basis)
         weighted = jnp.zeros((basis.shape[-1],) * 2, dtype=border.dtype)
