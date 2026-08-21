@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import operator
 import warnings
 from collections.abc import Callable
 from typing import cast
@@ -434,17 +435,23 @@ def _check_truncation_error(
     """Resolve `truncation_error` to the polynomial degree to assume, or `None`."""
     if truncation_error is None or truncation_error is False:
         return None
-    if not isinstance(truncation_error, (bool, int)):
-        raise TypeError(
-            f'Argument `truncation_error` must be a bool or an int (the assumed total'
-            f' polynomial degree of the operators), but is of type'
-            f' {type(truncation_error)}.'
-        )
-    if not isinstance(truncation_error, bool) and truncation_error < 0:
-        raise ValueError(
-            f'Argument `truncation_error` must be a non-negative degree, but is'
-            f' {truncation_error}.'
-        )
+
+    degree = None
+    if truncation_error is not True:
+        try:
+            # `operator.index` also accepts integers of another flavour, such as `np.int`
+            degree = operator.index(truncation_error)
+        except TypeError:
+            raise TypeError(
+                f'Argument `truncation_error` must be a bool or an int (the assumed'
+                f' total polynomial degree of the operators), but is of type'
+                f' {type(truncation_error)}.'
+            ) from None
+        if degree < 0:
+            raise ValueError(
+                f'Argument `truncation_error` must be a non-negative degree, but is'
+                f' {truncation_error}.'
+            )
 
     # every other method overrides `DiffraxIntegrator.run()`, where the estimate is
     # accumulated. `Rouchon` only overrides `terms`, so it is supported.
@@ -474,9 +481,7 @@ def _check_truncation_error(
             ' the unvectorized density matrix.'
         )
 
-    if isinstance(truncation_error, bool):
-        return assumed_degree(H, Ls)
-    return truncation_error
+    return assumed_degree(H, Ls) if degree is None else degree
 
 
 def _check_mesolve_args(

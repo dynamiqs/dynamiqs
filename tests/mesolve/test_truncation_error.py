@@ -532,6 +532,17 @@ def test_estimate_is_rejected_for_unsupported_methods():
         )
     with pytest.raises(TypeError, match='must be a bool or an int'):
         dq.mesolve(H, Ls, dq.fock(dim, 0), tsave, truncation_error='2')
+    with pytest.raises(ValueError, match='non-negative degree'):
+        dq.mesolve(H, Ls, dq.fock(dim, 0), tsave, truncation_error=-2)
+
+
+def test_estimate_accepts_a_numpy_degree():
+    dim, tsave = 6, jnp.linspace(0.0, 1.0, 3)
+    H, Ls = driven_oscillator(dim)
+    result = dq.mesolve(
+        H, Ls, dq.fock(dim, 0), tsave, truncation_error=np.int64(4)
+    )
+    assert result.truncation_error[-1] > 0.0
 
 
 def test_estimate_is_rejected_for_operators_it_cannot_derive():
