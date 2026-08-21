@@ -261,6 +261,10 @@ def extension_buffer(
     This is tight on every example of the paper: 1 for $H=u(t)(a+a^\dag)$, 2 for
     $L=a^2-\alpha^2$, 4 for the squeezed cat, and $(2, 1)$ for the two-mode
     $H=(a^2-\alpha^2)b^\dag+h.c.$ with $\mathcal{D}_b$.
+
+    A mode of dimension 2 is taken to be a genuine two-level system rather than a
+    truncated oscillator, so it gets no buffer: it cannot leak, and $\sigma_-$ is
+    indistinguishable from `dq.destroy(2)` on it anyway.
     """
     named = _named_operators(H, Ls)
     for argname, operator in named:
@@ -279,7 +283,10 @@ def extension_buffer(
             max(levels, high - low)
             for levels, low, high in zip(buffer, lowest, highest, strict=True)
         ]
-    return tuple(buffer)
+    return tuple(
+        0 if dim == 2 else levels
+        for dim, levels in zip(H.dims, buffer, strict=True)
+    )
 
 
 def assumed_degree(H: TimeQArray, Ls: list[TimeQArray]) -> int:

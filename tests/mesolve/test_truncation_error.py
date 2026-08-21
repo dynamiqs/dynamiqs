@@ -277,6 +277,46 @@ def test_buffer_matches_the_paper(name, buffer):
     assert extension_buffer(H, Ls) == buffer
 
 
+def test_two_level_modes_are_exact():
+    # a genuine qubit cannot leak, so it gets no buffer and no estimate of its own
+    nq, no, tsave = 2, 8, jnp.linspace(0.0, 1.0, 6)
+    sigmam = dq.tensor(dq.sigmam(), dq.eye(no))
+    a = dq.tensor(dq.eye(nq), dq.destroy(no))
+    # Jaynes-Cummings, with a drive to actually populate the oscillator
+    H = 0.5 * (sigmam.dag() @ a + sigmam @ a.dag()) + 1.0 * (a + a.dag())
+    assert extension_buffer(astimeqarray(H), [astimeqarray(a)], 4) == (0, 1)
+
+    rho0 = dq.tensor(dq.fock(nq, 0), dq.fock(no, 0))
+    xi = dq.mesolve(H, [a], rho0, tsave, truncation_error=True).truncation_error
+    assert bool(jnp.all(jnp.diff(xi) >= -1e-12))
+
+    # and it bounds the error against a much larger oscillator
+    big = 30
+    sigmam_big = dq.tensor(dq.sigmam(), dq.eye(big))
+    a_big = dq.tensor(dq.eye(nq), dq.destroy(big))
+    H_big = 0.5 * (sigmam_big.dag() @ a_big + sigmam_big @ a_big.dag()) + 1.0 * (
+        a_big + a_big.dag()
+    )
+    reference = dq.mesolve(
+        H_big, [a_big], dq.tensor(dq.fock(nq, 0), dq.fock(big, 0)), tsave
+    )
+    difference = (
+        pad(
+            dq.mesolve(H, [a], rho0, tsave).states.to_jax()[-1],
+            (nq, no),
+            (nq, big),
+        )
+        - reference.states.to_jax()[-1]
+    )
+    assert dq.norm(difference) <= xi[-1] + 1e-8
+
+    # a qubit on its own has nothing to truncate
+    qubit = dq.mesolve(
+        dq.sigmax(), [dq.sigmam()], dq.fock(2, 0), tsave, truncation_error=True
+    )
+    assert np.allclose(qubit.truncation_error, 0.0)
+
+
 def test_derived_buffer_is_large_enough():
     # the derived buffer must saturate the rate: enlarging the extended space past it
     # cannot change the residual

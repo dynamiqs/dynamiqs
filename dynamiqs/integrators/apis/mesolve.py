@@ -197,9 +197,10 @@ def mesolve(
             estimate needs `H` and `jump_ops` on a Fock space enlarged by a few levels
             per mode; both the enlargement and the operators on it are derived from the
             given operators, which must be normal-ordered polynomials in the ladder
-            operators with layout `dq.dia`. Pass an integer instead of `True` to declare
-            their total polynomial degree, needed only above degree
-            $4$ (e.g. `truncation_error=6` for $(a^\dag)^3a^3$). Only supported for
+            operators with layout `dq.dia` (modes of dimension $2$ are taken to be exact
+            two-level systems, and are not enlarged). Pass an integer instead of `True`
+            to declare their total polynomial degree, needed only above degree $4$
+            (e.g. `truncation_error=6` for $(a^\dag)^3a^3$). Only supported for
             Diffrax-based ODE methods and `vectorized=False`. Defaults to `None`.
 
     Examples:
