@@ -314,11 +314,14 @@ def extend_timeqarray(
 ) -> TimeQArray:
     """Extend a timeqarray to a larger Fock space, leaving its time dependence alone."""
     if isinstance(timeqarray, SummedTimeQArray):
-        return SummedTimeQArray(
-            [
+        # `replace` rather than a fresh `SummedTimeQArray`, to carry over the sum's own
+        # `tstart`/`tend`, which its `__call__` applies on top of the terms
+        return replace(
+            timeqarray,
+            timeqarrays=[
                 extend_timeqarray(term, extended_dims, degree, argname)
                 for term in timeqarray.timeqarrays
-            ]
+            ],
         )
     qarray = extend_qarray(
         _leaf_qarrays(timeqarray, argname)[0], extended_dims, degree, argname

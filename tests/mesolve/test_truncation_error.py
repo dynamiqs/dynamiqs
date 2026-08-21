@@ -410,6 +410,23 @@ def test_estimate_supports_time_dependent_operators(kind):
     assert xi[-1] > 0.0
 
 
+def test_estimate_respects_the_clipping_of_a_summed_operator():
+    # the clipping of a sum lives on the sum itself, and must survive the extension
+    dim, tsave = 8, jnp.linspace(0.0, 1.0, 11)
+    a = dq.destroy(dim)
+    H = (dq.modulated(lambda t: 2.0 * jnp.cos(t), a + a.dag()) + a.dag() @ a).clip(
+        0.0, 0.2
+    )
+    xi = dq.mesolve(
+        H, [a], dq.fock(dim, 0), tsave, truncation_error=True
+    ).truncation_error
+
+    # `H` is null past `tend` and `L = a` cannot leak out of the truncature, so the
+    # estimate grows while the drive is on and is constant afterwards
+    assert xi[3] > 0.0
+    assert np.allclose(xi[3:], xi[3], rtol=1e-6)
+
+
 def test_estimate_is_rejected_for_unsupported_methods():
     dim, tsave = 4, jnp.linspace(0.0, 1.0, 3)
     H, Ls = driven_oscillator(dim)
