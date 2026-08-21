@@ -27,7 +27,13 @@ from ...method import (
 )
 from ...options import Options
 from ...progress_meter import AbstractProgressMeter
-from ...result import MESolveResult, Result, SolveSaved, TruncationErrorSolveSaved
+from ...result import (
+    MESolveResult,
+    Result,
+    Saved,
+    SolveSaved,
+    TruncationErrorSolveSaved,
+)
 from ...time_qarray import TimeQArray
 from ...truncation_error import accumulate_truncation_error, inner_outer_indices
 from ...truncation_error import truncation_error_rate as truncation_error_rate_of
@@ -167,9 +173,18 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                 ).to_diffrax(),
             )
 
-    def truncation_error_rate(self) -> Callable | None:
-        """Rate of the a posteriori truncation error estimate, if it was requested."""
+    def save_at_steps(self) -> Callable | None:
+        """Quantity to save at every accepted step, if the integrator wants one.
+
+        Saving a quantity rather than augmenting the ODE state with it keeps it out of
+        the stepsize controller's error norm. What is saved is folded into the result by
+        `postprocess_steps()`.
+        """
         return None
+
+    def postprocess_steps(self, saved: Saved, ts: Array, values: PyTree) -> Saved:
+        """Fold what `save_at_steps()` accumulated, at times `ts`, into `saved`."""
+        raise NotImplementedError
 
     def run(self) -> Result:
         # === prepare diffrax arguments
@@ -178,13 +193,9 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
         subs = [subsaveat_a, subsaveat_b]
 
-        # The truncation error estimate is accumulated from its rate, evaluated once per
-        # accepted step. Saving it rather than augmenting the ODE state keeps it out of
-        # the stepsize controller's error norm, and works for every method inheriting
-        # this `run()` — including Rouchon, which only overrides `terms`.
-        rate = self.truncation_error_rate()
-        if rate is not None:
-            subs.append(dx.SubSaveAt(t0=True, steps=True, fn=rate))
+        step_fn = self.save_at_steps()
+        if step_fn is not None:
+            subs.append(dx.SubSaveAt(t0=True, steps=True, fn=step_fn))
 
         saveat = dx.SaveAt(subs=subs)
 
@@ -194,15 +205,8 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         # === collect and return results
         ys = cast(tuple, solution.ys)
         saved = self.postprocess_saved(ys[0], ys[1])
-        if rate is not None:
-            saved = TruncationErrorSolveSaved(
-                saved.ysave,
-                saved.extra,
-                saved.Esave,
-                accumulate_truncation_error(
-                    cast(tuple, solution.ts)[2], ys[2], self.ts
-                ),
-            )
+        if step_fn is not None:
+            saved = self.postprocess_steps(saved, cast(tuple, solution.ts)[2], ys[2])
         return self.result(saved, infos=self.infos(solution.stats))
 
     def infos(self, stats: dict[str, Array]) -> PyTree:
@@ -362,7 +366,10 @@ class MESolveDiffraxIntegrator(
     H_extended: TimeQArray | None = None
     Ls_extended: list[TimeQArray] = eqx.field(default_factory=list)
 
-    def truncation_error_rate(self) -> Callable | None:
+    def save_at_steps(self) -> Callable | None:
+        # the a posteriori truncation error estimate is accumulated from its rate,
+        # evaluated once per accepted step. This works for every method inheriting
+        # `DiffraxIntegrator.run()` — including Rouchon, which only overrides `terms`.
         H_extended = self.H_extended
         if H_extended is None:
             return None
@@ -370,6 +377,15 @@ class MESolveDiffraxIntegrator(
         inner, outer = inner_outer_indices(self.y0.dims, H_extended.dims)
         return lambda t, y, args: truncation_error_rate_of(  # noqa: ARG005
             t, y.to_jax(), H_extended, self.Ls_extended, inner, outer
+        )
+
+    def postprocess_steps(self, saved: Saved, ts: Array, values: PyTree) -> Saved:
+        saved = cast(SolveSaved, saved)
+        return TruncationErrorSolveSaved(
+            ysave=saved.ysave,
+            extra=saved.extra,
+            Esave=saved.Esave,
+            truncation_error=accumulate_truncation_error(ts, values, self.ts),
         )
 
     @property
