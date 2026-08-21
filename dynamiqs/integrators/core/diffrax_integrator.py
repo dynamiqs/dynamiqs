@@ -90,13 +90,18 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         else:
             method = cast(_DEAdaptiveStep, self.method)
 
-            return dx.PIDController(
+            controller = dx.PIDController(
                 rtol=method.rtol,
                 atol=method.atol,
                 safety=method.safety_factor,
                 factormin=method.min_factor,
                 factormax=method.max_factor,
             )
+            if len(self.discontinuity_ts) == 0:
+                return controller
+            # step exactly onto the operators' discontinuities: integrating across one
+            # silently costs accuracy, and the error estimate cannot see it
+            return dx.ClipStepSizeController(controller, jump_ts=self.discontinuity_ts)
 
     @property
     def dt0(self) -> float | None:
