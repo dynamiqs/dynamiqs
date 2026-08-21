@@ -27,7 +27,6 @@ from ...method import (
 )
 from ...options import Options
 from ...progress_meter import AbstractProgressMeter
-from ...qarrays.qarray import QArray
 from ...result import (
     MESolveResult,
     Result,
@@ -42,8 +41,8 @@ from ...truncation_error import (
     residual_blocks,
     truncation_error_rate_of_blocks,
 )
-from ...utils.operators import zeros_like
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
+from .._utils import sum_qarrays
 from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
@@ -222,18 +221,6 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                 stats['num_accepted_steps'],
                 stats['num_rejected_steps'],
             )
-
-
-def _sum_qarrays(terms: list[QArray], like: QArray) -> QArray:
-    """Sum of qarrays, staying a qarray when there is no term to sum.
-
-    `sum([])` is the integer `0`, which no longer combines with a qarray, so an empty
-    `jump_ops` would otherwise break the Lindblad vector field.
-    """
-    if len(terms) == 0:
-        return zeros_like(like)
-    first, *rest = terms
-    return sum(rest, start=first)
 
 
 def call_diffeqsolve(
@@ -420,15 +407,15 @@ class MESolveDiffraxIntegrator(
 
         def vector_field_unvec_standard(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
-            half_LdL = 0.5 * _sum_qarrays([_L.dag() @ _L for _L in L], H)
+            half_LdL = 0.5 * sum_qarrays([_L.dag() @ _L for _L in L], H)
             nojump_term = (-1j * H - half_LdL) @ y + y @ (1j * H - half_LdL)
-            jump_term = _sum_qarrays([_L @ y @ _L.dag() for _L in L], y)
+            jump_term = sum_qarrays([_L @ y @ _L.dag() for _L in L], y)
             return nojump_term + jump_term
 
         def vector_field_unvec_hermitian(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
-            Hnh = -1j * H - 0.5 * _sum_qarrays([_L.dag() @ _L for _L in L], H)
-            tmp = Hnh @ y + 0.5 * _sum_qarrays([_L @ y @ _L.dag() for _L in L], y)
+            Hnh = -1j * H - 0.5 * sum_qarrays([_L.dag() @ _L for _L in L], H)
+            tmp = Hnh @ y + 0.5 * sum_qarrays([_L @ y @ _L.dag() for _L in L], y)
             return tmp + tmp.dag()
 
         def vector_field_vec(t, y, _):  # noqa: ANN001, ANN202
