@@ -45,27 +45,16 @@ def restrict(qarray, dims, restricted_dims):
     return dq.asqarray(matrix, dims=restricted_dims, layout=dq.dia)
 
 
-def lindbladian(H, Ls, rho):
-    out = -1j * (H @ rho - rho @ H)
-    for L in Ls:
-        Ldag = L.conj().T
-        out += L @ rho @ Ldag - 0.5 * (Ldag @ L @ rho + rho @ Ldag @ L)
-    return out
-
-
 def dense_rate(rho, H, Ls, H_extended, Ls_extended, dims, extended_dims):
     """Brute-force reference: full residual on the extended space, dense trace norm."""
-    residual = lindbladian(
+    residual = dq.lindbladian(
         H_extended, Ls_extended, pad(rho, dims, extended_dims)
-    ) - pad(lindbladian(H, Ls, rho), dims, extended_dims)
-    return jnp.abs(jnp.linalg.eigvalsh(residual)).sum(-1)
+    ) - pad(dq.lindbladian(H, Ls, rho).to_jax(), dims, extended_dims)
+    return dq.norm(residual)
 
 
 def random_density_matrix(n, seed):
-    rng = np.random.default_rng(seed)
-    matrix = rng.normal(size=(n, n)) + 1j * rng.normal(size=(n, n))
-    rho = matrix @ matrix.conj().T
-    return jnp.asarray(rho / np.trace(rho))
+    return dq.random.dm(jax.random.PRNGKey(seed), n).to_jax()
 
 
 def single_mode_model(jump_kind, dim):
@@ -387,8 +376,7 @@ def test_estimate_is_monotone_and_bounds_the_true_error():
         pad(result.states.to_jax()[-1], (dim,), (reference_dim,))
         - reference.states.to_jax()[-1]
     )
-    true_error = jnp.abs(jnp.linalg.eigvalsh(difference)).sum()
-    assert true_error <= xi[-1] + 1e-8
+    assert dq.norm(difference) <= xi[-1] + 1e-8
 
 
 def test_estimate_decreases_with_the_truncature():
