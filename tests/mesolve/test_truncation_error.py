@@ -301,11 +301,7 @@ def test_two_level_modes_are_exact():
         H_big, [a_big], dq.tensor(dq.fock(nq, 0), dq.fock(big, 0)), tsave
     )
     difference = (
-        pad(
-            dq.mesolve(H, [a], rho0, tsave).states.to_jax()[-1],
-            (nq, no),
-            (nq, big),
-        )
+        pad(dq.mesolve(H, [a], rho0, tsave).states.to_jax()[-1], (nq, no), (nq, big))
         - reference.states.to_jax()[-1]
     )
     assert dq.norm(difference) <= xi[-1] + 1e-8
@@ -539,9 +535,7 @@ def test_estimate_is_rejected_for_unsupported_methods():
 def test_estimate_accepts_a_numpy_degree():
     dim, tsave = 6, jnp.linspace(0.0, 1.0, 3)
     H, Ls = driven_oscillator(dim)
-    result = dq.mesolve(
-        H, Ls, dq.fock(dim, 0), tsave, truncation_error=np.int64(4)
-    )
+    result = dq.mesolve(H, Ls, dq.fock(dim, 0), tsave, truncation_error=np.int64(4))
     assert result.truncation_error[-1] > 0.0
 
 

@@ -27,6 +27,7 @@ from ...method import (
 )
 from ...options import Options
 from ...progress_meter import AbstractProgressMeter
+from ...qarrays.qarray import QArray
 from ...result import (
     MESolveResult,
     Result,
@@ -37,7 +38,6 @@ from ...result import (
 from ...time_qarray import TimeQArray
 from ...truncation_error import accumulate_truncation_error, inner_outer_indices
 from ...truncation_error import truncation_error_rate as truncation_error_rate_of
-from ...qarrays.qarray import QArray
 from ...utils.operators import zeros_like
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator

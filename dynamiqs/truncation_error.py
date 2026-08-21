@@ -156,9 +156,9 @@ def offset_digits(
 
     A flat offset is `sum_k shift_k * stride_k`, which the modes after the first share
     modulo their dimension. With `degree` given, the split is the only one a polynomial
-    of that degree can make, and an offset that admits several of them is rejected rather
-    than guessed. Without it — when the degree is itself being derived from the offsets —
-    the shifts are the balanced mixed-radix digits, correct as long as
+    of that degree can make, and an offset admitting several of them is rejected rather
+    than guessed. Without it — when the degree is itself derived from the offsets — the
+    shifts are the balanced mixed-radix digits, correct as long as
     `|shift_k| <= dims[k] // 2`.
     """
     if degree is None:
@@ -183,9 +183,9 @@ def offset_digits(
             f' `truncation_error` argument of `dq.mesolve()`.'
         )
     raise ValueError(
-        f'The truncation error estimate cannot attribute the diagonal of offset {offset}'
-        f' of an operator with dims={dims} unambiguously: a polynomial of degree'
-        f' {degree} can put it on the per-mode shifts {candidates[0]} or'
+        f'The truncation error estimate cannot attribute the diagonal of offset'
+        f' {offset} of an operator with dims={dims} unambiguously: a polynomial of'
+        f' degree {degree} can put it on the per-mode shifts {candidates[0]} or'
         f' {candidates[1]}. Pass a smaller degree to the `truncation_error` argument of'
         f' `dq.mesolve()`, or increase the truncature of the modes after the first.'
     )
@@ -284,8 +284,7 @@ def extension_buffer(
             for levels, low, high in zip(buffer, lowest, highest, strict=True)
         ]
     return tuple(
-        0 if dim == 2 else levels
-        for dim, levels in zip(H.dims, buffer, strict=True)
+        0 if dim == 2 else levels for dim, levels in zip(H.dims, buffer, strict=True)
     )
 
 
@@ -492,8 +491,8 @@ def truncation_error_rate(
             generators += [jump_qp.conj().mT, leaked.conj().mT]
         # the generators are rank deficient whenever a `QP` block vanishes (any purely
         # lowering jump operator) or `rho` is close to pure, and the backward pass of a
-        # rank-deficient `qr` is `nan`. The basis is only a frame in which the residual's
-        # spectrum is read off, so freezing it leaves the value untouched and yields the
+        # rank-deficient `qr` is `nan`. The basis is only a frame in which to read the
+        # residual's spectrum, so freezing it leaves the value untouched and yields the
         # same subgradient as the dense branch (differentiating |eigenvalues| through a
         # fixed frame), instead of poisoning the whole gradient.
         basis, _ = jnp.linalg.qr(jnp.concatenate(generators, axis=-1))
