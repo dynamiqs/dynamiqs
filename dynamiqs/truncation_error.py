@@ -123,23 +123,72 @@ def _mode_map(
     return extended @ fit, truncated @ fit
 
 
-def offset_digits(offset: int, dims: tuple[int, ...]) -> tuple[int, ...]:
-    """Per-mode shifts of a flat `dia` offset, as balanced mixed-radix digits.
+def _candidate_digits(
+    offset: int, dims: tuple[int, ...], degree: int
+) -> list[tuple[int, ...]]:
+    """Every per-mode split of a flat `dia` offset a polynomial of `degree` can make.
 
-    A flat offset is `sum_k shift_k * stride_k`. The slowest mode has no wrap-around
-    above it so its shift is exact; the others are recovered as balanced residues, which
-    is the right split as long as `|shift_k| <= dims[k] // 2`. A wrong split lands the
-    diagonal on monomials it cannot be fitted against, which `extend_qarray()` reports.
+    A monomial shifting mode `k` by `shift_k` is at least of degree `|shift_k|` in that
+    mode, so a total degree of `degree` bounds `sum_k |shift_k|`; and a shift beyond
+    `dims[k] - 1` falls outside that mode's matrix.
     """
-    digits = []
-    for dim in reversed(dims[1:]):
-        residue = offset % dim
-        if residue > dim // 2:
-            residue -= dim
-        digits.append(residue)
-        offset = (offset - residue) // dim
-    digits.append(offset)
-    return tuple(reversed(digits))
+    *slower_dims, dim = dims
+    bound = min(degree, dim - 1)
+    if not slower_dims:
+        return [(offset,)] if abs(offset) <= bound else []
+
+    candidates = []
+    residue = offset % dim
+    for shift in (residue, residue - dim):
+        if abs(shift) > bound:
+            continue
+        slower = _candidate_digits(
+            (offset - shift) // dim, tuple(slower_dims), degree - abs(shift)
+        )
+        candidates += [(*digits, shift) for digits in slower]
+    return candidates
+
+
+def offset_digits(
+    offset: int, dims: tuple[int, ...], degree: int | None = None
+) -> tuple[int, ...]:
+    """Per-mode shifts of a flat `dia` offset.
+
+    A flat offset is `sum_k shift_k * stride_k`, which the modes after the first share
+    modulo their dimension. With `degree` given, the split is the only one a polynomial
+    of that degree can make, and an offset that admits several of them is rejected rather
+    than guessed. Without it — when the degree is itself being derived from the offsets —
+    the shifts are the balanced mixed-radix digits, correct as long as
+    `|shift_k| <= dims[k] // 2`.
+    """
+    if degree is None:
+        digits = []
+        for dim in reversed(dims[1:]):
+            residue = offset % dim
+            if residue > dim // 2:
+                residue -= dim
+            digits.append(residue)
+            offset = (offset - residue) // dim
+        digits.append(offset)
+        return tuple(reversed(digits))
+
+    candidates = _candidate_digits(offset, dims, degree)
+    if len(candidates) == 1:
+        return candidates[0]
+    if len(candidates) == 0:
+        raise ValueError(
+            f'The truncation error estimate cannot attribute the diagonal of offset'
+            f' {offset} of an operator with dims={dims} to any per-mode shifts of a'
+            f' polynomial of degree {degree}. Pass a larger degree to the'
+            f' `truncation_error` argument of `dq.mesolve()`.'
+        )
+    raise ValueError(
+        f'The truncation error estimate cannot attribute the diagonal of offset {offset}'
+        f' of an operator with dims={dims} unambiguously: a polynomial of degree'
+        f' {degree} can put it on the per-mode shifts {candidates[0]} or'
+        f' {candidates[1]}. Pass a smaller degree to the `truncation_error` argument of'
+        f' `dq.mesolve()`, or increase the truncature of the modes after the first.'
+    )
 
 
 def _leaf_qarrays(timeqarray: TimeQArray, argname: str) -> list[QArray]:
@@ -176,13 +225,15 @@ def _dia_data(qarray: QArray, argname: str) -> SparseDIADataArray:
     return data
 
 
-def _digit_range(timeqarray: TimeQArray, argname: str) -> tuple[list[int], list[int]]:
+def _digit_range(
+    timeqarray: TimeQArray, argname: str, degree: int | None = None
+) -> tuple[list[int], list[int]]:
     """Per-mode smallest and largest offset shift over every diagonal of an operator."""
     dims = timeqarray.dims
     lowest, highest = [0] * len(dims), [0] * len(dims)
     for qarray in _leaf_qarrays(timeqarray, argname):
         for offset in _dia_data(qarray, argname).offsets:
-            for mode, shift in enumerate(offset_digits(offset, dims)):
+            for mode, shift in enumerate(offset_digits(offset, dims, degree)):
                 lowest[mode] = min(lowest[mode], shift)
                 highest[mode] = max(highest[mode], shift)
     return lowest, highest
@@ -194,7 +245,9 @@ def _named_operators(
     return [('H', H), *[(f'jump_ops[{i}]', L) for i, L in enumerate(Ls)]]
 
 
-def extension_buffer(H: TimeQArray, Ls: list[TimeQArray]) -> tuple[int, ...]:
+def extension_buffer(
+    H: TimeQArray, Ls: list[TimeQArray], degree: int | None = None
+) -> tuple[int, ...]:
     r"""Per-mode number of Fock levels the residual can reach past the truncature.
 
     Writing `P` for the truncated space, `Q` for its complement and `r+`/`r-` for the
@@ -209,7 +262,8 @@ def extension_buffer(H: TimeQArray, Ls: list[TimeQArray]) -> tuple[int, ...]:
     $L=a^2-\alpha^2$, 4 for the squeezed cat, and $(2, 1)$ for the two-mode
     $H=(a^2-\alpha^2)b^\dag+h.c.$ with $\mathcal{D}_b$.
     """
-    for argname, operator in _named_operators(H, Ls):
+    named = _named_operators(H, Ls)
+    for argname, operator in named:
         if operator.dims != H.dims:
             raise ValueError(
                 f'Argument `{argname}` must have the same Hilbert space dimensions as'
@@ -217,10 +271,10 @@ def extension_buffer(H: TimeQArray, Ls: list[TimeQArray]) -> tuple[int, ...]:
                 f' {operator.dims} and {H.dims}.'
             )
 
-    lowest, highest = _digit_range(H, 'H')
+    lowest, highest = _digit_range(H, 'H', degree)
     buffer = [max(-low, high) for low, high in zip(lowest, highest, strict=True)]
-    for i, L in enumerate(Ls):
-        lowest, highest = _digit_range(L, f'jump_ops[{i}]')
+    for argname, L in named[1:]:
+        lowest, highest = _digit_range(L, argname, degree)
         buffer = [
             max(levels, high - low)
             for levels, low, high in zip(buffer, lowest, highest, strict=True)
@@ -267,7 +321,7 @@ def extend_qarray(
     extended_diags = {}
     mismatch = jnp.zeros(())
     for index, offset in enumerate(data.offsets):
-        digits = offset_digits(offset, dims)
+        digits = offset_digits(offset, dims, degree)
         diag = diags[..., index, :].reshape(*batch_shape, *dims)
         block, projected = diag, diag
         for mode in range(nmodes):

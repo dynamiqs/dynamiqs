@@ -224,6 +224,19 @@ def test_offset_digits_splits_a_flat_offset_per_mode():
     assert offset_digits(1, (16, 8)) == (0, 1)
 
 
+def test_offset_digits_rejects_an_ambiguous_split():
+    # on a 4-level trailing mode the flat offset 3 is shared by `b @ b @ b`, of shifts
+    # (0, 3), and `a @ b.dag()`, of shifts (1, -1)
+    assert offset_digits(3, (8, 4)) == (1, -1)  # what the balanced digits guess
+    with pytest.raises(ValueError, match='unambiguously'):
+        offset_digits(3, (8, 4), 4)
+    # a smaller declared degree rules the wrap-around out
+    assert offset_digits(3, (8, 4), 2) == (1, -1)
+    # the paper's two-mode model is unambiguous at the default degree
+    assert offset_digits(15, (16, 8), 4) == (2, -1)
+    assert offset_digits(1, (16, 8), 4) == (0, 1)
+
+
 @pytest.mark.parametrize(
     ('name', 'buffer'),
     [

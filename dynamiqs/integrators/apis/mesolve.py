@@ -372,7 +372,7 @@ def _mesolve(
     # batching of the operators they are derived from for free.
     extended = {}
     if truncation_degree is not None:
-        buffer = extension_buffer(H, Ls)
+        buffer = extension_buffer(H, Ls, truncation_degree)
         extended_dims = tuple(
             dim + levels for dim, levels in zip(H.dims, buffer, strict=True)
         )
