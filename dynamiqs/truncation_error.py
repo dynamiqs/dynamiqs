@@ -257,6 +257,11 @@ def extend_qarray(
     strides = [int(np.prod(extended_dims[mode + 1 :])) for mode in range(nmodes)]
     n_extended = int(np.prod(extended_dims))
 
+    if len(data.offsets) == 0:
+        # an operator with no stored diagonal is zero, and stays zero on any space
+        zero = jnp.zeros((*batch_shape, n_extended), dtype=diags.dtype)
+        return sparsedia_from_dict({0: zero}, dims=extended_dims)
+
     flatten = lambda x: x.reshape(*batch_shape, -1)
     extended_diags = {}
     mismatch = jnp.zeros(())

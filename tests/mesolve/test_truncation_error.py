@@ -205,6 +205,16 @@ def test_extension_carries_the_operator_batch_dimensions():
     assert np.allclose(extended.to_jax(), expected, rtol=1e-8, atol=1e-10)
 
 
+def test_extension_of_an_operator_with_no_stored_diagonal():
+    # a zero placeholder term can be stored with no diagonal at all
+    zero = dq.asqarray(jnp.zeros((4, 4)), layout=dq.dia)
+
+    extended = extend_qarray(zero, (6,), 4, 'H')
+
+    assert extended.dims == (6,)
+    assert np.allclose(extended.to_jax(), 0.0)
+
+
 def test_offset_digits_splits_a_flat_offset_per_mode():
     single = [offset_digits(o, (8,)) for o in (-7, -1, 0, 3)]
     assert single == [(-7,), (-1,), (0,), (3,)]
