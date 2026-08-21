@@ -613,9 +613,10 @@ def accumulate_truncation_error(step_ts: Array, rates: Array, ts: Array) -> Arra
     cumulative trapezoid.
 
     Warning:
-        `ts` is sampled by linear interpolation of a quantity that is only piecewise
-        linear between solver steps, so the values in between step times carry a small
-        quadrature error.
+        The rate is integrated by trapezoid over the solver steps, and `ts` is sampled
+        by linear interpolation of the result, so the returned values carry a
+        quadrature error of the order of the solver's own error. The bound is rigorous
+        up to that error, not beyond it.
     """
     valid = jnp.isfinite(step_ts)
     last = jnp.max(jnp.where(valid, step_ts, -jnp.inf))
