@@ -6,7 +6,7 @@ from typing import cast
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, ScalarLike
+from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar, ScalarLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
@@ -44,7 +44,7 @@ def jssesolve(
     save_states: bool = True,
     cartesian_batching: bool = True,
     t0: ScalarLike | None = None,
-    save_extra: Callable[[QArray], PyTree] | None = None,
+    save_extra: Callable[[Scalar, QArray], PyTree] | None = None,
     nmaxclick: int = 10_000,
 ) -> JSSESolveResult:
     r"""Solve the jump stochastic Schrödinger equation (SSE).
@@ -169,9 +169,10 @@ def jssesolve(
         t0: Initial time. If `None`, defaults to the first time in
             `tsave`.
         save_extra: A function with signature
-            `f(QArray) -> PyTree` that takes a state as input and returns a PyTree.
-            This can be used to save additional arbitrary data during the integration,
-            accessible in `result.extra`. Defaults to `None`.
+            `f(Scalar, QArray) -> PyTree` that takes the current time and state as
+            input and returns a PyTree. This can be used to save additional
+            arbitrary data during the integration, accessible in `result.extra`.
+            Defaults to `None`.
         nmaxclick: Maximum buffer size for `result.clicktimes`, should
             be set higher than the expected maximum number of clicks. Defaults to
             `10_000`.

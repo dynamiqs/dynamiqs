@@ -69,7 +69,7 @@ class TestMESolveAdaptiveLowRank(IntegratorTester):
             key=jax.random.PRNGKey(0),
             is_save_extra_low_rank=True,
         )
-        result = system.run(method, save_extra=lambda m: m)
+        result = system.run(method, save_extra=lambda t, m: m)  # noqa: ARG005
         assert result.extra.shape[-2:] == (system.n, rank)
 
     @pytest.mark.parametrize('system', [dense_ocavity])
@@ -77,7 +77,7 @@ class TestMESolveAdaptiveLowRank(IntegratorTester):
         method = LowRank(
             rank=system.n // 2, ode_method=Tsit5(), key=jax.random.PRNGKey(0)
         )
-        result = system.run(method, save_extra=lambda rho: rho)
+        result = system.run(method, save_extra=lambda t, rho: rho)  # noqa: ARG005
         assert result.extra.shape[-2:] == (system.n, system.n)
 
 

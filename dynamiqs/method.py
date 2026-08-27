@@ -770,8 +770,9 @@ class LowRank(Method):
             to `1e-5`.
         key: PRNG key used for random initialization of the low-rank factors.
         is_save_extra_low_rank: If `True`, `dq.Options(save_extra=...)` receives the
-            low-rank factor `m(t)` directly instead of the full-rank density matrix
-            `rho(t)`, avoiding its reconstruction. Defaults to `False`.
+            low-rank factor `m(t)` as second argument directly instead of the
+            full-rank density matrix `rho(t)`, avoiding its reconstruction. Defaults
+            to `False`.
 
     Note:
         The low-rank factors can be accessed from
