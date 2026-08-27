@@ -41,7 +41,9 @@ psi0 = dq.fock(N, 1)
 Htd = dq.modulated(lambda t: jnp.cos(2.0 * t), adag_a)
 # piecewise constant Hamiltonian for the Expm method, with discontinuity times
 # interleaving with tsave to catch a times[1:]/times[:-1] off-by-one
-Hpwc = dq.pwc(jnp.asarray([0.0, 0.15, 0.55, 1.0]), jnp.asarray([1.0, -0.5, 2.0]), adag_a)
+Hpwc = dq.pwc(
+    jnp.asarray([0.0, 0.15, 0.55, 1.0]), jnp.asarray([1.0, -0.5, 2.0]), adag_a
+)
 
 jump_ops = [0.5 * a]
 
@@ -71,9 +73,7 @@ def assert_extra_correct(result, *, atol=1e-6):
     ],
 )
 def test_mesolve(H, method):
-    result = dq.mesolve(
-        H, jump_ops, psi0, tsave, method=method, save_extra=save_extra
-    )
+    result = dq.mesolve(H, jump_ops, psi0, tsave, method=method, save_extra=save_extra)
     assert_extra_correct(result)
 
 
@@ -112,9 +112,7 @@ def _event(smart_sampling: bool) -> Event:
     return Event(root_finder=root_finder, smart_sampling=smart_sampling)
 
 
-@pytest.mark.parametrize(
-    'method', [_event(False), _event(True), EulerJump(dt=DT)]
-)
+@pytest.mark.parametrize('method', [_event(False), _event(True), EulerJump(dt=DT)])
 def test_jssesolve(method):
     keys = jax.random.split(jax.random.key(42), 5)
     result = dq.jssesolve(
@@ -175,9 +173,7 @@ def test_mesolve_montecarlo(method):
 
 
 def _lowrank_method(**kwargs) -> LowRank:
-    return LowRank(
-        rank=N // 2, ode_method=Tsit5(), key=jax.random.PRNGKey(0), **kwargs
-    )
+    return LowRank(rank=N // 2, ode_method=Tsit5(), key=jax.random.PRNGKey(0), **kwargs)
 
 
 def test_mesolve_lowrank():
