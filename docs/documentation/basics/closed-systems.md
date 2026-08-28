@@ -99,11 +99,11 @@ import dynamiqs as dq
 
 jnp.set_printoptions(precision=3, suppress=True)  # set custom array print style
 
-psi0 = dq.ground()                # initial state
-H = dq.sigmaz()                   # Hamiltonian
+psi0 = dq.ground()  # initial state
+H = dq.sigmaz()  # Hamiltonian
 tsave = jnp.linspace(0, 1.0, 11)  # saving times
 res = dq.sesolve(H, psi0, tsave)  # run the simulation
-print(res.states[-1])             # print the final state
+print(res.states[-1])  # print the final state
 ```
 
 ```text title="Output"

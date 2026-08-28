@@ -67,7 +67,7 @@ for i in range(ntrajs):
     ax = next(axs)
     dq.plot.xyz(result.states[i], times=tsave, ax=ax)
     ax.set(
-        title=f'Trajectory {i+1}: {result.nclicks[i].sum()} clicks',
+        title=f'Trajectory {i + 1}: {result.nclicks[i].sum()} clicks',
         xlabel=r'time $t$',
         ylabel='Pauli expectation values',
     )
@@ -114,7 +114,7 @@ for i in range(ntrajs):
     ax = next(axs)
     dq.plot.xyz(result.states[i], times=tsave, ax=ax)
     ax.set(
-        title=f'Trajectory {i+1}: {result.nclicks[i].sum()} clicks',
+        title=f'Trajectory {i + 1}: {result.nclicks[i].sum()} clicks',
         xlabel=r'time $t$',
         ylabel='Pauli expectation values',
     )
@@ -152,7 +152,9 @@ keys = jax.random.split(key, ntrajs)
 # simulate trajectories
 method = dq.method.EulerJump(dt=1e-3)
 exp_ops = [a.dag() @ a]
-result = dq.jssesolve(H, jump_ops, psi0, tsave, keys, method=method, save_states=False, exp_ops=exp_ops)
+result = dq.jssesolve(
+    H, jump_ops, psi0, tsave, keys, method=method, save_states=False, exp_ops=exp_ops
+)
 print(result)
 ```
 
@@ -176,19 +178,25 @@ kw = dict(lw=1.5, alpha=0.8)
 
 # individual trajectories
 for i, exp in enumerate(exps_adaga[:4]):
-    plt.plot(tsave, exp, label=f'Trajectory {i+1}', **kw)
+    plt.plot(tsave, exp, label=f'Trajectory {i + 1}', **kw)
 
 # average trajectory
 plt.plot(tsave, exps_adaga.mean(0), label=f'Average trajectory', color='gray', **kw)
 
 # Lindblad solution
-result_lindblad = dq.mesolve(H, jump_ops, psi0, tsave, save_states=False, exp_ops=exp_ops)
-plt.plot(tsave, result_lindblad.expects[0].real, ls='--', label=f'Lindblad', color='gray', **kw)
-
-plt.gca().set(
-    xlabel=r'time $t$',
-    ylabel=r'$\langle a^\dagger a \rangle_t$',
+result_lindblad = dq.mesolve(
+    H, jump_ops, psi0, tsave, save_states=False, exp_ops=exp_ops
 )
+plt.plot(
+    tsave,
+    result_lindblad.expects[0].real,
+    ls='--',
+    label=f'Lindblad',
+    color='gray',
+    **kw,
+)
+
+plt.gca().set(xlabel=r'time $t$', ylabel=r'$\langle a^\dagger a \rangle_t$')
 plt.legend()
 
 renderfig('jump-monitored-oscillator-trajs')

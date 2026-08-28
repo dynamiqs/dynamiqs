@@ -118,15 +118,15 @@ import dynamiqs as dq
 
 jnp.set_printoptions(precision=3, suppress=True)  # set custom array print style
 
-T = 1.0                             # drive period
-omega_d = 2 * jnp.pi / T            # drive frequency
-H0 = 0.1 * dq.sigmaz()              # drift Hamiltonian
+T = 1.0  # drive period
+omega_d = 2 * jnp.pi / T  # drive frequency
+H0 = 0.1 * dq.sigmaz()  # drift Hamiltonian
 f = lambda t: jnp.cos(omega_d * t)  # time-dependent drive
-H1 = dq.modulated(f, dq.sigmax())   # drive Hamiltonian
-tsave = jnp.linspace(0, T, 11)      # saving times
+H1 = dq.modulated(f, dq.sigmax())  # drive Hamiltonian
+tsave = jnp.linspace(0, T, 11)  # saving times
 res = dq.floquet(H0 + H1, T, tsave)  # run the simulation
-print(res.quasienergies)            # print the quasienergies
-print(res.modes[-1])                # print the final floquet modes
+print(res.quasienergies)  # print the quasienergies
+print(res.modes[-1])  # print the final floquet modes
 ```
 
 ```text title="Output"
