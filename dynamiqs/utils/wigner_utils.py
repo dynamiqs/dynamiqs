@@ -61,7 +61,7 @@ def wigner(
             state.
         - [`dq.plot.wigner_data()`][dynamiqs.plot.wigner_data]: plot a pre-computed
             Wigner function.
-    """  # noqa: E501
+    """
     state = to_jax(state)
     check_shape(state, 'state', '(..., n, 1)', '(..., n, n)')
 
