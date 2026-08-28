@@ -48,7 +48,13 @@ def wigner(
             `xvec` if specified.
         yvec (array of shape (npixels,) or (nyvec,)): $y$ coordinates, or
             `yvec` if specified.
-        w (array of shape (..., npixels, npixels) or (..., nyvec, nxvec)): Wigner distribution.
+        w (array of shape (..., npixels, npixels) or (..., nxvec, nyvec)): Wigner
+            distribution, such that `w[..., i, j]` is the Wigner function value at
+            `(xvec[i], yvec[j])`. Note that this is the transpose of what
+            `matplotlib.pyplot.imshow()` or `matplotlib.pyplot.pcolormesh()` expect,
+            so `w.T` should be passed to these functions instead of `w` (this is done
+            automatically by [`dq.plot.wigner()`][dynamiqs.plot.wigner] and
+            [`dq.plot.wigner_data()`][dynamiqs.plot.wigner_data]).
 
     See also:
         - [`dq.plot.wigner()`][dynamiqs.plot.wigner]: plot the Wigner function of a
