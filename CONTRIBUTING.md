@@ -152,7 +152,9 @@ We use [Google-style docstrings](https://google.github.io/styleguide/pyguide.htm
 Examples:
 
 ```python
-raise ValueError(f'Argument `H` must have shape (n, n), but has shape H.shape={H.shape}.')
+raise ValueError(
+    f'Argument `H` must have shape (n, n), but has shape H.shape={H.shape}.'
+)
 raise ValueError(
     "Argument `matmul_precision` should be a string 'low', 'high', or"
     f" 'highest', but is '{matmul_precision}'."

@@ -172,7 +172,7 @@ class MaterializedQArray(QArray):
     def devices(self) -> set[Device]:
         return self.data.devices()
 
-    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> Array:
         return self.data.isherm(rtol=rtol, atol=atol)
 
     def block_until_ready(self) -> QArray:

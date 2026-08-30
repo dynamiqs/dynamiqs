@@ -56,26 +56,31 @@ for any time $t$, where $O_0$ is an arbitrary operator. The most practical way t
 === "Dynamiqs utilities"
     ```python
     import dynamiqs as dq
+
     H = dq.sigmaz()
     ```
 === "Dynamiqs qarray"
     ```python
     import dynamiqs as dq
+
     H = dq.asqarray([[1, 0], [0, -1]])
     ```
 === "NumPy array"
     ```python
     import numpy as np
+
     H = np.array([[1, 0], [0, -1]])
     ```
 === "JAX array"
     ```python
     import jax.numpy as jnp
+
     H = jnp.array([[1, 0], [0, -1]])
     ```
 === "QuTiP Qobj"
     ```python
     import qutip as qt
+
     H = qt.sigmaz()
     ```
 === "Python list"
@@ -361,7 +366,7 @@ Use the `.shift()` method:
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
 >>> H = dq.modulated(f, dq.sigmax())
 >>> H_shift = H.shift(0.5)
->>> H_shift(0.0) # == H(0.5)
+>>> H_shift(0.0)  # == H(0.5)
 QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
 [[   ⋅    -1.+0.j]
  [-1.+0.j    ⋅   ]]
