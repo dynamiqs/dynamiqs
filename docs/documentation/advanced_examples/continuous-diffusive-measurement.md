@@ -183,7 +183,7 @@ kappa = 1.0
 omega = 10.0
 alpha0 = 2.0
 H = omega * a.dag() @ a
-jump_ops = [jnp.sqrt(kappa/2) * a, jnp.sqrt(kappa/2) * (-1j * a)]
+jump_ops = [jnp.sqrt(kappa / 2) * a, jnp.sqrt(kappa / 2) * (-1j * a)]
 etas = [1.0, 1.0]
 psi0 = dq.coherent(n, alpha0)
 
@@ -198,7 +198,9 @@ keys = jax.random.split(key, ntrajs)
 
 # simulate trajectories
 method = dq.method.EulerMaruyama(dt=1e-3)
-result = dq.dsmesolve(H, jump_ops, etas, psi0, tsave, keys, method=method, save_states=False)
+result = dq.dsmesolve(
+    H, jump_ops, etas, psi0, tsave, keys, method=method, save_states=False
+)
 print(result)
 ```
 
@@ -237,10 +239,7 @@ ax0.set(
 for Ik_p in Iks_p[:3]:
     ax1.plot(tsave[:-1], Ik_p / np.sqrt(2), lw=1.5)
 
-ax1.set(
-    xlabel=r'$t$',
-    ylabel=r'$I_P^{[t,t+\Delta t)}/\sqrt{2}$',
-)
+ax1.set(xlabel=r'$t$', ylabel=r'$I_P^{[t,t+\Delta t)}/\sqrt{2}$')
 
 renderfig('monitored-oscillator-IxIp')
 ```
@@ -252,8 +251,16 @@ renderfig('monitored-oscillator-IxIp')
 
 ```python
 plt.figure()
-plt.plot(tsave[:-1], jnp.mean(Iks_x / np.sqrt(2), axis=0), label=r'$\mathbb{E}[I_X/\sqrt{2}]$')
-plt.plot(tsave[:-1], jnp.mean(Iks_p / np.sqrt(2), axis=0), label=r'$\mathbb{E}[I_P/\sqrt{2}]$')
+plt.plot(
+    tsave[:-1],
+    jnp.mean(Iks_x / np.sqrt(2), axis=0),
+    label=r'$\mathbb{E}[I_X/\sqrt{2}]$',
+)
+plt.plot(
+    tsave[:-1],
+    jnp.mean(Iks_p / np.sqrt(2), axis=0),
+    label=r'$\mathbb{E}[I_P/\sqrt{2}]$',
+)
 
 alpha = alpha0 * jnp.exp(-kappa / 2 * tsave) * jnp.exp(-1j * omega * tsave)
 plt.plot(tsave, alpha.real, label=rf'$\mathrm{{Tr}}[X\rho_t]$', ls='--', color='gray')

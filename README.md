@@ -50,10 +50,10 @@ import dynamiqs as dq
 import jax.numpy as jnp
 
 # parameters
-n = 16          # Hilbert space dimension
-omega = 1.0     # frequency
-kappa = 0.1     # decay rate
-alpha0 = 1.0    # initial coherent state amplitude
+n = 16  # Hilbert space dimension
+omega = 1.0  # frequency
+kappa = 0.1  # decay rate
+alpha0 = 1.0  # initial coherent state amplitude
 T = 2 * jnp.pi  # total evolution time (one full revolution)
 
 # initialize operators, initial state and saving times
@@ -86,11 +86,12 @@ import jax.numpy as jnp
 import jax
 
 # parameters
-n = 16          # Hilbert space dimension
-omega = 1.0     # frequency
-kappa = 0.1     # decay rate
-alpha0 = 1.0    # initial coherent state amplitude
+n = 16  # Hilbert space dimension
+omega = 1.0  # frequency
+kappa = 0.1  # decay rate
+alpha0 = 1.0  # initial coherent state amplitude
 T = 2 * jnp.pi  # total evolution time (one full revolution)
+
 
 def population(omega, kappa, alpha0):
     """Return the oscillator population after time evolution."""
@@ -105,6 +106,7 @@ def population(omega, kappa, alpha0):
     result = dq.mesolve(H, jump_ops, psi0, tsave)
 
     return dq.expect(dq.number(n), result.states[-1]).real
+
 
 # compute gradient with respect to omega, kappa and alpha
 grad_population = jax.grad(population, argnums=(0, 1, 2))

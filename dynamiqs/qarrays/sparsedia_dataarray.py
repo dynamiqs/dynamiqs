@@ -204,7 +204,7 @@ class SparseDIADataArray(DataArray):
     def devices(self) -> set[jax.Device]:
         raise NotImplementedError
 
-    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> Array:
         return self.asdense().isherm(rtol=rtol, atol=atol)
 
     def to_jax(self) -> Array:
