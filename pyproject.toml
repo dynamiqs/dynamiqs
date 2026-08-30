@@ -138,7 +138,7 @@ cmd = 'echo "\n>>> ruff format" && ruff format'
 help = "auto-format the code (ruff)"
 
 [tool.taskipy.tasks.codespell]
-cmd = 'echo "\n>>> codespell" && codespell tests dynamiqs'
+cmd = 'echo "\n>>> codespell" && codespell tests dynamiqs benchmarks'
 help = "check for misspellings (codespell)"
 
 [tool.taskipy.tasks.type]
@@ -159,6 +159,10 @@ help = "run the static checks (ruff + codespell + ty)"
 [tool.taskipy.tasks.test]
 cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
 help = "run the unit tests suite (pytest)"
+
+[tool.taskipy.tasks.bench]
+cmd = 'python -m benchmarks'
+help = "run the timing benchmarks (see benchmarks/README.md)"
 
 [tool.taskipy.tasks.durations]
 cmd = 'echo "\n>>> generate .test_durations" && pytest tests --collect-only -q -p tests.generate_test_durations'
