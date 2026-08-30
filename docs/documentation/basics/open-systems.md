@@ -113,12 +113,12 @@ import dynamiqs as dq
 
 jnp.set_printoptions(precision=3, suppress=True)  # set custom array print style
 
-psi0 = dq.excited()                         # initial state
-H = dq.sigmaz()                             # Hamiltonian
-jump_ops = [dq.sigmam()]                    # list of jump operators
-tsave = jnp.linspace(0, 1.0, 11)            # saving times
+psi0 = dq.excited()  # initial state
+H = dq.sigmaz()  # Hamiltonian
+jump_ops = [dq.sigmam()]  # list of jump operators
+tsave = jnp.linspace(0, 1.0, 11)  # saving times
 res = dq.mesolve(H, jump_ops, psi0, tsave)  # run the simulation
-print(res.states[-1])                       # print the final state
+print(res.states[-1])  # print the final state
 ```
 
 ```text title="Output"

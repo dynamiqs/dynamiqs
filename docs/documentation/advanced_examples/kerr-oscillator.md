@@ -25,13 +25,13 @@ Let us begin with a simple simulation of the **time evolution of this system**, 
 
 ```python
 # simulation parameters
-n = 32         # Hilbert space size
-K = 1.0        # Kerr non-linearity
+n = 32  # Hilbert space size
+K = 1.0  # Kerr non-linearity
 epsilon = 3.0  # driving field
-kappa = 1.5    # dissipation rate
-alpha0 = 2.0   # initial coherent state amplitude
-T = 5.0        # simulation time
-ntsave = 201   # number of saved states
+kappa = 1.5  # dissipation rate
+alpha0 = 2.0  # initial coherent state amplitude
+T = 5.0  # simulation time
+ntsave = 201  # number of saved states
 
 # operators
 a = dq.destroy(n)
@@ -118,8 +118,8 @@ nbar0s = jnp.linspace(0.4, 4.0, 10)
 alpha0s = jnp.sqrt(nbar0s)
 
 # redefine jump operators and initial states
-jump_ops = [jnp.sqrt(kappas[:, None, None]) * a] # using numpy broadcasting
-psi0 = dq.coherent(n, alpha0s) # dq.coherent accepts a batched input
+jump_ops = [jnp.sqrt(kappas[:, None, None]) * a]  # using numpy broadcasting
+psi0 = dq.coherent(n, alpha0s)  # dq.coherent accepts a batched input
 
 # save times
 T = jnp.pi / K  # a single revival
@@ -175,13 +175,18 @@ exp_ops = [dq.proj(dq.basis(n, 0)), dq.proj(dq.basis(n, 1))]
 
 # run simulation and extract observables
 result = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops)
-pop_0 = result.expects[0].real # population of |0>
-pop_1 = result.expects[1].real # population of |1>
+pop_0 = result.expects[0].real  # population of |0>
+pop_1 = result.expects[1].real  # population of |1>
 
 # plot Rabi oscillations
 plt.plot(tsave * epsilon / jnp.pi, pop_0, label=r'$|0\rangle$')
 plt.plot(tsave * epsilon / jnp.pi, pop_1, label=r'$|1\rangle$')
-plt.plot(tsave * epsilon / jnp.pi, 1 - (pop_0 + pop_1), color='black', label=r'$|2\rangle$, $|3\rangle$, $\ldots$')
+plt.plot(
+    tsave * epsilon / jnp.pi,
+    1 - (pop_0 + pop_1),
+    color='black',
+    label=r'$|2\rangle$, $|3\rangle$, $\ldots$',
+)
 plt.xlabel(r'Time, $t\epsilon / \pi$')
 plt.ylabel('Population')
 plt.ylim(0, 1)
@@ -214,11 +219,12 @@ We begin by defining the pulse ansatz:
 ```python
 from jax.scipy.special import erf
 
+
 def pulse(t, T, sigma):
     """Gaussian pulse ansatz."""
     angle = jnp.pi / 2
     norm = jnp.sqrt(2 * jnp.pi) * sigma * T * erf(1 / (2 * jnp.sqrt(2) * sigma))
-    gaussian = jnp.exp(-(t - T / 2)**2 / (2 * T**2 * sigma**2))
+    gaussian = jnp.exp(-((t - T / 2) ** 2) / (2 * T**2 * sigma**2))
     return angle * gaussian / norm
 ```
 
@@ -243,6 +249,7 @@ jump_ops = [jnp.sqrt(kappa) * a]
 psi0 = dq.basis(n, 0)
 exp_ops = [dq.proj(dq.basis(n, 0)), dq.proj(dq.basis(n, 1))]
 
+
 @jax.vmap
 def compute_fidelity(T):
     """Compute the fidelity of a pi-pulse for a given gate duration."""
@@ -261,11 +268,12 @@ def compute_fidelity(T):
     # in a proper study, we would need to compute a full process tomography
     return jnp.max(result.expects[:, 1, :].real, axis=-1)
 
+
 # run simulation
 fidelities = compute_fidelity(Ts)
 
 # plot results
-plt.pcolormesh(sigmas, Ts, jnp.log10(1-fidelities), cmap='Blues_r')
+plt.pcolormesh(sigmas, Ts, jnp.log10(1 - fidelities), cmap='Blues_r')
 plt.xlabel('Pulse width')
 plt.ylabel('Gate duration')
 plt.colorbar(label='log10(1 - Fidelity)')
@@ -294,9 +302,9 @@ T = 0.2
 ntsave = 401
 
 # optimization parameters
-ntpulse = 101       # number of pieces in the parametrized pulse
-nepochs = 300       # number of optimization epochs
-learning_rate = 0.2 # gradient descent learning rate
+ntpulse = 101  # number of pieces in the parametrized pulse
+nepochs = 300  # number of optimization epochs
+learning_rate = 0.2  # gradient descent learning rate
 
 # operators, initial state, and expectation operator
 a = dq.destroy(n)
@@ -309,6 +317,7 @@ exp_ops = [dq.proj(dq.basis(n, 0)), dq.proj(dq.basis(n, 1))]
 tsave = jnp.linspace(0.0, T, ntsave)
 tpulse = jnp.linspace(0.0, T, ntpulse)
 
+
 # function to optimize
 def compute_fidelity(amps):
     # time-dependent Hamiltonian
@@ -318,18 +327,23 @@ def compute_fidelity(amps):
     H = H0 + Hx + Hp
 
     # run simulation
-    result = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, progress_meter=False) # disable progress meter
+    result = dq.mesolve(
+        H, jump_ops, psi0, tsave, exp_ops=exp_ops, progress_meter=False
+    )  # disable progress meter
     # fidelity is now defined as the overlap with |1> at the final time only
     return result.expects[1, -1].real
+
 
 # losses to minimize
 @jax.jit
 def compute_fidelity_loss(amps, weight=1.0):
     return weight * (1 - compute_fidelity(amps))
 
+
 @jax.jit
 def compute_smoothness_loss(amps, weight=1e-4):
-    return weight * jnp.sum(jnp.abs(jnp.diff(jnp.pad(amps, 1)))**2)
+    return weight * jnp.sum(jnp.abs(jnp.diff(jnp.pad(amps, 1))) ** 2)
+
 
 # seed amplitudes
 amps_seed = 0.5 * jnp.pi / T * jnp.ones(ntpulse - 1) + 1j * jnp.zeros(ntpulse - 1)
@@ -365,13 +379,13 @@ We can also plot the evolution of the fidelity and smoothness losses during the 
 
 ```python
 losses = jnp.asarray(losses)
-plt.plot(losses[:, 0], label="Fidelity loss")
-plt.plot(losses[:, 1], label="Smoothness loss")
-plt.plot(losses[:, 0] + losses[:, 1], c='k', label="Total loss")
+plt.plot(losses[:, 0], label='Fidelity loss')
+plt.plot(losses[:, 1], label='Smoothness loss')
+plt.plot(losses[:, 0] + losses[:, 1], c='k', label='Total loss')
 plt.ylim(0)
 plt.xlim(0, nepochs)
-plt.ylabel("Loss")
-plt.xlabel("Epoch")
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
 plt.legend()
 renderfig('losses-kerr-oscillator')
 ```

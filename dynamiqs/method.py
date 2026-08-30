@@ -272,6 +272,7 @@ class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _ROUCHON_GRADIENTS
 
+    dt: float | None = eqx.field(static=True, default=None)
     normalize: bool = eqx.field(static=True, default=True)
 
     # dummy init to have the signature in the documentation
@@ -286,7 +287,7 @@ class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
         dt: float | None = None,
         normalize: bool = True,
     ):
-        _DEFixedStep.__init__(self, dt)  # ty: ignore[invalid-argument-type]
+        self.dt = dt
 
         _DEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
@@ -327,6 +328,7 @@ class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _ROUCHON_GRADIENTS
 
+    dt: float | None = eqx.field(static=True, default=None)
     normalize: bool = eqx.field(static=True, default=True)
 
     # dummy init to have the signature in the documentation
@@ -341,7 +343,7 @@ class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
         dt: float | None = None,
         normalize: bool = True,
     ):
-        _DEFixedStep.__init__(self, dt)  # ty: ignore[invalid-argument-type]
+        self.dt = dt
 
         _DEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps

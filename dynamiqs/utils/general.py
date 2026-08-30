@@ -740,7 +740,7 @@ def isop(x: QArrayLike) -> bool:
     return x.shape[-1] == x.shape[-2]
 
 
-def isherm(x: QArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+def isherm(x: QArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> Array:
     r"""Returns True if the qarray is Hermitian.
 
     Args:

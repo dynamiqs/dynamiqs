@@ -105,7 +105,7 @@ def assert_method_supported(method: Method, supported_methods: Iterable[type[Met
 
 
 def multi_vmap(
-    f: Callable, in_axes: int | None | Sequence[Any], out_axes: Any, nvmap: int
+    f: Callable, in_axes: int | Sequence[Any] | None, out_axes: Any, nvmap: int
 ) -> Callable:
     """Vectorize a function multiple time over multiple shared axes (similar to
     jnp.vectorize).
@@ -156,7 +156,7 @@ def multi_vmap(
 
 
 def cartesian_vmap(
-    f: Callable, in_axes: int | None | Sequence[Any], out_axes: Any, nvmap: PyTree[int]
+    f: Callable, in_axes: int | Sequence[Any] | None, out_axes: Any, nvmap: PyTree[int]
 ) -> Callable:
     """Vectorize a function multiple time over distinct axes.
 
