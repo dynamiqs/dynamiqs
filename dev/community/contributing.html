@@ -7569,7 +7569,9 @@ pre-commit<span class="w"> </span>install
 <p>Examples:</p>
 <!-- skip: next -->
 
-<div class="highlight"><pre><span></span><code><span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Argument `H` must have shape (n, n), but has shape H.shape=</span><span class="si">{</span><span class="n">H</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">.'</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s1">'Argument `H` must have shape (n, n), but has shape H.shape=</span><span class="si">{</span><span class="n">H</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">.'</span>
+<span class="p">)</span>
 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
     <span class="s2">"Argument `matmul_precision` should be a string 'low', 'high', or"</span>
     <span class="sa">f</span><span class="s2">" 'highest', but is '</span><span class="si">{</span><span class="n">matmul_precision</span><span class="si">}</span><span class="s2">'."</span>

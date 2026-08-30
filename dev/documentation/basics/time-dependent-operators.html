@@ -7373,26 +7373,31 @@ for any time <span class="arithmatex">\(t\)</span>, where <span class="arithmate
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynamiqs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dq</span>
+
 <span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">()</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynamiqs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dq</span>
+
 <span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">asqarray</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
 <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+
 <span class="n">H</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">qutip</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">qt</span>
+
 <span class="n">H</span> <span class="o">=</span> <span class="n">qt</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">()</span>
 </code></pre></div>
 </div>
@@ -7666,7 +7671,7 @@ Use the <code>.shift()</code> method:
 </p><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">modulated</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H_shift</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H_shift</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span> <span class="c1"># == H(0.5)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H_shift</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>  <span class="c1"># == H(0.5)</span>
 <span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2</span>
 <span class="go">[[   ⋅    -1.+0.j]</span>
 <span class="go"> [-1.+0.j    ⋅   ]]</span>

@@ -7359,13 +7359,13 @@ with <span class="arithmatex">\(\kappa\)</span> the rate of single-photon dissip
 <h2 id="basic-time-evolution">Basic time evolution</h2>
 <p>Let us begin with a simple simulation of the <strong>time evolution of this system</strong>, assuming that the driving field is constant and the system is initially in a coherent state.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># simulation parameters</span>
-<span class="n">n</span> <span class="o">=</span> <span class="mi">32</span>         <span class="c1"># Hilbert space size</span>
-<span class="n">K</span> <span class="o">=</span> <span class="mf">1.0</span>        <span class="c1"># Kerr non-linearity</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">32</span>  <span class="c1"># Hilbert space size</span>
+<span class="n">K</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># Kerr non-linearity</span>
 <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">3.0</span>  <span class="c1"># driving field</span>
-<span class="n">kappa</span> <span class="o">=</span> <span class="mf">1.5</span>    <span class="c1"># dissipation rate</span>
-<span class="n">alpha0</span> <span class="o">=</span> <span class="mf">2.0</span>   <span class="c1"># initial coherent state amplitude</span>
-<span class="n">T</span> <span class="o">=</span> <span class="mf">5.0</span>        <span class="c1"># simulation time</span>
-<span class="n">ntsave</span> <span class="o">=</span> <span class="mi">201</span>   <span class="c1"># number of saved states</span>
+<span class="n">kappa</span> <span class="o">=</span> <span class="mf">1.5</span>  <span class="c1"># dissipation rate</span>
+<span class="n">alpha0</span> <span class="o">=</span> <span class="mf">2.0</span>  <span class="c1"># initial coherent state amplitude</span>
+<span class="n">T</span> <span class="o">=</span> <span class="mf">5.0</span>  <span class="c1"># simulation time</span>
+<span class="n">ntsave</span> <span class="o">=</span> <span class="mi">201</span>  <span class="c1"># number of saved states</span>
 
 <span class="c1"># operators</span>
 <span class="n">a</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
@@ -7432,8 +7432,8 @@ with <span class="arithmatex">\(\kappa\)</span> the rate of single-photon dissip
 <span class="n">alpha0s</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nbar0s</span><span class="p">)</span>
 
 <span class="c1"># redefine jump operators and initial states</span>
-<span class="n">jump_ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">kappas</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">*</span> <span class="n">a</span><span class="p">]</span> <span class="c1"># using numpy broadcasting</span>
-<span class="n">psi0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">coherent</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">alpha0s</span><span class="p">)</span> <span class="c1"># dq.coherent accepts a batched input</span>
+<span class="n">jump_ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">kappas</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">*</span> <span class="n">a</span><span class="p">]</span>  <span class="c1"># using numpy broadcasting</span>
+<span class="n">psi0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">coherent</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">alpha0s</span><span class="p">)</span>  <span class="c1"># dq.coherent accepts a batched input</span>
 
 <span class="c1"># save times</span>
 <span class="n">T</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">K</span>  <span class="c1"># a single revival</span>
@@ -7480,13 +7480,18 @@ with <span class="arithmatex">\(\kappa\)</span> the rate of single-photon dissip
 
 <span class="c1"># run simulation and extract observables</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">mesolve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">jump_ops</span><span class="p">,</span> <span class="n">psi0</span><span class="p">,</span> <span class="n">tsave</span><span class="p">,</span> <span class="n">exp_ops</span><span class="o">=</span><span class="n">exp_ops</span><span class="p">)</span>
-<span class="n">pop_0</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">expects</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="c1"># population of |0&gt;</span>
-<span class="n">pop_1</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">expects</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="c1"># population of |1&gt;</span>
+<span class="n">pop_0</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">expects</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span>  <span class="c1"># population of |0&gt;</span>
+<span class="n">pop_1</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">expects</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">real</span>  <span class="c1"># population of |1&gt;</span>
 
 <span class="c1"># plot Rabi oscillations</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tsave</span> <span class="o">*</span> <span class="n">epsilon</span> <span class="o">/</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">pop_0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">'$|0\rangle$'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tsave</span> <span class="o">*</span> <span class="n">epsilon</span> <span class="o">/</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">pop_1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">'$|1\rangle$'</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tsave</span> <span class="o">*</span> <span class="n">epsilon</span> <span class="o">/</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">pop_0</span> <span class="o">+</span> <span class="n">pop_1</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s1">'black'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">'$|2\rangle$, $|3\rangle$, $\ldots$'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">tsave</span> <span class="o">*</span> <span class="n">epsilon</span> <span class="o">/</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
+    <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">pop_0</span> <span class="o">+</span> <span class="n">pop_1</span><span class="p">),</span>
+    <span class="n">color</span><span class="o">=</span><span class="s1">'black'</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">'$|2\rangle$, $|3\rangle$, $\ldots$'</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">'Time, $t\epsilon / \pi$'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Population'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
@@ -7508,11 +7513,12 @@ with <span class="arithmatex">\(\kappa\)</span> the rate of single-photon dissip
 <p>We begin by defining the pulse ansatz:
 </p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">jax.scipy.special</span><span class="w"> </span><span class="kn">import</span> <span class="n">erf</span>
 
+
 <span class="k">def</span><span class="w"> </span><span class="nf">pulse</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Gaussian pulse ansatz."""</span>
     <span class="n">angle</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
     <span class="n">norm</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">T</span> <span class="o">*</span> <span class="n">erf</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">sigma</span><span class="p">))</span>
-    <span class="n">gaussian</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">T</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">T</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+    <span class="n">gaussian</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">((</span><span class="n">t</span> <span class="o">-</span> <span class="n">T</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">T</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">angle</span> <span class="o">*</span> <span class="n">gaussian</span> <span class="o">/</span> <span class="n">norm</span>
 </code></pre></div><p></p>
 <p>Then, we can define our sweeping parameters, and run the simulation by combining batching over <code>dq.modulated</code> to batch over the pulse width, and a <code>jax.vmap</code> to batch over the gate duration.
@@ -7535,6 +7541,7 @@ with <span class="arithmatex">\(\kappa\)</span> the rate of single-photon dissip
 <span class="n">psi0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="n">exp_ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">dq</span><span class="o">.</span><span class="n">proj</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span> <span class="n">dq</span><span class="o">.</span><span class="n">proj</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))]</span>
 
+
 <span class="nd">@jax</span><span class="o">.</span><span class="n">vmap</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_fidelity</span><span class="p">(</span><span class="n">T</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Compute the fidelity of a pi-pulse for a given gate duration."""</span>
@@ -7553,11 +7560,12 @@ with <span class="arithmatex">\(\kappa\)</span> the rate of single-photon dissip
     <span class="c1"># in a proper study, we would need to compute a full process tomography</span>
     <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">expects</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 
+
 <span class="c1"># run simulation</span>
 <span class="n">fidelities</span> <span class="o">=</span> <span class="n">compute_fidelity</span><span class="p">(</span><span class="n">Ts</span><span class="p">)</span>
 
 <span class="c1"># plot results</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">sigmas</span><span class="p">,</span> <span class="n">Ts</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">fidelities</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">'Blues_r'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">sigmas</span><span class="p">,</span> <span class="n">Ts</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">fidelities</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">'Blues_r'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'Pulse width'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Gate duration'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">'log10(1 - Fidelity)'</span><span class="p">)</span>
@@ -7578,9 +7586,9 @@ with <span class="arithmatex">\(\kappa\)</span> the rate of single-photon dissip
 <span class="n">ntsave</span> <span class="o">=</span> <span class="mi">401</span>
 
 <span class="c1"># optimization parameters</span>
-<span class="n">ntpulse</span> <span class="o">=</span> <span class="mi">101</span>       <span class="c1"># number of pieces in the parametrized pulse</span>
-<span class="n">nepochs</span> <span class="o">=</span> <span class="mi">300</span>       <span class="c1"># number of optimization epochs</span>
-<span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.2</span> <span class="c1"># gradient descent learning rate</span>
+<span class="n">ntpulse</span> <span class="o">=</span> <span class="mi">101</span>  <span class="c1"># number of pieces in the parametrized pulse</span>
+<span class="n">nepochs</span> <span class="o">=</span> <span class="mi">300</span>  <span class="c1"># number of optimization epochs</span>
+<span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.2</span>  <span class="c1"># gradient descent learning rate</span>
 
 <span class="c1"># operators, initial state, and expectation operator</span>
 <span class="n">a</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
@@ -7593,6 +7601,7 @@ with <span class="arithmatex">\(\kappa\)</span> the rate of single-photon dissip
 <span class="n">tsave</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">ntsave</span><span class="p">)</span>
 <span class="n">tpulse</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">ntpulse</span><span class="p">)</span>
 
+
 <span class="c1"># function to optimize</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_fidelity</span><span class="p">(</span><span class="n">amps</span><span class="p">):</span>
     <span class="c1"># time-dependent Hamiltonian</span>
@@ -7602,18 +7611,23 @@ with <span class="arithmatex">\(\kappa\)</span> the rate of single-photon dissip
     <span class="n">H</span> <span class="o">=</span> <span class="n">H0</span> <span class="o">+</span> <span class="n">Hx</span> <span class="o">+</span> <span class="n">Hp</span>
 
     <span class="c1"># run simulation</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">mesolve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">jump_ops</span><span class="p">,</span> <span class="n">psi0</span><span class="p">,</span> <span class="n">tsave</span><span class="p">,</span> <span class="n">exp_ops</span><span class="o">=</span><span class="n">exp_ops</span><span class="p">,</span> <span class="n">progress_meter</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># disable progress meter</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">mesolve</span><span class="p">(</span>
+        <span class="n">H</span><span class="p">,</span> <span class="n">jump_ops</span><span class="p">,</span> <span class="n">psi0</span><span class="p">,</span> <span class="n">tsave</span><span class="p">,</span> <span class="n">exp_ops</span><span class="o">=</span><span class="n">exp_ops</span><span class="p">,</span> <span class="n">progress_meter</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>  <span class="c1"># disable progress meter</span>
     <span class="c1"># fidelity is now defined as the overlap with |1&gt; at the final time only</span>
     <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">expects</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">real</span>
+
 
 <span class="c1"># losses to minimize</span>
 <span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_fidelity_loss</span><span class="p">(</span><span class="n">amps</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">weight</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">compute_fidelity</span><span class="p">(</span><span class="n">amps</span><span class="p">))</span>
 
+
 <span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_smoothness_loss</span><span class="p">(</span><span class="n">amps</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">amps</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">amps</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
 
 <span class="c1"># seed amplitudes</span>
 <span class="n">amps_seed</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">T</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">ntpulse</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ntpulse</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
@@ -7643,13 +7657,13 @@ with <span class="arithmatex">\(\kappa\)</span> the rate of single-photon dissip
 <p>We indeed find a smooth pulse, with a small contribution on the imaginary part corresponding to a drive on the conjugate quadrature. This is typical of an optimal transmon pulse, in which leakage is minimized through this additional drive in a process known as Derivative Removal by Adiabatic Gate (DRAG).</p>
 <p>We can also plot the evolution of the fidelity and smoothness losses during the optimization process.</p>
 <div class="highlight"><pre><span></span><code><span class="n">losses</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">losses</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">"Fidelity loss"</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">losses</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">"Smoothness loss"</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">losses</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">losses</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">'k'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"Total loss"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">losses</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">'Fidelity loss'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">losses</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">'Smoothness loss'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">losses</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">losses</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">'k'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'Total loss'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nepochs</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">"Loss"</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">"Epoch"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Loss'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'Epoch'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 </code></pre></div>
 <p><a class="glightbox" data-type="image" data-width="70%" data-height="auto" href="../../figs_docs/losses-kerr-oscillator.png" data-desc-position="bottom"><img alt="plot_losses_kerr" class="fig" src="../../figs_docs/losses-kerr-oscillator.png"></a></p>
