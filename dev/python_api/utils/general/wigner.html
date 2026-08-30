@@ -7203,10 +7203,16 @@ defaults to <code>yvec = jnp.linspace(-ymax, ymax, npixels)</code>.</p>
         </div>
       </li>
       <li class="doc-section-item field-body">
-<b><code>w</code></b>            (<i>array of shape (..., npixels, npixels) or (..., nyvec, nxvec)</i>)
+<b><code>w</code></b>            (<i>array of shape (..., npixels, npixels) or (..., nxvec, nyvec)</i>)
           –
         <div class="doc-md-description">
-          <p>Wigner distribution.</p>
+          <p>Wigner
+distribution, such that <code>w[..., i, j]</code> is the Wigner function value at
+<code>(xvec[i], yvec[j])</code>. Note that this is the transpose of what
+<code>matplotlib.pyplot.imshow()</code> or <code>matplotlib.pyplot.pcolormesh()</code> expect,
+so <code>w.T</code> should be passed to these functions instead of <code>w</code> (this is done
+automatically by <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.plot.wigner&lt;/span&gt;" href="../../plot/wigner.html#dynamiqs.plot.wigner"><code>dq.plot.wigner()</code></a> and
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.plot.wigner_data&lt;/span&gt;" href="../../plot/wigner_data.html#dynamiqs.plot.wigner_data"><code>dq.plot.wigner_data()</code></a>).</p>
         </div>
       </li>
   </ul>
