@@ -113,6 +113,7 @@ allow-dict-calls-with-keyword-arguments = true
 "docs/**.py" = ["INP001", "ARG001", "ANN"]
 "conftest.py" = ["ANN"]
 "tests/**.py" = ["ANN"]
+"benchmarks/**.py" = ["T20"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
