@@ -116,7 +116,7 @@ class CompositeTerm(eqx.Module):
         # must all be the same by convention ?
         raise NotImplementedError
 
-    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> Array:
         # Sufficient (not necessary): coeff real AND all ops .isherm().
         # False here is not conclusive for multi-term CompositeQArray.
         raise NotImplementedError
@@ -283,7 +283,7 @@ class CompositeQArray(QArray):
         # LAZY → all must be on same device ? .
         raise NotImplementedError
 
-    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> Array:
         # MATERIALIZE | 1-term sufficient check → term.isherm(rtol, atol).
         raise NotImplementedError
 

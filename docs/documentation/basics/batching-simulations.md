@@ -152,7 +152,7 @@ The previous examples illustrate batching over one dimension, but you can batch 
     H = [
         [Hx, 2 * Hx, 3 * Hx, 4 * Hx],
         [Hy, 2 * Hy, 3 * Hy, 4 * Hy],
-        [Hz, 2 * Hz, 3 * Hz, 4 * Hz]
+        [Hz, 2 * Hz, 3 * Hz, 4 * Hz],
     ]  # (3, 4, 2, 2)
     ```
 === "Using JAX broadcasting"

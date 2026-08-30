@@ -126,7 +126,7 @@ class DenseDataArray(DataArray):
     def devices(self) -> set[Device]:
         return self.data.devices()
 
-    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> Array[bool]:
+    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> Array:
         return jnp.allclose(self.data, self.data.mT.conj(), rtol=rtol, atol=atol)
 
     def to_jax(self) -> Array:

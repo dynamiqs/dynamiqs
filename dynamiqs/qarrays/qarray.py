@@ -414,7 +414,7 @@ class QArray(eqx.Module):
         pass
 
     @abstractmethod
-    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> Array:
         pass
 
     @abstractmethod

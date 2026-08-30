@@ -68,7 +68,7 @@ class SparseDIADataArray(DataArray):
         )
         for i, offset in enumerate(self.offsets):
             zero_slice = slice(None, offset) if offset >= 0 else slice(offset, None)
-            check = self.diags[..., i, zero_slice] != 0
+            check = jnp.any(self.diags[..., i, zero_slice] != 0)
             eqx.error_if(self.diags, check, error)
 
     @property
@@ -204,7 +204,7 @@ class SparseDIADataArray(DataArray):
     def devices(self) -> set[jax.Device]:
         raise NotImplementedError
 
-    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> Array:
         return self.asdense().isherm(rtol=rtol, atol=atol)
 
     def to_jax(self) -> Array:

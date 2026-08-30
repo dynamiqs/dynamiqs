@@ -32,8 +32,8 @@ delta = 0.3  # detuning
 Omega = 1.0  # Rabi frequency
 H = delta * dq.sigmaz() + Omega * dq.sigmax()
 
-print(f"State of type {type(psi0)} and shape {psi0.shape}.")
-print(f"Hamiltonian of type {type(H)} and shape {H.shape}.")
+print(f'State of type {type(psi0)} and shape {psi0.shape}.')
+print(f'Hamiltonian of type {type(H)} and shape {H.shape}.')
 ```
 
 ```text title="Output"
@@ -71,9 +71,9 @@ We can now run the simulation. This is done by calling the [`dq.sesolve()`][dyna
 result = dq.sesolve(H, psi0, tsave, exp_ops=exp_ops, method=method)
 
 # print some information
-print(f"`result` is of type {type(result)}.")
-print(f"`result` has the following attributes:")
-print(f"{[attr for attr in dir(result) if not attr.startswith('__')]}\n")
+print(f'`result` is of type {type(result)}.')
+print(f'`result` has the following attributes:')
+print(f'{[attr for attr in dir(result) if not attr.startswith("__")]}\n')
 print(result)
 ```
 
