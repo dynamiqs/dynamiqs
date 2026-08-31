@@ -12,6 +12,11 @@ import mkdocs_gen_files
 # value: (paths to include, namespace)
 doc_sections = {
     'integrators': (['dynamiqs/integrators/'], 'dq'),
+    'steady_state': (['dynamiqs/steady_state/'], 'dq'),
+    'steady_state/preconditionner': (
+        ['dynamiqs/steady_state/preconditionner/'],
+        'dynamiqs.steady_state.preconditionner',
+    ),
     'qarrays/qarray': (['dynamiqs/qarrays/qarray.py'], 'dq'),
     'time_qarray': (['dynamiqs/time_qarray.py'], 'dq'),
     'method': (['dynamiqs/method.py'], 'dq.method'),

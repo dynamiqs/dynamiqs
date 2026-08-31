@@ -17,6 +17,25 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - mepropagator
         - floquet
 
+### Steady-state
+
+::: dynamiqs.steady_state
+    options:
+        extra:
+            table: true
+        members:
+        - steadystate
+        - SteadyStateGMRES
+
+### Steady-state preconditioners
+
+::: dynamiqs.steady_state.preconditionner
+    options:
+        extra:
+            table: true
+        members:
+        - LyapunovSolverEig
+
 ### Stochastic
 
 ::: dynamiqs.integrators
