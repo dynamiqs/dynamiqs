@@ -75,14 +75,14 @@ class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
         step_propagators = expm(delta_ts[:, None, None] * As)  # (ntimes-1, N, N)
 
         # === combine the propagators together
-        def step(carry: QArray, xs: tuple[QArray, Array]) -> tuple[QArray, Saved]:
+        def step(carry: QArray, xs: tuple[Array, QArray]) -> tuple[QArray, Saved]:
             # note the ordering x @ carry: we accumulate propagators from the left
-            x, t = xs
+            t, x = xs
             x_next = x @ carry
             # the accumulated propagator holds at the interval's right endpoint t
             return x_next, self.save(t, x_next)
 
-        ylast, saved = jax.lax.scan(step, self.y0, (step_propagators, times[1:]))
+        ylast, saved = jax.lax.scan(step, self.y0, (times[1:], step_propagators))
         # saved has shape (ntimes-1, N, 1) if y0 has shape (N, 1) -> compute states
         # saved has shape (ntimes-1, N, N) if y0 has shape (N, N) -> compute propagators
 
