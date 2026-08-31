@@ -353,10 +353,11 @@ def concatenate_sparsedia(
 
 
 def autopad_sparsedia_diags(offsets: tuple[int, ...], diags: Sequence[Array]) -> Array:
-    # stack diags in a square matrix by padding each according to its offset
+    # stack diags in a square matrix by padding each according to its offset. Only the
+    # last axis holds the diagonal, any leading axis is a batch dimension.
     pads_width = [(abs(k), 0) if k >= 0 else (0, abs(k)) for k in offsets]
     diags = [
-        jnp.pad(diag, pad_width)
+        jnp.pad(diag, [(0, 0)] * (jnp.ndim(diag) - 1) + [pad_width])
         for pad_width, diag in zip(pads_width, diags, strict=True)
     ]
     dtype = reduce(jnp.promote_types, [diag.dtype for diag in diags])

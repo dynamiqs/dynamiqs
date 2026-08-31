@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import operator
 import warnings
 from collections.abc import Callable
 from typing import cast
@@ -34,6 +35,7 @@ from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import MESolveResult
 from ...time_qarray import TimeQArray
+from ...truncation_error import assumed_degree, extend_timeqarray, extension_buffer
 from .._utils import (
     assert_method_supported,
     astimeqarray,
@@ -78,6 +80,7 @@ def mesolve(
     save_extra: Callable[[QArray], PyTree] | None = None,
     vectorized: bool = False,
     assume_hermitian: bool = True,
+    truncation_error: bool | int | None = None,
 ) -> MESolveResult:
     r"""Solve the Lindblad master equation.
 
@@ -188,6 +191,18 @@ def mesolve(
             Hermitian part of `rho` is evolved. Only compatible with Diffrax-based
             ODE methods and `vectorized=False`. In other cases, no assumptions are
             made on the hermiticity of `rho0`. Defaults to `True`.
+        truncation_error: If `True`, the a posteriori Fock truncation error estimate of
+            [arXiv:2501.09607](https://arxiv.org/abs/2501.09607) is accumulated during
+            the solve and returned in `result.truncation_error`, a non-decreasing array
+            aligned with `tsave` that upper-bounds $\|\rho(t)-\rho_N(t)\|_1$. The
+            estimate needs `H` and `jump_ops` on a Fock space enlarged by a few levels
+            per mode; both the enlargement and the operators on it are derived from the
+            given operators, which must be normal-ordered polynomials in the ladder
+            operators with layout `dq.dia` (modes of dimension $2$ are taken to be exact
+            two-level systems, and are not enlarged). Pass an integer instead of `True`
+            to declare their total polynomial degree, needed only above degree $4$
+            (e.g. `truncation_error=6` for $(a^\dag)^3a^3$). Only supported for
+            Diffrax-based ODE methods and `vectorized=False`. Defaults to `None`.
 
     Examples:
         ```python
@@ -289,6 +304,7 @@ def mesolve(
     _check_mesolve_args(H, Ls, rho0, _exp_ops)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'mesolve')
+    degree = _check_truncation_error(truncation_error, H, Ls, method, vectorized)
     options = options.initialise()
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
@@ -299,11 +315,13 @@ def mesolve(
         isinstance(method, JumpMonteCarlo) and isinstance(method.jsse_method, EulerJump)
     ):
         _tsave = tuple(tsave.tolist())  # todo: fix static tsave
-        f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
+        f = jax.jit(
+            f, static_argnames=('tsave', 'gradient', 'options', 'truncation_degree')
+        )
     else:
-        f = jax.jit(f, static_argnames=('gradient', 'options'))
+        f = jax.jit(f, static_argnames=('gradient', 'options', 'truncation_degree'))
 
-    return f(H, Ls, rho0, _tsave, _exp_ops, method, gradient, options)
+    return f(H, Ls, rho0, _tsave, _exp_ops, method, gradient, options, degree)
 
 
 @catch_xla_runtime_error
@@ -316,13 +334,15 @@ def _vectorized_mesolve(
     method: Method,
     gradient: Gradient | None,
     options: Options,
+    truncation_degree: int | None,
 ) -> MESolveResult:
     # vectorize input over H, Ls and rho0
-    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, None, None, None, None, None)
+    L_axes = [L.in_axes for L in Ls]
+    in_axes = (H.in_axes, L_axes, 0, None, None, None, None, None, None)
     out_axes = MESolveResult.out_axes()
 
     if options.cartesian_batching:
-        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0.ndim - 2, 0, 0, 0, 0, 0)
+        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0.ndim - 2, 0, 0, 0, 0, 0, 0)
         f = cartesian_vmap(_mesolve, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, rho0]])
@@ -335,7 +355,7 @@ def _vectorized_mesolve(
         # vectorize the function
         f = multi_vmap(_mesolve, in_axes, out_axes, nvmap)
 
-    return f(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
+    return f(H, Ls, rho0, tsave, exp_ops, method, gradient, options, truncation_degree)
 
 
 def _mesolve(
@@ -347,7 +367,25 @@ def _mesolve(
     method: Method,
     gradient: Gradient | None,
     options: Options,
+    truncation_degree: int | None,
 ) -> MESolveResult:
+    # === derive the extended-space operators of the truncation error estimate, if any.
+    # This happens inside the vmapped function, so the extended operators inherit the
+    # batching of the operators they are derived from for free.
+    extended = {}
+    if truncation_degree is not None:
+        buffer = extension_buffer(H, Ls, truncation_degree)
+        extended_dims = tuple(
+            dim + levels for dim, levels in zip(H.dims, buffer, strict=True)
+        )
+        extended = {
+            'H_extended': extend_timeqarray(H, extended_dims, truncation_degree, 'H'),
+            'Ls_extended': [
+                extend_timeqarray(L, extended_dims, truncation_degree, f'jump_ops[{i}]')
+                for i, L in enumerate(Ls)
+            ],
+        }
+
     # === select integrator constructor
     integrator_constructors = {
         Euler: mesolve_euler_integrator_constructor,
@@ -380,10 +418,57 @@ def _mesolve(
         H=H,
         Ls=Ls,
         Es=exp_ops,
+        **extended,
     )
 
     # === run integrator
     return cast(MESolveResult, integrator.run())
+
+
+def _check_truncation_error(
+    truncation_error: bool | int | None,
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    method: Method,
+    vectorized: bool,
+) -> int | None:
+    """Resolve `truncation_error` to the polynomial degree to assume, or `None`."""
+    if truncation_error is None or truncation_error is False:
+        return None
+
+    degree = None
+    if truncation_error is not True:
+        try:
+            # `operator.index` also accepts other integer flavours, e.g. `np.int64`
+            degree = operator.index(truncation_error)
+        except TypeError:
+            raise TypeError(
+                f'Argument `truncation_error` must be a bool or an int (the assumed'
+                f' total polynomial degree of the operators), but is of type'
+                f' {type(truncation_error)}.'
+            ) from None
+        if degree < 0:
+            raise ValueError(
+                f'Argument `truncation_error` must be a non-negative degree, but is'
+                f' {truncation_error}.'
+            )
+
+    if not method.SUPPORTS_TRUNCATION_ERROR:
+        # a method type mismatch, as in `assert_method_supported`
+        raise TypeError(
+            f'The `truncation_error` argument of `dq.mesolve()` is not supported for'
+            f' the method `{type(method).__name__}`, which does not accumulate the'
+            f' estimate during the solve. It is available for the Diffrax-based ODE'
+            f' methods.'
+        )
+    if vectorized:
+        raise ValueError(
+            'The `truncation_error` argument of `dq.mesolve()` is not supported'
+            ' together with `vectorized=True`, because the estimate is computed from'
+            ' the unvectorized density matrix.'
+        )
+
+    return assumed_degree(H, Ls) if degree is None else degree
 
 
 def _check_mesolve_args(

@@ -159,7 +159,8 @@ class KrausMapRK(eqx.Module):
 
     def dissipator(self, c: float, rho: QArray) -> QArray:
         r"""Jump map $D_c(\rho) = \sum_k L_k \rho L_k^\dagger$ at $t + c\Delta t$."""
-        return sum_qarrays([M_rho_Mdag(L, rho) for L in self.L(self.t + c * self.dt)])
+        jumps = [M_rho_Mdag(L, rho) for L in self.L(self.t + c * self.dt)]
+        return sum_qarrays(jumps, rho)
 
     def compute_stages(self, rho0: QArray) -> list[QArray]:
         r"""Compute all intermediate stages $\rho^{(0)}, \ldots, \rho^{(s-1)}$."""
@@ -195,7 +196,8 @@ class KrausMapRK(eqx.Module):
 
     def adjoint_dissipator(self, c: float, O: QArray) -> QArray:
         r"""Adjoint jump map $D_c^*(O) = \sum_k L_k^\dagger O L_k$."""
-        return sum_qarrays([Mdag_O_M(L, O) for L in self.L(self.t + c * self.dt)])
+        jumps = [Mdag_O_M(L, O) for L in self.L(self.t + c * self.dt)]
+        return sum_qarrays(jumps, O)
 
     def S_stage(self, i: int, O: QArray) -> QArray:
         r"""Backward propagation of observation $O$ through stage $i$.
@@ -253,8 +255,9 @@ class KrausEuler(KrausMapRK):
 
     def U(self, c: float) -> QArray:
         # override to enforce midpoint evaluation
-        Hnh = self.H(self._t_mid) - 0.5j * sum(Mdag_M(_L) for _L in self.L(self._t_mid))
-        return self.identity - 1j * c * self.dt * Hnh
+        H = self.H(self._t_mid)
+        LdL = sum_qarrays([Mdag_M(_L) for _L in self.L(self._t_mid)], H)
+        return self.identity - 1j * c * self.dt * (H - 0.5j * LdL)
 
     def __call__(self, rho0: QArray) -> QArray:
         # override to enforce midpoint evaluation and single-stage structure
@@ -263,8 +266,8 @@ class KrausEuler(KrausMapRK):
     def S(self) -> QArray:
         # override to enforce midpoint evaluation and single-stage structure
         nojump_S = Mdag_M(self.U(1.0))
-        jump_S = self.dt * sum(Mdag_M(_L) for _L in self.L(self._t_mid))
-        return nojump_S + jump_S
+        jumps = [Mdag_M(_L) for _L in self.L(self._t_mid)]
+        return nojump_S + self.dt * sum_qarrays(jumps, nojump_S)
 
     def get_kraus_operators(self) -> list[QArray]:
         # this method is only used for stochastic solvers
@@ -320,8 +323,9 @@ class RouchonPropertiesMixin:
     method: Rouchon1 | Rouchon2 | Rouchon3
 
     def G(self, t: RealScalarLike) -> QArray:
-        LdL = sum(Mdag_M(_L) for _L in self.L(t))
-        return -1j * self.H(t) - 0.5 * LdL
+        H = self.H(t)
+        LdL = sum_qarrays([Mdag_M(_L) for _L in self.L(t)], H)
+        return -1j * H - 0.5 * LdL
 
     @property
     def identity(self) -> QArray:

@@ -27,8 +27,22 @@ from ...method import (
 )
 from ...options import Options
 from ...progress_meter import AbstractProgressMeter
-from ...result import MESolveResult, Result, SolveSaved
+from ...result import (
+    MESolveResult,
+    Result,
+    Saved,
+    SolveSaved,
+    TruncationErrorSolveSaved,
+)
+from ...time_qarray import TimeQArray
+from ...truncation_error import (
+    accumulate_truncation_error,
+    inner_outer_indices,
+    residual_blocks,
+    truncation_error_rate_of_blocks,
+)
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
+from .._utils import sum_qarrays
 from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
@@ -76,13 +90,18 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         else:
             method = cast(_DEAdaptiveStep, self.method)
 
-            return dx.PIDController(
+            controller = dx.PIDController(
                 rtol=method.rtol,
                 atol=method.atol,
                 safety=method.safety_factor,
                 factormin=method.min_factor,
                 factormax=method.max_factor,
             )
+            if len(self.discontinuity_ts) == 0:
+                return controller
+            # step exactly onto the operators' discontinuities: integrating across one
+            # silently costs accuracy, and the error estimate cannot see it
+            return dx.ClipStepSizeController(controller, jump_ts=self.discontinuity_ts)
 
     @property
     def dt0(self) -> float | None:
@@ -162,19 +181,40 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                 ).to_diffrax(),
             )
 
+    def save_at_steps(self) -> Callable | None:
+        """Quantity to save at every accepted step, if the integrator wants one.
+
+        Saving a quantity rather than augmenting the ODE state with it keeps it out of
+        the stepsize controller's error norm. What is saved is folded into the result by
+        `postprocess_steps()`.
+        """
+        return None
+
+    def postprocess_steps(self, saved: Saved, ts: Array, values: PyTree) -> Saved:
+        """Fold what `save_at_steps()` accumulated, at times `ts`, into `saved`."""
+        raise NotImplementedError
+
     def run(self) -> Result:
         # === prepare diffrax arguments
         fn = lambda t, y, args: self.save(y)  # noqa: ARG005
         subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
         subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-        saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+        subs = [subsaveat_a, subsaveat_b]
+
+        step_fn = self.save_at_steps()
+        if step_fn is not None:
+            subs.append(dx.SubSaveAt(t0=True, steps=True, fn=step_fn))
+
+        saveat = dx.SaveAt(subs=subs)
 
         # === solve differential equation
         solution = self.diffeqsolve(self.t0, self.t1, self.y0, saveat)
 
         # === collect and return results
         ys = cast(tuple, solution.ys)
-        saved = self.postprocess_saved(*ys)
+        saved = self.postprocess_saved(ys[0], ys[1])
+        if step_fn is not None:
+            saved = self.postprocess_steps(saved, cast(tuple, solution.ts)[2], ys[2])
         return self.result(saved, infos=self.infos(solution.stats))
 
     def infos(self, stats: dict[str, Array]) -> PyTree:
@@ -319,6 +359,35 @@ class MESolveDiffraxIntegrator(
     Diffrax library.
     """
 
+    # extended-space operators for the a posteriori truncation error estimate
+    H_extended: TimeQArray | None = None
+    Ls_extended: list[TimeQArray] = eqx.field(default_factory=list)
+
+    def save_at_steps(self) -> Callable | None:
+        # the a posteriori truncation error estimate is accumulated from its rate,
+        # evaluated once per accepted step. This works for every method inheriting
+        # `DiffraxIntegrator.run()` — including Rouchon, which only overrides `terms`.
+        H_extended = self.H_extended
+        if H_extended is None:
+            return None
+
+        inner, outer = inner_outer_indices(self.y0.dims, H_extended.dims)
+        # the operator blocks the rate needs are constant, so they are built once here
+        # rather than at every step
+        blocks = residual_blocks(H_extended, self.Ls_extended, inner, outer)
+        return lambda t, y, args: truncation_error_rate_of_blocks(  # noqa: ARG005
+            t, y.to_jax(), blocks
+        )
+
+    def postprocess_steps(self, saved: Saved, ts: Array, values: PyTree) -> Saved:
+        saved = cast(SolveSaved, saved)
+        return TruncationErrorSolveSaved(
+            ysave=saved.ysave,
+            extra=saved.extra,
+            Esave=saved.Esave,
+            truncation_error=accumulate_truncation_error(ts, values, self.ts),
+        )
+
     @property
     def terms(self) -> dx.AbstractTerm:
         # define Lindblad term drho/dt
@@ -343,15 +412,15 @@ class MESolveDiffraxIntegrator(
 
         def vector_field_unvec_standard(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
-            half_LdL = 0.5 * sum([_L.dag() @ _L for _L in L])
+            half_LdL = 0.5 * sum_qarrays([_L.dag() @ _L for _L in L], H)
             nojump_term = (-1j * H - half_LdL) @ y + y @ (1j * H - half_LdL)
-            jump_term = sum([_L @ y @ _L.dag() for _L in L])
+            jump_term = sum_qarrays([_L @ y @ _L.dag() for _L in L], y)
             return nojump_term + jump_term
 
         def vector_field_unvec_hermitian(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
-            Hnh = -1j * H - 0.5 * sum([_L.dag() @ _L for _L in L])
-            tmp = Hnh @ y + 0.5 * sum([_L @ y @ _L.dag() for _L in L])
+            Hnh = -1j * H - 0.5 * sum_qarrays([_L.dag() @ _L for _L in L], H)
+            tmp = Hnh @ y + 0.5 * sum_qarrays([_L @ y @ _L.dag() for _L in L], y)
             return tmp + tmp.dag()
 
         def vector_field_vec(t, y, _):  # noqa: ANN001, ANN202
