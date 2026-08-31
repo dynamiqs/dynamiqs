@@ -69,16 +69,22 @@ class TestMESolveAdaptiveLowRank(IntegratorTester):
             key=jax.random.PRNGKey(0),
             is_save_extra_low_rank=True,
         )
-        result = system.run(method, save_extra=lambda t, m: m)  # noqa: ARG005
-        assert result.extra.shape[-2:] == (system.n, rank)
+        # the hook receives the current time and the low-rank factor m(t)
+        result = system.run(method, save_extra=lambda t, m: (t, m))
+        t, m = result.extra
+        assert jnp.allclose(t, system.tsave)
+        assert m.shape[-2:] == (system.n, rank)
 
     @pytest.mark.parametrize('system', [dense_ocavity])
     def test_save_extra_full_rank_by_default(self, system):
         method = LowRank(
             rank=system.n // 2, ode_method=Tsit5(), key=jax.random.PRNGKey(0)
         )
-        result = system.run(method, save_extra=lambda t, rho: rho)  # noqa: ARG005
-        assert result.extra.shape[-2:] == (system.n, system.n)
+        # the hook receives the current time and the full-rank density matrix rho(t)
+        result = system.run(method, save_extra=lambda t, rho: (t, rho))
+        t, rho = result.extra
+        assert jnp.allclose(t, system.tsave)
+        assert rho.shape[-2:] == (system.n, system.n)
 
 
 def test_expval_from_m_accepts_qarray():
