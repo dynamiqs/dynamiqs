@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Sequence
 from math import prod
-from typing import Any, TypeAlias, TypeGuard, cast, get_args, overload
+from typing import Any, TypeAlias, TypeGuard, Union, cast, get_args, overload
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -694,7 +694,12 @@ def check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
 
 # extended array-like type
 _QArrayLike = ArrayLike | QArray | Qobj
+
 # a type alias for nested sequence of `_QArrayLike`
-_NestedQArrayLikeSequence = Sequence[_QArrayLike | '_NestedQArrayLikeSequence']
+# note: `Union` is required instead of `|` because `_QArrayLike` may be a
+# `types.UnionType` (e.g. with jax>=0.11.1), which does not support the `|` operator
+# with a string forward reference
+_NestedQArrayLikeSequence = Sequence[Union[_QArrayLike, '_NestedQArrayLikeSequence']]
+
 # a type alias for any type compatible with asqarray
 QArrayLike: TypeAlias = _QArrayLike | _NestedQArrayLikeSequence
