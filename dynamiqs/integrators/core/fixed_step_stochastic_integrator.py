@@ -122,8 +122,8 @@ class StochasticSolveFixedStepIntegrator(
         pass
 
     def integrate(
-        self, t0: float, y0: SDEState, key: PRNGKeyArray, nsteps: int
-    ) -> tuple[float, SDEState]:
+        self, t0: Scalar, y0: SDEState, key: PRNGKeyArray, nsteps: int
+    ) -> tuple[Scalar, SDEState]:
         # integrate the SDE for nsteps of length dt
 
         # sample random variable driving the SME
@@ -141,8 +141,8 @@ class StochasticSolveFixedStepIntegrator(
         return t, y
 
     def integrate_by_chunks(
-        self, t0: float, y0: SDEState, key: PRNGKeyArray, nsteps: int
-    ) -> tuple[float, SDEState]:
+        self, t0: Scalar, y0: SDEState, key: PRNGKeyArray, nsteps: int
+    ) -> tuple[Scalar, SDEState]:
         # integrate the SDE for nsteps of length dt, splitting the integration in
         # chunks of 1000 dts to ensure a fixed memory usage
 
