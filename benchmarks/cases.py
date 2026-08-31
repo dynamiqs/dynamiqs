@@ -38,13 +38,15 @@ class Case:
 
 
 def _sesolve_kerr(n: int, batch: int) -> Callable[[], Any]:
-    # driven Kerr oscillator (closed system, modulated drive, optional batching)
+    # driven Kerr oscillator (closed system, modulated drive, optional batching);
+    # note: the Kerr spectrum grows as n^2, which bounds the explicit-RK step size
+    # (stability, not accuracy), so this case is kept at moderate n and short time
     a = dq.destroy(n)
     H0 = -0.5 * a.dag() @ a.dag() @ a @ a
     amps = 0.5 if batch == 1 else jnp.linspace(0.1, 1.0, batch)
     H = H0 + dq.modulated(lambda t: amps * jnp.cos(2.0 * t), a + a.dag())
     psi0 = dq.coherent(n, 2.0)
-    tsave = jnp.linspace(0.0, 10.0, 101)
+    tsave = jnp.linspace(0.0, 2.0, 101)
 
     @eqx.filter_jit
     def run() -> dq.SESolveResult:
@@ -133,10 +135,10 @@ def benchmark_cases(quick: bool = False) -> list[Case]:
         pwc = [(8, 20)]
         grad = [8]
     else:
-        kerr = [(128, 1), (128, 100), (1024, 1), (1024, 100)]
+        kerr = [(32, 1), (32, 100), (128, 1), (128, 100)]
         cavity = [32, 128]
         cat = [(32, 2.0, 1), (32, 2.0, 10)]
-        pwc = [(128, 100)]
+        pwc = [(128, 100), (1024, 100)]
         grad = [32]
 
     partial = functools.partial
