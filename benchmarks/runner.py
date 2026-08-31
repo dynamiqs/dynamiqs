@@ -17,10 +17,12 @@ import jax.numpy as jnp
 
 from dynamiqs.qarrays.layout import get_layout
 
-from .cases import Case, benchmark_cases
+from .cases import Case, Tier, benchmark_cases
 
+_KEY_WIDTH = 60  # widest case key, e.g. `feat_gradient[gradient=...,n=16,nparams=20]`
 _TABLE_HEADER = (
-    f'{"case":<40} {"compile (s)":>12} {"median (s)":>12} {"nsteps":>8} {"nrej":>6}'
+    f'{"case":<{_KEY_WIDTH}} {"compile (s)":>12} {"median (s)":>12}'
+    f' {"nsteps":>8} {"nrej":>6}'
 )
 
 
@@ -47,15 +49,24 @@ def run_case(case: Case, repeats: int = 5) -> dict[str, Any]:
     and this is recorded as `compile_s` (tracing + lowering + compilation, no
     execution). The compiled function is then called `repeats` times and the
     median wall-clock time is reported as `median_s`.
+
+    Cases with `jit=False` cannot be wrapped in an outer jit (see `Case.jit`); they
+    compile themselves on their first call, so their `compile_s` is the duration of
+    that first call and includes one execution.
     """
     fn = case.build()
 
-    t0 = time.perf_counter()
-    compiled = jax.jit(fn).trace().lower().compile()
-    compile_s = time.perf_counter() - t0
+    if case.jit:
+        t0 = time.perf_counter()
+        compiled = jax.jit(fn).trace().lower().compile()
+        compile_s = time.perf_counter() - t0
+        out = jax.block_until_ready(compiled())  # untimed, for the solver infos
+    else:
+        compiled = fn
+        t0 = time.perf_counter()
+        out = jax.block_until_ready(compiled())
+        compile_s = time.perf_counter() - t0
 
-    # untimed warmup run, to extract the solver infos
-    out = jax.block_until_ready(compiled())
     infos = _extract_infos(out)
 
     runs_s = []
@@ -87,7 +98,9 @@ def _git_info() -> tuple[str | None, bool | None]:
         return None, None
 
 
-def _metadata(quick: bool, repeats: int, filter_: str | None) -> dict[str, Any]:
+def _metadata(
+    quick: bool, repeats: int, filter_: str | None, tier: Tier | None
+) -> dict[str, Any]:
     git_sha, git_dirty = _git_info()
     device = jax.devices()[0]
     packages = ['dynamiqs', 'jax', 'jaxlib', 'diffrax', 'equinox']
@@ -104,6 +117,7 @@ def _metadata(quick: bool, repeats: int, filter_: str | None) -> dict[str, Any]:
         'quick': quick,
         'repeats': repeats,
         'filter': filter_,
+        'tier': None if tier is None else str(tier),
     }
 
 
@@ -111,7 +125,7 @@ def _format_row(record: dict[str, Any], key: str) -> str:
     nsteps = record['nsteps']
     nrejected = record['nrejected']
     return (
-        f'{key:<40} {record["compile_s"]:>12.3f} {record["median_s"]:>12.4f}'
+        f'{key:<{_KEY_WIDTH}} {record["compile_s"]:>12.3f} {record["median_s"]:>12.4f}'
         f' {nsteps if nsteps is not None else "-":>8}'
         f' {nrejected if nrejected is not None else "-":>6}'
     )
@@ -122,6 +136,7 @@ def run_suite(
     filter_: str | None = None,
     repeats: int = 5,
     out: str | Path | None = None,
+    tier: Tier | None = None,
 ) -> dict[str, Any]:
     """Run the benchmark suite and return `{'meta': ..., 'results': [...]}`.
 
@@ -130,12 +145,13 @@ def run_suite(
         filter_: If given, only run cases whose key contains this substring.
         repeats: Number of timed runs per case (after one compile/warmup run).
         out: If given, path of the JSON file to write results to.
+        tier: If given, only run the cases of that tier; `None` runs all of them.
     """
-    cases = benchmark_cases(quick=quick)
+    cases = benchmark_cases(quick=quick, tier=tier)
     if filter_ is not None:
         cases = [c for c in cases if filter_ in c.key]
 
-    meta = _metadata(quick, repeats, filter_)
+    meta = _metadata(quick, repeats, filter_, tier)
     device = meta['device']
     print(f'device: {device["platform"]} ({device["device_kind"]})', end=', ')
     print(f'precision: {meta["precision"]}, repeats: {repeats}')
