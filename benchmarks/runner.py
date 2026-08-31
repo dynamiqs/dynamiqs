@@ -43,21 +43,25 @@ def _extract_infos(out: Any) -> dict[str, int | None]:
 def run_case(case: Case, repeats: int = 5) -> dict[str, Any]:
     """Run a single benchmark case and return its result record.
 
-    The first call is recorded as `compile_s` (compilation + one run, an upper
-    bound on compilation time). The same jitted closure is then called `repeats`
-    times and the median wall-clock time is reported as `median_s`.
+    The case is compiled ahead of time with `jax.jit(fn).trace().lower().compile()`
+    and this is recorded as `compile_s` (tracing + lowering + compilation, no
+    execution). The compiled function is then called `repeats` times and the
+    median wall-clock time is reported as `median_s`.
     """
     fn = case.build()
 
     t0 = time.perf_counter()
-    out = jax.block_until_ready(fn())
+    compiled = jax.jit(fn).trace().lower().compile()
     compile_s = time.perf_counter() - t0
+
+    # untimed warmup run, to extract the solver infos
+    out = jax.block_until_ready(compiled())
     infos = _extract_infos(out)
 
     runs_s = []
     for _ in range(repeats):
         t0 = time.perf_counter()
-        jax.block_until_ready(fn())
+        jax.block_until_ready(compiled())
         runs_s.append(time.perf_counter() - t0)
 
     return {
