@@ -10,6 +10,7 @@ from ..order import TEST_SHORT
 # with itself and the exact solution is exp(-i theta(t) sigma_x) |psi0> with
 # theta(t) the integral of the modulation.
 
+
 def square_wave(t):
     # square wave of period 1, discontinuous at every multiple of 0.5 and of vanishing
     # integral over each period
