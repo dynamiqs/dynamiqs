@@ -15,7 +15,7 @@ Options: `--filter S` (substring match on the case key, e.g. `--filter n=128`), 
 
 Output columns:
 
-- `compile (s)` — duration of the first call: compilation plus one run (an upper bound on compilation time),
+- `compile (s)` — ahead-of-time compilation time (tracing + lowering + compilation, no execution),
 - `median (s)` — median wall-clock time over the timed runs, after compilation,
 - `nsteps` — number of solver steps, maximum over batched simulations (the slowest batch element governs wall-clock time),
 - `nrej` — number of rejected steps (adaptive step-size methods only).
@@ -40,4 +40,4 @@ Install a CUDA-enabled JAX build (e.g. `uv pip install -U "jax[cuda12]"`), then 
 
 ## Adding a case
 
-In `cases.py`, write a builder returning a zero-argument jitted closure (use `eqx.filter_jit` if it returns a solver `Result`) and register it in `benchmark_cases()` with both full and `quick` sizes. The CI smoke test (`tests/test_benchmarks.py`) picks up new cases automatically.
+In `cases.py`, write a builder returning a plain zero-argument closure (the runner jits it, times its ahead-of-time compilation, then times its execution) and register it in `benchmark_cases()` with both full and `quick` sizes. The CI smoke test (`tests/test_benchmarks.py`) picks up new cases automatically.
