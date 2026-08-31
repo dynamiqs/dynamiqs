@@ -5,7 +5,7 @@ Lightweight timing benchmarks for dynamiqs, on a small set of cases representati
 ## Quickstart
 
 ```shell
-uv run task bench                     # full suite (a few minutes on a laptop CPU)
+uv run task bench                     # full suite (~2 minutes on a laptop CPU)
 uv run task bench --quick             # tiny sizes, a few seconds (sanity check)
 uv run task bench --filter cavity     # only cases whose name contains "cavity"
 uv run task bench --out results.json  # also write results to a JSON file
