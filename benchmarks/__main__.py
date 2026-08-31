@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import sys
 
+from .cases import Tier
 from .compare import compare
 from .runner import run_suite
 
@@ -31,6 +32,12 @@ def main(argv: list[str] | None = None) -> None:
             '--filter', help='only run cases whose key contains this substring'
         )
         parser.add_argument(
+            '--tier',
+            type=Tier,
+            choices=list(Tier),
+            help='only run the cases of this tier (default: all tiers)',
+        )
+        parser.add_argument(
             '--quick', action='store_true', help='use tiny problem sizes'
         )
         parser.add_argument(
@@ -39,7 +46,11 @@ def main(argv: list[str] | None = None) -> None:
         parser.add_argument('--out', help='write results to this JSON file')
         args = parser.parse_args(argv)
         run_suite(
-            quick=args.quick, filter_=args.filter, repeats=args.repeats, out=args.out
+            quick=args.quick,
+            filter_=args.filter,
+            repeats=args.repeats,
+            out=args.out,
+            tier=args.tier,
         )
 
 

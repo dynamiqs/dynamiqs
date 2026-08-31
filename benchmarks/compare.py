@@ -6,8 +6,9 @@ import json
 from pathlib import Path
 from typing import Any
 
+_KEY_WIDTH = 60  # kept in sync with `runner._KEY_WIDTH`
 _TABLE_HEADER = (
-    f'{"case":<40} {"before (s)":>11} {"after (s)":>11} {"Δ%":>7}'
+    f'{"case":<{_KEY_WIDTH}} {"before (s)":>11} {"after (s)":>11} {"Δ%":>7}'
     f' {"compile (s)":>15} {"nsteps":>13}'
 )
 
@@ -36,7 +37,8 @@ def _format_row(a: dict[str, Any] | None, b: dict[str, Any] | None) -> str:
     compile_ab = f'{fmt(a, "compile_s", ".2f")} → {fmt(b, "compile_s", ".2f")}'
     nsteps_ab = f'{fmt(a, "nsteps", "d")} → {fmt(b, "nsteps", "d")}'
     return (
-        f'{key:<40} {fmt(a, "median_s", ".4f"):>11} {fmt(b, "median_s", ".4f"):>11}'
+        f'{key:<{_KEY_WIDTH}} {fmt(a, "median_s", ".4f"):>11}'
+        f' {fmt(b, "median_s", ".4f"):>11}'
         f' {delta:>7} {compile_ab:>15} {nsteps_ab:>13}'
     )
 
