@@ -218,7 +218,9 @@ Capitalized sentences ending with a period; backticks for identifiers, single qu
 string values. Argument errors follow `"Argument ... must ..., but ..."`:
 
 ```python
-raise ValueError(f'Argument `H` must have shape (n, n), but has shape H.shape={H.shape}.')
+raise ValueError(
+    f'Argument `H` must have shape (n, n), but has shape H.shape={H.shape}.'
+)
 ```
 
 ## Documentation
