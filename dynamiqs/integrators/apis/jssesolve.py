@@ -256,8 +256,8 @@ def jssesolve(
     tutorial for more details.
     """
     # === convert arguments
-    H = astimeqarray(H)
-    Ls = [astimeqarray(L) for L in jump_ops]
+    H = astimeqarray(H, 'H')
+    Ls = [astimeqarray(L, 'jump_ops') for L in jump_ops]
     psi0 = asqarray(psi0)
     keys = jnp.asarray(keys)
 
