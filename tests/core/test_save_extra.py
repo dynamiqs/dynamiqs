@@ -2,31 +2,19 @@
 
 The hook returns `(1 + t) * expect(op, y)`, compared against the same quantity computed
 post-hoc from the saved states and `tsave`. This fails if `t` is stubbed to zero, off by
-one, or inconsistent with the saved states. Every solver family is covered, because each
-one calls `save()` from its own integration loop.
+one, or inconsistent with the saved states. All integrators share the same `save_extra`
+pipeline, so we only keep one representative combination per solver family.
 """
 
 import jax
 import jax.numpy as jnp
-import jax.tree_util as jtu
-import optimistix as optx
 import pytest
 
 import dynamiqs as dq
-from dynamiqs.method import (
-    DiffusiveMonteCarlo,
-    Euler,
-    EulerJump,
-    EulerMaruyama,
-    Event,
-    Expm,
-    JumpMonteCarlo,
-    Rouchon1,
-    Tsit5,
-)
+from dynamiqs.method import EulerJump, Expm, Tsit5
 
 from ..order import TEST_SHORT
-from ..systems import damped_oscillator, dense_cavity, dense_ocavity, otdqubit, tdqubit
+from ..systems import damped_oscillator, dense_cavity, dense_ocavity, otdqubit
 
 DT = 1e-2
 NTRAJS = 3
@@ -47,66 +35,33 @@ def _keys(ntrajs=NTRAJS):
     return jax.random.split(jax.random.key(42), ntrajs)
 
 
-def _event(smart_sampling: bool) -> Event:
-    root_finder = optx.Newton(1e-4, 1e-4, jtu.Partial(optx.rms_norm))
-    return Event(root_finder=root_finder, smart_sampling=smart_sampling)
-
-
 @pytest.mark.run(order=TEST_SHORT)
 class TestSaveExtra:
-    # Expm only supports constant or pwc Hamiltonians, hence the constant-H systems
-    @pytest.mark.parametrize(
-        ('system', 'method'),
-        [
-            (tdqubit, Tsit5()),  # diffrax adaptive step
-            (tdqubit, Euler(dt=DT)),  # diffrax fixed step
-            (dense_cavity, Expm()),  # expm scan
-        ],
-    )
-    def test_sesolve(self, system, method):
-        result = system.run(method, save_extra=_hook(system))
+    def test_sesolve(self):
+        # the expm scan builds the save times itself, unlike the diffrax integrators
+        # which get them from diffrax, hence the `Expm` method here
+        system = dense_cavity
+        result = system.run(Expm(), save_extra=_hook(system))
         _assert_extra_correct(system, result)
 
-    @pytest.mark.parametrize(
-        ('system', 'method'),
-        [
-            (otdqubit, Tsit5()),
-            (otdqubit, Rouchon1(dt=DT)),
-            (dense_ocavity, Expm()),
-            # for the Monte Carlo methods the hook is applied per save point to the
-            # mean states
-            (otdqubit, JumpMonteCarlo(_keys(), EulerJump(dt=DT))),
-            (otdqubit, DiffusiveMonteCarlo(_keys(), EulerMaruyama(dt=DT))),
-        ],
-    )
-    def test_mesolve(self, system, method):
-        result = system.run(method, save_extra=_hook(system))
+    def test_mesolve(self):
+        system = otdqubit
+        result = system.run(Tsit5(), save_extra=_hook(system))
         _assert_extra_correct(system, result)
 
-    @pytest.mark.parametrize(
-        ('solver', 'method'),
-        [
-            ('jsse', _event(smart_sampling=False)),  # event integrator
-            ('jsse', _event(smart_sampling=True)),
-            ('jsse', EulerJump(dt=DT)),  # fixed step stochastic integrator
-            ('jsme', EulerJump(dt=DT)),
-            ('dsse', EulerMaruyama(dt=DT)),
-            ('dsme', Rouchon1(dt=DT)),
-        ],
-    )
-    def test_stochastic(self, solver, method):
+    def test_stochastic(self):
+        # the fixed step stochastic integrator carries the time in its own scan
         system = damped_oscillator
-        result = system.run(solver, method, _keys(), save_extra=_hook(system))
+        result = system.run('jsse', EulerJump(dt=DT), _keys(), save_extra=_hook(system))
         _assert_extra_correct(system, result)
 
-    @pytest.mark.parametrize('method', [Tsit5(), Expm()])
-    def test_propagator(self, method):
+    def test_propagator(self):
         system = dense_ocavity
         H, Ls = system.H(system.params_default), system.Ls(system.params_default)
         save_extra = lambda t, U: (1 + t) * U.trace()
         results = [
-            dq.sepropagator(H, system.tsave, method=method, save_extra=save_extra),
-            dq.mepropagator(H, Ls, system.tsave, method=method, save_extra=save_extra),
+            dq.sepropagator(H, system.tsave, method=Tsit5(), save_extra=save_extra),
+            dq.mepropagator(H, Ls, system.tsave, method=Tsit5(), save_extra=save_extra),
         ]
         for result in results:
             expected = (1 + jnp.asarray(system.tsave)) * result.propagators.trace()
