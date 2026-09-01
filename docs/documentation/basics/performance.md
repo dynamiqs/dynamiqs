@@ -87,6 +87,30 @@ This reduces the number of significand bits carried through each matrix product.
 
 Finally, `save_states=False` avoids storing and returning the state at every time in `tsave` when only expectation values are needed, which matters for large systems and many save times.
 
+## Advanced: environment variables
+
+These variables are read when JAX and Equinox are imported, so they must be set before importing Dynamiqs either from the shell, or with `os.environ` at the very top of the script.
+
+### Turn off runtime error checking
+
+Dynamiqs (and Diffrax) guard simulations with runtime checks (non-Hermitian Hamiltonians, unsorted save times, the maximum number of solver steps) implemented as [`equinox.error_if()`](https://docs.kidger.site/equinox/api/errors/#equinox.error_if). Each check adds a device-side conditional to the compiled program, which the XLA compiler cannot always optimize away. Setting `EQX_ON_ERROR=off` removes all of them:
+
+```shell
+EQX_ON_ERROR=off python simulation.py
+```
+
+Because of compiler differences, the gain depends on the backend, but it can amount to several tens of percent speedup. This disables the checks entirely, so an invalid input silently produces a wrong result rather than an error. Validate your inputs with a short run first, then turn the checks off for production.
+
+### Simulate larger systems than the GPU memory
+
+On NVIDIA GPUs, XLA can be allowed to spill its allocations out of the device into system memory (unified memory), which makes it possible to simulate systems that do not fit in the GPU memory:
+
+```shell
+TF_FORCE_UNIFIED_MEMORY=1 XLA_PYTHON_CLIENT_MEM_FRACTION=4 python simulation.py
+```
+
+`XLA_PYTHON_CLIENT_MEM_FRACTION` is the fraction of the GPU memory that XLA preallocates; any integer greater than 1 lets the allocation overflow into host memory. Accesses to the spilled pages go over the CPU-GPU interconnect, so this trades speed for capacity. It is especially useful on systems with a fast interconnect such as Grace Hopper, but works in principle on any NVIDIA GPU.
+
 ## Measure
 
 Dynamiqs ships a benchmark suite that times representative simulations and compares two runs, for example before and after a change:
