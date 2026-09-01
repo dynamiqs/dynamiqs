@@ -10,7 +10,7 @@ import jax
 import jax.numpy as jnp
 import jax.scipy.linalg as jsp_linalg
 from jax import Array
-from jaxtyping import PyTree
+from jaxtyping import PyTree, Scalar
 
 from ..._checks import check_hermitian
 from ...method import (
@@ -296,7 +296,7 @@ class MESolveLowRankIntegrator(
         saved = self.postprocess_saved(*ys)
         return self.result(saved, infos=self.infos(solution.stats))
 
-    def save(self, y: PyTree) -> SolveSaved:
+    def save(self, t: Scalar, y: PyTree) -> SolveSaved:
         m = y
         m = normalize_m(m)
 
@@ -307,10 +307,10 @@ class MESolveLowRankIntegrator(
         extra = None
         if self.options.save_extra:
             if self.method.is_save_extra_low_rank:
-                extra = self.options.save_extra(cast(QArray, m))
+                extra = self.options.save_extra(t, cast(QArray, m))
             else:
                 rho = asqarray(rho_from_m(m), dims=self.dims)
-                extra = self.options.save_extra(rho)
+                extra = self.options.save_extra(t, rho)
 
         if self.Es is not None:
             Esave = jnp.stack([expval_from_m(m, E) for E in self.Es])
