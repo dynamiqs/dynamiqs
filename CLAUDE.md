@@ -62,6 +62,14 @@ Types that appear in nearly every signature: `QArray` (has a `layout` — `dq.de
 (a time-dependent `H(t)`), `Method` and `Gradient` (`dq.method.*`, `dq.gradient.*`), and
 `Result` (`.states`, `.expects`, solver-specific extras).
 
+Solver names are built from these prefixes, combined as needed (e.g. `sme` = stochastic master equation, `sse` = stochastic Schrödinger equation):
+
+- `se` — Schrödinger equation
+- `me` — master equation
+- `j` — jump unravelling
+- `d` — diffusive unravelling
+- `s` — stochastic
+
 ## Testing
 
 ```
@@ -119,6 +127,8 @@ file, run `task durations` and commit `.test_durations`.**
   sparse-DIA code paths can differ.
 - Keep the suite fast: existing files deliberately test only `Tsit5()` among the adaptive
   methods. Do not parametrize over every available method.
+- If a test modification requires relaxing an assertion, changing a tolerance, or
+  disabling a test to pass, stop and report instead of proceeding.
 
 ### Stochastic solver tests
 
@@ -167,6 +177,8 @@ PEP 8, line length **88**, single quotes. `task clean` handles formatting; the r
   `check_times`, `check_hermitian`, …), not hand-rolled asserts.
 - Shapes use `...` for batch dimensions and `n` for the Hilbert dimension.
 - `[None, ...]` to add an axis, not `unsqueeze`; `(...).sum(0)` over `jnp.sum(..., 0)`.
+- Avoid abbreviations when possible. Use full English words. Exception: symbols already
+  standard in the papers/docstrings, e.g. `(n, ...)`.
 
 ### Guidelines
 
@@ -175,6 +187,11 @@ PEP 8, line length **88**, single quotes. `task clean` handles formatting; the r
   numerically obvious formulation was rejected. Never restate the syntax. Unicode math in
   comments is idiomatic here (`# rho = Σ_i r_i |r_i⟩⟨r_i|`); in docstrings, math goes in
   LaTeX instead, because it is rendered.
+- **Comments describe the code as it stands, not how it got there.** The reader has
+  no access to the conversation or the previous version — never "as requested", "now
+  uses", "the previous approach". A rejected alternative earns a comment only when the
+  reason is durable, never because it was tried. Same for docstrings and identifiers:
+  no `_new`, `_v2`, `_fixed`. The reasoning that led here belongs in the commit message.
 - **Avoid trivial helpers.** Don't extract a single-use one- or two-line function unless
   it genuinely improves readability. Conversely, do extract a formula that appears in
   three integrators.
