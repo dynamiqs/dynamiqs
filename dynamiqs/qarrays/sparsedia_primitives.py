@@ -275,12 +275,19 @@ def and_sparsedia_sparsedia(
         np.ravel(left_offsets_np[:, None] * n + right_offsets_np)
     )
 
-    # compute new diagonals
-    out_diags = jnp.kron(left_diags, right_diags)
+    # compute new diagonals. The Kronecker product acts on the (ndiags, n) block
+    # only; batch axes are broadcast, not multiplied together.
+    out_diags = _bkron(left_diags, right_diags)
 
     # merge duplicate offsets and return
     out_offsets, out_diags = _compress_sparsedia(out_offsets, out_diags)
     return out_offsets, out_diags
+
+
+@partial(jnp.vectorize, signature='(a,b),(c,d)->(ac,bd)')
+def _bkron(a: Array, b: Array) -> Array:
+    # batched Kronecker product over the last two axes
+    return jnp.kron(a, b)
 
 
 def _compress_sparsedia(
