@@ -29,9 +29,7 @@ _VALID_TERM = CompositeTerm(operators=(_OP2, _OP3))
             id='term-operators-not-a-tuple',
         ),
         pytest.param(
-            lambda: CompositeTerm(operators=()),
-            ValueError,
-            id='term-operators-empty',
+            lambda: CompositeTerm(operators=()), ValueError, id='term-operators-empty'
         ),
         pytest.param(
             lambda: CompositeTerm(operators=(jnp.eye(2), _OP3)),
@@ -64,9 +62,7 @@ _VALID_TERM = CompositeTerm(operators=(_OP2, _OP3))
             id='qarray-terms-not-a-tuple',
         ),
         pytest.param(
-            lambda: CompositeQArray((2, 3), ()),
-            ValueError,
-            id='qarray-terms-empty',
+            lambda: CompositeQArray((2, 3), ()), ValueError, id='qarray-terms-empty'
         ),
         pytest.param(
             lambda: CompositeQArray((3, 2), (_VALID_TERM,)),
@@ -107,12 +103,10 @@ def test_qarray_matches_independent_oracle():
     )
 
     term0 = CompositeTerm(
-        operators=(dq.asqarray(A0, dims=(2,)), dq.asqarray(B0, dims=(3,))),
-        coeff=coeff0,
+        operators=(dq.asqarray(A0, dims=(2,)), dq.asqarray(B0, dims=(3,))), coeff=coeff0
     )
     term1 = CompositeTerm(
-        operators=(dq.asqarray(A1, dims=(2,)), dq.asqarray(B1, dims=(3,))),
-        coeff=coeff1,
+        operators=(dq.asqarray(A1, dims=(2,)), dq.asqarray(B1, dims=(3,))), coeff=coeff1
     )
     c = CompositeQArray((2, 3), (term0, term1))
 
