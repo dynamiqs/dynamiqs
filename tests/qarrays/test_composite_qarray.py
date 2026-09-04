@@ -2,9 +2,11 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
+from jax import Array
 
 import dynamiqs as dq
 from dynamiqs.qarrays.composite_qarray import CompositeQArray, CompositeTerm
+from dynamiqs.qarrays.layout import Layout
 from dynamiqs.qarrays.materialized_qarray import MaterializedQArray
 
 from ..order import TEST_SHORT
@@ -201,3 +203,169 @@ def test_repr_does_not_materialize(monkeypatch):
     assert 'n_terms=2' in text
     assert str(c.dims) in text
     assert str(c.shape) in text
+
+
+def _batched_composite(layout: Layout) -> tuple[CompositeQArray, np.ndarray]:
+    # two terms with different original batch shapes, so every batch-axis method
+    # exercises `_aligned`; overall shape (1, 4, 6, 6)
+    A0 = dq.asqarray(np.diag([1.0, 2.0]), dims=(2,), layout=layout)
+    B0 = dq.asqarray(np.diag([1.0, 2.0, 3.0]), dims=(3,), layout=layout)
+    term0 = CompositeTerm(operators=(A0, B0), coeff=2.0)
+
+    A1_data = np.stack([np.diag([1.0, k + 2.0]) for k in range(4)])
+    A1 = dq.asqarray(A1_data, dims=(2,), layout=layout)
+    B1_data = np.diag([2.0, 1.0, 3.0])
+    B1 = dq.asqarray(B1_data, dims=(3,), layout=layout)
+    coeff1 = jnp.arange(1.0, 5.0).reshape(1, 4, 1, 1)
+    term1 = CompositeTerm(operators=(A1, B1), coeff=coeff1)
+
+    c = CompositeQArray((2, 3), (term0, term1))
+
+    oracle0 = 2.0 * np.kron(np.diag([1.0, 2.0]), np.diag([1.0, 2.0, 3.0]))
+    oracle1 = np.stack([(k + 1) * np.kron(A1_data[k], B1_data) for k in range(4)])
+    oracle = oracle0[None, None] + oracle1[None]
+    return c, oracle
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_reshape_matches_oracle(layout):
+    c, oracle = _batched_composite(layout)
+
+    reshaped = c.reshape(4, 6, 6)
+
+    assert type(reshaped) is CompositeQArray
+    assert reshaped.layout is layout
+    assert reshaped.shape == (4, 6, 6)
+    assert jnp.allclose(reshaped.to_jax(), oracle.reshape(4, 6, 6))
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_reshape_rejects_matrix_axis_change():
+    c, _ = _batched_composite(dq.dense)
+
+    with pytest.raises(ValueError, match='last two dimensions'):
+        c.reshape(4, 4, 9)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_broadcast_to_matches_oracle(layout):
+    c, oracle = _batched_composite(layout)
+
+    broadcasted = c.broadcast_to(3, 1, 4, 6, 6)
+
+    assert type(broadcasted) is CompositeQArray
+    assert broadcasted.layout is layout
+    assert broadcasted.shape == (3, 1, 4, 6, 6)
+    assert jnp.allclose(broadcasted.to_jax(), np.broadcast_to(oracle, (3, 1, 4, 6, 6)))
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_broadcast_to_rejects_matrix_axis_change():
+    c, _ = _batched_composite(dq.dense)
+
+    with pytest.raises(ValueError, match='last two dimensions'):
+        c.broadcast_to(1, 4, 7, 7)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_swapaxes_matches_oracle():
+    c, oracle = _batched_composite(dq.dense)
+
+    swapped = c.swapaxes(0, 1)
+
+    assert type(swapped) is CompositeQArray
+    assert swapped.shape == (4, 1, 6, 6)
+    assert jnp.allclose(swapped.to_jax(), np.swapaxes(oracle, 0, 1))
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize(
+    ('source', 'destination'),
+    [
+        pytest.param(0, 1, id='single-axis'),
+        pytest.param((0, 1), (1, 0), id='multi-axis'),
+    ],
+)
+def test_moveaxis_matches_oracle(source, destination):
+    c, oracle = _batched_composite(dq.dense)
+
+    moved = c.moveaxis(source, destination)
+    expected = np.moveaxis(oracle, source, destination)
+
+    assert type(moved) is CompositeQArray
+    assert moved.shape == expected.shape
+    assert jnp.allclose(moved.to_jax(), expected)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize(
+    'axis', [pytest.param(0, id='single-axis'), pytest.param((0, 2), id='multi-axis')]
+)
+def test_expand_dims_matches_oracle(axis):
+    c, oracle = _batched_composite(dq.dense)
+
+    expanded = c.expand_dims(axis)
+    expected = np.expand_dims(oracle, axis)
+
+    assert type(expanded) is CompositeQArray
+    assert expanded.shape == expected.shape
+    assert jnp.allclose(expanded.to_jax(), expected)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_squeeze_batch_axis_stays_lazy(layout):
+    c, oracle = _batched_composite(layout)
+
+    squeezed = c.squeeze(0)
+
+    assert type(squeezed) is CompositeQArray
+    assert squeezed.layout is layout
+    assert squeezed.shape == (4, 6, 6)
+    assert jnp.allclose(squeezed.to_jax(), np.squeeze(oracle, 0))
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_squeeze_matrix_axis_materializes():
+    A = dq.asqarray(np.array([[2.0]]), dims=(1,))
+    B = dq.asqarray(np.array([[3.0]]), dims=(1,))
+    c = CompositeQArray((1, 1), (CompositeTerm(operators=(A, B)),))
+
+    squeezed = c.squeeze(-1)
+
+    assert not isinstance(squeezed, CompositeQArray)
+    assert jnp.allclose(jnp.asarray(squeezed), np.squeeze(np.array([[6.0]]), axis=-1))
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_sum_batch_axis_matches_oracle():
+    c, oracle = _batched_composite(dq.dense)
+
+    total = c.sum(axis=1)
+
+    assert type(total) is MaterializedQArray
+    assert total.shape == (1, 6, 6)
+    assert jnp.allclose(total.to_jax(), oracle.sum(axis=1))
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_sum_all_axes_returns_scalar_array():
+    c, oracle = _batched_composite(dq.dense)
+
+    total = c.sum(axis=None)
+
+    assert isinstance(total, Array)
+    assert jnp.allclose(total, oracle.sum())
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_reshape_unchecked_materializes():
+    c, oracle = _batched_composite(dq.dense)
+
+    reshaped = c._reshape_unchecked(1, 4, 36)
+
+    assert type(reshaped) is MaterializedQArray
+    assert reshaped.shape == (1, 4, 36)
+    assert jnp.allclose(reshaped.to_jax(), oracle.reshape(1, 4, 36))
