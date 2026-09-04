@@ -237,6 +237,10 @@ nav:
               - excited: python_api/utils/states/excited.md
               - excited_dm: python_api/utils/states/excited_dm.md
               - thermal_dm: python_api/utils/states/thermal_dm.md
+              - vacuum: python_api/utils/states/vacuum.md
+              - vacuum_dm: python_api/utils/states/vacuum_dm.md
+              - cat: python_api/utils/states/cat.md
+              - cat_dm: python_api/utils/states/cat_dm.md
           - Quantum utilities:
               - dag: python_api/utils/general/dag.md
               - powm: python_api/utils/general/powm.md
@@ -274,6 +278,11 @@ nav:
               - asqarray: python_api/qarrays/utils/asqarray.md
               - isqarraylike: python_api/qarrays/utils/isqarraylike.md
               - stack: python_api/qarrays/utils/stack.md
+              - concatenate: python_api/qarrays/utils/concatenate.md
+              - expand_dims: python_api/qarrays/utils/expand_dims.md
+              - swapaxes: python_api/qarrays/utils/swapaxes.md
+              - moveaxis: python_api/qarrays/utils/moveaxis.md
+              - where: python_api/qarrays/utils/where.md
               - to_jax: python_api/qarrays/utils/to_jax.md
               - to_numpy: python_api/qarrays/utils/to_numpy.md
               - to_qutip: python_api/qarrays/utils/to_qutip.md

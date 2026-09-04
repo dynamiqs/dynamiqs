@@ -231,15 +231,31 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
 
 
 def swapaxes(x: QArrayLike, axis1: int, axis2: int) -> QArray:
-    """Interchange two axes of a qarray.
+    r"""Interchange two batch axes of a qarray.
+
+    Warning:
+        Only batch axes can be swapped. The final two axes are the matrix dimensions,
+        use `x.mT` to transpose those.
 
     Args:
-        x: Qarray-like object.
+        x (qarray-like of shape (..., n, m)): Qarray-like object.
         axis1: First axis.
         axis2: Second axis.
 
     Returns:
-        Qarray with axes `axis1` and `axis2` interchanged.
+        (qarray of shape (..., n, m)): Qarray with axes `axis1` and `axis2`
+            interchanged.
+
+    See also:
+        - [dq.moveaxis()][dynamiqs.moveaxis]: move axes of a qarray to new positions.
+
+    Examples:
+        >>> psis = dq.stack([dq.fock(3, 0), dq.fock(3, 1), dq.fock(3, 2)])
+        >>> x = dq.stack([psis, psis])
+        >>> x.shape
+        (2, 3, 3, 1)
+        >>> dq.swapaxes(x, 0, 1).shape
+        (3, 2, 3, 1)
     """
     return asqarray(x).swapaxes(axis1, axis2)
 
@@ -247,42 +263,84 @@ def swapaxes(x: QArrayLike, axis1: int, axis2: int) -> QArray:
 def moveaxis(
     x: QArrayLike, source: int | Sequence[int], destination: int | Sequence[int]
 ) -> QArray:
-    """Move axes of a qarray to new positions.
+    r"""Move batch axes of a qarray to new positions.
+
+    Warning:
+        Only batch axes can be moved. The final two axes are the matrix dimensions,
+        use `x.mT` to transpose those.
 
     Args:
-        x: Qarray-like object.
+        x (qarray-like of shape (..., n, m)): Qarray-like object.
         source: Original positions of the axes to move.
         destination: Destination positions for each moved axis.
 
     Returns:
-        Qarray with moved axes.
+        (qarray of shape (..., n, m)): Qarray with moved axes.
+
+    See also:
+        - [dq.swapaxes()][dynamiqs.swapaxes]: interchange two axes of a qarray.
+
+    Examples:
+        >>> psis = dq.stack([dq.fock(3, 0), dq.fock(3, 1), dq.fock(3, 2)])
+        >>> x = dq.stack([psis, psis])
+        >>> x.shape
+        (2, 3, 3, 1)
+        >>> dq.moveaxis(x, 0, 1).shape
+        (3, 2, 3, 1)
     """
     return asqarray(x).moveaxis(source, destination)
 
 
 def expand_dims(x: QArrayLike, axis: int | Sequence[int]) -> QArray:
-    """Expand the shape of a qarray by inserting new axes.
+    r"""Expand the shape of a qarray by inserting new batch axes.
+
+    Warning:
+        New axes can only be inserted among the batch axes, not among the final two
+        matrix dimensions.
 
     Args:
-        x: Qarray-like object.
+        x (qarray-like of shape (..., n, m)): Qarray-like object.
         axis: Axis or axes where new dimensions are inserted.
 
     Returns:
-        Qarray with additional dimensions.
+        (qarray of shape (..., n, m)): Qarray with additional dimensions.
+
+    Examples:
+        >>> psis = dq.stack([dq.fock(3, 0), dq.fock(3, 1), dq.fock(3, 2)])
+        >>> psis.shape
+        (3, 3, 1)
+        >>> dq.expand_dims(psis, 0).shape
+        (1, 3, 3, 1)
     """
     return asqarray(x).expand_dims(axis)
 
 
 def where(condition: ArrayLike, x: QArrayLike, y: QArrayLike) -> QArray:
-    """Select values from two qarrays depending on a condition.
+    r"""Select values from two qarrays depending on a condition.
 
     Args:
-        condition: Boolean array-like condition.
-        x: Values selected when `condition` is true.
-        y: Values selected when `condition` is false.
+        condition (array-like of shape (...)): Boolean condition, broadcast against the
+            shapes of `x` and `y`.
+        x (qarray-like of shape (..., n, m)): Values selected when `condition` is true.
+        y (qarray-like of shape (..., n, m)): Values selected when `condition` is false.
 
     Returns:
-        Qarray with values chosen from `x` and `y`.
+        (qarray of shape (..., n, m)): Qarray with values chosen from `x` and `y`.
+
+    Raises:
+        TypeError: If neither `x` nor `y` is a qarray, in which case
+            [`jax.numpy.where()`](https://docs.jax.dev/en/latest/_autosummary/jax.numpy.where.html)
+            should be used directly.
+
+    Examples:
+        >>> condition = jnp.array([True, False])[:, None, None]
+        >>> dq.where(condition, dq.fock(2, 0), dq.fock(2, 1))
+        QArray: shape=(2, 2, 1), dims=(2,), dtype=complex64, layout=dense
+        [[[1.+0.j]
+          [0.+0.j]]
+        <BLANKLINE>
+         [[0.+0.j]
+          [1.+0.j]]]
     """
     x_is_qarray = isinstance(x, QArray)
     y_is_qarray = isinstance(y, QArray)
@@ -323,14 +381,32 @@ def where(condition: ArrayLike, x: QArrayLike, y: QArrayLike) -> QArray:
 
 
 def concatenate(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
-    """Join a sequence of qarrays along an existing axis.
+    r"""Join a sequence of qarrays along an existing batch axis.
+
+    Warning:
+        All elements of the sequence `qarrays` must have identical `dims` attributes,
+        identical final two dimensions, and identical shapes except along `axis`.
 
     Args:
         qarrays: Qarrays to concatenate.
-        axis: Axis in the result along which the input qarrays are concatenated.
+        axis: Batch axis in the result along which the input qarrays are concatenated.
 
     Returns:
         Concatenated qarray.
+
+    See also:
+        - [dq.stack()][dynamiqs.stack]: join a sequence of qarrays along a new axis.
+
+    Examples:
+        >>> dq.concatenate([dq.stack([dq.fock(3, 0)]), dq.stack([dq.fock(3, 1)])])
+        QArray: shape=(2, 3, 1), dims=(3,), dtype=complex64, layout=dense
+        [[[1.+0.j]
+          [0.+0.j]
+          [0.+0.j]]
+        <BLANKLINE>
+         [[0.+0.j]
+          [1.+0.j]
+          [0.+0.j]]]
     """
     qarrays, dims, vectorized, axis = _check_concatenate_input(qarrays, axis)
 

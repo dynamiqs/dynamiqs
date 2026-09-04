@@ -7,7 +7,6 @@ import dynamiqs as dq
 from ..order import TEST_LONG
 
 
-@pytest.mark.run(order=TEST_LONG)
 def rand_sesolve_args(n, nH, npsi0, nEs):
     kH, kpsi0, kEs = jax.random.split(jax.random.PRNGKey(42), 3)
     H = dq.random.operator(kH, n, batch=nH)

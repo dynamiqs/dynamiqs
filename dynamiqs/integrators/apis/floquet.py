@@ -172,7 +172,7 @@ def floquet(
     ```
     """
     # === convert arguments
-    H = astimeqarray(H)
+    H = astimeqarray(H, 'H')
     tsave = jnp.asarray(tsave)
 
     # === build options
@@ -255,7 +255,7 @@ def _check_floquet_args(
     T, tsave = eqx.error_if(
         (T, tsave),
         tsave[-1] - tsave[0] > T,
-        'The time interval spanned by tsave should be less than a single period T, '
+        'The time interval spanned by `tsave` must be less than a single period `T`, '
         'i.e. `tsave[-1] - tsave[0] <= T`.',
     )
 

@@ -206,8 +206,8 @@ def mepropagator(
     tutorial for more details.
     """
     # === convert arguments
-    H = astimeqarray(H)
-    Ls = [astimeqarray(L) for L in jump_ops]
+    H = astimeqarray(H, 'H')
+    Ls = [astimeqarray(L, 'jump_ops') for L in jump_ops]
     tsave = jnp.asarray(tsave)
 
     # === build options
