@@ -275,12 +275,17 @@ def and_sparsedia_sparsedia(
         np.ravel(left_offsets_np[:, None] * n + right_offsets_np)
     )
 
-    # compute new diagonals
-    out_diags = jnp.kron(left_diags, right_diags)
+    # compute new diagonals with broadcasted batch axes
+    out_diags = _bkron(left_diags, right_diags)
 
     # merge duplicate offsets and return
     out_offsets, out_diags = _compress_sparsedia(out_offsets, out_diags)
     return out_offsets, out_diags
+
+
+@partial(jnp.vectorize, signature='(a,b),(c,d)->(ac,bd)')
+def _bkron(a: Array, b: Array) -> Array:
+    return jnp.kron(a, b)
 
 
 def _compress_sparsedia(
