@@ -244,7 +244,7 @@ class MaterializedQArray(QArray):
         result = self.data * y
         return replace(self, data=result)
 
-    def __add__(self, y: QArrayLike) -> QArray:
+    def __add__(self, y: QArrayLike) -> MaterializedQArray:
         if isinstance(y, int | float) and y == 0:
             return self
 
