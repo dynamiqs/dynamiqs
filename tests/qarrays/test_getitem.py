@@ -6,12 +6,14 @@ from jax import Array
 
 import dynamiqs as dq
 from dynamiqs import QArray
-from dynamiqs.qarrays.layout import Layout
+from dynamiqs.qarrays.composite_qarray import CompositeQArray, CompositeTerm
 
 from ..order import TEST_INSTANT
 
 # batched qarray of shape (5, 3, 4, 4)
 _SHAPE = (5, 3, 4, 4)
+
+_LAYOUTS = {'dense': dq.dense, 'dia': dq.dia}
 
 # keys that only touch the batch dimensions: indexing returns a QArray
 BATCH_KEYS = [
@@ -56,19 +58,25 @@ MATRIX_KEYS = [
 ]
 
 
-def _qarray(layout: Layout) -> QArray:
+def _qarray(kind: str) -> QArray:
+    if kind == 'composite':
+        key0, key1 = jr.split(jr.key(44))
+        A = dq.asqarray(jr.normal(key0, (5, 3, 2, 2)), dims=(2,))
+        B = dq.asqarray(jr.normal(key1, (2, 2)), dims=(2,))
+        return CompositeQArray((2, 2), (CompositeTerm(operators=(A, B)),))
+
     data = jr.normal(jr.key(42), _SHAPE)
-    if layout == dq.dia:
+    if kind == 'dia':
         # batch of diagonal matrices, so the dia layout is preserved under stacking
         data = jnp.eye(4) * data[..., :1]
-    return dq.asqarray(data, layout=layout)
+    return dq.asqarray(data, layout=_LAYOUTS[kind])
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+@pytest.mark.parametrize('kind', ['dense', 'dia', 'composite'])
 @pytest.mark.parametrize('key', BATCH_KEYS)
-def test_getitem_batch_dims_returns_qarray(layout, key):
-    x = _qarray(layout)
+def test_getitem_batch_dims_returns_qarray(kind, key):
+    x = _qarray(kind)
     result = x[key]
     assert isinstance(result, QArray)
     assert result.dims == x.dims
@@ -77,19 +85,19 @@ def test_getitem_batch_dims_returns_qarray(layout, key):
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+@pytest.mark.parametrize('kind', ['dense', 'dia', 'composite'])
 @pytest.mark.parametrize('key', MATRIX_KEYS)
-def test_getitem_matrix_dims_returns_array(layout, key):
-    x = _qarray(layout)
+def test_getitem_matrix_dims_returns_array(kind, key):
+    x = _qarray(kind)
     result = x[key]
     assert isinstance(result, Array)
     assert jnp.array_equal(result, x.to_jax()[key])
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
-def test_getitem_unbatched(layout):
-    x = _qarray(layout)[0, 0]
+@pytest.mark.parametrize('kind', ['dense', 'dia', 'composite'])
+def test_getitem_unbatched(kind):
+    x = _qarray(kind)[0, 0]
     assert isinstance(x[:], QArray)
     assert isinstance(x[...], QArray)
     assert isinstance(x[None], QArray)
