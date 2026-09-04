@@ -285,7 +285,6 @@ def and_sparsedia_sparsedia(
 
 @partial(jnp.vectorize, signature='(a,b),(c,d)->(ac,bd)')
 def _bkron(a: Array, b: Array) -> Array:
-    # batched Kronecker product over the last two axes
     return jnp.kron(a, b)
 
 
