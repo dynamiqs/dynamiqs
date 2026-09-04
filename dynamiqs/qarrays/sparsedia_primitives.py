@@ -275,8 +275,7 @@ def and_sparsedia_sparsedia(
         np.ravel(left_offsets_np[:, None] * n + right_offsets_np)
     )
 
-    # compute new diagonals. The Kronecker product acts on the (ndiags, n) block
-    # only; batch axes are broadcast, not multiplied together.
+    # compute new diagonals with broadcasted batch axes
     out_diags = _bkron(left_diags, right_diags)
 
     # merge duplicate offsets and return
