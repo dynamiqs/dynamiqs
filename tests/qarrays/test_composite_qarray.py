@@ -339,6 +339,39 @@ def test_squeeze_matrix_axis_materializes():
     assert jnp.allclose(jnp.asarray(squeezed), np.squeeze(np.array([[6.0]]), axis=-1))
 
 
+def _squeeze_none_batch_axis_case() -> tuple[CompositeQArray, np.ndarray]:
+    # matrix dims (6, 6) are not size 1, so an unqualified squeeze() should
+    # only remove the size-1 batch axis and stay lazy
+    return _batched_composite(dq.dense)
+
+
+def _squeeze_none_matrix_axis_case() -> tuple[CompositeQArray, np.ndarray]:
+    # matrix dims are (1, 1), so an unqualified squeeze() must materialize
+    A = dq.asqarray(np.array([[2.0]]), dims=(1,))
+    B = dq.asqarray(np.array([[3.0]]), dims=(1,))
+    c = CompositeQArray((1, 1), (CompositeTerm(operators=(A, B)),))
+    return c, np.array([[6.0]])
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize(
+    ('build', 'stays_lazy'),
+    [
+        pytest.param(_squeeze_none_batch_axis_case, True, id='batch-axis-only'),
+        pytest.param(_squeeze_none_matrix_axis_case, False, id='matrix-dims-size-one'),
+    ],
+)
+def test_squeeze_none_axis_materializes_only_when_matrix_dims_are_one(
+    build, stays_lazy
+):
+    c, oracle = build()
+
+    squeezed = c.squeeze()
+
+    assert isinstance(squeezed, CompositeQArray) is stays_lazy
+    assert np.allclose(np.asarray(squeezed), np.squeeze(oracle))
+
+
 @pytest.mark.run(order=TEST_SHORT)
 def test_sum_batch_axis_matches_oracle():
     c, oracle = _batched_composite(dq.dense)
@@ -369,3 +402,28 @@ def test_reshape_unchecked_materializes():
     assert type(reshaped) is MaterializedQArray
     assert reshaped.shape == (1, 4, 36)
     assert jnp.allclose(reshaped.to_jax(), oracle.reshape(1, 4, 36))
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_getitem_batch_axis_stays_lazy(layout):
+    c, oracle = _batched_composite(layout)
+
+    key = (0, slice(1, 3))
+    indexed = c[key]
+
+    assert type(indexed) is CompositeQArray
+    assert indexed.layout is layout
+    assert indexed.shape == (2, 6, 6)
+    assert jnp.allclose(indexed.to_jax(), oracle[key])
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_getitem_matrix_axis_materializes():
+    c, oracle = _batched_composite(dq.dense)
+
+    key = (Ellipsis, 0)
+    indexed = c[key]
+
+    assert not isinstance(indexed, CompositeQArray)
+    assert jnp.allclose(jnp.asarray(indexed), oracle[key])

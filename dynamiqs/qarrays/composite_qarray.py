@@ -47,6 +47,12 @@ def _key_in_batch_dims(key: IndexType, ndim: int) -> bool:
     return not key_touches_last_two_dims(key, ndim)
 
 
+def _squeezable_batch_axes(shape: tuple[int, ...]) -> tuple[int, ...]:
+    # batch-axis positions of size 1, i.e. the axes an unqualified `squeeze()`
+    # removes without touching the matrix axes
+    return tuple(i for i, n in enumerate(shape[:-2]) if n == 1)
+
+
 class CompositeTerm(eqx.Module):
     r"""One separable term $c \, A_0 \otimes \cdots \otimes A_{N-1}$ in a
     :class:`CompositeQArray`.  Holds the bulk of the lazy logic; most ``LAZY``
@@ -165,6 +171,7 @@ class CompositeTerm(eqx.Module):
         raise NotImplementedError
 
     def reshape(self, *shape: int) -> CompositeTerm:
+        """Reshapes the term's batch axes."""
         term = self._aligned()
         operators = tuple(
             op.reshape(*shape[:-2], *op.shape[-2:]) for op in term.operators
@@ -173,7 +180,8 @@ class CompositeTerm(eqx.Module):
         return replace(term, operators=operators, coeff=coeff)
 
     def broadcast_to(self, *shape: int) -> CompositeTerm:
-        # batch axes only → each op's .broadcast_to() + jnp.broadcast_to(coeff, ...).
+        """Broadcasts the term's batch axes to a new shape."""
+        # unlike other batch-axis methods, no `_aligned()` call is needed
         if shape[-2:] != self.shape[-2:]:
             raise ValueError(
                 f'Cannot broadcast to shape {shape} because the last two dimensions '
@@ -186,7 +194,7 @@ class CompositeTerm(eqx.Module):
         return replace(self, operators=operators, coeff=coeff)
 
     def swapaxes(self, axis1: int, axis2: int) -> CompositeTerm:
-        # batch axes only → each op's .swapaxes() + jnp.swapaxes(coeff, ...).
+        """Interchanges two batch axes of the term."""
         term = self._aligned()
         operators = tuple(op.swapaxes(axis1, axis2) for op in term.operators)
         coeff = jnp.swapaxes(jnp.asarray(term.coeff), axis1, axis2)
@@ -195,13 +203,14 @@ class CompositeTerm(eqx.Module):
     def moveaxis(
         self, source: int | Sequence[int], destination: int | Sequence[int]
     ) -> CompositeTerm:
-        # batch axes only → each op's .moveaxis() + jnp.moveaxis(coeff, ...).
+        """Moves batch axes of the term to new positions."""
         term = self._aligned()
         operators = tuple(op.moveaxis(source, destination) for op in term.operators)
         coeff = jnp.moveaxis(jnp.asarray(term.coeff), source, destination)
         return replace(term, operators=operators, coeff=coeff)
 
     def expand_dims(self, axis: int | Sequence[int]) -> CompositeTerm:
+        """Expands the term's batch axes by inserting new axes."""
         term = self._aligned()
         operators = tuple(op.expand_dims(axis) for op in term.operators)
         coeff = jnp.expand_dims(jnp.asarray(term.coeff), axis)
@@ -217,9 +226,13 @@ class CompositeTerm(eqx.Module):
     def squeeze(
         self, axis: int | tuple[int, ...] | None = None
     ) -> CompositeTerm | QArray | Array:
-        # MIXED: batch axes only → each op's .squeeze() + jnp.squeeze(coeff, ...).
-        # An axis touching the matrix dims destroys the tensor-product structure.
-        if in_last_two_dims(axis, len(self.shape)):
+        # MIXED: an axis touching the matrix dims destroys the tensor-product
+        # structure. `axis=None` only does so if one of them is size 1.
+        if axis is None:
+            if self.shape[-2] == 1 or self.shape[-1] == 1:
+                return self._materialize().squeeze(axis=None)
+            axis = _squeezable_batch_axes(self.shape)
+        elif in_last_two_dims(axis, len(self.shape)):
             return self._materialize().squeeze(axis=axis)
 
         term = self._aligned()
@@ -302,8 +315,8 @@ class CompositeTerm(eqx.Module):
     # === Indexing ===
 
     def __getitem__(self, key: IndexType) -> CompositeTerm | MaterializedQArray:
-        # MIXED: batch axes only → each op's __getitem__.
-        # A key touching the matrix axes destroys the tensor-product structure.
+        # MIXED: a key touching the matrix axes destroys the tensor-product
+        # structure.
         if not _key_in_batch_dims(key, len(self.shape)):
             return cast(MaterializedQArray, self._materialize()[key])
 
@@ -460,8 +473,8 @@ class CompositeQArray(QArray):
         Returns:
             New qarray with the given shape.
         """
-        # LAZY: a reshape can only ever change the batch axes, since the matrix
-        # axes must stay the same size (checked below), so this never materializes.
+        # LAZY: the check below rejects any shape that would change the matrix
+        # dims
         if shape[-2:] != self.shape[-2:]:
             raise ValueError(
                 f'Cannot reshape to shape {shape} because the last two dimensions do '
@@ -471,7 +484,6 @@ class CompositeQArray(QArray):
         return replace(self, terms=terms)
 
     def _reshape_unchecked(self, *shape: int) -> QArray:
-        # MATERIALIZE → _materialize()._reshape_unchecked(*shape).
         return self._materialize()._reshape_unchecked(*shape)
 
     def broadcast_to(self, *shape: int) -> QArray:
@@ -525,13 +537,20 @@ class CompositeQArray(QArray):
         raise NotImplementedError
 
     def sum(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
+        # MATERIALIZE per term (forced, see `CompositeTerm.sum`), but each term is
+        # reduced along `axis` before combining
         return reduce(
             lambda x, y: x + y, (term.sum(axis=axis) for term in self._aligned().terms)
         )
 
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
-        # An axis touching the matrix dims destroys the tensor-product structure.
-        if in_last_two_dims(axis, self.ndim):
+        # MIXED: an axis touching the matrix dims destroys the tensor-product
+        # structure. `axis=None` only does so if one of them is size 1.
+        if axis is None:
+            if self.shape[-2] == 1 or self.shape[-1] == 1:
+                return self._materialize().squeeze(axis=None)
+            axis = _squeezable_batch_axes(self.shape)
+        elif in_last_two_dims(axis, self.ndim):
             return self._materialize().squeeze(axis=axis)
         terms = tuple(term.squeeze(axis=axis) for term in self._aligned().terms)
         return replace(self, terms=cast(tuple[CompositeTerm, ...], terms))
@@ -684,6 +703,8 @@ class CompositeQArray(QArray):
     # === Indexing ===
 
     def __getitem__(self, key: IndexType) -> QArray | Array:
+        # MIXED: a key touching the matrix axes destroys the tensor-product
+        # structure.
         if not _key_in_batch_dims(key, self.ndim):
             return self._materialize()[key]
         terms = tuple(term[key] for term in self._aligned().terms)
