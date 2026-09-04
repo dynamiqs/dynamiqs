@@ -91,18 +91,19 @@ def test_qarray_matches_independent_oracle():
     # non-cancelling values: this exercises `CompositeTerm`'s own combination
     # logic (`reduce(&, operators)`) and the batch broadcast across terms at
     # once, so there is nothing left for a standalone term-level test to add.
-    A0 = np.array([[1.0, 2.0], [3.0, 4.0]]) # (2,2)
-    B0 = np.diag([1.0, 2.0, 3.0]) # (3,3)
+    A0 = np.array([[1.0, 2.0], [3.0, 4.0]])  # (2,2)
+    B0 = np.diag([1.0, 2.0, 3.0])  # (3,3)
     coeff0 = 2.0
 
-    A1 = np.stack([np.array([[1.0, k + 1.0], [2.0, -k]]) for k in range(4)]) # (4,2,2)
-    B1 = np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]]) # (3,3)
+    A1 = np.stack([np.array([[1.0, k + 1.0], [2.0, -k]]) for k in range(4)])  # (4,2,2)
+    B1 = np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]])  # (3,3)
     coeff1 = 0.5 + 0.5j
 
     # independent oracle, computed from the raw arrays with numpy alone
+    # (1,6,6) broadcast (4,6,6) → (4,6,6)
     oracle = coeff0 * np.kron(A0, B0)[None] + coeff1 * np.stack(
         [np.kron(A1[k], B1) for k in range(4)]
-    ) # (1,6,6) broadcast (4,6,6) → (4,6,6)
+    )
 
     term0 = CompositeTerm(
         operators=(dq.asqarray(A0, dims=(2,)), dq.asqarray(B0, dims=(3,))), coeff=coeff0
@@ -147,7 +148,8 @@ def test_ndiags_is_lazy_and_guarded():
     )  # offsets (-1, 0)
     term0 = CompositeTerm(operators=(A0, B0))
     term1 = CompositeTerm(operators=(A1, B1))
-    c_dia = CompositeQArray((2, 3), (term0, term1))  # expected offsets {-1, 0, 1} offset 0 appears once
+    # expected offsets {-1, 0, 1}, offset 0 appears once
+    c_dia = CompositeQArray((2, 3), (term0, term1))
 
     assert c_dia.ndiags == 3
     assert c_dia.ndiags == c_dia._materialize().ndiags
