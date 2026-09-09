@@ -72,6 +72,13 @@ class TestSparseDIAQArray:
         self.denseB = make_dictB(denseB)
         self.sparseB = make_dictB(sparseB)
 
+        # matrix C, with a single diagonal of offset 0
+        sparseC = MaterializedQArray(
+            (N,), False, SparseDIADataArray((0,), diagsA[1][None, :])
+        )
+        self.denseC = make_dictA(sparseC.asdense())
+        self.sparseC = make_dictA(sparseC)
+
         # scalar
         self.scalar = 2 + 2j
         self.bscalar = jnp.ones((2, 2, 1, 1), dtype=jnp.complex64)
@@ -235,6 +242,25 @@ class TestSparseDIAQArray:
         out_dia = s.powm(3).to_jax()
 
         assert _allclose(out_dia, out_dense)
+
+    @pytest.mark.parametrize('k', ['simple', 'batch', 'batch_broadcast'])
+    def test_expm(self, k):
+        # matrix A has several diagonals, it is converted to the dense layout
+        dA, sA = self.denseA[k], self.sparseA[k]
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=UserWarning)
+            out_dia = sA.expm()
+        assert out_dia.layout is dq.dense
+        assert _allclose(out_dia.to_jax(), dA.expm().to_jax(), rtol=1e-4)
+
+        # matrix C has a single diagonal of offset 0, it stays in the dia layout and
+        # does not warn
+        dC, sC = self.denseC[k], self.sparseC[k]
+        with warnings.catch_warnings():
+            warnings.simplefilter('error', category=UserWarning)
+            out_dia = sC.expm()
+        assert out_dia.layout is dq.dia
+        assert _allclose(out_dia.to_jax(), dC.expm().to_jax(), rtol=1e-4)
 
 
 def _allclose(a, b, rtol=1e-05, atol=1e-08):
