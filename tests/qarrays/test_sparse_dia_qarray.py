@@ -1,5 +1,6 @@
 import warnings
 
+import jax
 import jax.numpy as jnp
 import jax.random as jr
 import pytest
@@ -206,6 +207,23 @@ class TestSparseDIAQArray:
 
         out_dia_dense = (sA & dB).to_jax()
         assert _allclose(out_dense_dense, out_dia_dense)
+
+    def test_kronecker_batch_batch(self):
+        # Kronecker product of two operands sharing the same non-1 batch size,
+        # a case `valid_operation_keys` never exercises.
+        sA = dq.stack([self.sparseA['simple'], 2 * self.sparseA['simple']])
+        sB = dq.stack([self.sparseB['simple'], 3 * self.sparseB['simple']])
+        dA, dB = sA.asdense(), sB.asdense()
+
+        out_dense_dense = (dA & dB).to_jax()
+        assert out_dense_dense.shape[0] == 2
+
+        out_dia_dia = (sA & sB).to_jax()
+        assert _allclose(out_dense_dense, out_dia_dia)
+
+    def test_devices(self):
+        d, s = self.denseA['simple'], self.sparseA['simple']
+        assert s.devices() == d.devices() == set(jax.devices())
 
     def test_outofbounds(self):
         # set up matrix
