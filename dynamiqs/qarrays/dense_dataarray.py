@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from functools import partial
 from typing import TYPE_CHECKING, ClassVar, get_args
 
 import jax
@@ -20,7 +19,7 @@ from .dataarray import (
     key_touches_last_two_dims,
 )
 from .layout import Layout, dense
-from .sparsedia_primitives import array_to_sparsedia
+from .sparsedia_primitives import _bkron, array_to_sparsedia
 
 if TYPE_CHECKING:
     from .sparsedia_dataarray import SparseDIADataArray
@@ -239,9 +238,3 @@ def array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:
         x.tolist(),
         is_leaf=lambda x: jnp.asarray(x).ndim == 2,
     )
-
-
-@partial(jnp.vectorize, signature='(a,b),(c,d)->(ac,bd)')
-def _bkron(a: Array, b: Array) -> Array:
-    # batched kronecker product
-    return jnp.kron(a, b)
