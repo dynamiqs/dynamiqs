@@ -179,8 +179,6 @@ The strictest section. Consult `CLAUDE.md` for the full test conventions.
   `tests/utils/<mirrors dynamiqs/utils/>`, `tests/core/`, `tests/plot/`)
 - Does every test carry a `@pytest.mark.run(order=TEST_INSTANT|TEST_SHORT|TEST_LONG)`
   marker, at the right tier?
-- If test files were added or renamed, was `.test_durations` regenerated
-  (`task durations`)? Otherwise CI shard balancing drifts.
 - Solver tests: do they compare against an **analytical** solution via a `System` in
   `tests/systems/`, rather than against another solver or a stored numerical baseline?
 - Are they routed through `IntegratorTester` / `StochasticTester` rather than

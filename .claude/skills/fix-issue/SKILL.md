@@ -137,17 +137,15 @@ hides a NaN instead of preventing it.
 4. Give it the right `@pytest.mark.run(order=TEST_INSTANT|TEST_SHORT|TEST_LONG)` marker.
    Prefer the cheapest tier that actually exercises the bug — many "solver" bugs can be
    caught by a `TEST_INSTANT` shape or tracing check.
-5. If you added or renamed a test file, run `task durations` and commit the updated
-   `.test_durations`.
-6. If the bug spans layouts or gradient modes, parametrize over them.
-7. Run **only** the narrow targets — the full suite is CI's job:
+5. If the bug spans layouts or gradient modes, parametrize over them.
+6. Run **only** the narrow targets — the full suite is CI's job:
    ```shell
    uv run pytest tests/<the relevant directory> -q
    uv run pytest dynamiqs/<the module you touched>.py -q   # if you changed a docstring
    ```
-8. Run `uv run task check` (ruff + codespell + ty). It is fast; there is no reason to
+7. Run `uv run task check` (ruff + codespell + ty). It is fast; there is no reason to
    skip it.
-9. Record the **exact** commands you ran and their outcomes.
+8. Record the **exact** commands you ran and their outcomes.
 
 If the fix changes documented behavior or an equation, update the docstring and its
 examples too (see `.claude/skills/docstring/SKILL.md`).

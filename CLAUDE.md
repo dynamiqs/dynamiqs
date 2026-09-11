@@ -28,7 +28,7 @@ Python 3.11+, managed with `uv sync --extra dev`. Prefix commands with `uv run`.
 | `task check`        | ruff + codespell + ty (read-only; fast)          |
 | `task clean`        | same, but auto-fixing                            |
 | `task docserve`     | live docs preview on <http://localhost:8000>     |
-| `task durations`    | regenerate `.test_durations` for CI sharding     |
+| `task durations`    | write `.test_durations` for CI sharding (rarely) |
 
 **Never run the full test suite locally** — `task all`, `task test`, `task doctest-code`,
 `task doctest-docs`, `task ci` and `task docbuild` are CI's job, unless the user asks.
@@ -113,8 +113,9 @@ Every test carries a tier from `tests/order.py`, per test or via a module-level
 | `TEST_LONG`    | seconds+, real ODE runs | all solver correctness/gradient/statistics |
 
 Two things depend on them: `conftest.py` runs fast tests first, and
-`generate_test_durations.py` weights the 5 CI shards. **After adding or renaming a test
-file, run `task durations` and commit `.test_durations`.**
+`generate_test_durations.py` weights the 5 CI shards. The weights are synthetic — derived
+from the markers alone, not from timings — so CI regenerates `.test_durations` before
+each sharded run and the file is git-ignored. Nothing to commit; just get the tier right.
 
 ### Solver tests
 
