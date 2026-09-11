@@ -203,7 +203,7 @@ def sesolve(
     tutorial for more details.
     """
     # === convert arguments
-    H = astimeqarray(H)
+    H = astimeqarray(H, 'H')
     psi0 = asqarray(psi0)
     tsave = jnp.asarray(tsave)
 

@@ -171,7 +171,7 @@ def sepropagator(
     tutorial for more details.
     """
     # === convert arguments
-    H = astimeqarray(H)
+    H = astimeqarray(H, 'H')
     tsave = jnp.asarray(tsave)
 
     # === build options

@@ -272,8 +272,8 @@ def jsmesolve(
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
     """  # noqa: E501
     # === convert arguments
-    H = astimeqarray(H)
-    Ls = [astimeqarray(L) for L in jump_ops]
+    H = astimeqarray(H, 'H')
+    Ls = [astimeqarray(L, 'jump_ops') for L in jump_ops]
     thetas = jnp.asarray(thetas)
     etas = jnp.asarray(etas)
     rho0 = asqarray(rho0)
@@ -499,7 +499,7 @@ def _check_jsmesolve_args(  # noqa: C901
 
     if not len(thetas) == len(Ls):
         raise ValueError(
-            'Argument `thetas` should be of the same length as argument `jump_ops`, but'
+            'Argument `thetas` must be of the same length as argument `jump_ops`, but'
             f' len(thetas)={len(thetas)} and len(jump_ops)={len(Ls)}.'
         )
 
@@ -514,7 +514,7 @@ def _check_jsmesolve_args(  # noqa: C901
 
     if not len(etas) == len(Ls):
         raise ValueError(
-            'Argument `etas` should be of the same length as argument `jump_ops`, but'
+            'Argument `etas` must be of the same length as argument `jump_ops`, but'
             f' len(etas)={len(etas)} and len(jump_ops)={len(Ls)}.'
         )
 
