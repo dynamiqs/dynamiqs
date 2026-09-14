@@ -32,7 +32,7 @@ class ClosedSystem(System):
         cartesian_batching: bool = True,
         progress_meter: AbstractProgressMeter | bool | None = None,
         t0: ScalarLike | None = None,
-        save_extra: Callable[[Array], PyTree] | None = None,
+        save_extra: Callable[[Array, Array], PyTree] | None = None,
     ) -> Result:
         params = self.params_default if params is None else params
         H = self.H(params)

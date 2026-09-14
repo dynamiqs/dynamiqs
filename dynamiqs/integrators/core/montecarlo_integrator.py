@@ -3,6 +3,7 @@ from abc import abstractmethod
 from dataclasses import replace
 from functools import partial
 
+import jax
 import jax.numpy as jnp
 
 from ...method import DiffusiveMonteCarlo, JumpMonteCarlo
@@ -33,7 +34,10 @@ class MESolveMonteCarloIntegrator(BaseIntegrator, MEInterface, SolveInterface):
         extra = None
         if self.options.save_extra:
             if self.options.save_states:
-                extra = self.options.save_extra(ysave)
+                # apply the hook per save point on the mean states, as in the other
+                # integrators
+                ts = jnp.asarray(self.ts)  # todo: fix static tsave
+                extra = jax.vmap(self.options.save_extra)(ts, ysave)
             else:
                 # this is enforced because `save_extra` is not necessarily a linear
                 # function of the states, and thus save_extra(mean(states)) may not

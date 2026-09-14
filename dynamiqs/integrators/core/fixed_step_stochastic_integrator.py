@@ -10,7 +10,7 @@ import jax.numpy as jnp
 import numpy as np
 from diffrax._custom_types import RealScalarLike
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray, PyTree
+from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
 
 from ...method import Rouchon1, _DEFixedStep
 from ...qarrays.qarray import QArray
@@ -122,8 +122,8 @@ class StochasticSolveFixedStepIntegrator(
         pass
 
     def integrate(
-        self, t0: float, y0: SDEState, key: PRNGKeyArray, nsteps: int
-    ) -> tuple[float, SDEState]:
+        self, t0: Scalar, y0: SDEState, key: PRNGKeyArray, nsteps: int
+    ) -> tuple[Scalar, SDEState]:
         # integrate the SDE for nsteps of length dt
 
         # sample random variable driving the SME
@@ -141,8 +141,8 @@ class StochasticSolveFixedStepIntegrator(
         return t, y
 
     def integrate_by_chunks(
-        self, t0: float, y0: SDEState, key: PRNGKeyArray, nsteps: int
-    ) -> tuple[float, SDEState]:
+        self, t0: Scalar, y0: SDEState, key: PRNGKeyArray, nsteps: int
+    ) -> tuple[Scalar, SDEState]:
         # integrate the SDE for nsteps of length dt, splitting the integration in
         # chunks of 1000 dts to ensure a fixed memory usage
 
@@ -180,14 +180,14 @@ class StochasticSolveFixedStepIntegrator(
         # define initial SDE state
         sde_y0 = self.sde_y0()
         # save initial SDE state at time 0
-        saved0 = self.save(sde_y0)
+        saved0 = self.save(self.t0, sde_y0)
 
         # === run the simulation
         # integrate the SSE/SME for each save interval
         def outer_step(carry, key):  # noqa: ANN001, ANN202
             t, y = carry
             t, y = self.integrate_by_chunks(t, y, key, nsteps_per_save)
-            return (t, y), self.save(y)
+            return (t, y), self.save(t, y)
 
         # split the key for each save interval
         keys = jax.random.split(self.key, nsave)
@@ -233,8 +233,8 @@ class JumpSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
         # the jump operator when a click occurs.
         return jax.random.uniform(key, (nsteps, 2))
 
-    def save(self, y: PyTree) -> SolveSaved:
-        return super().save(y.state)
+    def save(self, t: Scalar, y: PyTree) -> SolveSaved:
+        return super().save(t, y.state)
 
     def postprocess_saved(self, saved: SolveSaved, ylast: PyTree) -> JumpSolveSaved:
         saved = super().postprocess_saved(saved, ylast.state[None, :])
@@ -411,8 +411,8 @@ class DiffusiveSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
     def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> PyTree:
         return jnp.sqrt(self.dt) * jax.random.normal(key, (nsteps, self.nmeas))
 
-    def save(self, y: PyTree) -> DiffusiveSolveSaved:
-        saved = super().save(y.state)
+    def save(self, t: Scalar, y: PyTree) -> DiffusiveSolveSaved:
+        saved = super().save(t, y.state)
         return DiffusiveSolveSaved(saved.ysave, saved.extra, saved.Esave, y.Y)
 
     def postprocess_saved(

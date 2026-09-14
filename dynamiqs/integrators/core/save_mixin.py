@@ -5,7 +5,7 @@ from typing import Generic, TypeVar
 
 import equinox as eqx
 import jax.numpy as jnp
-from jaxtyping import PyTree
+from jaxtyping import PyTree, Scalar
 
 from ...result import PropagatorSaved, Saved, SolveSaved
 from ...utils.general import expect
@@ -22,7 +22,7 @@ class AbstractSaveMixin(OptionsInterface, Generic[SavedT]):
     """Mixin to assist integrators with data saving."""
 
     @abstractmethod
-    def save(self, y: PyTree) -> SavedT:
+    def save(self, t: Scalar, y: PyTree) -> SavedT:
         pass
 
     @abstractmethod
@@ -33,9 +33,9 @@ class AbstractSaveMixin(OptionsInterface, Generic[SavedT]):
 class PropagatorSaveMixin(AbstractSaveMixin[PropagatorSaved]):
     """Mixin to assist integrators computing propagators with data saving."""
 
-    def save(self, y: PyTree) -> PropagatorSaved:
+    def save(self, t: Scalar, y: PyTree) -> PropagatorSaved:
         ysave = y if self.options.save_propagators else None
-        extra = self.options.save_extra(y) if self.options.save_extra else None
+        extra = self.options.save_extra(t, y) if self.options.save_extra else None
         return PropagatorSaved(ysave, extra)
 
     def postprocess_saved(
@@ -55,9 +55,9 @@ class SolveSaveMixin(AbstractSaveMixin[SolveSaved]):
 
     Es: list[PyTree] | None
 
-    def save(self, y: PyTree) -> SolveSaved:
+    def save(self, t: Scalar, y: PyTree) -> SolveSaved:
         ysave = y if self.options.save_states else None
-        extra = self.options.save_extra(y) if self.options.save_extra else None
+        extra = self.options.save_extra(t, y) if self.options.save_extra else None
         if self.Es is not None:
             Esave = jnp.stack([expect(E, y) for E in self.Es])
         else:
