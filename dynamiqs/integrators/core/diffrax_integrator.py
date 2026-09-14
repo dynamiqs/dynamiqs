@@ -26,7 +26,7 @@ from ...method import (
     _DEFixedStep,
 )
 from ...options import Options
-from ...progress_meter import AbstractProgressMeter
+from ...progress_meter import AbstractProgressMeter, _ForwardModeProgressMeter
 from ...result import MESolveResult, Result, SolveSaved
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
@@ -144,6 +144,11 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                     get_dtmax, stepsize_controller, dtmax, is_leaf=lambda x: x is None
                 )
 
+            # === prepare progress meter
+            progress_meter = _ForwardModeProgressMeter(
+                cast(AbstractProgressMeter, self.options.progress_meter).to_diffrax()
+            )
+
             # === solve differential equation with diffrax
             return dx.diffeqsolve(
                 self.terms,
@@ -157,9 +162,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                 adjoint=self.adjoint,
                 event=event,
                 max_steps=self.max_steps,
-                progress_meter=cast(
-                    AbstractProgressMeter, self.options.progress_meter
-                ).to_diffrax(),
+                progress_meter=progress_meter,
             )
 
     def run(self) -> Result:

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
-from dataclasses import replace
 from typing import ClassVar
 
 import diffrax as dx
@@ -11,7 +10,7 @@ import jax
 import jax.numpy as jnp
 from diffrax import AbstractRungeKutta, Bosh3, Euler, Midpoint, ODETerm
 from diffrax._custom_types import VF, Args, BoolScalarLike, Control, RealScalarLike, Y
-from diffrax._local_interpolation import LocalLinearInterpolation
+from diffrax._local_interpolation import ThirdOrderHermitePolynomialInterpolation
 from jaxtyping import PyTree
 
 from ...gradient import Forward, Gradient
@@ -31,6 +30,8 @@ class AbstractRouchonTerm(dx.AbstractTerm):
 
     rouchon_step: Callable[[RealScalarLike, RealScalarLike, Y], tuple[Y, Y]]
     # should be defined as `rouchon_step(t0, t1, y0) -> y1, error`
+    lindbladian: Callable[[RealScalarLike, Y], Y]
+    # should be defined as `lindbladian(t, y) -> dy/dt`, only used for dense output
 
     def vf(self, t: RealScalarLike, y: Y, args: Args):
         del t, y, args
@@ -45,7 +46,7 @@ class AbstractRouchonTerm(dx.AbstractTerm):
 class RouchonDXSolver(dx.AbstractSolver):
     _order: int
     term_structure = AbstractRouchonTerm
-    interpolation_cls = LocalLinearInterpolation
+    interpolation_cls = ThirdOrderHermitePolynomialInterpolation
 
     def init(
         self,
@@ -69,7 +70,13 @@ class RouchonDXSolver(dx.AbstractSolver):
     ) -> tuple:
         del solver_state, made_jump, args
         y1, error = terms.term.rouchon_step(t0, t1, y0)  # ty: ignore
-        dense_info = dict(y0=y0, y1=y1)
+        # Third-order Hermite dense output, so that saving at times not aligned with
+        # the step grid does not degrade the order of the scheme. Note that
+        # `ThirdOrderHermitePolynomialInterpolation` expects dt-scaled derivatives.
+        dt = t1 - t0
+        k0 = dt * terms.term.lindbladian(t0, y0)  # ty: ignore
+        k1 = dt * terms.term.lindbladian(t1, y1)  # ty: ignore
+        dense_info = dict(y0=y0, y1=y1, k0=k0, k1=k1)
         return y1, error, dense_info, None, dx.RESULTS.successful
 
     def func(self, terms: AbstractRouchonTerm, t0: RealScalarLike, y0: Y, args: Args):
@@ -323,6 +330,14 @@ class RouchonPropertiesMixin:
         LdL = sum(Mdag_M(_L) for _L in self.L(t))
         return -1j * self.H(t) - 0.5 * LdL
 
+    def lindbladian(self, t: RealScalarLike, rho: QArray) -> QArray:
+        r"""Lindbladian $\dot\rho = G \rho + \rho G^\dagger
+        + \sum_k L_k \rho L_k^\dagger$.
+        """
+        G = self.G(t)
+        jump_term = sum_qarrays([M_rho_Mdag(_L, rho) for _L in self.L(t)])
+        return G @ rho + rho @ G.dag() + jump_term
+
     @property
     def identity(self) -> QArray:
         struct = jax.eval_shape(lambda: self.H(0.0))
@@ -418,7 +433,7 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
 
             return kraus_map(rho), None
 
-        return AbstractRouchonTerm(rouchon_step)
+        return AbstractRouchonTerm(rouchon_step, self.lindbladian)
 
     @classmethod
     def build_kraus_map(
@@ -555,22 +570,7 @@ class MESolveAdaptiveRouchonIntegrator(
 
             return rho_high, 0.5 * (rho_high - rho_low)
 
-        return AbstractRouchonTerm(rouchon_step)
-
-    @property
-    def stepsize_controller(self) -> dx.AbstractStepSizeController:
-        # todo: can we do better?
-        stepsize_controller = super().stepsize_controller
-        # fix incorrect default linear interpolation by stepping exactly at all times
-        # in tsave, so interpolation is bypassed
-        if isinstance(stepsize_controller, dx.ClipStepSizeController):
-            return eqx.tree_at(
-                lambda c: c.step_ts,
-                stepsize_controller,
-                self.ts,
-                is_leaf=lambda x: x is None,
-            )
-        return replace(stepsize_controller, step_ts=self.ts)
+        return AbstractRouchonTerm(rouchon_step, self.lindbladian)
 
 
 def cholesky_normalize(S: QArray, rho: QArray) -> QArray:
