@@ -111,9 +111,14 @@ def expm(x: QArrayLike, *, max_squarings: int = 16) -> QArray:
 
     Examples:
         >>> dq.expm(dq.sigmaz())
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[2.718+0.j     ⋅    ]
+         [    ⋅     0.368+0.j]]
+
+        >>> dq.expm(dq.sigmax())
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
-        [[2.718+0.j 0.   +0.j]
-         [0.   +0.j 0.368+0.j]]
+        [[1.543+0.j 1.175+0.j]
+         [1.175+0.j 1.543+0.j]]
     """
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
