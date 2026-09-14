@@ -1,0 +1,42 @@
+# job 69420 higgs GPU=0 2026-09-11T18:44:24+02:00
+
+================================================================
+### v0_baseline   N=64  R=65,536 B
+  ntsave=  10  output=     655,645  temp=   1,447,808  total/traj=3.2096
+  ntsave=  20  output=   1,311,085  temp=   2,758,528  total/traj=3.1049
+  ntsave=  40  output=   2,621,965  temp=   5,380,224  total/traj=3.0526
+  ntsave=  80  output=   5,243,725  temp=  10,623,360  total/traj=3.0264
+  ntsave= 160  output=  10,487,245  temp=  21,109,632  total/traj=3.0133
+  output  =          205 B +  1.0001 R per saved state
+  temp    =      137,013 B +  2.0001 R per saved state
+  total   =      137,218 B +  3.0002 R per saved state
+  --- safety check: max_steps=1 must still raise ---
+  OK, raised JaxRuntimeError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+
+================================================================
+### v3_one_cb   N=64  R=65,536 B
+  ntsave=  10  output=     655,645  temp=   1,117,824  total/traj=2.7061
+  ntsave=  20  output=   1,311,085  temp=   1,773,184  total/traj=2.3531
+  ntsave=  40  output=   2,621,965  temp=   3,083,904  total/traj=2.1766
+  ntsave=  80  output=   5,243,725  temp=   5,705,344  total/traj=2.0884
+  ntsave= 160  output=  10,487,245  temp=  10,948,224  total/traj=2.0442
+  output  =          205 B +  1.0001 R per saved state
+  temp    =      462,464 B +  1.0000 R per saved state
+  total   =      462,669 B +  2.0001 R per saved state
+  --- safety check: max_steps=1 must still raise ---
+  OK, raised JaxRuntimeError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+
+================================================================
+### v4_small   N=64  R=65,536 B
+  ntsave=  10  output=     655,645  temp=     921,472  total/traj=2.4065
+  ntsave=  20  output=   1,311,085  temp=     954,240  total/traj=1.7283
+  ntsave=  40  output=   2,621,965  temp=     954,240  total/traj=1.3642
+  ntsave=  80  output=   5,243,725  temp=     954,240  total/traj=1.1822
+  ntsave= 160  output=  10,487,245  temp=     954,240  total/traj=1.0911
+  output  =          205 B +  1.0001 R per saved state
+  temp    =      940,587 B +  0.0017 R per saved state
+  total   =      940,792 B +  1.0019 R per saved state
+  --- safety check: max_steps=1 must still raise ---
+  OK, raised JaxRuntimeError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+
+### STEP 8b COMPLETE ###

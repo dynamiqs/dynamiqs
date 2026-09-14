@@ -1,0 +1,14 @@
+HloLiveRange (max 2):
+  InstructionSequence:
+    0:args_0_.1
+    1:wrapped_broadcast
+  BufferLiveRange:
+    args_0_.1{}:0-2
+    wrapped_broadcast{}:1-2
+  Live ranges at 1 (peak):
+    wrapped_broadcast{}: 1024 bytes (cumulative: 1024 bytes)
+    args_0_.1{}: 16 bytes (cumulative: 1040 bytes)
+  Stack trace breakdown for peak usage: 1 040 bytes
+    main.1 (100.0%, total: 1 040 bytes, current: 0 bytes, remaining: 1 040 bytes)
+      ├── jit(broadcast_in_dim)/broadcast_in_dim (98.5%, total: 1 024 bytes, current: 1 024 bytes, remaining: 16 bytes)
+      └── args[0] (1.5%, total: 16 bytes, current: 16 bytes, remaining: 0 bytes)

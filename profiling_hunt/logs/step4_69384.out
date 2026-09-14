@@ -1,0 +1,103 @@
+############################################################################
+# SLURM job 69384 on higgs  2026-09-11T11:13:43+02:00  GPU=0
+#   XLA_PYTHON_CLIENT_MEM_FRACTION=.95
+#   XLA_PYTHON_CLIENT_PREALLOCATE=true
+# N=2000   R = 16*N^2 = 64000000 B   (complex128 = 16 bytes/element)
+############################################################################
+name, memory.total [MiB], memory.used [MiB]
+NVIDIA L40S, 46068 MiB, 0 MiB
+
+
+######################## ROW: bare ########################
+##############################################################################################################
+STEP 4 [bare]  jax 0.10.2 diffrax 0.7.2
+  dynamiqs 0.3.6
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 = 42.1758 GiB
+  complex128 = 16 bytes/element;  R = rho_bytes = 16*N^2 = 64,000,000 B
+##############################################################################################################
+
+  --- 1 bare_ode  dY/dt = M@Y  N=2000 complex128 ---
+    rho_bytes R = 16*2000^2 = 64,000,000 B = 61.04 MiB
+    PREDICTION (from Step 3b, Tsit5): peak = 12.393 x R = 0.7387 GiB
+    after operator setup                     in_use=    128,000,512 ( 0.11921 GiB)  peak=    228,000,768 ( 0.21234 GiB)  nalloc=    33
+    operator storage = 64,000,000 B = 1.0000 R
+    after solve                              in_use=    228,002,560 ( 0.21234 GiB)  peak=    808,200,192 ( 0.75270 GiB)  nalloc=    96  delta=+100,002,048
+    peak / R = 12.628   steps=10   elapsed 3.7s
+    peak during SETUP = 228,000,768 (3.563 R); setup-dominated = False
+
+  appended 1 record(s) to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step4_69384.jsonl
+
+######################## ROW: lindblad ########################
+##############################################################################################################
+STEP 4 [lindblad]  jax 0.10.2 diffrax 0.7.2
+  dynamiqs 0.3.6
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 = 42.1758 GiB
+  complex128 = 16 bytes/element;  R = rho_bytes = 16*N^2 = 64,000,000 B
+##############################################################################################################
+
+  --- 2 lindblad_diffrax  hand-written, dense, n_jump=2 N=2000 ---
+    rho_bytes R = 64,000,000 B = 61.04 MiB
+    HAND-DERIVED PREDICTION:
+      operators resident: H + 2x(L, Ldag, LdagL) = 7 R
+      vector-field live temporaries: acc + (L@rho | @Ldag) + LdagL@rho + rho@LdagL + 1 working ~ 5 R
+      solver (Tsit5, Step 3b): 5.393 R fixed + 7 stages x 1 R = 12.393 R, of which 1 R was the single operator
+      TOTAL PREDICTED PEAK ~ 12.393 - 1 + 7 + 5 = 23.393 R = 1.3943 GiB
+    after operator setup                     in_use=    512,000,768 ( 0.47684 GiB)  peak=    677,749,760 ( 0.63120 GiB)  nalloc=    92
+    operator storage = 448,000,000 B = 7.0000 R (predicted 7 R)
+    after solve                              in_use=    576,003,840 ( 0.53645 GiB)  peak=  1,536,009,472 ( 1.43052 GiB)  nalloc=   156  delta=+64,003,072
+    peak / R = 24.000  (predicted 23.393)  measured-predicted = +0.607 R
+    steps=10  elapsed 26.7s
+    peak during SETUP = 677,749,760 (10.590 R); setup-dominated = False
+
+  appended 1 record(s) to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step4_69384.jsonl
+
+######################## ROW: dq_dense ########################
+##############################################################################################################
+STEP 4 [dq_dense]  jax 0.10.2 diffrax 0.7.2
+  dynamiqs 0.3.6
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 = 42.1758 GiB
+  complex128 = 16 bytes/element;  R = rho_bytes = 16*N^2 = 64,000,000 B
+##############################################################################################################
+
+  --- 3_dq_dense  N=2000 ---
+    same random dense H and 2 jump operators as row 2
+    PREDICTION: identical physics to row 2, so any difference is dynamiqs' own overhead
+    after operator setup                     in_use=    256,000,000 ( 0.23842 GiB)  peak=    384,001,536 ( 0.35763 GiB)  nalloc=    70
+    MEASURED operator storage = 192,000,000 B = 183.1055 MiB = 3.00000 R
+    after mesolve                            in_use=    320,005,888 ( 0.29803 GiB)  peak=  1,220,209,664 ( 1.13641 GiB)  nalloc=   252  delta=+64,005,888
+    peak / R = 19.066   elapsed 10.1s
+    peak during SETUP = 384,001,536 (6.000 R); setup-dominated = False
+
+  appended 1 record(s) to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step4_69384.jsonl
+
+######################## ROW: dq_dia ########################
+##############################################################################################################
+STEP 4 [dq_dia]  jax 0.10.2 diffrax 0.7.2
+  dynamiqs 0.3.6
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 = 42.1758 GiB
+  complex128 = 16 bytes/element;  R = rho_bytes = 16*N^2 = 64,000,000 B
+##############################################################################################################
+
+  --- 4_dq_dia_cat  N=2000 ---
+    cat qubit: H=delta a^dag a, L2=sqrt(k2)(a^2-alpha^2), L1=sqrt(k1) a
+    layouts: H=dia L2=dia L1=dia  ndiags=[1, 2, 1]
+    PREDICTION from DIA structure: 16 * ndiags * N summed = 128,000 B = 0.1221 MiB
+    the same operators DENSE would cost 192,000,000 B = 183.1 MiB  (saving factor 1500x)
+    after operator setup                     in_use=     64,160,256 ( 0.05975 GiB)  peak=     64,224,256 ( 0.05981 GiB)  nalloc=   286
+    MEASURED operator storage = 128,000 B = 0.1221 MiB = 0.00200 R
+    measured / DIA prediction = 1.0000   -> DIA saving DELIVERED
+    after mesolve                            in_use=    128,165,632 ( 0.11936 GiB)  peak=    900,173,568 ( 0.83835 GiB)  nalloc=   385  delta=+64,005,376
+    peak / R = 14.065   elapsed 3.8s
+    peak during SETUP = 64,224,256 (1.004 R); setup-dominated = False
+
+  appended 1 record(s) to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step4_69384.jsonl
+
+### STEP 4 COMPLETE - json at /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step4_69384.jsonl ###

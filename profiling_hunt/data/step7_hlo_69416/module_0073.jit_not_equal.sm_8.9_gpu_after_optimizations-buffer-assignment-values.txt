@@ -1,0 +1,28 @@
+
+Total bytes used: 8 (8B)
+
+Used values:
+<0 x.1 @0>
+ positions:
+  x.1
+ uses:
+  (none)
+ from instruction: %x.1 = c128[0]{0} parameter(0), metadata={op_name="x"}
+<1 y.1 @0>
+ positions:
+  y.1
+ uses:
+  (none)
+ from instruction: %y.1 = s64[] parameter(1), metadata={op_name="y"}
+<2 constant_1_0 @0>
+ positions:
+  constant_1_0
+ uses:
+  copy.1, operand 0
+ from instruction: %constant_1_0 = pred[0]{0} constant({})
+<3 copy.1 @0>
+ positions:
+  copy.1
+ uses:
+  (none)
+ from instruction: %copy.1 = pred[0]{0} copy(%constant_1_0)

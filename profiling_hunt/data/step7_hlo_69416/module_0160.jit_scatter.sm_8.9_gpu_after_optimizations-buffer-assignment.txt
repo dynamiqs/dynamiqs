@@ -1,0 +1,21 @@
+BufferAssignment:
+allocation 0: size 1024, output shape is |c128[64,1]|, maybe-live-out:
+ value: <27 copy.2 @0> (size=1024,offset=0): c128[64,1]{1,0}
+ value: <33 loop_dynamic_update_slice_fusion @0> (size=1024,offset=0): c128[64,1]{1,0}
+allocation 1: size 1024, parameter 0, shape |c128[64,1]| at ShapeIndex {}:
+ value: <26 args_0_.1 @0> (size=1024,offset=0): c128[64,1]{1,0}
+allocation 2: size 16, parameter 2, shape |c128[1]| at ShapeIndex {}:
+ value: <30 args_2_.1 @0> (size=16,offset=0): c128[1]{0}
+allocation 3: size 8, constant:
+ value: <31 constant_22_0 @0> (size=8,offset=0): s32[2]{0}
+allocation 4: size 4, parameter 1, shape |s32[1]| at ShapeIndex {}:
+ value: <28 args_1_.1 @0> (size=4,offset=0): s32[1]{0}
+allocation 5: size 1, thread-local:
+ value: <2 and.3 @0> (size=1,offset=0): pred[]
+allocation 6: size 1, thread-local:
+ value: <0 lhs @0> (size=1,offset=0): pred[]
+allocation 7: size 1, thread-local:
+ value: <1 rhs @0> (size=1,offset=0): pred[]
+allocation 8: size 257, preallocated-temp:
+ value: <29 loop_dynamic_slice_fusion @0> (size=16,offset=0): c128[1,1]{1,0}
+ value: <32 input_reduce_fusion @0> (size=1,offset=256): pred[]

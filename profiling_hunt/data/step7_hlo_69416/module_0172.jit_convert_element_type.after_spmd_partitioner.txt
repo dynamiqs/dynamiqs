@@ -1,0 +1,6 @@
+HloModule jit_convert_element_type, entry_computation_layout={(pred[])->pred[]}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}
+
+ENTRY %main.1 (args_0_.1: pred[]) -> pred[] {
+  ROOT %args_0_.1 = pred[] parameter(0), metadata={op_name="args[0]"}
+}
+

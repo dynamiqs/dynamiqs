@@ -1,0 +1,18 @@
+HloLiveRange (max 3):
+  InstructionSequence:
+    0:constant_values.1
+    1:array.1
+    2:copy.1
+  BufferLiveRange:
+    constant_values.1{}:0-3
+    array.1{}:0-3
+    copy.1{}:2-3
+  Live ranges at 2 (peak):
+    array.1{}: 1024 bytes (cumulative: 1024 bytes)
+    copy.1{}: 1024 bytes (cumulative: 2048 bytes)
+    constant_values.1{}: 8 bytes (cumulative: 2056 bytes)
+  Stack trace breakdown for peak usage: 2 056 bytes
+    main.1 (100.0%, total: 2 056 bytes, current: 0 bytes, remaining: 2 056 bytes)
+      ├── array (49.8%, total: 1 024 bytes, current: 1 024 bytes, remaining: 1 032 bytes)
+      ├── copy.1 (49.8%, total: 1 024 bytes, current: 1 024 bytes, remaining: 8 bytes)
+      └── constant_values (0.4%, total: 8 bytes, current: 8 bytes, remaining: 0 bytes)

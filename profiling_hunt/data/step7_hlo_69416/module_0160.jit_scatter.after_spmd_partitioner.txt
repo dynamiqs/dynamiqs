@@ -1,0 +1,40 @@
+HloModule jit_scatter, entry_computation_layout={(c128[64,1]{1,0}, s32[1]{0}, c128[1]{0})->c128[64,1]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true,true,true}, allow_spmd_sharding_propagation_to_output={true}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step7_hlo.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/states.py"
+
+FunctionNames
+1 "<module>"
+2 "build"
+3 "fock_dm"
+4 "fock"
+5 "fock.<locals>._fock"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=46 end_line=46 column=14 end_column=22}
+2 {file_name_id=1 function_name_id=2 line=43 end_line=43 column=24 end_column=40}
+3 {file_name_id=2 function_name_id=3 line=189 end_line=189 column=11 end_column=28}
+4 {file_name_id=2 function_name_id=4 line=133 end_line=133 column=11 end_column=35}
+5 {file_name_id=2 function_name_id=5 line=129 end_line=129 column=16 end_column=36}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+4 {file_location_id=4 parent_frame_id=4}
+5 {file_location_id=5 parent_frame_id=5}
+
+
+%region_0.1 (scatter.2: c128[], scatter.3: c128[]) -> c128[] {
+  %scatter.2 = c128[] parameter(0), metadata={op_name="scatter"}
+  ROOT %scatter.3 = c128[] parameter(1), metadata={op_name="scatter"}
+}
+
+ENTRY %main.2 (args_0_.1: c128[64,1], args_1_.1: s32[1], args_2_.1: c128[1]) -> c128[64,1] {
+  %args_0_.1 = c128[64,1]{1,0} parameter(0), metadata={op_name="args[0]"}
+  %args_1_.1 = s32[1]{0} parameter(1), metadata={op_name="args[1]"}
+  %args_2_.1 = c128[1]{0} parameter(2), metadata={op_name="args[2]"}
+  ROOT %scatter.5 = c128[64,1]{1,0} scatter(%args_0_.1, %args_1_.1, %args_2_.1), update_window_dims={0}, inserted_window_dims={0}, scatter_dims_to_operand_dims={0}, index_vector_dim=0, indices_are_sorted=true, unique_indices=true, to_apply=%region_0.1, metadata={op_name="jit(scatter)/scatter" stack_frame_id=5}
+}
+

@@ -1,0 +1,40 @@
+# job 69416 higgs GPU=0 2026-09-11T18:09:37+02:00
+N=64  R = 16 N^2 = 65,536 B = 0.0625 MiB
+XLA_FLAGS = --xla_dump_to=/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step7_hlo_69416
+backend = gpu  device = cuda:0
+
+================================================================================================
+A) compiled.memory_analysis(), sweep over ntsave at fixed N
+================================================================================================
+ ntsave      traj=nt*R       output B         temp B       out+temp  (out+temp)/traj
+     10        655,360        655,645      1,447,808      2,103,453           3.2096
+     20      1,310,720      1,311,085      2,758,528      4,069,613           3.1049
+     40      2,621,440      2,621,965      5,380,224      8,002,189           3.0526
+     80      5,242,880      5,243,725     10,623,360     15,867,085           3.0264
+    160     10,485,760     10,487,245     21,109,632     31,596,877           3.0133
+  output       =            205 B +  1.0001 R per saved state   max|resid| = 0 B
+  temp         =        137,013 B +  2.0001 R per saved state   max|resid| = 65 B
+  output+temp  =        137,218 B +  3.0002 R per saved state   max|resid| = 65 B
+
+  same sweep with save_states=False, as a control:
+    ntsave=  10  output=      65,821 B  temp=     790,400 B
+    ntsave= 160  output=      67,021 B  temp=     790,400 B
+
+================================================================================================
+B) buffer assignment dump written to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step7_hlo_69416
+================================================================================================
+   compiled one module at ntsave=40, traj = 2,621,440 B
+   CompiledMemoryStats(generated_code_size_in_bytes=13738, argument_size_in_bytes=65536, output_size_in_bytes=2621965, alias_size_in_bytes=0, temp_size_in_bytes=5380224, host_generated_code_size_in_bytes=0, host_argument_size_in_bytes=0, host_output_size_in_bytes=0, host_alias_size_in_bytes=0, host_temp_size_in_bytes=0)
+
+### dumped files (buffer assignment) ###
+module_0000.jit_stage.sm_8.9_gpu_after_optimizations-buffer-assignment.txt
+module_0000.jit_stage.sm_8.9_gpu_after_optimizations-buffer-assignment-values.txt
+module_0002.jit_convert_element_type.sm_8.9_gpu_after_optimizations-buffer-assignment.txt
+module_0002.jit_convert_element_type.sm_8.9_gpu_after_optimizations-buffer-assignment-values.txt
+module_0004.jit_iota.sm_8.9_gpu_after_optimizations-buffer-assignment.txt
+module_0004.jit_iota.sm_8.9_gpu_after_optimizations-buffer-assignment-values.txt
+module_0007.jit_add.sm_8.9_gpu_after_optimizations-buffer-assignment.txt
+module_0007.jit_add.sm_8.9_gpu_after_optimizations-buffer-assignment-values.txt
+module_0010.jit_sqrt.sm_8.9_gpu_after_optimizations-buffer-assignment.txt
+module_0010.jit_sqrt.sm_8.9_gpu_after_optimizations-buffer-assignment-values.txt
+### total files: 2328 ###

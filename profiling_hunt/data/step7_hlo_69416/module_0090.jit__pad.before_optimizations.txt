@@ -1,0 +1,7 @@
+HloModule jit__pad, entry_computation_layout={(c128[64]{0}, s64[])->c128[64]{0}}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true}
+
+ENTRY %main.1 (array.1: c128[64], constant_values.1: s64[]) -> c128[64] {
+  ROOT %array.1 = c128[64]{0} parameter(0), metadata={op_name="array"}
+  %constant_values.1 = s64[] parameter(1), metadata={op_name="constant_values"}
+}
+

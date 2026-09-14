@@ -1,0 +1,47 @@
+# job 69423 higgs GPU=0 2026-09-11T19:12:20+02:00
+
+=== A) N=2000, ntsave=101: memory and run time ===
+### baseline  N=2000 ntsave=101 max_steps=100000  traj = 6.0201 GiB
+  peak      = 19,584,179,456 B = 18.2392 GiB = 306.003 R
+  slope     = 3.0000 R per saved state
+  first call (incl. compile) = 4.037 s
+  warm runs  = 0.2160 s +- 0.0004  (min 0.2154, n=5)
+  finite=True  trace=1.000000000000+0.000000000000j  checksum=1.3492017380e+02
+### result_code  N=2000 ntsave=101 max_steps=100000  traj = 6.0201 GiB
+  peak      = 13,412,177,920 B = 12.4911 GiB = 209.565 R
+  slope     = 2.0452 R per saved state
+  first call (incl. compile) = 3.844 s
+  warm runs  = 0.1950 s +- 0.0004  (min 0.1946, n=5)
+  finite=True  trace=1.000000000000+0.000000000000j  checksum=1.3492017380e+02
+### plus_nan  N=2000 ntsave=101 max_steps=100000  traj = 6.0201 GiB
+  peak      = 13,412,177,920 B = 12.4911 GiB = 209.565 R
+  slope     = 2.0452 R per saved state
+  first call (incl. compile) = 4.077 s
+  warm runs  = 0.2036 s +- 0.0003  (min 0.2033, n=5)
+  finite=True  trace=1.000000000000+0.000000000000j  checksum=1.3492017380e+02
+
+=== B) N=2000, ntsave=303: baseline OOMs today ===
+### baseline  N=2000 ntsave=303 max_steps=100000  traj = 18.0602 GiB
+  RAISED JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 36.24GiB. [tf-allocator-allocation-error=
+### result_code  N=2000 ntsave=303 max_steps=100000  traj = 18.0602 GiB
+  RAISED JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 18.45GiB. [tf-allocator-allocation-error=
+### plus_nan  N=2000 ntsave=303 max_steps=100000  traj = 18.0602 GiB
+  RAISED JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 18.45GiB. [executable_name='jit__vectoriz
+
+=== C) run time at a save-heavy config, N=1000 ntsave=1000 ===
+### baseline  N=1000 ntsave=1000 max_steps=100000  traj = 14.9012 GiB
+  RAISED JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 29.83GiB. [executable_name='jit__vectoriz
+### result_code  N=1000 ntsave=1000 max_steps=100000  traj = 14.9012 GiB
+  RAISED JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 15.00GiB. [tf-allocator-allocation-error=
+### plus_nan  N=1000 ntsave=1000 max_steps=100000  traj = 14.9012 GiB
+  RAISED JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 15.00GiB. [tf-allocator-allocation-error=
+
+=== D) does the failure still surface? max_steps=1 ===
+### baseline  N=64 ntsave=11 max_steps=1  traj = 0.0007 GiB
+  RAISED JaxRuntimeError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+### result_code  N=64 ntsave=11 max_steps=1  traj = 0.0007 GiB
+  RAISED JaxRuntimeError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+### plus_nan  N=64 ntsave=11 max_steps=1  traj = 0.0007 GiB
+  RAISED JaxRuntimeError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+
+### STEP 10 COMPLETE ###

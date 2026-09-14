@@ -1,0 +1,79 @@
+# job 69381 on higgs 2026-09-11T10:57:44+02:00  GPU=0
+#   XLA_PYTHON_CLIENT_MEM_FRACTION=.95
+#   XLA_PYTHON_CLIENT_PREALLOCATE=true
+####################################################################################################
+STEP 3c - POST-SOLVE RETENTION: bounded cache slot, or unbounded leak?
+  N=4000  state_bytes=128,000,000 (122.07 MiB)  M+Y0 = 256,000,000 B
+  bytes_limit = 45,285,900,288
+####################################################################################################
+
+--- vf_mode=closure  jax.clear_caches()=True ---
+    before any solve: in_use=0
+    solve 0: in_use=    256,000,512 (   244.14 MiB =  2.00 states)  num_allocs=     74
+    solve 1: in_use=    256,000,512 (   244.14 MiB =  2.00 states)  num_allocs=    126
+    solve 2: in_use=    256,000,512 (   244.14 MiB =  2.00 states)  num_allocs=    178
+    solve 3: in_use=    256,000,512 (   244.14 MiB =  2.00 states)  num_allocs=    230
+    solve 4: in_use=    256,000,512 (   244.14 MiB =  2.00 states)  num_allocs=    282
+    solve 5: in_use=    256,000,512 (   244.14 MiB =  2.00 states)  num_allocs=    334
+    growth across 6 solves = +0 B (+0 B/solve = +0.000 states/solve)
+    VERDICT: BOUNDED (flat)
+    after config cleanup: in_use=0
+
+--- vf_mode=closure  jax.clear_caches()=False ---
+    before any solve: in_use=0
+    solve 0: in_use=    256,001,536 (   244.14 MiB =  2.00 states)  num_allocs=    386
+    solve 1: in_use=    256,002,560 (   244.14 MiB =  2.00 states)  num_allocs=    438
+    solve 2: in_use=    384,003,584 (   366.21 MiB =  3.00 states)  num_allocs=    490
+    solve 3: in_use=    512,004,608 (   488.29 MiB =  4.00 states)  num_allocs=    542
+    solve 4: in_use=    640,005,632 (   610.36 MiB =  5.00 states)  num_allocs=    594
+    solve 5: in_use=    768,006,656 (   732.43 MiB =  6.00 states)  num_allocs=    646
+    growth across 6 solves = +512,005,120 B (+102,401,024 B/solve = +0.800 states/solve)
+    VERDICT: GROWING <-- LEAK
+    after config cleanup: in_use=0
+
+--- vf_mode=args  jax.clear_caches()=True ---
+    before any solve: in_use=0
+    solve 0: in_use=    256,000,512 (   244.14 MiB =  2.00 states)  num_allocs=    698
+    solve 1: in_use=    256,000,512 (   244.14 MiB =  2.00 states)  num_allocs=    750
+    solve 2: in_use=    256,000,512 (   244.14 MiB =  2.00 states)  num_allocs=    802
+    solve 3: in_use=    256,000,512 (   244.14 MiB =  2.00 states)  num_allocs=    854
+    solve 4: in_use=    256,000,512 (   244.14 MiB =  2.00 states)  num_allocs=    906
+    solve 5: in_use=    256,000,512 (   244.14 MiB =  2.00 states)  num_allocs=    958
+    growth across 6 solves = +0 B (+0 B/solve = +0.000 states/solve)
+    VERDICT: BOUNDED (flat)
+    after config cleanup: in_use=0
+
+--- vf_mode=args  jax.clear_caches()=False ---
+    before any solve: in_use=0
+    solve 0: in_use=    256,001,536 (   244.14 MiB =  2.00 states)  num_allocs=  1,010
+    solve 1: in_use=          2,560 (     0.00 MiB =  0.00 states)  num_allocs=  1,062
+    solve 2: in_use=          3,584 (     0.00 MiB =  0.00 states)  num_allocs=  1,114
+    solve 3: in_use=          4,608 (     0.00 MiB =  0.00 states)  num_allocs=  1,166
+    solve 4: in_use=          5,632 (     0.01 MiB =  0.00 states)  num_allocs=  1,218
+    solve 5: in_use=          6,656 (     0.01 MiB =  0.00 states)  num_allocs=  1,270
+    growth across 6 solves = -255,994,880 B (-51,198,976 B/solve = -0.400 states/solve)
+    VERDICT: GROWING <-- LEAK
+    after config cleanup: in_use=0
+
+--- CONTROL plain jax.jit  vf_mode=closure  (no clear_caches) ---
+    call 0: in_use=            512 (     0.00 MiB =  0.00 states)  num_allocs=  1,284
+    call 1: in_use=            512 (     0.00 MiB =  0.00 states)  num_allocs=  1,298
+    call 2: in_use=            512 (     0.00 MiB =  0.00 states)  num_allocs=  1,312
+    call 3: in_use=            512 (     0.00 MiB =  0.00 states)  num_allocs=  1,326
+    call 4: in_use=            512 (     0.00 MiB =  0.00 states)  num_allocs=  1,340
+    call 5: in_use=            512 (     0.00 MiB =  0.00 states)  num_allocs=  1,354
+    tail growth = +0 B/call = +0.000 states/call
+    VERDICT: BOUNDED (flat)
+    after config cleanup: in_use=0
+
+--- CONTROL plain jax.jit  vf_mode=args  (no clear_caches) ---
+    call 0: in_use=            512 (     0.00 MiB =  0.00 states)  num_allocs=  1,368
+    call 1: in_use=            512 (     0.00 MiB =  0.00 states)  num_allocs=  1,382
+    call 2: in_use=            512 (     0.00 MiB =  0.00 states)  num_allocs=  1,396
+    call 3: in_use=            512 (     0.00 MiB =  0.00 states)  num_allocs=  1,410
+    call 4: in_use=            512 (     0.00 MiB =  0.00 states)  num_allocs=  1,424
+    call 5: in_use=            512 (     0.00 MiB =  0.00 states)  num_allocs=  1,438
+    tail growth = +0 B/call = +0.000 states/call
+    VERDICT: BOUNDED (flat)
+    after config cleanup: in_use=0
+### STEP 3c COMPLETE ###

@@ -1,0 +1,83 @@
+# job 69419 higgs GPU=0 2026-09-11T18:41:48+02:00
+
+================================================================
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step8_tokenfix.py", line 164, in <module>
+  File "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step8_tokenfix.py", line 156, in main
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/traceback_util.py", line 195, in reraise_with_filtered_traceback
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/pjit.py", line 259, in cache_miss
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/pjit.py", line 139, in _run_python_pjit
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/pjit.py", line 1190, in _pjit_call_impl_python
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/profiler.py", line 420, in wrapper
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/interpreters/pxla.py", line 388, in __call__
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/callback.py", line 816, in _wrapped_callback
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/callback.py", line 226, in _callback
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/callback.py", line 96, in pure_callback_impl
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/callback.py", line 71, in __call__
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_errors.py", line 88, in raises
+_EquinoxRuntimeError: The maximum number of solver steps was reached. Try increasing `max_steps`.
+
+
+--------------------
+An error occurred during the runtime of your JAX program! Unfortunately you do not appear to be using `equinox.filter_jit` (perhaps you are using `jax.jit` instead?) and so further information about the error cannot be displayed. (Probably you are seeing a very large but uninformative error message right now.) Please wrap your program with `equinox.filter_jit`.
+--------------------
+ [executable_name='jit_f']
+
+================================================================
+### v1_marker   N=64  R=65,536 B
+  ntsave=  10  output=     655,645  temp=     919,936  total/traj=2.4041
+  ntsave=  20  output=   1,311,085  temp=     952,704  total/traj=1.7271
+  ntsave=  40  output=   2,621,965  temp=     952,704  total/traj=1.3636
+  ntsave=  80  output=   5,243,725  temp=     952,704  total/traj=1.1819
+  ntsave= 160  output=  10,487,245  temp=     952,704  total/traj=1.0910
+  output  =          205 B +  1.0001 R per saved state
+  temp    =      939,051 B +  0.0017 R per saved state
+  total   =      939,256 B +  1.0019 R per saved state
+  --- safety: max_steps=1, must still raise ---
+  NO ERROR RAISED. finite=False
+
+================================================================
+### v2_barrier   N=64  R=65,536 B
+  ntsave=  10  output=     655,645  temp=     920,192  total/traj=2.4045
+  ntsave=  20  output=   1,311,085  temp=     952,960  total/traj=1.7273
+  ntsave=  40  output=   2,621,965  temp=     952,960  total/traj=1.3637
+  ntsave=  80  output=   5,243,725  temp=     952,960  total/traj=1.1819
+  ntsave= 160  output=  10,487,245  temp=     952,960  total/traj=1.0910
+  output  =          205 B +  1.0001 R per saved state
+  temp    =      939,307 B +  0.0017 R per saved state
+  total   =      939,512 B +  1.0019 R per saved state
+  --- safety: max_steps=1, must still raise ---
+  NO ERROR RAISED. finite=False
+
+================================================================
+Exception ignored in atexit callback: <function clean_up at 0x7827fa9b54e0>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step8_tokenfix.py", line 164, in <module>
+  File "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step8_tokenfix.py", line 156, in main
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/traceback_util.py", line 195, in reraise_with_filtered_traceback
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/pjit.py", line 259, in cache_miss
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/pjit.py", line 139, in _run_python_pjit
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/pjit.py", line 1190, in _pjit_call_impl_python
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/profiler.py", line 420, in wrapper
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/interpreters/pxla.py", line 388, in __call__
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/callback.py", line 816, in _wrapped_callback
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/callback.py", line 226, in _callback
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/callback.py", line 96, in pure_callback_impl
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/callback.py", line 71, in __call__
+  File "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step8_tokenfix.py", line 85, in raises
+_EquinoxRuntimeError: The maximum number of solver steps was reached. Try increasing `max_steps`. [executable_name='jit_f']
+
+### STEP 8 COMPLETE ###

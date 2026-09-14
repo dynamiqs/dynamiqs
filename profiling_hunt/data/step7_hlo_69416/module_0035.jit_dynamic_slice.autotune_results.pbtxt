@@ -1,0 +1,113 @@
+version: 3
+results {
+  device: "CUDA: 8.9, Cores: 142, GPU clock: 2.52 GHz, Memory bandwidth: 864 GB/s, L2 cache: 96 MB, DNN version: 9.25.1"
+  hlo: "{\n  ROOT tmp_0 = c128[63]{0} iota(), iota_dimension=0\n}"
+  result {
+    other {
+      name: "NATIVE_EMITTER"
+      config {
+        type_url: "type.googleapis.com/xla.autotuner.BackendConfig"
+        value: "2\000"
+      }
+    }
+  }
+  version: 45
+}
+results {
+  device: "CUDA: 8.9, Cores: 142, GPU clock: 2.52 GHz, Memory bandwidth: 864 GB/s, L2 cache: 96 MB, DNN version: 9.25.1"
+  hlo: "{\n  tmp_0 = c128[1,64]{1,0} parameter(0)\n  tmp_1 = s64[] constant(0)\n  tmp_2 = s64[] parameter(1)\n  ROOT tmp_3 = c128[1,1]{1,0} dynamic-slice(c128[1,64]{1,0} tmp_0, s64[] tmp_1, s64[] tmp_2), dynamic_slice_sizes={1,1}\n}"
+  result {
+    other {
+      name: "NATIVE_EMITTER"
+      config {
+        type_url: "type.googleapis.com/xla.autotuner.BackendConfig"
+        value: "2\000"
+      }
+    }
+  }
+  version: 45
+}
+results {
+  device: "CUDA: 8.9, Cores: 142, GPU clock: 2.52 GHz, Memory bandwidth: 864 GB/s, L2 cache: 96 MB, DNN version: 9.25.1"
+  hlo: "{\n  tmp_0 = c128[1,64]{1,0} parameter(0)\n  tmp_1 = s64[] constant(0)\n  tmp_2 = s64[] parameter(1)\n  ROOT tmp_3 = c128[1,63]{1,0} dynamic-slice(c128[1,64]{1,0} tmp_0, s64[] tmp_1, s64[] tmp_2), dynamic_slice_sizes={1,63}\n}"
+  result {
+    other {
+      name: "NATIVE_EMITTER"
+      config {
+        type_url: "type.googleapis.com/xla.autotuner.BackendConfig"
+        value: "2\000"
+      }
+    }
+  }
+  version: 45
+}
+results {
+  device: "CUDA: 8.9, Cores: 142, GPU clock: 2.52 GHz, Memory bandwidth: 864 GB/s, L2 cache: 96 MB, DNN version: 9.25.1"
+  hlo: "{\n  tmp_0 = c128[1]{0} parameter(0)\n  tmp_1 = s64[] parameter(1)\n  tmp_2 = s64[1]{0} bitcast(s64[] tmp_1)\n  tmp_3 = c128[1]{0} convert(s64[1]{0} tmp_2)\n  ROOT tmp_4 = pred[1]{0} compare(c128[1]{0} tmp_0, c128[1]{0} tmp_3), direction=NE\n}"
+  result {
+    other {
+      name: "NATIVE_EMITTER"
+      config {
+        type_url: "type.googleapis.com/xla.autotuner.BackendConfig"
+        value: "2\000"
+      }
+    }
+  }
+  version: 45
+}
+results {
+  device: "CUDA: 8.9, Cores: 142, GPU clock: 2.52 GHz, Memory bandwidth: 864 GB/s, L2 cache: 96 MB, DNN version: 9.25.1"
+  hlo: "{\n  tmp_0 = c128[63]{0} parameter(0)\n  tmp_1 = f64[63]{0} real(c128[63]{0} tmp_0)\n  tmp_2 = f64[] constant(0)\n  tmp_3 = f64[63]{0} broadcast(f64[] tmp_2), dimensions={}\n  tmp_4 = pred[63]{0} compare(f64[63]{0} tmp_1, f64[63]{0} tmp_3), direction=GE\n  tmp_5 = f64[63]{0} abs(f64[63]{0} tmp_1)\n  tmp_6 = f64[63]{0} imag(c128[63]{0} tmp_0)\n  tmp_7 = f64[63]{0} abs(f64[63]{0} tmp_6)\n  tmp_8 = pred[63]{0} compare(f64[63]{0} tmp_5, f64[63]{0} tmp_7), direction=EQ\n  tmp_9 = f64[63]{0} sqrt(f64[63]{0} tmp_5)\n  tmp_10 = f64[] constant({...})\n  tmp_11 = f64[63]{0} broadcast(f64[] tmp_10), dimensions={}\n  tmp_12 = f64[63]{0} multiply(f64[63]{0} tmp_9, f64[63]{0} tmp_11)\n  tmp_13 = f64[63]{0} maximum(f64[63]{0} tmp_5, f64[63]{0} tmp_7)\n  tmp_14 = f64[63]{0} minimum(f64[63]{0} tmp_5, f64[63]{0} tmp_7)\n  tmp_15 = pred[63]{0} compare(f64[63]{0} tmp_13, f64[63]{0} tmp_14), direction=EQ\n  tmp_16 = f64[] constant({...})\n  tmp_17 = f64[63]{0} broadcast(f64[] tmp_16), dimensions={}\n  tmp_18 = f64[63]{0} multiply(f64[63]{0} tmp_13, f64[63]{0} tmp_17)\n  tmp_19 = f64[63]{0} divide(f64[63]{0} tmp_14, f64[63]{0} tmp_13)\n  tmp_20 = f64[63]{0} multiply(f64[63]{0} tmp_19, f64[63]{0} tmp_19)\n  tmp_21 = f64[] constant(1)\n  tmp_22 = f64[63]{0} broadcast(f64[] tmp_21), dimensions={}\n  tmp_23 = f64[63]{0} add(f64[63]{0} tmp_20, f64[63]{0} tmp_22)\n  tmp_24 = f64[63]{0} sqrt(f64[63]{0} tmp_23)\n  tmp_25 = pred[63]{0} compare(f64[63]{0} tmp_24, f64[63]{0} tmp_22), direction=EQ\n  tmp_26 = pred[63]{0} compare(f64[63]{0} tmp_20, f64[63]{0} tmp_3), direction=GT\n  tmp_27 = pred[63]{0} and(pred[63]{0} tmp_25, pred[63]{0} tmp_26)\n  tmp_28 = f64[63]{0} multiply(f64[63]{0} tmp_13, f64[63]{0} tmp_20)\n  tmp_29 = f64[] constant({...})\n  tmp_30 = f64[63]{0} broadcast(f64[] tmp_29), dimensions={}\n  tmp_31 = f64[63]{0} multiply(f64[63]{0} tmp_28, f64[63]{0} tmp_30)\n  tmp_32 = f64[63]{0} add(f64[63]{0} tmp_13, f64[63]{0} tmp_31)\n  tmp_33 = f64[63]{0} multiply(f64[63]{0} tmp_13, f64[63]{0} tmp_24)\n  tmp_34 = f64[63]{0} select(pred[63]{0} tmp_27, f64[63]{0} tmp_32, f64[63]{0} tmp_33)\n  tmp_35 = f64[63]{0} select(pred[63]{0} tmp_15, f64[63]{0} tmp_18, f64[63]{0} tmp_34)\n  tmp_36 = f64[63]{0} add(f64[63]{0} tmp_35, f64[63]{0} tmp_5)\n  tmp_37 = f64[63]{0} multiply(f64[63]{0} tmp_36, f64[63]{0} tmp_30)\n  tmp_38 = f64[63]{0} sqrt(f64[63]{0} tmp_37)\n  tmp_39 = pred[63]{0} compare(f64[63]{0} tmp_38, f64[63]{0} tmp_3), direction=EQ\n  tmp_40 = f64[] constant({...})\n  tmp_41 = f64[63]{0} broadcast(f64[] tmp_40), dimensions={}\n  tmp_42 = pred[63]{0} compare(f64[63]{0} tmp_38, f64[63]{0} tmp_41), direction=EQ\n  tmp_43 = pred[63]{0} or(pred[63]{0} tmp_39, pred[63]{0} tmp_42)\n  tmp_44 = pred[63]{0} compare(f64[63]{0} tmp_5, f64[63]{0} tmp_7), direction=GT\n  tmp_45 = pred[63]{0} compare(f64[63]{0} tmp_5, f64[63]{0} tmp_7), direction=LT\n  tmp_46 = f64[63]{0} divide(f64[63]{0} tmp_5, f64[63]{0} tmp_7)\n  tmp_47 = f64[63]{0} divide(f64[63]{0} tmp_7, f64[63]{0} tmp_5)\n  tmp_48 = f64[63]{0} select(pred[63]{0} tmp_45, f64[63]{0} tmp_46, f64[63]{0} tmp_47)\n  tmp_49 = f64[63]{0} select(pred[63]{0} tmp_8, f64[63]{0} tmp_22, f64[63]{0} tmp_48)\n  tmp_50 = f64[63]{0} abs(f64[63]{0} tmp_49)\n  tmp_51 = f64[63]{0} maximum(f64[63]{0} tmp_50, f64[63]{0} tmp_22)\n  tmp_52 = f64[63]{0} minimum(f64[63]{0} tmp_50, f64[63]{0} tmp_22)\n  tmp_53 = pred[63]{0} compare(f64[63]{0} tmp_51, f64[63]{0} tmp_52), direction=EQ\n  tmp_54 = f64[63]{0} multiply(f64[63]{0} tmp_51, f64[63]{0} tmp_17)\n  tmp_55 = f64[63]{0} divide(f64[63]{0} tmp_52, f64[63]{0} tmp_51)\n  tmp_56 = f64[63]{0} multiply(f64[63]{0} tmp_55, f64[63]{0} tmp_55)\n  tmp_57 = f64[63]{0} add(f64[63]{0} tmp_56, f64[63]{0} tmp_22)\n  tmp_58 = f64[63]{0} sqrt(f64[63]{0} tmp_57)\n  tmp_59 = pred[63]{0} compare(f64[63]{0} tmp_58, f64[63]{0} tmp_22), direction=EQ\n  tmp_60 = pred[63]{0} compare(f64[63]{0} tmp_56, f64[63]{0} tmp_3), direction=GT\n  tmp_61 = pred[63]{0} and(pred[63]{0} tmp_59, pred[63]{0} tmp_60)\n  tmp_62 = f64[63]{0} multiply(f64[63]{0} tmp_51, f64[63]{0} tmp_56)\n  tmp_63 = f64[63]{0} multiply(f64[63]{0} tmp_62, f64[63]{0} tmp_30)\n  tmp_64 = f64[63]{0} add(f64[63]{0} tmp_51, f64[63]{0} tmp_63)\n  tmp_65 = f64[63]{0} multiply(f64[63]{0} tmp_51, f64[63]{0} tmp_58)\n  tmp_66 = f64[63]{0} select(pred[63]{0} tmp_61, f64[63]{0} tmp_64, f64[63]{0} tmp_65)\n  tmp_67 = f64[63]{0} select(pred[63]{0} tmp_53, f64[63]{0} tmp_54, f64[63]{0} tmp_66)\n  tmp_68 = f64[63]{0} add(f64[63]{0} tmp_67, f64[63]{0} tmp_22)\n  tmp_69 = f64[63]{0} sqrt(f64[63]{0} tmp_68)\n  tmp_70 = f64[] constant({...})\n  tmp_71 = f64[63]{0} broadcast(f64[] tmp_70), dimensions={}\n  tmp_72 = f64[63]{0} multiply(f64[63]{0} tmp_69, f64[63]{0} tmp_71)\n  tmp_73 = f64[63]{0} multiply(f64[63]{0} tmp_9, f64[63]{0} tmp_72)\n  tmp_74 = f64[63]{0} sqrt(f64[63]{0} tmp_7)\n  tmp_75 = f64[63]{0} add(f64[63]{0} tmp_49, f64[63]{0} tmp_67)\n  tmp_76 = f64[63]{0} sqrt(f64[63]{0} tmp_75)\n  tmp_77 = f64[63]{0} multiply(f64[63]{0} tmp_76, f64[63]{0} tmp_71)\n  tmp_78 = f64[63]{0} multiply(f64[63]{0} tmp_74, f64[63]{0} tmp_77)\n  tmp_79 = f64[63]{0} select(pred[63]{0} tmp_44, f64[63]{0} tmp_73, f64[63]{0} tmp_78)\n  tmp_80 = f64[63]{0} select(pred[63]{0} tmp_43, f64[63]{0} tmp_79, f64[63]{0} tmp_38)\n  tmp_81 = f64[63]{0} select(pred[63]{0} tmp_8, f64[63]{0} tmp_12, f64[63]{0} tmp_80)\n  tmp_82 = f64[] constant({...})\n  tmp_83 = f64[63]{0} broadcast(f64[] tmp_82), dimensions={}\n  tmp_84 = f64[63]{0} multiply(f64[63]{0} tmp_74, f64[63]{0} tmp_83)\n  tmp_85 = f64[63]{0} divide(f64[63]{0} tmp_9, f64[63]{0} tmp_74)\n  tmp_86 = f64[63]{0} divide(f64[63]{0} tmp_74, f64[63]{0} tmp_9)\n  tmp_87 = f64[63]{0} select(pred[63]{0} tmp_45, f64[63]{0} tmp_85, f64[63]{0} tmp_86)\n  tmp_88 = f64[63]{0} select(pred[63]{0} tmp_8, f64[63]{0} tmp_22, f64[63]{0} tmp_87)\n  tmp_89 = f64[63]{0} multiply(f64[63]{0} tmp_74, f64[63]{0} tmp_88)\n  tmp_90 = f64[63]{0} multiply(f64[63]{0} tmp_69, f64[63]{0} tmp_17)\n  tmp_91 = f64[63]{0} divide(f64[63]{0} tmp_89, f64[63]{0} tmp_90)\n  tmp_92 = f64[63]{0} multiply(f64[63]{0} tmp_76, f64[63]{0} tmp_17)\n  tmp_93 = f64[63]{0} divide(f64[63]{0} tmp_74, f64[63]{0} tmp_92)\n  tmp_94 = f64[63]{0} select(pred[63]{0} tmp_44, f64[63]{0} tmp_91, f64[63]{0} tmp_93)\n  tmp_95 = f64[] constant({...})\n  tmp_96 = f64[63]{0} broadcast(f64[] tmp_95), dimensions={}\n  tmp_97 = f64[63]{0} multiply(f64[63]{0} tmp_38, f64[63]{0} tmp_96)\n  tmp_98 = f64[63]{0} divide(f64[63]{0} tmp_7, f64[63]{0} tmp_97)\n  tmp_99 = f64[63]{0} select(pred[63]{0} tmp_43, f64[63]{0} tmp_94, f64[63]{0} tmp_98)\n  tmp_100 = f64[63]{0} select(pred[63]{0} tmp_8, f64[63]{0} tmp_84, f64[63]{0} tmp_99)\n  tmp_101 = f64[63]{0} select(pred[63]{0} tmp_4, f64[63]{0} tmp_81, f64[63]{0} tmp_100)\n  tmp_102 = pred[63]{0} compare(f64[63]{0} tmp_1, f64[63]{0} tmp_3), direction=LT\n  tmp_103 = pred[63]{0} compare(f64[63]{0} tmp_6, f64[63]{0} tmp_3), direction=LT\n  tmp_104 = f64[63]{0} negate(f64[63]{0} tmp_81)\n  tmp_105 = f64[63]{0} select(pred[63]{0} tmp_103, f64[63]{0} tmp_104, f64[63]{0} tmp_81)\n  tmp_106 = f64[63]{0} negate(f64[63]{0} tmp_100)\n  tmp_107 = f64[63]{0} select(pred[63]{0} tmp_103, f64[63]{0} tmp_106, f64[63]{0} tmp_100)\n  tmp_108 = f64[63]{0} select(pred[63]{0} tmp_102, f64[63]{0} tmp_105, f64[63]{0} tmp_107)\n  ROOT tmp_109 = c128[63]{0} complex(f64[63]{0} tmp_101, f64[63]{0} tmp_108)\n}"
+  result {
+    other {
+      name: "NATIVE_EMITTER"
+      config {
+        type_url: "type.googleapis.com/xla.autotuner.BackendConfig"
+        value: "2\000"
+      }
+    }
+  }
+  version: 45
+}
+results {
+  device: "CUDA: 8.9, Cores: 142, GPU clock: 2.52 GHz, Memory bandwidth: 864 GB/s, L2 cache: 96 MB, DNN version: 9.25.1"
+  hlo: "{\n  tmp_0 = c128[63]{0} parameter(0)\n  tmp_1 = s64[] parameter(1)\n  tmp_2 = c128[] convert(s64[] tmp_1)\n  ROOT tmp_3 = c128[64]{0} pad(c128[63]{0} tmp_0, c128[] tmp_2), padding=1_0\n}"
+  result {
+    other {
+      name: "NATIVE_EMITTER"
+      config {
+        type_url: "type.googleapis.com/xla.autotuner.BackendConfig"
+        value: "2\000"
+      }
+    }
+  }
+  version: 45
+}
+results {
+  device: "CUDA: 8.9, Cores: 142, GPU clock: 2.52 GHz, Memory bandwidth: 864 GB/s, L2 cache: 96 MB, DNN version: 9.25.1"
+  hlo: "{\n  tmp_0 = c128[] parameter(0)\n  ROOT tmp_1 = c128[1,64]{1,0} broadcast(c128[] tmp_0), dimensions={}\n}"
+  result {
+    other {
+      name: "NATIVE_EMITTER"
+      config {
+        type_url: "type.googleapis.com/xla.autotuner.BackendConfig"
+        value: "2\000"
+      }
+    }
+  }
+  version: 45
+}
+results {
+  device: "CUDA: 8.9, Cores: 142, GPU clock: 2.52 GHz, Memory bandwidth: 864 GB/s, L2 cache: 96 MB, DNN version: 9.25.1"
+  hlo: "{\n  tmp_0 = c128[] parameter(1)\n  tmp_1 = c128[63]{0} broadcast(c128[] tmp_0), dimensions={}\n  tmp_2 = c128[63]{0} parameter(0)\n  ROOT tmp_3 = c128[63]{0} add(c128[63]{0} tmp_1, c128[63]{0} tmp_2)\n}"
+  result {
+    other {
+      name: "NATIVE_EMITTER"
+      config {
+        type_url: "type.googleapis.com/xla.autotuner.BackendConfig"
+        value: "2\000"
+      }
+    }
+  }
+  version: 45
+}

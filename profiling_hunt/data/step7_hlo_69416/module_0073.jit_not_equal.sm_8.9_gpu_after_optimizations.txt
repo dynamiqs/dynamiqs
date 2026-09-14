@@ -1,0 +1,9 @@
+HloModule jit_not_equal, is_scheduled=true, entry_computation_layout={(c128[0]{0}, s64[])->pred[0]{0}}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="43abf5263bb139568f093e4d39c0cb97"}
+
+ENTRY %main.1 (x.1: c128[0], y.1: s64[]) -> pred[0] {
+  %y.1 = s64[] parameter(1), metadata={op_name="y"}
+  %constant_1_0 = pred[0]{0} constant({})
+  ROOT %copy.1 = pred[0]{0} copy(%constant_1_0)
+  %x.1 = c128[0]{0} parameter(0), metadata={op_name="x"}
+}
+

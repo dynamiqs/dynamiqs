@@ -1,0 +1,2 @@
+001: kCustomKernel [source       | next=002 (1)] input_reduce_fusion grid: [1, 1, 1] threads: [2, 1, 1]  shared_memory: 0 bytes
+002: kCustomKernel [prev=001 (1) | sink        ] loop_complex_fusion grid: [1, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes

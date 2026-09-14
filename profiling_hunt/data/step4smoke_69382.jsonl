@@ -1,0 +1,4 @@
+{"row": "1_bare_ode", "N": 400, "R": 2560000, "pred_in_R": 12.393, "n_jump": 0, "status": "ok", "op_bytes": 2560000, "peak": 54549760, "in_use": 9122560, "peak_in_R": 21.3085, "steps": 10, "elapsed_s": 0.78, "clean": false}
+{"row": "2_lindblad_diffrax", "N": 400, "R": 2560000, "n_jump": 2, "n_ops": 7, "pred_in_R": 23.393, "status": "ok", "op_bytes": 17920000, "peak": 99192064, "in_use": 23044864, "peak_in_R": 38.7469, "steps": 10, "elapsed_s": 1.03, "clean": false}
+{"row": "3_dq_dense", "N": 400, "R": 2560000, "status": "ERR", "mode": "dense", "n_jump": 2, "exc": "TypeError", "peak": 15361536, "clean": false}
+{"row": "4_dq_dia_cat", "N": 400, "R": 2560000, "status": "ERR", "mode": "dia_cat", "dia_pred_bytes": 25600, "ndiags": [1, 2, 1], "n_jump": 2, "exc": "TypeError", "peak": 16797696, "clean": false}

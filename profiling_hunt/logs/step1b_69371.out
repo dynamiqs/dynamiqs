@@ -1,0 +1,365 @@
+############################################################################
+# SLURM job 69371 on higgs   2026-09-11T10:04:47+02:00
+# CUDA_VISIBLE_DEVICES = 0
+# SLURM_JOB_GPUS       = 2
+#
+# INHERITED environment as seen by the job (the contamination check):
+#   XLA_PYTHON_CLIENT_PREALLOCATE=false
+#   (nothing printed above == nothing inherited)
+############################################################################
+
+index, name, memory.total [MiB], memory.used [MiB]
+0, NVIDIA L40S, 46068 MiB, 0 MiB
+
+
+############### A_true_defaults  (frac=- prealloc=- probe=0) ######
+==============================================================================
+STEP 1 - CONFIGURATION: A_true_defaults
+==============================================================================
+environment:
+  XLA_PYTHON_CLIENT_MEM_FRACTION     = <unset>
+  XLA_PYTHON_CLIENT_PREALLOCATE      = <unset>
+  XLA_PYTHON_CLIENT_ALLOCATOR        = <unset>
+  XLA_FLAGS                          = <unset>
+  CUDA_VISIBLE_DEVICES               = 0
+  SLURM_JOB_ID                       = 69371
+  SLURM_JOB_GPUS                     = 2
+
+nvidia-smi (index, name, total MiB, used MiB):
+  0, NVIDIA L40S, 46068, 0
+
+jax 0.10.2   x64=True
+backend: gpu
+local_devices: [CudaDevice(id=0)]
+device[0]: cuda:0  kind=NVIDIA L40S
+
+memory_stats() AT REST (no user allocation yet)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    35,752,247,296      33.2969 GiB        34096.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                          0
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  0
+  peak_bytes_in_use                           0       0.0000 GiB            0.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                             0       0.0000 GiB            0.0 MiB
+  pool_bytes                                  0       0.0000 GiB            0.0 MiB
+
+allocated probe array: shape=(1024, 1024) dtype=float64 nbytes=8,388,608 (8.0 MiB)
+
+memory_stats() AFTER 8 MiB float64 probe allocation
+  bytes_in_use                        8,388,608       0.0078 GiB            8.0 MiB
+  bytes_limit                    35,752,247,296      33.2969 GiB        34096.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                35,752,247,296      33.2969 GiB        34096.0 MiB
+  pool_bytes                     35,752,247,296      33.2969 GiB        34096.0 MiB
+
+memory_stats() AFTER del + clear_caches (baseline check)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    35,752,247,296      33.2969 GiB        34096.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                35,752,247,296      33.2969 GiB        34096.0 MiB
+  pool_bytes                     35,752,247,296      33.2969 GiB        34096.0 MiB
+
+------------------------------------------------------------------------------
+DERIVED CEILING
+------------------------------------------------------------------------------
+  physical total            48,305,799,168 B     44.9883 GiB  (46068 MiB)
+  physical * 0.95           45,890,509,209 B     42.7389 GiB
+  physical * 0.9            43,475,219,251 B     40.4895 GiB
+  physical * 0.75           36,229,349,376 B     33.7412 GiB
+  MEASURED bytes_limit      35,752,247,296 B     33.2969 GiB
+  measured / physical   0.740123
+  BRIEF's LIMIT_BYTES       45,890,509,210 B     42.7389 GiB
+  measured / brief      0.779077
+
+appended JSON record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step1b_69371.jsonl
+
+STEP 1 CONFIG A_true_defaults: DONE
+
+############### B_095_prealloc_TRUE  (frac=.95 prealloc=true probe=1) ######
+==============================================================================
+STEP 1 - CONFIGURATION: B_095_prealloc_TRUE
+==============================================================================
+environment:
+  XLA_PYTHON_CLIENT_MEM_FRACTION     = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE      = true
+  XLA_PYTHON_CLIENT_ALLOCATOR        = <unset>
+  XLA_FLAGS                          = <unset>
+  CUDA_VISIBLE_DEVICES               = 0
+  SLURM_JOB_ID                       = 69371
+  SLURM_JOB_GPUS                     = 2
+
+nvidia-smi (index, name, total MiB, used MiB):
+  0, NVIDIA L40S, 46068, 0
+
+jax 0.10.2   x64=True
+backend: gpu
+local_devices: [CudaDevice(id=0)]
+device[0]: cuda:0  kind=NVIDIA L40S
+
+memory_stats() AT REST (no user allocation yet)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    45,285,900,288      42.1758 GiB        43188.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                          0
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  0
+  peak_bytes_in_use                           0       0.0000 GiB            0.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                             0       0.0000 GiB            0.0 MiB
+  pool_bytes                                  0       0.0000 GiB            0.0 MiB
+
+allocated probe array: shape=(1024, 1024) dtype=float64 nbytes=8,388,608 (8.0 MiB)
+
+memory_stats() AFTER 8 MiB float64 probe allocation
+  bytes_in_use                        8,388,608       0.0078 GiB            8.0 MiB
+  bytes_limit                    45,285,900,288      42.1758 GiB        43188.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                45,285,900,288      42.1758 GiB        43188.0 MiB
+  pool_bytes                     45,285,900,288      42.1758 GiB        43188.0 MiB
+
+memory_stats() AFTER del + clear_caches (baseline check)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    45,285,900,288      42.1758 GiB        43188.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                45,285,900,288      42.1758 GiB        43188.0 MiB
+  pool_bytes                     45,285,900,288      42.1758 GiB        43188.0 MiB
+
+------------------------------------------------------------------------------
+DERIVED CEILING
+------------------------------------------------------------------------------
+  physical total            48,305,799,168 B     44.9883 GiB  (46068 MiB)
+  physical * 0.95           45,890,509,209 B     42.7389 GiB
+  physical * 0.9            43,475,219,251 B     40.4895 GiB
+  physical * 0.75           36,229,349,376 B     33.7412 GiB
+  MEASURED bytes_limit      45,285,900,288 B     42.1758 GiB
+  measured / physical   0.937484
+  BRIEF's LIMIT_BYTES       45,890,509,210 B     42.7389 GiB
+  measured / brief      0.986825
+
+------------------------------------------------------------------------------
+SINGLE-ALLOCATION CEILING PROBE (bisection on jnp.zeros float64)
+------------------------------------------------------------------------------
+  probe  1:     24,907,245,152 B ( 23.1967 GiB) -> OK    bytes_in_use=24,907,245,312
+  probe  2:     37,360,867,728 B ( 34.7950 GiB) -> OK    bytes_in_use=37,360,867,840
+  probe  3:     43,587,679,016 B ( 40.5942 GiB) -> OK    bytes_in_use=43,587,679,232
+  probe  4:     46,701,084,664 B ( 43.4938 GiB) -> FAIL  JaxRuntimeError
+  probe  5:     45,144,381,840 B ( 42.0440 GiB) -> OK    bytes_in_use=45,144,381,952
+  probe  6:     45,922,733,248 B ( 42.7689 GiB) -> FAIL  JaxRuntimeError
+  probe  7:     45,533,557,544 B ( 42.4064 GiB) -> FAIL  JaxRuntimeError
+  probe  8:     45,338,969,688 B ( 42.2252 GiB) -> FAIL  JaxRuntimeError
+  probe  9:     45,241,675,760 B ( 42.1346 GiB) -> OK    bytes_in_use=45,285,899,776
+  probe 10:     45,290,322,720 B ( 42.1799 GiB) -> FAIL  JaxRuntimeError
+  probe 11:     45,265,999,240 B ( 42.1572 GiB) -> OK    bytes_in_use=45,285,899,776
+  probe 12:     45,278,160,976 B ( 42.1686 GiB) -> OK    bytes_in_use=45,285,899,776
+  probe 13:     45,284,241,848 B ( 42.1742 GiB) -> OK    bytes_in_use=45,285,899,776
+  probe 14:     45,287,282,280 B ( 42.1771 GiB) -> FAIL  JaxRuntimeError
+  probe 15:     45,285,762,064 B ( 42.1757 GiB) -> OK    bytes_in_use=45,285,899,776
+  probe 16:     45,286,522,168 B ( 42.1764 GiB) -> FAIL  JaxRuntimeError
+
+  largest single allocation that SUCCEEDS: 45,285,762,064 B  42.1757 GiB
+  bytes_limit                             : 45,285,900,288 B  42.1758 GiB
+  usable / bytes_limit                    : 0.999997
+  shortfall vs bytes_limit                : 138,224 B  0.1 MiB
+
+appended JSON record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step1b_69371.jsonl
+
+STEP 1 CONFIG B_095_prealloc_TRUE: DONE
+
+############### C_defaultfrac_prealloc_off  (frac=- prealloc=false probe=0) ######
+==============================================================================
+STEP 1 - CONFIGURATION: C_defaultfrac_prealloc_off
+==============================================================================
+environment:
+  XLA_PYTHON_CLIENT_MEM_FRACTION     = <unset>
+  XLA_PYTHON_CLIENT_PREALLOCATE      = false
+  XLA_PYTHON_CLIENT_ALLOCATOR        = <unset>
+  XLA_FLAGS                          = <unset>
+  CUDA_VISIBLE_DEVICES               = 0
+  SLURM_JOB_ID                       = 69371
+  SLURM_JOB_GPUS                     = 2
+
+nvidia-smi (index, name, total MiB, used MiB):
+  0, NVIDIA L40S, 46068, 0
+
+jax 0.10.2   x64=True
+backend: gpu
+local_devices: [CudaDevice(id=0)]
+device[0]: cuda:0  kind=NVIDIA L40S
+
+memory_stats() AT REST (no user allocation yet)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    35,752,247,296      33.2969 GiB        34096.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                          0
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  0
+  peak_bytes_in_use                           0       0.0000 GiB            0.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                             0       0.0000 GiB            0.0 MiB
+  pool_bytes                                  0       0.0000 GiB            0.0 MiB
+
+allocated probe array: shape=(1024, 1024) dtype=float64 nbytes=8,388,608 (8.0 MiB)
+
+memory_stats() AFTER 8 MiB float64 probe allocation
+  bytes_in_use                        8,388,608       0.0078 GiB            8.0 MiB
+  bytes_limit                    35,752,247,296      33.2969 GiB        34096.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                    10,485,760       0.0098 GiB           10.0 MiB
+  pool_bytes                         10,485,760       0.0098 GiB           10.0 MiB
+
+memory_stats() AFTER del + clear_caches (baseline check)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    35,752,247,296      33.2969 GiB        34096.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                    10,485,760       0.0098 GiB           10.0 MiB
+  pool_bytes                         10,485,760       0.0098 GiB           10.0 MiB
+
+------------------------------------------------------------------------------
+DERIVED CEILING
+------------------------------------------------------------------------------
+  physical total            48,305,799,168 B     44.9883 GiB  (46068 MiB)
+  physical * 0.95           45,890,509,209 B     42.7389 GiB
+  physical * 0.9            43,475,219,251 B     40.4895 GiB
+  physical * 0.75           36,229,349,376 B     33.7412 GiB
+  MEASURED bytes_limit      35,752,247,296 B     33.2969 GiB
+  measured / physical   0.740123
+  BRIEF's LIMIT_BYTES       45,890,509,210 B     42.7389 GiB
+  measured / brief      0.779077
+
+appended JSON record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step1b_69371.jsonl
+
+STEP 1 CONFIG C_defaultfrac_prealloc_off: DONE
+
+############### D_095_prealloc_off  (frac=.95 prealloc=false probe=1) ######
+==============================================================================
+STEP 1 - CONFIGURATION: D_095_prealloc_off
+==============================================================================
+environment:
+  XLA_PYTHON_CLIENT_MEM_FRACTION     = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE      = false
+  XLA_PYTHON_CLIENT_ALLOCATOR        = <unset>
+  XLA_FLAGS                          = <unset>
+  CUDA_VISIBLE_DEVICES               = 0
+  SLURM_JOB_ID                       = 69371
+  SLURM_JOB_GPUS                     = 2
+
+nvidia-smi (index, name, total MiB, used MiB):
+  0, NVIDIA L40S, 46068, 0
+
+jax 0.10.2   x64=True
+backend: gpu
+local_devices: [CudaDevice(id=0)]
+device[0]: cuda:0  kind=NVIDIA L40S
+
+memory_stats() AT REST (no user allocation yet)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    45,285,900,288      42.1758 GiB        43188.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                          0
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  0
+  peak_bytes_in_use                           0       0.0000 GiB            0.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                             0       0.0000 GiB            0.0 MiB
+  pool_bytes                                  0       0.0000 GiB            0.0 MiB
+
+allocated probe array: shape=(1024, 1024) dtype=float64 nbytes=8,388,608 (8.0 MiB)
+
+memory_stats() AFTER 8 MiB float64 probe allocation
+  bytes_in_use                        8,388,608       0.0078 GiB            8.0 MiB
+  bytes_limit                    45,285,900,288      42.1758 GiB        43188.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                    10,485,760       0.0098 GiB           10.0 MiB
+  pool_bytes                         10,485,760       0.0098 GiB           10.0 MiB
+
+memory_stats() AFTER del + clear_caches (baseline check)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    45,285,900,288      42.1758 GiB        43188.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                    10,485,760       0.0098 GiB           10.0 MiB
+  pool_bytes                         10,485,760       0.0098 GiB           10.0 MiB
+
+------------------------------------------------------------------------------
+DERIVED CEILING
+------------------------------------------------------------------------------
+  physical total            48,305,799,168 B     44.9883 GiB  (46068 MiB)
+  physical * 0.95           45,890,509,209 B     42.7389 GiB
+  physical * 0.9            43,475,219,251 B     40.4895 GiB
+  physical * 0.75           36,229,349,376 B     33.7412 GiB
+  MEASURED bytes_limit      45,285,900,288 B     42.1758 GiB
+  measured / physical   0.937484
+  BRIEF's LIMIT_BYTES       45,890,509,210 B     42.7389 GiB
+  measured / brief      0.986825
+
+------------------------------------------------------------------------------
+SINGLE-ALLOCATION CEILING PROBE (bisection on jnp.zeros float64)
+------------------------------------------------------------------------------
+  probe  1:     24,907,245,152 B ( 23.1967 GiB) -> OK    bytes_in_use=24,907,245,312
+  probe  2:     37,360,867,728 B ( 34.7950 GiB) -> FAIL  JaxRuntimeError
+  probe  3:     31,134,056,440 B ( 28.9958 GiB) -> OK    bytes_in_use=31,134,056,448
+  probe  4:     34,247,462,080 B ( 31.8954 GiB) -> OK    bytes_in_use=34,359,738,368
+  probe  5:     35,804,164,904 B ( 33.3452 GiB) -> FAIL  JaxRuntimeError
+  probe  6:     35,025,813,488 B ( 32.6203 GiB) -> FAIL  JaxRuntimeError
+  probe  7:     34,636,637,784 B ( 32.2579 GiB) -> FAIL  JaxRuntimeError
+  probe  8:     34,442,049,928 B ( 32.0767 GiB) -> FAIL  JaxRuntimeError
+  probe  9:     34,344,756,000 B ( 31.9860 GiB) -> OK    bytes_in_use=34,359,738,368
+  probe 10:     34,393,402,960 B ( 32.0314 GiB) -> FAIL  JaxRuntimeError
+  probe 11:     34,369,079,480 B ( 32.0087 GiB) -> FAIL  JaxRuntimeError
+  probe 12:     34,356,917,736 B ( 31.9974 GiB) -> OK    bytes_in_use=34,359,738,368
+  probe 13:     34,362,998,608 B ( 32.0030 GiB) -> FAIL  JaxRuntimeError
+  probe 14:     34,359,958,168 B ( 32.0002 GiB) -> FAIL  JaxRuntimeError
+  probe 15:     34,358,437,952 B ( 31.9988 GiB) -> OK    bytes_in_use=34,359,738,368
+  probe 16:     34,359,198,056 B ( 31.9995 GiB) -> OK    bytes_in_use=34,359,738,368
+
+  largest single allocation that SUCCEEDS: 34,359,198,056 B  31.9995 GiB
+  bytes_limit                             : 45,285,900,288 B  42.1758 GiB
+  usable / bytes_limit                    : 0.758717
+  shortfall vs bytes_limit                : 10,926,702,232 B  10420.5 MiB
+
+appended JSON record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step1b_69371.jsonl
+
+STEP 1 CONFIG D_095_prealloc_off: DONE
+
+### STEP 1b COMPLETE - json at /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step1b_69371.jsonl ###

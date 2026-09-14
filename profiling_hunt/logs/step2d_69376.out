@@ -1,0 +1,203 @@
+# job 69376 on higgs 2026-09-11T10:37:07+02:00  GPU=0
+#   XLA_PYTHON_CLIENT_MEM_FRACTION=.95
+#   XLA_PYTHON_CLIENT_PREALLOCATE=true
+####################################################################################################
+STEP 2d - ALLOCATION PATTERN vs kron
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 B = 42.1758 GiB
+####################################################################################################
+
+====================================================================================================
+CASE n=32: kron OOMed at k=11 (output 32.0000 GiB, input 8.0000 GiB)
+====================================================================================================
+
+--- n=32 mode=grow_hold ---
+  k= 1 want=  0.0000 GiB  OK   in_use=  0.0000 peak=  0.0000
+  k= 2 want=  0.0001 GiB  OK   in_use=  0.0001 peak=  0.0002
+  k= 3 want=  0.0005 GiB  OK   in_use=  0.0005 peak=  0.0006
+  k= 4 want=  0.0020 GiB  OK   in_use=  0.0020 peak=  0.0024
+  k= 5 want=  0.0078 GiB  OK   in_use=  0.0078 peak=  0.0098
+  k= 6 want=  0.0312 GiB  OK   in_use=  0.0312 peak=  0.0391
+  k= 7 want=  0.1250 GiB  OK   in_use=  0.1250 peak=  0.1563
+  k= 8 want=  0.5000 GiB  OK   in_use=  0.5000 peak=  0.6250
+  k= 9 want=  2.0000 GiB  OK   in_use=  2.0000 peak=  2.5000
+  k=10 want=  8.0000 GiB  OK   in_use=  8.0000 peak= 10.0000
+  k=11 want= 32.0000 GiB  OOM  in_use=  8.0000 peak= 10.0000
+     !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 32.00GiB. [executable_name='jit_broadcast_in_dim'] [tf-allocator-allocation-error='']
+  => n=32 mode=grow_hold: last_ok_k=10 oom_k=11
+
+--- n=32 mode=grow_free ---
+  k= 1 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 10.0000
+  k= 2 want=  0.0001 GiB  OK   in_use=  0.0001 peak= 10.0000
+  k= 3 want=  0.0005 GiB  OK   in_use=  0.0005 peak= 10.0000
+  k= 4 want=  0.0020 GiB  OK   in_use=  0.0020 peak= 10.0000
+  k= 5 want=  0.0078 GiB  OK   in_use=  0.0078 peak= 10.0000
+  k= 6 want=  0.0312 GiB  OK   in_use=  0.0312 peak= 10.0000
+  k= 7 want=  0.1250 GiB  OK   in_use=  0.1250 peak= 10.0000
+  k= 8 want=  0.5000 GiB  OK   in_use=  0.5000 peak= 10.0000
+  k= 9 want=  2.0000 GiB  OK   in_use=  2.0000 peak= 10.0000
+  k=10 want=  8.0000 GiB  OK   in_use=  8.0000 peak= 10.0000
+  k=11 want= 32.0000 GiB  OK   in_use= 32.0000 peak= 32.0000
+  => n=32 mode=grow_free: last_ok_k=11 oom_k=None
+
+====================================================================================================
+CASE n=2: kron OOMed at k=15 (output 32.0000 GiB, input 8.0000 GiB)
+====================================================================================================
+
+--- n=2 mode=grow_hold ---
+  k= 1 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 32.0000
+  k= 2 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 32.0000
+  k= 3 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 32.0000
+  k= 4 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 32.0000
+  k= 5 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 32.0000
+  k= 6 want=  0.0001 GiB  OK   in_use=  0.0001 peak= 32.0000
+  k= 7 want=  0.0005 GiB  OK   in_use=  0.0005 peak= 32.0000
+  k= 8 want=  0.0020 GiB  OK   in_use=  0.0020 peak= 32.0000
+  k= 9 want=  0.0078 GiB  OK   in_use=  0.0078 peak= 32.0000
+  k=10 want=  0.0312 GiB  OK   in_use=  0.0312 peak= 32.0000
+  k=11 want=  0.1250 GiB  OK   in_use=  0.1250 peak= 32.0000
+  k=12 want=  0.5000 GiB  OK   in_use=  0.5000 peak= 32.0000
+  k=13 want=  2.0000 GiB  OK   in_use=  2.0000 peak= 32.0000
+  k=14 want=  8.0000 GiB  OK   in_use=  8.0000 peak= 32.0000
+  k=15 want= 32.0000 GiB  OOM  in_use=  8.0000 peak= 32.0000
+     !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 32.00GiB. [executable_name='jit_broadcast_in_dim'] [tf-allocator-allocation-error='']
+  => n=2 mode=grow_hold: last_ok_k=14 oom_k=15
+
+--- n=2 mode=grow_free ---
+  k= 1 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 32.0000
+  k= 2 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 32.0000
+  k= 3 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 32.0000
+  k= 4 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 32.0000
+  k= 5 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 32.0000
+  k= 6 want=  0.0001 GiB  OK   in_use=  0.0001 peak= 32.0000
+  k= 7 want=  0.0005 GiB  OK   in_use=  0.0005 peak= 32.0000
+  k= 8 want=  0.0020 GiB  OK   in_use=  0.0020 peak= 32.0000
+  k= 9 want=  0.0078 GiB  OK   in_use=  0.0078 peak= 32.0000
+  k=10 want=  0.0312 GiB  OK   in_use=  0.0312 peak= 32.0000
+  k=11 want=  0.1250 GiB  OK   in_use=  0.1250 peak= 32.0000
+  k=12 want=  0.5000 GiB  OK   in_use=  0.5000 peak= 32.0000
+  k=13 want=  2.0000 GiB  OK   in_use=  2.0000 peak= 32.0000
+  k=14 want=  8.0000 GiB  OK   in_use=  8.0000 peak= 32.0000
+  k=15 want= 32.0000 GiB  OK   in_use= 32.0000 peak= 32.0000
+  => n=2 mode=grow_free: last_ok_k=15 oom_k=None
+
+====================================================================================================
+CASE n=16: kron OOMed at k=12 (output 32.0000 GiB, input 8.0000 GiB)
+====================================================================================================
+
+--- n=16 mode=grow_hold ---
+  k= 1 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 32.0000
+  k= 2 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 32.0000
+  k= 3 want=  0.0001 GiB  OK   in_use=  0.0001 peak= 32.0000
+  k= 4 want=  0.0005 GiB  OK   in_use=  0.0005 peak= 32.0000
+  k= 5 want=  0.0020 GiB  OK   in_use=  0.0020 peak= 32.0000
+  k= 6 want=  0.0078 GiB  OK   in_use=  0.0078 peak= 32.0000
+  k= 7 want=  0.0312 GiB  OK   in_use=  0.0312 peak= 32.0000
+  k= 8 want=  0.1250 GiB  OK   in_use=  0.1250 peak= 32.0000
+  k= 9 want=  0.5000 GiB  OK   in_use=  0.5000 peak= 32.0000
+  k=10 want=  2.0000 GiB  OK   in_use=  2.0000 peak= 32.0000
+  k=11 want=  8.0000 GiB  OK   in_use=  8.0000 peak= 32.0000
+  k=12 want= 32.0000 GiB  OOM  in_use=  8.0000 peak= 32.0000
+     !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 32.00GiB. [executable_name='jit_broadcast_in_dim'] [tf-allocator-allocation-error='']
+  => n=16 mode=grow_hold: last_ok_k=11 oom_k=12
+
+--- n=16 mode=grow_free ---
+  k= 1 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 32.0000
+  k= 2 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 32.0000
+  k= 3 want=  0.0001 GiB  OK   in_use=  0.0001 peak= 32.0000
+  k= 4 want=  0.0005 GiB  OK   in_use=  0.0005 peak= 32.0000
+  k= 5 want=  0.0020 GiB  OK   in_use=  0.0020 peak= 32.0000
+  k= 6 want=  0.0078 GiB  OK   in_use=  0.0078 peak= 32.0000
+  k= 7 want=  0.0312 GiB  OK   in_use=  0.0312 peak= 32.0000
+  k= 8 want=  0.1250 GiB  OK   in_use=  0.1250 peak= 32.0000
+  k= 9 want=  0.5000 GiB  OK   in_use=  0.5000 peak= 32.0000
+  k=10 want=  2.0000 GiB  OK   in_use=  2.0000 peak= 32.0000
+  k=11 want=  8.0000 GiB  OK   in_use=  8.0000 peak= 32.0000
+  k=12 want= 32.0000 GiB  OK   in_use= 32.0000 peak= 32.0000
+  => n=16 mode=grow_free: last_ok_k=12 oom_k=None
+
+====================================================================================================
+CASE n=31: kron OOMed at k=11 (output 30.0312 GiB, input 7.5078 GiB)
+====================================================================================================
+
+--- n=31 mode=grow_hold ---
+  k= 1 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 32.0000
+  k= 2 want=  0.0001 GiB  OK   in_use=  0.0001 peak= 32.0000
+  k= 3 want=  0.0005 GiB  OK   in_use=  0.0005 peak= 32.0000
+  k= 4 want=  0.0018 GiB  OK   in_use=  0.0018 peak= 32.0000
+  k= 5 want=  0.0073 GiB  OK   in_use=  0.0073 peak= 32.0000
+  k= 6 want=  0.0293 GiB  OK   in_use=  0.0293 peak= 32.0000
+  k= 7 want=  0.1173 GiB  OK   in_use=  0.1173 peak= 32.0000
+  k= 8 want=  0.4692 GiB  OK   in_use=  0.4692 peak= 32.0000
+  k= 9 want=  1.8770 GiB  OK   in_use=  1.8770 peak= 32.0000
+  k=10 want=  7.5078 GiB  OK   in_use=  7.5078 peak= 32.0000
+  k=11 want= 30.0312 GiB  OK   in_use= 30.0312 peak= 37.5391
+  => n=31 mode=grow_hold: last_ok_k=11 oom_k=None
+
+--- n=31 mode=grow_free ---
+  k= 1 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 37.5391
+  k= 2 want=  0.0001 GiB  OK   in_use=  0.0001 peak= 37.5391
+  k= 3 want=  0.0005 GiB  OK   in_use=  0.0005 peak= 37.5391
+  k= 4 want=  0.0018 GiB  OK   in_use=  0.0018 peak= 37.5391
+  k= 5 want=  0.0073 GiB  OK   in_use=  0.0073 peak= 37.5391
+  k= 6 want=  0.0293 GiB  OK   in_use=  0.0293 peak= 37.5391
+  k= 7 want=  0.1173 GiB  OK   in_use=  0.1173 peak= 37.5391
+  k= 8 want=  0.4692 GiB  OK   in_use=  0.4692 peak= 37.5391
+  k= 9 want=  1.8770 GiB  OK   in_use=  1.8770 peak= 37.5391
+  k=10 want=  7.5078 GiB  OK   in_use=  7.5078 peak= 37.5391
+  k=11 want= 30.0312 GiB  OK   in_use= 30.0312 peak= 37.5391
+  => n=31 mode=grow_free: last_ok_k=11 oom_k=None
+
+====================================================================================================
+CASE n=9: kron OOMed at k=13 (output 40.5000 GiB, input 10.1250 GiB)
+====================================================================================================
+
+--- n=9 mode=grow_hold ---
+  k= 1 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 37.5391
+  k= 2 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 37.5391
+  k= 3 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 37.5391
+  k= 4 want=  0.0002 GiB  OK   in_use=  0.0002 peak= 37.5391
+  k= 5 want=  0.0006 GiB  OK   in_use=  0.0006 peak= 37.5391
+  k= 6 want=  0.0025 GiB  OK   in_use=  0.0025 peak= 37.5391
+  k= 7 want=  0.0099 GiB  OK   in_use=  0.0099 peak= 37.5391
+  k= 8 want=  0.0396 GiB  OK   in_use=  0.0396 peak= 37.5391
+  k= 9 want=  0.1582 GiB  OK   in_use=  0.1582 peak= 37.5391
+  k=10 want=  0.6328 GiB  OK   in_use=  0.6328 peak= 37.5391
+  k=11 want=  2.5312 GiB  OK   in_use=  2.5312 peak= 37.5391
+  k=12 want= 10.1250 GiB  OK   in_use= 10.1250 peak= 37.5391
+  k=13 want= 40.5000 GiB  OOM  in_use= 10.1250 peak= 37.5391
+     !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 40.50GiB. [executable_name='jit_broadcast_in_dim'] [tf-allocator-allocation-error='']
+  => n=9 mode=grow_hold: last_ok_k=12 oom_k=13
+
+--- n=9 mode=grow_free ---
+  k= 1 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 37.5391
+  k= 2 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 37.5391
+  k= 3 want=  0.0000 GiB  OK   in_use=  0.0000 peak= 37.5391
+  k= 4 want=  0.0002 GiB  OK   in_use=  0.0002 peak= 37.5391
+  k= 5 want=  0.0006 GiB  OK   in_use=  0.0006 peak= 37.5391
+  k= 6 want=  0.0025 GiB  OK   in_use=  0.0025 peak= 37.5391
+  k= 7 want=  0.0099 GiB  OK   in_use=  0.0099 peak= 37.5391
+  k= 8 want=  0.0396 GiB  OK   in_use=  0.0396 peak= 37.5391
+  k= 9 want=  0.1582 GiB  OK   in_use=  0.1582 peak= 37.5391
+  k=10 want=  0.6328 GiB  OK   in_use=  0.6328 peak= 37.5391
+  k=11 want=  2.5312 GiB  OK   in_use=  2.5312 peak= 37.5391
+  k=12 want= 10.1250 GiB  OK   in_use= 10.1250 peak= 37.5391
+  k=13 want= 40.5000 GiB  OK   in_use= 40.5000 peak= 40.5000
+  => n=9 mode=grow_free: last_ok_k=13 oom_k=None
+
+####################################################################################################
+SUMMARY  (compare last_ok_k against the kron reference)
+####################################################################################################
+   n         mode  last_ok_k   kron last_ok_k                      verdict
+  32    grow_hold         10               10                 same as kron
+  32    grow_free         11               10           survives 1 further
+   2    grow_hold         14               14                 same as kron
+   2    grow_free         15               14           survives 1 further
+  16    grow_hold         11               11                 same as kron
+  16    grow_free         12               11           survives 1 further
+  31    grow_hold         11               11                 same as kron
+  31    grow_free         11               11                 same as kron
+   9    grow_hold         12               12                 same as kron
+   9    grow_free         13               12           survives 1 further
+### STEP 2d COMPLETE ###

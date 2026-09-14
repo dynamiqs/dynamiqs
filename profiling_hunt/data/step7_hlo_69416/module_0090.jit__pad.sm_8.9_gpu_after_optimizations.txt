@@ -1,0 +1,8 @@
+HloModule jit__pad, is_scheduled=true, entry_computation_layout={(c128[64]{0}, s64[])->c128[64]{0}}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="0ab71268b928b4d96fb6cc3fa6eece71"}
+
+ENTRY %main.1 (array.1: c128[64], constant_values.1: s64[]) -> c128[64] {
+  %constant_values.1 = s64[] parameter(1), metadata={op_name="constant_values"}
+  %array.1 = c128[64]{0} parameter(0), metadata={op_name="array"}
+  ROOT %copy.1 = c128[64]{0} copy(%array.1)
+}
+

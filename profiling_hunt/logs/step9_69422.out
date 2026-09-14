@@ -1,0 +1,41 @@
+# job 69422 higgs GPU=0 2026-09-11T19:01:03+02:00
+
+=== A) memory, N=2000 ntsave=101 ===
+### A_baseline  N=2000 ntsave=101 max_steps=100000  traj = 6.0201 GiB
+  peak = 19,584,179,456 B = 18.2392 GiB = 306.003 R
+  slope = 3.0000 R per saved state
+  finite=True  trace=1.000000000000+0.000000000000j  checksum=1.3492017380e+02
+### B_marker  N=2000 ntsave=101 max_steps=100000  traj = 6.0201 GiB
+  peak = 13,412,176,896 B = 12.4911 GiB = 209.565 R
+  slope = 2.0452 R per saved state
+  finite=True  trace=1.000000000000+0.000000000000j  checksum=1.3492017380e+02
+### C_marker_jit  N=2000 ntsave=101 max_steps=100000  traj = 6.0201 GiB
+  peak = 7,396,171,264 B = 6.8882 GiB = 115.565 R
+  slope = 1.1145 R per saved state
+  finite=True  trace=1.000000000000+0.000000000000j  checksum=1.3492017380e+02
+### D_baseline_jit  N=2000 ntsave=101 max_steps=100000  traj = 6.0201 GiB
+  peak = 19,584,175,104 B = 18.2392 GiB = 306.003 R
+  slope = 3.0000 R per saved state
+  finite=True  trace=1.000000000000+0.000000000000j  checksum=1.3492017380e+02
+
+=== B) does each still report a genuine failure? max_steps=1 ===
+### A_baseline  N=64 ntsave=11 max_steps=1  traj = 0.0007 GiB
+  RAISED JaxRuntimeError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+### B_marker  N=64 ntsave=11 max_steps=1  traj = 0.0007 GiB
+  RAISED EquinoxRuntimeError: Above is the stack outside of JIT. Below is the stack inside of JIT:
+### C_marker_jit  N=64 ntsave=11 max_steps=1  traj = 0.0007 GiB
+  RAISED JaxRuntimeError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+### D_baseline_jit  N=64 ntsave=11 max_steps=1  traj = 0.0007 GiB
+  RAISED JaxRuntimeError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+
+=== C) how far can the best variant go? ===
+### C_marker_jit  N=2000 ntsave=303 max_steps=100000  traj = 18.0602 GiB
+  peak = 20,324,174,336 B = 18.9284 GiB = 317.565 R
+  slope = 1.0382 R per saved state
+  finite=True  trace=1.000000000000+0.000000000000j  checksum=4.0471387107e+02
+### C_marker_jit  N=2000 ntsave=606 max_steps=100000  traj = 36.1204 GiB
+  peak = 39,716,178,944 B = 36.9886 GiB = 620.565 R
+  slope = 1.0191 R per saved state
+  finite=True  trace=1.000000000000+0.000000000000j  checksum=8.0940460406e+02
+
+### STEP 9 COMPLETE ###

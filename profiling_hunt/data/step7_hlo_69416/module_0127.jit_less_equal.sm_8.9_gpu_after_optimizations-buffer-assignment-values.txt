@@ -1,0 +1,22 @@
+
+Total bytes used: 17 (17B)
+
+Used values:
+<3 x.1 @0>
+ positions:
+  x.1
+ uses:
+  loop_compare_fusion, operand 0
+ from instruction: %x.1 = s64[1]{0} parameter(0), metadata={op_name="x"}
+<4 y.1 @0>
+ positions:
+  y.1
+ uses:
+  loop_compare_fusion, operand 1
+ from instruction: %y.1 = s64[] parameter(1), metadata={op_name="y"}
+<5 loop_compare_fusion @0>
+ positions:
+  loop_compare_fusion
+ uses:
+  (none)
+ from instruction: %loop_compare_fusion = pred[1]{0} fusion(%x.1, %y.1), kind=kLoop, calls=%fused_compare, metadata={op_name="jit(less_equal)/le" stack_frame_id=4}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}

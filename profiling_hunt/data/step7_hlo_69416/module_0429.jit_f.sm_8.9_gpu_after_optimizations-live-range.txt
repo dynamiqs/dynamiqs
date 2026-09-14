@@ -1,0 +1,484 @@
+HloLiveRange (max 217):
+  InstructionSequence:
+    0:constant_215_0
+    1:copy.90
+    2:copy.39
+    3:copy.40
+    4:copy.41
+    5:copy.43
+    6:rho0_data_data.1
+    7:input_transpose_fusion.3
+    8:input_reduce_fusion.3
+    9:tuple.86.0
+    10:cond.176.0
+    11:arg_empty_tuple.3
+    12:constant_24_0
+    13:pure_callback.6
+    14:pure_callback.7
+    15:tuple.521
+    16:Arg_.39
+    17:get-tuple-element.1682
+    18:copy.32
+    19:tuple.522
+    20:cond.177.clone
+    21:get-tuple-element.1684
+    22:loop_broadcast_fusion
+    23:loop_broadcast_fusion.1
+    24:constant_1771_0
+    25:copy.91
+    26:constant_1776_0
+    27:copy.92
+    28:constant_218_0
+    29:copy.37
+    30:tuple.523
+    31:arg_tuple.25
+    32:get-tuple-element.1372.0
+    33:get-tuple-element.1373.0
+    34:loop_and_fusion
+    35:arg_tuple.26
+    36:get-tuple-element.1697
+    37:copy.47
+    38:get-tuple-element.1696
+    39:wrapped_subtract
+    40:get-tuple-element.1698
+    41:get-tuple-element.1699
+    42:loop_select_fusion
+    43:loop_pad_fusion
+    44:get-tuple-element.1695
+    45:wrapped_transpose
+    46:bitcast.275.0
+    47:copy.14
+    48:loop_select_fusion.2
+    49:constant_4903_0
+    50:copy.105
+    51:copy.13
+    52:tuple.515
+    53:arg_tuple.41
+    54:get-tuple-element.1591.0
+    55:get-tuple-element.1598.0
+    56:loop_and_fusion.2
+    57:arg_tuple.42
+    58:get-tuple-element.1649
+    59:get-tuple-element.1657
+    60:get-tuple-element.1653
+    61:constant_226__sunk2_5_0
+    62:loop_reduce_fusion
+    63:get-tuple-element.1661
+    64:input_reduce_fusion
+    65:constant_5058_0
+    66:constant_5059_0
+    67:constant_5060_0
+    68:constant_5063_0
+    69:constant_5064_0
+    70:constant_5067_0
+    71:input_add_fusion
+    72:get-tuple-element.1636
+    73:input_transpose_fusion
+    74:get-tuple-element.1662
+    75:constant_5054_0
+    76:loop_dynamic_update_slice_fusion.1
+    77:get-tuple-element.1635
+    78:bitcast.273.0
+    79:loop_add_fusion.1
+    80:tuple.517
+    81:while.286
+    82:while.273.0
+    83:input_reduce_fusion.1
+    84:while.272.0
+    85:constant_228__sunk_7_0
+    86:loop_reduce_fusion.1
+    87:wrapped_transpose.1
+    88:input_transpose_fusion.2
+    89:loop_multiply_fusion
+    90:input_reduce_fusion.2
+    91:loop_compare_minimum_select_fusion
+    92:get-tuple-element.1668
+    93:get-tuple-element.1702
+    94:get-tuple-element.1703
+    95:get-tuple-element.1704
+    96:tuple.518
+    97:constant_1763__sunk2_7_0
+    98:arg_tuple.38
+    99:get-tuple-element.1537.0
+    100:get-tuple-element.1539.0
+    101:get-tuple-element.1540.0
+    102:get-tuple-element.1547.0
+    103:loop_and_fusion.1
+    104:arg_tuple.39
+    105:get-tuple-element.1669
+    106:get-tuple-element.1676
+    107:get-tuple-element.1678
+    108:constant_1763__sunk2_8_0
+    109:get-tuple-element.1671
+    110:loop_dynamic_update_slice_fusion
+    111:loop_add_fusion
+    112:get-tuple-element.1679
+    113:get-tuple-element.1680
+    114:tuple.520
+    115:while.285
+    116:get-tuple-element.1569.0
+    117:get-tuple-element.1573.0
+    118:wrapped_add.1
+    119:get-tuple-element.1570.0
+    120:wrapped_add
+    121:while.276.0
+    122:loop_select_fusion.1
+    123:input_transpose_fusion.1
+    124:get-tuple-element.1714
+    125:get-tuple-element.1701
+    126:loop_add_fusion.2
+    127:get-tuple-element.1700
+    128:loop_add_fusion.3
+    129:loop_select_fusion.3
+    130:get-tuple-element.1707
+    131:get-tuple-element.1708
+    132:get-tuple-element.1694
+    133:loop_add_fusion.4
+    134:tuple.525
+    135:while.278
+    136:while.49.0
+    137:bitcast.10.0
+    138:get-tuple-element.1359.0
+    139:while.50.0
+    140:while.51.0
+    141:cond.184.0
+    142:while.48.0
+    143:loop_not_select_fusion
+    144:get-tuple-element.1641
+    145:tuple.93.0
+    146:get-tuple-element.1640
+    147:Arg_.42
+    148:get-tuple-element.8.0
+    149:pure_callback.48
+    150:pure_callback.49.0
+    151:pure_callback.50.0
+    152:pure_callback.51.0
+    153:pure_callback.52.0
+    154:pure_callback.53.0
+    155:pure_callback.54.0
+    156:pure_callback.55.0
+    157:pure_callback.56.0
+    158:pure_callback.57.0
+    159:pure_callback.58
+    160:get-tuple-element.1716
+    161:get-tuple-element.1717
+    162:get-tuple-element.1718
+    163:get-tuple-element.1719
+    164:tuple.526
+    165:arg_tuple.17
+    166:get-tuple-element.1720
+    167:copy.70
+    168:get-tuple-element.1721
+    169:copy.71
+    170:get-tuple-element.1722
+    171:copy.72
+    172:get-tuple-element.1723
+    173:copy.73
+    174:tuple.527
+    175:cond.185
+    176:get-tuple-element.1736
+    177:get-tuple-element.1737
+    178:get-tuple-element.1738
+    179:get-tuple-element.1739
+    180:constant_1763_0
+    181:constant_188_0
+    182:constant_187_0
+    183:constant_186_0
+    184:constant_185_0
+    185:constant_238_0
+    186:constant_237_0
+    187:tuple.528
+    188:get-tuple-element.1740
+    189:get-tuple-element.1741
+    190:get-tuple-element.1742
+    191:get-tuple-element.1743
+    192:get-tuple-element.1744
+    193:get-tuple-element.1745
+    194:get-tuple-element.1746
+    195:get-tuple-element.1747
+    196:get-tuple-element.1748
+    197:get-tuple-element.1749
+    198:get-tuple-element.1750
+    199:get-tuple-element.1751
+    200:get-tuple-element.1752
+    201:get-tuple-element.1753
+    202:get-tuple-element.1754
+    203:get-tuple-element.1755
+    204:copy.93
+    205:copy.94
+    206:copy.95
+    207:copy.96
+    208:copy.97
+    209:copy.98
+    210:copy.99
+    211:copy.100
+    212:copy.101
+    213:copy.102
+    214:copy.103
+    215:copy.104
+    216:tuple.529
+  BufferLiveRange:
+    copy.32{}:18-20
+    tuple.522{}:19-20
+    constant_24_0{}:12-14
+    pure_callback.6{}:13-14
+    pure_callback.7{}:14-16
+    tuple.521{}:15-16
+    copy.70{}:167-175
+    copy.71{}:169-175
+    copy.72{}:171-175
+    copy.73{}:173-175
+    tuple.527{}:174-175
+    pure_callback.48{}:149-158
+    pure_callback.48{0}:149-159
+    pure_callback.48{1}:149-159
+    pure_callback.48{2}:149-159
+    pure_callback.48{3}:149-159
+    pure_callback.48{4}:149-159
+    pure_callback.48{5}:149-159
+    pure_callback.48{6}:149-159
+    pure_callback.48{7}:149-159
+    pure_callback.48{8}:149-159
+    pure_callback.58{}:159-163
+    pure_callback.58{0}:159-159
+    pure_callback.58{1}:159-159
+    pure_callback.58{2}:159-159
+    pure_callback.58{3}:159-159
+    pure_callback.58{4}:159-165
+    pure_callback.58{5}:159-165
+    pure_callback.58{6}:159-165
+    pure_callback.58{7}:159-165
+    pure_callback.58{8}:159-159
+    tuple.526{}:164-165
+    loop_and_fusion{}:34-35
+    constant_1763__sunk2_7_0{}:97-103
+    loop_and_fusion.1{}:103-104
+    constant_1763__sunk2_8_0{}:108-110
+    loop_dynamic_update_slice_fusion{}:110-115
+    loop_add_fusion{}:111-115
+    tuple.520{}:114-115
+    loop_and_fusion.2{}:56-57
+    constant_226__sunk2_5_0{}:61-62
+    loop_reduce_fusion{}:62-71
+    constant_5060_0{}:67-71
+    constant_5059_0{}:66-71
+    constant_5064_0{}:69-71
+    input_reduce_fusion{}:64-71
+    constant_5058_0{}:65-71
+    constant_5063_0{}:68-71
+    constant_5067_0{}:70-71
+    input_add_fusion{}:71-77
+    input_add_fusion{0}:71-81
+    input_add_fusion{1}:71-73
+    input_transpose_fusion{}:73-81
+    constant_5054_0{}:75-76
+    loop_dynamic_update_slice_fusion.1{}:76-81
+    loop_add_fusion.1{}:79-81
+    tuple.517{}:80-81
+    loop_add_fusion.4{}:133-135
+    input_transpose_fusion.2{}:88-89
+    wrapped_transpose{}:45-89
+    constant_4903_0{}:49-50
+    copy.105{}:50-97
+    copy.13{}:51-53
+    loop_select_fusion.2{}:48-81
+    copy.14{}:47-53
+    loop_select_fusion{}:42-53
+    copy.47{}:37-115
+    wrapped_subtract{}:39-91
+    loop_pad_fusion{}:43-53
+    tuple.515{}:52-53
+    constant_228__sunk_7_0{}:85-86
+    loop_reduce_fusion.1{}:86-87
+    wrapped_transpose.1{}:87-89
+    input_reduce_fusion.1{}:83-89
+    loop_multiply_fusion{}:89-90
+    input_reduce_fusion.2{}:90-91
+    loop_compare_minimum_select_fusion{}:91-131
+    loop_compare_minimum_select_fusion{0}:91-135
+    loop_compare_minimum_select_fusion{1}:91-135
+    loop_compare_minimum_select_fusion{2}:91-129
+    input_transpose_fusion.1{}:123-135
+    loop_select_fusion.3{}:129-135
+    loop_select_fusion.1{}:122-135
+    loop_add_fusion.3{}:128-135
+    loop_add_fusion.2{}:126-135
+    tuple.518{}:96-97
+    wrapped_add{}:120-135
+    wrapped_add.1{}:118-135
+    tuple.525{}:134-135
+    constant_1763_0{}:180-204
+    constant_188_0{}:181-206
+    constant_187_0{}:182-207
+    constant_186_0{}:183-208
+    constant_185_0{}:184-209
+    constant_237_0{}:186-214
+    constant_218_0{}:28-215
+    constant_238_0{}:185-213
+    constant_215_0{}:0-1
+    copy.90{}:1-31
+    rho0_data_data.1{}:0-217
+    input_transpose_fusion.3{}:7-8
+    input_reduce_fusion.3{}:8-20
+    cond.176.0{}:10-20
+    tuple.86.0{}:9-20
+    constant_1771_0{}:24-25
+    copy.91{}:25-31
+    constant_1776_0{}:26-27
+    copy.92{}:27-31
+    copy.37{}:29-31
+    loop_broadcast_fusion{}:22-31
+    copy.39{}:2-31
+    copy.40{}:3-31
+    copy.41{}:4-31
+    loop_broadcast_fusion.1{}:23-31
+    copy.43{}:5-31
+    tuple.523{}:30-31
+    loop_not_select_fusion{}:143-146
+    loop_not_select_fusion{0}:143-175
+    loop_not_select_fusion{1}:143-175
+    tuple.93.0{}:145-175
+    cond.184.0{}:141-175
+    tuple.528{}:187-203
+    copy.93{}:204-217
+    copy.94{}:205-217
+    copy.95{}:206-217
+    copy.96{}:207-217
+    copy.97{}:208-217
+    copy.98{}:209-217
+    copy.99{}:210-217
+    copy.100{}:211-217
+    copy.101{}:212-217
+    copy.102{}:213-217
+    copy.103{}:214-217
+    copy.104{}:215-217
+    tuple.529{}:216-217
+    cond.177.clone{}:20-21
+    cond.177.clone{0}:20-31
+    arg_tuple.25{}:31-35
+    arg_tuple.26{}:35-132
+    arg_tuple.41{}:53-57
+    arg_tuple.42{}:57-74
+    arg_tuple.41{0}:53-57
+    arg_tuple.41{2}:53-57
+    arg_tuple.41{3}:53-57
+    arg_tuple.41{4}:53-57
+    arg_tuple.42{0}:57-79
+    arg_tuple.42{2}:57-57
+    arg_tuple.42{3}:57-57
+    arg_tuple.42{4}:57-76
+    while.286{}:81-121
+    while.286{0}:81-81
+    while.286{2}:81-123
+    while.286{3}:81-122
+    while.286{4}:81-86
+    arg_tuple.38{}:97-104
+    arg_tuple.39{}:104-113
+    arg_tuple.38{0}:97-104
+    arg_tuple.38{2}:97-104
+    arg_tuple.39{0}:104-111
+    arg_tuple.39{2}:104-110
+    while.285{}:115-124
+    while.285{0}:115-120
+    while.285{2}:115-135
+    arg_tuple.25{0}:31-35
+    arg_tuple.25{1}:31-35
+    arg_tuple.25{2}:31-35
+    arg_tuple.25{3}:31-35
+    arg_tuple.25{4}:31-35
+    arg_tuple.25{5}:31-35
+    arg_tuple.25{6}:31-35
+    arg_tuple.25{7}:31-35
+    arg_tuple.25{8}:31-35
+    arg_tuple.25{9}:31-35
+    arg_tuple.25{10}:31-35
+    arg_tuple.26{0}:35-133
+    arg_tuple.26{1}:35-123
+    arg_tuple.26{2}:35-91
+    arg_tuple.26{3}:35-37
+    arg_tuple.26{4}:35-129
+    arg_tuple.26{5}:35-122
+    arg_tuple.26{6}:35-128
+    arg_tuple.26{7}:35-126
+    arg_tuple.26{8}:35-120
+    arg_tuple.26{9}:35-97
+    arg_tuple.26{10}:35-118
+    while.278{}:135-142
+    while.278{0}:135-175
+    while.278{1}:135-175
+    while.278{2}:135-143
+    while.278{3}:135-135
+    while.278{4}:135-135
+    while.278{5}:135-135
+    while.278{6}:135-175
+    while.278{7}:135-175
+    while.278{8}:135-135
+    while.278{9}:135-135
+    while.278{10}:135-135
+    cond.185{}:175-179
+    cond.185{0}:175-217
+    cond.185{1}:175-217
+    cond.185{2}:175-217
+    cond.185{3}:175-217
+  Live ranges at 53 (peak):
+    arg_tuple.41{4}: 458752 bytes (cumulative: 458752 bytes)
+    loop_pad_fusion{}: 458752 bytes (cumulative: 917504 bytes)
+    arg_tuple.26{1}: 65536 bytes (cumulative: 983040 bytes)
+    arg_tuple.26{5}: 65536 bytes (cumulative: 1048576 bytes)
+    arg_tuple.41{2}: 65536 bytes (cumulative: 1114112 bytes)
+    arg_tuple.41{3}: 65536 bytes (cumulative: 1179648 bytes)
+    copy.14{}: 65536 bytes (cumulative: 1245184 bytes)
+    loop_select_fusion{}: 65536 bytes (cumulative: 1310720 bytes)
+    rho0_data_data.1{}: 65536 bytes (cumulative: 1376256 bytes)
+    wrapped_transpose{}: 65536 bytes (cumulative: 1441792 bytes)
+    arg_tuple.26{}: 88 bytes (cumulative: 1441880 bytes)
+    arg_tuple.26{9}: 80 bytes (cumulative: 1441960 bytes)
+    arg_tuple.41{}: 56 bytes (cumulative: 1442016 bytes)
+    tuple.515{}: 56 bytes (cumulative: 1442072 bytes)
+    arg_tuple.26{0}: 8 bytes (cumulative: 1442080 bytes)
+    arg_tuple.26{2}: 8 bytes (cumulative: 1442088 bytes)
+    arg_tuple.26{6}: 8 bytes (cumulative: 1442096 bytes)
+    arg_tuple.26{7}: 8 bytes (cumulative: 1442104 bytes)
+    arg_tuple.26{8}: 8 bytes (cumulative: 1442112 bytes)
+    arg_tuple.26{10}: 8 bytes (cumulative: 1442120 bytes)
+    arg_tuple.41{0}: 8 bytes (cumulative: 1442128 bytes)
+    copy.105{}: 8 bytes (cumulative: 1442136 bytes)
+    copy.13{}: 8 bytes (cumulative: 1442144 bytes)
+    copy.47{}: 8 bytes (cumulative: 1442152 bytes)
+    loop_select_fusion.2{}: 8 bytes (cumulative: 1442160 bytes)
+    wrapped_subtract{}: 8 bytes (cumulative: 1442168 bytes)
+    arg_tuple.26{4}: 1 bytes (cumulative: 1442169 bytes)
+    constant_218_0{}: 1 bytes (cumulative: 1442170 bytes)
+  Stack trace breakdown for peak usage: 1 442 170 bytes
+    main.133 (100.0%, total: 1 442 170 bytes, current: 0 bytes, remaining: 1 442 170 bytes)
+      ├── jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while (95.5%, total: 1 376 633 bytes, current: 0 bytes, remaining: 1 442 170 bytes)
+      │   └── region_12.121.sunk.clone.sunk.clone.clone.clone.clone.clone (95.5%, total: 1 376 633 bytes, current: 0 bytes, remaining: 1 442 170 bytes)
+      │       ├── jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while (40.9%, total: 589 888 bytes, current: 0 bytes, remaining: 1 442 170 bytes)
+      │       │   └── region_92.107.clone.clone.clone.clone (40.9%, total: 589 888 bytes, current: 0 bytes, remaining: 1 442 170 bytes)
+      │       │       ├── arg_tuple.41{4} (31.8%, total: 458 752 bytes, current: 458 752 bytes, remaining: 983 418 bytes)
+      │       │       ├── arg_tuple.41{2} (4.5%, total: 65 536 bytes, current: 65 536 bytes, remaining: 917 882 bytes)
+      │       │       ├── arg_tuple.41{3} (4.5%, total: 65 536 bytes, current: 65 536 bytes, remaining: 852 346 bytes)
+      │       │       ├── arg_tuple.41 (0.0%, total: 56 bytes, current: 56 bytes, remaining: 852 290 bytes)
+      │       │       └── arg_tuple.41{0} (0.0%, total: 8 bytes, current: 8 bytes, remaining: 852 282 bytes)
+      │       ├── jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/scatter (31.8%, total: 458 752 bytes, current: 458 752 bytes, remaining: 393 530 bytes)
+      │       ├── jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n (4.5%, total: 65 544 bytes, current: 65 544 bytes, remaining: 327 986 bytes)
+      │       ├── arg_tuple.26{1} (4.5%, total: 65 536 bytes, current: 65 536 bytes, remaining: 262 450 bytes)
+      │       ├── arg_tuple.26{5} (4.5%, total: 65 536 bytes, current: 65 536 bytes, remaining: 196 914 bytes)
+      │       ├── copy.14 (4.5%, total: 65 536 bytes, current: 65 536 bytes, remaining: 131 378 bytes)
+      │       ├── wrapped_transpose (4.5%, total: 65 536 bytes, current: 65 536 bytes, remaining: 65 842 bytes)
+      │       ├── arg_tuple.26 (0.0%, total: 88 bytes, current: 88 bytes, remaining: 65 754 bytes)
+      │       ├── arg_tuple.26{9} (0.0%, total: 80 bytes, current: 80 bytes, remaining: 65 674 bytes)
+      │       ├── tuple.515 (0.0%, total: 56 bytes, current: 56 bytes, remaining: 65 618 bytes)
+      │       ├── arg_tuple.26{0} (0.0%, total: 8 bytes, current: 8 bytes, remaining: 65 610 bytes)
+      │       ├── arg_tuple.26{10} (0.0%, total: 8 bytes, current: 8 bytes, remaining: 65 602 bytes)
+      │       ├── arg_tuple.26{2} (0.0%, total: 8 bytes, current: 8 bytes, remaining: 65 594 bytes)
+      │       ├── arg_tuple.26{6} (0.0%, total: 8 bytes, current: 8 bytes, remaining: 65 586 bytes)
+      │       ├── arg_tuple.26{7} (0.0%, total: 8 bytes, current: 8 bytes, remaining: 65 578 bytes)
+      │       ├── arg_tuple.26{8} (0.0%, total: 8 bytes, current: 8 bytes, remaining: 65 570 bytes)
+      │       ├── copy.105 (0.0%, total: 8 bytes, current: 8 bytes, remaining: 65 562 bytes)
+      │       ├── copy.13 (0.0%, total: 8 bytes, current: 8 bytes, remaining: 65 554 bytes)
+      │       ├── copy.47 (0.0%, total: 8 bytes, current: 8 bytes, remaining: 65 546 bytes)
+      │       ├── jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/sub (0.0%, total: 8 bytes, current: 8 bytes, remaining: 65 538 bytes)
+      │       └── arg_tuple.26{4} (0.0%, total: 1 bytes, current: 1 bytes, remaining: 65 537 bytes)
+      ├── rho0.data.data (4.5%, total: 65 536 bytes, current: 65 536 bytes, remaining: 1 bytes)
+      └── jit(f)/jit(_vectorized_mesolve) (0.0%, total: 1 bytes, current: 1 bytes, remaining: 0 bytes)

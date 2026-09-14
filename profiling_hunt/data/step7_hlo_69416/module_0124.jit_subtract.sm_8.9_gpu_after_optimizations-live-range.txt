@@ -1,0 +1,18 @@
+HloLiveRange (max 3):
+  InstructionSequence:
+    0:y.1
+    1:x.1
+    2:wrapped_subtract
+  BufferLiveRange:
+    x.1{}:0-3
+    y.1{}:0-3
+    wrapped_subtract{}:2-3
+  Live ranges at 2 (peak):
+    wrapped_subtract{}: 8 bytes (cumulative: 8 bytes)
+    x.1{}: 8 bytes (cumulative: 16 bytes)
+    y.1{}: 8 bytes (cumulative: 24 bytes)
+  Stack trace breakdown for peak usage: 24 bytes
+    main.1 (100.0%, total: 24 bytes, current: 0 bytes, remaining: 24 bytes)
+      ├── jit(subtract)/sub (33.3%, total: 8 bytes, current: 8 bytes, remaining: 16 bytes)
+      ├── x (33.3%, total: 8 bytes, current: 8 bytes, remaining: 8 bytes)
+      └── y (33.3%, total: 8 bytes, current: 8 bytes, remaining: 0 bytes)

@@ -1,0 +1,1 @@
+001: kCustomKernel [source | sink] wrapped_dynamic_slice grid: [1, 1, 1] threads: [2, 1, 1]  shared_memory: 0 bytes

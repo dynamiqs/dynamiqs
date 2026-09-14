@@ -1,0 +1,22 @@
+
+Total bytes used: 2056 (2.0KiB)
+
+Used values:
+<0 constant_values.1 @0>
+ positions:
+  constant_values.1
+ uses:
+  (none)
+ from instruction: %constant_values.1 = s64[] parameter(1), metadata={op_name="constant_values"}
+<1 array.1 @0>
+ positions:
+  array.1
+ uses:
+  copy.1, operand 0
+ from instruction: %array.1 = c128[64]{0} parameter(0), metadata={op_name="array"}
+<2 copy.1 @0>
+ positions:
+  copy.1
+ uses:
+  (none)
+ from instruction: %copy.1 = c128[64]{0} copy(%array.1)

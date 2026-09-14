@@ -1,0 +1,102 @@
+HloModule jit_branched_error_if_impl, is_scheduled=true, entry_computation_layout={(c128[1,64]{1,0}, pred[])->(s64[], c128[1,64]{1,0})}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true,true}, frontend_attributes={fingerprint_before_lhs="7c76c411d19ac3344a7ca1009495160d",xla.sdy.meshes={maximal_mesh_0 = #sdy.mesh<[], device_ids=[0]>}}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step7_hlo.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/operators.py"
+3 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/utils.py"
+4 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_module/_module.py"
+5 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/sparsedia_dataarray.py"
+6 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_errors.py"
+7 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_jit.py"
+8 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_ad.py"
+
+FunctionNames
+1 "<module>"
+2 "build"
+3 "destroy"
+4 "destroy.<locals>.destroy_single"
+5 "sparsedia_from_dict"
+6 "_ModuleMeta.__call__"
+7 "SparseDIADataArray.__check_init__"
+8 "error_if"
+9 "branched_error_if"
+10 "_JitWrapper.__call__"
+11 "_call"
+12 "_filter_jit_cache.<locals>.fun_wrapped"
+13 "branched_error_if_impl"
+14 "filter_custom_jvp.__call__"
+15 "filter_custom_jvp.__init__.<locals>.fn_wrapper"
+16 "_error"
+17 "_error.<locals>.handle_error"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=46 end_line=46 column=14 end_column=22}
+2 {file_name_id=1 function_name_id=2 line=39 end_line=39 column=8 end_column=21}
+3 {file_name_id=2 function_name_id=3 line=308 end_line=308 column=15 end_column=38}
+4 {file_name_id=2 function_name_id=4 line=305 end_line=305 column=19 end_column=49}
+5 {file_name_id=3 function_name_id=5 line=503 end_line=503 column=43 end_column=77}
+6 {file_name_id=4 function_name_id=6 line=434 end_line=434 column=16 end_column=32}
+7 {file_name_id=5 function_name_id=7 line=72 end_line=72 column=12 end_column=50}
+8 {file_name_id=6 function_name_id=8 line=250 end_line=250 column=11 end_column=66}
+9 {file_name_id=6 function_name_id=9 line=271 end_line=271 column=15 end_column=82}
+10 {file_name_id=7 function_name_id=10 line=209 end_line=209 column=19 end_column=51}
+11 {file_name_id=7 function_name_id=11 line=263 end_line=265 column=37 end_column=17}
+12 {file_name_id=7 function_name_id=12 line=55 end_line=55 column=14 end_column=34}
+13 {file_name_id=6 function_name_id=13 line=342 end_line=344 column=16 end_column=5}
+14 {file_name_id=8 function_name_id=14 line=822 end_line=822 column=15 end_column=39}
+15 {file_name_id=8 function_name_id=15 line=779 end_line=779 column=19 end_column=38}
+16 {file_name_id=6 function_name_id=16 line=118 end_line=118 column=15 end_column=54}
+17 {file_name_id=6 function_name_id=17 line=111 end_line=111 column=18 end_column=58}
+18 {file_name_id=6 function_name_id=17 line=115 end_line=115 column=19 end_column=65}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+4 {file_location_id=4 parent_frame_id=4}
+5 {file_location_id=5 parent_frame_id=5}
+6 {file_location_id=6 parent_frame_id=6}
+7 {file_location_id=7 parent_frame_id=7}
+8 {file_location_id=8 parent_frame_id=8}
+9 {file_location_id=9 parent_frame_id=9}
+10 {file_location_id=10 parent_frame_id=10}
+11 {file_location_id=11 parent_frame_id=11}
+12 {file_location_id=12 parent_frame_id=12}
+13 {file_location_id=13 parent_frame_id=13}
+14 {file_location_id=14 parent_frame_id=14}
+15 {file_location_id=15 parent_frame_id=15}
+16 {file_location_id=16 parent_frame_id=16}
+17 {file_location_id=17 parent_frame_id=17}
+18 {file_location_id=18 parent_frame_id=17}
+
+
+%region_1.2 (arg_empty_tuple.1: ()) -> (c128[1,64]) {
+  %arg_empty_tuple.1 = () parameter(0)
+  %constant_2_0 = s64[] constant(0)
+  %pure_callback.2 = c128[1,64]{1,0} custom-call(%constant_2_0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={s64[]}, api_version=API_VERSION_TYPED_FFI, sharding={maximal device=0}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>]>"}, metadata={op_name="jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=17}, backend_config={index = 0 : ui64}
+  %pure_callback.3 = c128[1,64]{1,0} custom-call(%pure_callback.2, %constant_2_0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={c128[1,64]{1,0}, s64[]}, api_version=API_VERSION_TYPED_FFI, sharding={maximal device=0}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>]>"}, metadata={op_name="jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=18}, backend_config={index = 1 : ui64}
+  ROOT %tuple.4 = (c128[1,64]{1,0}) tuple(%pure_callback.3)
+}
+
+%region_0.1 (dynamic_nodonate__first___0_.0: (c128[1,64])) -> (c128[1,64]) {
+  %dynamic_nodonate__first___0_.0 = (c128[1,64]{1,0}) parameter(0)
+  %get-tuple-element.3 = c128[1,64]{1,0} get-tuple-element(%dynamic_nodonate__first___0_.0), index=0
+  %copy.1 = c128[1,64]{1,0} copy(%get-tuple-element.3)
+  ROOT %tuple.5 = (c128[1,64]{1,0}) tuple(%copy.1)
+}
+
+ENTRY %main.3 (dynamic_nodonate__first___0_.3: c128[1,64], dynamic_nodonate__rest___0_.1: pred[]) -> (s64[], c128[1,64]) {
+  %dynamic_nodonate__first___0_.3 = c128[1,64]{1,0} parameter(0), metadata={op_name="dynamic_nodonate[\'first\'][0]"}
+  %tuple.3.0 = (c128[1,64]{1,0}) tuple(%dynamic_nodonate__first___0_.3)
+  %cond.2.0 = () tuple(), metadata={op_name="jit(branched_error_if_impl)/cond" stack_frame_id=16}
+  %dynamic_nodonate__rest___0_.1 = pred[] parameter(1), metadata={op_name="dynamic_nodonate[\'rest\'][0]"}
+  %cond.3.clone = (c128[1,64]{1,0}) conditional(%dynamic_nodonate__rest___0_.1, %cond.2.0, %tuple.3.0), true_computation=%region_1.2, false_computation=%region_0.1, metadata={op_name="jit(branched_error_if_impl)/cond" stack_frame_id=16}
+  %get-tuple-element.5 = c128[1,64]{1,0} get-tuple-element(%cond.3.clone), index=0, metadata={op_name="jit(branched_error_if_impl)/cond" stack_frame_id=16}
+  %constant_3_0 = s64[] constant(0)
+  %tuple.6 = (s64[], c128[1,64]{1,0}) tuple(%constant_3_0, %get-tuple-element.5)
+  %get-tuple-element.6 = s64[] get-tuple-element(%tuple.6), index=0
+  %get-tuple-element.7 = c128[1,64]{1,0} get-tuple-element(%tuple.6), index=1
+  %copy.3 = s64[] copy(%get-tuple-element.6)
+  ROOT %tuple.7 = (s64[], c128[1,64]{1,0}) tuple(%copy.3, %get-tuple-element.7)
+}
+

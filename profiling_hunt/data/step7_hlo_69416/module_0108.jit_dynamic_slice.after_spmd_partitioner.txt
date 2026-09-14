@@ -1,0 +1,9 @@
+HloModule jit_dynamic_slice, entry_computation_layout={(c128[2,64]{1,0}, s64[], s64[])->c128[1,0]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true,true,true}, allow_spmd_sharding_propagation_to_output={true}
+
+ENTRY %main.1 (args_0_.1: c128[2,64], args_1_.1: s64[], args_2_.1: s64[]) -> c128[1,0] {
+  %args_0_.1 = c128[2,64]{1,0} parameter(0), metadata={op_name="args[0]"}
+  %args_1_.1 = s64[] parameter(1), metadata={op_name="args[1]"}
+  %args_2_.1 = s64[] parameter(2), metadata={op_name="args[2]"}
+  ROOT %constant.1 = c128[1,0]{1,0} constant({ {} })
+}
+

@@ -1,0 +1,16 @@
+
+Total bytes used: 16 (16B)
+
+Used values:
+<0 args_0_.1 @0>
+ positions:
+  args_0_.1
+ uses:
+  copy.1, operand 0
+ from instruction: %args_0_.1 = f64[] parameter(0), metadata={op_name="args[0]"}
+<1 copy.1 @0>
+ positions:
+  copy.1
+ uses:
+  (none)
+ from instruction: %copy.1 = f64[] copy(%args_0_.1)

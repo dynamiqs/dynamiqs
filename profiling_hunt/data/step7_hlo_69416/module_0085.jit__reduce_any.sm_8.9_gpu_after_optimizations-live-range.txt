@@ -1,0 +1,14 @@
+HloLiveRange (max 2):
+  InstructionSequence:
+    0:a.1
+    1:input_reduce_fusion
+  BufferLiveRange:
+    a.1{}:0-2
+    input_reduce_fusion{}:1-2
+  Live ranges at 1 (peak):
+    a.1{}: 2 bytes (cumulative: 2 bytes)
+    input_reduce_fusion{}: 1 bytes (cumulative: 3 bytes)
+  Stack trace breakdown for peak usage: 3 bytes
+    main.2 (100.0%, total: 3 bytes, current: 0 bytes, remaining: 3 bytes)
+      ├── a (66.7%, total: 2 bytes, current: 2 bytes, remaining: 1 bytes)
+      └── jit(_reduce_any)/reduce_or (33.3%, total: 1 bytes, current: 1 bytes, remaining: 0 bytes)

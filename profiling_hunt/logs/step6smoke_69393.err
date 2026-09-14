@@ -1,0 +1,26 @@
+WALL 10.57 s  MAXRSS 2517828 KB
+WALL 10.86 s  MAXRSS 2514972 KB
+WALL 11.07 s  MAXRSS 2518832 KB
+WALL 11.66 s  MAXRSS 2519064 KB
+E0911 14:56:21.665730 1577625 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (67176120181) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 14:56:21.696973 1577625 hlo_rematerialization.cc:3231] Can't reduce memory use below 62.50GiB (67108872205 bytes) by rematerialization; only reduced to 187.62GiB (201460834195 bytes), down from 187.62GiB (201460834195 bytes) originally
+W0911 14:56:32.621292 1577625 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 62.50GiB (rounded to 67108864000)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 14:56:32.621568 1577625 bfc_allocator.cc:525] *___________________________________________________________________________________________________
+Exception ignored in atexit callback: <function clean_up at 0x738edb8d9580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 62.50GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+WALL 21.36 s  MAXRSS 2521436 KB
+WALL 10.94 s  MAXRSS 2511188 KB
+WALL 12.20 s  MAXRSS 2513068 KB
+WALL 10.78 s  MAXRSS 2497964 KB

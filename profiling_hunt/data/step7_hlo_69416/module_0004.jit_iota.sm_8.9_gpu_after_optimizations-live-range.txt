@@ -1,0 +1,10 @@
+HloLiveRange (max 1):
+  InstructionSequence:
+    0:wrapped_iota
+  BufferLiveRange:
+    wrapped_iota{}:0-1
+  Live ranges at 0 (peak):
+    wrapped_iota{}: 1008 bytes (cumulative: 1008 bytes)
+  Stack trace breakdown for peak usage: 1 008 bytes
+    main.1 (100.0%, total: 1 008 bytes, current: 0 bytes, remaining: 1 008 bytes)
+      └── jit(iota)/iota (100.0%, total: 1 008 bytes, current: 1 008 bytes, remaining: 0 bytes)

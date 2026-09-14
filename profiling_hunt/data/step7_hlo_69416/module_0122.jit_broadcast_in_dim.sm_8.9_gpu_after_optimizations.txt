@@ -1,0 +1,31 @@
+HloModule jit_broadcast_in_dim, is_scheduled=true, entry_computation_layout={(s64[])->s64[1]{0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="b094f03a015e71a5e265b5f46cad368a"}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step7_hlo.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/states.py"
+
+FunctionNames
+1 "<module>"
+2 "build"
+3 "fock_dm"
+4 "fock"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=46 end_line=46 column=14 end_column=22}
+2 {file_name_id=1 function_name_id=2 line=43 end_line=43 column=24 end_column=40}
+3 {file_name_id=2 function_name_id=3 line=189 end_line=189 column=11 end_column=28}
+4 {file_name_id=2 function_name_id=4 line=103 end_line=103 column=17 end_column=34}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+4 {file_location_id=4 parent_frame_id=4}
+
+
+ENTRY %main.1 (args_0_.1: s64[]) -> s64[1] {
+  %args_0_.1 = s64[] parameter(0), metadata={op_name="args[0]"}
+  %bitcast.1 = s64[1]{0} bitcast(%args_0_.1), metadata={op_name="args[0]"}
+  ROOT %copy.1 = s64[1]{0} copy(%bitcast.1)
+}
+

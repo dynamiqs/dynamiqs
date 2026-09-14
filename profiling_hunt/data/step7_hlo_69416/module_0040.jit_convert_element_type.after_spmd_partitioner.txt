@@ -1,0 +1,6 @@
+HloModule jit_convert_element_type, entry_computation_layout={(s32[])->s32[]}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}
+
+ENTRY %main.1 (args_0_.1: s32[]) -> s32[] {
+  ROOT %args_0_.1 = s32[] parameter(0), metadata={op_name="args[0]"}
+}
+

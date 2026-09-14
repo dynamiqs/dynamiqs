@@ -1,0 +1,7 @@
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "wrapped_broadcast"
+    thunk_id: 1
+  }
+  thunk_kind: "kCustomKernel"
+}

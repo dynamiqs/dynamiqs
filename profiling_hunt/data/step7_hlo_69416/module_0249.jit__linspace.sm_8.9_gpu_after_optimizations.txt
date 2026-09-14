@@ -1,0 +1,47 @@
+HloModule jit__linspace, is_scheduled=true, entry_computation_layout={(f64[], f64[])->f64[20]{0}}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="fd6be7f8bcc2c7e0a5c8cd80035c8f89"}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step7_hlo.py"
+
+FunctionNames
+1 "<module>"
+2 "compile_for"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=73 end_line=73 column=8 end_column=23}
+2 {file_name_id=1 function_name_id=2 line=54 end_line=54 column=9 end_column=43}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+
+
+%fused_concatenate (param_0.12: f64[], param_1.21: f64[]) -> f64[20] {
+  %param_1.21 = f64[] parameter(1)
+  %mul.10.3 = f64[19]{0} broadcast(%param_1.21), dimensions={}, metadata={op_name="jit(_linspace)/mul" stack_frame_id=2}
+  %constant_2_1 = f64[] constant(1)
+  %broadcast.2.5 = f64[19]{0} broadcast(%constant_2_1), dimensions={}
+  %iota.1.6 = f64[19]{0} iota(), iota_dimension=0, metadata={op_name="jit(_linspace)/iota" stack_frame_id=2}
+  %constant_11 = f64[] constant(0.052631578947368418)
+  %broadcast.8 = f64[19]{0} broadcast(%constant_11), dimensions={}
+  %multiply.7 = f64[19]{0} multiply(%iota.1.6, %broadcast.8), metadata={op_name="jit(_linspace)/div" stack_frame_id=2}
+  %sub.1.5 = f64[19]{0} subtract(%broadcast.2.5, %multiply.7), metadata={op_name="jit(_linspace)/sub" stack_frame_id=2}
+  %mul.11.3 = f64[19]{0} multiply(%mul.10.3, %sub.1.5), metadata={op_name="jit(_linspace)/mul" stack_frame_id=2}
+  %iota.1.4 = f64[19]{0} iota(), iota_dimension=0, metadata={op_name="jit(_linspace)/iota" stack_frame_id=2}
+  %param_0.12 = f64[] parameter(0)
+  %bitcast.6 = f64[1]{0} bitcast(%param_0.12), metadata={op_name="stop"}
+  %constant_1_1 = f64[1]{0} constant({0.052631578947368418})
+  %multiply.3.3 = f64[1]{0} multiply(%bitcast.6, %constant_1_1), metadata={op_name="jit(_linspace)/mul" stack_frame_id=2}
+  %bitcast.1.5 = f64[] bitcast(%multiply.3.3), metadata={op_name="jit(_linspace)/mul" stack_frame_id=2}
+  %broadcast.1.5 = f64[19]{0} broadcast(%bitcast.1.5), dimensions={}, metadata={op_name="jit(_linspace)/mul" stack_frame_id=2}
+  %mul.15.3 = f64[19]{0} multiply(%iota.1.4, %broadcast.1.5), metadata={op_name="jit(_linspace)/mul" stack_frame_id=2}
+  %add.1.1 = f64[19]{0} add(%mul.11.3, %mul.15.3), metadata={op_name="jit(_linspace)/add" stack_frame_id=2}
+  ROOT %concatenate.1.1 = f64[20]{0} concatenate(%add.1.1, %bitcast.6), dimensions={0}, metadata={op_name="jit(_linspace)/concatenate" stack_frame_id=2}
+}
+
+ENTRY %main.1 (start.1: f64[], stop.1: f64[]) -> f64[20] {
+  %stop.1 = f64[] parameter(1), metadata={op_name="stop"}
+  %start.1 = f64[] parameter(0), metadata={op_name="start"}
+  ROOT %input_concatenate_fusion = f64[20]{0} fusion(%stop.1, %start.1), kind=kInput, calls=%fused_concatenate, metadata={op_name="jit(_linspace)/concatenate" stack_frame_id=2}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+}
+

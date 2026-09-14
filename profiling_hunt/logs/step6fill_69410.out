@@ -1,0 +1,32 @@
+# fill job 69410 higgs GPU=0 2026-09-11T16:27:34+02:00
+#   XLA_PYTHON_CLIENT_MEM_FRACTION=.95
+#   XLA_PYTHON_CLIENT_PREALLOCATE=true
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk2 (order 2, 2 stages, adaptive PID)  ntsave=670  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 45,013,270,528 B = 41.92188 GiB = 2683.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=11,257,594,368  peak=33,873,325,056 (2019.008 R, 31.54699 GiB)
+  traj bytes=11,240,734,720 (670.000 R)  nsteps=14
+  MEASURED / PREDICTED = 0.7525   rel.err = -24.75%
+  elapsed 71.7s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_fill.jsonl
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk5 (order 5, 7 stages, adaptive PID)  ntsave=1000  save_states=False  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 917,504 B = 0.00085 GiB = 14.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=157,696  peak=50,429,440 (769.492 R, 0.04697 GiB)
+  traj bytes=65,536 (1.000 R)  nsteps=3
+  MEASURED / PREDICTED = 54.9637   rel.err = +5396.37%
+  elapsed 4.2s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_fill.jsonl
+### FILL COMPLETE ###

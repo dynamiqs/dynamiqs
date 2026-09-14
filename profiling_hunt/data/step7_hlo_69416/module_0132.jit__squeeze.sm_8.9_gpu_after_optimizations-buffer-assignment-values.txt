@@ -1,0 +1,16 @@
+
+Total bytes used: 16 (16B)
+
+Used values:
+<0 a.1 @0>
+ positions:
+  a.1
+ uses:
+  copy.1, operand 0
+ from instruction: %a.1 = s64[1]{0} parameter(0), metadata={op_name="a"}
+<1 copy.1 @0>
+ positions:
+  copy.1
+ uses:
+  (none)
+ from instruction: %copy.1 = s64[1]{0} copy(%a.1)

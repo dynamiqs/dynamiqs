@@ -1,0 +1,6 @@
+HloModule jit__moveaxis, entry_computation_layout={(c128[1,64]{1,0})->c128[1,64]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}
+
+ENTRY %main.1 (a.1: c128[1,64]) -> c128[1,64] {
+  ROOT %a.1 = c128[1,64]{1,0} parameter(0), metadata={op_name="a"}
+}
+

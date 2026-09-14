@@ -1,0 +1,6 @@
+HloModule jit_stage, entry_computation_layout={(s64[])->s64[]}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}
+
+ENTRY %main.1 (args_0_.1: s64[]) -> s64[] {
+  ROOT %args_0_.1 = s64[] parameter(0), metadata={op_name="args[0]"}
+}
+

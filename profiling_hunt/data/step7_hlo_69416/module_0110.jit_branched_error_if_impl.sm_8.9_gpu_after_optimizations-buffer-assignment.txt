@@ -1,0 +1,25 @@
+BufferAssignment:
+allocation 0: size 2048, maybe-live-out:
+ value: <0 copy.1 @0> (size=2048,offset=0): c128[2,64]{1,0}
+ value: <4 pure_callback.3 @0> (size=2048,offset=0): c128[2,64]{1,0}
+ value: <15 cond.3.clone{0} (phi) @0> (size=2048,offset=0): c128[2,64]{1,0}
+allocation 1: size 2048, parameter 0, shape |c128[2,64]| at ShapeIndex {}:
+ value: <9 dynamic_nodonate__first___0_.3 @0> (size=2048,offset=0): c128[2,64]{1,0}
+allocation 2: size 16, output shape is |(s64[], c128[2,64])|, maybe-live-out:
+ value: <13 tuple.7{} @0> (size=16,offset=0): (s64[], c128[2,64]{1,0})
+allocation 3: size 1, parameter 1, shape |pred[]| at ShapeIndex {}:
+ value: <7 dynamic_nodonate__rest___0_.1 @0> (size=1,offset=0): pred[]
+allocation 4: size 8, maybe-live-out:
+ value: <12 copy.3 @0> (size=8,offset=0): s64[]
+allocation 5: size 8, constant:
+ value: <6 constant_3_0 @0> (size=8,offset=0): s64[]
+allocation 6: size 8, constant:
+ value: <2 constant_2_0 @0> (size=8,offset=0): s64[]
+allocation 7: size 2816, preallocated-temp:
+ value: <1 tuple.5{} @0> (size=8,offset=0): (c128[2,64]{1,0})
+ value: <3 pure_callback.2 @0> (size=2048,offset=768): c128[2,64]{1,0}
+ value: <5 tuple.4{} @0> (size=8,offset=0): (c128[2,64]{1,0})
+ value: <8 cond.2.0{} @0> (size=0,offset=768): ()
+ value: <10 tuple.3.0{} @0> (size=8,offset=256): (c128[2,64]{1,0})
+ value: <11 tuple.6{} @0> (size=16,offset=512): (s64[], c128[2,64]{1,0})
+ value: <14 cond.3.clone{} (phi) @0> (size=8,offset=0): (c128[2,64]{1,0})

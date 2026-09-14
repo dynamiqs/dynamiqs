@@ -1,0 +1,35 @@
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "cond.3.clone"
+    thunk_id: 4
+  }
+  thunk_kind: "kConditional"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "pure_callback.2"
+    thunk_id: 1
+  }
+  thunk_kind: "kCustomCall"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "pure_callback.3"
+    thunk_id: 2
+  }
+  thunk_kind: "kCustomCall"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.1"
+    thunk_id: 3
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.3"
+    thunk_id: 5
+  }
+  thunk_kind: "kCopy"
+}

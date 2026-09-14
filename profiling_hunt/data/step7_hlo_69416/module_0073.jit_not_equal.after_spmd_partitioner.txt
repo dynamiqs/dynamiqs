@@ -1,0 +1,8 @@
+HloModule jit_not_equal, entry_computation_layout={(c128[0]{0}, s64[])->pred[0]{0}}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true}
+
+ENTRY %main.1 (x.1: c128[0], y.1: s64[]) -> pred[0] {
+  %x.1 = c128[0]{0} parameter(0), metadata={op_name="x"}
+  %y.1 = s64[] parameter(1), metadata={op_name="y"}
+  ROOT %constant.1 = pred[0]{0} constant({})
+}
+

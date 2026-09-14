@@ -1,0 +1,28 @@
+HloLiveRange (max 6):
+  InstructionSequence:
+    0:args_1_.1
+    1:constant_37_0
+    2:input_reduce_fusion
+    3:args_2_.1
+    4:args_0_.1
+    5:loop_complex_fusion
+  BufferLiveRange:
+    args_1_.1{}:0-6
+    args_0_.1{}:0-6
+    args_2_.1{}:0-6
+    constant_37_0{}:1-2
+    input_reduce_fusion{}:2-5
+    loop_complex_fusion{}:5-6
+  Live ranges at 5 (peak):
+    args_0_.1{}: 2048 bytes (cumulative: 2048 bytes)
+    loop_complex_fusion{}: 2048 bytes (cumulative: 4096 bytes)
+    args_2_.1{}: 1024 bytes (cumulative: 5120 bytes)
+    args_1_.1{}: 4 bytes (cumulative: 5124 bytes)
+    input_reduce_fusion{}: 1 bytes (cumulative: 5125 bytes)
+  Stack trace breakdown for peak usage: 5 125 bytes
+    main.3 (100.0%, total: 5 125 bytes, current: 0 bytes, remaining: 5 125 bytes)
+      ├── args[0] (40.0%, total: 2 048 bytes, current: 2 048 bytes, remaining: 3 077 bytes)
+      ├── jit(scatter-add)/scatter-add (40.0%, total: 2 048 bytes, current: 2 048 bytes, remaining: 1 029 bytes)
+      ├── args[2] (20.0%, total: 1 024 bytes, current: 1 024 bytes, remaining: 5 bytes)
+      ├── args[1] (0.1%, total: 4 bytes, current: 4 bytes, remaining: 1 bytes)
+      └── input_reduce_fusion (0.0%, total: 1 bytes, current: 1 bytes, remaining: 0 bytes)

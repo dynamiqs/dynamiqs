@@ -1,0 +1,83 @@
+########## bare ##########
+##############################################################################################################
+STEP 4 [bare]  jax 0.10.2 diffrax 0.7.2
+  dynamiqs 0.3.6
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 = 42.1758 GiB
+  complex128 = 16 bytes/element;  R = rho_bytes = 16*N^2 = 2,560,000 B
+##############################################################################################################
+
+  --- 1 bare_ode  dY/dt = M@Y  N=400 complex128 ---
+    rho_bytes R = 16*400^2 = 2,560,000 B = 2.44 MiB
+    PREDICTION (from Step 3b, Tsit5): peak = 12.393 x R = 0.0295 GiB
+    after operator setup                     in_use=      5,120,512 ( 0.00477 GiB)  peak=      9,120,768 ( 0.00849 GiB)  nalloc=    31
+    operator storage = 2,560,000 B = 1.0000 R
+    after solve                              in_use=      9,122,560 ( 0.00850 GiB)  peak=     54,549,760 ( 0.05080 GiB)  nalloc=    90  delta=+4,002,048
+    peak / R = 21.308   steps=10   elapsed 0.8s
+
+  appended 1 record(s) to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step4smoke_69382.jsonl
+########## lindblad ##########
+##############################################################################################################
+STEP 4 [lindblad]  jax 0.10.2 diffrax 0.7.2
+  dynamiqs 0.3.6
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 = 42.1758 GiB
+  complex128 = 16 bytes/element;  R = rho_bytes = 16*N^2 = 2,560,000 B
+##############################################################################################################
+
+  --- 2 lindblad_diffrax  hand-written, dense, n_jump=2 N=400 ---
+    rho_bytes R = 2,560,000 B = 2.44 MiB
+    HAND-DERIVED PREDICTION:
+      operators resident: H + 2x(L, Ldag, LdagL) = 7 R
+      vector-field live temporaries: acc + (L@rho | @Ldag) + LdagL@rho + rho@LdagL + 1 working ~ 5 R
+      solver (Tsit5, Step 3b): 5.393 R fixed + 7 stages x 1 R = 12.393 R, of which 1 R was the single operator
+      TOTAL PREDICTED PEAK ~ 12.393 - 1 + 7 + 5 = 23.393 R = 0.0558 GiB
+    after operator setup                     in_use=     20,481,792 ( 0.01908 GiB)  peak=     63,350,784 ( 0.05900 GiB)  nalloc=    82
+    operator storage = 17,920,000 B = 7.0000 R (predicted 7 R)
+    after solve                              in_use=     23,044,864 ( 0.02146 GiB)  peak=     99,192,064 ( 0.09238 GiB)  nalloc=   162  delta=+2,563,072
+    peak / R = 38.747  (predicted 23.393)  measured-predicted = +15.354 R
+    steps=10  elapsed 1.0s
+
+  appended 1 record(s) to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step4smoke_69382.jsonl
+########## dq_dense ##########
+##############################################################################################################
+STEP 4 [dq_dense]  jax 0.10.2 diffrax 0.7.2
+  dynamiqs 0.3.6
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 = 42.1758 GiB
+  complex128 = 16 bytes/element;  R = rho_bytes = 16*N^2 = 2,560,000 B
+##############################################################################################################
+
+  --- 3_dq_dense  N=400 ---
+    same random dense H and 2 jump operators as row 2
+    PREDICTION: identical physics to row 2, so any difference is dynamiqs' own overhead
+    after operator setup                     in_use=     10,240,000 ( 0.00954 GiB)  peak=     15,361,536 ( 0.01431 GiB)  nalloc=    64
+    MEASURED operator storage = 7,680,000 B = 7.3242 MiB = 3.00000 R
+    !! TypeError: mesolve() got an unexpected keyword argument 'options'
+
+  appended 1 record(s) to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step4smoke_69382.jsonl
+########## dq_dia ##########
+##############################################################################################################
+STEP 4 [dq_dia]  jax 0.10.2 diffrax 0.7.2
+  dynamiqs 0.3.6
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 = 42.1758 GiB
+  complex128 = 16 bytes/element;  R = rho_bytes = 16*N^2 = 2,560,000 B
+##############################################################################################################
+
+  --- 4_dq_dia_cat  N=400 ---
+    cat qubit: H=delta a^dag a, L2=sqrt(k2)(a^2-alpha^2), L1=sqrt(k1) a
+    layouts: H=dia L2=dia L1=dia  ndiags=[1, 2, 1]
+    PREDICTION from DIA structure: 16 * ndiags * N summed = 25,600 B = 0.0244 MiB
+    the same operators DENSE would cost 7,680,000 B = 7.3 MiB  (saving factor 300x)
+    after operator setup                     in_use=      2,592,256 ( 0.00241 GiB)  peak=     16,797,696 ( 0.01564 GiB)  nalloc=   286
+    MEASURED operator storage = 25,600 B = 0.0244 MiB = 0.01000 R
+    measured / DIA prediction = 1.0000   -> DIA saving DELIVERED
+    !! TypeError: mesolve() got an unexpected keyword argument 'options'
+
+  appended 1 record(s) to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step4smoke_69382.jsonl
+### SMOKE DONE ###

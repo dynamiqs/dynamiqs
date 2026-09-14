@@ -1,0 +1,7 @@
+BufferAssignment:
+allocation 0: size 8, output shape is |s64[]|, maybe-live-out:
+ value: <5 wrapped_add @0> (size=8,offset=0): s64[]
+allocation 1: size 8, parameter 0, shape |s64[]| at ShapeIndex {}:
+ value: <3 x.1 @0> (size=8,offset=0): s64[]
+allocation 2: size 8, parameter 1, shape |s64[]| at ShapeIndex {}:
+ value: <4 y.1 @0> (size=8,offset=0): s64[]

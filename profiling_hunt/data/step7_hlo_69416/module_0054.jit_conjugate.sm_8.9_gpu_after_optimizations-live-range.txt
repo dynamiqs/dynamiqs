@@ -1,0 +1,14 @@
+HloLiveRange (max 2):
+  InstructionSequence:
+    0:x.1
+    1:loop_complex_fusion
+  BufferLiveRange:
+    x.1{}:0-2
+    loop_complex_fusion{}:1-2
+  Live ranges at 1 (peak):
+    loop_complex_fusion{}: 1024 bytes (cumulative: 1024 bytes)
+    x.1{}: 1024 bytes (cumulative: 2048 bytes)
+  Stack trace breakdown for peak usage: 2 048 bytes
+    main.1 (100.0%, total: 2 048 bytes, current: 0 bytes, remaining: 2 048 bytes)
+      ├── jit(conjugate)/complex (50.0%, total: 1 024 bytes, current: 1 024 bytes, remaining: 1 024 bytes)
+      └── x (50.0%, total: 1 024 bytes, current: 1 024 bytes, remaining: 0 bytes)

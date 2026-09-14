@@ -1,0 +1,1 @@
+001: kCustomKernel [source | sink] input_reduce_fusion grid: [1, 1, 1] threads: [32, 1, 1]  shared_memory: 0 bytes

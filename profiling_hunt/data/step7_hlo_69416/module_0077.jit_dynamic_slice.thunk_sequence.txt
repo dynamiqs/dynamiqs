@@ -1,0 +1,1 @@
+001: kCustomKernel [source | sink] loop_dynamic_slice_fusion grid: [1, 1, 1] threads: [2, 1, 1]  shared_memory: 0 bytes

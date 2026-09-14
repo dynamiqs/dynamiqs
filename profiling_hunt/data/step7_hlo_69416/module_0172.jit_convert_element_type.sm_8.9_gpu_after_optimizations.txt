@@ -1,0 +1,7 @@
+HloModule jit_convert_element_type, is_scheduled=true, entry_computation_layout={(pred[])->pred[]}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="46c2d6963c5381ea22b3e5b9d3562c2f"}
+
+ENTRY %main.1 (args_0_.1: pred[]) -> pred[] {
+  %args_0_.1 = pred[] parameter(0), metadata={op_name="args[0]"}
+  ROOT %copy.1 = pred[] copy(%args_0_.1)
+}
+

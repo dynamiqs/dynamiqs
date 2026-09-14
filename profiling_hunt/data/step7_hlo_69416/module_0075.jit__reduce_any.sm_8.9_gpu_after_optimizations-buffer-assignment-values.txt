@@ -1,0 +1,22 @@
+
+Total bytes used: 2 (2B)
+
+Used values:
+<0 a.1 @0>
+ positions:
+  a.1
+ uses:
+  (none)
+ from instruction: %a.1 = pred[0]{0} parameter(0), metadata={op_name="a"}
+<1 constant_1_0 @0>
+ positions:
+  constant_1_0
+ uses:
+  copy.1, operand 0
+ from instruction: %constant_1_0 = pred[] constant(false)
+<2 copy.1 @0>
+ positions:
+  copy.1
+ uses:
+  (none)
+ from instruction: %copy.1 = pred[] copy(%constant_1_0)

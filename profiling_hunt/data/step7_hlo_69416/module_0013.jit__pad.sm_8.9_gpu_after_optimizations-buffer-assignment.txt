@@ -1,0 +1,7 @@
+BufferAssignment:
+allocation 0: size 1024, output shape is |c128[64]|, maybe-live-out:
+ value: <6 loop_pad_fusion @0> (size=1024,offset=0): c128[64]{0}
+allocation 1: size 1008, parameter 0, shape |c128[63]| at ShapeIndex {}:
+ value: <4 array.1 @0> (size=1008,offset=0): c128[63]{0}
+allocation 2: size 8, parameter 1, shape |s64[]| at ShapeIndex {}:
+ value: <5 constant_values.1 @0> (size=8,offset=0): s64[]

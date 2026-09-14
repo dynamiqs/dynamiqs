@@ -1,0 +1,18 @@
+
+Total bytes used: 2 (2B)
+
+Used values:
+<0 a.1 @0>
+ positions:
+  a.1
+  bitcast.1
+ uses:
+  bitcast.1, operand 0
+  copy.1, operand 0
+ from instruction: %a.1 = pred[1]{0} parameter(0), metadata={op_name="a"}
+<1 copy.1 @0>
+ positions:
+  copy.1
+ uses:
+  (none)
+ from instruction: %copy.1 = pred[] copy(%bitcast.1)

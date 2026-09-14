@@ -1,0 +1,44 @@
+HloModule jit_multiply, is_scheduled=true, entry_computation_layout={(f64[], c128[1,64]{1,0})->c128[1,64]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="99bb937de8f202281963ffd90aa5da00"}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step7_hlo.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/qarray.py"
+3 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/materialized_qarray.py"
+4 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/sparsedia_dataarray.py"
+
+FunctionNames
+1 "<module>"
+2 "build"
+3 "QArray.__rmul__"
+4 "MaterializedQArray.__mul__"
+5 "SparseDIADataArray.__mul__"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=46 end_line=46 column=14 end_column=22}
+2 {file_name_id=1 function_name_id=2 line=40 end_line=40 column=8 end_column=25}
+3 {file_name_id=2 function_name_id=3 line=550 end_line=550 column=15 end_column=23}
+4 {file_name_id=3 function_name_id=4 line=244 end_line=244 column=17 end_column=30}
+5 {file_name_id=4 function_name_id=5 line=270 end_line=270 column=24 end_column=42}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+4 {file_location_id=4 parent_frame_id=4}
+5 {file_location_id=5 parent_frame_id=5}
+
+
+%fused_multiply (param_0.1: c128[1,64], param_1.2: f64[]) -> c128[1,64] {
+  %param_1.2 = f64[] parameter(1)
+  %convert_element_type.1.1 = c128[] convert(%param_1.2), metadata={op_name="jit(multiply)/convert_element_type" stack_frame_id=5}
+  %mul.2.1 = c128[1,64]{1,0} broadcast(%convert_element_type.1.1), dimensions={}, metadata={op_name="jit(multiply)/mul" stack_frame_id=5}
+  %param_0.1 = c128[1,64]{1,0} parameter(0)
+  ROOT %mul.3.1 = c128[1,64]{1,0} multiply(%mul.2.1, %param_0.1), metadata={op_name="jit(multiply)/mul" stack_frame_id=5}
+}
+
+ENTRY %main.1 (x.1: f64[], y.1: c128[1,64]) -> c128[1,64] {
+  %x.1 = f64[] parameter(0), metadata={op_name="x"}
+  %y.1 = c128[1,64]{1,0} parameter(1), metadata={op_name="y"}
+  ROOT %loop_multiply_fusion = c128[1,64]{1,0} fusion(%y.1, %x.1), kind=kLoop, calls=%fused_multiply, metadata={op_name="jit(multiply)/mul" stack_frame_id=5}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+}
+

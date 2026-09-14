@@ -1,0 +1,55 @@
+# job 69386 on higgs 2026-09-11T11:18:56+02:00  GPU=0
+#   XLA_PYTHON_CLIENT_MEM_FRACTION=.95
+#   XLA_PYTHON_CLIENT_PREALLOCATE=true
+####################################################################################################
+STEP 4c - does dynamiqs mesolve retain operators per call?
+  dynamiqs 0.3.6   N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+####################################################################################################
+
+--- layout=dense  jax.clear_caches()=False ---
+    mesolve 0: in_use=    351,904,000 (   335.60 MiB =  5.498 R)  num_allocs=    273
+    mesolve 1: in_use=          1,536 (     0.00 MiB =  0.000 R)  num_allocs=    399
+    mesolve 2: in_use=          1,536 (     0.00 MiB =  0.000 R)  num_allocs=    525
+    mesolve 3: in_use=          1,536 (     0.00 MiB =  0.000 R)  num_allocs=    651
+    mesolve 4: in_use=          1,536 (     0.00 MiB =  0.000 R)  num_allocs=    777
+    mesolve 5: in_use=          1,536 (     0.00 MiB =  0.000 R)  num_allocs=    903
+    tail slope = +0 B/call = +0.000 R/call
+    VERDICT: BOUNDED (flat)
+    after config cleanup: in_use=0
+
+--- layout=dense  jax.clear_caches()=True ---
+    mesolve 0: in_use=    351,902,720 (   335.60 MiB =  5.498 R)  num_allocs=  1,067
+    mesolve 1: in_use=    351,902,720 (   335.60 MiB =  5.498 R)  num_allocs=  1,231
+    mesolve 2: in_use=    351,902,720 (   335.60 MiB =  5.498 R)  num_allocs=  1,395
+    mesolve 3: in_use=    351,902,720 (   335.60 MiB =  5.498 R)  num_allocs=  1,559
+    mesolve 4: in_use=    351,902,720 (   335.60 MiB =  5.498 R)  num_allocs=  1,723
+    mesolve 5: in_use=    351,902,720 (   335.60 MiB =  5.498 R)  num_allocs=  1,887
+    tail slope = +0 B/call = +0.000 R/call
+    VERDICT: BOUNDED (flat)
+    after config cleanup: in_use=0
+
+--- layout=dia  jax.clear_caches()=False ---
+    mesolve 0: in_use=     64,161,536 (    61.19 MiB =  1.003 R)  num_allocs=  2,250
+    mesolve 1: in_use=         33,280 (     0.03 MiB =  0.001 R)  num_allocs=  2,566
+    mesolve 2: in_use=         33,280 (     0.03 MiB =  0.001 R)  num_allocs=  2,882
+    mesolve 3: in_use=         33,280 (     0.03 MiB =  0.001 R)  num_allocs=  3,198
+    mesolve 4: in_use=         33,280 (     0.03 MiB =  0.001 R)  num_allocs=  3,514
+    mesolve 5: in_use=         33,280 (     0.03 MiB =  0.001 R)  num_allocs=  3,830
+    tail slope = +0 B/call = +0.000 R/call
+    VERDICT: BOUNDED (flat)
+    after config cleanup: in_use=0
+
+--- layout=dia  jax.clear_caches()=True ---
+    mesolve 0: in_use=     64,160,256 (    61.19 MiB =  1.003 R)  num_allocs=  4,184
+    mesolve 1: in_use=     64,160,256 (    61.19 MiB =  1.003 R)  num_allocs=  4,538
+    mesolve 2: in_use=     64,160,256 (    61.19 MiB =  1.003 R)  num_allocs=  4,892
+    mesolve 3: in_use=     64,160,256 (    61.19 MiB =  1.003 R)  num_allocs=  5,246
+    mesolve 4: in_use=     64,160,256 (    61.19 MiB =  1.003 R)  num_allocs=  5,600
+    mesolve 5: in_use=     64,160,256 (    61.19 MiB =  1.003 R)  num_allocs=  5,954
+    tail slope = +0 B/call = +0.000 R/call
+    VERDICT: BOUNDED (flat)
+    after config cleanup: in_use=0
+### STEP 4c COMPLETE ###

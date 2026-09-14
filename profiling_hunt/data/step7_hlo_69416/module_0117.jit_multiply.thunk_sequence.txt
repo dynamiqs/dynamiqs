@@ -1,0 +1,1 @@
+001: kCustomKernel [source | sink] loop_multiply_fusion grid: [1, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes

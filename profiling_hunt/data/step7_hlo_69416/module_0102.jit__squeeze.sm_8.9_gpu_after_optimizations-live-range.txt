@@ -1,0 +1,14 @@
+HloLiveRange (max 2):
+  InstructionSequence:
+    0:a.1
+    1:copy.1
+  BufferLiveRange:
+    a.1{}:0-2
+    copy.1{}:1-2
+  Live ranges at 1 (peak):
+    a.1{}: 1024 bytes (cumulative: 1024 bytes)
+    copy.1{}: 1024 bytes (cumulative: 2048 bytes)
+  Stack trace breakdown for peak usage: 2 048 bytes
+    main.1 (100.0%, total: 2 048 bytes, current: 0 bytes, remaining: 2 048 bytes)
+      ├── a (50.0%, total: 1 024 bytes, current: 1 024 bytes, remaining: 1 024 bytes)
+      └── copy.1 (50.0%, total: 1 024 bytes, current: 1 024 bytes, remaining: 0 bytes)

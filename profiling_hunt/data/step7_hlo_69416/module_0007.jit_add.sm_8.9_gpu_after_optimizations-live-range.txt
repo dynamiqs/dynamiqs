@@ -1,0 +1,18 @@
+HloLiveRange (max 3):
+  InstructionSequence:
+    0:args_0_.1
+    1:args_1_.1
+    2:loop_add_fusion
+  BufferLiveRange:
+    args_1_.1{}:0-3
+    args_0_.1{}:0-3
+    loop_add_fusion{}:2-3
+  Live ranges at 2 (peak):
+    args_1_.1{}: 1008 bytes (cumulative: 1008 bytes)
+    loop_add_fusion{}: 1008 bytes (cumulative: 2016 bytes)
+    args_0_.1{}: 16 bytes (cumulative: 2032 bytes)
+  Stack trace breakdown for peak usage: 2 032 bytes
+    main.1 (100.0%, total: 2 032 bytes, current: 0 bytes, remaining: 2 032 bytes)
+      ├── args[1] (49.6%, total: 1 008 bytes, current: 1 008 bytes, remaining: 1 024 bytes)
+      ├── jit(add)/add (49.6%, total: 1 008 bytes, current: 1 008 bytes, remaining: 16 bytes)
+      └── args[0] (0.8%, total: 16 bytes, current: 16 bytes, remaining: 0 bytes)

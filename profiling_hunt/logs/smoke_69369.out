@@ -1,0 +1,3 @@
+host=higgs CUDA_VISIBLE_DEVICES=0 SLURM_JOB_GPUS=2
+index, name, memory.total [MiB], memory.used [MiB]
+0, NVIDIA L40S, 46068 MiB, 0 MiB

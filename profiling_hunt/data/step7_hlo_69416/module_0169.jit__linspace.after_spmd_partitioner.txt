@@ -1,0 +1,43 @@
+HloModule jit__linspace, entry_computation_layout={(f64[], f64[])->f64[10]{0}}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step7_hlo.py"
+
+FunctionNames
+1 "<module>"
+2 "compile_for"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=73 end_line=73 column=8 end_column=23}
+2 {file_name_id=1 function_name_id=2 line=54 end_line=54 column=9 end_column=43}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+
+
+ENTRY %main.1 (start.1: f64[], stop.1: f64[]) -> f64[10] {
+  %start.1 = f64[] parameter(0), metadata={op_name="start"}
+  %reshape.2 = f64[1]{0} reshape(%start.1), metadata={op_name="jit(_linspace)/reshape" stack_frame_id=2}
+  %mul.8 = f64[1]{0} broadcast(%reshape.2), dimensions={0}, metadata={op_name="jit(_linspace)/mul" stack_frame_id=2}
+  %mul.9 = f64[] reshape(%mul.8), metadata={op_name="jit(_linspace)/mul" stack_frame_id=2}
+  %mul.10 = f64[9]{0} broadcast(%mul.9), dimensions={}, metadata={op_name="jit(_linspace)/mul" stack_frame_id=2}
+  %constant.2 = f64[] constant(1)
+  %broadcast.2 = f64[9]{0} broadcast(%constant.2), dimensions={}
+  %iota.1 = f64[9]{0} iota(), iota_dimension=0, metadata={op_name="jit(_linspace)/iota" stack_frame_id=2}
+  %constant.3 = f64[] constant(9)
+  %broadcast.3 = f64[9]{0} broadcast(%constant.3), dimensions={}
+  %div.1 = f64[9]{0} divide(%iota.1, %broadcast.3), metadata={op_name="jit(_linspace)/div" stack_frame_id=2}
+  %sub.1 = f64[9]{0} subtract(%broadcast.2, %div.1), metadata={op_name="jit(_linspace)/sub" stack_frame_id=2}
+  %mul.11 = f64[9]{0} multiply(%mul.10, %sub.1), metadata={op_name="jit(_linspace)/mul" stack_frame_id=2}
+  %stop.1 = f64[] parameter(1), metadata={op_name="stop"}
+  %reshape.3 = f64[1]{0} reshape(%stop.1), metadata={op_name="jit(_linspace)/reshape" stack_frame_id=2}
+  %mul.12 = f64[1]{0} broadcast(%reshape.3), dimensions={0}, metadata={op_name="jit(_linspace)/mul" stack_frame_id=2}
+  %mul.13 = f64[] reshape(%mul.12), metadata={op_name="jit(_linspace)/mul" stack_frame_id=2}
+  %mul.14 = f64[9]{0} broadcast(%mul.13), dimensions={}, metadata={op_name="jit(_linspace)/mul" stack_frame_id=2}
+  %mul.15 = f64[9]{0} multiply(%mul.14, %div.1), metadata={op_name="jit(_linspace)/mul" stack_frame_id=2}
+  %add.1 = f64[9]{0} add(%mul.11, %mul.15), metadata={op_name="jit(_linspace)/add" stack_frame_id=2}
+  %broadcast_in_dim.1 = f64[1]{0} reshape(%stop.1), metadata={op_name="jit(_linspace)/broadcast_in_dim" stack_frame_id=2}
+  ROOT %concatenate.1 = f64[10]{0} concatenate(%add.1, %broadcast_in_dim.1), dimensions={0}, metadata={op_name="jit(_linspace)/concatenate" stack_frame_id=2}
+}
+

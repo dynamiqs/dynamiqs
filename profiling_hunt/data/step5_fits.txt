@@ -1,0 +1,75 @@
+========================================================================================================
+STEP 5 ANALYSIS   R = 16*2000^2 = 64,000,000 B = 61.04 MiB
+========================================================================================================
+
+--- A) save_states=True, ntsave sweep (layout=dia, grad=none, max_steps=100000) ---
+ ntsave           traj B   traj/R   ratio           peak B   peak/R      s
+      2      128,000,000    2.000  1.0000    1,060,175,616   16.565   3.66
+      6      384,000,000    6.000  1.0000    1,344,144,384   21.002   3.74
+     11      704,000,000   11.000  1.0000    2,304,144,384   36.002   3.91
+     11      704,000,000   11.000  1.0000    2,304,144,384   36.002   3.77
+     11      704,000,000   11.000  1.0000    2,304,144,384   36.002   3.87
+     26    1,664,000,000   26.000  1.0000    5,184,144,384   81.002   3.78
+     51    3,264,000,000   51.000  1.0000    9,984,145,408  156.002   3.84
+    101    6,464,000,000  101.000  1.0000   19,584,147,456  306.002   3.96
+
+  FIT peak = a + b*ntsave :  a = +295,284,640 B = 4.614 R
+                            b = 190,442,526 B = 2.9757 R per saved state
+  residuals: ['-384,005,923', '+93,795,414', '+86,008,046', '+86,008,046', '+86,008,046', '+62,645,942', '+23,708,078', '-54,167,650'] B
+  >>> H-B: raw diffrax gave b = 3.000 R.  dynamiqs gives b = 2.9757 R
+
+--- B) save_states=False, ntsave sweep (must be FLAT) ---
+  ntsave=   2 traj=1.000 R  peak=     900,141,568 (14.065 R)
+  ntsave=  11 traj=1.000 R  peak=     900,141,568 (14.065 R)
+  ntsave=  51 traj=1.000 R  peak=     900,174,848 (14.065 R)
+  ntsave= 101 traj=1.000 R  peak=     900,144,640 (14.065 R)
+  spread over ntsave 2..101 = +33,280 B = +0.0005 R  -> FLAT
+
+--- C) exp_ops only (save_states=False, 2 exp_ops) ---
+  ntsave=  11 traj=1.000 R  expects=352 B  peak=14.567 R
+  ntsave= 101 traj=1.000 R  expects=3,232 B  peak=14.567 R
+
+--- D) max_steps sweep at ntsave=11 (H-C: must NOT depend on max_steps) ---
+  max_steps=    1,000  peak=   2,304,144,384 (36.002 R)  in_use=   768,133,632  s=3.97
+  max_steps=   10,000  peak=   2,304,176,640 (36.003 R)  in_use=   768,165,888  s=3.69
+  max_steps=  100,000  peak=   2,304,144,384 (36.002 R)  in_use=   768,133,632  s=3.91
+  max_steps=  100,000  peak=   2,304,144,384 (36.002 R)  in_use=   768,133,632  s=3.77
+  max_steps=  100,000  peak=   2,304,144,384 (36.002 R)  in_use=   768,133,632  s=3.87
+  max_steps=1,000,000  peak=   2,304,144,384 (36.002 R)  in_use=   768,133,632  s=3.85
+  spread over max_steps 1e3..1e6 = +32,256 B = +0.00050 R -> INDEPENDENT
+
+--- E) gradient/adjoint at ntsave=11, forward-only ---
+  gradient=none          peak=   2,304,144,384 ( 36.002 R)  vs none: +0 B (+0.000 R)  s=3.87
+  gradient=forward       peak=   2,304,144,384 ( 36.002 R)  vs none: +0 B (+0.000 R)  s=3.8
+  gradient=direct        peak=   3,008,162,560 ( 47.003 R)  vs none: +704,018,176 B (+11.000 R)  s=5.04
+  gradient=checkpointed  peak=   2,304,144,384 ( 36.002 R)  vs none: +0 B (+0.000 R)  s=3.69
+
+--- F) dense-operator cross-check of the slope ---
+  ntsave=  11 peak=   2,496,017,152 (39.000 R)
+  ntsave=  51 peak=  10,176,018,176 (159.000 R)
+  slope between the two dense points = 192,000,026 B = 3.0000 R per saved state
+
+====================================================================================================
+A') REFIT excluding ntsave=2 (there the solver's own 14.065 R working set dominates)
+====================================================================================================
+  peak = +192,143,892 + 192,000,034 * ntsave   bytes
+       = 3.0022 R + 3.0000 R * ntsave
+  residuals: ['-290', '-122', '+382', '+199', '-168'] B   (max 382 B on 19,584,147,456 B)
+
+  >>> raw diffrax (Step 3a): peak = 2.000 R + 3.000 R * n_slots
+  >>> dynamiqs             : peak = 3.002 R + 3.000 R * ntsave
+  >>> SAME SLOPE. dynamiqs INHERITS the 3x trajectory peak.
+
+  floor (save_states=False) = 14.065 R, so in practice
+  peak ~ max(14.065 R,  3.002 R + 3.000 R * ntsave)
+
+----------------------------------------------------------------------------------------------------
+PRACTICAL CONSEQUENCE at N=2000 (R=61.04 MiB), effective ceiling 0.89*bytes_limit = 37.54 GiB
+----------------------------------------------------------------------------------------------------
+  max saveable states  = 208
+  their resident size  = 12.40 GiB
+  naive expectation (ceiling / R) = 629 states  -> overestimates by 3.02x
+  ntsave=  11: resident   0.656 GiB   peak   2.146 GiB   ratio 3.273
+  ntsave=  51: resident   3.040 GiB   peak   9.298 GiB   ratio 3.059
+  ntsave= 101: resident   6.020 GiB   peak  18.239 GiB   ratio 3.030
+  ntsave= 208: resident  12.398 GiB   peak  37.372 GiB   ratio 3.014

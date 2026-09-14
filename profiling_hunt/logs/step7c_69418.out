@@ -1,0 +1,91 @@
+# job 69418 higgs GPU=0 2026-09-11T18:14:03+02:00
+
+=========== A) peak memory and answer, N=2000 ntsave=101 ===========
+--- EQX_ON_ERROR=RAISE ---
+####################################################################################################
+EQX_ON_ERROR=<unset> (equinox sees raise)  N=2000 ntsave=101 max_steps=100000
+R = 64,000,000 B   trajectory = nt*R = 6.0201 GiB
+published model, 3 R (nt+1) = 18.2390 GiB
+####################################################################################################
+  peak = 19,584,179,456 B = 18.2392 GiB = 306.003 R
+  peak / (nt*R) = 3.0297   slope implied = 3.0000 R per saved state
+  states shape=(101, 2000, 2000)  all finite=True
+  trace(rho_final) = 1.000000000000+0.000000000000j
+  checksum sum|rho| = 1.3492017380e+02
+--- EQX_ON_ERROR=nan ---
+####################################################################################################
+EQX_ON_ERROR=nan (equinox sees nan)  N=2000 ntsave=101 max_steps=100000
+R = 64,000,000 B   trajectory = nt*R = 6.0201 GiB
+published model, 3 R (nt+1) = 18.2390 GiB
+####################################################################################################
+  peak = 13,056,175,616 B = 12.1595 GiB = 204.003 R
+  peak / (nt*R) = 2.0198   slope implied = 1.9901 R per saved state
+  states shape=(101, 2000, 2000)  all finite=True
+  trace(rho_final) = 1.000000000000+0.000000000000j
+  checksum sum|rho| = 1.3492017380e+02
+--- EQX_ON_ERROR=off ---
+####################################################################################################
+EQX_ON_ERROR=off (equinox sees off)  N=2000 ntsave=101 max_steps=100000
+R = 64,000,000 B   trajectory = nt*R = 6.0201 GiB
+published model, 3 R (nt+1) = 18.2390 GiB
+####################################################################################################
+  peak = 13,412,175,616 B = 12.4911 GiB = 209.565 R
+  peak / (nt*R) = 2.0749   slope implied = 2.0452 R per saved state
+  states shape=(101, 2000, 2000)  all finite=True
+  trace(rho_final) = 1.000000000000+0.000000000000j
+  checksum sum|rho| = 1.3492017380e+02
+
+=========== B) how far can we now go? ntsave=303 (3x), only with off ===
+--- default (expected to OOM: 3R*304 = 58 GiB) ---
+####################################################################################################
+EQX_ON_ERROR=<unset> (equinox sees raise)  N=2000 ntsave=303 max_steps=100000
+R = 64,000,000 B   trajectory = nt*R = 18.0602 GiB
+published model, 3 R (nt+1) = 54.3594 GiB
+####################################################################################################
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 36.24GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+--- EQX_ON_ERROR=off (expected ~1R*303 = 18 GiB) ---
+####################################################################################################
+EQX_ON_ERROR=off (equinox sees off)  N=2000 ntsave=303 max_steps=100000
+R = 64,000,000 B   trajectory = nt*R = 18.0602 GiB
+published model, 3 R (nt+1) = 54.3594 GiB
+####################################################################################################
+  peak = 39,268,181,760 B = 36.5713 GiB = 613.565 R
+  peak / (nt*R) = 2.0250   slope implied = 2.0151 R per saved state
+  states shape=(303, 2000, 2000)  all finite=True
+  trace(rho_final) = 1.000000000000+0.000000000000j
+  checksum sum|rho| = 4.0471387107e+02
+
+=========== C) safety: a solve that genuinely fails (max_steps=1) ======
+--- EQX_ON_ERROR=RAISE, max_steps=1 ---
+####################################################################################################
+EQX_ON_ERROR=<unset> (equinox sees raise)  N=64 ntsave=11 max_steps=1
+R = 65,536 B   trajectory = nt*R = 0.0007 GiB
+published model, 3 R (nt+1) = 0.0022 GiB
+####################################################################################################
+  !! JaxRuntimeError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step7c_verify.py", line 61, in <module>
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/integrators/apis/mesolve.py", line 306, in mesol
+--- EQX_ON_ERROR=nan, max_steps=1 ---
+####################################################################################################
+EQX_ON_ERROR=nan (equinox sees nan)  N=64 ntsave=11 max_steps=1
+R = 65,536 B   trajectory = nt*R = 0.0007 GiB
+published model, 3 R (nt+1) = 0.0022 GiB
+####################################################################################################
+  peak = 50,405,632 B = 0.0469 GiB = 769.129 R
+  peak / (nt*R) = 69.9208   slope implied = 69.6481 R per saved state
+  states shape=(11, 64, 64)  all finite=False
+  trace(rho_final) = nan+0.000000000000j
+  checksum sum|rho| = nan
+--- EQX_ON_ERROR=off, max_steps=1 ---
+####################################################################################################
+EQX_ON_ERROR=off (equinox sees off)  N=64 ntsave=11 max_steps=1
+R = 65,536 B   trajectory = nt*R = 0.0007 GiB
+published model, 3 R (nt+1) = 0.0022 GiB
+####################################################################################################
+  peak = 16,781,568 B = 0.0156 GiB = 256.066 R
+  peak / (nt*R) = 23.2788   slope implied = 23.0060 R per saved state
+  states shape=(11, 64, 64)  all finite=False
+  trace(rho_final) = inf+0.000000000000j
+  checksum sum|rho| = inf
+
+### STEP 7c COMPLETE  json=/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step7c_69418.jsonl ###

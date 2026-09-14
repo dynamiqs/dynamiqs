@@ -1,0 +1,50 @@
+HloModule jit__reduce_any, is_scheduled=true, entry_computation_layout={(pred[2]{0})->pred[]}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="a87ebda5beba5b0b6ba46571e656aa87"}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step7_hlo.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/materialized_qarray.py"
+3 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/sparsedia_dataarray.py"
+4 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_module/_module.py"
+
+FunctionNames
+1 "<module>"
+2 "build"
+3 "MaterializedQArray.__matmul__"
+4 "SparseDIADataArray.__matmul__"
+5 "_ModuleMeta.__call__"
+6 "SparseDIADataArray.__check_init__"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=46 end_line=46 column=14 end_column=22}
+2 {file_name_id=1 function_name_id=2 line=41 end_line=41 column=24 end_column=29}
+3 {file_name_id=2 function_name_id=3 line=281 end_line=281 column=17 end_column=35}
+4 {file_name_id=3 function_name_id=4 line=310 end_line=310 column=19 end_column=62}
+5 {file_name_id=4 function_name_id=5 line=434 end_line=434 column=16 end_column=32}
+6 {file_name_id=3 function_name_id=6 line=71 end_line=71 column=20 end_column=64}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+4 {file_location_id=4 parent_frame_id=4}
+5 {file_location_id=5 parent_frame_id=5}
+6 {file_location_id=6 parent_frame_id=6}
+
+
+%region_0.1 (reduce_or.3: pred[], reduce_or.4: pred[]) -> pred[] {
+  %reduce_or.4 = pred[] parameter(1), metadata={op_name="reduce_or"}
+  %reduce_or.3 = pred[] parameter(0), metadata={op_name="reduce_or"}
+  ROOT %reduce_or.5.0 = pred[] or(%reduce_or.3, %reduce_or.4), metadata={op_name="jit(_reduce_any)/reduce_or" stack_frame_id=6}
+}
+
+%fused_reduce (param_0: pred[2]) -> pred[] {
+  %param_0 = pred[2]{0} parameter(0)
+  %constant_1_1 = pred[] constant(false)
+  ROOT %reduce_or.7.1 = pred[] reduce(%param_0, %constant_1_1), dimensions={0}, to_apply=%region_0.1, metadata={op_name="jit(_reduce_any)/reduce_or" stack_frame_id=6}
+}
+
+ENTRY %main.2 (a.1: pred[2]) -> pred[] {
+  %a.1 = pred[2]{0} parameter(0), metadata={op_name="a"}
+  ROOT %input_reduce_fusion = pred[] fusion(%a.1), kind=kCustom, calls=%fused_reduce, metadata={op_name="jit(_reduce_any)/reduce_or" stack_frame_id=6}, backend_config={"operation_queue_id":"0","fusion_backend_config":{"kind":"__triton","block_level_fusion_config":{"num_warps":"1","output_tiles":[{"sizes":[]}],"num_ctas":1,"num_stages":1,"is_tma_allowed":false,"is_warp_specialization_allowed":false,"waves_per_eu":0}},"force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID"}
+}
+

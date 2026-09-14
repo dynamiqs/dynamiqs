@@ -1,0 +1,80 @@
+##############################################################################################################
+STEP 3 [3a]  jax 0.10.2 diffrax 0.7.2 x64=True
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 B = 42.1758 GiB
+  float64 = 8 bytes/element; state_bytes = 8*N^2
+##############################################################################################################
+
+  --- 3a  N=500 n_steps=10 SaveAt=t1 max_steps=11 ---
+    state_bytes = 8*500^2 = 2,000,000 B = 1.91 MiB
+    PREDICTED trajectory storage: 1 x state (final only) = 2,000,000 B = 0.00186 GiB
+    after problem setup (M + Y0)           in_use=      4,000,256 ( 0.00373 GiB)  peak=      8,251,392 ( 0.00768 GiB)  nalloc=     21
+    after diffeqsolve                      in_use=      6,003,200 ( 0.00559 GiB)  peak=     49,750,784 ( 0.04633 GiB)  nalloc=     80  delta_in_use=+2,002,944 (+1.91 MiB)
+    sol.ys shape=(1, 500, 500) nbytes=2,000,000 (0.00186 GiB)
+    measured trajectory / predicted = 1.0000
+    elapsed 3.60s
+    after cleanup: in_use=4,000,256 (baseline return: NO <-- DIRTY)
+
+  appended 1 record(s) to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step3smoke_69378.jsonl
+##############################################################################################################
+STEP 3 [3a]  jax 0.10.2 diffrax 0.7.2 x64=True
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 B = 42.1758 GiB
+  float64 = 8 bytes/element; state_bytes = 8*N^2
+##############################################################################################################
+
+  --- 3a  N=500 n_steps=10 SaveAt=steps max_steps=11 ---
+    state_bytes = 8*500^2 = 2,000,000 B = 1.91 MiB
+    PREDICTED trajectory storage: max_steps(11) x state = 22,000,000 B = 0.02049 GiB
+    after problem setup (M + Y0)           in_use=      4,000,256 ( 0.00373 GiB)  peak=      8,251,392 ( 0.00768 GiB)  nalloc=     21
+    after diffeqsolve                      in_use=     26,003,200 ( 0.02422 GiB)  peak=     70,008,832 ( 0.06520 GiB)  nalloc=     80  delta_in_use=+22,002,944 (+20.98 MiB)
+    sol.ys shape=(11, 500, 500) nbytes=22,000,000 (0.02049 GiB)
+    measured trajectory / predicted = 1.0000
+    elapsed 2.89s
+    after cleanup: in_use=4,000,256 (baseline return: NO <-- DIRTY)
+
+  appended 1 record(s) to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step3smoke_69378.jsonl
+##############################################################################################################
+STEP 3 [3b_manual]  jax 0.10.2 diffrax 0.7.2 x64=True
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 B = 42.1758 GiB
+  float64 = 8 bytes/element; state_bytes = 8*N^2
+##############################################################################################################
+
+  --- 3b MANUAL  N=500 solver=Tsit5 order=5 stages=7 n_steps=5 ---
+    state_bytes = 2,000,000 B = 1.91 MiB
+    PREDICTION: peak grows as a + b*n_stages with b ~ state_bytes => 7 x 1.91 MiB = 13.35 MiB of stage storage
+    after problem setup (M + Y0)           in_use=      4,000,256 ( 0.00373 GiB)  peak=      8,251,392 ( 0.00768 GiB)  nalloc=     21
+    after solver.init                      in_use=      6,000,640 ( 0.00559 GiB)  peak=      8,251,392 ( 0.00768 GiB)  nalloc=     26  delta_in_use=+2,000,384 (+1.91 MiB)
+    step   0: in_use=    24,002,304 (    22.89 MiB =  12.00 states)  peak=    93,560,064 ( 46.78 states)  nalloc=    114
+    step   1: in_use=    33,998,848 (    32.42 MiB =  17.00 states)  peak=    93,560,064 ( 46.78 states)  nalloc=    175
+    step   2: in_use=    26,002,432 (    24.80 MiB =  13.00 states)  peak=    93,560,064 ( 46.78 states)  nalloc=    236
+    step   3: in_use=    32,001,792 (    30.52 MiB =  16.00 states)  peak=    94,007,040 ( 47.00 states)  nalloc=    297
+    step   4: in_use=    26,001,408 (    24.80 MiB =  13.00 states)  peak=    96,007,680 ( 48.00 states)  nalloc=    358
+    after all steps                        in_use=     26,001,408 ( 0.02422 GiB)  peak=     96,007,680 ( 0.08941 GiB)  nalloc=    358  delta_in_use=+22,001,152 (+20.98 MiB)
+    peak_bytes_in_use over the loop = 96,007,680 (91.56 MiB)
+    peak - post_init_resident      = 90,007,040 (85.84 MiB) = 45.004 x state
+    LEAK TEST: bytes_in_use slope over the last 3 steps = -512.0 B/step = -0.0003 states/step
+    num_allocs per step = 61.0
+    after cleanup: in_use=0 (baseline return: YES)
+
+  appended 1 record(s) to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step3smoke_69378.jsonl
+##############################################################################################################
+STEP 3 [3b_solve]  jax 0.10.2 diffrax 0.7.2 x64=True
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 B = 42.1758 GiB
+  float64 = 8 bytes/element; state_bytes = 8*N^2
+##############################################################################################################
+
+  --- 3b DIFFEQSOLVE  N=500 solver=Tsit5 stages=7 n_steps=5 ---
+    after problem setup (M + Y0)           in_use=      4,000,256 ( 0.00373 GiB)  peak=      8,251,392 ( 0.00768 GiB)  nalloc=     21
+    after diffeqsolve                      in_use=      6,003,456 ( 0.00559 GiB)  peak=     49,751,040 ( 0.04633 GiB)  nalloc=     90  delta_in_use=+2,003,200 (+1.91 MiB)
+    peak/state = 24.876   elapsed 3.31s
+    after cleanup: in_use=4,000,256 (baseline return: NO <-- DIRTY)
+
+  appended 1 record(s) to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step3smoke_69378.jsonl
+### SMOKE DONE ###

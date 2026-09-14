@@ -1,0 +1,1700 @@
+
+Total bytes used: 933991 (912.1KiB)
+
+Used values:
+<0 reduce_and.3 @0>
+ positions:
+  reduce_and.3
+ uses:
+  reduce_and.5.0, operand 0
+ from instruction: %reduce_and.3 = pred[] parameter(0), metadata={op_name="reduce_and"}
+<1 reduce_and.4 @0>
+ positions:
+  reduce_and.4
+ uses:
+  reduce_and.5.0, operand 1
+ from instruction: %reduce_and.4 = pred[] parameter(1), metadata={op_name="reduce_and"}
+<2 reduce_and.5.0 @0>
+ positions:
+  reduce_and.5.0
+ uses:
+  (none)
+ from instruction: %reduce_and.5.0 = pred[] and(%reduce_and.3, %reduce_and.4), metadata={op_name="reduce_and"}
+<3 copy.32 @0>
+ positions:
+  copy.32
+  tuple.522 {0}
+ uses:
+  tuple.522, operand 0
+ from instruction: %copy.32 = c128[64,64]{1,0} copy(%get-tuple-element.1682)
+<4 tuple.522{} @0>
+ positions:
+  tuple.522 {}
+ uses:
+  (none)
+ from instruction: %tuple.522 = (c128[64,64]{1,0}) tuple(%copy.32)
+<5 constant_24_0 @0>
+ positions:
+  constant_24_0
+ uses:
+  pure_callback.6, operand 0
+  pure_callback.7, operand 1
+ from instruction: %constant_24_0 = s64[] constant(0), metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(branched_error_if_impl)" stack_frame_id=1679}
+<6 pure_callback.6 @0>
+ positions:
+  pure_callback.6
+ uses:
+  pure_callback.7, operand 0
+ from instruction: %pure_callback.6 = c128[64,64]{1,0} custom-call(%constant_24_0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={s64[]}, api_version=API_VERSION_TYPED_FFI, sharding={maximal device=0}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=1685}, backend_config={index = 2 : ui64}
+<7 pure_callback.7 @0>
+ positions:
+  pure_callback.7
+  tuple.521 {0}
+ uses:
+  tuple.521, operand 0
+ from instruction: %pure_callback.7 = c128[64,64]{1,0} custom-call(%pure_callback.6, %constant_24_0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={c128[64,64]{1,0}, s64[]}, api_version=API_VERSION_TYPED_FFI, sharding={maximal device=0}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=1686}, backend_config={index = 3 : ui64}
+<8 tuple.521{} @0>
+ positions:
+  tuple.521 {}
+ uses:
+  (none)
+ from instruction: %tuple.521 = (c128[64,64]{1,0}) tuple(%pure_callback.7)
+<9 reduce_or.187 @0>
+ positions:
+  reduce_or.187
+ uses:
+  reduce_or.189.0, operand 0
+ from instruction: %reduce_or.187 = pred[] parameter(0), metadata={op_name="reduce_or"}
+<10 reduce_or.188 @0>
+ positions:
+  reduce_or.188
+ uses:
+  reduce_or.189.0, operand 1
+ from instruction: %reduce_or.188 = pred[] parameter(1), metadata={op_name="reduce_or"}
+<11 reduce_or.189.0 @0>
+ positions:
+  reduce_or.189.0
+ uses:
+  (none)
+ from instruction: %reduce_or.189.0 = pred[] or(%reduce_or.187, %reduce_or.188), metadata={op_name="outer-loop/checkpointed-no-vjp/while/body/reduce_or" stack_frame_id=384}
+<12 copy.70 @0>
+ positions:
+  copy.70
+  tuple.527 {0}
+ uses:
+  tuple.527, operand 0
+ from instruction: %copy.70 = c128[1,64,64]{2,1,0} copy(%get-tuple-element.1720)
+<13 copy.71 @0>
+ positions:
+  copy.71
+  tuple.527 {1}
+ uses:
+  tuple.527, operand 1
+ from instruction: %copy.71 = s64[] copy(%get-tuple-element.1721)
+<14 copy.72 @0>
+ positions:
+  copy.72
+  tuple.527 {2}
+ uses:
+  tuple.527, operand 2
+ from instruction: %copy.72 = s64[] copy(%get-tuple-element.1722)
+<15 copy.73 @0>
+ positions:
+  copy.73
+  tuple.527 {3}
+ uses:
+  tuple.527, operand 3
+ from instruction: %copy.73 = s64[] copy(%get-tuple-element.1723)
+<16 tuple.527{} @0>
+ positions:
+  tuple.527 {}
+ uses:
+  (none)
+ from instruction: %tuple.527 = (c128[1,64,64]{2,1,0}, s64[], s64[], s64[]) tuple(%copy.70, %copy.71, %copy.72, %copy.73)
+<17 pure_callback.48{} @0>
+ positions:
+  pure_callback.48 {}
+ uses:
+  pure_callback.49.0, operand 0 {}
+  pure_callback.50.0, operand 0 {}
+  pure_callback.51.0, operand 0 {}
+  pure_callback.52.0, operand 0 {}
+  pure_callback.53.0, operand 0 {}
+  pure_callback.54.0, operand 0 {}
+  pure_callback.55.0, operand 0 {}
+  pure_callback.56.0, operand 0 {}
+  pure_callback.57.0, operand 0 {}
+ from instruction: %pure_callback.48 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2439}, backend_config={index = 14 : ui64}
+<18 pure_callback.48{0} @0>
+ positions:
+  pure_callback.48 {0}
+  pure_callback.49.0
+ uses:
+  pure_callback.58, operand 0
+ from instruction: %pure_callback.48 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2439}, backend_config={index = 14 : ui64}
+<19 pure_callback.48{1} @0>
+ positions:
+  pure_callback.48 {1}
+  pure_callback.50.0
+ uses:
+  pure_callback.58, operand 1
+ from instruction: %pure_callback.48 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2439}, backend_config={index = 14 : ui64}
+<20 pure_callback.48{2} @0>
+ positions:
+  pure_callback.48 {2}
+  pure_callback.51.0
+ uses:
+  pure_callback.58, operand 2
+ from instruction: %pure_callback.48 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2439}, backend_config={index = 14 : ui64}
+<21 pure_callback.48{3} @0>
+ positions:
+  pure_callback.48 {3}
+  pure_callback.52.0
+ uses:
+  pure_callback.58, operand 3
+ from instruction: %pure_callback.48 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2439}, backend_config={index = 14 : ui64}
+<22 pure_callback.48{4} @0>
+ positions:
+  pure_callback.48 {4}
+  pure_callback.53.0
+ uses:
+  pure_callback.58, operand 4
+ from instruction: %pure_callback.48 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2439}, backend_config={index = 14 : ui64}
+<23 pure_callback.48{5} @0>
+ positions:
+  pure_callback.48 {5}
+  pure_callback.54.0
+ uses:
+  pure_callback.58, operand 5
+ from instruction: %pure_callback.48 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2439}, backend_config={index = 14 : ui64}
+<24 pure_callback.48{6} @0>
+ positions:
+  pure_callback.48 {6}
+  pure_callback.55.0
+ uses:
+  pure_callback.58, operand 6
+ from instruction: %pure_callback.48 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2439}, backend_config={index = 14 : ui64}
+<25 pure_callback.48{7} @0>
+ positions:
+  pure_callback.48 {7}
+  pure_callback.56.0
+ uses:
+  pure_callback.58, operand 7
+ from instruction: %pure_callback.48 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2439}, backend_config={index = 14 : ui64}
+<26 pure_callback.48{8} @0>
+ positions:
+  pure_callback.48 {8}
+  pure_callback.57.0
+ uses:
+  pure_callback.58, operand 8
+ from instruction: %pure_callback.48 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2439}, backend_config={index = 14 : ui64}
+<27 pure_callback.58{} @0>
+ positions:
+  pure_callback.58 {}
+ uses:
+  get-tuple-element.1719, operand 0 {}
+  get-tuple-element.1718, operand 0 {}
+  get-tuple-element.1717, operand 0 {}
+  get-tuple-element.1716, operand 0 {}
+ from instruction: %pure_callback.58 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%pure_callback.49.0, %pure_callback.50.0, %pure_callback.51.0, %pure_callback.52.0, %pure_callback.53.0, /*index=5*/%pure_callback.54.0, %pure_callback.55.0, %pure_callback.56.0, %pure_callback.57.0, %get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, s64[], s64[], s64[], s32[], s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2440}, backend_config={index = 15 : ui64}
+<28 pure_callback.58{0} @0>
+ positions:
+  pure_callback.58 {0}
+ uses:
+  (none)
+ from instruction: %pure_callback.58 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%pure_callback.49.0, %pure_callback.50.0, %pure_callback.51.0, %pure_callback.52.0, %pure_callback.53.0, /*index=5*/%pure_callback.54.0, %pure_callback.55.0, %pure_callback.56.0, %pure_callback.57.0, %get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, s64[], s64[], s64[], s32[], s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2440}, backend_config={index = 15 : ui64}
+<29 pure_callback.58{1} @0>
+ positions:
+  pure_callback.58 {1}
+ uses:
+  (none)
+ from instruction: %pure_callback.58 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%pure_callback.49.0, %pure_callback.50.0, %pure_callback.51.0, %pure_callback.52.0, %pure_callback.53.0, /*index=5*/%pure_callback.54.0, %pure_callback.55.0, %pure_callback.56.0, %pure_callback.57.0, %get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, s64[], s64[], s64[], s32[], s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2440}, backend_config={index = 15 : ui64}
+<30 pure_callback.58{2} @0>
+ positions:
+  pure_callback.58 {2}
+ uses:
+  (none)
+ from instruction: %pure_callback.58 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%pure_callback.49.0, %pure_callback.50.0, %pure_callback.51.0, %pure_callback.52.0, %pure_callback.53.0, /*index=5*/%pure_callback.54.0, %pure_callback.55.0, %pure_callback.56.0, %pure_callback.57.0, %get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, s64[], s64[], s64[], s32[], s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2440}, backend_config={index = 15 : ui64}
+<31 pure_callback.58{3} @0>
+ positions:
+  pure_callback.58 {3}
+ uses:
+  (none)
+ from instruction: %pure_callback.58 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%pure_callback.49.0, %pure_callback.50.0, %pure_callback.51.0, %pure_callback.52.0, %pure_callback.53.0, /*index=5*/%pure_callback.54.0, %pure_callback.55.0, %pure_callback.56.0, %pure_callback.57.0, %get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, s64[], s64[], s64[], s32[], s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2440}, backend_config={index = 15 : ui64}
+<32 pure_callback.58{4} @0>
+ positions:
+  pure_callback.58 {4}
+  get-tuple-element.1716
+  tuple.526 {0}
+ uses:
+  tuple.526, operand 0
+ from instruction: %pure_callback.58 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%pure_callback.49.0, %pure_callback.50.0, %pure_callback.51.0, %pure_callback.52.0, %pure_callback.53.0, /*index=5*/%pure_callback.54.0, %pure_callback.55.0, %pure_callback.56.0, %pure_callback.57.0, %get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, s64[], s64[], s64[], s32[], s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2440}, backend_config={index = 15 : ui64}
+<33 pure_callback.58{5} @0>
+ positions:
+  pure_callback.58 {5}
+  get-tuple-element.1717
+  tuple.526 {1}
+ uses:
+  tuple.526, operand 1
+ from instruction: %pure_callback.58 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%pure_callback.49.0, %pure_callback.50.0, %pure_callback.51.0, %pure_callback.52.0, %pure_callback.53.0, /*index=5*/%pure_callback.54.0, %pure_callback.55.0, %pure_callback.56.0, %pure_callback.57.0, %get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, s64[], s64[], s64[], s32[], s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2440}, backend_config={index = 15 : ui64}
+<34 pure_callback.58{6} @0>
+ positions:
+  pure_callback.58 {6}
+  get-tuple-element.1718
+  tuple.526 {2}
+ uses:
+  tuple.526, operand 2
+ from instruction: %pure_callback.58 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%pure_callback.49.0, %pure_callback.50.0, %pure_callback.51.0, %pure_callback.52.0, %pure_callback.53.0, /*index=5*/%pure_callback.54.0, %pure_callback.55.0, %pure_callback.56.0, %pure_callback.57.0, %get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, s64[], s64[], s64[], s32[], s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2440}, backend_config={index = 15 : ui64}
+<35 pure_callback.58{7} @0>
+ positions:
+  pure_callback.58 {7}
+  get-tuple-element.1719
+  tuple.526 {3}
+ uses:
+  tuple.526, operand 3
+ from instruction: %pure_callback.58 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%pure_callback.49.0, %pure_callback.50.0, %pure_callback.51.0, %pure_callback.52.0, %pure_callback.53.0, /*index=5*/%pure_callback.54.0, %pure_callback.55.0, %pure_callback.56.0, %pure_callback.57.0, %get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, s64[], s64[], s64[], s32[], s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2440}, backend_config={index = 15 : ui64}
+<36 pure_callback.58{8} @0>
+ positions:
+  pure_callback.58 {8}
+ uses:
+  (none)
+ from instruction: %pure_callback.58 = (f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, /*index=5*/s64[], s64[], s64[], s32[]) custom-call(%pure_callback.49.0, %pure_callback.50.0, %pure_callback.51.0, %pure_callback.52.0, %pure_callback.53.0, /*index=5*/%pure_callback.54.0, %pure_callback.55.0, %pure_callback.56.0, %pure_callback.57.0, %get-tuple-element.8.0), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={f64[], f64[], f64[160]{0}, f64[1]{0}, c128[1,64,64]{2,1,0}, s64[], s64[], s64[], s32[], s32[]}, api_version=API_VERSION_TYPED_FFI, sharding={{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}, /*index=5*/{maximal device=0}, {maximal device=0}, {maximal device=0}, {maximal device=0}}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>, <@maximal_mesh_0, []>]>"}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=2440}, backend_config={index = 15 : ui64}
+<37 tuple.526{} @0>
+ positions:
+  tuple.526 {}
+ uses:
+  (none)
+ from instruction: %tuple.526 = (c128[1,64,64]{2,1,0}, s64[], s64[], s64[]) tuple(%get-tuple-element.1716, %get-tuple-element.1717, %get-tuple-element.1718, %get-tuple-element.1719)
+<38 scalar_lhs @0>
+ positions:
+  scalar_lhs
+ uses:
+  add.91.0, operand 0
+ from instruction: %scalar_lhs = c128[] parameter(0)
+<39 scalar_rhs @0>
+ positions:
+  scalar_rhs
+ uses:
+  add.91.0, operand 1
+ from instruction: %scalar_rhs = c128[] parameter(1)
+<40 add.91.0 @0>
+ positions:
+  add.91.0
+ uses:
+  (none)
+ from instruction: %add.91.0 = c128[] add(%scalar_lhs, %scalar_rhs)
+<41 reduce_and.2 @0>
+ positions:
+  reduce_and.2
+ uses:
+  reduce_and.8.0, operand 0
+ from instruction: %reduce_and.2 = pred[] parameter(0), metadata={op_name="reduce_and"}
+<42 reduce_and.6 @0>
+ positions:
+  reduce_and.6
+ uses:
+  reduce_and.8.0, operand 1
+ from instruction: %reduce_and.6 = pred[] parameter(1), metadata={op_name="reduce_and"}
+<43 reduce_and.8.0 @0>
+ positions:
+  reduce_and.8.0
+ uses:
+  (none)
+ from instruction: %reduce_and.8.0 = pred[] and(%reduce_and.2, %reduce_and.6), metadata={op_name="reduce_and"}
+<44 reduce_and.9 @0>
+ positions:
+  reduce_and.9
+ uses:
+  reduce_and.11.0, operand 0
+ from instruction: %reduce_and.9 = pred[] parameter(0), metadata={op_name="reduce_and"}
+<45 reduce_and.10 @0>
+ positions:
+  reduce_and.10
+ uses:
+  reduce_and.11.0, operand 1
+ from instruction: %reduce_and.10 = pred[] parameter(1), metadata={op_name="reduce_and"}
+<46 reduce_and.11.0 @0>
+ positions:
+  reduce_and.11.0
+ uses:
+  (none)
+ from instruction: %reduce_and.11.0 = pred[] and(%reduce_and.9, %reduce_and.10), metadata={op_name="reduce_and"}
+<47 scalar_lhs.3 @0>
+ positions:
+  scalar_lhs.3
+ uses:
+  add.331.0, operand 0
+ from instruction: %scalar_lhs.3 = c128[] parameter(0)
+<48 scalar_rhs.3 @0>
+ positions:
+  scalar_rhs.3
+ uses:
+  add.331.0, operand 1
+ from instruction: %scalar_rhs.3 = c128[] parameter(1)
+<49 add.331.0 @0>
+ positions:
+  add.331.0
+ uses:
+  (none)
+ from instruction: %add.331.0 = c128[] add(%scalar_lhs.3, %scalar_rhs.3)
+<50 scalar_lhs.4 @0>
+ positions:
+  scalar_lhs.4
+ uses:
+  add.332.0, operand 0
+ from instruction: %scalar_lhs.4 = c128[] parameter(0)
+<51 scalar_rhs.4 @0>
+ positions:
+  scalar_rhs.4
+ uses:
+  add.332.0, operand 1
+ from instruction: %scalar_rhs.4 = c128[] parameter(1)
+<52 add.332.0 @0>
+ positions:
+  add.332.0
+ uses:
+  (none)
+ from instruction: %add.332.0 = c128[] add(%scalar_lhs.4, %scalar_rhs.4)
+<60 loop_and_fusion @0>
+ positions:
+  loop_and_fusion
+ uses:
+  (none)
+ from instruction: %loop_and_fusion = pred[] fusion(%get-tuple-element.1373.0, %get-tuple-element.1372.0), kind=kLoop, calls=%fused_and, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/cond/and" stack_frame_id=2397}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<79 constant_1763__sunk2_7_0 @0>
+ positions:
+  constant_1763__sunk2_7_0
+ uses:
+  loop_and_fusion.1, operand 2
+ from instruction: %constant_1763__sunk2_7_0 = f64[160]{0} constant({...}), metadata={op_name="jit(f)/jit(branched_error_if_impl)/cond" stack_frame_id=1619}
+<80 loop_and_fusion.1 @0>
+ positions:
+  loop_and_fusion.1
+ uses:
+  (none)
+ from instruction: %loop_and_fusion.1 = pred[] fusion(%get-tuple-element.1537.0, %get-tuple-element.1539.0, %constant_1763__sunk2_7_0, %get-tuple-element.1540.0, %get-tuple-element.1547.0), kind=kLoop, calls=%fused_and.1, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/cond/and" stack_frame_id=2342}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<109 constant_1763__sunk2_8_0 @0>
+ positions:
+  constant_1763__sunk2_8_0
+ uses:
+  loop_dynamic_update_slice_fusion, operand 1
+ from instruction: %constant_1763__sunk2_8_0 = f64[160]{0} constant({...}), metadata={op_name="jit(f)/jit(branched_error_if_impl)/cond" stack_frame_id=1619}
+<110 loop_dynamic_update_slice_fusion @0>
+ positions:
+  loop_dynamic_update_slice_fusion
+  tuple.520 {2}
+ uses:
+  tuple.520, operand 2
+ from instruction: %loop_dynamic_update_slice_fusion = f64[160]{0} fusion(%get-tuple-element.1671, %constant_1763__sunk2_8_0, %get-tuple-element.1676, %get-tuple-element.1669, %get-tuple-element.1678), kind=kLoop, calls=%fused_dynamic_update_slice, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/scatter" stack_frame_id=2333}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<111 loop_add_fusion @0>
+ positions:
+  loop_add_fusion
+  tuple.520 {0}
+ uses:
+  tuple.520, operand 0
+ from instruction: %loop_add_fusion = s64[] fusion(%get-tuple-element.1669), kind=kLoop, calls=%fused_add, control-predecessors={%loop_dynamic_update_slice_fusion}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/add" deduplicated_name="loop_add_fusion" stack_frame_id=2309}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<112 tuple.520{} @0>
+ positions:
+  tuple.520 {}
+ uses:
+  (none)
+ from instruction: %tuple.520 = (s64[], s64[], f64[160]{0}, s64[], f64[], /*index=5*/pred[]) tuple(%loop_add_fusion, %get-tuple-element.1676, %loop_dynamic_update_slice_fusion, %get-tuple-element.1678, %get-tuple-element.1679, /*index=5*/%get-tuple-element.1680)
+<120 loop_and_fusion.2 @0>
+ positions:
+  loop_and_fusion.2
+ uses:
+  (none)
+ from instruction: %loop_and_fusion.2 = pred[] fusion(%get-tuple-element.1598.0, %get-tuple-element.1591.0), kind=kLoop, calls=%fused_and.2, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/cond/and" stack_frame_id=2240}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<320 constant_226__sunk2_5_0 @0>
+ positions:
+  constant_226__sunk2_5_0
+ uses:
+  loop_reduce_fusion, operand 1
+ from instruction: %constant_226__sunk2_5_0 = c128[7,7]{1,0} constant({...}), metadata={op_name="jit(f)/jit(_vectorized_mesolve)" stack_frame_id=719}
+<321 loop_reduce_fusion @0>
+ positions:
+  loop_reduce_fusion
+ uses:
+  input_add_fusion, operand 1
+ from instruction: %loop_reduce_fusion = c128[64,64]{1,0} fusion(%get-tuple-element.1653, %constant_226__sunk2_5_0, %get-tuple-element.1657, %get-tuple-element.1649), kind=kLoop, calls=%fused_reduce, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=2056}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<322 constant_5060_0 @0>
+ positions:
+  constant_5060_0
+ uses:
+  input_add_fusion, operand 2
+ from instruction: %constant_5060_0 = c128[63]{0} constant({...}), metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/mul" stack_frame_id=2076}
+<323 constant_5059_0 @0>
+ positions:
+  constant_5059_0
+ uses:
+  input_add_fusion, operand 3
+ from instruction: %constant_5059_0 = c128[63]{0} constant({...}), metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/mul" stack_frame_id=2073}
+<324 constant_5064_0 @0>
+ positions:
+  constant_5064_0
+ uses:
+  input_add_fusion, operand 4
+ from instruction: %constant_5064_0 = c128[62]{0} constant({...}), metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/mul" stack_frame_id=2076}
+<325 input_reduce_fusion @0>
+ positions:
+  input_reduce_fusion
+ uses:
+  input_add_fusion, operand 5
+ from instruction: %input_reduce_fusion = pred[] fusion(), kind=kCustom, calls=%fused_reduce.1, metadata={stack_frame_id=2070}, backend_config={"operation_queue_id":"0","fusion_backend_config":{"kind":"__triton","block_level_fusion_config":{"num_warps":"1","output_tiles":[{"sizes":[]}],"num_ctas":1,"num_stages":1,"is_tma_allowed":false,"is_warp_specialization_allowed":false,"waves_per_eu":0}},"force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID"}
+<326 constant_5058_0 @0>
+ positions:
+  constant_5058_0
+ uses:
+  input_add_fusion, operand 6
+ from instruction: %constant_5058_0 = c128[62]{0} constant({...}), metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/mul" stack_frame_id=2073}
+<327 constant_5063_0 @0>
+ positions:
+  constant_5063_0
+ uses:
+  input_add_fusion, operand 7
+ from instruction: %constant_5063_0 = f64[1,64]{1,0} constant({...}), metadata={op_name="outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/scatter-add" stack_frame_id=2623}
+<328 constant_5067_0 @0>
+ positions:
+  constant_5067_0
+ uses:
+  input_add_fusion, operand 8
+ from instruction: %constant_5067_0 = f64[3,64]{1,0} constant({...}), metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/scatter-add" stack_frame_id=1939}
+<329 input_add_fusion{} @0>
+ positions:
+  input_add_fusion {}
+ uses:
+  get-tuple-element.1635, operand 0 {}
+  get-tuple-element.1636, operand 0 {}
+ from instruction: %input_add_fusion = (c128[64,64]{1,0}, c128[64,64]{1,0}) fusion(%get-tuple-element.1661, %loop_reduce_fusion, %constant_5060_0, %constant_5059_0, %constant_5064_0, /*index=5*/%input_reduce_fusion, %constant_5058_0, %constant_5063_0, %constant_5067_0), kind=kInput, calls=%fused_add.1, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/add" stack_frame_id=2060}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<330 input_add_fusion{0} @0>
+ positions:
+  input_add_fusion {0}
+  bitcast.273.0
+  get-tuple-element.1635
+  tuple.517 {2}
+ uses:
+  tuple.517, operand 2
+  bitcast.273.0, operand 0
+ from instruction: %input_add_fusion = (c128[64,64]{1,0}, c128[64,64]{1,0}) fusion(%get-tuple-element.1661, %loop_reduce_fusion, %constant_5060_0, %constant_5059_0, %constant_5064_0, /*index=5*/%input_reduce_fusion, %constant_5058_0, %constant_5063_0, %constant_5067_0), kind=kInput, calls=%fused_add.1, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/add" stack_frame_id=2060}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<331 input_add_fusion{1} @0>
+ positions:
+  input_add_fusion {1}
+  get-tuple-element.1636
+ uses:
+  input_transpose_fusion, operand 0
+ from instruction: %input_add_fusion = (c128[64,64]{1,0}, c128[64,64]{1,0}) fusion(%get-tuple-element.1661, %loop_reduce_fusion, %constant_5060_0, %constant_5059_0, %constant_5064_0, /*index=5*/%input_reduce_fusion, %constant_5058_0, %constant_5063_0, %constant_5067_0), kind=kInput, calls=%fused_add.1, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/add" stack_frame_id=2060}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<332 input_transpose_fusion @0>
+ positions:
+  input_transpose_fusion
+  tuple.517 {3}
+ uses:
+  loop_dynamic_update_slice_fusion.1, operand 1
+  tuple.517, operand 3
+ from instruction: %input_transpose_fusion = c128[64,64]{1,0} fusion(%get-tuple-element.1636), kind=kInput, calls=%fused_transpose, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/add" stack_frame_id=2111}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<333 constant_5054_0 @0>
+ positions:
+  constant_5054_0
+ uses:
+  loop_dynamic_update_slice_fusion.1, operand 5
+ from instruction: %constant_5054_0 = s32[3]{0} constant({6, 0, 0}), metadata={stack_frame_id=2139}
+<334 loop_dynamic_update_slice_fusion.1 @0>
+ positions:
+  loop_dynamic_update_slice_fusion.1
+  tuple.517 {4}
+ uses:
+  tuple.517, operand 4
+ from instruction: %loop_dynamic_update_slice_fusion.1 = c128[7,64,64]{2,1,0} fusion(%get-tuple-element.1653, %input_transpose_fusion, %get-tuple-element.1662, %get-tuple-element.1657, %get-tuple-element.1649, /*index=5*/%constant_5054_0), kind=kLoop, calls=%fused_dynamic_update_slice.1, control-predecessors={%loop_reduce_fusion}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/scatter" stack_frame_id=2139}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<335 loop_add_fusion.1 @0>
+ positions:
+  loop_add_fusion.1
+  tuple.517 {0}
+ uses:
+  tuple.517, operand 0
+ from instruction: %loop_add_fusion.1 = s64[] fusion(%get-tuple-element.1649), kind=kLoop, calls=%fused_add.2, control-predecessors={%loop_dynamic_update_slice_fusion.1, %loop_reduce_fusion}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/add" deduplicated_name="loop_add_fusion" stack_frame_id=2043}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<336 tuple.517{} @0>
+ positions:
+  tuple.517 {}
+ uses:
+  (none)
+ from instruction: %tuple.517 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) tuple(%loop_add_fusion.1, %get-tuple-element.1657, %bitcast.273.0, %input_transpose_fusion, %loop_dynamic_update_slice_fusion.1, /*index=5*/%get-tuple-element.1661, %get-tuple-element.1662)
+<511 loop_add_fusion.4 @0>
+ positions:
+  loop_add_fusion.4
+  tuple.525 {0}
+ uses:
+  tuple.525, operand 0
+ from instruction: %loop_add_fusion.4 = s64[] fusion(%get-tuple-element.1694), kind=kLoop, calls=%fused_add.5, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/add" deduplicated_name="loop_add_fusion" stack_frame_id=2343}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<512 input_transpose_fusion.2 @0>
+ positions:
+  input_transpose_fusion.2
+ uses:
+  loop_multiply_fusion, operand 0
+ from instruction: %input_transpose_fusion.2 = f64[64,64]{1,0} fusion(%get-tuple-element.1695), kind=kInput, calls=%fused_transpose.2, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/abs" stack_frame_id=2255}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<513 wrapped_transpose @0>
+ positions:
+  wrapped_transpose
+  while.286 {5}
+  bitcast.275.0
+  tuple.515 {5}
+  arg_tuple.41 {5}
+  arg_tuple.42 {5}
+  get-tuple-element.1661
+  tuple.517 {5}
+ uses:
+  bitcast.275.0, operand 0
+  loop_multiply_fusion, operand 1
+  copy.14, operand 0
+  while.286, operand 0 {5}
+  tuple.517, operand 5
+  input_add_fusion, operand 0
+ from instruction: %wrapped_transpose = c128[64,64]{1,0} fusion(%get-tuple-element.1695), kind=kInput, calls=%wrapped_transpose_computation, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<514 constant_4903_0 @0>
+ positions:
+  constant_4903_0
+ uses:
+  copy.105, operand 0
+ from instruction: %constant_4903_0 = s64[] constant(0), metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)" stack_frame_id=1630}
+<515 copy.105 @0>
+ positions:
+  copy.105
+  tuple.518 {0}
+ uses:
+  copy.13, operand 0
+  while.285, operand 0 {0}
+ from instruction: %copy.105 = s64[] copy(%constant_4903_0)
+<516 copy.13 @0>
+ positions:
+  copy.13
+  tuple.515 {0}
+ uses:
+  while.286, operand 0 {0}
+ from instruction: %copy.13 = s64[] copy(%copy.105)
+<517 loop_select_fusion.2 @0>
+ positions:
+  loop_select_fusion.2
+  while.286 {1}
+  tuple.515 {1}
+  arg_tuple.41 {1}
+  get-tuple-element.1598.0
+  arg_tuple.42 {1}
+  get-tuple-element.1657
+  tuple.517 {1}
+ uses:
+  while.286, operand 0 {1}
+  loop_and_fusion.2, operand 0
+  loop_reduce_fusion, operand 2
+  loop_dynamic_update_slice_fusion.1, operand 3
+  tuple.517, operand 1
+ from instruction: %loop_select_fusion.2 = s64[] fusion(%get-tuple-element.1698), kind=kLoop, calls=%fused_select.2, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=2366}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<518 copy.14 @0>
+ positions:
+  copy.14
+  tuple.515 {2}
+ uses:
+  while.286, operand 0 {2}
+ from instruction: %copy.14 = c128[64,64]{0,1} copy(%bitcast.275.0)
+<519 loop_select_fusion @0>
+ positions:
+  loop_select_fusion
+  tuple.515 {3}
+ uses:
+  loop_pad_fusion, operand 0
+  while.286, operand 0 {3}
+ from instruction: %loop_select_fusion = c128[64,64]{1,0} fusion(%get-tuple-element.1699, %get-tuple-element.1698), kind=kLoop, calls=%fused_select, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=2368}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<520 copy.47 @0>
+ positions:
+  copy.47
+  while.285 {4}
+  tuple.518 {4}
+  arg_tuple.38 {4}
+  get-tuple-element.1539.0
+  arg_tuple.39 {4}
+  get-tuple-element.1679
+  tuple.520 {4}
+ uses:
+  loop_compare_minimum_select_fusion, operand 1
+  wrapped_subtract, operand 0
+  while.285, operand 0 {4}
+  loop_and_fusion.1, operand 1
+  tuple.520, operand 4
+ from instruction: %copy.47 = f64[] copy(%get-tuple-element.1697)
+<521 wrapped_subtract @0>
+ positions:
+  wrapped_subtract
+  while.286 {6}
+  tuple.515 {6}
+  arg_tuple.41 {6}
+  arg_tuple.42 {6}
+  get-tuple-element.1662
+  tuple.517 {6}
+ uses:
+  loop_pad_fusion, operand 1
+  loop_compare_minimum_select_fusion, operand 0
+  while.286, operand 0 {6}
+  loop_dynamic_update_slice_fusion.1, operand 2
+  tuple.517, operand 6
+ from instruction: %wrapped_subtract = f64[] fusion(%copy.47, %get-tuple-element.1696), kind=kLoop, calls=%wrapped_subtract_computation, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=1783}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<522 loop_pad_fusion @0>
+ positions:
+  loop_pad_fusion
+  tuple.515 {4}
+ uses:
+  while.286, operand 0 {4}
+ from instruction: %loop_pad_fusion = c128[7,64,64]{2,1,0} fusion(%loop_select_fusion, %wrapped_subtract), kind=kLoop, calls=%fused_pad, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/scatter" stack_frame_id=1803}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<523 tuple.515{} @0>
+ positions:
+  tuple.515 {}
+ uses:
+  while.286, operand 0 {}
+ from instruction: %tuple.515 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) tuple(%copy.13, %loop_select_fusion.2, %copy.14, %loop_select_fusion, %loop_pad_fusion, /*index=5*/%bitcast.275.0, %wrapped_subtract)
+<524 constant_228__sunk_7_0 @0>
+ positions:
+  constant_228__sunk_7_0
+ uses:
+  loop_reduce_fusion.1, operand 1
+ from instruction: %constant_228__sunk_7_0 = c128[7]{0} constant({(0.0017800110522257773, 0), (0.00081643445965674626, 0), (-0.0078808780102619935, 0), (0.14471100717326291, 0), (-0.58235716545255523, 0), (0.45808210592918686, 0), (-0.015151515151515152, 0)}), metadata={op_name="jit(f)/jit(_vectorized_mesolve)" stack_frame_id=719}
+<525 loop_reduce_fusion.1 @0>
+ positions:
+  loop_reduce_fusion.1
+ uses:
+  wrapped_transpose.1, operand 0
+ from instruction: %loop_reduce_fusion.1 = c128[64,64]{1,0} fusion(%while.272.0, %constant_228__sunk_7_0), kind=kLoop, calls=%fused_reduce.3, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=2248}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<526 wrapped_transpose.1 @0>
+ positions:
+  wrapped_transpose.1
+ uses:
+  loop_multiply_fusion, operand 3
+ from instruction: %wrapped_transpose.1 = c128[64,64]{1,0} fusion(%loop_reduce_fusion.1), kind=kInput, calls=%wrapped_transpose_computation.1, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=2248}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<527 input_reduce_fusion.1 @0>
+ positions:
+  input_reduce_fusion.1
+ uses:
+  loop_multiply_fusion, operand 4
+ from instruction: %input_reduce_fusion.1 = pred[] fusion(%while.273.0), kind=kInput, calls=%fused_reduce.2, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/reduce_or" stack_frame_id=2256}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<528 loop_multiply_fusion @0>
+ positions:
+  loop_multiply_fusion
+ uses:
+  input_reduce_fusion.2, operand 0
+ from instruction: %loop_multiply_fusion = c128[64,64]{1,0} fusion(%input_transpose_fusion.2, %wrapped_transpose, %while.273.0, %wrapped_transpose.1, %input_reduce_fusion.1), kind=kLoop, calls=%fused_multiply, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=2281}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<529 input_reduce_fusion.2 @0>
+ positions:
+  input_reduce_fusion.2
+ uses:
+  loop_compare_minimum_select_fusion, operand 3
+ from instruction: %input_reduce_fusion.2 = f64[] fusion(%loop_multiply_fusion), kind=kInput, calls=%fused_reduce.4, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/sqrt" stack_frame_id=2282}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<530 loop_compare_minimum_select_fusion{} @0>
+ positions:
+  loop_compare_minimum_select_fusion {}
+ uses:
+  get-tuple-element.1708, operand 0 {}
+  get-tuple-element.1707, operand 0 {}
+  get-tuple-element.1668, operand 0 {}
+ from instruction: %loop_compare_minimum_select_fusion = (f64[], f64[], pred[]) fusion(%wrapped_subtract, %copy.47, %get-tuple-element.1696, %input_reduce_fusion.2), kind=kLoop, calls=%fused_compare_minimum_select, control-predecessors={%wrapped_subtract}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=2384}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<531 loop_compare_minimum_select_fusion{0} @0>
+ positions:
+  loop_compare_minimum_select_fusion {0}
+  get-tuple-element.1708
+  tuple.525 {3}
+ uses:
+  tuple.525, operand 3
+ from instruction: %loop_compare_minimum_select_fusion = (f64[], f64[], pred[]) fusion(%wrapped_subtract, %copy.47, %get-tuple-element.1696, %input_reduce_fusion.2), kind=kLoop, calls=%fused_compare_minimum_select, control-predecessors={%wrapped_subtract}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=2384}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<532 loop_compare_minimum_select_fusion{1} @0>
+ positions:
+  loop_compare_minimum_select_fusion {1}
+  get-tuple-element.1707
+  tuple.525 {2}
+ uses:
+  tuple.525, operand 2
+ from instruction: %loop_compare_minimum_select_fusion = (f64[], f64[], pred[]) fusion(%wrapped_subtract, %copy.47, %get-tuple-element.1696, %input_reduce_fusion.2), kind=kLoop, calls=%fused_compare_minimum_select, control-predecessors={%wrapped_subtract}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=2384}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<533 loop_compare_minimum_select_fusion{2} @0>
+ positions:
+  loop_compare_minimum_select_fusion {2}
+  while.285 {5}
+  get-tuple-element.1668
+  tuple.518 {5}
+  arg_tuple.38 {5}
+  get-tuple-element.1537.0
+  arg_tuple.39 {5}
+  get-tuple-element.1680
+  tuple.520 {5}
+ uses:
+  loop_select_fusion.3, operand 0
+  loop_add_fusion.3, operand 1
+  loop_select_fusion.1, operand 2
+  loop_add_fusion.2, operand 1
+  input_transpose_fusion.1, operand 2
+  while.285, operand 0 {5}
+  loop_and_fusion.1, operand 0
+  tuple.520, operand 5
+ from instruction: %loop_compare_minimum_select_fusion = (f64[], f64[], pred[]) fusion(%wrapped_subtract, %copy.47, %get-tuple-element.1696, %input_reduce_fusion.2), kind=kLoop, calls=%fused_compare_minimum_select, control-predecessors={%wrapped_subtract}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=2384}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<534 input_transpose_fusion.1 @0>
+ positions:
+  input_transpose_fusion.1
+  tuple.525 {1}
+ uses:
+  tuple.525, operand 1
+ from instruction: %input_transpose_fusion.1 = c128[64,64]{1,0} fusion(%get-tuple-element.1695, %while.273.0, %get-tuple-element.1668), kind=kInput, calls=%fused_transpose.1, control-predecessors={%wrapped_transpose, %input_transpose_fusion.2}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=2379}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<535 loop_select_fusion.3 @0>
+ positions:
+  loop_select_fusion.3
+  tuple.525 {4}
+ uses:
+  tuple.525, operand 4
+ from instruction: %loop_select_fusion.3 = pred[] fusion(%get-tuple-element.1668, %get-tuple-element.1698), kind=kLoop, calls=%fused_select.3, control-predecessors={%loop_select_fusion.2, %loop_select_fusion}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=2386}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<536 loop_select_fusion.1 @0>
+ positions:
+  loop_select_fusion.1
+  tuple.525 {5}
+ uses:
+  tuple.525, operand 5
+ from instruction: %loop_select_fusion.1 = c128[64,64]{1,0} fusion(%while.276.0, %get-tuple-element.1699, %get-tuple-element.1668), kind=kLoop, calls=%fused_select.1, control-predecessors={%loop_select_fusion}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=2386}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<537 loop_add_fusion.3 @0>
+ positions:
+  loop_add_fusion.3
+  tuple.525 {6}
+ uses:
+  tuple.525, operand 6
+ from instruction: %loop_add_fusion.3 = s64[] fusion(%get-tuple-element.1700, %get-tuple-element.1668), kind=kLoop, calls=%fused_add.4, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=2362}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<538 loop_add_fusion.2 @0>
+ positions:
+  loop_add_fusion.2
+  tuple.525 {7}
+ uses:
+  tuple.525, operand 7
+ from instruction: %loop_add_fusion.2 = s64[] fusion(%get-tuple-element.1701, %get-tuple-element.1668), kind=kLoop, calls=%fused_add.3, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=2363}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<539 tuple.518{} @0>
+ positions:
+  tuple.518 {}
+ uses:
+  while.285, operand 0 {}
+ from instruction: %tuple.518 = (s64[], s64[], f64[160]{0}, s64[], f64[], /*index=5*/pred[]) tuple(%copy.105, %get-tuple-element.1702, %get-tuple-element.1703, %get-tuple-element.1704, %copy.47, /*index=5*/%get-tuple-element.1668)
+<540 wrapped_add @0>
+ positions:
+  wrapped_add
+  tuple.525 {8}
+ uses:
+  tuple.525, operand 8
+ from instruction: %wrapped_add = s64[] fusion(%get-tuple-element.1570.0, %get-tuple-element.1569.0), kind=kLoop, calls=%wrapped_add_computation, control-predecessors={%while.285}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=2299}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<541 wrapped_add.1 @0>
+ positions:
+  wrapped_add.1
+  tuple.525 {10}
+ uses:
+  tuple.525, operand 10
+ from instruction: %wrapped_add.1 = s64[] fusion(%get-tuple-element.1573.0, %get-tuple-element.1569.0), kind=kLoop, calls=%wrapped_add_computation.1, control-predecessors={%while.285}, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=2299}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<542 tuple.525{} @0>
+ positions:
+  tuple.525 {}
+ uses:
+  (none)
+ from instruction: %tuple.525 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) tuple(%loop_add_fusion.4, %input_transpose_fusion.1, %get-tuple-element.1707, %get-tuple-element.1708, %loop_select_fusion.3, /*index=5*/%loop_select_fusion.1, %loop_add_fusion.3, %loop_add_fusion.2, %wrapped_add, %get-tuple-element.1714, /*index=10*/%wrapped_add.1)
+<543 constant_1763_0 @0>
+ positions:
+  constant_1763_0
+  tuple.528 {0}
+  get-tuple-element.1740
+ uses:
+  copy.93, operand 0
+ from instruction: %constant_1763_0 = f64[160]{0} constant({...}), metadata={op_name="jit(f)/jit(branched_error_if_impl)/cond" stack_frame_id=1619}
+<544 constant_188_0 @0>
+ positions:
+  constant_188_0
+  tuple.528 {1}
+  tuple.528 {2}
+  get-tuple-element.1741
+  get-tuple-element.1742
+ uses:
+  copy.94, operand 0
+  copy.95, operand 0
+ from instruction: %constant_188_0 = f64[] constant(1e-06), metadata={op_name="jit(f)/jit(_vectorized_mesolve)" stack_frame_id=719}
+<545 constant_187_0 @0>
+ positions:
+  constant_187_0
+  tuple.528 {3}
+  get-tuple-element.1743
+ uses:
+  copy.96, operand 0
+ from instruction: %constant_187_0 = f64[] constant(0.9), metadata={op_name="jit(f)/jit(_vectorized_mesolve)" stack_frame_id=719}
+<546 constant_186_0 @0>
+ positions:
+  constant_186_0
+  tuple.528 {4}
+  get-tuple-element.1744
+ uses:
+  copy.97, operand 0
+ from instruction: %constant_186_0 = f64[] constant(0.2), metadata={op_name="jit(f)/jit(_vectorized_mesolve)" stack_frame_id=719}
+<547 constant_185_0 @0>
+ positions:
+  constant_185_0
+  tuple.528 {5}
+  get-tuple-element.1745
+ uses:
+  copy.98, operand 0
+ from instruction: %constant_185_0 = f64[] constant(5), metadata={op_name="jit(f)/jit(_vectorized_mesolve)" stack_frame_id=719}
+<548 constant_237_0 @0>
+ positions:
+  constant_237_0
+  tuple.528 {6}
+  tuple.528 {10}
+  get-tuple-element.1746
+  get-tuple-element.1750
+ uses:
+  copy.99, operand 0
+  copy.103, operand 0
+ from instruction: %constant_237_0 = pred[] constant(false), metadata={op_name="jit(f)/jit(_vectorized_mesolve)" stack_frame_id=719}
+<549 constant_218_0 @0>
+ positions:
+  constant_218_0
+  tuple.528 {7}
+  tuple.528 {8}
+  tuple.528 {11}
+  get-tuple-element.1747
+  get-tuple-element.1748
+  get-tuple-element.1751
+ uses:
+  copy.37, operand 0
+  copy.100, operand 0
+  copy.101, operand 0
+  copy.104, operand 0
+ from instruction: %constant_218_0 = pred[] constant(true), metadata={op_name="jit(f)/jit(_vectorized_mesolve)" stack_frame_id=719}
+<550 constant_238_0 @0>
+ positions:
+  constant_238_0
+  tuple.528 {9}
+  get-tuple-element.1749
+ uses:
+  copy.102, operand 0
+ from instruction: %constant_238_0 = s64[] constant(10000), metadata={op_name="jit(f)/jit(_vectorized_mesolve)" stack_frame_id=719}
+<551 constant_215_0 @0>
+ positions:
+  constant_215_0
+ uses:
+  copy.90, operand 0
+ from instruction: %constant_215_0 = s64[] constant(0), metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)" stack_frame_id=1630}
+<552 copy.90 @0>
+ positions:
+  copy.90
+  tuple.523 {0}
+ uses:
+  copy.41, operand 0
+  copy.43, operand 0
+  copy.39, operand 0
+  copy.40, operand 0
+  while.278, operand 0 {0}
+ from instruction: %copy.90 = s64[] copy(%constant_215_0)
+<553 rho0_data_data.1 @0>
+ positions:
+  rho0_data_data.1
+  Arg_.39 {0}
+  get-tuple-element.1682
+  tuple.86.0 {0}
+ uses:
+  input_transpose_fusion.3, operand 0
+  copy.32, operand 0
+  cond.177.clone, operand 2 {0}
+ from instruction: %rho0_data_data.1 = c128[64,64]{1,0} parameter(0), metadata={op_name="rho0.data.data"}
+<554 input_transpose_fusion.3 @0>
+ positions:
+  input_transpose_fusion.3
+ uses:
+  input_reduce_fusion.3, operand 0
+ from instruction: %input_transpose_fusion.3 = pred[64,64]{1,0} fusion(%rho0_data_data.1), kind=kInput, calls=%fused_transpose.3, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(allclose)/jit(isclose)/or" stack_frame_id=1673}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<555 input_reduce_fusion.3 @0>
+ positions:
+  input_reduce_fusion.3
+ uses:
+  cond.177.clone, operand 0
+ from instruction: %input_reduce_fusion.3 = pred[] fusion(%input_transpose_fusion.3), kind=kInput, calls=%fused_reduce.5, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/not" stack_frame_id=1674}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<556 cond.176.0{} @0>
+ positions:
+  cond.176.0 {}
+  arg_empty_tuple.3 {}
+ uses:
+  cond.177.clone, operand 1 {}
+ from instruction: %cond.176.0 = () tuple(), metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(branched_error_if_impl)/cond" stack_frame_id=1684}
+<557 tuple.86.0{} @0>
+ positions:
+  tuple.86.0 {}
+  Arg_.39 {}
+ uses:
+  cond.177.clone, operand 2 {}
+  get-tuple-element.1682, operand 0 {}
+ from instruction: %tuple.86.0 = (c128[64,64]{1,0}) tuple(%rho0_data_data.1)
+<558 constant_1771_0 @0>
+ positions:
+  constant_1771_0
+ uses:
+  copy.91, operand 0
+ from instruction: %constant_1771_0 = f64[] constant(0), metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/mul" stack_frame_id=1640}
+<559 copy.91 @0>
+ positions:
+  copy.91
+  tuple.523 {2}
+ uses:
+  while.278, operand 0 {2}
+ from instruction: %copy.91 = f64[] copy(%constant_1771_0)
+<560 constant_1776_0 @0>
+ positions:
+  constant_1776_0
+ uses:
+  copy.92, operand 0
+ from instruction: %constant_1776_0 = f64[] constant(0.01), metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/min" stack_frame_id=1690}
+<561 copy.92 @0>
+ positions:
+  copy.92
+  tuple.523 {3}
+ uses:
+  while.278, operand 0 {3}
+ from instruction: %copy.92 = f64[] copy(%constant_1776_0)
+<562 copy.37 @0>
+ positions:
+  copy.37
+  tuple.523 {4}
+ uses:
+  while.278, operand 0 {4}
+ from instruction: %copy.37 = pred[] copy(%constant_218_0)
+<563 loop_broadcast_fusion @0>
+ positions:
+  loop_broadcast_fusion
+  tuple.523 {5}
+ uses:
+  while.278, operand 0 {5}
+ from instruction: %loop_broadcast_fusion = c128[64,64]{1,0} fusion(), kind=kLoop, calls=%fused_broadcast, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)" stack_frame_id=1630}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<564 copy.39 @0>
+ positions:
+  copy.39
+  tuple.523 {6}
+ uses:
+  while.278, operand 0 {6}
+ from instruction: %copy.39 = s64[] copy(%copy.90)
+<565 copy.40 @0>
+ positions:
+  copy.40
+  tuple.523 {7}
+ uses:
+  while.278, operand 0 {7}
+ from instruction: %copy.40 = s64[] copy(%copy.90)
+<566 copy.41 @0>
+ positions:
+  copy.41
+  tuple.523 {8}
+ uses:
+  while.278, operand 0 {8}
+ from instruction: %copy.41 = s64[] copy(%copy.90)
+<567 loop_broadcast_fusion.1 @0>
+ positions:
+  loop_broadcast_fusion.1
+  tuple.523 {9}
+ uses:
+  while.278, operand 0 {9}
+ from instruction: %loop_broadcast_fusion.1 = f64[160]{0} fusion(), kind=kLoop, calls=%fused_broadcast.1, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/broadcast_in_dim" stack_frame_id=1693}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<568 copy.43 @0>
+ positions:
+  copy.43
+  tuple.523 {10}
+ uses:
+  while.278, operand 0 {10}
+ from instruction: %copy.43 = s64[] copy(%copy.90)
+<569 tuple.523{} @0>
+ positions:
+  tuple.523 {}
+ uses:
+  while.278, operand 0 {}
+ from instruction: %tuple.523 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) tuple(%copy.90, %get-tuple-element.1684, %copy.91, %copy.92, %copy.37, /*index=5*/%loop_broadcast_fusion, %copy.39, %copy.40, %copy.41, %loop_broadcast_fusion.1, /*index=10*/%copy.43)
+<570 loop_not_select_fusion{} @0>
+ positions:
+  loop_not_select_fusion {}
+ uses:
+  get-tuple-element.1640, operand 0 {}
+  get-tuple-element.1641, operand 0 {}
+ from instruction: %loop_not_select_fusion = (pred[], s32[]) fusion(%while.48.0), kind=kLoop, calls=%fused_not_select, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/not" stack_frame_id=2425}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<571 loop_not_select_fusion{0} @0>
+ positions:
+  loop_not_select_fusion {0}
+  get-tuple-element.1640
+ uses:
+  cond.185, operand 0
+ from instruction: %loop_not_select_fusion = (pred[], s32[]) fusion(%while.48.0), kind=kLoop, calls=%fused_not_select, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/not" stack_frame_id=2425}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<572 loop_not_select_fusion{1} @0>
+ positions:
+  loop_not_select_fusion {1}
+  Arg_.42 {0}
+  get-tuple-element.8.0
+  tuple.93.0 {0}
+  get-tuple-element.1641
+ uses:
+  pure_callback.48, operand 0
+  pure_callback.58, operand 9
+  cond.185, operand 1 {0}
+ from instruction: %loop_not_select_fusion = (pred[], s32[]) fusion(%while.48.0), kind=kLoop, calls=%fused_not_select, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/not" stack_frame_id=2425}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<573 tuple.93.0{} @0>
+ positions:
+  tuple.93.0 {}
+  Arg_.42 {}
+ uses:
+  cond.185, operand 1 {}
+  get-tuple-element.8.0, operand 0 {}
+ from instruction: %tuple.93.0 = (s32[]) tuple(%get-tuple-element.1641)
+<574 cond.184.0{} @0>
+ positions:
+  cond.184.0 {}
+  arg_tuple.17 {}
+ uses:
+  cond.185, operand 2 {}
+  get-tuple-element.1720, operand 0 {}
+  get-tuple-element.1721, operand 0 {}
+  get-tuple-element.1722, operand 0 {}
+  get-tuple-element.1723, operand 0 {}
+ from instruction: %cond.184.0 = (c128[1,64,64]{2,1,0}, s64[], s64[], s64[]) tuple(%bitcast.10.0, %while.50.0, %while.51.0, %get-tuple-element.1359.0), metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond" stack_frame_id=2436}
+<575 tuple.528{} @0>
+ positions:
+  tuple.528 {}
+ uses:
+  get-tuple-element.1740, operand 0 {}
+  get-tuple-element.1741, operand 0 {}
+  get-tuple-element.1742, operand 0 {}
+  get-tuple-element.1743, operand 0 {}
+  get-tuple-element.1744, operand 0 {}
+  get-tuple-element.1745, operand 0 {}
+  get-tuple-element.1746, operand 0 {}
+  get-tuple-element.1747, operand 0 {}
+  get-tuple-element.1748, operand 0 {}
+  get-tuple-element.1749, operand 0 {}
+  get-tuple-element.1750, operand 0 {}
+  get-tuple-element.1751, operand 0 {}
+  get-tuple-element.1752, operand 0 {}
+  get-tuple-element.1753, operand 0 {}
+  get-tuple-element.1754, operand 0 {}
+  get-tuple-element.1755, operand 0 {}
+ from instruction: %tuple.528 = (f64[160]{0}, f64[], f64[], f64[], f64[], /*index=5*/f64[], pred[], pred[], pred[], s64[], /*index=10*/pred[], pred[], c128[1,64,64]{2,1,0}, s64[], s64[], /*index=15*/s64[]) tuple(%constant_1763_0, %constant_188_0, %constant_188_0, %constant_187_0, %constant_186_0, /*index=5*/%constant_185_0, %constant_237_0, %constant_218_0, %constant_218_0, %constant_238_0, /*index=10*/%constant_237_0, %constant_218_0, %get-tuple-element.1736, %get-tuple-element.1737, %get-tuple-element.1738, /*index=15*/%get-tuple-element.1739)
+<576 copy.93 @0>
+ positions:
+  copy.93
+  tuple.529 {0}
+ uses:
+  tuple.529, operand 0
+ from instruction: %copy.93 = f64[160]{0} copy(%get-tuple-element.1740)
+<577 copy.94 @0>
+ positions:
+  copy.94
+  tuple.529 {1}
+ uses:
+  tuple.529, operand 1
+ from instruction: %copy.94 = f64[] copy(%get-tuple-element.1741)
+<578 copy.95 @0>
+ positions:
+  copy.95
+  tuple.529 {2}
+ uses:
+  tuple.529, operand 2
+ from instruction: %copy.95 = f64[] copy(%get-tuple-element.1742)
+<579 copy.96 @0>
+ positions:
+  copy.96
+  tuple.529 {3}
+ uses:
+  tuple.529, operand 3
+ from instruction: %copy.96 = f64[] copy(%get-tuple-element.1743)
+<580 copy.97 @0>
+ positions:
+  copy.97
+  tuple.529 {4}
+ uses:
+  tuple.529, operand 4
+ from instruction: %copy.97 = f64[] copy(%get-tuple-element.1744)
+<581 copy.98 @0>
+ positions:
+  copy.98
+  tuple.529 {5}
+ uses:
+  tuple.529, operand 5
+ from instruction: %copy.98 = f64[] copy(%get-tuple-element.1745)
+<582 copy.99 @0>
+ positions:
+  copy.99
+  tuple.529 {6}
+ uses:
+  tuple.529, operand 6
+ from instruction: %copy.99 = pred[] copy(%get-tuple-element.1746)
+<583 copy.100 @0>
+ positions:
+  copy.100
+  tuple.529 {7}
+ uses:
+  tuple.529, operand 7
+ from instruction: %copy.100 = pred[] copy(%get-tuple-element.1747)
+<584 copy.101 @0>
+ positions:
+  copy.101
+  tuple.529 {8}
+ uses:
+  tuple.529, operand 8
+ from instruction: %copy.101 = pred[] copy(%get-tuple-element.1748)
+<585 copy.102 @0>
+ positions:
+  copy.102
+  tuple.529 {9}
+ uses:
+  tuple.529, operand 9
+ from instruction: %copy.102 = s64[] copy(%get-tuple-element.1749)
+<586 copy.103 @0>
+ positions:
+  copy.103
+  tuple.529 {10}
+ uses:
+  tuple.529, operand 10
+ from instruction: %copy.103 = pred[] copy(%get-tuple-element.1750)
+<587 copy.104 @0>
+ positions:
+  copy.104
+  tuple.529 {11}
+ uses:
+  tuple.529, operand 11
+ from instruction: %copy.104 = pred[] copy(%get-tuple-element.1751)
+<588 tuple.529{} @0>
+ positions:
+  tuple.529 {}
+ uses:
+  (none)
+ from instruction: %tuple.529 = (f64[160]{0}, f64[], f64[], f64[], f64[], /*index=5*/f64[], pred[], pred[], pred[], s64[], /*index=10*/pred[], pred[], c128[1,64,64]{2,1,0}, s64[], s64[], /*index=15*/s64[]) tuple(%copy.93, %copy.94, %copy.95, %copy.96, %copy.97, /*index=5*/%copy.98, %copy.99, %copy.100, %copy.101, %copy.102, /*index=10*/%copy.103, %copy.104, %get-tuple-element.1752, %get-tuple-element.1753, %get-tuple-element.1754, /*index=15*/%get-tuple-element.1755)
+<589 cond.177.clone{} (phi) @0>
+ positions:
+  cond.177.clone {}
+ uses:
+  get-tuple-element.1684, operand 0 {}
+ from instruction: %cond.177.clone = (c128[64,64]{1,0}) conditional(%input_reduce_fusion.3, %cond.176.0, %tuple.86.0), true_computation=%region_5.9, false_computation=%region_4.8, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(branched_error_if_impl)/cond" stack_frame_id=1684}
+<590 cond.177.clone{0} (phi) @0>
+ positions:
+  cond.177.clone {0}
+  get-tuple-element.1684
+  tuple.523 {1}
+ uses:
+  while.278, operand 0 {1}
+ from instruction: %cond.177.clone = (c128[64,64]{1,0}) conditional(%input_reduce_fusion.3, %cond.176.0, %tuple.86.0), true_computation=%region_5.9, false_computation=%region_4.8, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(branched_error_if_impl)/cond" stack_frame_id=1684}
+<591 arg_tuple.25{} (phi) @0>
+ positions:
+  arg_tuple.25 {}
+ uses:
+  get-tuple-element.1373.0, operand 0 {}
+  get-tuple-element.1372.0, operand 0 {}
+ from instruction: %arg_tuple.25 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<592 arg_tuple.26{} (phi) @0>
+ positions:
+  arg_tuple.26 {}
+ uses:
+  get-tuple-element.1704, operand 0 {}
+  get-tuple-element.1703, operand 0 {}
+  get-tuple-element.1702, operand 0 {}
+  get-tuple-element.1701, operand 0 {}
+  get-tuple-element.1700, operand 0 {}
+  get-tuple-element.1699, operand 0 {}
+  get-tuple-element.1698, operand 0 {}
+  get-tuple-element.1697, operand 0 {}
+  get-tuple-element.1696, operand 0 {}
+  get-tuple-element.1695, operand 0 {}
+  get-tuple-element.1694, operand 0 {}
+ from instruction: %arg_tuple.26 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<593 arg_tuple.41{} (phi) @0>
+ positions:
+  arg_tuple.41 {}
+ uses:
+  get-tuple-element.1598.0, operand 0 {}
+  get-tuple-element.1591.0, operand 0 {}
+ from instruction: %arg_tuple.41 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) parameter(0)
+<594 arg_tuple.42{} (phi) @0>
+ positions:
+  arg_tuple.42 {}
+ uses:
+  get-tuple-element.1662, operand 0 {}
+  get-tuple-element.1661, operand 0 {}
+  get-tuple-element.1653, operand 0 {}
+  get-tuple-element.1649, operand 0 {}
+  get-tuple-element.1657, operand 0 {}
+ from instruction: %arg_tuple.42 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) parameter(0)
+<595 arg_tuple.41{0} (phi) @0>
+ positions:
+  arg_tuple.41 {0}
+  get-tuple-element.1591.0
+ uses:
+  loop_and_fusion.2, operand 1
+ from instruction: %arg_tuple.41 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) parameter(0)
+<597 arg_tuple.41{2} (phi) @0>
+ positions:
+  arg_tuple.41 {2}
+ uses:
+  (none)
+ from instruction: %arg_tuple.41 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) parameter(0)
+<598 arg_tuple.41{3} (phi) @0>
+ positions:
+  arg_tuple.41 {3}
+ uses:
+  (none)
+ from instruction: %arg_tuple.41 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) parameter(0)
+<599 arg_tuple.41{4} (phi) @0>
+ positions:
+  arg_tuple.41 {4}
+ uses:
+  (none)
+ from instruction: %arg_tuple.41 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) parameter(0)
+<602 arg_tuple.42{0} (phi) @0>
+ positions:
+  arg_tuple.42 {0}
+  get-tuple-element.1649
+ uses:
+  loop_dynamic_update_slice_fusion.1, operand 4
+  loop_reduce_fusion, operand 3
+  loop_add_fusion.1, operand 0
+ from instruction: %arg_tuple.42 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) parameter(0)
+<604 arg_tuple.42{2} (phi) @0>
+ positions:
+  arg_tuple.42 {2}
+ uses:
+  (none)
+ from instruction: %arg_tuple.42 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) parameter(0)
+<605 arg_tuple.42{3} (phi) @0>
+ positions:
+  arg_tuple.42 {3}
+ uses:
+  (none)
+ from instruction: %arg_tuple.42 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) parameter(0)
+<606 arg_tuple.42{4} (phi) @0>
+ positions:
+  arg_tuple.42 {4}
+  get-tuple-element.1653
+ uses:
+  loop_dynamic_update_slice_fusion.1, operand 0
+  loop_reduce_fusion, operand 0
+ from instruction: %arg_tuple.42 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) parameter(0)
+<609 while.286{} (phi) @0>
+ positions:
+  while.286 {}
+ uses:
+  while.273.0, operand 0 {}
+  while.276.0, operand 0 {}
+  while.272.0, operand 0 {}
+ from instruction: %while.286 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) while(%tuple.515), condition=%region_92.107.clone.clone.clone.clone, body=%region_14.106.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while" stack_frame_id=1808}
+<610 while.286{0} (phi) @0>
+ positions:
+  while.286 {0}
+ uses:
+  (none)
+ from instruction: %while.286 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) while(%tuple.515), condition=%region_92.107.clone.clone.clone.clone, body=%region_14.106.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while" stack_frame_id=1808}
+<612 while.286{2} (phi) @0>
+ positions:
+  while.286 {2}
+  while.273.0
+ uses:
+  input_transpose_fusion.1, operand 1
+  loop_multiply_fusion, operand 2
+  input_reduce_fusion.1, operand 0
+ from instruction: %while.286 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) while(%tuple.515), condition=%region_92.107.clone.clone.clone.clone, body=%region_14.106.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while" stack_frame_id=1808}
+<613 while.286{3} (phi) @0>
+ positions:
+  while.286 {3}
+  while.276.0
+ uses:
+  loop_select_fusion.1, operand 0
+ from instruction: %while.286 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) while(%tuple.515), condition=%region_92.107.clone.clone.clone.clone, body=%region_14.106.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while" stack_frame_id=1808}
+<614 while.286{4} (phi) @0>
+ positions:
+  while.286 {4}
+  while.272.0
+ uses:
+  loop_reduce_fusion.1, operand 0
+ from instruction: %while.286 = (s64[], s64[], c128[64,64]{0,1}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{0,1}, f64[]) while(%tuple.515), condition=%region_92.107.clone.clone.clone.clone, body=%region_14.106.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while" stack_frame_id=1808}
+<617 arg_tuple.38{} (phi) @0>
+ positions:
+  arg_tuple.38 {}
+ uses:
+  get-tuple-element.1537.0, operand 0 {}
+  get-tuple-element.1539.0, operand 0 {}
+  get-tuple-element.1547.0, operand 0 {}
+  get-tuple-element.1540.0, operand 0 {}
+ from instruction: %arg_tuple.38 = (s64[], s64[], f64[160]{0}, s64[], f64[], /*index=5*/pred[]) parameter(0)
+<618 arg_tuple.39{} (phi) @0>
+ positions:
+  arg_tuple.39 {}
+ uses:
+  get-tuple-element.1680, operand 0 {}
+  get-tuple-element.1679, operand 0 {}
+  get-tuple-element.1678, operand 0 {}
+  get-tuple-element.1671, operand 0 {}
+  get-tuple-element.1676, operand 0 {}
+  get-tuple-element.1669, operand 0 {}
+ from instruction: %arg_tuple.39 = (s64[], s64[], f64[160]{0}, s64[], f64[], /*index=5*/pred[]) parameter(0)
+<619 arg_tuple.38{0} (phi) @0>
+ positions:
+  arg_tuple.38 {0}
+  get-tuple-element.1540.0
+ uses:
+  loop_and_fusion.1, operand 3
+ from instruction: %arg_tuple.38 = (s64[], s64[], f64[160]{0}, s64[], f64[], /*index=5*/pred[]) parameter(0)
+<621 arg_tuple.38{2} (phi) @0>
+ positions:
+  arg_tuple.38 {2}
+ uses:
+  (none)
+ from instruction: %arg_tuple.38 = (s64[], s64[], f64[160]{0}, s64[], f64[], /*index=5*/pred[]) parameter(0)
+<625 arg_tuple.39{0} (phi) @0>
+ positions:
+  arg_tuple.39 {0}
+  get-tuple-element.1669
+ uses:
+  loop_add_fusion, operand 0
+  loop_dynamic_update_slice_fusion, operand 3
+ from instruction: %arg_tuple.39 = (s64[], s64[], f64[160]{0}, s64[], f64[], /*index=5*/pred[]) parameter(0)
+<627 arg_tuple.39{2} (phi) @0>
+ positions:
+  arg_tuple.39 {2}
+  get-tuple-element.1671
+ uses:
+  loop_dynamic_update_slice_fusion, operand 0
+ from instruction: %arg_tuple.39 = (s64[], s64[], f64[160]{0}, s64[], f64[], /*index=5*/pred[]) parameter(0)
+<631 while.285{} (phi) @0>
+ positions:
+  while.285 {}
+ uses:
+  get-tuple-element.1569.0, operand 0 {}
+  get-tuple-element.1570.0, operand 0 {}
+  get-tuple-element.1573.0, operand 0 {}
+  get-tuple-element.1714, operand 0 {}
+ from instruction: %while.285 = (s64[], s64[], f64[160]{0}, s64[], f64[], /*index=5*/pred[]) while(%tuple.518), condition=%region_96.120.sunk.clone.clone.clone, body=%region_94.119.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=2299}
+<632 while.285{0} (phi) @0>
+ positions:
+  while.285 {0}
+  get-tuple-element.1569.0
+ uses:
+  wrapped_add, operand 1
+  wrapped_add.1, operand 1
+ from instruction: %while.285 = (s64[], s64[], f64[160]{0}, s64[], f64[], /*index=5*/pred[]) while(%tuple.518), condition=%region_96.120.sunk.clone.clone.clone, body=%region_94.119.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=2299}
+<634 while.285{2} (phi) @0>
+ positions:
+  while.285 {2}
+  get-tuple-element.1714
+  tuple.525 {9}
+ uses:
+  tuple.525, operand 9
+ from instruction: %while.285 = (s64[], s64[], f64[160]{0}, s64[], f64[], /*index=5*/pred[]) while(%tuple.518), condition=%region_96.120.sunk.clone.clone.clone, body=%region_94.119.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=2299}
+<638 arg_tuple.25{0} (phi) @0>
+ positions:
+  arg_tuple.25 {0}
+  get-tuple-element.1373.0
+ uses:
+  loop_and_fusion, operand 0
+ from instruction: %arg_tuple.25 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<639 arg_tuple.25{1} (phi) @0>
+ positions:
+  arg_tuple.25 {1}
+ uses:
+  (none)
+ from instruction: %arg_tuple.25 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<640 arg_tuple.25{2} (phi) @0>
+ positions:
+  arg_tuple.25 {2}
+  get-tuple-element.1372.0
+ uses:
+  loop_and_fusion, operand 1
+ from instruction: %arg_tuple.25 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<641 arg_tuple.25{3} (phi) @0>
+ positions:
+  arg_tuple.25 {3}
+ uses:
+  (none)
+ from instruction: %arg_tuple.25 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<642 arg_tuple.25{4} (phi) @0>
+ positions:
+  arg_tuple.25 {4}
+ uses:
+  (none)
+ from instruction: %arg_tuple.25 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<643 arg_tuple.25{5} (phi) @0>
+ positions:
+  arg_tuple.25 {5}
+ uses:
+  (none)
+ from instruction: %arg_tuple.25 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<644 arg_tuple.25{6} (phi) @0>
+ positions:
+  arg_tuple.25 {6}
+ uses:
+  (none)
+ from instruction: %arg_tuple.25 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<645 arg_tuple.25{7} (phi) @0>
+ positions:
+  arg_tuple.25 {7}
+ uses:
+  (none)
+ from instruction: %arg_tuple.25 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<646 arg_tuple.25{8} (phi) @0>
+ positions:
+  arg_tuple.25 {8}
+ uses:
+  (none)
+ from instruction: %arg_tuple.25 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<647 arg_tuple.25{9} (phi) @0>
+ positions:
+  arg_tuple.25 {9}
+ uses:
+  (none)
+ from instruction: %arg_tuple.25 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<648 arg_tuple.25{10} (phi) @0>
+ positions:
+  arg_tuple.25 {10}
+ uses:
+  (none)
+ from instruction: %arg_tuple.25 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<649 arg_tuple.26{0} (phi) @0>
+ positions:
+  arg_tuple.26 {0}
+  get-tuple-element.1694
+ uses:
+  loop_add_fusion.4, operand 0
+ from instruction: %arg_tuple.26 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<650 arg_tuple.26{1} (phi) @0>
+ positions:
+  arg_tuple.26 {1}
+  get-tuple-element.1695
+ uses:
+  wrapped_transpose, operand 0
+  input_transpose_fusion.2, operand 0
+  input_transpose_fusion.1, operand 0
+ from instruction: %arg_tuple.26 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<651 arg_tuple.26{2} (phi) @0>
+ positions:
+  arg_tuple.26 {2}
+  get-tuple-element.1696
+ uses:
+  wrapped_subtract, operand 1
+  loop_compare_minimum_select_fusion, operand 2
+ from instruction: %arg_tuple.26 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<652 arg_tuple.26{3} (phi) @0>
+ positions:
+  arg_tuple.26 {3}
+  get-tuple-element.1697
+ uses:
+  copy.47, operand 0
+ from instruction: %arg_tuple.26 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<653 arg_tuple.26{4} (phi) @0>
+ positions:
+  arg_tuple.26 {4}
+  get-tuple-element.1698
+ uses:
+  loop_select_fusion.2, operand 0
+  loop_select_fusion, operand 1
+  loop_select_fusion.3, operand 1
+ from instruction: %arg_tuple.26 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<654 arg_tuple.26{5} (phi) @0>
+ positions:
+  arg_tuple.26 {5}
+  get-tuple-element.1699
+ uses:
+  loop_select_fusion.1, operand 1
+  loop_select_fusion, operand 0
+ from instruction: %arg_tuple.26 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<655 arg_tuple.26{6} (phi) @0>
+ positions:
+  arg_tuple.26 {6}
+  get-tuple-element.1700
+ uses:
+  loop_add_fusion.3, operand 0
+ from instruction: %arg_tuple.26 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<656 arg_tuple.26{7} (phi) @0>
+ positions:
+  arg_tuple.26 {7}
+  get-tuple-element.1701
+ uses:
+  loop_add_fusion.2, operand 0
+ from instruction: %arg_tuple.26 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<657 arg_tuple.26{8} (phi) @0>
+ positions:
+  arg_tuple.26 {8}
+  while.285 {1}
+  get-tuple-element.1570.0
+  tuple.518 {1}
+  get-tuple-element.1702
+  arg_tuple.38 {1}
+  get-tuple-element.1547.0
+  arg_tuple.39 {1}
+  get-tuple-element.1676
+  tuple.520 {1}
+ uses:
+  wrapped_add, operand 0
+  while.285, operand 0 {1}
+  loop_and_fusion.1, operand 4
+  tuple.520, operand 1
+  loop_dynamic_update_slice_fusion, operand 2
+ from instruction: %arg_tuple.26 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<658 arg_tuple.26{9} (phi) @0>
+ positions:
+  arg_tuple.26 {9}
+  tuple.518 {2}
+  get-tuple-element.1703
+ uses:
+  while.285, operand 0 {2}
+ from instruction: %arg_tuple.26 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<659 arg_tuple.26{10} (phi) @0>
+ positions:
+  arg_tuple.26 {10}
+  while.285 {3}
+  get-tuple-element.1573.0
+  tuple.518 {3}
+  get-tuple-element.1704
+  arg_tuple.38 {3}
+  arg_tuple.39 {3}
+  get-tuple-element.1678
+  tuple.520 {3}
+ uses:
+  wrapped_add.1, operand 0
+  while.285, operand 0 {3}
+  tuple.520, operand 3
+  loop_dynamic_update_slice_fusion, operand 4
+ from instruction: %arg_tuple.26 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) parameter(0)
+<660 while.278{} (phi) @0>
+ positions:
+  while.278 {}
+ uses:
+  get-tuple-element.1359.0, operand 0 {}
+  while.49.0, operand 0 {}
+  while.48.0, operand 0 {}
+  while.51.0, operand 0 {}
+  while.50.0, operand 0 {}
+ from instruction: %while.278 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) while(%tuple.523), condition=%region_97.122.sunk.clone.sunk.clone.clone.clone.clone, body=%region_12.121.sunk.clone.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=1749}
+<661 while.278{0} (phi) @0>
+ positions:
+  while.278 {0}
+  arg_tuple.17 {3}
+  get-tuple-element.1723
+  cond.184.0 {3}
+  get-tuple-element.1359.0
+ uses:
+  copy.73, operand 0
+  cond.185, operand 2 {3}
+ from instruction: %while.278 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) while(%tuple.523), condition=%region_97.122.sunk.clone.sunk.clone.clone.clone.clone, body=%region_12.121.sunk.clone.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=1749}
+<662 while.278{1} (phi) @0>
+ positions:
+  while.278 {1}
+  arg_tuple.17 {0}
+  get-tuple-element.1720
+  cond.184.0 {0}
+  while.49.0
+  bitcast.10.0
+ uses:
+  copy.70, operand 0
+  cond.185, operand 2 {0}
+  bitcast.10.0, operand 0
+ from instruction: %while.278 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) while(%tuple.523), condition=%region_97.122.sunk.clone.sunk.clone.clone.clone.clone, body=%region_12.121.sunk.clone.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=1749}
+<663 while.278{2} (phi) @0>
+ positions:
+  while.278 {2}
+  while.48.0
+ uses:
+  loop_not_select_fusion, operand 0
+ from instruction: %while.278 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) while(%tuple.523), condition=%region_97.122.sunk.clone.sunk.clone.clone.clone.clone, body=%region_12.121.sunk.clone.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=1749}
+<664 while.278{3} (phi) @0>
+ positions:
+  while.278 {3}
+ uses:
+  (none)
+ from instruction: %while.278 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) while(%tuple.523), condition=%region_97.122.sunk.clone.sunk.clone.clone.clone.clone, body=%region_12.121.sunk.clone.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=1749}
+<665 while.278{4} (phi) @0>
+ positions:
+  while.278 {4}
+ uses:
+  (none)
+ from instruction: %while.278 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) while(%tuple.523), condition=%region_97.122.sunk.clone.sunk.clone.clone.clone.clone, body=%region_12.121.sunk.clone.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=1749}
+<666 while.278{5} (phi) @0>
+ positions:
+  while.278 {5}
+ uses:
+  (none)
+ from instruction: %while.278 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) while(%tuple.523), condition=%region_97.122.sunk.clone.sunk.clone.clone.clone.clone, body=%region_12.121.sunk.clone.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=1749}
+<667 while.278{6} (phi) @0>
+ positions:
+  while.278 {6}
+  arg_tuple.17 {1}
+  get-tuple-element.1721
+  cond.184.0 {1}
+  while.50.0
+ uses:
+  copy.71, operand 0
+  cond.185, operand 2 {1}
+ from instruction: %while.278 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) while(%tuple.523), condition=%region_97.122.sunk.clone.sunk.clone.clone.clone.clone, body=%region_12.121.sunk.clone.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=1749}
+<668 while.278{7} (phi) @0>
+ positions:
+  while.278 {7}
+  arg_tuple.17 {2}
+  get-tuple-element.1722
+  cond.184.0 {2}
+  while.51.0
+ uses:
+  copy.72, operand 0
+  cond.185, operand 2 {2}
+ from instruction: %while.278 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) while(%tuple.523), condition=%region_97.122.sunk.clone.sunk.clone.clone.clone.clone, body=%region_12.121.sunk.clone.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=1749}
+<669 while.278{8} (phi) @0>
+ positions:
+  while.278 {8}
+ uses:
+  (none)
+ from instruction: %while.278 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) while(%tuple.523), condition=%region_97.122.sunk.clone.sunk.clone.clone.clone.clone, body=%region_12.121.sunk.clone.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=1749}
+<670 while.278{9} (phi) @0>
+ positions:
+  while.278 {9}
+ uses:
+  (none)
+ from instruction: %while.278 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) while(%tuple.523), condition=%region_97.122.sunk.clone.sunk.clone.clone.clone.clone, body=%region_12.121.sunk.clone.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=1749}
+<671 while.278{10} (phi) @0>
+ positions:
+  while.278 {10}
+ uses:
+  (none)
+ from instruction: %while.278 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[160]{0}, /*index=10*/s64[]) while(%tuple.523), condition=%region_97.122.sunk.clone.sunk.clone.clone.clone.clone, body=%region_12.121.sunk.clone.sunk.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=1749}
+<672 cond.185{} (phi) @0>
+ positions:
+  cond.185 {}
+ uses:
+  get-tuple-element.1736, operand 0 {}
+  get-tuple-element.1738, operand 0 {}
+  get-tuple-element.1739, operand 0 {}
+  get-tuple-element.1737, operand 0 {}
+ from instruction: %cond.185 = (c128[1,64,64]{2,1,0}, s64[], s64[], s64[]) conditional(%get-tuple-element.1640, %tuple.93.0, %cond.184.0), true_computation=%region_103.129, false_computation=%region_102.128, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond" stack_frame_id=2436}
+<673 cond.185{0} (phi) @0>
+ positions:
+  cond.185 {0}
+  get-tuple-element.1736
+  tuple.528 {12}
+  get-tuple-element.1752
+  tuple.529 {12}
+ uses:
+  tuple.529, operand 12
+ from instruction: %cond.185 = (c128[1,64,64]{2,1,0}, s64[], s64[], s64[]) conditional(%get-tuple-element.1640, %tuple.93.0, %cond.184.0), true_computation=%region_103.129, false_computation=%region_102.128, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond" stack_frame_id=2436}
+<674 cond.185{1} (phi) @0>
+ positions:
+  cond.185 {1}
+  get-tuple-element.1738
+  tuple.528 {14}
+  get-tuple-element.1754
+  tuple.529 {14}
+ uses:
+  tuple.529, operand 14
+ from instruction: %cond.185 = (c128[1,64,64]{2,1,0}, s64[], s64[], s64[]) conditional(%get-tuple-element.1640, %tuple.93.0, %cond.184.0), true_computation=%region_103.129, false_computation=%region_102.128, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond" stack_frame_id=2436}
+<675 cond.185{2} (phi) @0>
+ positions:
+  cond.185 {2}
+  get-tuple-element.1739
+  tuple.528 {15}
+  get-tuple-element.1755
+  tuple.529 {15}
+ uses:
+  tuple.529, operand 15
+ from instruction: %cond.185 = (c128[1,64,64]{2,1,0}, s64[], s64[], s64[]) conditional(%get-tuple-element.1640, %tuple.93.0, %cond.184.0), true_computation=%region_103.129, false_computation=%region_102.128, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond" stack_frame_id=2436}
+<676 cond.185{3} (phi) @0>
+ positions:
+  cond.185 {3}
+  get-tuple-element.1737
+  tuple.528 {13}
+  get-tuple-element.1753
+  tuple.529 {13}
+ uses:
+  tuple.529, operand 13
+ from instruction: %cond.185 = (c128[1,64,64]{2,1,0}, s64[], s64[], s64[]) conditional(%get-tuple-element.1640, %tuple.93.0, %cond.184.0), true_computation=%region_103.129, false_computation=%region_102.128, metadata={op_name="jit(f)/jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond" stack_frame_id=2436}

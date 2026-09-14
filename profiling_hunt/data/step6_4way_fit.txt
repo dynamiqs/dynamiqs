@@ -1,0 +1,40 @@
+
+save=False grad=none  n=60  R^2=1.0000000  mean(peak)=615.96 MiB
+   a0 const     =        63013.2   contribution =            0 B  (  0.0000% of span)
+   a1 R         =        7.06368   contribution =    3.555e+08 B  ( 28.9521% of span)
+   a2 ntsave    =        23.4224   contribution =    2.319e+04 B  (  0.0019% of span)
+   a3 S         =       -319.953   contribution =       -3,200 B  ( -0.0003% of span)
+   a4 R.ntsave  =    3.54511e-07   contribution =    2.373e+04 B  (  0.0019% of span)
+   a5 R.S       =              1   contribution =    8.724e+08 B  ( 71.0447% of span)
+   a6 ntsave.S  =       0.451439   contribution =        6,302 B  (  0.0005% of span)
+   a7 R.ntsave.S =   -1.34193e-08   contribution =    -1.26e+04 B  ( -0.0010% of span)
+
+save=True grad=none  n=120  R^2=1.0000000  mean(peak)=7502.77 MiB
+   a0 const     =        38790.7   contribution =            0 B  (  0.0000% of span)
+   a1 R         =        3.00171   contribution =    2.012e+08 B  (  0.4503% of span)
+   a2 ntsave    =        20.5088   contribution =     2.03e+04 B  (  0.0000% of span)
+   a3 S         =        48.3012   contribution =          483 B  (  0.0000% of span)
+   a4 R.ntsave  =              3   contribution =    4.464e+10 B  ( 99.8878% of span)
+   a5 R.S       =   -8.35763e-06   contribution =       -7,850 B  ( -0.0000% of span)
+   a6 ntsave.S  =      -0.114593   contribution =       -1,600 B  ( -0.0000% of span)
+   a7 R.ntsave.S =    9.28717e-09   contribution =        1,940 B  (  0.0000% of span)
+
+save=False grad=Direct (ntsave>=230, past the transient)  n=56  R^2=1.0000000  mean(peak)=901.28 MiB
+   a0 const     =        81314.3   contribution =            0 B  (  0.0000% of span)
+   a1 R         =        9.00126   contribution =    5.663e+08 B  ( 24.3264% of span)
+   a2 ntsave    =         25.113   contribution =    1.934e+04 B  (  0.0008% of span)
+   a3 S         =       -1386.05   contribution =   -1.386e+04 B  ( -0.0006% of span)
+   a4 R.ntsave  =    1.35392e-07   contribution =        8,955 B  (  0.0004% of span)
+   a5 R.S       =        2.00001   contribution =    1.762e+09 B  ( 75.6719% of span)
+   a6 ntsave.S  =       0.955012   contribution =    1.249e+04 B  (  0.0005% of span)
+   a7 R.ntsave.S =   -3.74399e-09   contribution =       -3,467 B  ( -0.0001% of span)
+
+save=True grad=Direct  n=123  R^2=1.0000000  mean(peak)=7420.24 MiB
+   a0 const     =        57797.6   contribution =            0 B  (  0.0000% of span)
+   a1 R         =        7.00156   contribution =    4.694e+08 B  (  1.0433% of span)
+   a2 ntsave    =        38.0824   contribution =     3.77e+04 B  (  0.0001% of span)
+   a3 S         =       -4.86527   contribution =       -48.65 B  ( -0.0000% of span)
+   a4 R.ntsave  =              3   contribution =    4.467e+10 B  ( 99.2796% of span)
+   a5 R.S       =       0.999997   contribution =    9.393e+08 B  (  2.0875% of span)
+   a6 ntsave.S  =      -0.800426   contribution =   -1.117e+04 B  ( -0.0000% of span)
+   a7 R.ntsave.S =    5.71129e-08   contribution =    1.193e+04 B  (  0.0000% of span)

@@ -1,0 +1,1 @@
+001: kCustomKernel [source | sink] input_concatenate_fusion grid: [2, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes

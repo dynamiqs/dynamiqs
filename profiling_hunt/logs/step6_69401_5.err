@@ -1,0 +1,314 @@
+W0911 15:32:57.200196 1773935 hlo_rematerialization.cc:3231] Can't reduce memory use below 40.73GiB (43729477586 bytes) by rematerialization; only reduced to 43.25GiB (46439339875 bytes), down from 43.25GiB (46439339875 bytes) originally
+W0911 15:33:08.031899 1773935 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 28.88GiB (rounded to 31004306688)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:33:08.032108 1773935 bfc_allocator.cc:525] ***********************************_________________________________________________________________
+Exception ignored in atexit callback: <function clean_up at 0x76f2ecc01580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 28.88GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+W0911 15:33:18.329252 1775050 hlo_rematerialization.cc:3231] Can't reduce memory use below 40.73GiB (43729477586 bytes) by rematerialization; only reduced to 43.25GiB (46439339875 bytes), down from 43.25GiB (46439339875 bytes) originally
+W0911 15:33:29.300314 1775050 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 28.88GiB (rounded to 31004305920)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:33:29.300585 1775050 bfc_allocator.cc:525] ***********************************_________________________________________________________________
+Exception ignored in atexit callback: <function clean_up at 0x7e9a7bc09580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 28.88GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+W0911 15:35:26.140901 1784479 hlo_rematerialization.cc:3231] Can't reduce memory use below 41.07GiB (44098575546 bytes) by rematerialization; only reduced to 63.88GiB (68585267635 bytes), down from 63.88GiB (68585267635 bytes) originally
+W0911 15:35:37.160180 1784479 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 42.62GiB (rounded to 45768258048)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:35:37.160385 1784479 bfc_allocator.cc:525] ***************************************************_________________________________________________
+Exception ignored in atexit callback: <function clean_up at 0x75111160d580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 42.62GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+W0911 15:35:47.450041 1785654 hlo_rematerialization.cc:3231] Can't reduce memory use below 41.07GiB (44098575546 bytes) by rematerialization; only reduced to 63.88GiB (68585267635 bytes), down from 63.88GiB (68585267635 bytes) originally
+W0911 15:35:58.438121 1785654 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 42.62GiB (rounded to 45768256768)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:35:58.438332 1785654 bfc_allocator.cc:525] ***************************************************_________________________________________________
+Exception ignored in atexit callback: <function clean_up at 0x76c187b05580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 42.62GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+W0911 15:37:56.931729 1798099 hlo_rematerialization.cc:3231] Can't reduce memory use below 41.41GiB (44467673506 bytes) by rematerialization; only reduced to 84.50GiB (90731195395 bytes), down from 84.50GiB (90731195395 bytes) originally
+W0911 15:38:07.781664 1798099 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 56.38GiB (rounded to 60532209152)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:38:07.781919 1798099 bfc_allocator.cc:525] *******************************************************************_________________________________
+Exception ignored in atexit callback: <function clean_up at 0x7b99189c5580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 56.38GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+W0911 15:38:17.824152 1799476 hlo_rematerialization.cc:3231] Can't reduce memory use below 41.41GiB (44467673506 bytes) by rematerialization; only reduced to 84.50GiB (90731195395 bytes), down from 84.50GiB (90731195395 bytes) originally
+W0911 15:38:28.802937 1799476 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 56.38GiB (rounded to 60532207872)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:38:28.803156 1799476 bfc_allocator.cc:525] *******************************************************************_________________________________
+Exception ignored in atexit callback: <function clean_up at 0x7da29f6f1580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 56.38GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+W0911 15:40:26.485803 1807436 hlo_rematerialization.cc:3231] Can't reduce memory use below 41.76GiB (44836771466 bytes) by rematerialization; only reduced to 105.12GiB (112877123155 bytes), down from 105.12GiB (112877123155 bytes) originally
+W0911 15:40:37.442499 1807436 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 70.12GiB (rounded to 75296160000)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:40:37.442728 1807436 bfc_allocator.cc:525] ************************************************************************************________________
+Exception ignored in atexit callback: <function clean_up at 0x74e417ef1580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 70.12GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+W0911 15:40:47.616103 1809647 hlo_rematerialization.cc:3231] Can't reduce memory use below 41.76GiB (44836771466 bytes) by rematerialization; only reduced to 105.12GiB (112877123155 bytes), down from 105.12GiB (112877123155 bytes) originally
+W0911 15:40:58.492753 1809647 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 70.12GiB (rounded to 75296158720)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:40:58.493000 1809647 bfc_allocator.cc:525] ************************************************************************************________________
+Exception ignored in atexit callback: <function clean_up at 0x76d006ffd580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 70.12GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+W0911 15:42:57.538525 1820293 hlo_rematerialization.cc:3231] Can't reduce memory use below 42.10GiB (45205869426 bytes) by rematerialization; only reduced to 125.75GiB (135023050915 bytes), down from 125.75GiB (135023050915 bytes) originally
+W0911 15:43:08.427638 1820293 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 83.88GiB (rounded to 90060110848)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:43:08.427845 1820293 bfc_allocator.cc:525] ****************************************************************************************************
+Exception ignored in atexit callback: <function clean_up at 0x7de9c7b0d580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 83.88GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+W0911 15:43:18.456637 1821618 hlo_rematerialization.cc:3231] Can't reduce memory use below 42.10GiB (45205869426 bytes) by rematerialization; only reduced to 125.75GiB (135023050915 bytes), down from 125.75GiB (135023050915 bytes) originally
+W0911 15:43:29.583383 1821618 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 83.88GiB (rounded to 90060109568)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:43:29.583648 1821618 bfc_allocator.cc:525] ****************************************************************************************************
+Exception ignored in atexit callback: <function clean_up at 0x741c6c1fd580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 83.88GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+E0911 15:45:28.366897 1831163 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (52412166581) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 15:45:28.396033 1831163 hlo_rematerialization.cc:3231] Can't reduce memory use below 48.75GiB (52344920365 bytes) by rematerialization; only reduced to 146.38GiB (157168978675 bytes), down from 146.38GiB (157168978675 bytes) originally
+W0911 15:45:39.416140 1831163 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 48.75GiB (rounded to 52344913920)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:45:39.416342 1831163 bfc_allocator.cc:525] *___________________________________________________________________________________________________
+Exception ignored in atexit callback: <function clean_up at 0x7ae6ef105580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 48.75GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+E0911 15:45:49.450713 1832809 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (52412166581) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 15:45:49.479449 1832809 hlo_rematerialization.cc:3231] Can't reduce memory use below 48.75GiB (52344920365 bytes) by rematerialization; only reduced to 146.38GiB (157168978675 bytes), down from 146.38GiB (157168978675 bytes) originally
+W0911 15:46:00.387514 1832809 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 48.75GiB (rounded to 52344913920)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:46:00.387700 1832809 bfc_allocator.cc:525] *___________________________________________________________________________________________________
+Exception ignored in atexit callback: <function clean_up at 0x703266705580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 48.75GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+W0911 15:47:35.603718 1841445 hlo_rematerialization.cc:3231] Can't reduce memory use below 40.75GiB (43752184335 bytes) by rematerialization; only reduced to 41.75GiB (44828742979 bytes), down from 41.75GiB (44828742979 bytes) originally
+W0911 15:47:46.727136 1842310 hlo_rematerialization.cc:3231] Can't reduce memory use below 40.75GiB (43752184335 bytes) by rematerialization; only reduced to 41.75GiB (44828742979 bytes), down from 41.75GiB (44828742979 bytes) originally
+E0911 15:47:58.332646 1843025 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (59794143381) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 15:47:58.361678 1843025 hlo_rematerialization.cc:3231] Can't reduce memory use below 55.62GiB (59726896285 bytes) by rematerialization; only reduced to 167.00GiB (179314906435 bytes), down from 167.00GiB (179314906435 bytes) originally
+W0911 15:48:09.227002 1843025 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 55.62GiB (rounded to 59726888960)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:48:09.227198 1843025 bfc_allocator.cc:525] *___________________________________________________________________________________________________
+Exception ignored in atexit callback: <function clean_up at 0x75cc59d01580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 55.62GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+E0911 15:48:19.294871 1844177 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (59794143381) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 15:48:19.323625 1844177 hlo_rematerialization.cc:3231] Can't reduce memory use below 55.62GiB (59726896285 bytes) by rematerialization; only reduced to 167.00GiB (179314906435 bytes), down from 167.00GiB (179314906435 bytes) originally
+W0911 15:48:30.284753 1844177 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 55.62GiB (rounded to 59726888960)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:48:30.284951 1844177 bfc_allocator.cc:525] *___________________________________________________________________________________________________
+Exception ignored in atexit callback: <function clean_up at 0x7f31703c1580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 55.62GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+W0911 15:50:05.379936 1850847 hlo_rematerialization.cc:3231] Can't reduce memory use below 40.83GiB (43844458231 bytes) by rematerialization; only reduced to 46.91GiB (50365226899 bytes), down from 46.91GiB (50365226899 bytes) originally
+W0911 15:50:16.335959 1850847 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 31.28GiB (rounded to 33588004352)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:50:16.336169 1850847 bfc_allocator.cc:525] **************************************______________________________________________________________
+Exception ignored in atexit callback: <function clean_up at 0x7a79ac305580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 31.28GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+W0911 15:50:25.993650 1851675 hlo_rematerialization.cc:3231] Can't reduce memory use below 40.83GiB (43844458231 bytes) by rematerialization; only reduced to 46.91GiB (50365226899 bytes), down from 46.91GiB (50365226899 bytes) originally
+W0911 15:50:36.961757 1851675 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 31.28GiB (rounded to 33588004096)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:50:36.961983 1851675 bfc_allocator.cc:525] **************************************______________________________________________________________
+Exception ignored in atexit callback: <function clean_up at 0x7a3270ed9580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 31.28GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+E0911 15:50:46.775988 1852164 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (67176120181) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 15:50:46.804931 1852164 hlo_rematerialization.cc:3231] Can't reduce memory use below 62.50GiB (67108872205 bytes) by rematerialization; only reduced to 187.62GiB (201460834195 bytes), down from 187.62GiB (201460834195 bytes) originally
+W0911 15:50:57.837030 1852164 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 62.50GiB (rounded to 67108864000)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:50:57.837235 1852164 bfc_allocator.cc:525] *___________________________________________________________________________________________________
+Exception ignored in atexit callback: <function clean_up at 0x7e14bd601580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 62.50GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+E0911 15:51:07.705439 1852643 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (67176120181) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 15:51:07.734214 1852643 hlo_rematerialization.cc:3231] Can't reduce memory use below 62.50GiB (67108872205 bytes) by rematerialization; only reduced to 187.62GiB (201460834195 bytes), down from 187.62GiB (201460834195 bytes) originally
+W0911 15:51:18.781957 1852643 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 62.50GiB (rounded to 67108864000)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 15:51:18.782190 1852643 bfc_allocator.cc:525] *___________________________________________________________________________________________________
+Exception ignored in atexit callback: <function clean_up at 0x7fa29b1fd580>
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2578, in clean_up
+    clear_backends(_crash=True)
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2554, in clear_backends
+    effects_barrier()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/api.py", line 2477, in effects_barrier
+    dispatch.runtime_tokens.block_until_ready()
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/dispatch.py", line 171, in block_until_ready
+    token.block_until_ready()
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 62.50GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']

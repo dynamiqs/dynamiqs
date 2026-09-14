@@ -1,0 +1,7 @@
+HloModule jit__squeeze, is_scheduled=true, entry_computation_layout={(c128[64]{0})->c128[64]{0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="81d630436952005b232bb8cba3392fe8"}
+
+ENTRY %main.1 (a.1: c128[64]) -> c128[64] {
+  %a.1 = c128[64]{0} parameter(0), metadata={op_name="a"}
+  ROOT %copy.1 = c128[64]{0} copy(%a.1)
+}
+

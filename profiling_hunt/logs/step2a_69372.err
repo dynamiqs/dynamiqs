@@ -1,0 +1,60 @@
+E0911 10:12:57.160515 3362513 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (54358179872) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 10:13:07.189549 3362513 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 40.50GiB (rounded to 43486543872)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 10:13:07.189721 3362513 bfc_allocator.cc:525] *_______*************************___________________________________________________________________
+E0911 10:13:10.796592 3362740 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (54358179872) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 10:13:20.833151 3362740 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 40.50GiB (rounded to 43486543872)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 10:13:20.833323 3362740 bfc_allocator.cc:525] *_______*************************___________________________________________________________________
+E0911 10:13:24.402595 3362857 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (54358179872) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 10:13:34.440827 3362857 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 40.50GiB (rounded to 43486543872)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 10:13:34.441000 3362857 bfc_allocator.cc:525] *_______*************************___________________________________________________________________
+E0911 10:13:38.065571 3362967 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (54358179872) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 10:13:48.102571 3362967 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 40.50GiB (rounded to 43486543872)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 10:13:48.102769 3362967 bfc_allocator.cc:525] *_______*************************___________________________________________________________________
+E0911 10:13:51.668140 3363084 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (54358179872) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 10:14:01.704671 3363084 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 40.50GiB (rounded to 43486543872)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 10:14:01.704850 3363084 bfc_allocator.cc:525] *_______*************************___________________________________________________________________
+E0911 10:14:05.196352 3363192 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (57420021792) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 10:14:15.227650 3363192 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 42.78GiB (rounded to 45936017408)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 10:14:15.227867 3363192 bfc_allocator.cc:525] *_______**************************__________________________________________________________________
+E0911 10:14:18.789195 3363301 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (57420021792) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 10:14:28.826906 3363301 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 42.78GiB (rounded to 45936017408)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 10:14:28.827079 3363301 bfc_allocator.cc:525] *_______**************************__________________________________________________________________
+E0911 10:14:32.348119 3363530 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (57420021792) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 10:14:42.385308 3363530 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 42.78GiB (rounded to 45936017408)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 10:14:42.385540 3363530 bfc_allocator.cc:525] *_______**************************__________________________________________________________________
+E0911 10:14:45.995740 3363677 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (57420021792) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 10:14:56.033337 3363677 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 42.78GiB (rounded to 45936017408)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 10:14:56.033543 3363677 bfc_allocator.cc:525] *_______**************************__________________________________________________________________
+E0911 10:14:59.601569 3363790 gpu_hlo_schedule.cc:968] The byte size of input/output arguments (57420021792) exceeds the base limit (45285900288). This indicates an error in the calculation!
+W0911 10:15:09.637981 3363790 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 42.78GiB (rounded to 45936017408)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 10:15:09.638162 3363790 bfc_allocator.cc:525] *_______**************************__________________________________________________________________

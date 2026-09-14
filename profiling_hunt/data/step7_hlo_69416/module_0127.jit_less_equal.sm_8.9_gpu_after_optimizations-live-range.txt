@@ -1,0 +1,18 @@
+HloLiveRange (max 3):
+  InstructionSequence:
+    0:y.1
+    1:x.1
+    2:loop_compare_fusion
+  BufferLiveRange:
+    x.1{}:0-3
+    y.1{}:0-3
+    loop_compare_fusion{}:2-3
+  Live ranges at 2 (peak):
+    x.1{}: 8 bytes (cumulative: 8 bytes)
+    y.1{}: 8 bytes (cumulative: 16 bytes)
+    loop_compare_fusion{}: 1 bytes (cumulative: 17 bytes)
+  Stack trace breakdown for peak usage: 17 bytes
+    main.1 (100.0%, total: 17 bytes, current: 0 bytes, remaining: 17 bytes)
+      ├── x (47.1%, total: 8 bytes, current: 8 bytes, remaining: 9 bytes)
+      ├── y (47.1%, total: 8 bytes, current: 8 bytes, remaining: 1 bytes)
+      └── jit(less_equal)/le (5.9%, total: 1 bytes, current: 1 bytes, remaining: 0 bytes)

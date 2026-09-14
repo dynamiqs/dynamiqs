@@ -1,0 +1,18 @@
+HloLiveRange (max 3):
+  InstructionSequence:
+    0:stop.1
+    1:start.1
+    2:input_concatenate_fusion
+  BufferLiveRange:
+    stop.1{}:0-3
+    start.1{}:0-3
+    input_concatenate_fusion{}:2-3
+  Live ranges at 2 (peak):
+    input_concatenate_fusion{}: 640 bytes (cumulative: 640 bytes)
+    start.1{}: 8 bytes (cumulative: 648 bytes)
+    stop.1{}: 8 bytes (cumulative: 656 bytes)
+  Stack trace breakdown for peak usage: 656 bytes
+    main.1 (100.0%, total: 656 bytes, current: 0 bytes, remaining: 656 bytes)
+      ├── jit(_linspace)/concatenate (97.6%, total: 640 bytes, current: 640 bytes, remaining: 16 bytes)
+      ├── start (1.2%, total: 8 bytes, current: 8 bytes, remaining: 8 bytes)
+      └── stop (1.2%, total: 8 bytes, current: 8 bytes, remaining: 0 bytes)

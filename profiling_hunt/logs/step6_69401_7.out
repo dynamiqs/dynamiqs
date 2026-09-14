@@ -1,0 +1,1760 @@
+############################################################################
+# STEP 6 shard 7/8  job 69401_7  higgs
+# 2026-09-11T15:45:52+02:00  GPU=0
+# inherited XLA*/JAX* environment (contamination check, Finding 1.A):
+#   XLA_PYTHON_CLIENT_MEM_FRACTION=.95
+#   XLA_PYTHON_CLIENT_PREALLOCATE=true
+############################################################################
+name, memory.total [MiB], memory.used [MiB]
+NVIDIA L40S, 46068 MiB, 439 MiB
+
+shard 7 has 120 configs
+
+-------- [7 1/120] N=64 ntsave=10 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=10  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 2,818,048 B = 0.00262 GiB = 43.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=731,648  peak=50,405,632 (769.129 R, 0.04694 GiB)
+  traj bytes=655,360 (10.000 R)  nsteps=6
+  MEASURED / PREDICTED = 17.8867   rel.err = +1688.67%
+  elapsed 4.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 2/120] N=64 ntsave=10 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=10  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 2,818,048 B = 0.00262 GiB = 43.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=731,648  peak=50,405,632 (769.129 R, 0.04694 GiB)
+  traj bytes=655,360 (10.000 R)  nsteps=11
+  MEASURED / PREDICTED = 17.8867   rel.err = +1688.67%
+  elapsed 4.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 3/120] N=128 ntsave=10 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=10  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 11,272,192 B = 0.01050 GiB = 43.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=2,898,432  peak=50,606,336 (193.048 R, 0.04713 GiB)
+  traj bytes=2,621,440 (10.000 R)  nsteps=6
+  MEASURED / PREDICTED = 4.4895   rel.err = +348.95%
+  elapsed 3.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 4/120] N=128 ntsave=10 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=10  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 11,272,192 B = 0.01050 GiB = 43.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=2,898,432  peak=50,606,336 (193.048 R, 0.04713 GiB)
+  traj bytes=2,621,440 (10.000 R)  nsteps=9
+  MEASURED / PREDICTED = 4.4895   rel.err = +348.95%
+  elapsed 4.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 5/120] N=256 ntsave=10 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=10  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 45,088,768 B = 0.04199 GiB = 43.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=11,557,376  peak=51,400,960 (49.020 R, 0.04787 GiB)
+  traj bytes=10,485,760 (10.000 R)  nsteps=5
+  MEASURED / PREDICTED = 1.1400   rel.err = +14.00%
+  elapsed 4.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 6/120] N=256 ntsave=10 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=10  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 45,088,768 B = 0.04199 GiB = 43.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=11,557,376  peak=53,527,552 (51.048 R, 0.04985 GiB)
+  traj bytes=10,485,760 (10.000 R)  nsteps=7
+  MEASURED / PREDICTED = 1.1872   rel.err = +18.72%
+  elapsed 4.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 7/120] N=512 ntsave=10 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=10  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 180,355,072 B = 0.16797 GiB = 43.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=46,176,768  peak=172,033,792 (41.016 R, 0.16022 GiB)
+  traj bytes=41,943,040 (10.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.9539   rel.err = -4.61%
+  elapsed 4.2s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 8/120] N=512 ntsave=10 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=10  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 180,355,072 B = 0.16797 GiB = 43.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,584  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=46,176,768  peak=213,977,088 (51.016 R, 0.19928 GiB)
+  traj bytes=41,943,040 (10.000 R)  nsteps=5
+  MEASURED / PREDICTED = 1.1864   rel.err = +18.64%
+  elapsed 4.2s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 9/120] N=1024 ntsave=10 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=10  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 721,420,288 B = 0.67188 GiB = 43.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=184,621,568  peak=687,966,720 (41.006 R, 0.64072 GiB)
+  traj bytes=167,772,160 (10.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.9536   rel.err = -4.64%
+  elapsed 4.5s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 10/120] N=1024 ntsave=10 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=10  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 721,420,288 B = 0.67188 GiB = 43.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=184,621,568  peak=855,738,880 (51.006 R, 0.79697 GiB)
+  traj bytes=167,772,160 (10.000 R)  nsteps=3
+  MEASURED / PREDICTED = 1.1862   rel.err = +18.62%
+  elapsed 4.6s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 11/120] N=2048 ntsave=10 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=10  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 2,885,681,152 B = 2.68750 GiB = 43.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  after mesolve: in_use=738,335,232  peak=2,751,629,056 (41.002 R, 2.56265 GiB)
+  traj bytes=671,088,640 (10.000 R)  nsteps=3
+  MEASURED / PREDICTED = 0.9535   rel.err = -4.65%
+  elapsed 4.7s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 12/120] N=2048 ntsave=10 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=10  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 2,885,681,152 B = 2.68750 GiB = 43.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  after mesolve: in_use=738,335,232  peak=3,422,717,440 (51.002 R, 3.18765 GiB)
+  traj bytes=671,088,640 (10.000 R)  nsteps=3
+  MEASURED / PREDICTED = 1.1861   rel.err = +18.61%
+  elapsed 5.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 13/120] N=64 ntsave=120 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=120  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 31,653,888 B = 0.02948 GiB = 483.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=7,942,144  peak=50,407,936 (769.164 R, 0.04695 GiB)
+  traj bytes=7,864,320 (120.000 R)  nsteps=6
+  MEASURED / PREDICTED = 1.5925   rel.err = +59.25%
+  elapsed 4.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 14/120] N=64 ntsave=120 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=120  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 31,653,888 B = 0.02948 GiB = 483.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=7,942,144  peak=50,407,936 (769.164 R, 0.04695 GiB)
+  traj bytes=7,864,320 (120.000 R)  nsteps=11
+  MEASURED / PREDICTED = 1.5925   rel.err = +59.25%
+  elapsed 4.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 15/120] N=128 ntsave=120 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=120  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 126,615,552 B = 0.11792 GiB = 483.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=31,735,808  peak=97,303,808 (371.185 R, 0.09062 GiB)
+  traj bytes=31,457,280 (120.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7685   rel.err = -23.15%
+  elapsed 4.2s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 16/120] N=128 ntsave=120 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=120  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 126,615,552 B = 0.11792 GiB = 483.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=31,735,808  peak=99,921,152 (381.169 R, 0.09306 GiB)
+  traj bytes=31,457,280 (120.000 R)  nsteps=9
+  MEASURED / PREDICTED = 0.7892   rel.err = -21.08%
+  elapsed 4.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 17/120] N=256 ntsave=120 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=120  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 506,462,208 B = 0.47168 GiB = 483.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=126,902,272  peak=389,078,272 (371.054 R, 0.36236 GiB)
+  traj bytes=125,829,120 (120.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7682   rel.err = -23.18%
+  elapsed 4.2s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 18/120] N=256 ntsave=120 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=120  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 506,462,208 B = 0.47168 GiB = 483.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=126,902,272  peak=399,559,680 (381.050 R, 0.37212 GiB)
+  traj bytes=125,829,120 (120.000 R)  nsteps=7
+  MEASURED / PREDICTED = 0.7889   rel.err = -21.11%
+  elapsed 4.4s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 19/120] N=512 ntsave=120 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=120  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 2,025,848,832 B = 1.88672 GiB = 483.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=507,551,744  peak=1,556,156,416 (371.017 R, 1.44928 GiB)
+  traj bytes=503,316,480 (120.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7682   rel.err = -23.18%
+  elapsed 4.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 20/120] N=512 ntsave=120 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=120  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 2,025,848,832 B = 1.88672 GiB = 483.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=507,551,744  peak=1,598,099,456 (381.017 R, 1.48835 GiB)
+  traj bytes=503,316,480 (120.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7889   rel.err = -21.11%
+  elapsed 5.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 21/120] N=1024 ntsave=120 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=120  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 8,103,395,328 B = 7.54688 GiB = 483.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=2,030,116,864  peak=6,224,450,304 (371.006 R, 5.79697 GiB)
+  traj bytes=2,013,265,920 (120.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7681   rel.err = -23.19%
+  elapsed 7.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 22/120] N=1024 ntsave=120 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=120  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 8,103,395,328 B = 7.54688 GiB = 483.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=2,030,116,864  peak=6,392,222,464 (381.006 R, 5.95322 GiB)
+  traj bytes=2,013,265,920 (120.000 R)  nsteps=3
+  MEASURED / PREDICTED = 0.7888   rel.err = -21.12%
+  elapsed 7.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 23/120] N=2048 ntsave=120 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=120  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 32,413,581,312 B = 30.18750 GiB = 483.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  after mesolve: in_use=8,120,311,808  peak=24,897,556,224 (371.002 R, 23.18766 GiB)
+  traj bytes=8,053,063,680 (120.000 R)  nsteps=3
+  MEASURED / PREDICTED = 0.7681   rel.err = -23.19%
+  elapsed 14.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 24/120] N=2048 ntsave=120 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=120  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 32,413,581,312 B = 30.18750 GiB = 483.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  after mesolve: in_use=8,120,311,808  peak=25,568,644,864 (381.002 R, 23.81266 GiB)
+  traj bytes=8,053,063,680 (120.000 R)  nsteps=3
+  MEASURED / PREDICTED = 0.7888   rel.err = -21.12%
+  elapsed 14.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 25/120] N=64 ntsave=230 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=230  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 60,489,728 B = 0.05634 GiB = 923.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=15,154,944  peak=50,412,800 (769.238 R, 0.04695 GiB)
+  traj bytes=15,073,280 (230.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.8334   rel.err = -16.66%
+  elapsed 4.2s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 26/120] N=64 ntsave=230 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=230  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 60,489,728 B = 0.05634 GiB = 923.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=15,154,944  peak=50,412,800 (769.238 R, 0.04695 GiB)
+  traj bytes=15,073,280 (230.000 R)  nsteps=11
+  MEASURED / PREDICTED = 0.8334   rel.err = -16.66%
+  elapsed 4.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 27/120] N=128 ntsave=230 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=230  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 241,958,912 B = 0.22534 GiB = 923.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=60,574,464  peak=183,814,656 (701.197 R, 0.17119 GiB)
+  traj bytes=60,293,120 (230.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7597   rel.err = -24.03%
+  elapsed 4.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 28/120] N=128 ntsave=230 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=230  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 241,958,912 B = 0.22534 GiB = 923.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=60,574,464  peak=186,434,560 (711.191 R, 0.17363 GiB)
+  traj bytes=60,293,120 (230.000 R)  nsteps=9
+  MEASURED / PREDICTED = 0.7705   rel.err = -22.95%
+  elapsed 4.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 29/120] N=256 ntsave=230 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=230  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 967,835,648 B = 0.90137 GiB = 923.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=242,247,680  peak=735,110,912 (701.056 R, 0.68463 GiB)
+  traj bytes=241,172,480 (230.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7595   rel.err = -24.05%
+  elapsed 4.7s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 30/120] N=256 ntsave=230 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=230  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 967,835,648 B = 0.90137 GiB = 923.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=242,247,680  peak=745,594,880 (711.055 R, 0.69439 GiB)
+  traj bytes=241,172,480 (230.000 R)  nsteps=7
+  MEASURED / PREDICTED = 0.7704   rel.err = -22.96%
+  elapsed 4.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 31/120] N=512 ntsave=230 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=230  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 3,871,342,592 B = 3.60547 GiB = 923.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,584  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=968,927,232  peak=2,940,281,856 (701.018 R, 2.73835 GiB)
+  traj bytes=964,689,920 (230.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7595   rel.err = -24.05%
+  elapsed 6.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 32/120] N=512 ntsave=230 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=230  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 3,871,342,592 B = 3.60547 GiB = 923.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=968,927,232  peak=2,982,224,896 (711.018 R, 2.77741 GiB)
+  traj bytes=964,689,920 (230.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7703   rel.err = -22.97%
+  elapsed 6.5s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 33/120] N=1024 ntsave=230 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=230  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 15,485,370,368 B = 14.42188 GiB = 923.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=3,875,612,672  peak=11,760,936,704 (701.006 R, 10.95323 GiB)
+  traj bytes=3,858,759,680 (230.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7595   rel.err = -24.05%
+  elapsed 11.7s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 34/120] N=1024 ntsave=230 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=230  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 15,485,370,368 B = 14.42188 GiB = 923.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=3,875,612,672  peak=11,928,708,864 (711.006 R, 11.10948 GiB)
+  traj bytes=3,858,759,680 (230.000 R)  nsteps=3
+  MEASURED / PREDICTED = 0.7703   rel.err = -22.97%
+  elapsed 12.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 35/120] N=2048 ntsave=230 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=230  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 61,941,481,472 B = 57.68750 GiB = 923.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 29.38GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 36/120] N=2048 ntsave=230 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=230  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 61,941,481,472 B = 57.68750 GiB = 923.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 30.00GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 37/120] N=64 ntsave=340 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=340  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 89,325,568 B = 0.08319 GiB = 1363.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=22,364,672  peak=67,621,632 (1031.824 R, 0.06298 GiB)
+  traj bytes=22,282,240 (340.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7570   rel.err = -24.30%
+  elapsed 4.2s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 38/120] N=64 ntsave=340 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=340  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 89,325,568 B = 0.08319 GiB = 1363.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=22,364,672  peak=68,274,688 (1041.789 R, 0.06359 GiB)
+  traj bytes=22,282,240 (340.000 R)  nsteps=11
+  MEASURED / PREDICTED = 0.7643   rel.err = -23.57%
+  elapsed 4.2s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 39/120] N=128 ntsave=340 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=340  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 357,302,272 B = 0.33276 GiB = 1363.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=89,411,072  peak=270,329,856 (1031.227 R, 0.25176 GiB)
+  traj bytes=89,128,960 (340.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7566   rel.err = -24.34%
+  elapsed 4.4s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 40/120] N=128 ntsave=340 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=340  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 357,302,272 B = 0.33276 GiB = 1363.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=89,411,072  peak=272,948,992 (1041.218 R, 0.25420 GiB)
+  traj bytes=89,128,960 (340.000 R)  nsteps=9
+  MEASURED / PREDICTED = 0.7639   rel.err = -23.61%
+  elapsed 4.5s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 41/120] N=256 ntsave=340 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=340  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 1,429,209,088 B = 1.33105 GiB = 1363.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=357,593,856  peak=1,081,148,416 (1031.063 R, 1.00690 GiB)
+  traj bytes=356,515,840 (340.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7565   rel.err = -24.35%
+  elapsed 5.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 42/120] N=256 ntsave=340 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=340  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 1,429,209,088 B = 1.33105 GiB = 1363.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=357,593,856  peak=1,091,631,616 (1041.061 R, 1.01666 GiB)
+  traj bytes=356,515,840 (340.000 R)  nsteps=7
+  MEASURED / PREDICTED = 0.7638   rel.err = -23.62%
+  elapsed 5.5s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 43/120] N=512 ntsave=340 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=340  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 5,716,836,352 B = 5.32422 GiB = 1363.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=1,430,302,208  peak=4,324,410,112 (1031.020 R, 4.02742 GiB)
+  traj bytes=1,426,063,360 (340.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7564   rel.err = -24.36%
+  elapsed 8.5s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 44/120] N=512 ntsave=340 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=340  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 5,716,836,352 B = 5.32422 GiB = 1363.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=1,430,302,208  peak=4,366,353,152 (1041.020 R, 4.06648 GiB)
+  traj bytes=1,426,063,360 (340.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7638   rel.err = -23.62%
+  elapsed 8.7s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 45/120] N=1024 ntsave=340 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=340  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 22,867,345,408 B = 21.29688 GiB = 1363.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=5,721,107,968  peak=17,297,423,360 (1031.007 R, 16.10948 GiB)
+  traj bytes=5,704,253,440 (340.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7564   rel.err = -24.36%
+  elapsed 20.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 46/120] N=1024 ntsave=340 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=340  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 22,867,345,408 B = 21.29688 GiB = 1363.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=5,721,107,968  peak=17,465,195,520 (1041.007 R, 16.26573 GiB)
+  traj bytes=5,704,253,440 (340.000 R)  nsteps=3
+  MEASURED / PREDICTED = 0.7638   rel.err = -23.62%
+  elapsed 20.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 47/120] N=2048 ntsave=340 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=340  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 91,469,381,632 B = 85.18750 GiB = 1363.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 43.12GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 48/120] N=2048 ntsave=340 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=340  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 91,469,381,632 B = 85.18750 GiB = 1363.000 R
+################################################################################################################
+  after setup: in_use=67,273,216 peak=67,371,520  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 43.75GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 49/120] N=64 ntsave=450 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=450  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 118,161,408 B = 0.11005 GiB = 1803.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=29,574,656  peak=89,253,632 (1361.902 R, 0.08312 GiB)
+  traj bytes=29,491,200 (450.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7554   rel.err = -24.46%
+  elapsed 4.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 50/120] N=64 ntsave=450 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=450  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 118,161,408 B = 0.11005 GiB = 1803.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=29,574,656  peak=89,905,664 (1371.852 R, 0.08373 GiB)
+  traj bytes=29,491,200 (450.000 R)  nsteps=11
+  MEASURED / PREDICTED = 0.7609   rel.err = -23.91%
+  elapsed 4.4s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 51/120] N=128 ntsave=450 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=450  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 472,645,632 B = 0.44019 GiB = 1803.000 R
+################################################################################################################
+  after setup: in_use=272,896 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=118,251,264  peak=356,843,776 (1361.251 R, 0.33234 GiB)
+  traj bytes=117,964,800 (450.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7550   rel.err = -24.50%
+  elapsed 4.6s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 52/120] N=128 ntsave=450 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=450  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 472,645,632 B = 0.44019 GiB = 1803.000 R
+################################################################################################################
+  after setup: in_use=272,896 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=118,251,264  peak=359,461,888 (1371.238 R, 0.33477 GiB)
+  traj bytes=117,964,800 (450.000 R)  nsteps=9
+  MEASURED / PREDICTED = 0.7605   rel.err = -23.95%
+  elapsed 4.7s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 53/120] N=256 ntsave=450 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=450  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 1,890,582,528 B = 1.76074 GiB = 1803.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=472,941,568  peak=1,427,186,944 (1361.072 R, 1.32917 GiB)
+  traj bytes=471,859,200 (450.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7549   rel.err = -24.51%
+  elapsed 6.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 54/120] N=256 ntsave=450 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=450  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 1,890,582,528 B = 1.76074 GiB = 1803.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=472,941,568  peak=1,437,669,120 (1371.068 R, 1.33893 GiB)
+  traj bytes=471,859,200 (450.000 R)  nsteps=7
+  MEASURED / PREDICTED = 0.7604   rel.err = -23.96%
+  elapsed 6.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 55/120] N=512 ntsave=450 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=450  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 7,562,330,112 B = 7.04297 GiB = 1803.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=1,891,677,696  peak=5,708,533,504 (1361.020 R, 5.31649 GiB)
+  traj bytes=1,887,436,800 (450.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7549   rel.err = -24.51%
+  elapsed 11.2s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 56/120] N=512 ntsave=450 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=450  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 7,562,330,112 B = 7.04297 GiB = 1803.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=1,891,677,696  peak=5,750,476,544 (1371.020 R, 5.35555 GiB)
+  traj bytes=1,887,436,800 (450.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7604   rel.err = -23.96%
+  elapsed 11.5s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 57/120] N=1024 ntsave=450 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=450  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 30,249,320,448 B = 28.17188 GiB = 1803.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=7,566,605,568  peak=22,833,911,552 (1361.007 R, 21.26574 GiB)
+  traj bytes=7,549,747,200 (450.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7549   rel.err = -24.51%
+  elapsed 29.2s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 58/120] N=1024 ntsave=450 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=450  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 30,249,320,448 B = 28.17188 GiB = 1803.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=7,566,605,568  peak=23,001,683,712 (1371.007 R, 21.42199 GiB)
+  traj bytes=7,549,747,200 (450.000 R)  nsteps=3
+  MEASURED / PREDICTED = 0.7604   rel.err = -23.96%
+  elapsed 30.5s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 59/120] N=2048 ntsave=450 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=450  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 120,997,281,792 B = 112.68750 GiB = 1803.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 56.88GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 60/120] N=2048 ntsave=450 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=450  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 120,997,281,792 B = 112.68750 GiB = 1803.000 R
+################################################################################################################
+  after setup: in_use=67,273,216 peak=67,371,520  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 57.50GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 61/120] N=64 ntsave=560 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=560  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 146,997,248 B = 0.13690 GiB = 2243.000 R
+################################################################################################################
+  after setup: in_use=71,168 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=36,786,432  peak=110,886,400 (1691.992 R, 0.10327 GiB)
+  traj bytes=36,700,160 (560.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7543   rel.err = -24.57%
+  elapsed 4.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 62/120] N=64 ntsave=560 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=560  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 146,997,248 B = 0.13690 GiB = 2243.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=36,785,152  peak=111,536,384 (1701.910 R, 0.10388 GiB)
+  traj bytes=36,700,160 (560.000 R)  nsteps=11
+  MEASURED / PREDICTED = 0.7588   rel.err = -24.12%
+  elapsed 4.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 63/120] N=128 ntsave=560 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=560  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 587,988,992 B = 0.54761 GiB = 2243.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=147,089,664  peak=443,356,672 (1691.271 R, 0.41291 GiB)
+  traj bytes=146,800,640 (560.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7540   rel.err = -24.60%
+  elapsed 5.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 64/120] N=128 ntsave=560 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=560  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 587,988,992 B = 0.54761 GiB = 2243.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=147,089,664  peak=445,974,016 (1701.256 R, 0.41535 GiB)
+  traj bytes=146,800,640 (560.000 R)  nsteps=9
+  MEASURED / PREDICTED = 0.7585   rel.err = -24.15%
+  elapsed 5.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 65/120] N=256 ntsave=560 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=560  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 2,351,955,968 B = 2.19043 GiB = 2243.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=588,283,136  peak=1,773,218,304 (1691.073 R, 1.65144 GiB)
+  traj bytes=587,202,560 (560.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7539   rel.err = -24.61%
+  elapsed 6.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 66/120] N=256 ntsave=560 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=560  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 2,351,955,968 B = 2.19043 GiB = 2243.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=588,283,136  peak=1,783,699,712 (1701.069 R, 1.66120 GiB)
+  traj bytes=587,202,560 (560.000 R)  nsteps=7
+  MEASURED / PREDICTED = 0.7584   rel.err = -24.16%
+  elapsed 7.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 67/120] N=512 ntsave=560 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=560  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 9,407,823,872 B = 8.76172 GiB = 2243.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=2,353,056,256  peak=7,092,660,736 (1691.022 R, 6.60556 GiB)
+  traj bytes=2,348,810,240 (560.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7539   rel.err = -24.61%
+  elapsed 14.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 68/120] N=512 ntsave=560 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=560  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 9,407,823,872 B = 8.76172 GiB = 2243.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=2,353,056,256  peak=7,134,603,776 (1701.022 R, 6.64462 GiB)
+  traj bytes=2,348,810,240 (560.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7584   rel.err = -24.16%
+  elapsed 14.5s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 69/120] N=1024 ntsave=560 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=560  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 37,631,295,488 B = 35.04688 GiB = 2243.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=9,412,099,072  peak=28,370,394,880 (1691.007 R, 26.42199 GiB)
+  traj bytes=9,395,240,960 (560.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7539   rel.err = -24.61%
+  elapsed 41.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 70/120] N=1024 ntsave=560 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=560  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 37,631,295,488 B = 35.04688 GiB = 2243.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=9,412,099,072  peak=28,538,167,040 (1701.007 R, 26.57824 GiB)
+  traj bytes=9,395,240,960 (560.000 R)  nsteps=3
+  MEASURED / PREDICTED = 0.7584   rel.err = -24.16%
+  elapsed 41.6s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 71/120] N=2048 ntsave=560 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=560  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 150,525,181,952 B = 140.18750 GiB = 2243.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 70.62GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 72/120] N=2048 ntsave=560 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=560  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 150,525,181,952 B = 140.18750 GiB = 2243.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 71.25GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 73/120] N=64 ntsave=670 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=670  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 175,833,088 B = 0.16376 GiB = 2683.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=43,995,648  peak=132,516,608 (2022.043 R, 0.12342 GiB)
+  traj bytes=43,909,120 (670.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7537   rel.err = -24.63%
+  elapsed 4.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 74/120] N=64 ntsave=670 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=670  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 175,833,088 B = 0.16376 GiB = 2683.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=43,995,648  peak=133,167,104 (2031.969 R, 0.12402 GiB)
+  traj bytes=43,909,120 (670.000 R)  nsteps=11
+  MEASURED / PREDICTED = 0.7573   rel.err = -24.27%
+  elapsed 4.5s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 75/120] N=128 ntsave=670 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=670  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 703,332,352 B = 0.65503 GiB = 2683.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=175,926,272  peak=529,868,032 (2021.286 R, 0.49348 GiB)
+  traj bytes=175,636,480 (670.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7534   rel.err = -24.66%
+  elapsed 5.2s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 76/120] N=128 ntsave=670 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=670  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 703,332,352 B = 0.65503 GiB = 2683.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=175,926,272  peak=532,484,608 (2031.268 R, 0.49591 GiB)
+  traj bytes=175,636,480 (670.000 R)  nsteps=9
+  MEASURED / PREDICTED = 0.7571   rel.err = -24.29%
+  elapsed 5.5s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 77/120] N=256 ntsave=670 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=670  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 2,813,329,408 B = 2.62012 GiB = 2683.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=703,627,776  peak=2,119,256,064 (2021.080 R, 1.97371 GiB)
+  traj bytes=702,545,920 (670.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7533   rel.err = -24.67%
+  elapsed 7.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 78/120] N=256 ntsave=670 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=670  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 2,813,329,408 B = 2.62012 GiB = 2683.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=703,627,776  peak=2,129,736,704 (2031.075 R, 1.98347 GiB)
+  traj bytes=702,545,920 (670.000 R)  nsteps=7
+  MEASURED / PREDICTED = 0.7570   rel.err = -24.30%
+  elapsed 8.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 79/120] N=512 ntsave=670 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=670  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 11,253,317,632 B = 10.48047 GiB = 2683.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=2,814,430,464  peak=8,476,784,128 (2021.023 R, 7.89462 GiB)
+  traj bytes=2,810,183,680 (670.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7533   rel.err = -24.67%
+  elapsed 17.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 80/120] N=512 ntsave=670 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=670  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 11,253,317,632 B = 10.48047 GiB = 2683.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=2,814,430,464  peak=8,518,727,168 (2031.023 R, 7.93368 GiB)
+  traj bytes=2,810,183,680 (670.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7570   rel.err = -24.30%
+  elapsed 18.2s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 81/120] N=1024 ntsave=670 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=670  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 45,013,270,528 B = 41.92188 GiB = 2683.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=11,257,594,368  peak=33,906,880,000 (2021.008 R, 31.57824 GiB)
+  traj bytes=11,240,734,720 (670.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7533   rel.err = -24.67%
+  elapsed 57.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 82/120] N=1024 ntsave=670 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=670  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 45,013,270,528 B = 41.92188 GiB = 2683.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=11,257,594,368  peak=34,074,652,416 (2031.008 R, 31.73449 GiB)
+  traj bytes=11,240,734,720 (670.000 R)  nsteps=3
+  MEASURED / PREDICTED = 0.7570   rel.err = -24.30%
+  elapsed 57.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 83/120] N=2048 ntsave=670 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=670  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 180,053,082,112 B = 167.68750 GiB = 2683.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 84.38GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 84/120] N=2048 ntsave=670 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=670  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 180,053,082,112 B = 167.68750 GiB = 2683.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 85.00GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 85/120] N=64 ntsave=780 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=780  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 204,668,928 B = 0.19061 GiB = 3123.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=51,206,656  peak=154,149,632 (2352.137 R, 0.14356 GiB)
+  traj bytes=51,118,080 (780.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7532   rel.err = -24.68%
+  elapsed 4.5s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 86/120] N=64 ntsave=780 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=780  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 204,668,928 B = 0.19061 GiB = 3123.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=51,206,656  peak=154,799,104 (2362.047 R, 0.14417 GiB)
+  traj bytes=51,118,080 (780.000 R)  nsteps=11
+  MEASURED / PREDICTED = 0.7563   rel.err = -24.37%
+  elapsed 4.6s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 87/120] N=128 ntsave=780 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=780  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 818,675,712 B = 0.76245 GiB = 3123.000 R
+################################################################################################################
+  after setup: in_use=272,896 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=204,765,440  peak=616,382,976 (2351.314 R, 0.57405 GiB)
+  traj bytes=204,472,320 (780.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7529   rel.err = -24.71%
+  elapsed 5.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 88/120] N=128 ntsave=780 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=780  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 818,675,712 B = 0.76245 GiB = 3123.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=204,763,136  peak=618,996,224 (2361.283 R, 0.57649 GiB)
+  traj bytes=204,472,320 (780.000 R)  nsteps=9
+  MEASURED / PREDICTED = 0.7561   rel.err = -24.39%
+  elapsed 5.6s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 89/120] N=256 ntsave=780 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=780  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 3,274,702,848 B = 3.04980 GiB = 3123.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=818,973,184  peak=2,465,290,240 (2351.084 R, 2.29598 GiB)
+  traj bytes=817,889,280 (780.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7528   rel.err = -24.72%
+  elapsed 9.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 90/120] N=256 ntsave=780 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=780  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 3,274,702,848 B = 3.04980 GiB = 3123.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=818,973,184  peak=2,475,769,856 (2361.078 R, 2.30574 GiB)
+  traj bytes=817,889,280 (780.000 R)  nsteps=7
+  MEASURED / PREDICTED = 0.7560   rel.err = -24.40%
+  elapsed 9.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 91/120] N=512 ntsave=780 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=780  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 13,098,811,392 B = 12.19922 GiB = 3123.000 R
+################################################################################################################
+  after setup: in_use=4,235,776 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=3,275,817,728  peak=9,860,927,488 (2351.028 R, 9.18370 GiB)
+  traj bytes=3,271,557,120 (780.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7528   rel.err = -24.72%
+  elapsed 22.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 92/120] N=512 ntsave=780 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=780  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 13,098,811,392 B = 12.19922 GiB = 3123.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=3,275,809,280  peak=9,902,862,080 (2361.026 R, 9.22276 GiB)
+  traj bytes=3,271,557,120 (780.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7560   rel.err = -24.40%
+  elapsed 22.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 93/120] N=1024 ntsave=780 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=780  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 52,395,245,568 B = 48.79688 GiB = 3123.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=13,103,090,688  peak=39,443,366,912 (2351.008 R, 36.73450 GiB)
+  traj bytes=13,086,228,480 (780.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7528   rel.err = -24.72%
+  elapsed 75.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 94/120] N=1024 ntsave=780 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=780  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 52,395,245,568 B = 48.79688 GiB = 3123.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=13,103,090,688  peak=39,611,139,328 (2361.008 R, 36.89075 GiB)
+  traj bytes=13,086,228,480 (780.000 R)  nsteps=3
+  MEASURED / PREDICTED = 0.7560   rel.err = -24.40%
+  elapsed 73.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 95/120] N=2048 ntsave=780 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=780  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 209,580,982,272 B = 195.18750 GiB = 3123.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 48.75GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 96/120] N=2048 ntsave=780 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=780  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 209,580,982,272 B = 195.18750 GiB = 3123.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 48.75GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 97/120] N=64 ntsave=890 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=890  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 233,504,768 B = 0.21747 GiB = 3563.000 R
+################################################################################################################
+  after setup: in_use=71,168 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=58,418,432  peak=175,782,400 (2682.227 R, 0.16371 GiB)
+  traj bytes=58,327,040 (890.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7528   rel.err = -24.72%
+  elapsed 4.6s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 98/120] N=64 ntsave=890 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=890  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 233,504,768 B = 0.21747 GiB = 3563.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=58,417,152  peak=176,429,824 (2692.105 R, 0.16431 GiB)
+  traj bytes=58,327,040 (890.000 R)  nsteps=11
+  MEASURED / PREDICTED = 0.7556   rel.err = -24.44%
+  elapsed 4.7s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 99/120] N=128 ntsave=890 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=890  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 934,019,072 B = 0.86987 GiB = 3563.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=233,599,744  peak=702,892,032 (2681.320 R, 0.65462 GiB)
+  traj bytes=233,308,160 (890.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7525   rel.err = -24.75%
+  elapsed 5.7s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 100/120] N=128 ntsave=890 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=890  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 934,019,072 B = 0.86987 GiB = 3563.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=233,599,744  peak=705,506,816 (2691.295 R, 0.65705 GiB)
+  traj bytes=233,308,160 (890.000 R)  nsteps=9
+  MEASURED / PREDICTED = 0.7553   rel.err = -24.47%
+  elapsed 5.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 101/120] N=256 ntsave=890 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=890  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 3,736,076,288 B = 3.47949 GiB = 3563.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=934,324,992  peak=2,811,330,560 (2681.094 R, 2.61826 GiB)
+  traj bytes=933,232,640 (890.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7525   rel.err = -24.75%
+  elapsed 10.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 102/120] N=256 ntsave=890 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=890  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 3,736,076,288 B = 3.47949 GiB = 3563.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=934,324,992  peak=2,821,809,408 (2691.087 R, 2.62801 GiB)
+  traj bytes=933,232,640 (890.000 R)  nsteps=7
+  MEASURED / PREDICTED = 0.7553   rel.err = -24.47%
+  elapsed 10.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 103/120] N=512 ntsave=890 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=890  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 14,944,305,152 B = 13.91797 GiB = 3563.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=3,737,184,256  peak=11,245,040,896 (2681.027 R, 10.47276 GiB)
+  traj bytes=3,732,930,560 (890.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7525   rel.err = -24.75%
+  elapsed 26.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 104/120] N=512 ntsave=890 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=890  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 14,944,305,152 B = 13.91797 GiB = 3563.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=3,737,184,256  peak=11,286,983,936 (2691.027 R, 10.51182 GiB)
+  traj bytes=3,732,930,560 (890.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7553   rel.err = -24.47%
+  elapsed 27.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 105/120] N=1024 ntsave=890 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=890  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 59,777,220,608 B = 55.67188 GiB = 3563.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=14,948,585,472  peak=44,979,851,776 (2681.008 R, 41.89075 GiB)
+  traj bytes=14,931,722,240 (890.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7525   rel.err = -24.75%
+  elapsed 94.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 106/120] N=1024 ntsave=890 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=890  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 59,777,220,608 B = 55.67188 GiB = 3563.000 R
+################################################################################################################
+  after setup: in_use=16,843,008 peak=16,892,160  op_bytes=65,536 (0.00391 R)
+  after mesolve: in_use=14,948,585,472  peak=45,147,624,192 (2691.008 R, 42.04700 GiB)
+  traj bytes=14,931,722,240 (890.000 R)  nsteps=3
+  MEASURED / PREDICTED = 0.7553   rel.err = -24.47%
+  elapsed 93.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 107/120] N=2048 ntsave=890 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=890  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 239,108,882,432 B = 222.68750 GiB = 3563.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 55.62GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 108/120] N=2048 ntsave=890 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=890  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 239,108,882,432 B = 222.68750 GiB = 3563.000 R
+################################################################################################################
+  after setup: in_use=67,273,216 peak=67,371,520  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 55.62GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 109/120] N=64 ntsave=1000 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=1000  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 262,340,608 B = 0.24432 GiB = 4003.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=65,628,160  peak=197,414,144 (3012.301 R, 0.18386 GiB)
+  traj bytes=65,536,000 (1000.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7525   rel.err = -24.75%
+  elapsed 4.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 110/120] N=64 ntsave=1000 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=64  R=16N^2=65,536 B (0.062 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=1000  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 262,340,608 B = 0.24432 GiB = 4003.000 R
+################################################################################################################
+  after setup: in_use=69,888 peak=16,781,568  op_bytes=4,096 (0.06250 R)
+  after mesolve: in_use=65,628,160  peak=198,061,824 (3022.184 R, 0.18446 GiB)
+  traj bytes=65,536,000 (1000.000 R)  nsteps=11
+  MEASURED / PREDICTED = 0.7550   rel.err = -24.50%
+  elapsed 4.7s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 111/120] N=128 ntsave=1000 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=1000  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 1,049,362,432 B = 0.97729 GiB = 4003.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=262,436,864  peak=789,404,928 (3011.341 R, 0.73519 GiB)
+  traj bytes=262,144,000 (1000.000 R)  nsteps=6
+  MEASURED / PREDICTED = 0.7523   rel.err = -24.77%
+  elapsed 6.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 112/120] N=128 ntsave=1000 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=128  R=16N^2=262,144 B (0.250 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=1000  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 1,049,362,432 B = 0.97729 GiB = 4003.000 R
+################################################################################################################
+  after setup: in_use=270,592 peak=16,784,640  op_bytes=8,192 (0.03125 R)
+  after mesolve: in_use=262,436,864  peak=792,018,688 (3021.312 R, 0.73762 GiB)
+  traj bytes=262,144,000 (1000.000 R)  nsteps=9
+  MEASURED / PREDICTED = 0.7548   rel.err = -24.52%
+  elapsed 6.2s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 113/120] N=256 ntsave=1000 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=1000  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 4,197,449,728 B = 3.90918 GiB = 4003.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,790,784  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=1,049,669,376  peak=3,157,365,760 (3011.099 R, 2.94053 GiB)
+  traj bytes=1,048,576,000 (1000.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7522   rel.err = -24.78%
+  elapsed 11.7s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 114/120] N=256 ntsave=1000 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=256  R=16N^2=1,048,576 B (1.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=1000  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 4,197,449,728 B = 3.90918 GiB = 4003.000 R
+################################################################################################################
+  after setup: in_use=1,065,216 peak=16,791,296  op_bytes=16,384 (0.01562 R)
+  after mesolve: in_use=1,049,669,376  peak=3,167,843,584 (3021.091 R, 2.95028 GiB)
+  traj bytes=1,048,576,000 (1000.000 R)  nsteps=7
+  MEASURED / PREDICTED = 0.7547   rel.err = -24.53%
+  elapsed 12.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 115/120] N=512 ntsave=1000 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=1000  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 16,789,798,912 B = 15.63672 GiB = 4003.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=4,198,559,744  peak=12,629,163,264 (3011.027 R, 11.76182 GiB)
+  traj bytes=4,194,304,000 (1000.000 R)  nsteps=4
+  MEASURED / PREDICTED = 0.7522   rel.err = -24.78%
+  elapsed 33.6s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 116/120] N=512 ntsave=1000 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=512  R=16N^2=4,194,304 B (4.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=1000  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 16,789,798,912 B = 15.63672 GiB = 4003.000 R
+################################################################################################################
+  after setup: in_use=4,227,328 peak=16,803,072  op_bytes=32,768 (0.00781 R)
+  after mesolve: in_use=4,198,559,744  peak=12,671,106,304 (3021.027 R, 11.80089 GiB)
+  traj bytes=4,194,304,000 (1000.000 R)  nsteps=5
+  MEASURED / PREDICTED = 0.7547   rel.err = -24.53%
+  elapsed 34.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 117/120] N=1024 ntsave=1000 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=1000  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 67,159,195,648 B = 62.54688 GiB = 4003.000 R
+################################################################################################################
+  after setup: in_use=16,859,648 peak=16,908,800  op_bytes=65,536 (0.00391 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 31.41GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 118/120] N=1024 ntsave=1000 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=1024  R=16N^2=16,777,216 B (16.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=1000  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 67,159,195,648 B = 62.54688 GiB = 4003.000 R
+################################################################################################################
+  after setup: in_use=16,859,648 peak=16,908,800  op_bytes=65,536 (0.00391 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 31.56GiB. [tf-allocator-allocation-error=''] [executable_name='jit__vectorized_mesolve']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 119/120] N=2048 ntsave=1000 save=1 method=rk3 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk3 (order 3, 4 stages, adaptive PID)  ntsave=1000  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 268,636,782,592 B = 250.18750 GiB = 4003.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 62.50GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+-------- [7 120/120] N=2048 ntsave=1000 save=1 method=rk8 gradient=direct --------
+################################################################################################################
+STEP 6 GRID  dynamiqs 0.3.6  N=2048  R=16N^2=67,108,864 B (64.000 MiB)
+  method=rk8 (order 8, 14 stages, adaptive PID)  ntsave=1000  save_states=True  gradient=direct
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  FORMULA PREDICTION peak = 268,636,782,592 B = 250.18750 GiB = 4003.000 R
+################################################################################################################
+  after setup: in_use=67,240,192 peak=67,338,496  op_bytes=131,072 (0.00195 R)
+  !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 62.50GiB. [executable_name='jit__vectorized_mesolve'] [tf-allocator-allocation-error='']
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl
+
+### STEP 6 SHARD 7 COMPLETE  json=/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step6_69401_7.jsonl  2026-09-11T16:26:40+02:00 ###

@@ -1,0 +1,8 @@
+HloModule jit__reduce_any, is_scheduled=true, entry_computation_layout={(pred[0]{0})->pred[]}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="77a0b9439f67d9bcc8f6a6f258b161fa"}
+
+ENTRY %main.1 (a.1: pred[0]) -> pred[] {
+  %constant_1_0 = pred[] constant(false)
+  ROOT %copy.1 = pred[] copy(%constant_1_0)
+  %a.1 = pred[0]{0} parameter(0), metadata={op_name="a"}
+}
+

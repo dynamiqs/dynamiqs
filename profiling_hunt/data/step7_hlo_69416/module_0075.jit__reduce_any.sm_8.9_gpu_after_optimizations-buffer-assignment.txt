@@ -1,0 +1,7 @@
+BufferAssignment:
+allocation 0: size 1, output shape is |pred[]|, maybe-live-out:
+ value: <2 copy.1 @0> (size=1,offset=0): pred[]
+allocation 1: size 1, constant:
+ value: <1 constant_1_0 @0> (size=1,offset=0): pred[]
+allocation 2: size 0, parameter 0, shape |pred[0]| at ShapeIndex {}:
+ value: <0 a.1 @0> (size=0,offset=0): pred[0]{0}

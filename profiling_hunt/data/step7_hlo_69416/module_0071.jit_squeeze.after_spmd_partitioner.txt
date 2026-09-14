@@ -1,0 +1,7 @@
+HloModule jit_squeeze, entry_computation_layout={(c128[1,0]{1,0})->c128[0]{0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}
+
+ENTRY %main.1 (args_0_.1: c128[1,0]) -> c128[0] {
+  %args_0_.1 = c128[1,0]{1,0} parameter(0), metadata={op_name="args[0]"}
+  ROOT %constant.1 = c128[0]{0} constant({})
+}
+

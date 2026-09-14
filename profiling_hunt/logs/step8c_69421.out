@@ -1,0 +1,29 @@
+# job 69421 higgs GPU=0 2026-09-11T18:45:54+02:00
+
+=== A) N=2000 ntsave=101: baseline vs patched ===
+patch=BASELINE  N=2000 ntsave=101 max_steps=100000  traj = nt*R = 6.0201 GiB
+  peak = 19,584,179,456 B = 18.2392 GiB = 306.003 R
+  slope = 3.0000 R per saved state
+  finite=True  trace=1.000000000000+0.000000000000j  checksum=1.3492017380e+02
+patch=v4_small  N=2000 ntsave=101 max_steps=100000  traj = nt*R = 6.0201 GiB
+  peak = 13,412,210,688 B = 12.4911 GiB = 209.566 R
+  slope = 2.0452 R per saved state
+  finite=True  trace=1.000000000000+0.000000000000j  checksum=1.3492017380e+02
+
+=== B) N=2000 ntsave=303: baseline OOMs today ===
+patch=BASELINE  N=2000 ntsave=303 max_steps=100000  traj = nt*R = 18.0602 GiB
+  RAISED JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 36.24GiB. [tf-allocator-allocat
+patch=v4_small  N=2000 ntsave=303 max_steps=100000  traj = nt*R = 18.0602 GiB
+  peak = 39,268,184,576 B = 36.5713 GiB = 613.565 R
+  slope = 2.0151 R per saved state
+  finite=True  trace=1.000000000000+0.000000000000j  checksum=4.0471387107e+02
+
+=== C) N=2000 ntsave=606: reachable only with the fix ===
+patch=v4_small  N=2000 ntsave=606 max_steps=100000  traj = nt*R = 36.1204 GiB
+  RAISED JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 36.51GiB. [executable_name='jit
+
+=== D) safety at production size: max_steps=1 must raise ===
+patch=v4_small  N=2000 ntsave=101 max_steps=1  traj = nt*R = 6.0201 GiB
+  RAISED JaxRuntimeError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+
+### STEP 8c COMPLETE ###

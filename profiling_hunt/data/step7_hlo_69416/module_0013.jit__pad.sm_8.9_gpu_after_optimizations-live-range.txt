@@ -1,0 +1,18 @@
+HloLiveRange (max 3):
+  InstructionSequence:
+    0:constant_values.1
+    1:array.1
+    2:loop_pad_fusion
+  BufferLiveRange:
+    array.1{}:0-3
+    constant_values.1{}:0-3
+    loop_pad_fusion{}:2-3
+  Live ranges at 2 (peak):
+    loop_pad_fusion{}: 1024 bytes (cumulative: 1024 bytes)
+    array.1{}: 1008 bytes (cumulative: 2032 bytes)
+    constant_values.1{}: 8 bytes (cumulative: 2040 bytes)
+  Stack trace breakdown for peak usage: 2 040 bytes
+    main.1 (100.0%, total: 2 040 bytes, current: 0 bytes, remaining: 2 040 bytes)
+      ├── jit(_pad)/pad (50.2%, total: 1 024 bytes, current: 1 024 bytes, remaining: 1 016 bytes)
+      ├── array (49.4%, total: 1 008 bytes, current: 1 008 bytes, remaining: 8 bytes)
+      └── constant_values (0.4%, total: 8 bytes, current: 8 bytes, remaining: 0 bytes)

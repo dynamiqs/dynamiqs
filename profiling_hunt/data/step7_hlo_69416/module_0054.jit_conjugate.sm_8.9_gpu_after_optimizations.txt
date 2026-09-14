@@ -1,0 +1,48 @@
+HloModule jit_conjugate, is_scheduled=true, entry_computation_layout={(c128[1,64]{1,0})->c128[1,64]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="0bd9ca84d12ec59586834db8e9480423"}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step7_hlo.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/general.py"
+3 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_module/_prebuilt.py"
+4 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/materialized_qarray.py"
+5 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/sparsedia_dataarray.py"
+
+FunctionNames
+1 "<module>"
+2 "build"
+3 "dag"
+4 "BoundMethod.__call__"
+5 "MaterializedQArray.conj"
+6 "SparseDIADataArray.conj"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=46 end_line=46 column=14 end_column=22}
+2 {file_name_id=1 function_name_id=2 line=40 end_line=40 column=16 end_column=25}
+3 {file_name_id=2 function_name_id=3 line=72 end_line=72 column=11 end_column=22}
+4 {file_name_id=3 function_name_id=4 line=46 end_line=46 column=15 end_column=60}
+5 {file_name_id=4 function_name_id=5 line=94 end_line=94 column=34 end_column=50}
+6 {file_name_id=5 function_name_id=6 line=96 end_line=96 column=16 end_column=33}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+4 {file_location_id=4 parent_frame_id=4}
+5 {file_location_id=5 parent_frame_id=5}
+6 {file_location_id=4 parent_frame_id=6}
+7 {file_location_id=6 parent_frame_id=7}
+
+
+%fused_complex (param_0.1: c128[1,64]) -> c128[1,64] {
+  %param_0.1 = c128[1,64]{1,0} parameter(0)
+  %real.1.1 = f64[1,64]{1,0} real(%param_0.1), metadata={op_name="jit(conjugate)/real" stack_frame_id=7}
+  %imag.1.1 = f64[1,64]{1,0} imag(%param_0.1), metadata={op_name="jit(conjugate)/imag" stack_frame_id=7}
+  %neg.1.1 = f64[1,64]{1,0} negate(%imag.1.1), metadata={op_name="jit(conjugate)/neg" stack_frame_id=7}
+  ROOT %complex.1.1 = c128[1,64]{1,0} complex(%real.1.1, %neg.1.1), metadata={op_name="jit(conjugate)/complex" stack_frame_id=7}
+}
+
+ENTRY %main.1 (x.1: c128[1,64]) -> c128[1,64] {
+  %x.1 = c128[1,64]{1,0} parameter(0), metadata={op_name="x"}
+  ROOT %loop_complex_fusion = c128[1,64]{1,0} fusion(%x.1), kind=kLoop, calls=%fused_complex, metadata={op_name="jit(conjugate)/complex" stack_frame_id=7}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+}
+

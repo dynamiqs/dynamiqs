@@ -1,0 +1,4 @@
+xla_cpu_enable_fast_min_max: false
+xla_gpu_cuda_data_dir: "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/nvidia/cu13"
+xla_dump_to: "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step7_hlo_69416"
+xla_detailed_logging: false

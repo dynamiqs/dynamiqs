@@ -1,0 +1,22 @@
+HloLiveRange (max 4):
+  InstructionSequence:
+    0:args_2_.1
+    1:args_1_.1
+    2:args_0_.1
+    3:wrapped_dynamic-slice
+  BufferLiveRange:
+    args_0_.1{}:0-4
+    args_1_.1{}:0-4
+    args_2_.1{}:0-4
+    wrapped_dynamic-slice{}:3-4
+  Live ranges at 3 (peak):
+    args_0_.1{}: 2048 bytes (cumulative: 2048 bytes)
+    wrapped_dynamic-slice{}: 32 bytes (cumulative: 2080 bytes)
+    args_1_.1{}: 8 bytes (cumulative: 2088 bytes)
+    args_2_.1{}: 8 bytes (cumulative: 2096 bytes)
+  Stack trace breakdown for peak usage: 2 096 bytes
+    main.1 (100.0%, total: 2 096 bytes, current: 0 bytes, remaining: 2 096 bytes)
+      ├── args[0] (97.7%, total: 2 048 bytes, current: 2 048 bytes, remaining: 48 bytes)
+      ├── jit(dynamic_slice)/dynamic_slice (1.5%, total: 32 bytes, current: 32 bytes, remaining: 16 bytes)
+      ├── args[1] (0.4%, total: 8 bytes, current: 8 bytes, remaining: 8 bytes)
+      └── args[2] (0.4%, total: 8 bytes, current: 8 bytes, remaining: 0 bytes)

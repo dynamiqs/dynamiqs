@@ -1,0 +1,9 @@
+BufferAssignment:
+allocation 0: size 2048, parameter 0, shape |c128[2,64]| at ShapeIndex {}:
+ value: <4 args_0_.1 @0> (size=2048,offset=0): c128[2,64]{1,0}
+allocation 1: size 32, output shape is |c128[1,2]|, maybe-live-out:
+ value: <7 wrapped_dynamic-slice @0> (size=32,offset=0): c128[1,2]{1,0}
+allocation 2: size 8, parameter 1, shape |s64[]| at ShapeIndex {}:
+ value: <5 args_1_.1 @0> (size=8,offset=0): s64[]
+allocation 3: size 8, parameter 2, shape |s64[]| at ShapeIndex {}:
+ value: <6 args_2_.1 @0> (size=8,offset=0): s64[]

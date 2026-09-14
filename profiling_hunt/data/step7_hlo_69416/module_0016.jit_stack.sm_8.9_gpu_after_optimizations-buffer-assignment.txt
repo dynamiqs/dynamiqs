@@ -1,0 +1,5 @@
+BufferAssignment:
+allocation 0: size 1024, output shape is |c128[1,64]|, maybe-live-out:
+ value: <1 copy.1 @0> (size=1024,offset=0): c128[1,64]{1,0}
+allocation 1: size 1024, parameter 0, shape |c128[64]| at ShapeIndex {}:
+ value: <0 args_0_.1 @0> (size=1024,offset=0): c128[64]{0}

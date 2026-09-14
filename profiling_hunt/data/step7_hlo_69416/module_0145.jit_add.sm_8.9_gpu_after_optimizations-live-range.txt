@@ -1,0 +1,18 @@
+HloLiveRange (max 3):
+  InstructionSequence:
+    0:args_1_.1
+    1:args_0_.1
+    2:wrapped_add
+  BufferLiveRange:
+    args_0_.1{}:0-3
+    args_1_.1{}:0-3
+    wrapped_add{}:2-3
+  Live ranges at 2 (peak):
+    args_0_.1{}: 8 bytes (cumulative: 8 bytes)
+    args_1_.1{}: 8 bytes (cumulative: 16 bytes)
+    wrapped_add{}: 8 bytes (cumulative: 24 bytes)
+  Stack trace breakdown for peak usage: 24 bytes
+    main.1 (100.0%, total: 24 bytes, current: 0 bytes, remaining: 24 bytes)
+      ├── args[0] (33.3%, total: 8 bytes, current: 8 bytes, remaining: 16 bytes)
+      ├── args[1] (33.3%, total: 8 bytes, current: 8 bytes, remaining: 8 bytes)
+      └── jit(add)/add (33.3%, total: 8 bytes, current: 8 bytes, remaining: 0 bytes)

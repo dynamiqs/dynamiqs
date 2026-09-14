@@ -1,0 +1,28 @@
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "input_reduce_fusion"
+    thunk_id: 1
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.2"
+    thunk_id: 2
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_dynamic_slice_fusion"
+    thunk_id: 3
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_dynamic_update_slice_fusion"
+    thunk_id: 4
+  }
+  thunk_kind: "kCustomKernel"
+}

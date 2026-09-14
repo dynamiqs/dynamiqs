@@ -1,0 +1,103 @@
+HloModule jit_branched_error_if_impl, entry_computation_layout={(s64[1]{0}, pred[1]{0})->(s64[], s64[1]{0})}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true,true}, frontend_attributes={xla.sdy.meshes={maximal_mesh_0 = #sdy.mesh<[], device_ids=[0]>}}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step7_hlo.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/states.py"
+3 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_errors.py"
+4 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_jit.py"
+5 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_unvmap.py"
+6 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_ad.py"
+
+FunctionNames
+1 "<module>"
+2 "build"
+3 "fock_dm"
+4 "fock"
+5 "error_if"
+6 "branched_error_if"
+7 "_JitWrapper.__call__"
+8 "_call"
+9 "_filter_jit_cache.<locals>.fun_wrapped"
+10 "branched_error_if_impl"
+11 "unvmap_any"
+12 "filter_custom_jvp.__call__"
+13 "filter_custom_jvp.__init__.<locals>.fn_wrapper"
+14 "_error"
+15 "_error.<locals>.handle_error"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=46 end_line=46 column=14 end_column=22}
+2 {file_name_id=1 function_name_id=2 line=43 end_line=43 column=24 end_column=40}
+3 {file_name_id=2 function_name_id=3 line=189 end_line=189 column=11 end_column=28}
+4 {file_name_id=2 function_name_id=4 line=113 end_line=118 column=13 end_column=5}
+5 {file_name_id=3 function_name_id=5 line=250 end_line=250 column=11 end_column=66}
+6 {file_name_id=3 function_name_id=6 line=271 end_line=271 column=15 end_column=82}
+7 {file_name_id=4 function_name_id=7 line=209 end_line=209 column=19 end_column=51}
+8 {file_name_id=4 function_name_id=8 line=263 end_line=265 column=37 end_column=17}
+9 {file_name_id=4 function_name_id=9 line=55 end_line=55 column=14 end_column=34}
+10 {file_name_id=3 function_name_id=10 line=293 end_line=293 column=19 end_column=35}
+11 {file_name_id=5 function_name_id=11 line=50 end_line=50 column=23 end_column=43}
+12 {file_name_id=3 function_name_id=10 line=342 end_line=344 column=16 end_column=5}
+13 {file_name_id=6 function_name_id=12 line=822 end_line=822 column=15 end_column=39}
+14 {file_name_id=6 function_name_id=13 line=779 end_line=779 column=19 end_column=38}
+15 {file_name_id=3 function_name_id=14 line=118 end_line=118 column=15 end_column=54}
+16 {file_name_id=3 function_name_id=15 line=111 end_line=111 column=18 end_column=58}
+17 {file_name_id=3 function_name_id=15 line=115 end_line=115 column=19 end_column=65}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+4 {file_location_id=4 parent_frame_id=4}
+5 {file_location_id=5 parent_frame_id=5}
+6 {file_location_id=6 parent_frame_id=6}
+7 {file_location_id=7 parent_frame_id=7}
+8 {file_location_id=8 parent_frame_id=8}
+9 {file_location_id=9 parent_frame_id=9}
+10 {file_location_id=10 parent_frame_id=10}
+11 {file_location_id=11 parent_frame_id=11}
+12 {file_location_id=9 parent_frame_id=12}
+13 {file_location_id=10 parent_frame_id=13}
+14 {file_location_id=11 parent_frame_id=14}
+15 {file_location_id=12 parent_frame_id=10}
+16 {file_location_id=13 parent_frame_id=16}
+17 {file_location_id=14 parent_frame_id=17}
+18 {file_location_id=15 parent_frame_id=18}
+19 {file_location_id=16 parent_frame_id=19}
+20 {file_location_id=17 parent_frame_id=19}
+
+
+%region_0.1 (reduce_or.3: pred[], reduce_or.4: pred[]) -> pred[] {
+  %reduce_or.3 = pred[] parameter(0), metadata={op_name="reduce_or"}
+  %reduce_or.4 = pred[] parameter(1), metadata={op_name="reduce_or"}
+  ROOT %reduce_or.5 = pred[] or(%reduce_or.3, %reduce_or.4), metadata={op_name="jit(branched_error_if_impl)/reduce_or" stack_frame_id=14}
+}
+
+%region_1.2 (dynamic_nodonate__first___0_.0: (s64[1])) -> (s64[1]) {
+  %dynamic_nodonate__first___0_.0 = (s64[1]{0}) parameter(0)
+  %get-tuple-element = s64[1]{0} get-tuple-element(%dynamic_nodonate__first___0_.0), index=0
+  ROOT %tuple = (s64[1]{0}) tuple(%get-tuple-element)
+}
+
+%region_2.3 (arg_empty_tuple.1: ()) -> (s64[1]) {
+  %arg_empty_tuple.1 = () parameter(0)
+  %constant.3 = s64[] constant(0)
+  %pure_callback.2 = s64[1]{0} custom-call(%constant.3), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={s64[]}, api_version=API_VERSION_TYPED_FFI, sharding={maximal device=0}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>]>"}, metadata={op_name="jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=19}, backend_config={index = 0 : ui64}
+  %pure_callback.3 = s64[1]{0} custom-call(%pure_callback.2, %constant.3), custom_call_target="xla_ffi_python_gpu_callback", operand_layout_constraints={s64[1]{0}, s64[]}, api_version=API_VERSION_TYPED_FFI, sharding={maximal device=0}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@maximal_mesh_0, []>]>"}, metadata={op_name="jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback" stack_frame_id=20}, backend_config={index = 1 : ui64}
+  ROOT %tuple.2 = (s64[1]{0}) tuple(%pure_callback.3)
+}
+
+ENTRY %main.4 (dynamic_nodonate__first___0_.3: s64[1], dynamic_nodonate__rest___0_.1: pred[1]) -> (s64[], s64[1]) {
+  %constant.4 = s64[] constant(0)
+  %dynamic_nodonate__rest___0_.1 = pred[1]{0} parameter(1), metadata={op_name="dynamic_nodonate[\'rest\'][0]"}
+  %constant.5 = pred[] constant(false)
+  %reduce_or.7 = pred[] reduce(%dynamic_nodonate__rest___0_.1, %constant.5), dimensions={0}, to_apply=%region_0.1, metadata={op_name="jit(branched_error_if_impl)/reduce_or" stack_frame_id=14}
+  %convert_element_type.1 = s32[] convert(%reduce_or.7), metadata={op_name="jit(branched_error_if_impl)/convert_element_type" stack_frame_id=18}
+  %dynamic_nodonate__first___0_.3 = s64[1]{0} parameter(0), metadata={op_name="dynamic_nodonate[\'first\'][0]"}
+  %tuple.3 = (s64[1]{0}) tuple(%dynamic_nodonate__first___0_.3)
+  %cond.2 = () tuple(), metadata={op_name="jit(branched_error_if_impl)/cond" stack_frame_id=18}
+  %cond.3.clone = (s64[1]{0}) conditional(%convert_element_type.1, %tuple.3, %cond.2), branch_computations={%region_1.2, %region_2.3}, metadata={op_name="jit(branched_error_if_impl)/cond" stack_frame_id=18}
+  %get-tuple-element.1 = s64[1]{0} get-tuple-element(%cond.3.clone), index=0, metadata={op_name="jit(branched_error_if_impl)/cond" stack_frame_id=18}
+  ROOT %tuple.1 = (s64[], s64[1]{0}) tuple(%constant.4, %get-tuple-element.1)
+}
+

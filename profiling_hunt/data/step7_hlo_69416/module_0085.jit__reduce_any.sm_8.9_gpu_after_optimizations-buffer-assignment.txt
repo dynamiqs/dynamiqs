@@ -1,0 +1,11 @@
+BufferAssignment:
+allocation 0: size 2, parameter 0, shape |pred[2]| at ShapeIndex {}:
+ value: <6 a.1 @0> (size=2,offset=0): pred[2]{0}
+allocation 1: size 1, output shape is |pred[]|, maybe-live-out:
+ value: <7 input_reduce_fusion @0> (size=1,offset=0): pred[]
+allocation 2: size 1, thread-local:
+ value: <0 reduce_or.3 @0> (size=1,offset=0): pred[]
+allocation 3: size 1, thread-local:
+ value: <1 reduce_or.4 @0> (size=1,offset=0): pred[]
+allocation 4: size 1, thread-local:
+ value: <2 reduce_or.5.0 @0> (size=1,offset=0): pred[]

@@ -1,0 +1,22 @@
+
+Total bytes used: 24 (24B)
+
+Used values:
+<3 x.1 @0>
+ positions:
+  x.1
+ uses:
+  wrapped_subtract, operand 0
+ from instruction: %x.1 = s64[1]{0} parameter(0), metadata={op_name="x"}
+<4 y.1 @0>
+ positions:
+  y.1
+ uses:
+  wrapped_subtract, operand 1
+ from instruction: %y.1 = s64[1]{0} parameter(1), metadata={op_name="y"}
+<5 wrapped_subtract @0>
+ positions:
+  wrapped_subtract
+ uses:
+  (none)
+ from instruction: %wrapped_subtract = s64[1]{0} fusion(%x.1, %y.1), kind=kLoop, calls=%wrapped_subtract_computation, metadata={op_name="jit(subtract)/sub" stack_frame_id=4}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}

@@ -1,0 +1,7 @@
+004: kConditional [source | sink]   
+  false_branch:
+    001: kCustomCall [source       | next=002 (1)] kCustomCall
+    002: kCustomCall [prev=001 (1) | sink        ] kCustomCall
+  true_branch:
+    003: kCopy [source | sink] kCopy
+005: kCopy        [source | sink] kCopy

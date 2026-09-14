@@ -1,0 +1,18 @@
+HloLiveRange (max 3):
+  InstructionSequence:
+    0:y.1
+    1:x.1
+    2:wrapped_multiply
+  BufferLiveRange:
+    x.1{}:0-3
+    y.1{}:0-3
+    wrapped_multiply{}:2-3
+  Live ranges at 2 (peak):
+    wrapped_multiply{}: 1008 bytes (cumulative: 1008 bytes)
+    x.1{}: 1008 bytes (cumulative: 2016 bytes)
+    y.1{}: 1008 bytes (cumulative: 3024 bytes)
+  Stack trace breakdown for peak usage: 3 024 bytes
+    main.1 (100.0%, total: 3 024 bytes, current: 0 bytes, remaining: 3 024 bytes)
+      ├── jit(multiply)/mul (33.3%, total: 1 008 bytes, current: 1 008 bytes, remaining: 2 016 bytes)
+      ├── x (33.3%, total: 1 008 bytes, current: 1 008 bytes, remaining: 1 008 bytes)
+      └── y (33.3%, total: 1 008 bytes, current: 1 008 bytes, remaining: 0 bytes)

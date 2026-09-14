@@ -1,0 +1,42 @@
+# job 69417 higgs GPU=0 2026-09-11T18:12:25+02:00
+
+############### EQX_ON_ERROR=RAISE ###############
+EQX_ON_ERROR = <unset, defaults to raise>   (equinox sees: raise)
+N=64  R=65,536 B
+ ntsave      output B        temp B      out+temp  total/traj
+     10       655,645     1,447,808     2,103,453      3.2096
+     20     1,311,085     2,758,528     4,069,613      3.1049
+     40     2,621,965     5,380,224     8,002,189      3.0526
+     80     5,243,725    10,623,360    15,867,085      3.0264
+    160    10,487,245    21,109,632    31,596,877      3.0133
+  output       =          205 B +  1.0001 R per saved state
+  temp         =      137,013 B +  2.0001 R per saved state
+  output+temp  =      137,218 B +  3.0002 R per saved state
+
+############### EQX_ON_ERROR=off ###############
+EQX_ON_ERROR = off   (equinox sees: off)
+N=64  R=65,536 B
+ ntsave      output B        temp B      out+temp  total/traj
+     10       655,645       919,424     1,575,069      2.4034
+     20     1,311,085       952,192     2,263,277      1.7267
+     40     2,621,965       952,192     3,574,157      1.3634
+     80     5,243,725       952,192     6,195,917      1.1818
+    160    10,487,245       952,192    11,439,437      1.0909
+  output       =          205 B +  1.0001 R per saved state
+  temp         =      938,539 B +  0.0017 R per saved state
+  output+temp  =      938,744 B +  1.0019 R per saved state
+
+############### EQX_ON_ERROR=nan ###############
+EQX_ON_ERROR = nan   (equinox sees: nan)
+N=64  R=65,536 B
+ ntsave      output B        temp B      out+temp  total/traj
+     10       655,645     1,117,056     1,772,701      2.7049
+     20     1,311,085     1,772,416     3,083,501      2.3525
+     40     2,621,965     3,083,136     5,705,101      2.1763
+     80     5,243,725     5,704,576    10,948,301      2.0882
+    160    10,487,245    10,947,456    21,434,701      2.0442
+  output       =          205 B +  1.0001 R per saved state
+  temp         =      461,696 B +  1.0000 R per saved state
+  output+temp  =      461,901 B +  2.0001 R per saved state
+
+### STEP 7b COMPLETE ###

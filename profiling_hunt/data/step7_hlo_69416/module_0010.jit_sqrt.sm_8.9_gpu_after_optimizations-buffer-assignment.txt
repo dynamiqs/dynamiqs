@@ -1,0 +1,5 @@
+BufferAssignment:
+allocation 0: size 1008, output shape is |c128[63]|, maybe-live-out:
+ value: <111 loop_complex_fusion @0> (size=1008,offset=0): c128[63]{0}
+allocation 1: size 1008, parameter 0, shape |c128[63]| at ShapeIndex {}:
+ value: <110 x.1 @0> (size=1008,offset=0): c128[63]{0}

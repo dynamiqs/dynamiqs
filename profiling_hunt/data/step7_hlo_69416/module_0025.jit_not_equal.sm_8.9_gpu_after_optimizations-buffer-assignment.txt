@@ -1,0 +1,7 @@
+BufferAssignment:
+allocation 0: size 16, parameter 0, shape |c128[1]| at ShapeIndex {}:
+ value: <4 x.1 @0> (size=16,offset=0): c128[1]{0}
+allocation 1: size 8, parameter 1, shape |s64[]| at ShapeIndex {}:
+ value: <5 y.1 @0> (size=8,offset=0): s64[]
+allocation 2: size 1, output shape is |pred[1]|, maybe-live-out:
+ value: <6 loop_compare_fusion @0> (size=1,offset=0): pred[1]{0}

@@ -1,0 +1,29 @@
+version: 3
+results {
+  device: "CUDA: 8.9, Cores: 142, GPU clock: 2.52 GHz, Memory bandwidth: 864 GB/s, L2 cache: 96 MB, DNN version: 9.25.1"
+  hlo: "{\n  ROOT tmp_0 = c128[63]{0} iota(), iota_dimension=0\n}"
+  result {
+    other {
+      name: "NATIVE_EMITTER"
+      config {
+        type_url: "type.googleapis.com/xla.autotuner.BackendConfig"
+        value: "2\000"
+      }
+    }
+  }
+  version: 45
+}
+results {
+  device: "CUDA: 8.9, Cores: 142, GPU clock: 2.52 GHz, Memory bandwidth: 864 GB/s, L2 cache: 96 MB, DNN version: 9.25.1"
+  hlo: "{\n  tmp_0 = c128[] parameter(1)\n  tmp_1 = c128[63]{0} broadcast(c128[] tmp_0), dimensions={}\n  tmp_2 = c128[63]{0} parameter(0)\n  ROOT tmp_3 = c128[63]{0} add(c128[63]{0} tmp_1, c128[63]{0} tmp_2)\n}"
+  result {
+    other {
+      name: "NATIVE_EMITTER"
+      config {
+        type_url: "type.googleapis.com/xla.autotuner.BackendConfig"
+        value: "2\000"
+      }
+    }
+  }
+  version: 45
+}

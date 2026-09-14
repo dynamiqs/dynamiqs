@@ -1,0 +1,53 @@
+gpu_device_info {
+  threads_per_block_limit: 1024
+  threads_per_warp: 32
+  shared_memory_per_block: 49152
+  shared_memory_per_core: 102400
+  threads_per_core_limit: 1536
+  core_count: 142
+  fpus_per_core: 128
+  block_dim_limit_x: 2147483647
+  block_dim_limit_y: 65535
+  block_dim_limit_z: 65535
+  memory_bandwidth: 864096000000
+  l2_cache_size: 100663296
+  clock_rate_ghz: 2.52
+  device_memory_size: 47667740672
+  shared_memory_per_block_optin: 101376
+  cuda_compute_capability {
+    major: 8
+    minor: 9
+    feature_extension: NONE
+  }
+  registers_per_core_limit: 65536
+  registers_per_block_limit: 65536
+  driver_version: "13.2.0"
+  kernel_mode_driver_version: "595.84.0"
+  runtime_version: "13.4.0"
+  compile_time_toolkit_version: "13.0.0"
+  dnn_version: "9.25.1"
+  cub_version: "3.2.0"
+  device_vendor: "NVIDIA Corporation"
+  platform_version: "Compute Capability 8.9"
+  pci_bus_id: "<undefined>"
+  name: "NVIDIA L40S"
+  model_str: "sm_8.9 with 47667740672B RAM, 142 cores, 2520000KHz clock, 9001000KHz mem clock, 100663296B L2$"
+  numa_node: -1
+  thread_dim_limit_x: 1024
+  thread_dim_limit_y: 1024
+  thread_dim_limit_z: 64
+  device_address_bits: 64
+  pcie_bandwidth: 34359738368
+  ecc_enabled: true
+}
+platform_name: "CUDA"
+dnn_version_info {
+  major: 9
+  minor: 25
+  patch: 1
+}
+device_description_str: "NVIDIA L40S"
+runtime_version {
+  major: 13
+  minor: 4
+}

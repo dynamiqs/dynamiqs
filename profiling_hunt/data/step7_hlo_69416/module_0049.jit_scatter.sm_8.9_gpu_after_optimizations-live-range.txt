@@ -1,0 +1,34 @@
+HloLiveRange (max 7):
+  InstructionSequence:
+    0:args_1_.1
+    1:input_reduce_fusion
+    2:args_2_.1
+    3:args_0_.1
+    4:copy.2
+    5:loop_dynamic_slice_fusion
+    6:loop_dynamic_update_slice_fusion
+  BufferLiveRange:
+    args_0_.1{}:0-7
+    copy.2{}:4-6
+    args_1_.1{}:0-7
+    loop_dynamic_slice_fusion{}:5-6
+    args_2_.1{}:0-7
+    input_reduce_fusion{}:1-6
+    loop_dynamic_update_slice_fusion{}:6-7
+  Live ranges at 6 (peak):
+    args_0_.1{}: 1024 bytes (cumulative: 1024 bytes)
+    copy.2{}: 1024 bytes (cumulative: 2048 bytes)
+    loop_dynamic_update_slice_fusion{}: 1024 bytes (cumulative: 3072 bytes)
+    args_2_.1{}: 1008 bytes (cumulative: 4080 bytes)
+    loop_dynamic_slice_fusion{}: 1008 bytes (cumulative: 5088 bytes)
+    args_1_.1{}: 8 bytes (cumulative: 5096 bytes)
+    input_reduce_fusion{}: 1 bytes (cumulative: 5097 bytes)
+  Stack trace breakdown for peak usage: 5 097 bytes
+    main.2 (100.0%, total: 5 097 bytes, current: 0 bytes, remaining: 5 097 bytes)
+      ├── args[0] (20.1%, total: 1 024 bytes, current: 1 024 bytes, remaining: 4 073 bytes)
+      ├── copy.2 (20.1%, total: 1 024 bytes, current: 1 024 bytes, remaining: 3 049 bytes)
+      ├── jit(scatter)/scatter (20.1%, total: 1 024 bytes, current: 1 024 bytes, remaining: 2 025 bytes)
+      ├── args[2] (19.8%, total: 1 008 bytes, current: 1 008 bytes, remaining: 1 017 bytes)
+      ├── loop_dynamic_slice_fusion (19.8%, total: 1 008 bytes, current: 1 008 bytes, remaining: 9 bytes)
+      ├── args[1] (0.2%, total: 8 bytes, current: 8 bytes, remaining: 1 bytes)
+      └── input_reduce_fusion (0.0%, total: 1 bytes, current: 1 bytes, remaining: 0 bytes)

@@ -1,0 +1,411 @@
+############################################################################
+# SLURM job 69388 on higgs  2026-09-11T11:50:58+02:00  GPU=0
+#   XLA_PYTHON_CLIENT_MEM_FRACTION=.95
+#   XLA_PYTHON_CLIENT_PREALLOCATE=true
+# N=2000  R = 16*N^2 = 64000000 B
+############################################################################
+name, memory.total [MiB], memory.used [MiB]
+NVIDIA L40S, 46068 MiB, 0 MiB
+
+============================================================================
+A) ntsave sweep, save_states=True  -> fit peak = a + b * ntsave * R
+   H-B: b = 3.000 means dynamiqs inherits the raw-diffrax 3x; b = 1.000 means not
+============================================================================
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=2  save_states=True  n_exp_ops=0  max_steps=100000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 128,000,000 B = 0.11921 GiB
+##############################################################################################################
+  after setup: in_use=64,160,512 (1.003 R)  peak=64,256,512 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=192,165,888 (3.003 R)  peak=1,060,175,616 (16.565 R)
+  res.states shape=(2, 2000, 2000)  bytes=128,000,000 (2.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,256,512; setup-dominated = False
+  elapsed 3.7s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=6  save_states=True  n_exp_ops=0  max_steps=100000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 384,000,000 B = 0.35763 GiB
+##############################################################################################################
+  after setup: in_use=64,128,256 (1.002 R)  peak=64,224,256 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=448,133,632 (7.002 R)  peak=1,344,144,384 (21.002 R)
+  res.states shape=(6, 2000, 2000)  bytes=384,000,000 (6.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,224,256; setup-dominated = False
+  elapsed 3.7s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=11  save_states=True  n_exp_ops=0  max_steps=100000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 704,000,000 B = 0.65565 GiB
+##############################################################################################################
+  after setup: in_use=64,128,256 (1.002 R)  peak=64,224,256 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=768,133,632 (12.002 R)  peak=2,304,144,384 (36.002 R)
+  res.states shape=(11, 2000, 2000)  bytes=704,000,000 (11.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,224,256; setup-dominated = False
+  elapsed 3.9s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=26  save_states=True  n_exp_ops=0  max_steps=100000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 1,664,000,000 B = 1.54972 GiB
+##############################################################################################################
+  after setup: in_use=64,128,256 (1.002 R)  peak=64,224,256 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=1,728,133,632 (27.002 R)  peak=5,184,144,384 (81.002 R)
+  res.states shape=(26, 2000, 2000)  bytes=1,664,000,000 (26.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,224,256; setup-dominated = False
+  elapsed 3.8s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=51  save_states=True  n_exp_ops=0  max_steps=100000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 3,264,000,000 B = 3.03984 GiB
+##############################################################################################################
+  after setup: in_use=64,128,256 (1.002 R)  peak=64,224,256 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=3,328,134,144 (52.002 R)  peak=9,984,145,408 (156.002 R)
+  res.states shape=(51, 2000, 2000)  bytes=3,264,000,000 (51.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,224,256; setup-dominated = False
+  elapsed 3.8s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=101  save_states=True  n_exp_ops=0  max_steps=100000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 6,464,000,000 B = 6.02007 GiB
+##############################################################################################################
+  after setup: in_use=64,128,256 (1.002 R)  peak=64,224,256 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=6,528,135,168 (102.002 R)  peak=19,584,147,456 (306.002 R)
+  res.states shape=(101, 2000, 2000)  bytes=6,464,000,000 (101.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,224,256; setup-dominated = False
+  elapsed 4.0s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+
+============================================================================
+B) same ntsave sweep, save_states=False  -> must be FLAT
+============================================================================
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=2  save_states=False  n_exp_ops=0  max_steps=100000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = 1 (t1 only) x R = 64,000,000 B = 0.05960 GiB
+##############################################################################################################
+  after setup: in_use=64,128,256 (1.002 R)  peak=64,224,256 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=128,133,632 (2.002 R)  peak=900,141,568 (14.065 R)
+  res.states shape=(1, 2000, 2000)  bytes=64,000,000 (1.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,224,256; setup-dominated = False
+  elapsed 3.6s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=11  save_states=False  n_exp_ops=0  max_steps=100000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = 1 (t1 only) x R = 64,000,000 B = 0.05960 GiB
+##############################################################################################################
+  after setup: in_use=64,128,256 (1.002 R)  peak=64,224,256 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=128,133,632 (2.002 R)  peak=900,141,568 (14.065 R)
+  res.states shape=(1, 2000, 2000)  bytes=64,000,000 (1.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,224,256; setup-dominated = False
+  elapsed 4.0s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=51  save_states=False  n_exp_ops=0  max_steps=100000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = 1 (t1 only) x R = 64,000,000 B = 0.05960 GiB
+##############################################################################################################
+  after setup: in_use=64,160,512 (1.003 R)  peak=64,256,512 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=128,166,400 (2.003 R)  peak=900,174,848 (14.065 R)
+  res.states shape=(1, 2000, 2000)  bytes=64,000,000 (1.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,256,512; setup-dominated = False
+  elapsed 3.8s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=101  save_states=False  n_exp_ops=0  max_steps=100000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = 1 (t1 only) x R = 64,000,000 B = 0.05960 GiB
+##############################################################################################################
+  after setup: in_use=64,128,256 (1.002 R)  peak=64,224,256 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=128,135,168 (2.002 R)  peak=900,144,640 (14.065 R)
+  res.states shape=(1, 2000, 2000)  bytes=64,000,000 (1.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,224,256; setup-dominated = False
+  elapsed 3.8s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+
+============================================================================
+C) exp_ops instead of states: save_states=False + 2 exp_ops -> must be FLAT
+============================================================================
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=11  save_states=False  n_exp_ops=2  max_steps=100000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = 1 (t1 only) x R = 64,000,000 B = 0.05960 GiB
+##############################################################################################################
+  after setup: in_use=64,258,048 (1.004 R)  peak=64,482,560 (1.008 R)  op_bytes=224,000
+  after mesolve: in_use=128,263,936 (2.004 R)  peak=932,274,176 (14.567 R)
+  res.states shape=(1, 2000, 2000)  bytes=64,000,000 (1.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=(2, 11)  bytes=352
+  peak during SETUP = 64,482,560; setup-dominated = False
+  elapsed 3.8s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=101  save_states=False  n_exp_ops=2  max_steps=100000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = 1 (t1 only) x R = 64,000,000 B = 0.05960 GiB
+##############################################################################################################
+  after setup: in_use=64,258,048 (1.004 R)  peak=64,482,560 (1.008 R)  op_bytes=224,000
+  after mesolve: in_use=128,268,288 (2.004 R)  peak=932,280,064 (14.567 R)
+  res.states shape=(1, 2000, 2000)  bytes=64,000,000 (1.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=(2, 101)  bytes=3,232
+  peak during SETUP = 64,482,560; setup-dominated = False
+  elapsed 4.0s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+
+============================================================================
+D) max_steps sweep at fixed ntsave=11  -> H-C: memory must NOT depend on it
+   (dynamiqs hard-codes max_steps=100000 for fixed-step methods)
+============================================================================
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=11  save_states=True  n_exp_ops=0  max_steps=1000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 704,000,000 B = 0.65565 GiB
+##############################################################################################################
+  after setup: in_use=64,128,256 (1.002 R)  peak=64,224,256 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=768,133,632 (12.002 R)  peak=2,304,144,384 (36.002 R)
+  res.states shape=(11, 2000, 2000)  bytes=704,000,000 (11.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,224,256; setup-dominated = False
+  elapsed 4.0s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=11  save_states=True  n_exp_ops=0  max_steps=10000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 704,000,000 B = 0.65565 GiB
+##############################################################################################################
+  after setup: in_use=64,160,512 (1.003 R)  peak=64,256,512 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=768,165,888 (12.003 R)  peak=2,304,176,640 (36.003 R)
+  res.states shape=(11, 2000, 2000)  bytes=704,000,000 (11.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,256,512; setup-dominated = False
+  elapsed 3.7s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=11  save_states=True  n_exp_ops=0  max_steps=100000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 704,000,000 B = 0.65565 GiB
+##############################################################################################################
+  after setup: in_use=64,128,256 (1.002 R)  peak=64,224,256 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=768,133,632 (12.002 R)  peak=2,304,144,384 (36.002 R)
+  res.states shape=(11, 2000, 2000)  bytes=704,000,000 (11.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,224,256; setup-dominated = False
+  elapsed 3.8s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=11  save_states=True  n_exp_ops=0  max_steps=1000000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 704,000,000 B = 0.65565 GiB
+##############################################################################################################
+  after setup: in_use=64,128,256 (1.002 R)  peak=64,224,256 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=768,133,632 (12.002 R)  peak=2,304,144,384 (36.002 R)
+  res.states shape=(11, 2000, 2000)  bytes=704,000,000 (11.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,224,256; setup-dominated = False
+  elapsed 3.9s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+
+============================================================================
+E) gradient/adjoint sweep at fixed ntsave=11, forward-only solve
+   gradient=None already selects RecursiveCheckpointAdjoint (checkpointed loop)
+============================================================================
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=11  save_states=True  n_exp_ops=0  max_steps=100000  gradient=none  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 704,000,000 B = 0.65565 GiB
+##############################################################################################################
+  after setup: in_use=64,128,256 (1.002 R)  peak=64,224,256 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=768,133,632 (12.002 R)  peak=2,304,144,384 (36.002 R)
+  res.states shape=(11, 2000, 2000)  bytes=704,000,000 (11.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,224,256; setup-dominated = False
+  elapsed 3.9s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=11  save_states=True  n_exp_ops=0  max_steps=100000  gradient=forward  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 704,000,000 B = 0.65565 GiB
+##############################################################################################################
+  after setup: in_use=64,128,256 (1.002 R)  peak=64,224,256 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=768,133,632 (12.002 R)  peak=2,304,144,384 (36.002 R)
+  res.states shape=(11, 2000, 2000)  bytes=704,000,000 (11.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,224,256; setup-dominated = False
+  elapsed 3.8s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=11  save_states=True  n_exp_ops=0  max_steps=100000  gradient=direct  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 704,000,000 B = 0.65565 GiB
+##############################################################################################################
+  after setup: in_use=64,128,256 (1.002 R)  peak=64,224,256 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=768,134,656 (12.002 R)  peak=3,008,162,560 (47.003 R)
+  res.states shape=(11, 2000, 2000)  bytes=704,000,000 (11.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,224,256; setup-dominated = False
+  elapsed 5.0s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=11  save_states=True  n_exp_ops=0  max_steps=100000  gradient=checkpointed  layout=dia
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 704,000,000 B = 0.65565 GiB
+##############################################################################################################
+  after setup: in_use=64,128,256 (1.002 R)  peak=64,224,256 (1.004 R)  op_bytes=128,000
+  after mesolve: in_use=768,133,632 (12.002 R)  peak=2,304,144,384 (36.002 R)
+  res.states shape=(11, 2000, 2000)  bytes=704,000,000 (11.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 64,224,256; setup-dominated = False
+  elapsed 3.7s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+
+============================================================================
+F) dense-operator cross-check of the ntsave slope (layout must not matter)
+============================================================================
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=11  save_states=True  n_exp_ops=0  max_steps=100000  gradient=none  layout=dense
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 704,000,000 B = 0.65565 GiB
+##############################################################################################################
+  after setup: in_use=256,000,000 (4.000 R)  peak=384,128,256 (6.002 R)  op_bytes=192,000,000
+  after mesolve: in_use=960,005,376 (15.000 R)  peak=2,496,017,152 (39.000 R)
+  res.states shape=(11, 2000, 2000)  bytes=704,000,000 (11.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 384,128,256; setup-dominated = False
+  elapsed 10.6s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+##############################################################################################################
+STEP 5  dynamiqs 0.3.6  N=2000  R = 16*N^2 = 64,000,000 B (61.04 MiB)
+  ntsave=51  save_states=True  n_exp_ops=0  max_steps=100000  gradient=none  layout=dense
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  H-A PREDICTION trajectory resident = ntsave x R = 3,264,000,000 B = 3.03984 GiB
+##############################################################################################################
+  after setup: in_use=256,000,000 (4.000 R)  peak=384,128,256 (6.002 R)  op_bytes=192,000,000
+  after mesolve: in_use=3,520,005,888 (55.000 R)  peak=10,176,018,176 (159.000 R)
+  res.states shape=(51, 2000, 2000)  bytes=3,264,000,000 (51.000 R)
+  H-A measured/predicted trajectory = 1.0000
+  res.expects shape=None  bytes=0
+  peak during SETUP = 384,128,256; setup-dominated = False
+  elapsed 10.4s
+
+  appended record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl
+
+### STEP 5 COMPLETE - json at /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step5_69388.jsonl ###

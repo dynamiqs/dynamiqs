@@ -1,0 +1,52 @@
+# job 69385 on higgs 2026-09-11T11:17:03+02:00 GPU=0  N=2000
+#   XLA_PYTHON_CLIENT_MEM_FRACTION=.95
+#   XLA_PYTHON_CLIENT_PREALLOCATE=true
+
+######################## ROW: dq_dia ########################
+##############################################################################################################
+STEP 4 [dq_dia]  jax 0.10.2 diffrax 0.7.2
+  dynamiqs 0.3.6
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 = 42.1758 GiB
+  complex128 = 16 bytes/element;  R = rho_bytes = 16*N^2 = 64,000,000 B
+##############################################################################################################
+
+  --- 4_dq_dia_cat  N=2000 ---
+    cat qubit: H=delta a^dag a, L2=sqrt(k2)(a^2-alpha^2), L1=sqrt(k1) a
+    layouts: H=dia L2=dia L1=dia  ndiags=[1, 2, 1]
+    PREDICTION from DIA structure: 16 * ndiags * N summed = 128,000 B = 0.1221 MiB
+    the same operators DENSE would cost 192,000,000 B = 183.1 MiB  (saving factor 1500x)
+    after operator setup                     in_use=     64,160,256 ( 0.05975 GiB)  peak=     64,224,256 ( 0.05981 GiB)  nalloc=   286
+    MEASURED operator storage = 128,000 B = 0.1221 MiB = 0.00200 R
+    measured / DIA prediction = 1.0000   -> DIA saving DELIVERED
+    after mesolve                            in_use=    128,165,632 ( 0.11936 GiB)  peak=    900,173,568 ( 0.83835 GiB)  nalloc=   385  delta=+64,005,376
+    peak / R = 14.065   elapsed 3.5s
+    peak during SETUP = 64,224,256 (1.004 R); setup-dominated = False
+
+  appended 1 record(s) to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step4b_69385.jsonl
+
+######################## ROW: dq_cat_dense ########################
+##############################################################################################################
+STEP 4 [dq_cat_dense]  jax 0.10.2 diffrax 0.7.2
+  dynamiqs 0.3.6
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 = 42.1758 GiB
+  complex128 = 16 bytes/element;  R = rho_bytes = 16*N^2 = 64,000,000 B
+##############################################################################################################
+
+  --- 5_dq_cat_DENSE_control  N=2000 ---
+    cat qubit: H=delta a^dag a, L2=sqrt(k2)(a^2-alpha^2), L1=sqrt(k1) a
+    layouts: H=dense L2=dense L1=dense  ndiags=[None, None, None]
+    PREDICTION from DIA structure: 16 * ndiags * N summed = 0 B = 0.0000 MiB
+    the same operators DENSE would cost 192,000,000 B = 183.1 MiB  (saving factor 192000000x)
+    after operator setup                     in_use=    256,032,000 ( 0.23845 GiB)  peak=    384,128,256 ( 0.35775 GiB)  nalloc=   321
+    MEASURED operator storage = 192,000,000 B = 183.1055 MiB = 3.00000 R
+    measured / DIA prediction = 1.0000   -> DIA saving DELIVERED
+    after mesolve                            in_use=    320,037,376 ( 0.29806 GiB)  peak=  1,220,241,152 ( 1.13644 GiB)  nalloc=   503  delta=+64,005,376
+    peak / R = 19.066   elapsed 10.0s
+    peak during SETUP = 384,128,256 (6.002 R); setup-dominated = False
+
+  appended 1 record(s) to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step4b_69385.jsonl
+### STEP 4b COMPLETE ###

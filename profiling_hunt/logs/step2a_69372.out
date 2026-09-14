@@ -1,0 +1,382 @@
+############################################################################
+# SLURM job 69372 on higgs   2026-09-11T10:12:54+02:00
+# CUDA_VISIBLE_DEVICES=0  SLURM_JOB_GPUS=2
+# XLA env actually in force:
+#   XLA_PYTHON_CLIENT_MEM_FRACTION=.95
+#   XLA_PYTHON_CLIENT_PREALLOCATE=true
+############################################################################
+index, name, memory.total [MiB], memory.used [MiB]
+0, NVIDIA L40S, 46068 MiB, 0 MiB
+
+
+############################ n=36 k<=11  repeat 1 ########################
+########################################################################################################################
+STEP 2 - kron ladder.  jax 0.10.2  x64=True
+device cuda:0 kind=NVIDIA L40S
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 B = 42.1758 GiB
+  pool_bytes  = 0 B = 0.0000 GiB
+  predicted_bytes(n,k) = 8 * n^2 * 4^k   [float64 = 8 bytes/element]
+########################################################################################################################
+
+========================================================================================================================
+SEED n=36  (repeat 0)   kmax=11
+========================================================================================================================
+  baseline before ladder: bytes_in_use=0 num_allocs=0 peak_bytes_in_use=0
+  n= 36 k=  0 side=     36 elem=          1,296 pred=         10,368 (  0.0000 GiB) | seed | in_use=         10,752 (  0.0000 GiB) peak=         11,008 (  0.0000 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         10,496 free_blk=              0 nalloc=     8 | in_use/pred=  1.037 peak/pred= 1.0617 | 0.000s
+  n= 36 k=  1 side=     72 elem=          5,184 pred=         41,472 (  0.0000 GiB) | ok   | in_use=         41,728 (  0.0000 GiB) peak=         52,224 (  0.0000 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         41,472 free_blk=              0 nalloc=     9 | in_use/pred= 1.0062 peak/pred= 1.2593 | 0.041s
+  n= 36 k=  2 side=    144 elem=         20,736 pred=        165,888 (  0.0002 GiB) | ok   | in_use=        166,144 (  0.0002 GiB) peak=        207,616 (  0.0002 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        165,888 free_blk=              0 nalloc=    10 | in_use/pred= 1.0015 peak/pred= 1.2515 | 0.039s
+  n= 36 k=  3 side=    288 elem=         82,944 pred=        663,552 (  0.0006 GiB) | ok   | in_use=        663,808 (  0.0006 GiB) peak=        829,696 (  0.0008 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        663,552 free_blk=              0 nalloc=    11 | in_use/pred= 1.0004 peak/pred= 1.2504 | 0.040s
+  n= 36 k=  4 side=    576 elem=        331,776 pred=      2,654,208 (  0.0025 GiB) | ok   | in_use=      2,654,464 (  0.0025 GiB) peak=      3,318,016 (  0.0031 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=      2,654,208 free_blk=              0 nalloc=    12 | in_use/pred= 1.0001 peak/pred= 1.2501 | 0.042s
+  n= 36 k=  5 side=   1152 elem=      1,327,104 pred=     10,616,832 (  0.0099 GiB) | ok   | in_use=     10,617,088 (  0.0099 GiB) peak=     13,271,296 (  0.0124 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     10,616,832 free_blk=              0 nalloc=    13 | in_use/pred=    1.0 peak/pred=   1.25 | 0.043s
+  n= 36 k=  6 side=   2304 elem=      5,308,416 pred=     42,467,328 (  0.0396 GiB) | ok   | in_use=     42,467,584 (  0.0396 GiB) peak=     53,084,416 (  0.0494 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     42,467,328 free_blk=              0 nalloc=    14 | in_use/pred=    1.0 peak/pred=   1.25 | 0.042s
+  n= 36 k=  7 side=   4608 elem=     21,233,664 pred=    169,869,312 (  0.1582 GiB) | ok   | in_use=    169,869,568 (  0.1582 GiB) peak=    212,336,896 (  0.1978 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    169,869,312 free_blk=              0 nalloc=    15 | in_use/pred=    1.0 peak/pred=   1.25 | 0.044s
+  n= 36 k=  8 side=   9216 elem=     84,934,656 pred=    679,477,248 (  0.6328 GiB) | ok   | in_use=    679,477,504 (  0.6328 GiB) peak=    849,346,816 (  0.7910 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    679,477,248 free_blk=              0 nalloc=    16 | in_use/pred=    1.0 peak/pred=   1.25 | 0.042s
+  n= 36 k=  9 side=  18432 elem=    339,738,624 pred=  2,717,908,992 (  2.5312 GiB) | ok   | in_use=  2,717,909,248 (  2.5313 GiB) peak=  3,397,386,496 (  3.1641 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=  2,717,908,992 free_blk=              0 nalloc=    17 | in_use/pred=    1.0 peak/pred=   1.25 | 0.046s
+  n= 36 k= 10 side=  36864 elem=  1,358,954,496 pred= 10,871,635,968 ( 10.1250 GiB) | ok   | in_use= 10,871,636,224 ( 10.1250 GiB) peak= 13,589,545,216 ( 12.6563 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 10,871,635,968 free_blk=              0 nalloc=    18 | in_use/pred=    1.0 peak/pred=   1.25 | 0.062s
+  n= 36 k= 11 side=  73728 elem=  5,435,817,984 pred= 43,486,543,872 ( 40.5000 GiB) | OOM  | in_use=            256 (  0.0000 GiB) peak= 13,589,545,216 ( 12.6563 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 10,871,635,968 free_blk=              0 nalloc=    18 | in_use/pred=    0.0 peak/pred= 0.3125 | 10.042s
+    !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 40.50GiB. [executable_name='jit_kron'] [tf-allocator-allocation-error='']
+  after cleanup: bytes_in_use=0 num_allocs=18 peak_bytes_in_use=13,589,545,216 pool_bytes=45,285,900,288
+  returned to baseline: YES  (delta vs pre-ladder = +0 B)
+  SUMMARY n=36: last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True allocs_delta=18
+
+########################################################################################################################
+SWEEP SUMMARY
+########################################################################################################################
+  n= 36 rep=0 last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True
+
+############################ n=36 k<=11  repeat 2 ########################
+########################################################################################################################
+STEP 2 - kron ladder.  jax 0.10.2  x64=True
+device cuda:0 kind=NVIDIA L40S
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 B = 42.1758 GiB
+  pool_bytes  = 0 B = 0.0000 GiB
+  predicted_bytes(n,k) = 8 * n^2 * 4^k   [float64 = 8 bytes/element]
+########################################################################################################################
+
+========================================================================================================================
+SEED n=36  (repeat 0)   kmax=11
+========================================================================================================================
+  baseline before ladder: bytes_in_use=0 num_allocs=0 peak_bytes_in_use=0
+  n= 36 k=  0 side=     36 elem=          1,296 pred=         10,368 (  0.0000 GiB) | seed | in_use=         10,752 (  0.0000 GiB) peak=         11,008 (  0.0000 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         10,496 free_blk=              0 nalloc=     8 | in_use/pred=  1.037 peak/pred= 1.0617 | 0.000s
+  n= 36 k=  1 side=     72 elem=          5,184 pred=         41,472 (  0.0000 GiB) | ok   | in_use=         41,728 (  0.0000 GiB) peak=         52,224 (  0.0000 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         41,472 free_blk=              0 nalloc=     9 | in_use/pred= 1.0062 peak/pred= 1.2593 | 0.040s
+  n= 36 k=  2 side=    144 elem=         20,736 pred=        165,888 (  0.0002 GiB) | ok   | in_use=        166,144 (  0.0002 GiB) peak=        207,616 (  0.0002 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        165,888 free_blk=              0 nalloc=    10 | in_use/pred= 1.0015 peak/pred= 1.2515 | 0.042s
+  n= 36 k=  3 side=    288 elem=         82,944 pred=        663,552 (  0.0006 GiB) | ok   | in_use=        663,808 (  0.0006 GiB) peak=        829,696 (  0.0008 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        663,552 free_blk=              0 nalloc=    11 | in_use/pred= 1.0004 peak/pred= 1.2504 | 0.041s
+  n= 36 k=  4 side=    576 elem=        331,776 pred=      2,654,208 (  0.0025 GiB) | ok   | in_use=      2,654,464 (  0.0025 GiB) peak=      3,318,016 (  0.0031 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=      2,654,208 free_blk=              0 nalloc=    12 | in_use/pred= 1.0001 peak/pred= 1.2501 | 0.044s
+  n= 36 k=  5 side=   1152 elem=      1,327,104 pred=     10,616,832 (  0.0099 GiB) | ok   | in_use=     10,617,088 (  0.0099 GiB) peak=     13,271,296 (  0.0124 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     10,616,832 free_blk=              0 nalloc=    13 | in_use/pred=    1.0 peak/pred=   1.25 | 0.059s
+  n= 36 k=  6 side=   2304 elem=      5,308,416 pred=     42,467,328 (  0.0396 GiB) | ok   | in_use=     42,467,584 (  0.0396 GiB) peak=     53,084,416 (  0.0494 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     42,467,328 free_blk=              0 nalloc=    14 | in_use/pred=    1.0 peak/pred=   1.25 | 0.057s
+  n= 36 k=  7 side=   4608 elem=     21,233,664 pred=    169,869,312 (  0.1582 GiB) | ok   | in_use=    169,869,568 (  0.1582 GiB) peak=    212,336,896 (  0.1978 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    169,869,312 free_blk=              0 nalloc=    15 | in_use/pred=    1.0 peak/pred=   1.25 | 0.059s
+  n= 36 k=  8 side=   9216 elem=     84,934,656 pred=    679,477,248 (  0.6328 GiB) | ok   | in_use=    679,477,504 (  0.6328 GiB) peak=    849,346,816 (  0.7910 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    679,477,248 free_blk=              0 nalloc=    16 | in_use/pred=    1.0 peak/pred=   1.25 | 0.057s
+  n= 36 k=  9 side=  18432 elem=    339,738,624 pred=  2,717,908,992 (  2.5312 GiB) | ok   | in_use=  2,717,909,248 (  2.5313 GiB) peak=  3,397,386,496 (  3.1641 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=  2,717,908,992 free_blk=              0 nalloc=    17 | in_use/pred=    1.0 peak/pred=   1.25 | 0.065s
+  n= 36 k= 10 side=  36864 elem=  1,358,954,496 pred= 10,871,635,968 ( 10.1250 GiB) | ok   | in_use= 10,871,636,224 ( 10.1250 GiB) peak= 13,589,545,216 ( 12.6563 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 10,871,635,968 free_blk=              0 nalloc=    18 | in_use/pred=    1.0 peak/pred=   1.25 | 0.079s
+  n= 36 k= 11 side=  73728 elem=  5,435,817,984 pred= 43,486,543,872 ( 40.5000 GiB) | OOM  | in_use=            256 (  0.0000 GiB) peak= 13,589,545,216 ( 12.6563 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 10,871,635,968 free_blk=              0 nalloc=    18 | in_use/pred=    0.0 peak/pred= 0.3125 | 10.060s
+    !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 40.50GiB. [tf-allocator-allocation-error=''] [executable_name='jit_kron']
+  after cleanup: bytes_in_use=0 num_allocs=18 peak_bytes_in_use=13,589,545,216 pool_bytes=45,285,900,288
+  returned to baseline: YES  (delta vs pre-ladder = +0 B)
+  SUMMARY n=36: last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True allocs_delta=18
+
+########################################################################################################################
+SWEEP SUMMARY
+########################################################################################################################
+  n= 36 rep=0 last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True
+
+############################ n=36 k<=11  repeat 3 ########################
+########################################################################################################################
+STEP 2 - kron ladder.  jax 0.10.2  x64=True
+device cuda:0 kind=NVIDIA L40S
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 B = 42.1758 GiB
+  pool_bytes  = 0 B = 0.0000 GiB
+  predicted_bytes(n,k) = 8 * n^2 * 4^k   [float64 = 8 bytes/element]
+########################################################################################################################
+
+========================================================================================================================
+SEED n=36  (repeat 0)   kmax=11
+========================================================================================================================
+  baseline before ladder: bytes_in_use=0 num_allocs=0 peak_bytes_in_use=0
+  n= 36 k=  0 side=     36 elem=          1,296 pred=         10,368 (  0.0000 GiB) | seed | in_use=         10,752 (  0.0000 GiB) peak=         11,008 (  0.0000 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         10,496 free_blk=              0 nalloc=     8 | in_use/pred=  1.037 peak/pred= 1.0617 | 0.000s
+  n= 36 k=  1 side=     72 elem=          5,184 pred=         41,472 (  0.0000 GiB) | ok   | in_use=         41,728 (  0.0000 GiB) peak=         52,224 (  0.0000 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         41,472 free_blk=              0 nalloc=     9 | in_use/pred= 1.0062 peak/pred= 1.2593 | 0.041s
+  n= 36 k=  2 side=    144 elem=         20,736 pred=        165,888 (  0.0002 GiB) | ok   | in_use=        166,144 (  0.0002 GiB) peak=        207,616 (  0.0002 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        165,888 free_blk=              0 nalloc=    10 | in_use/pred= 1.0015 peak/pred= 1.2515 | 0.042s
+  n= 36 k=  3 side=    288 elem=         82,944 pred=        663,552 (  0.0006 GiB) | ok   | in_use=        663,808 (  0.0006 GiB) peak=        829,696 (  0.0008 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        663,552 free_blk=              0 nalloc=    11 | in_use/pred= 1.0004 peak/pred= 1.2504 | 0.041s
+  n= 36 k=  4 side=    576 elem=        331,776 pred=      2,654,208 (  0.0025 GiB) | ok   | in_use=      2,654,464 (  0.0025 GiB) peak=      3,318,016 (  0.0031 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=      2,654,208 free_blk=              0 nalloc=    12 | in_use/pred= 1.0001 peak/pred= 1.2501 | 0.049s
+  n= 36 k=  5 side=   1152 elem=      1,327,104 pred=     10,616,832 (  0.0099 GiB) | ok   | in_use=     10,617,088 (  0.0099 GiB) peak=     13,271,296 (  0.0124 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     10,616,832 free_blk=              0 nalloc=    13 | in_use/pred=    1.0 peak/pred=   1.25 | 0.057s
+  n= 36 k=  6 side=   2304 elem=      5,308,416 pred=     42,467,328 (  0.0396 GiB) | ok   | in_use=     42,467,584 (  0.0396 GiB) peak=     53,084,416 (  0.0494 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     42,467,328 free_blk=              0 nalloc=    14 | in_use/pred=    1.0 peak/pred=   1.25 | 0.057s
+  n= 36 k=  7 side=   4608 elem=     21,233,664 pred=    169,869,312 (  0.1582 GiB) | ok   | in_use=    169,869,568 (  0.1582 GiB) peak=    212,336,896 (  0.1978 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    169,869,312 free_blk=              0 nalloc=    15 | in_use/pred=    1.0 peak/pred=   1.25 | 0.056s
+  n= 36 k=  8 side=   9216 elem=     84,934,656 pred=    679,477,248 (  0.6328 GiB) | ok   | in_use=    679,477,504 (  0.6328 GiB) peak=    849,346,816 (  0.7910 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    679,477,248 free_blk=              0 nalloc=    16 | in_use/pred=    1.0 peak/pred=   1.25 | 0.057s
+  n= 36 k=  9 side=  18432 elem=    339,738,624 pred=  2,717,908,992 (  2.5312 GiB) | ok   | in_use=  2,717,909,248 (  2.5313 GiB) peak=  3,397,386,496 (  3.1641 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=  2,717,908,992 free_blk=              0 nalloc=    17 | in_use/pred=    1.0 peak/pred=   1.25 | 0.063s
+  n= 36 k= 10 side=  36864 elem=  1,358,954,496 pred= 10,871,635,968 ( 10.1250 GiB) | ok   | in_use= 10,871,636,224 ( 10.1250 GiB) peak= 13,589,545,216 ( 12.6563 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 10,871,635,968 free_blk=              0 nalloc=    18 | in_use/pred=    1.0 peak/pred=   1.25 | 0.079s
+  n= 36 k= 11 side=  73728 elem=  5,435,817,984 pred= 43,486,543,872 ( 40.5000 GiB) | OOM  | in_use=            256 (  0.0000 GiB) peak= 13,589,545,216 ( 12.6563 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 10,871,635,968 free_blk=              0 nalloc=    18 | in_use/pred=    0.0 peak/pred= 0.3125 | 10.061s
+    !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 40.50GiB. [executable_name='jit_kron'] [tf-allocator-allocation-error='']
+  after cleanup: bytes_in_use=0 num_allocs=18 peak_bytes_in_use=13,589,545,216 pool_bytes=45,285,900,288
+  returned to baseline: YES  (delta vs pre-ladder = +0 B)
+  SUMMARY n=36: last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True allocs_delta=18
+
+########################################################################################################################
+SWEEP SUMMARY
+########################################################################################################################
+  n= 36 rep=0 last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True
+
+############################ n=36 k<=11  repeat 4 ########################
+########################################################################################################################
+STEP 2 - kron ladder.  jax 0.10.2  x64=True
+device cuda:0 kind=NVIDIA L40S
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 B = 42.1758 GiB
+  pool_bytes  = 0 B = 0.0000 GiB
+  predicted_bytes(n,k) = 8 * n^2 * 4^k   [float64 = 8 bytes/element]
+########################################################################################################################
+
+========================================================================================================================
+SEED n=36  (repeat 0)   kmax=11
+========================================================================================================================
+  baseline before ladder: bytes_in_use=0 num_allocs=0 peak_bytes_in_use=0
+  n= 36 k=  0 side=     36 elem=          1,296 pred=         10,368 (  0.0000 GiB) | seed | in_use=         10,752 (  0.0000 GiB) peak=         11,008 (  0.0000 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         10,496 free_blk=              0 nalloc=     8 | in_use/pred=  1.037 peak/pred= 1.0617 | 0.000s
+  n= 36 k=  1 side=     72 elem=          5,184 pred=         41,472 (  0.0000 GiB) | ok   | in_use=         41,728 (  0.0000 GiB) peak=         52,224 (  0.0000 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         41,472 free_blk=              0 nalloc=     9 | in_use/pred= 1.0062 peak/pred= 1.2593 | 0.042s
+  n= 36 k=  2 side=    144 elem=         20,736 pred=        165,888 (  0.0002 GiB) | ok   | in_use=        166,144 (  0.0002 GiB) peak=        207,616 (  0.0002 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        165,888 free_blk=              0 nalloc=    10 | in_use/pred= 1.0015 peak/pred= 1.2515 | 0.043s
+  n= 36 k=  3 side=    288 elem=         82,944 pred=        663,552 (  0.0006 GiB) | ok   | in_use=        663,808 (  0.0006 GiB) peak=        829,696 (  0.0008 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        663,552 free_blk=              0 nalloc=    11 | in_use/pred= 1.0004 peak/pred= 1.2504 | 0.041s
+  n= 36 k=  4 side=    576 elem=        331,776 pred=      2,654,208 (  0.0025 GiB) | ok   | in_use=      2,654,464 (  0.0025 GiB) peak=      3,318,016 (  0.0031 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=      2,654,208 free_blk=              0 nalloc=    12 | in_use/pred= 1.0001 peak/pred= 1.2501 | 0.057s
+  n= 36 k=  5 side=   1152 elem=      1,327,104 pred=     10,616,832 (  0.0099 GiB) | ok   | in_use=     10,617,088 (  0.0099 GiB) peak=     13,271,296 (  0.0124 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     10,616,832 free_blk=              0 nalloc=    13 | in_use/pred=    1.0 peak/pred=   1.25 | 0.058s
+  n= 36 k=  6 side=   2304 elem=      5,308,416 pred=     42,467,328 (  0.0396 GiB) | ok   | in_use=     42,467,584 (  0.0396 GiB) peak=     53,084,416 (  0.0494 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     42,467,328 free_blk=              0 nalloc=    14 | in_use/pred=    1.0 peak/pred=   1.25 | 0.056s
+  n= 36 k=  7 side=   4608 elem=     21,233,664 pred=    169,869,312 (  0.1582 GiB) | ok   | in_use=    169,869,568 (  0.1582 GiB) peak=    212,336,896 (  0.1978 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    169,869,312 free_blk=              0 nalloc=    15 | in_use/pred=    1.0 peak/pred=   1.25 | 0.056s
+  n= 36 k=  8 side=   9216 elem=     84,934,656 pred=    679,477,248 (  0.6328 GiB) | ok   | in_use=    679,477,504 (  0.6328 GiB) peak=    849,346,816 (  0.7910 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    679,477,248 free_blk=              0 nalloc=    16 | in_use/pred=    1.0 peak/pred=   1.25 | 0.057s
+  n= 36 k=  9 side=  18432 elem=    339,738,624 pred=  2,717,908,992 (  2.5312 GiB) | ok   | in_use=  2,717,909,248 (  2.5313 GiB) peak=  3,397,386,496 (  3.1641 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=  2,717,908,992 free_blk=              0 nalloc=    17 | in_use/pred=    1.0 peak/pred=   1.25 | 0.062s
+  n= 36 k= 10 side=  36864 elem=  1,358,954,496 pred= 10,871,635,968 ( 10.1250 GiB) | ok   | in_use= 10,871,636,224 ( 10.1250 GiB) peak= 13,589,545,216 ( 12.6563 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 10,871,635,968 free_blk=              0 nalloc=    18 | in_use/pred=    1.0 peak/pred=   1.25 | 0.078s
+  n= 36 k= 11 side=  73728 elem=  5,435,817,984 pred= 43,486,543,872 ( 40.5000 GiB) | OOM  | in_use=            256 (  0.0000 GiB) peak= 13,589,545,216 ( 12.6563 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 10,871,635,968 free_blk=              0 nalloc=    18 | in_use/pred=    0.0 peak/pred= 0.3125 | 10.060s
+    !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 40.50GiB. [tf-allocator-allocation-error=''] [executable_name='jit_kron']
+  after cleanup: bytes_in_use=0 num_allocs=18 peak_bytes_in_use=13,589,545,216 pool_bytes=45,285,900,288
+  returned to baseline: YES  (delta vs pre-ladder = +0 B)
+  SUMMARY n=36: last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True allocs_delta=18
+
+########################################################################################################################
+SWEEP SUMMARY
+########################################################################################################################
+  n= 36 rep=0 last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True
+
+############################ n=36 k<=11  repeat 5 ########################
+########################################################################################################################
+STEP 2 - kron ladder.  jax 0.10.2  x64=True
+device cuda:0 kind=NVIDIA L40S
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 B = 42.1758 GiB
+  pool_bytes  = 0 B = 0.0000 GiB
+  predicted_bytes(n,k) = 8 * n^2 * 4^k   [float64 = 8 bytes/element]
+########################################################################################################################
+
+========================================================================================================================
+SEED n=36  (repeat 0)   kmax=11
+========================================================================================================================
+  baseline before ladder: bytes_in_use=0 num_allocs=0 peak_bytes_in_use=0
+  n= 36 k=  0 side=     36 elem=          1,296 pred=         10,368 (  0.0000 GiB) | seed | in_use=         10,752 (  0.0000 GiB) peak=         11,008 (  0.0000 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         10,496 free_blk=              0 nalloc=     8 | in_use/pred=  1.037 peak/pred= 1.0617 | 0.000s
+  n= 36 k=  1 side=     72 elem=          5,184 pred=         41,472 (  0.0000 GiB) | ok   | in_use=         41,728 (  0.0000 GiB) peak=         52,224 (  0.0000 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         41,472 free_blk=              0 nalloc=     9 | in_use/pred= 1.0062 peak/pred= 1.2593 | 0.042s
+  n= 36 k=  2 side=    144 elem=         20,736 pred=        165,888 (  0.0002 GiB) | ok   | in_use=        166,144 (  0.0002 GiB) peak=        207,616 (  0.0002 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        165,888 free_blk=              0 nalloc=    10 | in_use/pred= 1.0015 peak/pred= 1.2515 | 0.039s
+  n= 36 k=  3 side=    288 elem=         82,944 pred=        663,552 (  0.0006 GiB) | ok   | in_use=        663,808 (  0.0006 GiB) peak=        829,696 (  0.0008 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        663,552 free_blk=              0 nalloc=    11 | in_use/pred= 1.0004 peak/pred= 1.2504 | 0.046s
+  n= 36 k=  4 side=    576 elem=        331,776 pred=      2,654,208 (  0.0025 GiB) | ok   | in_use=      2,654,464 (  0.0025 GiB) peak=      3,318,016 (  0.0031 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=      2,654,208 free_blk=              0 nalloc=    12 | in_use/pred= 1.0001 peak/pred= 1.2501 | 0.049s
+  n= 36 k=  5 side=   1152 elem=      1,327,104 pred=     10,616,832 (  0.0099 GiB) | ok   | in_use=     10,617,088 (  0.0099 GiB) peak=     13,271,296 (  0.0124 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     10,616,832 free_blk=              0 nalloc=    13 | in_use/pred=    1.0 peak/pred=   1.25 | 0.048s
+  n= 36 k=  6 side=   2304 elem=      5,308,416 pred=     42,467,328 (  0.0396 GiB) | ok   | in_use=     42,467,584 (  0.0396 GiB) peak=     53,084,416 (  0.0494 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     42,467,328 free_blk=              0 nalloc=    14 | in_use/pred=    1.0 peak/pred=   1.25 | 0.047s
+  n= 36 k=  7 side=   4608 elem=     21,233,664 pred=    169,869,312 (  0.1582 GiB) | ok   | in_use=    169,869,568 (  0.1582 GiB) peak=    212,336,896 (  0.1978 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    169,869,312 free_blk=              0 nalloc=    15 | in_use/pred=    1.0 peak/pred=   1.25 | 0.047s
+  n= 36 k=  8 side=   9216 elem=     84,934,656 pred=    679,477,248 (  0.6328 GiB) | ok   | in_use=    679,477,504 (  0.6328 GiB) peak=    849,346,816 (  0.7910 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    679,477,248 free_blk=              0 nalloc=    16 | in_use/pred=    1.0 peak/pred=   1.25 | 0.048s
+  n= 36 k=  9 side=  18432 elem=    339,738,624 pred=  2,717,908,992 (  2.5312 GiB) | ok   | in_use=  2,717,909,248 (  2.5313 GiB) peak=  3,397,386,496 (  3.1641 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=  2,717,908,992 free_blk=              0 nalloc=    17 | in_use/pred=    1.0 peak/pred=   1.25 | 0.053s
+  n= 36 k= 10 side=  36864 elem=  1,358,954,496 pred= 10,871,635,968 ( 10.1250 GiB) | ok   | in_use= 10,871,636,224 ( 10.1250 GiB) peak= 13,589,545,216 ( 12.6563 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 10,871,635,968 free_blk=              0 nalloc=    18 | in_use/pred=    1.0 peak/pred=   1.25 | 0.071s
+  n= 36 k= 11 side=  73728 elem=  5,435,817,984 pred= 43,486,543,872 ( 40.5000 GiB) | OOM  | in_use=            256 (  0.0000 GiB) peak= 13,589,545,216 ( 12.6563 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 10,871,635,968 free_blk=              0 nalloc=    18 | in_use/pred=    0.0 peak/pred= 0.3125 | 10.059s
+    !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 40.50GiB. [tf-allocator-allocation-error=''] [executable_name='jit_kron']
+  after cleanup: bytes_in_use=0 num_allocs=18 peak_bytes_in_use=13,589,545,216 pool_bytes=45,285,900,288
+  returned to baseline: YES  (delta vs pre-ladder = +0 B)
+  SUMMARY n=36: last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True allocs_delta=18
+
+########################################################################################################################
+SWEEP SUMMARY
+########################################################################################################################
+  n= 36 rep=0 last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True
+
+############################ n=37 k<=11  repeat 1 ########################
+########################################################################################################################
+STEP 2 - kron ladder.  jax 0.10.2  x64=True
+device cuda:0 kind=NVIDIA L40S
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 B = 42.1758 GiB
+  pool_bytes  = 0 B = 0.0000 GiB
+  predicted_bytes(n,k) = 8 * n^2 * 4^k   [float64 = 8 bytes/element]
+########################################################################################################################
+
+========================================================================================================================
+SEED n=37  (repeat 0)   kmax=11
+========================================================================================================================
+  baseline before ladder: bytes_in_use=0 num_allocs=0 peak_bytes_in_use=0
+  n= 37 k=  0 side=     37 elem=          1,369 pred=         10,952 (  0.0000 GiB) | seed | in_use=         11,264 (  0.0000 GiB) peak=         11,520 (  0.0000 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         11,008 free_blk=              0 nalloc=     8 | in_use/pred= 1.0285 peak/pred= 1.0519 | 0.000s
+  n= 37 k=  1 side=     74 elem=          5,476 pred=         43,808 (  0.0000 GiB) | ok   | in_use=         44,288 (  0.0000 GiB) peak=         55,296 (  0.0001 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         44,032 free_blk=              0 nalloc=     9 | in_use/pred=  1.011 peak/pred= 1.2622 | 0.042s
+  n= 37 k=  2 side=    148 elem=         21,904 pred=        175,232 (  0.0002 GiB) | ok   | in_use=        175,616 (  0.0002 GiB) peak=        219,648 (  0.0002 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        175,360 free_blk=              0 nalloc=    10 | in_use/pred= 1.0022 peak/pred= 1.2535 | 0.042s
+  n= 37 k=  3 side=    296 elem=         87,616 pred=        700,928 (  0.0007 GiB) | ok   | in_use=        701,184 (  0.0007 GiB) peak=        876,544 (  0.0008 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        700,928 free_blk=              0 nalloc=    11 | in_use/pred= 1.0004 peak/pred= 1.2505 | 0.041s
+  n= 37 k=  4 side=    592 elem=        350,464 pred=      2,803,712 (  0.0026 GiB) | ok   | in_use=      2,803,968 (  0.0026 GiB) peak=      3,504,896 (  0.0033 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=      2,803,712 free_blk=              0 nalloc=    12 | in_use/pred= 1.0001 peak/pred= 1.2501 | 0.043s
+  n= 37 k=  5 side=   1184 elem=      1,401,856 pred=     11,214,848 (  0.0104 GiB) | ok   | in_use=     11,215,104 (  0.0104 GiB) peak=     14,018,816 (  0.0131 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     11,214,848 free_blk=              0 nalloc=    13 | in_use/pred=    1.0 peak/pred=   1.25 | 0.042s
+  n= 37 k=  6 side=   2368 elem=      5,607,424 pred=     44,859,392 (  0.0418 GiB) | ok   | in_use=     44,859,648 (  0.0418 GiB) peak=     56,074,496 (  0.0522 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     44,859,392 free_blk=              0 nalloc=    14 | in_use/pred=    1.0 peak/pred=   1.25 | 0.042s
+  n= 37 k=  7 side=   4736 elem=     22,429,696 pred=    179,437,568 (  0.1671 GiB) | ok   | in_use=    179,437,824 (  0.1671 GiB) peak=    224,297,216 (  0.2089 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    179,437,568 free_blk=              0 nalloc=    15 | in_use/pred=    1.0 peak/pred=   1.25 | 0.042s
+  n= 37 k=  8 side=   9472 elem=     89,718,784 pred=    717,750,272 (  0.6685 GiB) | ok   | in_use=    717,750,528 (  0.6685 GiB) peak=    897,188,096 (  0.8356 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    717,750,272 free_blk=              0 nalloc=    16 | in_use/pred=    1.0 peak/pred=   1.25 | 0.043s
+  n= 37 k=  9 side=  18944 elem=    358,875,136 pred=  2,871,001,088 (  2.6738 GiB) | ok   | in_use=  2,871,001,344 (  2.6738 GiB) peak=  3,588,751,616 (  3.3423 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=  2,871,001,088 free_blk=              0 nalloc=    17 | in_use/pred=    1.0 peak/pred=   1.25 | 0.047s
+  n= 37 k= 10 side=  37888 elem=  1,435,500,544 pred= 11,484,004,352 ( 10.6953 GiB) | ok   | in_use= 11,484,004,608 ( 10.6953 GiB) peak= 14,355,005,696 ( 13.3691 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 11,484,004,352 free_blk=              0 nalloc=    18 | in_use/pred=    1.0 peak/pred=   1.25 | 0.064s
+  n= 37 k= 11 side=  75776 elem=  5,742,002,176 pred= 45,936,017,408 ( 42.7812 GiB) | OOM  | in_use=            256 (  0.0000 GiB) peak= 14,355,005,696 ( 13.3691 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 11,484,004,352 free_blk=              0 nalloc=    18 | in_use/pred=    0.0 peak/pred= 0.3125 | 10.053s
+    !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 42.78GiB. [executable_name='jit_kron'] [tf-allocator-allocation-error='']
+  after cleanup: bytes_in_use=0 num_allocs=18 peak_bytes_in_use=14,355,005,696 pool_bytes=45,285,900,288
+  returned to baseline: YES  (delta vs pre-ladder = +0 B)
+  SUMMARY n=37: last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True allocs_delta=18
+
+########################################################################################################################
+SWEEP SUMMARY
+########################################################################################################################
+  n= 37 rep=0 last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True
+
+############################ n=37 k<=11  repeat 2 ########################
+########################################################################################################################
+STEP 2 - kron ladder.  jax 0.10.2  x64=True
+device cuda:0 kind=NVIDIA L40S
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 B = 42.1758 GiB
+  pool_bytes  = 0 B = 0.0000 GiB
+  predicted_bytes(n,k) = 8 * n^2 * 4^k   [float64 = 8 bytes/element]
+########################################################################################################################
+
+========================================================================================================================
+SEED n=37  (repeat 0)   kmax=11
+========================================================================================================================
+  baseline before ladder: bytes_in_use=0 num_allocs=0 peak_bytes_in_use=0
+  n= 37 k=  0 side=     37 elem=          1,369 pred=         10,952 (  0.0000 GiB) | seed | in_use=         11,264 (  0.0000 GiB) peak=         11,520 (  0.0000 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         11,008 free_blk=              0 nalloc=     8 | in_use/pred= 1.0285 peak/pred= 1.0519 | 0.000s
+  n= 37 k=  1 side=     74 elem=          5,476 pred=         43,808 (  0.0000 GiB) | ok   | in_use=         44,288 (  0.0000 GiB) peak=         55,296 (  0.0001 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         44,032 free_blk=              0 nalloc=     9 | in_use/pred=  1.011 peak/pred= 1.2622 | 0.040s
+  n= 37 k=  2 side=    148 elem=         21,904 pred=        175,232 (  0.0002 GiB) | ok   | in_use=        175,616 (  0.0002 GiB) peak=        219,648 (  0.0002 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        175,360 free_blk=              0 nalloc=    10 | in_use/pred= 1.0022 peak/pred= 1.2535 | 0.043s
+  n= 37 k=  3 side=    296 elem=         87,616 pred=        700,928 (  0.0007 GiB) | ok   | in_use=        701,184 (  0.0007 GiB) peak=        876,544 (  0.0008 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        700,928 free_blk=              0 nalloc=    11 | in_use/pred= 1.0004 peak/pred= 1.2505 | 0.049s
+  n= 37 k=  4 side=    592 elem=        350,464 pred=      2,803,712 (  0.0026 GiB) | ok   | in_use=      2,803,968 (  0.0026 GiB) peak=      3,504,896 (  0.0033 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=      2,803,712 free_blk=              0 nalloc=    12 | in_use/pred= 1.0001 peak/pred= 1.2501 | 0.045s
+  n= 37 k=  5 side=   1184 elem=      1,401,856 pred=     11,214,848 (  0.0104 GiB) | ok   | in_use=     11,215,104 (  0.0104 GiB) peak=     14,018,816 (  0.0131 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     11,214,848 free_blk=              0 nalloc=    13 | in_use/pred=    1.0 peak/pred=   1.25 | 0.058s
+  n= 37 k=  6 side=   2368 elem=      5,607,424 pred=     44,859,392 (  0.0418 GiB) | ok   | in_use=     44,859,648 (  0.0418 GiB) peak=     56,074,496 (  0.0522 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     44,859,392 free_blk=              0 nalloc=    14 | in_use/pred=    1.0 peak/pred=   1.25 | 0.050s
+  n= 37 k=  7 side=   4736 elem=     22,429,696 pred=    179,437,568 (  0.1671 GiB) | ok   | in_use=    179,437,824 (  0.1671 GiB) peak=    224,297,216 (  0.2089 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    179,437,568 free_blk=              0 nalloc=    15 | in_use/pred=    1.0 peak/pred=   1.25 | 0.058s
+  n= 37 k=  8 side=   9472 elem=     89,718,784 pred=    717,750,272 (  0.6685 GiB) | ok   | in_use=    717,750,528 (  0.6685 GiB) peak=    897,188,096 (  0.8356 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    717,750,272 free_blk=              0 nalloc=    16 | in_use/pred=    1.0 peak/pred=   1.25 | 0.055s
+  n= 37 k=  9 side=  18944 elem=    358,875,136 pred=  2,871,001,088 (  2.6738 GiB) | ok   | in_use=  2,871,001,344 (  2.6738 GiB) peak=  3,588,751,616 (  3.3423 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=  2,871,001,088 free_blk=              0 nalloc=    17 | in_use/pred=    1.0 peak/pred=   1.25 | 0.063s
+  n= 37 k= 10 side=  37888 elem=  1,435,500,544 pred= 11,484,004,352 ( 10.6953 GiB) | ok   | in_use= 11,484,004,608 ( 10.6953 GiB) peak= 14,355,005,696 ( 13.3691 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 11,484,004,352 free_blk=              0 nalloc=    18 | in_use/pred=    1.0 peak/pred=   1.25 | 0.081s
+  n= 37 k= 11 side=  75776 elem=  5,742,002,176 pred= 45,936,017,408 ( 42.7812 GiB) | OOM  | in_use=            256 (  0.0000 GiB) peak= 14,355,005,696 ( 13.3691 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 11,484,004,352 free_blk=              0 nalloc=    18 | in_use/pred=    0.0 peak/pred= 0.3125 | 10.061s
+    !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 42.78GiB. [executable_name='jit_kron'] [tf-allocator-allocation-error='']
+  after cleanup: bytes_in_use=0 num_allocs=18 peak_bytes_in_use=14,355,005,696 pool_bytes=45,285,900,288
+  returned to baseline: YES  (delta vs pre-ladder = +0 B)
+  SUMMARY n=37: last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True allocs_delta=18
+
+########################################################################################################################
+SWEEP SUMMARY
+########################################################################################################################
+  n= 37 rep=0 last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True
+
+############################ n=37 k<=11  repeat 3 ########################
+########################################################################################################################
+STEP 2 - kron ladder.  jax 0.10.2  x64=True
+device cuda:0 kind=NVIDIA L40S
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 B = 42.1758 GiB
+  pool_bytes  = 0 B = 0.0000 GiB
+  predicted_bytes(n,k) = 8 * n^2 * 4^k   [float64 = 8 bytes/element]
+########################################################################################################################
+
+========================================================================================================================
+SEED n=37  (repeat 0)   kmax=11
+========================================================================================================================
+  baseline before ladder: bytes_in_use=0 num_allocs=0 peak_bytes_in_use=0
+  n= 37 k=  0 side=     37 elem=          1,369 pred=         10,952 (  0.0000 GiB) | seed | in_use=         11,264 (  0.0000 GiB) peak=         11,520 (  0.0000 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         11,008 free_blk=              0 nalloc=     8 | in_use/pred= 1.0285 peak/pred= 1.0519 | 0.000s
+  n= 37 k=  1 side=     74 elem=          5,476 pred=         43,808 (  0.0000 GiB) | ok   | in_use=         44,288 (  0.0000 GiB) peak=         55,296 (  0.0001 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         44,032 free_blk=              0 nalloc=     9 | in_use/pred=  1.011 peak/pred= 1.2622 | 0.042s
+  n= 37 k=  2 side=    148 elem=         21,904 pred=        175,232 (  0.0002 GiB) | ok   | in_use=        175,616 (  0.0002 GiB) peak=        219,648 (  0.0002 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        175,360 free_blk=              0 nalloc=    10 | in_use/pred= 1.0022 peak/pred= 1.2535 | 0.041s
+  n= 37 k=  3 side=    296 elem=         87,616 pred=        700,928 (  0.0007 GiB) | ok   | in_use=        701,184 (  0.0007 GiB) peak=        876,544 (  0.0008 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        700,928 free_blk=              0 nalloc=    11 | in_use/pred= 1.0004 peak/pred= 1.2505 | 0.040s
+  n= 37 k=  4 side=    592 elem=        350,464 pred=      2,803,712 (  0.0026 GiB) | ok   | in_use=      2,803,968 (  0.0026 GiB) peak=      3,504,896 (  0.0033 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=      2,803,712 free_blk=              0 nalloc=    12 | in_use/pred= 1.0001 peak/pred= 1.2501 | 0.043s
+  n= 37 k=  5 side=   1184 elem=      1,401,856 pred=     11,214,848 (  0.0104 GiB) | ok   | in_use=     11,215,104 (  0.0104 GiB) peak=     14,018,816 (  0.0131 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     11,214,848 free_blk=              0 nalloc=    13 | in_use/pred=    1.0 peak/pred=   1.25 | 0.041s
+  n= 37 k=  6 side=   2368 elem=      5,607,424 pred=     44,859,392 (  0.0418 GiB) | ok   | in_use=     44,859,648 (  0.0418 GiB) peak=     56,074,496 (  0.0522 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     44,859,392 free_blk=              0 nalloc=    14 | in_use/pred=    1.0 peak/pred=   1.25 | 0.042s
+  n= 37 k=  7 side=   4736 elem=     22,429,696 pred=    179,437,568 (  0.1671 GiB) | ok   | in_use=    179,437,824 (  0.1671 GiB) peak=    224,297,216 (  0.2089 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    179,437,568 free_blk=              0 nalloc=    15 | in_use/pred=    1.0 peak/pred=   1.25 | 0.043s
+  n= 37 k=  8 side=   9472 elem=     89,718,784 pred=    717,750,272 (  0.6685 GiB) | ok   | in_use=    717,750,528 (  0.6685 GiB) peak=    897,188,096 (  0.8356 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    717,750,272 free_blk=              0 nalloc=    16 | in_use/pred=    1.0 peak/pred=   1.25 | 0.043s
+  n= 37 k=  9 side=  18944 elem=    358,875,136 pred=  2,871,001,088 (  2.6738 GiB) | ok   | in_use=  2,871,001,344 (  2.6738 GiB) peak=  3,588,751,616 (  3.3423 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=  2,871,001,088 free_blk=              0 nalloc=    17 | in_use/pred=    1.0 peak/pred=   1.25 | 0.048s
+  n= 37 k= 10 side=  37888 elem=  1,435,500,544 pred= 11,484,004,352 ( 10.6953 GiB) | ok   | in_use= 11,484,004,608 ( 10.6953 GiB) peak= 14,355,005,696 ( 13.3691 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 11,484,004,352 free_blk=              0 nalloc=    18 | in_use/pred=    1.0 peak/pred=   1.25 | 0.063s
+  n= 37 k= 11 side=  75776 elem=  5,742,002,176 pred= 45,936,017,408 ( 42.7812 GiB) | OOM  | in_use=            256 (  0.0000 GiB) peak= 14,355,005,696 ( 13.3691 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 11,484,004,352 free_blk=              0 nalloc=    18 | in_use/pred=    0.0 peak/pred= 0.3125 | 10.059s
+    !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 42.78GiB. [executable_name='jit_kron'] [tf-allocator-allocation-error='']
+  after cleanup: bytes_in_use=0 num_allocs=18 peak_bytes_in_use=14,355,005,696 pool_bytes=45,285,900,288
+  returned to baseline: YES  (delta vs pre-ladder = +0 B)
+  SUMMARY n=37: last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True allocs_delta=18
+
+########################################################################################################################
+SWEEP SUMMARY
+########################################################################################################################
+  n= 37 rep=0 last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True
+
+############################ n=37 k<=11  repeat 4 ########################
+########################################################################################################################
+STEP 2 - kron ladder.  jax 0.10.2  x64=True
+device cuda:0 kind=NVIDIA L40S
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 B = 42.1758 GiB
+  pool_bytes  = 0 B = 0.0000 GiB
+  predicted_bytes(n,k) = 8 * n^2 * 4^k   [float64 = 8 bytes/element]
+########################################################################################################################
+
+========================================================================================================================
+SEED n=37  (repeat 0)   kmax=11
+========================================================================================================================
+  baseline before ladder: bytes_in_use=0 num_allocs=0 peak_bytes_in_use=0
+  n= 37 k=  0 side=     37 elem=          1,369 pred=         10,952 (  0.0000 GiB) | seed | in_use=         11,264 (  0.0000 GiB) peak=         11,520 (  0.0000 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         11,008 free_blk=              0 nalloc=     8 | in_use/pred= 1.0285 peak/pred= 1.0519 | 0.000s
+  n= 37 k=  1 side=     74 elem=          5,476 pred=         43,808 (  0.0000 GiB) | ok   | in_use=         44,288 (  0.0000 GiB) peak=         55,296 (  0.0001 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         44,032 free_blk=              0 nalloc=     9 | in_use/pred=  1.011 peak/pred= 1.2622 | 0.045s
+  n= 37 k=  2 side=    148 elem=         21,904 pred=        175,232 (  0.0002 GiB) | ok   | in_use=        175,616 (  0.0002 GiB) peak=        219,648 (  0.0002 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        175,360 free_blk=              0 nalloc=    10 | in_use/pred= 1.0022 peak/pred= 1.2535 | 0.042s
+  n= 37 k=  3 side=    296 elem=         87,616 pred=        700,928 (  0.0007 GiB) | ok   | in_use=        701,184 (  0.0007 GiB) peak=        876,544 (  0.0008 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        700,928 free_blk=              0 nalloc=    11 | in_use/pred= 1.0004 peak/pred= 1.2505 | 0.055s
+  n= 37 k=  4 side=    592 elem=        350,464 pred=      2,803,712 (  0.0026 GiB) | ok   | in_use=      2,803,968 (  0.0026 GiB) peak=      3,504,896 (  0.0033 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=      2,803,712 free_blk=              0 nalloc=    12 | in_use/pred= 1.0001 peak/pred= 1.2501 | 0.057s
+  n= 37 k=  5 side=   1184 elem=      1,401,856 pred=     11,214,848 (  0.0104 GiB) | ok   | in_use=     11,215,104 (  0.0104 GiB) peak=     14,018,816 (  0.0131 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     11,214,848 free_blk=              0 nalloc=    13 | in_use/pred=    1.0 peak/pred=   1.25 | 0.058s
+  n= 37 k=  6 side=   2368 elem=      5,607,424 pred=     44,859,392 (  0.0418 GiB) | ok   | in_use=     44,859,648 (  0.0418 GiB) peak=     56,074,496 (  0.0522 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     44,859,392 free_blk=              0 nalloc=    14 | in_use/pred=    1.0 peak/pred=   1.25 | 0.057s
+  n= 37 k=  7 side=   4736 elem=     22,429,696 pred=    179,437,568 (  0.1671 GiB) | ok   | in_use=    179,437,824 (  0.1671 GiB) peak=    224,297,216 (  0.2089 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    179,437,568 free_blk=              0 nalloc=    15 | in_use/pred=    1.0 peak/pred=   1.25 | 0.057s
+  n= 37 k=  8 side=   9472 elem=     89,718,784 pred=    717,750,272 (  0.6685 GiB) | ok   | in_use=    717,750,528 (  0.6685 GiB) peak=    897,188,096 (  0.8356 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    717,750,272 free_blk=              0 nalloc=    16 | in_use/pred=    1.0 peak/pred=   1.25 | 0.058s
+  n= 37 k=  9 side=  18944 elem=    358,875,136 pred=  2,871,001,088 (  2.6738 GiB) | ok   | in_use=  2,871,001,344 (  2.6738 GiB) peak=  3,588,751,616 (  3.3423 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=  2,871,001,088 free_blk=              0 nalloc=    17 | in_use/pred=    1.0 peak/pred=   1.25 | 0.060s
+  n= 37 k= 10 side=  37888 elem=  1,435,500,544 pred= 11,484,004,352 ( 10.6953 GiB) | ok   | in_use= 11,484,004,608 ( 10.6953 GiB) peak= 14,355,005,696 ( 13.3691 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 11,484,004,352 free_blk=              0 nalloc=    18 | in_use/pred=    1.0 peak/pred=   1.25 | 0.080s
+  n= 37 k= 11 side=  75776 elem=  5,742,002,176 pred= 45,936,017,408 ( 42.7812 GiB) | OOM  | in_use=            256 (  0.0000 GiB) peak= 14,355,005,696 ( 13.3691 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 11,484,004,352 free_blk=              0 nalloc=    18 | in_use/pred=    0.0 peak/pred= 0.3125 | 10.060s
+    !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 42.78GiB. [executable_name='jit_kron'] [tf-allocator-allocation-error='']
+  after cleanup: bytes_in_use=0 num_allocs=18 peak_bytes_in_use=14,355,005,696 pool_bytes=45,285,900,288
+  returned to baseline: YES  (delta vs pre-ladder = +0 B)
+  SUMMARY n=37: last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True allocs_delta=18
+
+########################################################################################################################
+SWEEP SUMMARY
+########################################################################################################################
+  n= 37 rep=0 last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True
+
+############################ n=37 k<=11  repeat 5 ########################
+########################################################################################################################
+STEP 2 - kron ladder.  jax 0.10.2  x64=True
+device cuda:0 kind=NVIDIA L40S
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288 B = 42.1758 GiB
+  pool_bytes  = 0 B = 0.0000 GiB
+  predicted_bytes(n,k) = 8 * n^2 * 4^k   [float64 = 8 bytes/element]
+########################################################################################################################
+
+========================================================================================================================
+SEED n=37  (repeat 0)   kmax=11
+========================================================================================================================
+  baseline before ladder: bytes_in_use=0 num_allocs=0 peak_bytes_in_use=0
+  n= 37 k=  0 side=     37 elem=          1,369 pred=         10,952 (  0.0000 GiB) | seed | in_use=         11,264 (  0.0000 GiB) peak=         11,520 (  0.0000 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         11,008 free_blk=              0 nalloc=     8 | in_use/pred= 1.0285 peak/pred= 1.0519 | 0.000s
+  n= 37 k=  1 side=     74 elem=          5,476 pred=         43,808 (  0.0000 GiB) | ok   | in_use=         44,288 (  0.0000 GiB) peak=         55,296 (  0.0001 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=         44,032 free_blk=              0 nalloc=     9 | in_use/pred=  1.011 peak/pred= 1.2622 | 0.048s
+  n= 37 k=  2 side=    148 elem=         21,904 pred=        175,232 (  0.0002 GiB) | ok   | in_use=        175,616 (  0.0002 GiB) peak=        219,648 (  0.0002 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        175,360 free_blk=              0 nalloc=    10 | in_use/pred= 1.0022 peak/pred= 1.2535 | 0.045s
+  n= 37 k=  3 side=    296 elem=         87,616 pred=        700,928 (  0.0007 GiB) | ok   | in_use=        701,184 (  0.0007 GiB) peak=        876,544 (  0.0008 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=        700,928 free_blk=              0 nalloc=    11 | in_use/pred= 1.0004 peak/pred= 1.2505 | 0.045s
+  n= 37 k=  4 side=    592 elem=        350,464 pred=      2,803,712 (  0.0026 GiB) | ok   | in_use=      2,803,968 (  0.0026 GiB) peak=      3,504,896 (  0.0033 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=      2,803,712 free_blk=              0 nalloc=    12 | in_use/pred= 1.0001 peak/pred= 1.2501 | 0.050s
+  n= 37 k=  5 side=   1184 elem=      1,401,856 pred=     11,214,848 (  0.0104 GiB) | ok   | in_use=     11,215,104 (  0.0104 GiB) peak=     14,018,816 (  0.0131 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     11,214,848 free_blk=              0 nalloc=    13 | in_use/pred=    1.0 peak/pred=   1.25 | 0.048s
+  n= 37 k=  6 side=   2368 elem=      5,607,424 pred=     44,859,392 (  0.0418 GiB) | ok   | in_use=     44,859,648 (  0.0418 GiB) peak=     56,074,496 (  0.0522 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=     44,859,392 free_blk=              0 nalloc=    14 | in_use/pred=    1.0 peak/pred=   1.25 | 0.048s
+  n= 37 k=  7 side=   4736 elem=     22,429,696 pred=    179,437,568 (  0.1671 GiB) | ok   | in_use=    179,437,824 (  0.1671 GiB) peak=    224,297,216 (  0.2089 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    179,437,568 free_blk=              0 nalloc=    15 | in_use/pred=    1.0 peak/pred=   1.25 | 0.051s
+  n= 37 k=  8 side=   9472 elem=     89,718,784 pred=    717,750,272 (  0.6685 GiB) | ok   | in_use=    717,750,528 (  0.6685 GiB) peak=    897,188,096 (  0.8356 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=    717,750,272 free_blk=              0 nalloc=    16 | in_use/pred=    1.0 peak/pred=   1.25 | 0.049s
+  n= 37 k=  9 side=  18944 elem=    358,875,136 pred=  2,871,001,088 (  2.6738 GiB) | ok   | in_use=  2,871,001,344 (  2.6738 GiB) peak=  3,588,751,616 (  3.3423 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest=  2,871,001,088 free_blk=              0 nalloc=    17 | in_use/pred=    1.0 peak/pred=   1.25 | 0.052s
+  n= 37 k= 10 side=  37888 elem=  1,435,500,544 pred= 11,484,004,352 ( 10.6953 GiB) | ok   | in_use= 11,484,004,608 ( 10.6953 GiB) peak= 14,355,005,696 ( 13.3691 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 11,484,004,352 free_blk=              0 nalloc=    18 | in_use/pred=    1.0 peak/pred=   1.25 | 0.070s
+  n= 37 k= 11 side=  75776 elem=  5,742,002,176 pred= 45,936,017,408 ( 42.7812 GiB) | OOM  | in_use=            256 (  0.0000 GiB) peak= 14,355,005,696 ( 13.3691 GiB) limit= 45,285,900,288 pool= 45,285,900,288 peak_pool= 45,285,900,288 largest= 11,484,004,352 free_blk=              0 nalloc=    18 | in_use/pred=    0.0 peak/pred= 0.3125 | 10.050s
+    !! JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 42.78GiB. [tf-allocator-allocation-error=''] [executable_name='jit_kron']
+  after cleanup: bytes_in_use=0 num_allocs=18 peak_bytes_in_use=14,355,005,696 pool_bytes=45,285,900,288
+  returned to baseline: YES  (delta vs pre-ladder = +0 B)
+  SUMMARY n=37: last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True allocs_delta=18
+
+########################################################################################################################
+SWEEP SUMMARY
+########################################################################################################################
+  n= 37 rep=0 last_ok_k=10 oom_k=11 exc=JaxRuntimeError clean=True
+
+### STEP 2a COMPLETE - csv at /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step2a_probes_69372.csv ###

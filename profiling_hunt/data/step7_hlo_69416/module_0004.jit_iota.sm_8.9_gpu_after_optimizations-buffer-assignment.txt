@@ -1,0 +1,3 @@
+BufferAssignment:
+allocation 0: size 1008, output shape is |c128[63]|, maybe-live-out:
+ value: <1 wrapped_iota @0> (size=1008,offset=0): c128[63]{0}

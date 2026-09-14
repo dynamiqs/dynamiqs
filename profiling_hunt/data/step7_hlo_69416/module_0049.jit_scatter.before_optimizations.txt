@@ -1,0 +1,51 @@
+HloModule jit_scatter, entry_computation_layout={(c128[1,64]{1,0}, s32[2]{0}, c128[63]{0})->c128[1,64]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true,true,true}, allow_spmd_sharding_propagation_to_output={true}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/profiling_hunt/scripts/step7_hlo.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/general.py"
+3 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_module/_module.py"
+4 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/materialized_qarray.py"
+5 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/sparsedia_dataarray.py"
+6 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/sparsedia_primitives.py"
+
+FunctionNames
+1 "<module>"
+2 "build"
+3 "dag"
+4 "Module.__getattribute__"
+5 "MaterializedQArray.mT"
+6 "SparseDIADataArray.mT"
+7 "transpose_sparsedia"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=46 end_line=46 column=14 end_column=22}
+2 {file_name_id=1 function_name_id=2 line=40 end_line=40 column=16 end_column=25}
+3 {file_name_id=2 function_name_id=3 line=72 end_line=72 column=11 end_column=15}
+4 {file_name_id=3 function_name_id=4 line=586 end_line=586 column=18 end_column=48}
+5 {file_name_id=4 function_name_id=5 line=70 end_line=70 column=34 end_column=46}
+6 {file_name_id=5 function_name_id=6 line=88 end_line=88 column=25 end_column=70}
+7 {file_name_id=6 function_name_id=7 line=27 end_line=27 column=20 end_column=80}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+4 {file_location_id=4 parent_frame_id=4}
+5 {file_location_id=5 parent_frame_id=5}
+6 {file_location_id=4 parent_frame_id=6}
+7 {file_location_id=6 parent_frame_id=7}
+8 {file_location_id=7 parent_frame_id=8}
+
+
+%region_0.1 (scatter.2: c128[], scatter.3: c128[]) -> c128[] {
+  %scatter.2 = c128[] parameter(0), metadata={op_name="scatter"}
+  ROOT %scatter.3 = c128[] parameter(1), metadata={op_name="scatter"}
+}
+
+ENTRY %main.2 (args_0_.1: c128[1,64], args_1_.1: s32[2], args_2_.1: c128[63]) -> c128[1,64] {
+  %args_0_.1 = c128[1,64]{1,0} parameter(0), metadata={op_name="args[0]"}
+  %args_1_.1 = s32[2]{0} parameter(1), metadata={op_name="args[1]"}
+  %args_2_.1 = c128[63]{0} parameter(2), metadata={op_name="args[2]"}
+  ROOT %scatter.5 = c128[1,64]{1,0} scatter(%args_0_.1, %args_1_.1, %args_2_.1), update_window_dims={0}, inserted_window_dims={0}, scatter_dims_to_operand_dims={0,1}, index_vector_dim=0, indices_are_sorted=true, unique_indices=true, to_apply=%region_0.1, metadata={op_name="jit(scatter)/scatter" stack_frame_id=8}
+}
+

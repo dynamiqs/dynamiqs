@@ -1,0 +1,5 @@
+BufferAssignment:
+allocation 0: size 16, output shape is |c128[]|, maybe-live-out:
+ value: <3 wrapped_convert @0> (size=16,offset=0): c128[]
+allocation 1: size 8, parameter 0, shape |f64[]| at ShapeIndex {}:
+ value: <2 args_0_.1 @0> (size=8,offset=0): f64[]

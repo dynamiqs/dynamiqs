@@ -1,0 +1,20 @@
+W0911 10:37:19.525362 3374486 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 32.00GiB (rounded to 34359738368)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 10:37:19.525651 3374486 bfc_allocator.cc:525] *_____********************__________________________________________________________________________
+W0911 10:37:31.164205 3374486 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 32.00GiB (rounded to 34359738368)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 10:37:31.164441 3374486 bfc_allocator.cc:525] *_____********************__________________________________________________________________________
+W0911 10:37:42.874842 3374486 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 32.00GiB (rounded to 34359738368)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 10:37:42.875038 3374486 bfc_allocator.cc:525] *_____********************__________________________________________________________________________
+W0911 10:37:56.032326 3374486 bfc_allocator.cc:514] Allocator (GPU_0_bfc) ran out of memory trying to allocate 40.50GiB (rounded to 43486543872)requested by op 
+If the cause is memory fragmentation maybe the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' will improve the situation. 
+Current allocation summary follows.
+Current allocation summary follows.
+W0911 10:37:56.032612 3374486 bfc_allocator.cc:525] *_______*************************___________________________________________________________________

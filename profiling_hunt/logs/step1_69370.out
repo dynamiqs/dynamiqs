@@ -1,0 +1,326 @@
+############################################################################
+# SLURM job 69370 on higgs
+# date         : 2026-09-11T09:59:59+02:00
+# CUDA_VISIBLE_DEVICES = 0
+# SLURM_JOB_GPUS       = 2
+############################################################################
+
+### full-node nvidia-smi view of the reservation ###
+Fri Sep 11 09:59:59 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.84                 Driver Version: 595.84         CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L40S                    Off |   00000000:63:00.0 Off |                    0 |
+| N/A   23C    P8             33W /  350W |       0MiB /  46068MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+
+==============================================================================
+STEP 1 - CONFIGURATION: A_jax_defaults
+==============================================================================
+environment:
+  XLA_PYTHON_CLIENT_MEM_FRACTION     = <unset>
+  XLA_PYTHON_CLIENT_PREALLOCATE      = <unset>
+  XLA_PYTHON_CLIENT_ALLOCATOR        = <unset>
+  XLA_FLAGS                          = <unset>
+  CUDA_VISIBLE_DEVICES               = 0
+  SLURM_JOB_ID                       = 69370
+  SLURM_JOB_GPUS                     = 2
+
+nvidia-smi (index, name, total MiB, used MiB):
+  0, NVIDIA L40S, 46068, 0
+
+jax 0.10.2   x64=True
+backend: gpu
+local_devices: [CudaDevice(id=0)]
+device[0]: cuda:0  kind=NVIDIA L40S
+
+memory_stats() AT REST (no user allocation yet)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    35,752,247,296      33.2969 GiB        34096.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                          0
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  0
+  peak_bytes_in_use                           0       0.0000 GiB            0.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                             0       0.0000 GiB            0.0 MiB
+  pool_bytes                                  0       0.0000 GiB            0.0 MiB
+
+allocated probe array: shape=(1024, 1024) dtype=float64 nbytes=8,388,608 (8.0 MiB)
+
+memory_stats() AFTER 8 MiB float64 probe allocation
+  bytes_in_use                        8,388,608       0.0078 GiB            8.0 MiB
+  bytes_limit                    35,752,247,296      33.2969 GiB        34096.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                35,752,247,296      33.2969 GiB        34096.0 MiB
+  pool_bytes                     35,752,247,296      33.2969 GiB        34096.0 MiB
+
+memory_stats() AFTER del + clear_caches (baseline check)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    35,752,247,296      33.2969 GiB        34096.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                35,752,247,296      33.2969 GiB        34096.0 MiB
+  pool_bytes                     35,752,247,296      33.2969 GiB        34096.0 MiB
+
+------------------------------------------------------------------------------
+DERIVED CEILING
+------------------------------------------------------------------------------
+  physical total            48,305,799,168 B     44.9883 GiB  (46068 MiB)
+  physical * 0.95           45,890,509,209 B     42.7389 GiB
+  physical * 0.9            43,475,219,251 B     40.4895 GiB
+  physical * 0.75           36,229,349,376 B     33.7412 GiB
+  MEASURED bytes_limit      35,752,247,296 B     33.2969 GiB
+  measured / physical   0.740123
+  BRIEF's LIMIT_BYTES       45,890,509,210 B     42.7389 GiB
+  measured / brief      0.779077
+
+appended JSON record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step1_69370.jsonl
+
+STEP 1 CONFIG A_jax_defaults: DONE
+
+==============================================================================
+STEP 1 - CONFIGURATION: B_mem_fraction_095
+==============================================================================
+environment:
+  XLA_PYTHON_CLIENT_MEM_FRACTION     = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE      = false
+  XLA_PYTHON_CLIENT_ALLOCATOR        = <unset>
+  XLA_FLAGS                          = <unset>
+  CUDA_VISIBLE_DEVICES               = 0
+  SLURM_JOB_ID                       = 69370
+  SLURM_JOB_GPUS                     = 2
+
+nvidia-smi (index, name, total MiB, used MiB):
+  0, NVIDIA L40S, 46068, 0
+
+jax 0.10.2   x64=True
+backend: gpu
+local_devices: [CudaDevice(id=0)]
+device[0]: cuda:0  kind=NVIDIA L40S
+
+memory_stats() AT REST (no user allocation yet)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    45,285,900,288      42.1758 GiB        43188.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                          0
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  0
+  peak_bytes_in_use                           0       0.0000 GiB            0.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                             0       0.0000 GiB            0.0 MiB
+  pool_bytes                                  0       0.0000 GiB            0.0 MiB
+
+allocated probe array: shape=(1024, 1024) dtype=float64 nbytes=8,388,608 (8.0 MiB)
+
+memory_stats() AFTER 8 MiB float64 probe allocation
+  bytes_in_use                        8,388,608       0.0078 GiB            8.0 MiB
+  bytes_limit                    45,285,900,288      42.1758 GiB        43188.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                    10,485,760       0.0098 GiB           10.0 MiB
+  pool_bytes                         10,485,760       0.0098 GiB           10.0 MiB
+
+memory_stats() AFTER del + clear_caches (baseline check)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    45,285,900,288      42.1758 GiB        43188.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                    10,485,760       0.0098 GiB           10.0 MiB
+  pool_bytes                         10,485,760       0.0098 GiB           10.0 MiB
+
+------------------------------------------------------------------------------
+DERIVED CEILING
+------------------------------------------------------------------------------
+  physical total            48,305,799,168 B     44.9883 GiB  (46068 MiB)
+  physical * 0.95           45,890,509,209 B     42.7389 GiB
+  physical * 0.9            43,475,219,251 B     40.4895 GiB
+  physical * 0.75           36,229,349,376 B     33.7412 GiB
+  MEASURED bytes_limit      45,285,900,288 B     42.1758 GiB
+  measured / physical   0.937484
+  BRIEF's LIMIT_BYTES       45,890,509,210 B     42.7389 GiB
+  measured / brief      0.986825
+
+appended JSON record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step1_69370.jsonl
+
+STEP 1 CONFIG B_mem_fraction_095: DONE
+
+==============================================================================
+STEP 1 - CONFIGURATION: C_preallocate_false
+==============================================================================
+environment:
+  XLA_PYTHON_CLIENT_MEM_FRACTION     = <unset>
+  XLA_PYTHON_CLIENT_PREALLOCATE      = false
+  XLA_PYTHON_CLIENT_ALLOCATOR        = <unset>
+  XLA_FLAGS                          = <unset>
+  CUDA_VISIBLE_DEVICES               = 0
+  SLURM_JOB_ID                       = 69370
+  SLURM_JOB_GPUS                     = 2
+
+nvidia-smi (index, name, total MiB, used MiB):
+  0, NVIDIA L40S, 46068, 0
+
+jax 0.10.2   x64=True
+backend: gpu
+local_devices: [CudaDevice(id=0)]
+device[0]: cuda:0  kind=NVIDIA L40S
+
+memory_stats() AT REST (no user allocation yet)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    35,752,247,296      33.2969 GiB        34096.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                          0
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  0
+  peak_bytes_in_use                           0       0.0000 GiB            0.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                             0       0.0000 GiB            0.0 MiB
+  pool_bytes                                  0       0.0000 GiB            0.0 MiB
+
+allocated probe array: shape=(1024, 1024) dtype=float64 nbytes=8,388,608 (8.0 MiB)
+
+memory_stats() AFTER 8 MiB float64 probe allocation
+  bytes_in_use                        8,388,608       0.0078 GiB            8.0 MiB
+  bytes_limit                    35,752,247,296      33.2969 GiB        34096.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                    10,485,760       0.0098 GiB           10.0 MiB
+  pool_bytes                         10,485,760       0.0098 GiB           10.0 MiB
+
+memory_stats() AFTER del + clear_caches (baseline check)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    35,752,247,296      33.2969 GiB        34096.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                    10,485,760       0.0098 GiB           10.0 MiB
+  pool_bytes                         10,485,760       0.0098 GiB           10.0 MiB
+
+------------------------------------------------------------------------------
+DERIVED CEILING
+------------------------------------------------------------------------------
+  physical total            48,305,799,168 B     44.9883 GiB  (46068 MiB)
+  physical * 0.95           45,890,509,209 B     42.7389 GiB
+  physical * 0.9            43,475,219,251 B     40.4895 GiB
+  physical * 0.75           36,229,349,376 B     33.7412 GiB
+  MEASURED bytes_limit      35,752,247,296 B     33.2969 GiB
+  measured / physical   0.740123
+  BRIEF's LIMIT_BYTES       45,890,509,210 B     42.7389 GiB
+  measured / brief      0.779077
+
+appended JSON record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step1_69370.jsonl
+
+STEP 1 CONFIG C_preallocate_false: DONE
+
+==============================================================================
+STEP 1 - CONFIGURATION: D_095_and_no_prealloc
+==============================================================================
+environment:
+  XLA_PYTHON_CLIENT_MEM_FRACTION     = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE      = false
+  XLA_PYTHON_CLIENT_ALLOCATOR        = <unset>
+  XLA_FLAGS                          = <unset>
+  CUDA_VISIBLE_DEVICES               = 0
+  SLURM_JOB_ID                       = 69370
+  SLURM_JOB_GPUS                     = 2
+
+nvidia-smi (index, name, total MiB, used MiB):
+  0, NVIDIA L40S, 46068, 0
+
+jax 0.10.2   x64=True
+backend: gpu
+local_devices: [CudaDevice(id=0)]
+device[0]: cuda:0  kind=NVIDIA L40S
+
+memory_stats() AT REST (no user allocation yet)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    45,285,900,288      42.1758 GiB        43188.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                          0
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  0
+  peak_bytes_in_use                           0       0.0000 GiB            0.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                             0       0.0000 GiB            0.0 MiB
+  pool_bytes                                  0       0.0000 GiB            0.0 MiB
+
+allocated probe array: shape=(1024, 1024) dtype=float64 nbytes=8,388,608 (8.0 MiB)
+
+memory_stats() AFTER 8 MiB float64 probe allocation
+  bytes_in_use                        8,388,608       0.0078 GiB            8.0 MiB
+  bytes_limit                    45,285,900,288      42.1758 GiB        43188.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                    10,485,760       0.0098 GiB           10.0 MiB
+  pool_bytes                         10,485,760       0.0098 GiB           10.0 MiB
+
+memory_stats() AFTER del + clear_caches (baseline check)
+  bytes_in_use                                0       0.0000 GiB            0.0 MiB
+  bytes_limit                    45,285,900,288      42.1758 GiB        43188.0 MiB
+  bytes_reserved                              0       0.0000 GiB            0.0 MiB
+  largest_alloc_size                  8,388,608
+  largest_free_block_bytes                    0       0.0000 GiB            0.0 MiB
+  num_allocs                                  3
+  peak_bytes_in_use                   8,388,864       0.0078 GiB            8.0 MiB
+  peak_bytes_reserved                         0       0.0000 GiB            0.0 MiB
+  peak_pool_bytes                    10,485,760       0.0098 GiB           10.0 MiB
+  pool_bytes                         10,485,760       0.0098 GiB           10.0 MiB
+
+------------------------------------------------------------------------------
+DERIVED CEILING
+------------------------------------------------------------------------------
+  physical total            48,305,799,168 B     44.9883 GiB  (46068 MiB)
+  physical * 0.95           45,890,509,209 B     42.7389 GiB
+  physical * 0.9            43,475,219,251 B     40.4895 GiB
+  physical * 0.75           36,229,349,376 B     33.7412 GiB
+  MEASURED bytes_limit      45,285,900,288 B     42.1758 GiB
+  measured / physical   0.937484
+  BRIEF's LIMIT_BYTES       45,890,509,210 B     42.7389 GiB
+  measured / brief      0.986825
+
+appended JSON record to /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step1_69370.jsonl
+
+STEP 1 CONFIG D_095_and_no_prealloc: DONE
+
+### STEP 1 COMPLETE - json at /srv/data/users/nlepage/new_dynamiqs/profiling_hunt/data/step1_69370.jsonl ###

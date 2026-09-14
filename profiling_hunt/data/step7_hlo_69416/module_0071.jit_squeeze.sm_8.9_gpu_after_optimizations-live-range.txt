@@ -1,0 +1,13 @@
+HloLiveRange (max 3):
+  InstructionSequence:
+    0:constant_1_0
+    1:copy.1
+    2:args_0_.1
+  BufferLiveRange:
+    args_0_.1{}:0-3
+    constant_1_0{}:0-1
+    copy.1{}:1-3
+  Live ranges at 0 (peak):
+    args_0_.1{}: 0 bytes (cumulative: 0 bytes)
+    constant_1_0{}: 0 bytes (cumulative: 0 bytes)
+  Stack trace breakdown for peak usage: 0 bytes
