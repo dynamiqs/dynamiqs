@@ -141,3 +141,13 @@ def test_string_does_not_recurse():
     assert get_dims('not a qarray') is None
     with pytest.raises(TypeError):
         dq.asqarray('not a qarray')
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_sparsedia_from_dict_pads_only_the_diagonal_axis():
+    # a batched diagonal with a non-zero offset used to be padded on every axis, which
+    # silently grew the batch dimension
+    x = dq.sparsedia_from_dict({1: jnp.ones((3, 2))})
+    assert x.shape == (3, 3, 3)
+    expected = jnp.tile(jnp.diag(jnp.ones(2), k=1), (3, 1, 1))
+    assert jnp.allclose(x.to_jax(), expected)

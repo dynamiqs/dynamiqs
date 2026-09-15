@@ -23,6 +23,7 @@ from ..time_qarray import (
     SummedTimeQArray,
     TimeQArray,
 )
+from ..utils.operators import zeros_like
 
 
 class HasShape(Protocol):
@@ -33,7 +34,15 @@ class HasShape(Protocol):
 HasShapeT = TypeVar('HasShapeT', bound=HasShape)
 
 
-def sum_qarrays(qarrays: list[QArray]) -> QArray:
+def sum_qarrays(qarrays: list[QArray], like: QArray | None = None) -> QArray:
+    """Sum of qarrays, staying a qarray when there is nothing to sum.
+
+    An empty sum has no qarray to reduce, and the integer `0` a plain `sum()` would
+    return cannot be subtracted from a qarray, so `like` gives the dims and layout of
+    the null qarray to return instead. This is what an empty `jump_ops` needs.
+    """
+    if len(qarrays) == 0 and like is not None:
+        return zeros_like(like)
     return functools.reduce(operator.add, qarrays)
 
 
