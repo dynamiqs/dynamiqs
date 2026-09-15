@@ -1,5 +1,5 @@
 {
-  "tests/core/test_gradient_support.py::test_default_gradient_rejects_hessian": 0.1,
+  "tests/core/test_gradient_support.py::test_default_gradient_rejects_hessian": 15.0,
   "tests/core/test_gradient_support.py::test_higher_order_supported[method0]": 0.1,
   "tests/core/test_gradient_support.py::test_higher_order_supported[method1]": 0.1,
   "tests/core/test_gradient_support.py::test_higher_order_supported[method2]": 0.1,
@@ -596,6 +596,10 @@
   "tests/qarrays/test_utils.py::test_stack_double": 0.1,
   "tests/qarrays/test_utils.py::test_stack_simple": 0.1,
   "tests/qarrays/test_utils.py::test_string_does_not_recurse": 0.1,
+  "tests/sepropagator/test_batching.py::test_cartesian_batching[nH0]": 15.0,
+  "tests/sepropagator/test_batching.py::test_cartesian_batching[nH1]": 15.0,
+  "tests/sepropagator/test_batching.py::test_cartesian_batching[nH2]": 15.0,
+  "tests/sepropagator/test_batching.py::test_timeqarray_batching": 15.0,
   "tests/sepropagator/test_sepropagator.py::TestSEPropagator::test_correctness[system0]": 15.0,
   "tests/sepropagator/test_sepropagator.py::TestSEPropagator::test_correctness[system1]": 15.0,
   "tests/sepropagator/test_sepropagator.py::TestSEPropagator::test_correctness_complex[nH0-None-False]": 15.0,
