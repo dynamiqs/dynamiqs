@@ -22,6 +22,7 @@ Familiarize yourself with Dynamiqs. Learn how to simulate quantum systems, defin
 - [Batching simulations](basics/batching-simulations.md)
 - [Computing gradients](basics/computing-gradients.md)
 - [Floquet integration](basics/floquet-integration.md)
+- [Optimizing performance](basics/performance.md)
 
 ## Advanced examples
 
