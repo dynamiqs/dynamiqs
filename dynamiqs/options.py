@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import equinox as eqx
 import jax.tree_util as jtu
-from jaxtyping import PyTree, ScalarLike
+from jaxtyping import PyTree, Scalar, ScalarLike
 
 from ._utils import tree_str_inline
 from .progress_meter import AbstractProgressMeter
@@ -20,7 +20,7 @@ class Options(eqx.Module):
     cartesian_batching: bool = True
     progress_meter: AbstractProgressMeter | bool | None = None
     t0: ScalarLike | None = None
-    save_extra: Callable[[QArray], PyTree] | None = None
+    save_extra: Callable[[Scalar, QArray], PyTree] | None = None
     nmaxclick: int = 10_000
     vectorized: bool = False
     assume_hermitian: bool = True
@@ -32,7 +32,7 @@ class Options(eqx.Module):
         cartesian_batching: bool = True,
         progress_meter: AbstractProgressMeter | bool | None = None,
         t0: ScalarLike | None = None,
-        save_extra: Callable[[QArray], PyTree] | None = None,
+        save_extra: Callable[[Scalar, QArray], PyTree] | None = None,
         nmaxclick: int = 10_000,
         vectorized: bool = False,
         assume_hermitian: bool = True,
