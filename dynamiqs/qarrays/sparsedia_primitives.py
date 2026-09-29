@@ -178,21 +178,24 @@ def add_sparsedia_sparsedia(
     # compute the output offsets
     out_offsets = np.union1d(left_offsets, right_offsets).astype(int)
 
-    # initialize the output diagonals
+    # build each output diagonal, then stack them: XLA fuses this into one kernel,
+    # while filling a zero array with `.at[i].add` is one kernel per diagonal
     batch_shape = jnp.broadcast_shapes(left_diags.shape[:-2], right_diags.shape[:-2])
-    diags_shape = (*batch_shape, len(out_offsets), left_diags.shape[-1])
+    diag_shape = (*batch_shape, left_diags.shape[-1])
     dtype = jnp.promote_types(left_diags.dtype, right_diags.dtype)
-    out_diags = jnp.zeros(diags_shape, dtype=dtype)
-
-    # loop over each offset and fill the output
-    for i, offset in enumerate(out_offsets):
+    out_diags = []
+    for offset in out_offsets:
+        diag = jnp.zeros(diag_shape, dtype=dtype)
         if offset in left_offsets:
-            left_diag = left_diags[..., left_offsets.index(offset), :]
-            out_diags = out_diags.at[..., i, :].add(left_diag)
+            diag = diag + left_diags[..., left_offsets.index(offset), :]
         if offset in right_offsets:
-            right_diag = right_diags[..., right_offsets.index(offset), :]
-            out_diags = out_diags.at[..., i, :].add(right_diag)
+            diag = diag + right_diags[..., right_offsets.index(offset), :]
+        out_diags.append(diag)
 
+    if len(out_diags) == 0:
+        out_diags = jnp.zeros((*batch_shape, 0, left_diags.shape[-1]), dtype=dtype)
+    else:
+        out_diags = jnp.stack(out_diags, axis=-2)
     return _numpy_to_tuple(out_offsets), out_diags
 
 
