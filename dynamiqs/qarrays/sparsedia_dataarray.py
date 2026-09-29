@@ -129,6 +129,11 @@ class SparseDIADataArray(DataArray):
         return replace(self, offsets=offsets, diags=diags)
 
     def expm(self, *, max_squarings: int = 16) -> DataArray:
+        # for a diagonal matrix, the matrix exponential is the element-wise
+        # exponential of its diagonal, so we can stay in the dia layout
+        if self.offsets == (0,):
+            return replace(self, diags=jnp.exp(self.diags))
+
         warnings.warn(
             'A `SparseDIADataArray` has been converted to a `DenseDataArray` while '
             'computing its matrix exponential.',
