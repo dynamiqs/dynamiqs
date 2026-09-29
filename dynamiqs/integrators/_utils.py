@@ -37,7 +37,7 @@ def sum_qarrays(qarrays: list[QArray]) -> QArray:
     return functools.reduce(operator.add, qarrays)
 
 
-def astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
+def astimeqarray(x: QArrayLike | TimeQArray, argname: str) -> TimeQArray:
     if isinstance(x, TimeQArray):
         return x
     else:
@@ -47,8 +47,8 @@ def astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
             return ConstantTimeQArray(qarray)
         except (TypeError, ValueError) as e:
             raise TypeError(
-                'Argument must be a qarray-like or a timeqarray, but has type'
-                f' {obj_type_str(x)}.'
+                f'Argument `{argname}` must be a qarray-like or a timeqarray, but has'
+                f' type {obj_type_str(x)}.'
             ) from e
 
 

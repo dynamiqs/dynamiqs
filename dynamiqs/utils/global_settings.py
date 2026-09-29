@@ -63,7 +63,7 @@ def set_precision(precision: Literal['single', 'double']):
         jax.config.update('jax_enable_x64', True)
     else:
         raise ValueError(
-            f"Argument `precision` should be a string 'single' or 'double', but is"
+            f"Argument `precision` must be a string 'single' or 'double', but is"
             f" '{precision}'."
         )
 
@@ -101,7 +101,7 @@ def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest']):
         jax.config.update('jax_default_matmul_precision', 'highest')
     else:
         raise ValueError(
-            f"Argument `matmul_precision` should be a string 'low', 'high', or"
+            f"Argument `matmul_precision` must be a string 'low', 'high', or"
             f" 'highest', but is '{matmul_precision}'."
         )
 
@@ -140,7 +140,7 @@ def set_layout(layout: Literal['dense', 'dia']):
     layouts = {'dense': dense, 'dia': dia}
     if layout not in layouts:
         raise ValueError(
-            f"Argument `layout` should be a string 'dense' or 'dia', but is {layout}."
+            f"Argument `layout` must be a string 'dense' or 'dia', but is {layout}."
         )
 
     set_global_layout(layouts[layout])

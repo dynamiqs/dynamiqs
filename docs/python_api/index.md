@@ -214,6 +214,11 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - asqarray
         - isqarraylike
         - stack
+        - concatenate
+        - expand_dims
+        - swapaxes
+        - moveaxis
+        - where
         - to_jax
         - to_numpy
         - to_qutip

@@ -15,6 +15,8 @@ from dynamiqs.method import (
     Tsit5,
 )
 
+from ..order import TEST_INSTANT, TEST_LONG
+
 # Methods that support `HigherOrder` (explicit Diffrax ODE methods) and methods that
 # don't (implicit solvers, low-rank, Rouchon). These guard the `SUPPORTED_GRADIENT`
 # gate without running a full integration system.
@@ -27,6 +29,7 @@ UNSUPPORTED = [
 ]
 
 
+@pytest.mark.run(order=TEST_INSTANT)
 @pytest.mark.parametrize('method', SUPPORTED)
 def test_higher_order_supported(method):
     assert method.supports_gradient(HigherOrder())
@@ -36,6 +39,7 @@ def test_higher_order_supported(method):
     assert method.supports_gradient(Forward())
 
 
+@pytest.mark.run(order=TEST_INSTANT)
 @pytest.mark.parametrize('method', UNSUPPORTED)
 def test_higher_order_unsupported(method):
     assert not method.supports_gradient(HigherOrder())
@@ -49,6 +53,7 @@ def test_higher_order_unsupported(method):
         method.assert_supports_gradient(HigherOrder())
 
 
+@pytest.mark.run(order=TEST_LONG)
 def test_default_gradient_rejects_hessian():
     # regression guard: the default first-order path (RecursiveCheckpointAdjoint, a
     # custom_vjp) cannot be Hessian-differentiated; `HigherOrder` is what unlocks it.

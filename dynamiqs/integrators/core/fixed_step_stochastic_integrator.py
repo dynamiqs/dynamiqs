@@ -68,7 +68,7 @@ class StochasticSolveFixedStepIntegrator(
 
         # check that tsave is linearly spaced
         if not _is_linearly_spaced(self.ts):
-            raise ValueError('Argument `tsave` should be linearly spaced.')
+            raise ValueError('Argument `tsave` must be linearly spaced.')
 
         # check that options.t0 is not used
         if self.options.t0 is not None:

@@ -87,23 +87,23 @@ def check_times(x: Array, argname: str, allow_empty: bool = False) -> Array:
 
     if x.ndim != 1:
         raise ValueError(
-            f'Argument {argname} must be a 1D array, but is a {x.ndim}D array.'
+            f'Argument `{argname}` must be a 1D array, but is a {x.ndim}D array.'
         )
     if not allow_empty and len(x) == 0:
-        raise ValueError(f'Argument {argname} must contain at least one element.')
+        raise ValueError(f'Argument `{argname}` must contain at least one element.')
 
     # this check is written to be JIT-compatible
     return eqx.error_if(
         x,
         x[1:] < x[:-1],
-        f'Argument {argname} must be sorted in strictly ascending order.',
+        f'Argument `{argname}` must be sorted in strictly ascending order.',
     )
 
 
 def check_type_int(x: Array | np.ndarray | QArray, argname: str) -> None:
     if not jnp.issubdtype(x.dtype, jnp.integer):
         raise ValueError(
-            f'Argument {argname} must be of type integer, but is of type'
+            f'Argument `{argname}` must be of type integer, but is of type'
             f' {argname}.dtype={x.dtype}.'
         )
 
@@ -113,14 +113,13 @@ def check_hermitian(x: QArray, argname: str) -> QArray:
     return eqx.error_if(
         x,
         jnp.logical_not(x.isherm(rtol=rtol, atol=atol)),
-        f'Argument {argname} is not hermitian.',
+        f'Argument `{argname}` is not hermitian.',
     )
 
 
 def check_qarray_is_dense(x: QArray, argname: str) -> None:
-    # check if the layout of x is dense
     if x.layout != dense:
         raise ValueError(
-            f'Argument {argname} must have layout `dense` but has layout '
+            f'Argument `{argname}` must have layout `dense`, but has layout '
             f'{argname}.layout={x.layout}.'
         )
