@@ -101,7 +101,6 @@ The symptom tells you where to look:
   uv run pytest tests/<relevant directory> -q
   uv run pytest dynamiqs/<touched module>.py -q  # if you changed a docstring
   ```
-- If you added or renamed a test file, run `uv run task durations`.
 - If the fix changes documented behavior or an equation, update the docstring and its
   examples (see the `docstring` skill).
 

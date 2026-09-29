@@ -104,11 +104,10 @@ points too local to be findings: naming, wording, stale comments.
   regression class); unsupported dunder operands return `NotImplemented`.
 
 **Testing.** Check every rule of the Testing section of `CLAUDE.md`. The frequent
-misses: no regression test for a bug fix; a missing or wrong `TEST_*` tier;
-`.test_durations` not regenerated; comparison against another solver instead of a
-`tests/systems/` analytical solution; only one layout covered; a stochastic property
-test without its control; and a tolerance loosened in an existing test, which usually
-hides a regression.
+misses: no regression test for a bug fix; a missing or wrong `TEST_*` tier; comparison
+against another solver instead of a `tests/systems/` analytical solution; only one
+layout covered; a stochastic property test without its control; and a tolerance
+loosened in an existing test, which usually hides a regression.
 
 **API and documentation**
 - New public function registered in `__all__`, `mkdocs.yml`, **and**
