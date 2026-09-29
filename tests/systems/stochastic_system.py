@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Callable
 
 import jax.numpy as jnp
 import numpy as np
@@ -34,16 +35,37 @@ class StochasticSystem(System):
     def etas(self) -> Array:
         """Compute the efficiencies for each jump operator."""
 
-    def run(self, solver: str, method: Method, keys: Array) -> Result:
+    def run(
+        self,
+        solver: str,
+        method: Method,
+        keys: Array,
+        *,
+        save_extra: Callable[[Array, Array], PyTree] | None = None,
+    ) -> Result:
         H, Ls, y0 = self.H(None), self.Ls(None), self.y0(None)
         exp_ops = self.Es(None) or None
         if solver == 'jsse':
             return dq.jssesolve(
-                H, Ls, y0, self.tsave, keys=keys, exp_ops=exp_ops, method=method
+                H,
+                Ls,
+                y0,
+                self.tsave,
+                keys=keys,
+                exp_ops=exp_ops,
+                method=method,
+                save_extra=save_extra,
             )
         if solver == 'dsse':
             return dq.dssesolve(
-                H, Ls, y0, self.tsave, keys=keys, exp_ops=exp_ops, method=method
+                H,
+                Ls,
+                y0,
+                self.tsave,
+                keys=keys,
+                exp_ops=exp_ops,
+                method=method,
+                save_extra=save_extra,
             )
         if solver == 'jsme':
             thetas = jnp.zeros(len(Ls))
@@ -57,6 +79,7 @@ class StochasticSystem(System):
                 keys=keys,
                 exp_ops=exp_ops,
                 method=method,
+                save_extra=save_extra,
             )
         if solver == 'dsme':
             return dq.dsmesolve(
@@ -68,6 +91,7 @@ class StochasticSystem(System):
                 keys=keys,
                 exp_ops=exp_ops,
                 method=method,
+                save_extra=save_extra,
             )
         raise ValueError(f'unknown stochastic solver {solver!r}')
 
