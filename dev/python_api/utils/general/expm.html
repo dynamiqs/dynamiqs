@@ -7183,9 +7183,14 @@
 
 <p><span class="doc-section-title">Examples:</span></p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">expm</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">())</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1</span>
+<span class="go">[[2.718+0.j     ⋅    ]</span>
+<span class="go"> [    ⋅     0.368+0.j]]</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">expm</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
 <span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense</span>
-<span class="go">[[2.718+0.j 0.   +0.j]</span>
-<span class="go"> [0.   +0.j 0.368+0.j]]</span>
+<span class="go">[[1.543+0.j 1.175+0.j]</span>
+<span class="go"> [1.175+0.j 1.543+0.j]]</span>
 </code></pre></div>
 
 
