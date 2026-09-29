@@ -10,7 +10,7 @@ import jax.numpy as jnp
 from diffrax._custom_types import RealScalarLike
 from equinox.internal import while_loop
 from jax import Array
-from jaxtyping import PRNGKeyArray, PyTree
+from jaxtyping import PRNGKeyArray, PyTree, Scalar
 
 from ...method import Event
 from ...options import Options
@@ -113,8 +113,8 @@ class JSSESolveEventIntegrator(
             dtmax=self.method.dtmax,
         )
 
-    def save(self, y: PyTree) -> SolveSaved:
-        return super().save(y.unit())
+    def save(self, t: Scalar, y: PyTree) -> SolveSaved:
+        return super().save(t, y.unit())
 
     def _solve_until_click(self, y: JumpState, rand: Array) -> tuple[JumpState, bool]:
         # === solve until the next click event
@@ -197,7 +197,7 @@ class JSSESolveEventIntegrator(
         clicktimes = jnp.full((len(self.Ls), self.options.nmaxclick), jnp.nan)
         indices = jnp.zeros(len(self.Ls), dtype=int)
         y = stack([self.y0] * len(self.ts))
-        saved = self.reorder_Esave(self.save(y))
+        saved = jax.vmap(self.save)(jnp.asarray(self.ts), y)
         y0 = JumpState(self.y0, self.t0, key, clicktimes, indices, saved, 0)
 
         # === loop over no-click evolutions until the final time is reached
