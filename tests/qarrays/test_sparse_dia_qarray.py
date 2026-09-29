@@ -1,5 +1,6 @@
 import warnings
 
+import jax
 import jax.numpy as jnp
 import jax.random as jr
 import pytest
@@ -71,6 +72,13 @@ class TestSparseDIAQArray:
 
         self.denseB = make_dictB(denseB)
         self.sparseB = make_dictB(sparseB)
+
+        # matrix C, with a single diagonal of offset 0
+        sparseC = MaterializedQArray(
+            (N,), False, SparseDIADataArray((0,), diagsA[1][None, :])
+        )
+        self.denseC = make_dictA(sparseC.asdense())
+        self.sparseC = make_dictA(sparseC)
 
         # scalar
         self.scalar = 2 + 2j
@@ -207,6 +215,23 @@ class TestSparseDIAQArray:
         out_dia_dense = (sA & dB).to_jax()
         assert _allclose(out_dense_dense, out_dia_dense)
 
+    def test_kronecker_batch_batch(self):
+        # Kronecker product of two operands sharing the same non-1 batch size,
+        # a case `valid_operation_keys` never exercises.
+        sA = dq.stack([self.sparseA['simple'], 2 * self.sparseA['simple']])
+        sB = dq.stack([self.sparseB['simple'], 3 * self.sparseB['simple']])
+        dA, dB = sA.asdense(), sB.asdense()
+
+        out_dense_dense = (dA & dB).to_jax()
+        assert out_dense_dense.shape[0] == 2
+
+        out_dia_dia = (sA & sB).to_jax()
+        assert _allclose(out_dense_dense, out_dia_dia)
+
+    def test_devices(self):
+        d, s = self.denseA['simple'], self.sparseA['simple']
+        assert s.devices() == d.devices() == set(jax.devices())
+
     def test_outofbounds(self):
         # set up matrix
         N = 10
@@ -235,6 +260,25 @@ class TestSparseDIAQArray:
         out_dia = s.powm(3).to_jax()
 
         assert _allclose(out_dia, out_dense)
+
+    @pytest.mark.parametrize('k', ['simple', 'batch', 'batch_broadcast'])
+    def test_expm(self, k):
+        # matrix A has several diagonals, it is converted to the dense layout
+        dA, sA = self.denseA[k], self.sparseA[k]
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=UserWarning)
+            out_dia = sA.expm()
+        assert out_dia.layout is dq.dense
+        assert _allclose(out_dia.to_jax(), dA.expm().to_jax(), rtol=1e-4)
+
+        # matrix C has a single diagonal of offset 0, it stays in the dia layout and
+        # does not warn
+        dC, sC = self.denseC[k], self.sparseC[k]
+        with warnings.catch_warnings():
+            warnings.simplefilter('error', category=UserWarning)
+            out_dia = sC.expm()
+        assert out_dia.layout is dq.dia
+        assert _allclose(out_dia.to_jax(), dC.expm().to_jax(), rtol=1e-4)
 
 
 def _allclose(a, b, rtol=1e-05, atol=1e-08):

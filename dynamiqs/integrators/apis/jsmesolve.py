@@ -4,10 +4,12 @@ from collections.abc import Callable
 from functools import partial
 from typing import cast
 
+import equinox as eqx
 import jax
 import jax.numpy as jnp
+import numpy as np
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray, PyTree
+from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
 
 from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
@@ -45,7 +47,7 @@ def jsmesolve(
     gradient: Gradient | None = None,
     save_states: bool = True,
     cartesian_batching: bool = True,
-    save_extra: Callable[[QArray], PyTree] | None = None,
+    save_extra: Callable[[Scalar, QArray], PyTree] | None = None,
     nmaxclick: int = 10_000,
 ) -> JSMESolveResult:
     r"""Solve the jump stochastic master equation (SME).
@@ -93,7 +95,9 @@ def jsmesolve(
     Warning:
         For now, `jsmesolve()` only supports linearly spaced `tsave` with values that
         are exact multiples of the method fixed step size `dt`. Moreover, to JIT-compile
-        code using `jsmesolve()`, `tsave` must be passed as tuple.
+        code using `jsmesolve()`, `tsave` must be passed as tuple. The values of `etas`
+        must also be known at compile time, because they determine which loss channels
+        are measured.
 
     Note: Simulating the measurement record only
         If you are only interested in the measurement record and not the state, you
@@ -181,9 +185,10 @@ def jsmesolve(
             as separated batch dimensions, otherwise the batching is performed over a
             single shared batch dimension. Defaults to `True`.
         save_extra: A function with signature
-            `f(QArray) -> PyTree` that takes a state as input and returns a PyTree.
-            This can be used to save additional arbitrary data during the integration,
-            accessible in `result.extra`. Defaults to `None`.
+            `f(Scalar, QArray) -> PyTree` that takes the current time and state as
+            input and returns a PyTree. This can be used to save additional
+            arbitrary data during the integration, accessible in `result.extra`.
+            Defaults to `None`.
         nmaxclick: Maximum buffer size for `result.clicktimes`, should
             be set higher than the expected maximum number of clicks. Defaults to
             `10_000`.
@@ -275,7 +280,7 @@ def jsmesolve(
     H = astimeqarray(H, 'H')
     Ls = [astimeqarray(L, 'jump_ops') for L in jump_ops]
     thetas = jnp.asarray(thetas)
-    etas = jnp.asarray(etas)
+    etas = np.asarray(etas)
     rho0 = asqarray(rho0)
     keys = jnp.asarray(keys)
 
@@ -311,6 +316,10 @@ def jsmesolve(
     # === convert rho0 to density matrix
     rho0 = rho0.todm()
     rho0 = check_hermitian(rho0, 'rho0')
+
+    thetas = eqx.error_if(
+        thetas, thetas < 0, 'Argument `thetas` should only contain positive values.'
+    )
 
     # === split jump operators
     # split between purely dissipative (eta = 0) and measured (eta != 0)
@@ -468,11 +477,11 @@ def _jsmesolve_single_trajectory(
     return cast(JSMESolveResult, integrator.run())
 
 
-def _check_jsmesolve_args(  # noqa: C901
+def _check_jsmesolve_args(
     H: TimeQArray,
     Ls: list[TimeQArray],
     thetas: Array,
-    etas: Array,
+    etas: np.ndarray,
     rho0: QArray,
     exp_ops: list[QArray] | None,
 ):
@@ -503,12 +512,6 @@ def _check_jsmesolve_args(  # noqa: C901
             f' len(thetas)={len(thetas)} and len(jump_ops)={len(Ls)}.'
         )
 
-    if jnp.any(thetas < 0):
-        raise ValueError(
-            'Argument `thetas` should only contain values greater than 0, but'
-            f' is {thetas}.'
-        )
-
     # === check etas
     check_shape(etas, 'etas', '(n,)', subs={'n': 'len(jump_ops)'})
 
@@ -518,13 +521,13 @@ def _check_jsmesolve_args(  # noqa: C901
             f' len(etas)={len(etas)} and len(jump_ops)={len(Ls)}.'
         )
 
-    if jnp.all(etas == 0):
+    if np.all(etas == 0):
         raise ValueError(
             'Argument `etas` contains only null values, consider using `dq.mesolve()`'
             ' to solve the Lindblad master equation.'
         )
 
-    if not (jnp.all(etas >= 0) and jnp.all(etas <= 1)):
+    if not (np.all(etas >= 0) and np.all(etas <= 1)):
         raise ValueError(
             'Argument `etas` should only contain values between 0 and 1, but'
             f' is {etas}.'

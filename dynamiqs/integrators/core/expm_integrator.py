@@ -8,7 +8,7 @@ import jax
 import jax.numpy as jnp
 from diffrax._custom_types import RealScalarLike
 from jax import Array
-from jaxtyping import PyTree
+from jaxtyping import PyTree, Scalar
 
 from dynamiqs._utils import concatenate_sort
 
@@ -75,12 +75,14 @@ class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
         step_propagators = expm(delta_ts[:, None, None] * As)  # (ntimes-1, N, N)
 
         # === combine the propagators together
-        def step(carry: QArray, x: QArray) -> tuple[QArray, Saved]:
+        def step(carry: QArray, xs: tuple[Array, QArray]) -> tuple[QArray, Saved]:
             # note the ordering x @ carry: we accumulate propagators from the left
+            t, x = xs
             x_next = x @ carry
-            return x_next, self.save(x_next)
+            # the accumulated propagator holds at the interval's right endpoint t
+            return x_next, self.save(t, x_next)
 
-        ylast, saved = jax.lax.scan(step, self.y0, step_propagators)
+        ylast, saved = jax.lax.scan(step, self.y0, (times[1:], step_propagators))
         # saved has shape (ntimes-1, N, 1) if y0 has shape (N, 1) -> compute states
         # saved has shape (ntimes-1, N, N) if y0 has shape (N, N) -> compute propagators
 
@@ -164,11 +166,11 @@ class MESolveExpmIntegrator(MEExpmIntegrator, SolveSaveMixin, SolveInterface):
         # convert to vectorized form
         self.y0 = vectorize(self.y0)  # (n^2, 1)
 
-    def save(self, y: PyTree) -> SolveSaved:
+    def save(self, t: Scalar, y: PyTree) -> SolveSaved:
         # TODO: implement bexpect for vectorized operators and convert at the end
         # instead of at each step
         y = unvectorize(y)
-        return super().save(y)
+        return super().save(t, y)
 
 
 mesolve_expm_integrator_constructor = partial(

@@ -7,7 +7,7 @@ from typing import cast
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray, PyTree
+from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
@@ -44,7 +44,7 @@ def dssesolve(
     gradient: Gradient | None = None,
     save_states: bool = True,
     cartesian_batching: bool = True,
-    save_extra: Callable[[QArray], PyTree] | None = None,
+    save_extra: Callable[[Scalar, QArray], PyTree] | None = None,
 ) -> DSSESolveResult:
     r"""Solve the diffusive stochastic Schrödinger equation (SSE).
 
@@ -168,9 +168,10 @@ def dssesolve(
             as separated batch dimensions, otherwise the batching is performed over a
             single shared batch dimension. Defaults to `True`.
         save_extra: A function with signature
-            `f(QArray) -> PyTree` that takes a state as input and returns a PyTree.
-            This can be used to save additional arbitrary data during the integration,
-            accessible in `result.extra`. Defaults to `None`.
+            `f(Scalar, QArray) -> PyTree` that takes the current time and state as
+            input and returns a PyTree. This can be used to save additional
+            arbitrary data during the integration, accessible in `result.extra`.
+            Defaults to `None`.
 
     Examples:
         ```python
