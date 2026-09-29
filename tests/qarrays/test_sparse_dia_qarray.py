@@ -9,6 +9,10 @@ from equinox import EquinoxRuntimeError
 import dynamiqs as dq
 from dynamiqs.qarrays.materialized_qarray import MaterializedQArray
 from dynamiqs.qarrays.sparsedia_dataarray import SparseDIADataArray
+from dynamiqs.qarrays.sparsedia_primitives import (
+    _matmul_array_sparsedia,
+    _matmul_sparsedia_array,
+)
 
 from ..order import TEST_SHORT
 
@@ -201,6 +205,24 @@ class TestSparseDIAQArray:
         assert _allclose(out_dense_dense, out_dia_dense)
 
         out_dense_dia = (dA @ sB).to_jax()
+        assert _allclose(out_dense_dense, out_dense_dia)
+
+    @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
+    def test_matmul_padded(self, kA, kB):
+        # DIA x dense products are padded on GPU only (`_MIN_DIAGONALS_TO_PAD`), so CI,
+        # on CPU, would otherwise never run that code
+        dA, sA = self.denseA[kA], self.sparseA[kA]
+        dB, sB = self.denseB[kB], self.sparseB[kB]
+        out_dense_dense = (dA @ dB).to_jax()
+
+        out_dia_dense = _matmul_sparsedia_array(
+            sA.data.offsets, sA.data.diags, dB.to_jax(), pad=True
+        )
+        assert _allclose(out_dense_dense, out_dia_dense)
+
+        out_dense_dia = _matmul_array_sparsedia(
+            dA.to_jax(), sB.data.offsets, sB.data.diags, pad=True
+        )
         assert _allclose(out_dense_dense, out_dense_dia)
 
     def test_kronecker(self):

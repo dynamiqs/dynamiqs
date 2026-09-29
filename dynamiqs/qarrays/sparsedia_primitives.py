@@ -4,6 +4,7 @@ from functools import partial, reduce
 
 import jax.numpy as jnp
 import numpy as np
+from jax import lax
 from jax._src.core import concrete_or_error
 from jaxtyping import Array
 
@@ -232,8 +233,30 @@ def matmul_sparsedia_sparsedia(
     return out_offsets, out_diags
 
 
+# The DIA x dense products add each diagonal's contribution into the output with
+# `.at[slice].add`, one scatter-add kernel per diagonal. On GPU, for operators with at
+# least this many diagonals, they instead zero-pad each contribution back to full size
+# and sum them, which XLA fuses into one kernel. With fewer diagonals, or on CPU, the
+# scatter-adds were as fast or faster in the dynamiqs benchmarks
+# (`python -m benchmarks`).
+_MIN_DIAGONALS_TO_PAD = 4
+
+
 def matmul_sparsedia_array(
     offsets: tuple[int, ...], diags: Array, array: Array
+) -> Array:
+    if len(offsets) < _MIN_DIAGONALS_TO_PAD:
+        return _matmul_sparsedia_array(offsets, diags, array, pad=False)
+    return lax.platform_dependent(
+        diags,
+        array,
+        cuda=partial(_matmul_sparsedia_array, offsets, pad=True),
+        default=partial(_matmul_sparsedia_array, offsets, pad=False),
+    )
+
+
+def _matmul_sparsedia_array(
+    offsets: tuple[int, ...], diags: Array, array: Array, *, pad: bool
 ) -> Array:
     batch_shape = jnp.broadcast_shapes(diags.shape[:-2], array.shape[:-2])
     out_shape = (*batch_shape, diags.shape[-1], array.shape[-1])
@@ -243,13 +266,34 @@ def matmul_sparsedia_array(
         slice_in = _sparsedia_slice(offset)
         slice_out = _sparsedia_slice(-offset)
         tmp = diags[..., i, slice_in, None] * array[..., slice_in, :]
-        out = out.at[..., slice_out, :].add(tmp)
+        if pad:
+            out = out + _pad_rows(tmp, offset)
+        else:
+            out = out.at[..., slice_out, :].add(tmp)
 
     return out
 
 
 def matmul_array_sparsedia(
     array: Array, offsets: tuple[int, ...], diags: Array
+) -> Array:
+    # see `_MIN_DIAGONALS_TO_PAD`
+    if len(offsets) < _MIN_DIAGONALS_TO_PAD:
+        return _matmul_array_sparsedia(array, offsets, diags, pad=False)
+    return lax.platform_dependent(
+        array,
+        diags,
+        cuda=lambda array, diags: _matmul_array_sparsedia(
+            array, offsets, diags, pad=True
+        ),
+        default=lambda array, diags: _matmul_array_sparsedia(
+            array, offsets, diags, pad=False
+        ),
+    )
+
+
+def _matmul_array_sparsedia(
+    array: Array, offsets: tuple[int, ...], diags: Array, *, pad: bool
 ) -> Array:
     batch_shape = jnp.broadcast_shapes(array.shape[:-2], diags.shape[:-2])
     out_shape = (*batch_shape, array.shape[-2], diags.shape[-1])
@@ -259,9 +303,28 @@ def matmul_array_sparsedia(
         slice_in = _sparsedia_slice(offset)
         slice_out = _sparsedia_slice(-offset)
         tmp = array[..., :, slice_out] * diags[..., i, None, slice_in]
-        out = out.at[..., :, slice_in].add(tmp)
+        if pad:
+            out = out + _pad_columns(tmp, offset)
+        else:
+            out = out.at[..., :, slice_in].add(tmp)
 
     return out
+
+
+def _pad_rows(x: Array, offset: int) -> Array:
+    # Zero-pad the second-to-last axis of `x` back to full size: the rows selected by
+    # `_sparsedia_slice(-offset)`.
+    pad_width = [(0, 0)] * x.ndim
+    pad_width[-2] = (0, offset) if offset >= 0 else (-offset, 0)
+    return jnp.pad(x, pad_width)
+
+
+def _pad_columns(x: Array, offset: int) -> Array:
+    # Zero-pad the last axis of `x` back to full size: the columns selected by
+    # `_sparsedia_slice(offset)`.
+    pad_width = [(0, 0)] * x.ndim
+    pad_width[-1] = (offset, 0) if offset >= 0 else (0, -offset)
+    return jnp.pad(x, pad_width)
 
 
 def and_sparsedia_sparsedia(
