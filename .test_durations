@@ -1,5 +1,6 @@
 {
   "tests/core/test_discontinuities.py::test_declared_discontinuities_improve_adaptive_stepping": 2.0,
+  "tests/core/test_discontinuities.py::test_gradient_wrt_discontinuity_time": 2.0,
   "tests/core/test_discontinuities.py::test_repeated_discontinuity_ts": 2.0,
   "tests/core/test_gradient_support.py::test_default_gradient_rejects_hessian": 0.1,
   "tests/core/test_gradient_support.py::test_higher_order_supported[method0]": 0.1,
@@ -557,6 +558,7 @@
   "tests/qarrays/test_sparse_dia_qarray.py::TestSparseDIAQArray::test_convert[batch]": 2.0,
   "tests/qarrays/test_sparse_dia_qarray.py::TestSparseDIAQArray::test_convert[batch_broadcast]": 2.0,
   "tests/qarrays/test_sparse_dia_qarray.py::TestSparseDIAQArray::test_convert[simple]": 2.0,
+  "tests/qarrays/test_sparse_dia_qarray.py::TestSparseDIAQArray::test_devices": 2.0,
   "tests/qarrays/test_sparse_dia_qarray.py::TestSparseDIAQArray::test_elmul[batch-simple]": 2.0,
   "tests/qarrays/test_sparse_dia_qarray.py::TestSparseDIAQArray::test_elmul[batch_broadcast-batch]": 2.0,
   "tests/qarrays/test_sparse_dia_qarray.py::TestSparseDIAQArray::test_elmul[batch_broadcast-batch_broadcast]": 2.0,
@@ -568,6 +570,7 @@
   "tests/qarrays/test_sparse_dia_qarray.py::TestSparseDIAQArray::test_elpow[batch_broadcast]": 2.0,
   "tests/qarrays/test_sparse_dia_qarray.py::TestSparseDIAQArray::test_elpow[simple]": 2.0,
   "tests/qarrays/test_sparse_dia_qarray.py::TestSparseDIAQArray::test_kronecker": 2.0,
+  "tests/qarrays/test_sparse_dia_qarray.py::TestSparseDIAQArray::test_kronecker_batch_batch": 2.0,
   "tests/qarrays/test_sparse_dia_qarray.py::TestSparseDIAQArray::test_matmul[batch-simple]": 2.0,
   "tests/qarrays/test_sparse_dia_qarray.py::TestSparseDIAQArray::test_matmul[batch_broadcast-batch]": 2.0,
   "tests/qarrays/test_sparse_dia_qarray.py::TestSparseDIAQArray::test_matmul[batch_broadcast-batch_broadcast]": 2.0,

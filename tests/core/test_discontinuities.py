@@ -1,3 +1,4 @@
+import jax
 import jax.numpy as jnp
 import pytest
 
@@ -17,9 +18,9 @@ def square_wave(t):
     return jnp.where(jnp.sin(2 * jnp.pi * t) >= 0, 1.0, -1.0)
 
 
-def solve(H, tsave):
+def solve(H, tsave, **kwargs):
     psi0 = dq.fock(2, 0)
-    return dq.sesolve(H, psi0, tsave, method=Tsit5(), progress_meter=False)
+    return dq.sesolve(H, psi0, tsave, method=Tsit5(), progress_meter=False, **kwargs)
 
 
 @pytest.mark.run(order=TEST_SHORT)
@@ -52,3 +53,21 @@ def test_repeated_discontinuity_ts():
     states = solve(H, tsave).states
     expected = solve(dq.pwc(times, 2 * values, dq.sigmax()), tsave).states
     assert jnp.allclose(states.to_jax(), expected.to_jax(), atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_gradient_wrt_discontinuity_time():
+    # the vector field depends on the switching time tau only through where it jumps,
+    # so the derivative vanishes unless the steps are clipped to tau
+    v0, v1 = 1.3, -0.7
+
+    def population(tau):
+        H = dq.pwc(jnp.stack([0.0, tau, 1.0]), jnp.array([v0, v1]), dq.sigmax())
+        result = solve(H, jnp.array([0.0, 1.0]), gradient=dq.gradient.Forward())
+        return jnp.abs(result.states[-1].to_jax()[0, 0]) ** 2
+
+    # |⟨0|psi(1)⟩|² = cos²(theta) with theta = v0 tau + v1 (1 - tau)
+    tau = 0.37
+    theta = v0 * tau + v1 * (1 - tau)
+    expected = -jnp.sin(2 * theta) * (v0 - v1)
+    assert jnp.allclose(jax.jacfwd(population)(tau), expected, rtol=1e-3)
