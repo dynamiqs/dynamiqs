@@ -6,6 +6,7 @@ from typing import cast
 
 import jax
 import jax.numpy as jnp
+import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
 
@@ -97,7 +98,9 @@ def dsmesolve(
     Warning:
         For now, `dsmesolve()` only supports linearly spaced `tsave` with values that
         are exact multiples of the method fixed step size `dt`. Moreover, to JIT-compile
-        code using `dsmesolve()`, `tsave` must be passed as tuple.
+        code using `dsmesolve()`, `tsave` must be passed as tuple. The values of `etas`
+        must also be known at compile time, because they determine which loss channels
+        are measured.
 
     Note: Simulating the measurement record only
         If you are only interested in the measurement record and not the state, you
@@ -274,7 +277,7 @@ def dsmesolve(
     # === convert arguments
     H = astimeqarray(H)
     Ls = [astimeqarray(L) for L in jump_ops]
-    etas = jnp.asarray(etas)
+    etas = np.asarray(etas)
     rho0 = asqarray(rho0)
     keys = jnp.asarray(keys)
 
@@ -454,7 +457,7 @@ def _dsmesolve_single_trajectory(
 def _check_dsmesolve_args(
     H: TimeQArray,
     Ls: list[TimeQArray],
-    etas: Array,
+    etas: np.ndarray,
     rho0: QArray,
     exp_ops: list[QArray] | None,
 ):
@@ -485,13 +488,13 @@ def _check_dsmesolve_args(
             f' len(etas)={len(etas)} and len(jump_ops)={len(Ls)}.'
         )
 
-    if jnp.all(etas == 0):
+    if np.all(etas == 0):
         raise ValueError(
             'Argument `etas` contains only null values, consider using `dq.mesolve()`'
             ' to solve the Lindblad master equation.'
         )
 
-    if not (jnp.all(etas >= 0) and jnp.all(etas <= 1)):
+    if not (np.all(etas >= 0) and np.all(etas <= 1)):
         raise ValueError(
             'Argument `etas` should only contain values between 0 and 1, but'
             f' is {etas}.'

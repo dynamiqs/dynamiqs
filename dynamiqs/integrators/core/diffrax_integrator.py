@@ -76,13 +76,21 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         else:
             method = cast(_DEAdaptiveStep, self.method)
 
-            return dx.PIDController(
+            controller = dx.PIDController(
                 rtol=method.rtol,
                 atol=method.atol,
                 safety=method.safety_factor,
                 factormin=method.min_factor,
                 factormax=method.max_factor,
             )
+
+            # Clip the steps to the discontinuities of the vector field (e.g. the
+            # boundaries of a piecewise constant Hamiltonian). Without this, the
+            # adaptive controller must discover each discontinuity by rejecting
+            # steps.
+            disc_ts = self.discontinuity_ts
+            jump_ts = disc_ts if disc_ts.size > 0 else None
+            return dx.ClipStepSizeController(controller, jump_ts=jump_ts)
 
     @property
     def dt0(self) -> float | None:
