@@ -7327,7 +7327,9 @@ returned measurement values for each detector is <code>len(tsave)-1</code>.</p>
   <summary>Warning</summary>
   <p>For now, <code>dsmesolve()</code> only supports linearly spaced <code>tsave</code> with values that
 are exact multiples of the method fixed step size <code>dt</code>. Moreover, to JIT-compile
-code using <code>dsmesolve()</code>, <code>tsave</code> must be passed as tuple.</p>
+code using <code>dsmesolve()</code>, <code>tsave</code> must be passed as tuple. The values of <code>etas</code>
+must also be known at compile time, because they determine which loss channels
+are measured.</p>
 </details>  
 
 <details class="note" open="">
