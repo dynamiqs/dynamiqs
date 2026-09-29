@@ -76,13 +76,21 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         else:
             method = cast(_DEAdaptiveStep, self.method)
 
-            return dx.PIDController(
+            controller = dx.PIDController(
                 rtol=method.rtol,
                 atol=method.atol,
                 safety=method.safety_factor,
                 factormin=method.min_factor,
                 factormax=method.max_factor,
             )
+
+            # Clip the steps to the discontinuities of the vector field (e.g. the
+            # boundaries of a piecewise constant Hamiltonian). Without this, the
+            # adaptive controller must discover each discontinuity by rejecting
+            # steps.
+            disc_ts = self.discontinuity_ts
+            jump_ts = disc_ts if disc_ts.size > 0 else None
+            return dx.ClipStepSizeController(controller, jump_ts=jump_ts)
 
     @property
     def dt0(self) -> float | None:
@@ -164,7 +172,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
 
     def run(self) -> Result:
         # === prepare diffrax arguments
-        fn = lambda t, y, args: self.save(y)  # noqa: ARG005
+        fn = lambda t, y, args: self.save(t, y)  # noqa: ARG005
         subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
         subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
         saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
@@ -210,7 +218,7 @@ def call_diffeqsolve(
         def discontinuity_ts(self) -> Array:
             return discontinuity_ts
 
-        def save(self, y: PyTree) -> PyTree:
+        def save(self, t: Scalar, y: PyTree) -> PyTree:
             pass
 
         def postprocess_saved(self, saved: PyTree, ylast: PyTree) -> PyTree:
@@ -240,8 +248,8 @@ def call_diffeqsolve(
     )
 
     if save is None:
-        save = lambda y: y
-    fn = lambda t, y, args: save(y)  # noqa: ARG005
+        save = lambda t, y: y  # noqa: ARG005
+    fn = lambda t, y, args: save(t, y)  # noqa: ARG005
     subsaveat_a = dx.SubSaveAt(ts=ts, fn=fn)  # save solution regularly
     subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
     saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
@@ -376,12 +384,12 @@ class MESolveDiffraxIntegrator(
         if self.options.vectorized:
             self.y0 = vectorize(self.y0)  # (n^2, 1)
 
-    def save(self, y: PyTree) -> SolveSaved:
+    def save(self, t: Scalar, y: PyTree) -> SolveSaved:
         # TODO: implement bexpect for vectorized operators and convert at the end
         # instead of at each step
         if self.options.vectorized:
             y = unvectorize(y)
-        return super().save(y)
+        return super().save(t, y)
 
 
 mesolve_euler_integrator_constructor = partial(

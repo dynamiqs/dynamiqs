@@ -129,6 +129,11 @@ class SparseDIADataArray(DataArray):
         return replace(self, offsets=offsets, diags=diags)
 
     def expm(self, *, max_squarings: int = 16) -> DataArray:
+        # for a diagonal matrix, the matrix exponential is the element-wise
+        # exponential of its diagonal, so we can stay in the dia layout
+        if self.offsets == (0,):
+            return replace(self, diags=jnp.exp(self.diags))
+
         warnings.warn(
             'A `SparseDIADataArray` has been converted to a `DenseDataArray` while '
             'computing its matrix exponential.',
@@ -202,7 +207,8 @@ class SparseDIADataArray(DataArray):
         return self.asdense()._eigvalsh()
 
     def devices(self) -> set[jax.Device]:
-        raise NotImplementedError
+        # `offsets` is static, so `diags` holds every array leaf
+        return self.diags.devices()
 
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> Array:
         return self.asdense().isherm(rtol=rtol, atol=atol)

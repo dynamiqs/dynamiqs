@@ -7,7 +7,7 @@ from typing import cast
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike, PyTree, ScalarLike
+from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
@@ -48,7 +48,7 @@ def sesolve(
     cartesian_batching: bool = True,
     progress_meter: AbstractProgressMeter | bool | None = None,
     t0: ScalarLike | None = None,
-    save_extra: Callable[[QArray], PyTree] | None = None,
+    save_extra: Callable[[Scalar, QArray], PyTree] | None = None,
 ) -> SESolveResult:
     r"""Solve the Schrödinger equation.
 
@@ -128,9 +128,10 @@ def sesolve(
         t0: Initial time. If `None`, defaults to the first
             time in `tsave`. Defaults to `None`.
         save_extra: A function with signature
-            `f(QArray) -> PyTree` that takes a state as input and returns a PyTree.
-            This can be used to save additional arbitrary data during the integration,
-            accessible in `result.extra`. Defaults to `None`.
+            `f(Scalar, QArray) -> PyTree` that takes the current time and state as
+            input and returns a PyTree. This can be used to save additional
+            arbitrary data during the integration, accessible in `result.extra`.
+            Defaults to `None`.
 
     Examples:
         ```python

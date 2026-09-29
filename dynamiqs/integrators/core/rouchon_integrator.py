@@ -309,7 +309,6 @@ class KrausHeun3(KrausMapRK):
 class RouchonPropertiesMixin:
     """Mixin providing shared properties for Rouchon integrators.
 
-    Subclasses must define ``nojump_diffrax_solver``.
     Expects ``self.H`` and ``self.L`` to be callable.
     """
 
@@ -327,6 +326,44 @@ class RouchonPropertiesMixin:
     def identity(self) -> QArray:
         struct = jax.eval_shape(lambda: self.H(0.0))
         return eye(*struct.dims, layout=dense)
+
+    def _make_forward_compatible(self, solver: dx.AbstractSolver) -> dx.AbstractSolver:
+        """Make the solver forward-mode compatible.
+
+        This is the same hack used in diffrax to make `AbstractRungeKutta` solvers
+        forward-mode compatible, see https://github.com/patrick-kidger/diffrax/blob/5ea5fcb05058bd22548300a10ea5ef5ce7fb75bb/diffrax/_adjoint.py#L381-L386.
+        """
+        if (
+            isinstance(self.gradient, Forward)
+            and isinstance(solver, AbstractRungeKutta)
+            and solver.scan_kind is None
+        ):
+            return eqx.tree_at(
+                lambda s: s.scan_kind, solver, 'bounded', is_leaf=lambda x: x is None
+            )
+        return solver
+
+
+def M_rho_Mdag(M: QArray, rho: QArray) -> QArray:
+    return M @ rho @ M.dag()
+
+
+def Mdag_O_M(M: QArray, O: QArray) -> QArray:
+    return M.dag() @ O @ M
+
+
+def Mdag_M(M: QArray) -> QArray:
+    return M.dag() @ M
+
+
+class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegrator):
+    """Integrator computing the time evolution of the Lindblad master equation using a
+    fixed step Rouchon method.
+
+    Subclasses must set ``_kraus_map_cls`` and define ``nojump_diffrax_solver``.
+    """
+
+    _kraus_map_cls: ClassVar[type[KrausMapRK]]
 
     @property
     @abstractmethod
@@ -362,44 +399,6 @@ class RouchonPropertiesMixin:
         )
         interpolant = solver.interpolation_cls(t0=t, t1=t1, **dense_info)
         return interpolant.evaluate
-
-    def _make_forward_compatible(self, solver: dx.AbstractSolver) -> dx.AbstractSolver:
-        """Make the solver forward-mode compatible.
-
-        This is the same hack used in diffrax to make `AbstractRungeKutta` solvers
-        forward-mode compatible, see https://github.com/patrick-kidger/diffrax/blob/5ea5fcb05058bd22548300a10ea5ef5ce7fb75bb/diffrax/_adjoint.py#L381-L386.
-        """
-        if (
-            isinstance(self.gradient, Forward)
-            and isinstance(solver, AbstractRungeKutta)
-            and solver.scan_kind is None
-        ):
-            return eqx.tree_at(
-                lambda s: s.scan_kind, solver, 'bounded', is_leaf=lambda x: x is None
-            )
-        return solver
-
-
-def M_rho_Mdag(M: QArray, rho: QArray) -> QArray:
-    return M @ rho @ M.dag()
-
-
-def Mdag_O_M(M: QArray, O: QArray) -> QArray:
-    return M.dag() @ O @ M
-
-
-def Mdag_M(M: QArray) -> QArray:
-    return M.dag() @ M
-
-
-class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegrator):
-    """Integrator computing the time evolution of the Lindblad master equation using a
-    fixed step Rouchon method.
-
-    Subclasses must set ``_kraus_map_cls`` and may override ``nojump_diffrax_solver``.
-    """
-
-    _kraus_map_cls: ClassVar[type[KrausMapRK]]
 
     @property
     def terms(self) -> dx.AbstractTerm:
