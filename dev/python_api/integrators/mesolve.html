@@ -7754,9 +7754,10 @@ spaces. Only supported for Diffrax-based ODE methods. Defaults to <code>False</c
           <p>If <code>True</code>, the initial density matrix
 <code>rho0</code> is assumed to be Hermitian. This allows to halve the number of
 matrix multiplications during vector field evaluation since only the
-Hermitian part of <code>rho</code> is evolved. Only compatible with Diffrax-based
-ODE methods and <code>vectorized=False</code>. In other cases, no assumptions are
-made on the hermiticity of <code>rho0</code>. Defaults to <code>True</code>.</p>
+Hermitian part of <code>rho</code> is evolved. Only compatible with explicit
+Diffrax-based ODE methods (not <code>Kvaerno3</code> or <code>Kvaerno5</code>) and
+<code>vectorized=False</code>. In other cases, no assumptions are made on the
+hermiticity of <code>rho0</code>. Defaults to <code>True</code>.</p>
         </div>
       </li>
   </ul>
