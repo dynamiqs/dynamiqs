@@ -5,13 +5,14 @@ import pytest
 import dynamiqs as dq
 from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
 from dynamiqs.integrators.core.low_rank_integrator import expval_from_m
-from dynamiqs.method import LinearSolver, LowRank, Tsit5
+from dynamiqs.method import Kvaerno5, LinearSolver, LowRank, Tsit5
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
 from ..systems import dense_ocavity, dia_ocavity, otdqubit
 
-# we only test Tsit5 to keep the unit test suite fast
+# we only test Tsit5 to keep the unit test suite fast, and Kvaerno5 for the real
+# splitting used by implicit methods
 
 
 # use double precision for gradients
@@ -44,6 +45,10 @@ class TestMESolveAdaptiveLowRank(IntegratorTester):
     @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
     def test_correctness(self, system, linear_solver):
         self._test_correctness(system, _lowrank_method(system, linear_solver))
+
+    def test_correctness_implicit(self):
+        method = LowRank(rank=4, ode_method=Kvaerno5(), key=jax.random.PRNGKey(0))
+        self._test_correctness(dense_ocavity, method)
 
     @pytest.mark.parametrize('linear_solver', [LinearSolver.QR, LinearSolver.CHOLESKY])
     @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])

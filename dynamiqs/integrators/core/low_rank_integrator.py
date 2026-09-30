@@ -279,21 +279,31 @@ class MESolveLowRankIntegrator(
             return dm
 
         term = dx.ODETerm(vector_field)
+        y0, save, to_m = m0, self.save, lambda y: y
+        if isinstance(self.method.ode_method, Kvaerno3 | Kvaerno5):
+            # The vector field is not holomorphic in m (it contains m†), so the
+            # complex Jacobian used by implicit solvers would be wrong. We solve for
+            # (Re m, Im m) instead, whose real Jacobian is exact.
+            to_m = lambda y: y[0] + 1j * y[1]
+            split = lambda m: (m.real, m.imag)
+            term = dx.ODETerm(lambda t, y, args: split(vector_field(t, to_m(y), args)))
+            y0 = split(m0)
+            save = lambda t, y: self.save(t, to_m(y))
 
         # call diffrax to solve the ODE and save the results
         solution = call_diffeqsolve(
             self.ts,
-            m0,
+            y0,
             term,
             self.method.ode_method,
             self.gradient,
             self.options,
             self.discontinuity_ts,
-            save=self.save,
+            save=save,
         )
 
         ys = cast(tuple, solution.ys)
-        saved = self.postprocess_saved(*ys)
+        saved = self.postprocess_saved(ys[0], to_m(ys[1]))
         return self.result(saved, infos=self.infos(solution.stats))
 
     def save(self, t: Scalar, y: PyTree) -> SolveSaved:

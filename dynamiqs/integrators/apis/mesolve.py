@@ -188,9 +188,10 @@ def mesolve(
         assume_hermitian: If `True`, the initial density matrix
             `rho0` is assumed to be Hermitian. This allows to halve the number of
             matrix multiplications during vector field evaluation since only the
-            Hermitian part of `rho` is evolved. Only compatible with Diffrax-based
-            ODE methods and `vectorized=False`. In other cases, no assumptions are
-            made on the hermiticity of `rho0`. Defaults to `True`.
+            Hermitian part of `rho` is evolved. Only compatible with explicit
+            Diffrax-based ODE methods (not `Kvaerno3` or `Kvaerno5`) and
+            `vectorized=False`. In other cases, no assumptions are made on the
+            hermiticity of `rho0`. Defaults to `True`.
 
     Examples:
         ```python

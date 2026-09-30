@@ -1,13 +1,14 @@
 import pytest
 
 from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
-from dynamiqs.method import Tsit5
+from dynamiqs.method import Kvaerno5, Tsit5
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
 from ..systems import dense_ocavity, dia_ocavity, otdqubit
 
-# we only test Tsit5 to keep the unit test suite fast
+# we only test Tsit5 to keep the unit test suite fast, and Kvaerno5 for the vector
+# field used by implicit methods
 
 
 @pytest.mark.run(order=TEST_LONG)
@@ -26,3 +27,6 @@ class TestMESolveAdaptive(IntegratorTester):
     @pytest.mark.parametrize('gradient', [Direct(), BackwardCheckpointed(), Forward()])
     def test_gradient(self, system, gradient):
         self._test_gradient(system, Tsit5(), gradient)
+
+    def test_correctness_implicit(self):
+        self._test_correctness(dense_ocavity, Kvaerno5())
