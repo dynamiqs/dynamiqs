@@ -348,6 +348,10 @@ class MESolveDiffraxIntegrator(
         # involves fewer matrix multiplications, and is thus more efficient with only
         # a negligible numerical error induced on the dynamics. If however
         # `options.assume_hermitian = False`, we resort back to (1).
+        # Implicit solvers always use (1): (2) is not holomorphic in rho (it contains
+        # rho†), but their Newton iterations use the complex Jacobian of the vector
+        # field, which only exists for a holomorphic one. With (2) this Jacobian is
+        # wrong and the iterations converge slowly or diverge.
 
         def vector_field_unvec_standard(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
@@ -366,9 +370,10 @@ class MESolveDiffraxIntegrator(
             L, H = self.L(t), self.H(t)
             return slindbladian(H, L) @ y
 
+        implicit = isinstance(self.diffrax_solver, dx.AbstractImplicitSolver)
         if self.options.vectorized:
             vector_field = vector_field_vec
-        elif self.options.assume_hermitian:
+        elif self.options.assume_hermitian and not implicit:
             vector_field = vector_field_unvec_hermitian
         else:
             vector_field = vector_field_unvec_standard
