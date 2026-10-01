@@ -31,6 +31,7 @@ from ...result import MESolveResult, Result, SolveSaved
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
+from .jump_clip_controller import JumpClipController
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
 
 
@@ -90,7 +91,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             # steps.
             disc_ts = self.discontinuity_ts
             jump_ts = disc_ts if disc_ts.size > 0 else None
-            return dx.ClipStepSizeController(controller, jump_ts=jump_ts)
+            return JumpClipController(controller, jump_ts=jump_ts)
 
     @property
     def dt0(self) -> float | None:
