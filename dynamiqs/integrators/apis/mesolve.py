@@ -191,7 +191,10 @@ def mesolve(
             Hermitian part of `rho` is evolved. Only compatible with explicit
             Diffrax-based ODE methods (not `Kvaerno3` or `Kvaerno5`) and
             `vectorized=False`. In other cases, no assumptions are made on the
-            hermiticity of `rho0`. Defaults to `True`.
+            hermiticity of `rho0`. When `H` and `jump_ops` are in sparse DIA
+            format, the Lindbladian is instead computed in a single fused pass over
+            `rho` whatever this option, and the hermiticity of `rho` then holds up to
+            round-off. Defaults to `True`.
 
     Examples:
         ```python

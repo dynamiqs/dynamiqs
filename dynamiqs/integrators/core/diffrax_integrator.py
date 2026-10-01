@@ -27,7 +27,10 @@ from ...method import (
 )
 from ...options import Options
 from ...progress_meter import AbstractProgressMeter
+from ...qarrays.dense_dataarray import DenseDataArray
+from ...qarrays.sparsedia_dataarray import SparseDIADataArray
 from ...result import MESolveResult, Result, SolveSaved
+from ...utils.general import lindbladian_sparsedia_terms
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
@@ -354,6 +357,24 @@ class MESolveDiffraxIntegrator(
         # field, which only exists for a holomorphic one. With (2) this Jacobian is
         # wrong and the iterations converge slowly or diverge.
 
+        # When H and the jump operators are in sparse DIA format, we use (1) in both
+        # cases (also holomorphic, for implicit solvers), computed by
+        # `lindbladian_sparsedia_terms` in a single fused pass over rho (each product
+        # of (2), and its transpose, takes a pass over rho), unless its terms read too
+        # many shifted copies of rho: it then returns None.
+
+        def vector_field_unvec_sparsedia(t, y, _):  # noqa: ANN001, ANN202
+            L, H = self.L(t), self.H(t)
+            half_LdL = 0.5 * sum([_L.dag() @ _L for _L in L])
+            fused = lindbladian_sparsedia_terms(
+                -1j * H - half_LdL, 1j * H - half_LdL, L, y
+            )
+            if fused is not None:
+                return fused
+            if self.options.assume_hermitian and not implicit:
+                return vector_field_unvec_hermitian(t, y, _)
+            return vector_field_unvec_standard(t, y, _)
+
         def vector_field_unvec_standard(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
             half_LdL = 0.5 * sum([_L.dag() @ _L for _L in L])
@@ -374,12 +395,23 @@ class MESolveDiffraxIntegrator(
         implicit = isinstance(self.diffrax_solver, dx.AbstractImplicitSolver)
         if self.options.vectorized:
             vector_field = vector_field_vec
+        elif self._sparsedia_operators():
+            vector_field = vector_field_unvec_sparsedia
         elif self.options.assume_hermitian and not implicit:
             vector_field = vector_field_unvec_hermitian
         else:
             vector_field = vector_field_unvec_standard
 
         return dx.ODETerm(vector_field)
+
+    def _sparsedia_operators(self) -> bool:
+        # whether H(t), the jump operators and the state allow the fused Lindbladian
+        # (the layout of a time-qarray's value does not depend on t)
+        t = self.ts[0]
+        operators = [self.H(t), *self.L(t)]
+        return all(
+            isinstance(getattr(x, 'data', None), SparseDIADataArray) for x in operators
+        ) and isinstance(getattr(self.y0, 'data', None), DenseDataArray)
 
     def __post_init__(self):
         # convert y0 to a density matrix

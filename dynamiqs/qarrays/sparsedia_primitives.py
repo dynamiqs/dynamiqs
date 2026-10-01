@@ -450,3 +450,89 @@ def autopad_sparsedia_diags(offsets: tuple[int, ...], diags: Sequence[Array]) ->
     dtype = reduce(jnp.promote_types, [diag.dtype for diag in diags])
     stacked_diags = jnp.stack(diags, dtype=dtype)
     return jnp.moveaxis(stacked_diags, 0, -2)
+
+
+# Most shifts (p, q) for which `lindbladian_sparsedia` is used (see
+# `lindbladian_sparsedia_shifts`). Each shift reads rho once more: on an A100, with 16
+# shifts (n = 1176, batch 16) the fused sum is 5.6x faster than the products, with 71
+# (n = 900, batch 4: rho no longer fits in L2) the products are 1.3x faster.
+MAX_FUSED_SHIFTS = 32
+
+
+def lindbladian_sparsedia_shifts(
+    left_offsets: tuple[int, ...],
+    right_offsets: tuple[int, ...],
+    jump_offsets: Sequence[tuple[int, ...]],
+) -> int:
+    # number of distinct shifted copies of rho that `lindbladian_sparsedia` reads
+    shifts = {(o, 0) for o in left_offsets} | {(0, -o) for o in right_offsets}
+    for offsets in jump_offsets:
+        shifts |= {(a, b) for a in offsets for b in offsets}
+    return len(shifts)
+
+
+def lindbladian_sparsedia(
+    left: tuple[tuple[int, ...], Array],
+    right: tuple[tuple[int, ...], Array],
+    jump_ops: Sequence[tuple[tuple[int, ...], Array]],
+    rho: Array,
+) -> Array:
+    r"""Return $A\rho + \rho B + \sum_k L_k \rho L_k^\dag$ for a dense $\rho$ and
+    operators $A$, $B$ and $L_k$ in DIA format, each given as (offsets, diags).
+
+    Every term is a shifted copy of $\rho$ weighted by row and column coefficients,
+    $R[i]\,\rho[i+p, j+q]\,C[j]$, with $(p, q) = (o, 0)$ for each diagonal $o$ of $A$,
+    $(0, -o)$ for each diagonal of $B$, and $(a, b)$ for each pair of diagonals of an
+    $L_k$. The terms are grouped by shift and summed in one elementwise expression,
+    which XLA fuses into a single pass over $\rho$, instead of a pass per product.
+    """
+    n = rho.shape[-1]
+    operators = [left, right, *jump_ops]
+    pad = max((abs(o) for offsets, _ in operators for o in offsets), default=0)
+    terms = _lindbladian_sparsedia_terms(left, right, jump_ops, n, pad)
+    widths = [(0, 0)] * (rho.ndim - 2) + [(pad, pad), (pad, pad)]
+    rho_padded = jnp.pad(rho, widths)
+    out = None
+    for (p, q), coefficients in terms.items():
+        block = rho_padded[..., pad + p : pad + p + n, pad + q : pad + q + n]
+        weight = None
+        for row, column in coefficients:
+            if column is None:
+                w = row[..., :, None]
+            elif row is None:
+                w = column[..., None, :]
+            else:
+                w = row[..., :, None] * column[..., None, :]
+            weight = w if weight is None else weight + w
+        term = weight * block
+        out = term if out is None else out + term
+    return out
+
+
+def _lindbladian_sparsedia_terms(
+    left: tuple[tuple[int, ...], Array],
+    right: tuple[tuple[int, ...], Array],
+    jump_ops: Sequence[tuple[tuple[int, ...], Array]],
+    n: int,
+    pad: int,
+) -> dict[tuple[int, int], list[tuple[Array | None, Array | None]]]:
+    # the terms of `lindbladian_sparsedia`, grouped by shift (p, q): a list of (row
+    # coefficients or None, column coefficients or None)
+    def shifted(diag: Array, offset: int) -> Array:
+        # v[i] = diag[i + offset], 0 outside [0, n)
+        widths = [(0, 0)] * (diag.ndim - 1) + [(pad, pad)]
+        return jnp.pad(diag, widths)[..., pad + offset : pad + offset + n]
+
+    terms = defaultdict(list)
+    offsets, diags = left
+    for k, offset in enumerate(offsets):  # A[i, i+o] rho[i+o, j]
+        terms[offset, 0].append((shifted(diags[..., k, :], offset), None))
+    offsets, diags = right
+    for k, offset in enumerate(offsets):  # rho[i, j-o] B[j-o, j]
+        terms[0, -offset].append((None, diags[..., k, :]))
+    for offsets, diags in jump_ops:  # L[i, i+a] rho[i+a, j+b] conj(L[j, j+b])
+        rows = [shifted(diags[..., k, :], o) for k, o in enumerate(offsets)]
+        for a, row in zip(offsets, rows, strict=True):
+            for b, column in zip(offsets, rows, strict=True):
+                terms[a, b].append((row, column.conj()))
+    return terms

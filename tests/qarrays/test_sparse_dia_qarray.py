@@ -7,12 +7,14 @@ import pytest
 from equinox import EquinoxRuntimeError
 
 import dynamiqs as dq
+from dynamiqs.qarrays.dense_dataarray import DenseDataArray
 from dynamiqs.qarrays.materialized_qarray import MaterializedQArray
 from dynamiqs.qarrays.sparsedia_dataarray import SparseDIADataArray
 from dynamiqs.qarrays.sparsedia_primitives import (
     _matmul_array_sparsedia,
     _matmul_sparsedia_array,
 )
+from dynamiqs.utils.general import lindbladian_sparsedia_terms
 
 from ..order import TEST_SHORT
 
@@ -233,6 +235,34 @@ class TestSparseDIAQArray:
         out_dense = dq.tracemm(dA, dB)
         assert _allclose(out_dense, dq.tracemm(sA, dB))
         assert _allclose(out_dense, dq.tracemm(dA, sB))
+
+    @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
+    def test_lindbladian_fused(self, kA, kB):
+        # DIA operators take the fused `lindbladian_sparsedia` path, dense ones the
+        # products; A is not Hermitian, which the two must treat alike
+        rho = self.denseA['simple'] @ self.denseB['simple'].dag()
+        H_dense, H_dia = self.denseA[kA], self.sparseA[kA]
+        L_dense = [self.denseB[kB], 0.5 * self.denseA['simple']]
+        L_dia = [self.sparseB[kB], 0.5 * self.sparseA['simple']]
+        out_dense = dq.lindbladian(H_dense, L_dense, rho).to_jax()
+        out_dia = dq.lindbladian(H_dia, L_dia, rho)
+        assert isinstance(out_dia.data, DenseDataArray)
+        # the terms are summed in another order: compare at the output's scale
+        atol = 1e-6 * jnp.abs(out_dense).max()
+        assert _allclose(out_dense, out_dia.to_jax(), atol=atol)
+
+    def test_lindbladian_many_shifts(self):
+        # a jump operator with 6 diagonals reads 36 shifted copies of rho, more than
+        # MAX_FUSED_SHIFTS: lindbladian falls back to the products
+        a = dq.destroy(10, layout=dq.dia)
+        L = a + a @ a + a @ a @ a + 0.5 * (a + a @ a + a @ a @ a).dag()
+        H = self.sparseA['simple']
+        rho = self.denseA['simple'] @ self.denseB['simple'].dag()
+        Hnh = -1j * H - 0.5 * L.dag() @ L
+        assert lindbladian_sparsedia_terms(Hnh, Hnh.dag(), [L], rho) is None
+        out_dense = dq.lindbladian(H.asdense(), [L.asdense()], rho).to_jax()
+        out_dia = dq.lindbladian(H, [L], rho).to_jax()
+        assert _allclose(out_dense, out_dia, atol=1e-6 * jnp.abs(out_dense).max())
 
     def test_kronecker(self):
         dA, sA = self.denseA['simple'], self.sparseA['simple']
