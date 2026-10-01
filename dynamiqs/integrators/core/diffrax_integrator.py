@@ -8,6 +8,7 @@ from typing import cast
 
 import diffrax as dx
 import equinox as eqx
+import jax
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
@@ -325,6 +326,13 @@ sesolve_kvaerno5_integrator_constructor = partial(
 )
 
 
+def _fuse_lindbladian() -> bool:
+    # On CPU, inside a solve, the fused Lindbladian is up to 1.9x slower than the
+    # products for small and medium systems (n = 32-96, faster from n ~ 128), and
+    # there is no synchronisation to save. Fuse on GPU only.
+    return jax.default_backend() == 'gpu'
+
+
 class MESolveDiffraxIntegrator(
     DiffraxIntegrator, MEInterface, SolveSaveMixin, SolveInterface
 ):
@@ -408,6 +416,8 @@ class MESolveDiffraxIntegrator(
     def _sparsedia_operators(self) -> bool:
         # whether H(t), the jump operators and the state allow the fused Lindbladian
         # (the layout of a time-qarray's value does not depend on t)
+        if not _fuse_lindbladian():
+            return False
         t = self.ts[0]
         operators = [self.H(t), *self.L(t)]
         return all(
