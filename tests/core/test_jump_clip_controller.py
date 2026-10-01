@@ -3,7 +3,10 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-from dynamiqs.integrators.core.jump_clip_controller import _find_idx_by_counting
+from dynamiqs.integrators.core.jump_clip_controller import (
+    _find_idx_by_counting,
+    private_search_available,
+)
 
 from ..order import TEST_INSTANT
 
@@ -18,3 +21,11 @@ def test_find_idx_matches_diffrax():
             expected = dx_clip._find_idx_with_hint(t, ts, jnp.array(hint))
             assert int(_find_idx_by_counting(t, ts, jnp.array(hint))) == int(expected)
     assert _find_idx_by_counting(0.3, None, 0) == np.int64(0)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_private_search_exists():
+    # JumpClipController replaces this private function of Diffrax; if a release moved
+    # or renamed it, the controller falls back to Diffrax's search (with while loops):
+    # find its new home, or drop the controller
+    assert private_search_available()
