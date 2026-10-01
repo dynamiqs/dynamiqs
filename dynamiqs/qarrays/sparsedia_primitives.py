@@ -492,18 +492,33 @@ def lindbladian_sparsedia(
     terms = _lindbladian_sparsedia_terms(left, right, jump_ops, n, pad)
     widths = [(0, 0)] * (rho.ndim - 2) + [(pad, pad), (pad, pad)]
     rho_padded = jnp.pad(rho, widths)
-    out = jnp.zeros_like(rho)
-    for (p, q), coefficients in terms.items():
+
+    def term(p: int, q: int) -> Array:
         block = rho_padded[..., pad + p : pad + p + n, pad + q : pad + q + n]
         weight = 0
-        for row, column in coefficients:
+        for row, column in terms[p, q]:
             if row is not None and column is not None:
                 weight = weight + row[..., :, None] * column[..., None, :]
             elif row is not None:
                 weight = weight + row[..., :, None]
             elif column is not None:
                 weight = weight + column[..., None, :]
-        out = out + weight * block
+        return weight * block
+
+    # Each shift (p, q) is summed with its mirror (q, p). When rho is Hermitian and
+    # B = A^dag, the terms at (j, i) are then the exact complex conjugates of those at
+    # (i, j), added in the same order: the result is exactly Hermitian, as the
+    # Hermitian form tmp + tmp^dag is by construction.
+    out = jnp.zeros_like(rho)
+    done = set()
+    for p, q in terms:
+        if (p, q) in done:
+            continue
+        done |= {(p, q), (q, p)}
+        if p == q or (q, p) not in terms:
+            out = out + term(p, q)
+        else:
+            out = out + (term(p, q) + term(q, p))
     return out
 
 
