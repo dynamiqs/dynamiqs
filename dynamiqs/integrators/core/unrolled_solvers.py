@@ -19,11 +19,16 @@ implementation.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from typing import cast
+
 import diffrax as dx
 import equinox.internal as eqxi
 import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
+import numpy as np
+from diffrax._custom_types import Args, BoolScalarLike, RealScalarLike, Y
 from jaxtyping import ArrayLike, PyTree
 
 
@@ -34,7 +39,9 @@ def _unroll_stages() -> bool:
     return jax.default_backend() == 'gpu'
 
 
-def _combine(y0: PyTree, coefficients: ArrayLike, ks: list[PyTree]) -> PyTree:
+def _combine(
+    y0: PyTree, coefficients: Sequence[float] | np.ndarray, ks: list[PyTree]
+) -> PyTree:
     # y0 + sum_j coefficients[j] * ks[j], skipping the zero coefficients
     def leaf(y: ArrayLike, *k: ArrayLike) -> ArrayLike:
         total = y
@@ -46,7 +53,7 @@ def _combine(y0: PyTree, coefficients: ArrayLike, ks: list[PyTree]) -> PyTree:
     return jtu.tree_map(leaf, y0, *ks)
 
 
-def _dot(coefficients: ArrayLike, ks: list[PyTree]) -> PyTree:
+def _dot(coefficients: Sequence[float] | np.ndarray, ks: list[PyTree]) -> PyTree:
     # sum_j coefficients[j] * ks[j], skipping the zero coefficients
     def leaf(*k: ArrayLike) -> ArrayLike:
         terms = [float(a) * kj for a, kj in zip(coefficients, k, strict=True) if a != 0]
@@ -62,10 +69,10 @@ class _UnrolledERK(dx.AbstractERK):
     def _unrolled(
         self,
         terms: dx.AbstractTerm,
-        t0: ArrayLike,
-        t1: ArrayLike,
-        y0: PyTree,
-        args: PyTree,
+        t0: RealScalarLike,
+        t1: RealScalarLike,
+        y0: Y,
+        args: Args,
     ) -> bool:
         vf_expensive, _ = self._common(terms, t0, t1, y0, args)
         tableau = self.tableau
@@ -79,10 +86,10 @@ class _UnrolledERK(dx.AbstractERK):
     def init(
         self,
         terms: dx.AbstractTerm,
-        t0: ArrayLike,
-        t1: ArrayLike,
-        y0: PyTree,
-        args: PyTree,
+        t0: RealScalarLike,
+        t1: RealScalarLike,
+        y0: Y,
+        args: Args,
     ) -> PyTree:
         if not self._unrolled(terms, t0, t1, y0, args):
             return super().init(terms, t0, t1, y0, args)
@@ -95,21 +102,22 @@ class _UnrolledERK(dx.AbstractERK):
     def step(
         self,
         terms: dx.AbstractTerm,
-        t0: ArrayLike,
-        t1: ArrayLike,
-        y0: PyTree,
-        args: PyTree,
+        t0: RealScalarLike,
+        t1: RealScalarLike,
+        y0: Y,
+        args: Args,
         solver_state: PyTree,
-        made_jump: ArrayLike,
+        made_jump: BoolScalarLike,
     ) -> tuple:
         if not self._unrolled(terms, t0, t1, y0, args):
             return super().step(terms, t0, t1, y0, args, solver_state, made_jump)
         _, fsal = self._common(terms, t0, t1, y0, args)
-        tableau = self.tableau
+        # a single explicit Butcher tableau (checked by `_unrolled`)
+        tableau = cast(dx.ButcherTableau, self.tableau)
         control = terms.contr(t0, t1)
         dt = t1 - t0
 
-        def f(t: ArrayLike, y: PyTree) -> PyTree:
+        def f(t: RealScalarLike, y: Y) -> PyTree:
             return terms.vf(t, y, args)
 
         # === first stage

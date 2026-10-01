@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import partial, reduce
+from typing import cast
 
 import jax
 import jax.numpy as jnp
@@ -701,23 +702,23 @@ def lindbladian_sparsedia_terms(
     With $A = -iH - \frac12\sum_k L_k^\dag L_k$ and $B = iH - \frac12\sum_k L_k^\dag
     L_k$, this is the Lindbladian.
     """
-    operators = [A, B, *jump_ops]
+    operand_data = [getattr(x, 'data', None) for x in [A, B, *jump_ops]]
+    rho_data = getattr(rho, 'data', None)
     if not (
-        all(isinstance(getattr(x, 'data', None), SparseDIADataArray) for x in operators)
-        and isinstance(getattr(rho, 'data', None), DenseDataArray)
+        all(isinstance(d, SparseDIADataArray) for d in operand_data)
+        and isinstance(rho_data, DenseDataArray)
         and rho.shape[-1] == rho.shape[-2]
     ):
         return None
-    shifts = lindbladian_sparsedia_shifts(
-        A.data.offsets, B.data.offsets, [L.data.offsets for L in jump_ops]
-    )
+    a, b, *ls = cast(list[SparseDIADataArray], operand_data)
+    shifts = lindbladian_sparsedia_shifts(a.offsets, b.offsets, [l.offsets for l in ls])
     if shifts > MAX_FUSED_SHIFTS:
         return None
     out = lindbladian_sparsedia(
-        (A.data.offsets, A.data.diags),
-        (B.data.offsets, B.data.diags),
-        [(L.data.offsets, L.data.diags) for L in jump_ops],
-        rho.data.data,
+        (a.offsets, a.diags),
+        (b.offsets, b.diags),
+        [(l.offsets, l.diags) for l in ls],
+        rho_data.data,
     )
     return MaterializedQArray(rho.dims, False, DenseDataArray(out))
 

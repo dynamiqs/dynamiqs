@@ -492,20 +492,18 @@ def lindbladian_sparsedia(
     terms = _lindbladian_sparsedia_terms(left, right, jump_ops, n, pad)
     widths = [(0, 0)] * (rho.ndim - 2) + [(pad, pad), (pad, pad)]
     rho_padded = jnp.pad(rho, widths)
-    out = None
+    out = jnp.zeros_like(rho)
     for (p, q), coefficients in terms.items():
         block = rho_padded[..., pad + p : pad + p + n, pad + q : pad + q + n]
-        weight = None
+        weight = 0
         for row, column in coefficients:
-            if column is None:
-                w = row[..., :, None]
-            elif row is None:
-                w = column[..., None, :]
-            else:
-                w = row[..., :, None] * column[..., None, :]
-            weight = w if weight is None else weight + w
-        term = weight * block
-        out = term if out is None else out + term
+            if row is not None and column is not None:
+                weight = weight + row[..., :, None] * column[..., None, :]
+            elif row is not None:
+                weight = weight + row[..., :, None]
+            elif column is not None:
+                weight = weight + column[..., None, :]
+        out = out + weight * block
     return out
 
 
