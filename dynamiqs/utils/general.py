@@ -9,6 +9,8 @@ from jax import Array
 
 from .._checks import check_hermitian, check_shape
 from ..qarrays.qarray import QArray, QArrayLike, get_dims
+from ..qarrays.sparsedia_dataarray import SparseDIADataArray
+from ..qarrays.sparsedia_primitives import tracemm_sparsedia_array
 from ..qarrays.utils import asqarray, init_dims, to_jax
 
 __all__ = [
@@ -277,6 +279,15 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
     y = asqarray(y)
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
+    # with one operand in sparse DIA format, only the diagonals of the other that meet
+    # its diagonals are read (tr(xy) = tr(yx))
+    x_data, y_data = getattr(x, 'data', None), getattr(y, 'data', None)
+    x_dia = isinstance(x_data, SparseDIADataArray)
+    y_dia = isinstance(y_data, SparseDIADataArray)
+    if x_dia and not y_dia:
+        return tracemm_sparsedia_array(x_data.offsets, x_data.diags, y.to_jax())
+    if y_dia and not x_dia:
+        return tracemm_sparsedia_array(y_data.offsets, y_data.diags, x.to_jax())
     # todo: fix perf
     return (x.to_jax() * y.to_jax().mT).sum((-2, -1))
 

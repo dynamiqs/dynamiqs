@@ -225,6 +225,15 @@ class TestSparseDIAQArray:
         )
         assert _allclose(out_dense_dense, out_dense_dia)
 
+    @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
+    def test_tracemm(self, kA, kB):
+        # a DIA operand only reads the diagonals of the other that it meets
+        dA, sA = self.denseA[kA], self.sparseA[kA]
+        dB, sB = self.denseB[kB], self.sparseB[kB]
+        out_dense = dq.tracemm(dA, dB)
+        assert _allclose(out_dense, dq.tracemm(sA, dB))
+        assert _allclose(out_dense, dq.tracemm(dA, sB))
+
     def test_kronecker(self):
         dA, sA = self.denseA['simple'], self.sparseA['simple']
         dB, sB = self.denseB['simple'], self.sparseB['simple']

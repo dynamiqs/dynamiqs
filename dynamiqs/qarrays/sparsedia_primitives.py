@@ -121,6 +121,23 @@ def mul_sparsedia_array(
     return offsets, out_diags
 
 
+def tracemm_sparsedia_array(
+    offsets: tuple[int, ...], diags: Array, array: Array
+) -> Array:
+    # tr(A @ x) = sum_o sum_j A[j - o, j] x[j, j - o]: only the diagonals of x at the
+    # opposite offsets are read
+    out = None
+    for i, offset in enumerate(offsets):
+        x_diag = jnp.diagonal(array, offset=-offset, axis1=-2, axis2=-1)
+        term = (diags[..., i, _sparsedia_slice(offset)] * x_diag).sum(-1)
+        out = term if out is None else out + term
+    if out is None:
+        batch_shape = jnp.broadcast_shapes(diags.shape[:-2], array.shape[:-2])
+        dtype = jnp.promote_types(diags.dtype, array.dtype)
+        return jnp.zeros(batch_shape, dtype=dtype)
+    return out
+
+
 def sparsedia_to_array(offsets: tuple[int, ...], diags: Array) -> Array:
     out = jnp.zeros(shape_sparsedia(diags), dtype=diags.dtype)
     for i, offset in enumerate(offsets):
