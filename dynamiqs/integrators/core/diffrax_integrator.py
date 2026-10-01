@@ -36,6 +36,7 @@ from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .jump_clip_controller import JumpClipController
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
+from .unrolled_solvers import UnrolledDopri5, UnrolledDopri8, UnrolledTsit5
 
 
 class FixedStepInfos(eqx.Module):
@@ -231,9 +232,9 @@ def call_diffeqsolve(
     # === set Diffrax solver
     solvers: dict[type[Method], tuple[dx.AbstractSolver, bool]] = {
         Euler: (dx.Euler(), True),
-        Dopri5: (dx.Dopri5(), False),
-        Dopri8: (dx.Dopri8(), False),
-        Tsit5: (dx.Tsit5(), False),
+        Dopri5: (UnrolledDopri5(), False),
+        Dopri8: (UnrolledDopri8(), False),
+        Tsit5: (UnrolledTsit5(), False),
         Kvaerno3: (dx.Kvaerno3(), False),
         Kvaerno5: (dx.Kvaerno5(), False),
     }
@@ -282,13 +283,13 @@ sepropagator_euler_integrator_constructor = partial(
     SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
 )
 sepropagator_dopri5_integrator_constructor = partial(
-    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+    SEPropagatorDiffraxIntegrator, diffrax_solver=UnrolledDopri5(), fixed_step=False
 )
 sepropagator_dopri8_integrator_constructor = partial(
-    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+    SEPropagatorDiffraxIntegrator, diffrax_solver=UnrolledDopri8(), fixed_step=False
 )
 sepropagator_tsit5_integrator_constructor = partial(
-    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+    SEPropagatorDiffraxIntegrator, diffrax_solver=UnrolledTsit5(), fixed_step=False
 )
 sepropagator_kvaerno3_integrator_constructor = partial(
     SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
@@ -308,13 +309,13 @@ sesolve_euler_integrator_constructor = partial(
     SESolveDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
 )
 sesolve_dopri5_integrator_constructor = partial(
-    SESolveDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+    SESolveDiffraxIntegrator, diffrax_solver=UnrolledDopri5(), fixed_step=False
 )
 sesolve_dopri8_integrator_constructor = partial(
-    SESolveDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+    SESolveDiffraxIntegrator, diffrax_solver=UnrolledDopri8(), fixed_step=False
 )
 sesolve_tsit5_integrator_constructor = partial(
-    SESolveDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+    SESolveDiffraxIntegrator, diffrax_solver=UnrolledTsit5(), fixed_step=False
 )
 sesolve_kvaerno3_integrator_constructor = partial(
     SESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
@@ -438,19 +439,19 @@ mesolve_euler_integrator_constructor = partial(
 )
 mesolve_dopri5_integrator_constructor = partial(
     MESolveDiffraxIntegrator,
-    diffrax_solver=dx.Dopri5(),
+    diffrax_solver=UnrolledDopri5(),
     fixed_step=False,
     result_class=MESolveResult,
 )
 mesolve_dopri8_integrator_constructor = partial(
     MESolveDiffraxIntegrator,
-    diffrax_solver=dx.Dopri8(),
+    diffrax_solver=UnrolledDopri8(),
     fixed_step=False,
     result_class=MESolveResult,
 )
 mesolve_tsit5_integrator_constructor = partial(
     MESolveDiffraxIntegrator,
-    diffrax_solver=dx.Tsit5(),
+    diffrax_solver=UnrolledTsit5(),
     fixed_step=False,
     result_class=MESolveResult,
 )
@@ -491,13 +492,13 @@ mepropagator_euler_integrator_constructor = partial(
     MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
 )
 mepropagator_dopri5_integrator_constructor = partial(
-    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+    MEPropagatorDiffraxIntegrator, diffrax_solver=UnrolledDopri5(), fixed_step=False
 )
 mepropagator_dopri8_integrator_constructor = partial(
-    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+    MEPropagatorDiffraxIntegrator, diffrax_solver=UnrolledDopri8(), fixed_step=False
 )
 mepropagator_tsit5_integrator_constructor = partial(
-    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+    MEPropagatorDiffraxIntegrator, diffrax_solver=UnrolledTsit5(), fixed_step=False
 )
 mepropagator_kvaerno3_integrator_constructor = partial(
     MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
