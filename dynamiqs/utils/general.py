@@ -284,9 +284,9 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
     x_data, y_data = getattr(x, 'data', None), getattr(y, 'data', None)
     x_dia = isinstance(x_data, SparseDIADataArray)
     y_dia = isinstance(y_data, SparseDIADataArray)
-    if isinstance(x_data, SparseDIADataArray) and not y_dia:
+    if x_dia and not y_dia:
         return tracemm_sparsedia_array(x_data.offsets, x_data.diags, y.to_jax())
-    if isinstance(y_data, SparseDIADataArray) and not x_dia:
+    if y_dia and not x_dia:
         return tracemm_sparsedia_array(y_data.offsets, y_data.diags, x.to_jax())
     # todo: fix perf
     return (x.to_jax() * y.to_jax().mT).sum((-2, -1))
