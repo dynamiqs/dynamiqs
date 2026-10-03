@@ -3,7 +3,6 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
-from dynamiqs.integrators.core import diffrax_integrator
 
 from ..order import TEST_SHORT
 
@@ -31,7 +30,7 @@ def _solve():
 def test_real_saves_are_exact(monkeypatch):
     # the saves are split into real arrays on GPU only, so CI forces it here
     reference = _solve()
-    monkeypatch.setattr(diffrax_integrator, '_split_complex_saves', lambda: True)
+    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
     jax.clear_caches()
     split = _solve()
     for x, y in zip(split, reference, strict=True):
