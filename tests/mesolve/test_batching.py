@@ -61,6 +61,19 @@ def test_flat_batching(nL1, npsi0):
     assert result.expects.shape == (*broadcast_shape, nEs, ntsave)
 
 
+def test_flat_batching_values():
+    # flat batching with an unbatched jump operator and a batched one gives the same
+    # results as solving each batch element on its own
+    n = 4
+    H, (L1, L2), psi0, Es = rand_mesolve_args(n, (3,), [(), (3,)], (3,), 2)
+    tsave = jnp.linspace(0, 0.1, 5)
+    result = dq.mesolve(H, [L1, L2], psi0, tsave, exp_ops=Es, cartesian_batching=False)
+    for i in range(3):
+        expected = dq.mesolve(H[i], [L1, L2[i]], psi0[i], tsave, exp_ops=Es)
+        assert jnp.allclose(result.states[i].to_jax(), expected.states.to_jax())
+        assert jnp.allclose(result.expects[i], expected.expects)
+
+
 @pytest.mark.run(order=TEST_LONG)
 def test_batching_boris():
     n = 9

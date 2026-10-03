@@ -22,6 +22,7 @@ from ...time_qarray import TimeQArray
 from .._utils import (
     assert_method_supported,
     astimeqarray,
+    broadcast_batched,
     cartesian_vmap,
     catch_xla_runtime_error,
     ispwc,
@@ -251,10 +252,11 @@ def _vectorized_mepropagator(
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls]])
         nvmap = len(bshape)
-        # broadcast all vectorized input to same shape
-        n = H.shape[-1]
-        H = H.broadcast_to(*bshape, n, n)
-        Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
+        # broadcast batched inputs to the same shape, keep unbatched inputs unbatched
+        H, H_axes = broadcast_batched(H, H.in_axes, bshape)
+        Ls_and_axes = [broadcast_batched(L, L.in_axes, bshape) for L in Ls]
+        Ls = [L for L, _ in Ls_and_axes]
+        in_axes = (H_axes, [axes for _, axes in Ls_and_axes], *in_axes[2:])
         # vectorize the function
         f = multi_vmap(_mepropagator, in_axes, out_axes, nvmap)
 
