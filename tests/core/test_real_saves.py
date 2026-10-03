@@ -1,0 +1,39 @@
+import jax
+import jax.numpy as jnp
+import pytest
+
+import dynamiqs as dq
+
+from ..order import TEST_SHORT
+
+
+def _solve():
+    # a batch of driven, damped cavities, with expectation values and states saved
+    a = dq.destroy(6)
+
+    def solve(amplitude):
+        H = a.dag() @ a + dq.modulated(lambda t: amplitude * jnp.cos(t), a + a.dag())
+        result = dq.mesolve(
+            H,
+            [0.5 * a],
+            dq.coherent(6, 0.5),
+            jnp.linspace(0.0, 1.0, 4),
+            exp_ops=[a.dag() @ a, a],
+            progress_meter=False,
+        )
+        return result.expects, result.states.to_jax(), result.final_state.to_jax()
+
+    return jax.vmap(solve)(jnp.array([0.5, 1.0, 1.5]))
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_real_saves_match(monkeypatch):
+    # the saves are split into real arrays on GPU only, so CI forces it here; other
+    # GPU-only paths change the solve's round-off, hence the tolerance
+    reference = _solve()
+    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
+    jax.clear_caches()
+    split = _solve()
+    for x, y in zip(split, reference, strict=True):
+        assert x.dtype == y.dtype
+        assert jnp.allclose(x, y, rtol=1e-5, atol=1e-6)
