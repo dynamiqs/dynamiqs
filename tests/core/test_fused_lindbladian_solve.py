@@ -34,7 +34,7 @@ def test_fused_lindbladian_in_mesolve(monkeypatch):
         return fused_terms(*args)
 
     monkeypatch.setattr(diffrax_integrator, 'lindbladian_sparsedia_terms', spy)
-    monkeypatch.setattr(diffrax_integrator, '_fuse_lindbladian', lambda: True)
+    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
     jax.clear_caches()
     fused, steps = _final_state()
     assert calls  # the solve took the fused path

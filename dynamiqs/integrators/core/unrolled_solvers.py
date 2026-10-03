@@ -32,13 +32,6 @@ from diffrax._custom_types import Args, BoolScalarLike, RealScalarLike, Y
 from jaxtyping import ArrayLike, PyTree
 
 
-def _unroll_stages() -> bool:
-    # On CPU, XLA fuses each stage's output into the later stages that read it and
-    # recomputes it there, which makes unrolled steps slower; there is also no
-    # synchronisation to save. Unroll on GPU only.
-    return jax.default_backend() == 'gpu'
-
-
 def _combine(
     y0: PyTree, coefficients: Sequence[float] | np.ndarray, ks: list[PyTree]
 ) -> PyTree:
@@ -76,8 +69,11 @@ class _UnrolledERK(dx.AbstractERK):
     ) -> bool:
         vf_expensive, _ = self._common(terms, t0, t1, y0, args)
         tableau = self.tableau
+        # On CPU, XLA fuses each stage's output into the later stages that read it and
+        # recomputes it there, which makes unrolled steps slower; there is also no
+        # synchronisation to save. Unroll on GPU only.
         return (
-            _unroll_stages()
+            jax.default_backend() == 'gpu'
             and not vf_expensive
             and isinstance(tableau, dx.ButcherTableau)
             and not tableau.implicit
