@@ -97,6 +97,19 @@ def test_conversions(layout):
 
 
 @pytest.mark.run(order=TEST_INSTANT)
+def test_asqarray_keeps_sparse_sequences_sparse():
+    a, adag = dq.destroy(5, layout=dq.dia), dq.create(5, layout=dq.dia)
+    x = dq.asqarray([a, adag])
+    assert x.layout is dq.dia
+    assert jnp.array_equal(x.to_jax(), jnp.stack([a.to_jax(), adag.to_jax()]))
+    assert dq.asqarray((a, a)).layout is dq.dia
+    assert dq.asqarray([a, adag], layout=dq.dense).layout is dq.dense
+
+    # a sequence mixing layouts still converts to dense
+    assert dq.asqarray([a, adag.asdense()]).layout is dq.dense
+
+
+@pytest.mark.run(order=TEST_INSTANT)
 def test_qutip_tensor_compatibility():
     """Test compatibility with qutip v5.2.0 auto_tidyup_dims.
 

@@ -61,7 +61,8 @@ def asqarray(
             Defaults to `None` (`x.dims` if available, individual system `dims=(n,)`
             otherwise).
         layout (dq.dense, dq.dia or None): Matrix layout. If `None`, the default
-            layout is `dq.dense`, except for qarrays that are directly returned.
+            layout is `dq.dense`, except for qarrays that are directly returned,
+            and for sequences of `dq.dia` qarrays, which are stacked in `dq.dia`.
         offsets: Offsets of the stored diagonals if `layout==dq.dia`. If `None`, offsets
             are determined automatically from the matrix structure. This argument can
             also be explicitly specified to ensure compatibility with JAX
@@ -94,6 +95,17 @@ def asqarray(
          [[ 1.+0.j  0.+0.j]
           [ 0.+0.j -1.+0.j]]]
     """
+    # stack a sequence of sparse qarrays without converting them to dense first
+    if (
+        isinstance(x, (list, tuple))
+        and len(x) > 0
+        and all(
+            isinstance(q, MaterializedQArray) and isinstance(q.data, SparseDIADataArray)
+            for q in x
+        )
+    ):
+        x = stack(cast(list[QArray], x))
+
     if layout is None and isinstance(x, QArray):
         return x
 
