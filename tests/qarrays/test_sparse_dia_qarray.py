@@ -12,6 +12,7 @@ from dynamiqs.qarrays.sparsedia_dataarray import SparseDIADataArray
 from dynamiqs.qarrays.sparsedia_primitives import (
     _matmul_array_sparsedia,
     _matmul_sparsedia_array,
+    _pad_on_gpu,
 )
 
 from ..order import TEST_SHORT
@@ -224,6 +225,14 @@ class TestSparseDIAQArray:
             dA.to_jax(), sB.data.offsets, sB.data.diags, pad=True
         )
         assert _allclose(out_dense_dense, out_dense_dia)
+
+    def test_pad_on_gpu(self):
+        # the GPU pads the products of operators with many diagonals or of large dense
+        # arrays; CI, on CPU, never selects the padded branch itself
+        small, large = jnp.zeros((64, 64)), jnp.zeros((512, 512))
+        assert not _pad_on_gpu((-1, 0, 1), small)
+        assert _pad_on_gpu((-2, -1, 0, 1), small)
+        assert _pad_on_gpu((-1, 0, 1), large)
 
     @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
     def test_tracemm(self, kA, kB):
