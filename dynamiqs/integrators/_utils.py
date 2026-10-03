@@ -5,7 +5,7 @@ import math
 import operator
 from collections.abc import Callable, Iterable, Sequence
 from functools import wraps
-from typing import Any, Protocol, TypeVar
+from typing import Any, Protocol, TypeVar, cast
 
 import jax
 import jax.numpy as jnp
@@ -102,6 +102,19 @@ def assert_method_supported(method: Method, supported_methods: Iterable[type[Met
             f'Method of type `{type(method).__name__}` is not supported (supported'
             f' method types: {supported_str}).'
         )
+
+
+BatchedInput = TypeVar('BatchedInput', QArray, TimeQArray)
+
+
+def broadcast_batched(
+    x: BatchedInput, in_axes: PyTree[int | None], bshape: tuple[int, ...]
+) -> tuple[BatchedInput, PyTree[int | None]]:
+    # broadcast a batched input of `multi_vmap` to `bshape`; an unbatched input is
+    # kept as is with `in_axes=None`, so that it is not copied for each batch element
+    if x.ndim == 2:
+        return x, None
+    return cast(BatchedInput, x.broadcast_to(*bshape, *x.shape[-2:])), in_axes
 
 
 def multi_vmap(
