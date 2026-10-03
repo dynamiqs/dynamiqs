@@ -66,18 +66,13 @@ class AdaptiveStepInfos(eqx.Module):
         )
 
 
-def _split_complex_saves() -> bool:
-    # Under vmap, Diffrax writes each saved value into its buffer with a scatter,
-    # which XLA runs on GPU as a sequential loop over the batch for complex dtypes:
-    # on an A100, 3.6 ms per save point at batch 255, against 14 us for a real dtype.
-    # On CPU the split only adds a copy per save (up to 7% slower): GPU only.
-    return jax.default_backend() == 'gpu'
-
-
 def _real_leaves(tree: PyTree) -> list[Array]:
     # The leaves of `tree`, complex ones as (..., 2) arrays of real and imaginary
-    # parts (on GPU, see `_split_complex_saves`).
-    if not _split_complex_saves():
+    # parts, on GPU only. Under vmap, Diffrax writes each saved value into its buffer
+    # with a scatter, which XLA runs on GPU as a sequential loop over the batch for
+    # complex dtypes: on an A100, 3.6 ms per save point at batch 255, against 14 us
+    # for a real dtype. On CPU the split only adds a copy per save (up to 7% slower).
+    if jax.default_backend() != 'gpu':
         return jtu.tree_leaves(tree)
     return [
         jnp.stack([x.real, x.imag], axis=-1) if jnp.iscomplexobj(x) else x
