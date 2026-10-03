@@ -41,3 +41,25 @@ def test_fused_lindbladian_in_mesolve(monkeypatch):
     assert steps == reference_steps
     assert jnp.allclose(fused, reference, atol=1e-5)  # single precision
     assert jnp.array_equal(fused, fused.mT.conj())  # exactly Hermitian
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_wide_band_is_not_fused(monkeypatch):
+    # rows of rho 2 * 1900 apart (n = 2048) do not fit in an A100's L2: mesolve uses
+    # the products instead of the fused Lindbladian (traced only, not solved)
+    calls = []
+    monkeypatch.setattr(
+        diffrax_integrator,
+        'lindbladian_sparsedia_terms',
+        lambda *args: calls.append(None),
+    )
+    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
+    n = 2048
+    H = dq.sparsedia_from_dict({-1900: jnp.ones(n - 1900), 1900: jnp.ones(n - 1900)})
+    L = dq.destroy(n)
+    jax.eval_shape(
+        lambda: dq.mesolve(
+            H, [L], dq.fock(n, 0), jnp.linspace(0.0, 1.0, 2), progress_meter=False
+        ).final_state.to_jax()
+    )
+    assert not calls
