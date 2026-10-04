@@ -252,17 +252,22 @@ def matmul_sparsedia_sparsedia(
 
 # The DIA x dense products add each diagonal's contribution into the output with
 # `.at[slice].add`, one scatter-add kernel per diagonal. On GPU, for operators with at
-# least this many diagonals, they instead zero-pad each contribution back to full size
-# and sum them, which XLA fuses into one kernel. With fewer diagonals, or on CPU, the
-# scatter-adds were as fast or faster in the dynamiqs benchmarks
-# (`python -m benchmarks`).
+# least this many diagonals, or applied to a dense array of at least this many
+# elements, they instead zero-pad each contribution back to full size and sum them,
+# which XLA fuses into one kernel. Otherwise, or on CPU, the scatter-adds were as fast
+# or faster in the dynamiqs benchmarks (`python -m benchmarks`).
 _MIN_DIAGONALS_TO_PAD = 4
+_MIN_SIZE_TO_PAD = 2**18
+
+
+def _pad_on_gpu(offsets: tuple[int, ...], array: Array) -> bool:
+    return len(offsets) >= _MIN_DIAGONALS_TO_PAD or array.size >= _MIN_SIZE_TO_PAD
 
 
 def matmul_sparsedia_array(
     offsets: tuple[int, ...], diags: Array, array: Array
 ) -> Array:
-    if len(offsets) < _MIN_DIAGONALS_TO_PAD:
+    if not _pad_on_gpu(offsets, array):
         return _matmul_sparsedia_array(offsets, diags, array, pad=False)
     return lax.platform_dependent(
         diags,
@@ -294,8 +299,7 @@ def _matmul_sparsedia_array(
 def matmul_array_sparsedia(
     array: Array, offsets: tuple[int, ...], diags: Array
 ) -> Array:
-    # see `_MIN_DIAGONALS_TO_PAD`
-    if len(offsets) < _MIN_DIAGONALS_TO_PAD:
+    if not _pad_on_gpu(offsets, array):
         return _matmul_array_sparsedia(array, offsets, diags, pad=False)
     return lax.platform_dependent(
         array,
