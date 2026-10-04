@@ -71,3 +71,28 @@ def test_gradient_wrt_discontinuity_time():
     theta = v0 * tau + v1 * (1 - tau)
     expected = -jnp.sin(2 * theta) * (v0 - v1)
     assert jnp.allclose(jax.jacfwd(population)(tau), expected, rtol=1e-3)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize(
+    'progress_meter', [dq.TqdmProgressMeter(), dq.TextProgressMeter()]
+)
+def test_gradient_wrt_discontinuity_time_with_progress_meter(progress_meter):
+    # the progress meters display the solver's time, which depends on tau: the
+    # derivative must go through them as without a meter
+    def population(tau, meter):
+        H = dq.pwc(jnp.stack([0.0, tau, 1.0]), jnp.array([1.3, -0.7]), dq.sigmax())
+        result = dq.sesolve(
+            H,
+            dq.fock(2, 0),
+            jnp.array([0.0, 1.0]),
+            method=Tsit5(),
+            gradient=dq.gradient.Forward(),
+            progress_meter=meter,
+        )
+        return jnp.abs(result.states[-1].to_jax()[0, 0]) ** 2
+
+    expected = jax.jacfwd(lambda tau: population(tau, False))(0.37)
+    assert jnp.allclose(
+        jax.jacfwd(lambda tau: population(tau, progress_meter))(0.37), expected
+    )

@@ -27,6 +27,7 @@ from ...method import (
 )
 from ...options import Options
 from ...progress_meter import AbstractProgressMeter
+from ...progress_meter import to_diffrax as progress_meter_to_diffrax
 from ...result import MESolveResult, Result, SolveSaved
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
@@ -166,9 +167,9 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                 adjoint=self.adjoint,
                 event=event,
                 max_steps=self.max_steps,
-                progress_meter=cast(
-                    AbstractProgressMeter, self.options.progress_meter
-                ).to_diffrax(),
+                progress_meter=progress_meter_to_diffrax(
+                    cast(AbstractProgressMeter, self.options.progress_meter)
+                ),
             )
 
     def run(self) -> Result:
