@@ -7442,7 +7442,9 @@ otherwise).</p>
         –
         <div class="doc-md-description">
           <p>Matrix layout. If <code>None</code>, the default
-layout is <code>dq.dense</code>, except for qarrays that are directly returned.</p>
+layout is <code>dq.dense</code>, except for qarrays that are directly returned,
+and for sequences of <code>dq.dia</code> qarrays with identical <code>dims</code> and shape,
+which are stacked in <code>dq.dia</code> if <code>offsets</code> is <code>None</code>.</p>
         </div>
       </li>
       <li class="doc-section-item field-body">
@@ -7495,6 +7497,13 @@ transformations, which require static offset values.</p>
 
 <span class="go"> [[ 1.+0.j  0.+0.j]</span>
 <span class="go">  [ 0.+0.j -1.+0.j]]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">asqarray</span><span class="p">([</span><span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">(),</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">()])</span>
+<span class="go">QArray: shape=(2, 2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=3</span>
+<span class="go">[[[   ⋅     1.+0.j]</span>
+<span class="go">  [ 1.+0.j    ⋅   ]]</span>
+
+<span class="go"> [[ 1.+0.j    ⋅   ]</span>
+<span class="go">  [   ⋅    -1.+0.j]]]</span>
 </code></pre></div>
 
 
