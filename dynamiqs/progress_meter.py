@@ -2,6 +2,11 @@ from abc import abstractmethod
 
 import diffrax as dx
 import equinox as eqx
+import jax
+import jax.numpy as jnp
+import numpy as np
+from jax import Array
+from jaxtyping import PyTree
 from tqdm import tqdm
 
 __all__ = ['NoProgressMeter', 'TextProgressMeter', 'TqdmProgressMeter']
@@ -116,3 +121,30 @@ class TqdmProgressMeter(AbstractProgressMeter):
 
     def to_diffrax(self) -> dx.AbstractProgressMeter:
         return _DiffraxTqdmProgressMeter()
+
+
+class _StopGradientProgressMeter(dx.AbstractProgressMeter):
+    """Wraps a Diffrax progress meter: the progress it displays carries no tangent.
+
+    Diffrax computes the progress from the solver's times, which depend on traced
+    jump times (e.g. a pulse edge passed as `discontinuity_ts`). Its meters then
+    reduce the progress over the batch with `unvmap` primitives that have no
+    differentiation rule, so forward-mode derivatives with respect to those times
+    raise `NotImplementedError`. The progress is only displayed: drop its tangent.
+    """
+
+    meter: dx.AbstractProgressMeter
+
+    def init(self) -> PyTree:
+        return self.meter.init()
+
+    def step(self, state: PyTree, progress: float | Array | np.ndarray) -> PyTree:
+        return self.meter.step(state, jax.lax.stop_gradient(jnp.asarray(progress)))
+
+    def close(self, state: PyTree) -> None:
+        self.meter.close(state)
+
+
+def to_diffrax(progress_meter: AbstractProgressMeter) -> dx.AbstractProgressMeter:
+    """The Diffrax progress meter of a dynamiqs one, safe to differentiate through."""
+    return _StopGradientProgressMeter(progress_meter.to_diffrax())
