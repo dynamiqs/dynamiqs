@@ -61,7 +61,9 @@ def asqarray(
             Defaults to `None` (`x.dims` if available, individual system `dims=(n,)`
             otherwise).
         layout (dq.dense, dq.dia or None): Matrix layout. If `None`, the default
-            layout is `dq.dense`, except for qarrays that are directly returned.
+            layout is `dq.dense`, except for qarrays that are directly returned,
+            and for sequences of `dq.dia` qarrays with identical `dims` and shape,
+            which are stacked in `dq.dia` if `offsets` is `None`.
         offsets: Offsets of the stored diagonals if `layout==dq.dia`. If `None`, offsets
             are determined automatically from the matrix structure. This argument can
             also be explicitly specified to ensure compatibility with JAX
@@ -93,7 +95,26 @@ def asqarray(
         <BLANKLINE>
          [[ 1.+0.j  0.+0.j]
           [ 0.+0.j -1.+0.j]]]
+        >>> dq.asqarray([dq.sigmax(), dq.sigmaz()])
+        QArray: shape=(2, 2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=3
+        [[[   ⋅     1.+0.j]
+          [ 1.+0.j    ⋅   ]]
+        <BLANKLINE>
+         [[ 1.+0.j    ⋅   ]
+          [   ⋅    -1.+0.j]]]
     """
+    # stack a sequence of sparse qarrays without converting them to dense first,
+    # unless it cannot be stacked or `dims`/`offsets` ask for a different result
+    if isinstance(x, (list, tuple)) and len(x) > 0 and all(map(_is_sparsedia, x)):
+        qarrays = cast(Sequence[QArray], x)
+        dims0, shape0 = qarrays[0].dims, qarrays[0].shape
+        if (
+            all(q.dims == dims0 and q.shape == shape0 for q in qarrays)
+            and dims in (None, dims0)
+            and offsets is None
+        ):
+            x = stack(qarrays)
+
     if layout is None and isinstance(x, QArray):
         return x
 
@@ -211,19 +232,17 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
         data = jnp.stack(
             [cast(DenseDataArray, q.data).data for q in _qarrays], axis=axis
         )
-        return MaterializedQArray(dims, False, DenseDataArray(data))
+        return MaterializedQArray(dims, _qarrays[0].vectorized, DenseDataArray(data))
 
-    elif all(
-        isinstance(q, MaterializedQArray) and isinstance(q.data, SparseDIADataArray)
-        for q in qarrays
-    ):
+    elif all(map(_is_sparsedia, qarrays)):
         _qarrays = cast(list[MaterializedQArray], qarrays)
         offsets, diags = stack_sparsedia(
             [cast(SparseDIADataArray, q.data).offsets for q in _qarrays],
             [cast(SparseDIADataArray, q.data).diags for q in _qarrays],
             axis=axis,
         )
-        return MaterializedQArray(dims, False, SparseDIADataArray(offsets, diags))
+        data = SparseDIADataArray(offsets, diags)
+        return MaterializedQArray(dims, _qarrays[0].vectorized, data)
     else:
         raise NotImplementedError(
             'Stacking qarrays with different data types is not implemented.'
@@ -609,6 +628,10 @@ def _check_compatible_qarray_metadata(
             'Qarrays have incompatible `vectorized` attributes. '
             f'Got {x.vectorized} and {y.vectorized}.'
         )
+
+
+def _is_sparsedia(x: object) -> bool:
+    return isinstance(x, MaterializedQArray) and isinstance(x.data, SparseDIADataArray)
 
 
 def _warn_sparse_to_dense(operation: str) -> None:
