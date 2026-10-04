@@ -1,5 +1,6 @@
 import jax
 import jax.numpy as jnp
+import numpy as np
 import pytest
 
 import dynamiqs as dq
@@ -54,17 +55,31 @@ def test_flat_batching(npsi0):
     assert result.expects.shape == (*broadcast_shape, nEs, ntsave)
 
 
-def test_flat_batching_values():
-    # flat batching with an unbatched Hamiltonian gives the same results as solving
-    # each initial state on its own
-    n = 4
-    H, psi0, Es = rand_sesolve_args(n, (), (3,), 2)
+@pytest.mark.run(order=TEST_LONG)
+@pytest.mark.parametrize(('nH', 'npsi0'), [((), (3,)), ((3,), ()), ((2, 1), (3,))])
+def test_flat_batching_values(nH, npsi0):
+    # flat batching, with unbatched or partially batched inputs, gives the same
+    # results as solving each batch element on its own
+    H, psi0, Es = rand_sesolve_args(4, nH, npsi0, 2)
     tsave = jnp.linspace(0, 0.1, 5)
     result = dq.sesolve(H, psi0, tsave, exp_ops=Es, cartesian_batching=False)
-    for i in range(3):
-        expected = dq.sesolve(H, psi0[i], tsave, exp_ops=Es)
-        assert jnp.allclose(result.states[i].to_jax(), expected.states.to_jax())
-        assert jnp.allclose(result.expects[i], expected.expects)
+    for index in np.ndindex(jnp.broadcast_shapes(nH, npsi0)):
+        expected = dq.sesolve(
+            _element(H, nH, index), _element(psi0, npsi0, index), tsave, exp_ops=Es
+        )
+        assert jnp.allclose(result.states[index].to_jax(), expected.states.to_jax())
+        assert jnp.allclose(result.expects[index], expected.expects)
+
+
+def _element(x, shape, index):
+    # the inputs of batch element `index` of a flat batch, with broadcasting
+    if len(shape) == 0:
+        return x
+    return x[
+        tuple(
+            i if d > 1 else 0 for i, d in zip(index[-len(shape) :], shape, strict=True)
+        )
+    ]
 
 
 @pytest.mark.run(order=TEST_LONG)

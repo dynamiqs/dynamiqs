@@ -1,4 +1,5 @@
 import jax.numpy as jnp
+import numpy as np
 import pytest
 
 import dynamiqs as dq
@@ -43,3 +44,31 @@ def test_flat_batching(nL1):
     # check result shape
     broadcast_shape = jnp.broadcast_shapes(nH, nL1)
     assert result.propagators.shape == (*broadcast_shape, ntsave, n**2, n**2)
+
+
+@pytest.mark.run(order=TEST_LONG)
+@pytest.mark.parametrize(('nH', 'nL2'), [((3,), ()), ((), (3,)), ((2, 1), (3,))])
+def test_flat_batching_values(nH, nL2):
+    # flat batching, with unbatched or partially batched inputs, gives the same
+    # propagators as computing each batch element on its own
+    H, (L1, L2) = rand_mepropagator_args(2, nH, [(), nL2])
+    tsave = jnp.linspace(0, 0.01, 5)
+    result = dq.mepropagator(H, [L1, L2], tsave, cartesian_batching=False)
+    for index in np.ndindex(jnp.broadcast_shapes(nH, nL2)):
+        expected = dq.mepropagator(
+            _element(H, nH, index), [L1, _element(L2, nL2, index)], tsave
+        )
+        assert jnp.allclose(
+            result.propagators[index].to_jax(), expected.propagators.to_jax()
+        )
+
+
+def _element(x, shape, index):
+    # the inputs of batch element `index` of a flat batch, with broadcasting
+    if len(shape) == 0:
+        return x
+    return x[
+        tuple(
+            i if d > 1 else 0 for i, d in zip(index[-len(shape) :], shape, strict=True)
+        )
+    ]
