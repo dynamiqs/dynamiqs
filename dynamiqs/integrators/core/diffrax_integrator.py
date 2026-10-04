@@ -84,36 +84,49 @@ def _saveat(ts: Array, save: Callable, y0: PyTree) -> tuple[dx.SaveAt, Callable]
     # inverse below both follow this one flag.
     split = jax.default_backend() == 'gpu'
     structures = (jax.eval_shape(save, ts[0], y0), jax.eval_shape(lambda y: y, y0))
+    # which leaves of each saved tree are complex: the split and the restore both
+    # follow this, so they cannot disagree
+    complex_leaves = [
+        [jnp.issubdtype(x.dtype, jnp.complexfloating) for x in jtu.tree_leaves(s)]
+        for s in structures
+    ]
 
-    def to_saved(tree: PyTree) -> list[Array]:
+    def to_saved(tree: PyTree, is_complex: list[bool]) -> list[Array]:
         leaves = jtu.tree_leaves(tree)
         if not split:
             return leaves
         return [
-            jnp.stack([x.real, x.imag], axis=-1) if jnp.iscomplexobj(x) else x
-            for x in leaves
+            jnp.stack([x.real, x.imag], axis=-1) if c else x
+            for x, c in zip(leaves, is_complex, strict=True)
         ]
 
-    def from_saved(saved: list[Array], structure: PyTree) -> PyTree:
+    def from_saved(
+        saved: list[Array], structure: PyTree, is_complex: list[bool]
+    ) -> PyTree:
         leaves = saved
         if split:
-            dtypes = [x.dtype for x in jtu.tree_leaves(structure)]
             leaves = [
-                (x[..., 0] + 1j * x[..., 1]).astype(dtype)
-                if jnp.issubdtype(dtype, jnp.complexfloating)
-                else x
-                for x, dtype in zip(saved, dtypes, strict=True)
+                (x[..., 0] + 1j * x[..., 1]).astype(s.dtype) if c else x
+                for x, s, c in zip(
+                    saved, jtu.tree_leaves(structure), is_complex, strict=True
+                )
             ]
         return jtu.tree_unflatten(jtu.tree_structure(structure), leaves)
 
     def restore(ys: tuple) -> tuple[PyTree, PyTree]:
         return tuple(
-            from_saved(saved, structure)
-            for saved, structure in zip(ys, structures, strict=True)
+            from_saved(*args)
+            for args in zip(ys, structures, complex_leaves, strict=True)
         )
 
-    subsaveat_a = dx.SubSaveAt(ts=ts, fn=lambda t, y, args: to_saved(save(t, y)))  # noqa: ARG005
-    subsaveat_b = dx.SubSaveAt(t1=True, fn=lambda t, y, args: to_saved(y))  # noqa: ARG005
+    subsaveat_a = dx.SubSaveAt(
+        ts=ts,
+        fn=lambda t, y, args: to_saved(save(t, y), complex_leaves[0]),  # noqa: ARG005
+    )
+    subsaveat_b = dx.SubSaveAt(
+        t1=True,
+        fn=lambda t, y, args: to_saved(y, complex_leaves[1]),  # noqa: ARG005
+    )
     return dx.SaveAt(subs=[subsaveat_a, subsaveat_b]), restore
 
 
