@@ -398,7 +398,7 @@ class MESolveDiffraxIntegrator(
         implicit = isinstance(self.diffrax_solver, dx.AbstractImplicitSolver)
         if self.options.vectorized:
             vector_field = vector_field_vec
-        elif self._sparsedia_operators():
+        elif self._are_operators_sparsedia():
             vector_field = vector_field_unvec_sparsedia
         elif self.options.assume_hermitian and not implicit:
             vector_field = vector_field_unvec_hermitian
@@ -407,7 +407,7 @@ class MESolveDiffraxIntegrator(
 
         return dx.ODETerm(vector_field)
 
-    def _sparsedia_operators(self) -> bool:
+    def _are_operators_sparsedia(self) -> bool:
         # whether H(t), the jump operators and the state allow the fused Lindbladian
         # (the layout of a time-qarray's value does not depend on t)
         # On CPU, inside a solve, the fused Lindbladian is up to 1.9x slower than the
