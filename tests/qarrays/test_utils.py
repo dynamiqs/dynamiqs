@@ -108,6 +108,22 @@ def test_asqarray_keeps_sparse_sequences_sparse():
     # a sequence mixing layouts still converts to dense
     assert dq.asqarray([a, adag.asdense()]).layout is dq.dense
 
+    # explicit offsets are honored rather than taken from the stacked qarrays
+    x = dq.asqarray([a, adag], layout=dq.dia, offsets=(-1, 0, 1))
+    assert x.data.offsets == (-1, 0, 1)
+
+    # a sequence with mismatched dims is not stacked, so it converts as before
+    a_composite = dq.destroy(5, 1)[0]
+    assert dq.asqarray([a, a_composite]).dims == (5,)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_stack_keeps_vectorized(layout):
+    a = dq.destroy(3, layout=layout)
+    L = dq.slindbladian(a, [a])
+    assert dq.stack([L, L]).vectorized
+
 
 @pytest.mark.run(order=TEST_INSTANT)
 def test_qutip_tensor_compatibility():
