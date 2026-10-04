@@ -106,7 +106,7 @@ def _saveat(ts: Array, save: Callable, y0: PyTree) -> tuple[dx.SaveAt, Callable]
         leaves = saved
         if split:
             leaves = [
-                (x[..., 0] + 1j * x[..., 1]).astype(s.dtype) if c else x
+                jax.lax.complex(x[..., 0], x[..., 1]).astype(s.dtype) if c else x
                 for x, s, c in zip(
                     saved, jtu.tree_leaves(structure), is_complex, strict=True
                 )
