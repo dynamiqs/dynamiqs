@@ -71,43 +71,49 @@ class AdaptiveStepInfos(eqx.Module):
         )
 
 
-def _real_leaves(tree: PyTree) -> list[Array]:
-    # The leaves of `tree`, complex ones as (..., 2) arrays of real and imaginary
-    # parts, on GPU only. Under vmap, Diffrax writes each saved value into its buffer
-    # with a scatter, which XLA runs on GPU as a sequential loop over the batch for
-    # complex dtypes: on an A100, 3.6 ms per save point at batch 255, against 14 us
-    # for a real dtype. On CPU the split only adds a copy per save (up to 7% slower).
-    if jax.default_backend() != 'gpu':
-        return jtu.tree_leaves(tree)
-    return [
-        jnp.stack([x.real, x.imag], axis=-1) if jnp.iscomplexobj(x) else x
-        for x in jtu.tree_leaves(tree)
-    ]
-
-
 def _saveat(ts: Array, save: Callable, y0: PyTree) -> tuple[dx.SaveAt, Callable]:
     """Diffrax's SaveAt of dynamiqs (`save(t, y)` at each time of `ts`, and the last
-    state), saving real arrays only, and the function that turns the saved values of
-    a solution back into the outputs of `save` and the last state.
+    state), and the function that turns the saved values of a solution back into the
+    outputs of `save` and the last state.
     """
+    # On GPU, complex leaves are saved as (..., 2) arrays of real and imaginary parts.
+    # Under vmap, Diffrax writes each saved value into its buffer with a scatter,
+    # which XLA runs on GPU as a sequential loop over the batch for complex dtypes: on
+    # an A100, 3.6 ms per save point at batch 255, against 14 us for a real dtype. On
+    # CPU the split only adds a copy per save (up to 7% slower). The split and its
+    # inverse below both follow this one flag.
+    split = jax.default_backend() == 'gpu'
     structures = (jax.eval_shape(save, ts[0], y0), jax.eval_shape(lambda y: y, y0))
-    subsaveat_a = dx.SubSaveAt(ts=ts, fn=lambda t, y, args: _real_leaves(save(t, y)))  # noqa: ARG005
-    subsaveat_b = dx.SubSaveAt(t1=True, fn=lambda t, y, args: _real_leaves(y))  # noqa: ARG005
 
-    def restore(ys: tuple) -> tuple[PyTree, PyTree]:
-        out = []
-        for saved, structure in zip(ys, structures, strict=True):
+    def to_saved(tree: PyTree) -> list[Array]:
+        leaves = jtu.tree_leaves(tree)
+        if not split:
+            return leaves
+        return [
+            jnp.stack([x.real, x.imag], axis=-1) if jnp.iscomplexobj(x) else x
+            for x in leaves
+        ]
+
+    def from_saved(saved: list[Array], structure: PyTree) -> PyTree:
+        leaves = saved
+        if split:
             dtypes = [x.dtype for x in jtu.tree_leaves(structure)]
             leaves = [
                 (x[..., 0] + 1j * x[..., 1]).astype(dtype)
                 if jnp.issubdtype(dtype, jnp.complexfloating)
-                and not jnp.iscomplexobj(x)
                 else x
                 for x, dtype in zip(saved, dtypes, strict=True)
             ]
-            out.append(jtu.tree_unflatten(jtu.tree_structure(structure), leaves))
-        return tuple(out)
+        return jtu.tree_unflatten(jtu.tree_structure(structure), leaves)
 
+    def restore(ys: tuple) -> tuple[PyTree, PyTree]:
+        return tuple(
+            from_saved(saved, structure)
+            for saved, structure in zip(ys, structures, strict=True)
+        )
+
+    subsaveat_a = dx.SubSaveAt(ts=ts, fn=lambda t, y, args: to_saved(save(t, y)))  # noqa: ARG005
+    subsaveat_b = dx.SubSaveAt(t1=True, fn=lambda t, y, args: to_saved(y))  # noqa: ARG005
     return dx.SaveAt(subs=[subsaveat_a, subsaveat_b]), restore
 
 
