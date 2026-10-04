@@ -4,7 +4,7 @@ import pytest
 
 import dynamiqs as dq
 
-from ..order import TEST_SHORT
+from ..order import TEST_LONG
 
 
 def _solve(gradient=None):
@@ -33,7 +33,7 @@ def _solve(gradient=None):
     return final_population
 
 
-@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('unroll', [False, True])
 def test_unrolled_matches_diffrax(monkeypatch, unroll):
     # the stages are unrolled on GPU only, so CI forces them here

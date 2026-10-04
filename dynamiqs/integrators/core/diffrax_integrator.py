@@ -417,21 +417,9 @@ class MESolveDiffraxIntegrator(
             return False
         t = self.ts[0]
         data = [getattr(x, 'data', None) for x in [self.H(t), *self.L(t)]]
-        if not all(isinstance(x, SparseDIADataArray) for x in data) or not isinstance(
+        return all(isinstance(x, SparseDIADataArray) for x in data) and isinstance(
             getattr(self.y0, 'data', None), DenseDataArray
-        ):
-            return False
-        # Each output row of the fused sum reads the rows of rho up to the largest
-        # offset away (L^dag L included). On an A100 (40 MB of L2), fusing was up to
-        # 1.5x faster while these rows took at most 47 MB, and 1.1x slower from 53 MB
-        # on: fuse up to 48 MiB.
-        offsets = [x.offsets for x in cast(list[SparseDIADataArray], data)]
-        reach = max(
-            [abs(o) for x in offsets for o in x]
-            + [max(x) - min(x) for x in offsets[1:]]  # L^dag L
         )
-        rows = 2 * reach * self.y0.shape[-1] * self.y0.dtype.itemsize
-        return rows <= 48 * 2**20
 
     def __post_init__(self):
         # convert y0 to a density matrix
