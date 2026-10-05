@@ -1,3 +1,4 @@
+import jax
 import pytest
 
 from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
@@ -30,3 +31,26 @@ class TestMESolveAdaptive(IntegratorTester):
 
     def test_correctness_implicit(self):
         self._test_correctness(dense_ocavity, Kvaerno5())
+
+
+@pytest.mark.run(order=TEST_LONG)
+class TestMESolveAdaptiveGPUPaths(IntegratorTester):
+    # on GPU, the Runge-Kutta stages are unrolled and the DIA Lindbladian is fused:
+    # CI runs on CPU, so these tests force both
+    @pytest.fixture(autouse=True)
+    def gpu_paths(self, monkeypatch):
+        monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
+        jax.clear_caches()
+        yield
+        jax.clear_caches()
+
+    @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity])
+    def test_correctness(self, system):
+        self._test_correctness(system, Tsit5())
+
+    def test_gradient(self):
+        # forward mode is covered by tests/core/test_unrolled_solvers.py
+        self._test_gradient(dia_ocavity, Tsit5(), BackwardCheckpointed())
+
+    def test_correctness_implicit(self):
+        self._test_correctness(dia_ocavity, Kvaerno5())

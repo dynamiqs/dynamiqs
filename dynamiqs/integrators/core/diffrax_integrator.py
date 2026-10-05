@@ -8,6 +8,9 @@ from typing import cast
 
 import diffrax as dx
 import equinox as eqx
+import jax
+import jax.numpy as jnp
+import jax.tree_util as jtu
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
@@ -28,12 +31,16 @@ from ...method import (
 from ...options import Options
 from ...progress_meter import AbstractProgressMeter
 from ...progress_meter import to_diffrax as progress_meter_to_diffrax
+from ...qarrays.dense_dataarray import DenseDataArray
+from ...qarrays.sparsedia_dataarray import SparseDIADataArray
 from ...result import MESolveResult, Result, SolveSaved
+from ...utils.general import lindbladian_sparsedia_terms
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .jump_clip_controller import JumpClipController
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
+from .unrolled_solvers import UnrolledDopri5, UnrolledDopri8, UnrolledTsit5
 
 
 class FixedStepInfos(eqx.Module):
@@ -62,6 +69,65 @@ class AdaptiveStepInfos(eqx.Module):
             f'{self.nsteps} steps ({self.naccepted} accepted,'
             f' {self.nrejected} rejected)'
         )
+
+
+def _saveat(ts: Array, save: Callable, y0: PyTree) -> tuple[dx.SaveAt, Callable]:
+    """Diffrax's SaveAt of dynamiqs (`save(t, y)` at each time of `ts`, and the last
+    state), and the function that turns the saved values of a solution back into the
+    outputs of `save` and the last state.
+    """
+    # On GPU, complex leaves are saved as (..., 2) arrays of real and imaginary parts.
+    # Under vmap, Diffrax writes each saved value into its buffer with a scatter,
+    # which XLA runs on GPU as a sequential loop over the batch for complex dtypes: on
+    # an A100, 3.6 ms per save point at batch 255, against 14 us for a real dtype. On
+    # CPU the split only adds a copy per save (up to 7% slower). The split and its
+    # inverse below both follow this one flag.
+    split = jax.default_backend() == 'gpu'
+    structures = (jax.eval_shape(save, ts[0], y0), jax.eval_shape(lambda y: y, y0))
+    # which leaves of each saved tree are complex: the split and the restore both
+    # follow this, so they cannot disagree
+    complex_leaves = [
+        [jnp.issubdtype(x.dtype, jnp.complexfloating) for x in jtu.tree_leaves(s)]
+        for s in structures
+    ]
+
+    def to_saved(tree: PyTree, is_complex: list[bool]) -> list[Array]:
+        leaves = jtu.tree_leaves(tree)
+        if not split:
+            return leaves
+        return [
+            jnp.stack([x.real, x.imag], axis=-1) if c else x
+            for x, c in zip(leaves, is_complex, strict=True)
+        ]
+
+    def from_saved(
+        saved: list[Array], structure: PyTree, is_complex: list[bool]
+    ) -> PyTree:
+        leaves = saved
+        if split:
+            leaves = [
+                jax.lax.complex(x[..., 0], x[..., 1]).astype(s.dtype) if c else x
+                for x, s, c in zip(
+                    saved, jtu.tree_leaves(structure), is_complex, strict=True
+                )
+            ]
+        return jtu.tree_unflatten(jtu.tree_structure(structure), leaves)
+
+    def restore(ys: tuple) -> tuple[PyTree, PyTree]:
+        return tuple(
+            from_saved(*args)
+            for args in zip(ys, structures, complex_leaves, strict=True)
+        )
+
+    subsaveat_a = dx.SubSaveAt(
+        ts=ts,
+        fn=lambda t, y, args: to_saved(save(t, y), complex_leaves[0]),  # noqa: ARG005
+    )
+    subsaveat_b = dx.SubSaveAt(
+        t1=True,
+        fn=lambda t, y, args: to_saved(y, complex_leaves[1]),  # noqa: ARG005
+    )
+    return dx.SaveAt(subs=[subsaveat_a, subsaveat_b]), restore
 
 
 class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
@@ -173,18 +239,14 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             )
 
     def run(self) -> Result:
-        # === prepare diffrax arguments
-        fn = lambda t, y, args: self.save(t, y)  # noqa: ARG005
-        subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
-        subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-        saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+        # === prepare diffrax arguments: save the solution regularly, and the last state
+        saveat, restore = _saveat(self.ts, self.save, self.y0)
 
         # === solve differential equation
         solution = self.diffeqsolve(self.t0, self.t1, self.y0, saveat)
 
         # === collect and return results
-        ys = cast(tuple, solution.ys)
-        saved = self.postprocess_saved(*ys)
+        saved = self.postprocess_saved(*restore(cast(tuple, solution.ys)))
         return self.result(saved, infos=self.infos(solution.stats))
 
     def infos(self, stats: dict[str, Array]) -> PyTree:
@@ -229,9 +291,9 @@ def call_diffeqsolve(
     # === set Diffrax solver
     solvers: dict[type[Method], tuple[dx.AbstractSolver, bool]] = {
         Euler: (dx.Euler(), True),
-        Dopri5: (dx.Dopri5(), False),
-        Dopri8: (dx.Dopri8(), False),
-        Tsit5: (dx.Tsit5(), False),
+        Dopri5: (UnrolledDopri5(), False),
+        Dopri8: (UnrolledDopri8(), False),
+        Tsit5: (UnrolledTsit5(), False),
         Kvaerno3: (dx.Kvaerno3(), False),
         Kvaerno5: (dx.Kvaerno5(), False),
     }
@@ -251,13 +313,13 @@ def call_diffeqsolve(
 
     if save is None:
         save = lambda t, y: y  # noqa: ARG005
-    fn = lambda t, y, args: save(t, y)  # noqa: ARG005
-    subsaveat_a = dx.SubSaveAt(ts=ts, fn=fn)  # save solution regularly
-    subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-    saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+    saveat, restore = _saveat(ts, save, y0)
 
     # === run integrator
-    return integrator.diffeqsolve(ts[0], ts[-1], y0, saveat, event=event, dtmax=dtmax)
+    solution = integrator.diffeqsolve(
+        ts[0], ts[-1], y0, saveat, event=event, dtmax=dtmax
+    )
+    return eqx.tree_at(lambda s: s.ys, solution, restore(cast(tuple, solution.ys)))
 
 
 class SEDiffraxIntegrator(DiffraxIntegrator, SEInterface):
@@ -280,13 +342,13 @@ sepropagator_euler_integrator_constructor = partial(
     SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
 )
 sepropagator_dopri5_integrator_constructor = partial(
-    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+    SEPropagatorDiffraxIntegrator, diffrax_solver=UnrolledDopri5(), fixed_step=False
 )
 sepropagator_dopri8_integrator_constructor = partial(
-    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+    SEPropagatorDiffraxIntegrator, diffrax_solver=UnrolledDopri8(), fixed_step=False
 )
 sepropagator_tsit5_integrator_constructor = partial(
-    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+    SEPropagatorDiffraxIntegrator, diffrax_solver=UnrolledTsit5(), fixed_step=False
 )
 sepropagator_kvaerno3_integrator_constructor = partial(
     SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
@@ -306,13 +368,13 @@ sesolve_euler_integrator_constructor = partial(
     SESolveDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
 )
 sesolve_dopri5_integrator_constructor = partial(
-    SESolveDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+    SESolveDiffraxIntegrator, diffrax_solver=UnrolledDopri5(), fixed_step=False
 )
 sesolve_dopri8_integrator_constructor = partial(
-    SESolveDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+    SESolveDiffraxIntegrator, diffrax_solver=UnrolledDopri8(), fixed_step=False
 )
 sesolve_tsit5_integrator_constructor = partial(
-    SESolveDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+    SESolveDiffraxIntegrator, diffrax_solver=UnrolledTsit5(), fixed_step=False
 )
 sesolve_kvaerno3_integrator_constructor = partial(
     SESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
@@ -355,6 +417,24 @@ class MESolveDiffraxIntegrator(
         # field, which only exists for a holomorphic one. With (2) this Jacobian is
         # wrong and the iterations converge slowly or diverge.
 
+        # When H and the jump operators are in sparse DIA format, we use (1) in both
+        # cases (also holomorphic, for implicit solvers), computed by
+        # `lindbladian_sparsedia_terms` in a single fused pass over rho (each product
+        # of (2), and its transpose, takes a pass over rho), unless its terms read too
+        # many shifted copies of rho: it then returns None.
+
+        def vector_field_unvec_sparsedia(t, y, _):  # noqa: ANN001, ANN202
+            L, H = self.L(t), self.H(t)
+            half_LdL = 0.5 * sum([_L.dag() @ _L for _L in L])
+            fused = lindbladian_sparsedia_terms(
+                -1j * H - half_LdL, 1j * H - half_LdL, L, y
+            )
+            if fused is not None:
+                return fused
+            if self.options.assume_hermitian and not implicit:
+                return vector_field_unvec_hermitian(t, y, _)
+            return vector_field_unvec_standard(t, y, _)
+
         def vector_field_unvec_standard(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
             half_LdL = 0.5 * sum([_L.dag() @ _L for _L in L])
@@ -375,12 +455,28 @@ class MESolveDiffraxIntegrator(
         implicit = isinstance(self.diffrax_solver, dx.AbstractImplicitSolver)
         if self.options.vectorized:
             vector_field = vector_field_vec
+        elif self._are_operators_sparsedia():
+            vector_field = vector_field_unvec_sparsedia
         elif self.options.assume_hermitian and not implicit:
             vector_field = vector_field_unvec_hermitian
         else:
             vector_field = vector_field_unvec_standard
 
         return dx.ODETerm(vector_field)
+
+    def _are_operators_sparsedia(self) -> bool:
+        # whether H(t), the jump operators and the state allow the fused Lindbladian
+        # (the layout of a time-qarray's value does not depend on t)
+        # On CPU, inside a solve, the fused Lindbladian is up to 1.9x slower than the
+        # products for small and medium systems (n = 32-96, faster from n ~ 128), and
+        # there is no synchronisation to save. Fuse on GPU only.
+        if jax.default_backend() != 'gpu':
+            return False
+        t = self.ts[0]
+        data = [getattr(x, 'data', None) for x in [self.H(t), *self.L(t)]]
+        return all(isinstance(x, SparseDIADataArray) for x in data) and isinstance(
+            getattr(self.y0, 'data', None), DenseDataArray
+        )
 
     def __post_init__(self):
         # convert y0 to a density matrix
@@ -407,19 +503,19 @@ mesolve_euler_integrator_constructor = partial(
 )
 mesolve_dopri5_integrator_constructor = partial(
     MESolveDiffraxIntegrator,
-    diffrax_solver=dx.Dopri5(),
+    diffrax_solver=UnrolledDopri5(),
     fixed_step=False,
     result_class=MESolveResult,
 )
 mesolve_dopri8_integrator_constructor = partial(
     MESolveDiffraxIntegrator,
-    diffrax_solver=dx.Dopri8(),
+    diffrax_solver=UnrolledDopri8(),
     fixed_step=False,
     result_class=MESolveResult,
 )
 mesolve_tsit5_integrator_constructor = partial(
     MESolveDiffraxIntegrator,
-    diffrax_solver=dx.Tsit5(),
+    diffrax_solver=UnrolledTsit5(),
     fixed_step=False,
     result_class=MESolveResult,
 )
@@ -460,13 +556,13 @@ mepropagator_euler_integrator_constructor = partial(
     MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
 )
 mepropagator_dopri5_integrator_constructor = partial(
-    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+    MEPropagatorDiffraxIntegrator, diffrax_solver=UnrolledDopri5(), fixed_step=False
 )
 mepropagator_dopri8_integrator_constructor = partial(
-    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+    MEPropagatorDiffraxIntegrator, diffrax_solver=UnrolledDopri8(), fixed_step=False
 )
 mepropagator_tsit5_integrator_constructor = partial(
-    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+    MEPropagatorDiffraxIntegrator, diffrax_solver=UnrolledTsit5(), fixed_step=False
 )
 mepropagator_kvaerno3_integrator_constructor = partial(
     MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
