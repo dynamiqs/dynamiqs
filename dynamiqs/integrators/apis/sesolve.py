@@ -21,6 +21,7 @@ from ...time_qarray import TimeQArray
 from .._utils import (
     assert_method_supported,
     astimeqarray,
+    broadcast_batched,
     cartesian_vmap,
     catch_xla_runtime_error,
     multi_vmap,
@@ -251,12 +252,12 @@ def _vectorized_sesolve(
         nvmap = (H.ndim - 2, psi0.ndim - 2, 0, 0, 0, 0, 0)
         f = cartesian_vmap(_sesolve, in_axes, out_axes, nvmap)
     else:
-        n = H.shape[-1]
         bshape = jnp.broadcast_shapes(H.shape[:-2], psi0.shape[:-2])
         nvmap = len(bshape)
-        # broadcast all vectorized input to same shape
-        H = H.broadcast_to(*bshape, n, n)
-        psi0 = psi0.broadcast_to(*bshape, n, 1)
+        # broadcast batched inputs to the same shape, keep unbatched inputs unbatched
+        H, H_axes = broadcast_batched(H, H.in_axes, bshape)
+        psi0, psi0_axes = broadcast_batched(psi0, 0, bshape)
+        in_axes = (H_axes, psi0_axes, *in_axes[2:])
         # vectorize the function
         f = multi_vmap(_sesolve, in_axes, out_axes, nvmap)
 
