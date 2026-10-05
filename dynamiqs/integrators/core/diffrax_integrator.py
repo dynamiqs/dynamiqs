@@ -9,6 +9,8 @@ from typing import cast
 import diffrax as dx
 import equinox as eqx
 import jax
+import jax.numpy as jnp
+import jax.tree_util as jtu
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
@@ -67,6 +69,65 @@ class AdaptiveStepInfos(eqx.Module):
             f'{self.nsteps} steps ({self.naccepted} accepted,'
             f' {self.nrejected} rejected)'
         )
+
+
+def _saveat(ts: Array, save: Callable, y0: PyTree) -> tuple[dx.SaveAt, Callable]:
+    """Diffrax's SaveAt of dynamiqs (`save(t, y)` at each time of `ts`, and the last
+    state), and the function that turns the saved values of a solution back into the
+    outputs of `save` and the last state.
+    """
+    # On GPU, complex leaves are saved as (..., 2) arrays of real and imaginary parts.
+    # Under vmap, Diffrax writes each saved value into its buffer with a scatter,
+    # which XLA runs on GPU as a sequential loop over the batch for complex dtypes: on
+    # an A100, 3.6 ms per save point at batch 255, against 14 us for a real dtype. On
+    # CPU the split only adds a copy per save (up to 7% slower). The split and its
+    # inverse below both follow this one flag.
+    split = jax.default_backend() == 'gpu'
+    structures = (jax.eval_shape(save, ts[0], y0), jax.eval_shape(lambda y: y, y0))
+    # which leaves of each saved tree are complex: the split and the restore both
+    # follow this, so they cannot disagree
+    complex_leaves = [
+        [jnp.issubdtype(x.dtype, jnp.complexfloating) for x in jtu.tree_leaves(s)]
+        for s in structures
+    ]
+
+    def to_saved(tree: PyTree, is_complex: list[bool]) -> list[Array]:
+        leaves = jtu.tree_leaves(tree)
+        if not split:
+            return leaves
+        return [
+            jnp.stack([x.real, x.imag], axis=-1) if c else x
+            for x, c in zip(leaves, is_complex, strict=True)
+        ]
+
+    def from_saved(
+        saved: list[Array], structure: PyTree, is_complex: list[bool]
+    ) -> PyTree:
+        leaves = saved
+        if split:
+            leaves = [
+                jax.lax.complex(x[..., 0], x[..., 1]).astype(s.dtype) if c else x
+                for x, s, c in zip(
+                    saved, jtu.tree_leaves(structure), is_complex, strict=True
+                )
+            ]
+        return jtu.tree_unflatten(jtu.tree_structure(structure), leaves)
+
+    def restore(ys: tuple) -> tuple[PyTree, PyTree]:
+        return tuple(
+            from_saved(*args)
+            for args in zip(ys, structures, complex_leaves, strict=True)
+        )
+
+    subsaveat_a = dx.SubSaveAt(
+        ts=ts,
+        fn=lambda t, y, args: to_saved(save(t, y), complex_leaves[0]),  # noqa: ARG005
+    )
+    subsaveat_b = dx.SubSaveAt(
+        t1=True,
+        fn=lambda t, y, args: to_saved(y, complex_leaves[1]),  # noqa: ARG005
+    )
+    return dx.SaveAt(subs=[subsaveat_a, subsaveat_b]), restore
 
 
 class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
@@ -178,18 +239,14 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             )
 
     def run(self) -> Result:
-        # === prepare diffrax arguments
-        fn = lambda t, y, args: self.save(t, y)  # noqa: ARG005
-        subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
-        subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-        saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+        # === prepare diffrax arguments: save the solution regularly, and the last state
+        saveat, restore = _saveat(self.ts, self.save, self.y0)
 
         # === solve differential equation
         solution = self.diffeqsolve(self.t0, self.t1, self.y0, saveat)
 
         # === collect and return results
-        ys = cast(tuple, solution.ys)
-        saved = self.postprocess_saved(*ys)
+        saved = self.postprocess_saved(*restore(cast(tuple, solution.ys)))
         return self.result(saved, infos=self.infos(solution.stats))
 
     def infos(self, stats: dict[str, Array]) -> PyTree:
@@ -256,13 +313,13 @@ def call_diffeqsolve(
 
     if save is None:
         save = lambda t, y: y  # noqa: ARG005
-    fn = lambda t, y, args: save(t, y)  # noqa: ARG005
-    subsaveat_a = dx.SubSaveAt(ts=ts, fn=fn)  # save solution regularly
-    subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-    saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+    saveat, restore = _saveat(ts, save, y0)
 
     # === run integrator
-    return integrator.diffeqsolve(ts[0], ts[-1], y0, saveat, event=event, dtmax=dtmax)
+    solution = integrator.diffeqsolve(
+        ts[0], ts[-1], y0, saveat, event=event, dtmax=dtmax
+    )
+    return eqx.tree_at(lambda s: s.ys, solution, restore(cast(tuple, solution.ys)))
 
 
 class SEDiffraxIntegrator(DiffraxIntegrator, SEInterface):
