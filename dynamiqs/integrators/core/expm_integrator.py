@@ -70,19 +70,15 @@ class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
         # === compute time differences (null for times outside [t0, t1])
         delta_ts = jnp.diff(times)  # (ntimes-1,)
 
-        # === batch-compute the propagators $e^{\Delta t A}$ on each time interval
-        As = jax.vmap(self.generator)(times[:-1]).asdense()  # (ntimes-1, N, N)
-        step_propagators = expm(delta_ts[:, None, None] * As)  # (ntimes-1, N, N)
-
-        # === combine the propagators together
-        def step(carry: QArray, xs: tuple[Array, QArray]) -> tuple[QArray, Saved]:
-            # note the ordering x @ carry: we accumulate propagators from the left
-            t, x = xs
-            x_next = x @ carry
-            # the accumulated propagator holds at the interval's right endpoint t
-            return x_next, self.save(t, x_next)
-
-        ylast, saved = jax.lax.scan(step, self.y0, (times[1:], step_propagators))
+        # === combine the propagators $e^{\Delta t A}$ of each time interval
+        # On CPU, computing only the propagators that change, one at a time, is much
+        # faster than one batched expm over all intervals. On GPU it is slower whenever
+        # several propagators are needed: a single expm syncs with the host on its
+        # data-dependent branches, which the batched expm evaluates without branching.
+        if jax.default_backend() == 'cpu':
+            ylast, saved = self._propagate_sequential(times, delta_ts, disc_ts)
+        else:
+            ylast, saved = self._propagate_batched(times, delta_ts)
         # saved has shape (ntimes-1, N, 1) if y0 has shape (N, 1) -> compute states
         # saved has shape (ntimes-1, N, N) if y0 has shape (N, N) -> compute propagators
 
@@ -95,6 +91,60 @@ class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
 
         nsteps = (delta_ts != 0).sum()
         return self.result(saved, infos=self.Infos(nsteps))
+
+    def _propagate_batched(self, times: Array, delta_ts: Array) -> tuple[QArray, Saved]:
+        # batch-compute the propagators of all intervals
+        As = jax.vmap(self.generator)(times[:-1]).asdense()  # (ntimes-1, N, N)
+        step_propagators = expm(delta_ts[:, None, None] * As)  # (ntimes-1, N, N)
+
+        def step(carry: QArray, xs: tuple[Array, QArray]) -> tuple[QArray, Saved]:
+            # note the ordering x @ carry: we accumulate propagators from the left
+            t, x = xs
+            x_next = x @ carry
+            # the accumulated propagator holds at the interval's right endpoint t
+            return x_next, self.save(t, x_next)
+
+        return jax.lax.scan(step, self.y0, (times[1:], step_propagators))
+
+    def _propagate_sequential(
+        self, times: Array, delta_ts: Array, disc_ts: Array
+    ) -> tuple[QArray, Saved]:
+        # compute a propagator only when the generator or the interval length changes:
+        # null intervals are skipped, and an interval of the same length (up to the
+        # rounding of the times) as the previous one reuses its propagator
+        new_generator = jnp.isin(times[:-1], disc_ts)  # (ntimes-1,)
+        tol = 4 * jnp.finfo(delta_ts.dtype).eps
+
+        def step(
+            carry: tuple[QArray, QArray, Array], xs: tuple[Array, Array, Array, Array]
+        ) -> tuple[tuple[QArray, QArray, Array], Saved]:
+            y, propagator, last_dt = carry
+            t_start, t_end, dt, new_A = xs
+
+            def skip() -> tuple[QArray, QArray, Array]:
+                return y, propagator, last_dt
+
+            def reuse() -> tuple[QArray, QArray, Array]:
+                # note the ordering x @ y: we accumulate propagators from the left
+                return propagator @ y, propagator, last_dt
+
+            def compute() -> tuple[QArray, QArray, Array]:
+                x = expm(dt * self.generator(t_start).asdense())  # (N, N)
+                return x @ y, x, dt
+
+            scale = jnp.maximum(jnp.abs(t_start), jnp.abs(t_end))
+            same = ~new_A & (jnp.abs(dt - last_dt) <= tol * scale)
+            branch = jnp.where(dt == 0, 0, jnp.where(same, 1, 2))
+            carry = jax.lax.switch(branch, [skip, reuse, compute])
+            # the accumulated propagator holds at the interval's right endpoint t_end
+            return carry, self.save(t_end, carry[0])
+
+        # placeholder propagator, never used: the first non-null interval computes one
+        propagator = 0 * self.generator(self.t0).asdense()  # (N, N)
+        carry = (self.y0, propagator, jnp.asarray(-1.0, delta_ts.dtype))
+        xs = (times[:-1], times[1:], delta_ts, new_generator)
+        (ylast, _, _), saved = jax.lax.scan(step, carry, xs)
+        return ylast, saved
 
 
 class SEExpmIntegrator(ExpmIntegrator, SEInterface):

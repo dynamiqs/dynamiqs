@@ -63,8 +63,11 @@ class Method(eqx.Module):
 class Expm(Method):
     r"""Explicit matrix exponentiation to compute propagators.
 
-    Explicitly batch-compute the propagators for all time intervals in `tsave`. These
-    propagators are then iteratively applied:
+    Explicitly compute the propagators for all time intervals in `tsave`, then apply
+    them iteratively. On GPU, all propagators are computed in one batch. On CPU, a
+    propagator is computed only when it changes, at a discontinuity of the Hamiltonian
+    or jump operators or for an interval of a different length, and is otherwise
+    reused. The propagators are applied:
 
     - starting from the initial state for [`dq.sesolve()`][dynamiqs.sesolve] and
       [`dq.mesolve()`][dynamiqs.mesolve], to compute states for all times in `tsave`,
