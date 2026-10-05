@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import partial, reduce
+from typing import cast
 
 import jax
 import jax.numpy as jnp
@@ -8,9 +9,16 @@ import numpy as np
 from jax import Array
 
 from .._checks import check_hermitian, check_shape
+from ..qarrays.dense_dataarray import DenseDataArray
+from ..qarrays.materialized_qarray import MaterializedQArray
 from ..qarrays.qarray import QArray, QArrayLike, get_dims
 from ..qarrays.sparsedia_dataarray import SparseDIADataArray
-from ..qarrays.sparsedia_primitives import tracemm_sparsedia_array
+from ..qarrays.sparsedia_primitives import (
+    MAX_FUSED_SHIFTS,
+    lindbladian_sparsedia,
+    lindbladian_sparsedia_shifts,
+    tracemm_sparsedia_array,
+)
 from ..qarrays.utils import asqarray, init_dims, to_jax
 
 __all__ = [
@@ -667,9 +675,52 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
     # === check rho shape
     check_shape(rho, 'rho', '(..., n, n)')
 
+    if all(
+        isinstance(getattr(x, 'data', None), SparseDIADataArray)
+        for x in [H, *_jump_ops]
+    ):
+        half_LdL = 0.5 * sum([L.dag() @ L for L in _jump_ops])
+        fused = lindbladian_sparsedia_terms(
+            -1j * H - half_LdL, 1j * H - half_LdL, _jump_ops, rho
+        )
+        if fused is not None:
+            return fused
+
     return asqarray(
         -1j * H @ rho + 1j * rho @ H + sum([dissipator(L, rho) for L in _jump_ops])
     )
+
+
+def lindbladian_sparsedia_terms(
+    A: QArray, B: QArray, jump_ops: list[QArray], rho: QArray
+) -> QArray | None:
+    r"""Returns $A\rho + \rho B + \sum_k L_k \rho L_k^\dag$ computed in a single fused
+    pass over $\rho$ if $A$, $B$ and the $L_k$ are in sparse DIA format, $\rho$ is
+    dense and the terms read at most `MAX_FUSED_SHIFTS` shifted copies of $\rho$, and
+    None otherwise.
+
+    With $A = -iH - \frac12\sum_k L_k^\dag L_k$ and $B = iH - \frac12\sum_k L_k^\dag
+    L_k$, this is the Lindbladian.
+    """
+    operand_data = [getattr(x, 'data', None) for x in [A, B, *jump_ops]]
+    rho_data = getattr(rho, 'data', None)
+    if not (
+        all(isinstance(d, SparseDIADataArray) for d in operand_data)
+        and isinstance(rho_data, DenseDataArray)
+        and rho.shape[-1] == rho.shape[-2]
+    ):
+        return None
+    a, b, *ls = cast(list[SparseDIADataArray], operand_data)
+    shifts = lindbladian_sparsedia_shifts(a.offsets, b.offsets, [l.offsets for l in ls])
+    if shifts > MAX_FUSED_SHIFTS:
+        return None
+    out = lindbladian_sparsedia(
+        (a.offsets, a.diags),
+        (b.offsets, b.diags),
+        [(l.offsets, l.diags) for l in ls],
+        rho_data.data,
+    )
+    return MaterializedQArray(rho.dims, False, DenseDataArray(out))
 
 
 def isket(x: QArrayLike) -> bool:
