@@ -5,6 +5,7 @@ import pytest
 
 import dynamiqs as dq
 from dynamiqs.integrators.core.diffrax_integrator import call_diffeqsolve
+from dynamiqs.integrators.core.unrolled_solvers import _UnrolledERK
 
 from ..order import TEST_SHORT
 
@@ -57,6 +58,14 @@ SOLVES = {
 }
 
 
+def _force_split_saves(monkeypatch):
+    # the unrolled Runge-Kutta stages (also GPU-only) change the round-off enough to
+    # change the steps of an adaptive solve, so keep Diffrax's stages here
+    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
+    monkeypatch.setattr(_UnrolledERK, '_unrolled', lambda *args: False)  # noqa: ARG005
+    jax.clear_caches()
+
+
 def _assert_match(split, reference):
     for x, y in zip(jax.tree.leaves(split), jax.tree.leaves(reference), strict=True):
         assert x.dtype == y.dtype
@@ -69,8 +78,7 @@ def test_real_saves_match(monkeypatch, solver):
     # a batch of driven cavities, with states and expectation values saved
     solve = lambda: jax.vmap(SOLVES[solver])(jnp.array([0.5, 1.0]))
     reference = solve()
-    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
-    jax.clear_caches()
+    _force_split_saves(monkeypatch)
     _assert_match(solve(), reference)
 
 
@@ -78,8 +86,7 @@ def test_real_saves_match(monkeypatch, solver):
 def test_real_saves_gradient(monkeypatch):
     loss = lambda amplitude: SOLVES['mesolve'](amplitude).expects.real.sum()
     reference = jax.grad(loss)(1.0)
-    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
-    jax.clear_caches()
+    _force_split_saves(monkeypatch)
     assert jnp.allclose(jax.grad(loss)(1.0), reference, rtol=1e-5)
 
 
@@ -87,8 +94,7 @@ def test_real_saves_gradient(monkeypatch):
 def test_real_saves_after_event(monkeypatch):
     # a solve stopped by an event leaves later saves unfilled (inf): restoring them
     # must not create NaNs
-    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
-    jax.clear_caches()
+    _force_split_saves(monkeypatch)
     terms = dx.ODETerm(lambda t, y, _: -0.5 * (a.dag() @ a) @ y)  # noqa: ARG005
     event = dx.Event(lambda t, y, *args, **kwargs: y.norm() ** 2 - 0.9)  # noqa: ARG005
     solution = call_diffeqsolve(
