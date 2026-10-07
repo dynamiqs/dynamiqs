@@ -3,6 +3,7 @@ import warnings
 import jax
 import jax.numpy as jnp
 import jax.random as jr
+import numpy as np
 import pytest
 from equinox import EquinoxRuntimeError
 
@@ -11,6 +12,7 @@ from dynamiqs.qarrays.dense_dataarray import DenseDataArray
 from dynamiqs.qarrays.materialized_qarray import MaterializedQArray
 from dynamiqs.qarrays.sparsedia_dataarray import SparseDIADataArray
 from dynamiqs.qarrays.sparsedia_primitives import (
+    _add_diags,
     _matmul_array_sparsedia,
     _matmul_sparsedia_array,
     _pad_on_gpu,
@@ -227,6 +229,22 @@ class TestSparseDIAQArray:
             dA.to_jax(), sB.data.offsets, sB.data.diags, pad=True
         )
         assert _allclose(out_dense_dense, out_dense_dia)
+
+    @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
+    def test_add_stacked(self, kA, kB):
+        # DIA sums are stacked on GPU only, so CI, on CPU, would otherwise never run
+        # that code: both ways add the same terms, so they agree exactly
+        sA, sB = self.sparseA[kA], self.sparseB[kB]
+        offsets = np.union1d(sA.data.offsets, sB.data.offsets).astype(int)
+        add = lambda stack: _add_diags(
+            sA.data.offsets,
+            sB.data.offsets,
+            offsets,
+            sA.data.diags,
+            sB.data.diags,
+            stack=stack,
+        )
+        assert jnp.array_equal(add(stack=True), add(stack=False))
 
     def test_pad_on_gpu(self):
         # the GPU pads the products of operators with many diagonals or of large dense
