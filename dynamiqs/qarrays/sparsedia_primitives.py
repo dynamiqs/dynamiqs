@@ -194,31 +194,31 @@ def add_sparsedia_sparsedia(
     right_offsets: tuple[int, ...],
     right_diags: Array,
 ) -> tuple[tuple[int, ...], Array]:
-    # compute the output offsets
-    out_offsets = np.union1d(left_offsets, right_offsets).astype(int)
-
-    # chosen when tracing, not with `lax.platform_dependent`, whose conditional slows
-    # the GPU solves down (x1.24 on a batched `mesolve` on an A100)
-    stack = jax.default_backend() == 'gpu'
-    out_diags = _add_diags(
-        left_offsets, right_offsets, out_offsets, left_diags, right_diags, stack=stack
+    # Chosen when tracing, with the default backend rather than the device a solve
+    # runs on (as for the real-array saves of `_saveat`). With `lax.platform_dependent`
+    # instead, a batched `mesolve` on an A100 was 1.24x slower.
+    return _add_sparsedia_sparsedia(
+        left_offsets,
+        left_diags,
+        right_offsets,
+        right_diags,
+        stack=jax.default_backend() == 'gpu',
     )
-    return _numpy_to_tuple(out_offsets), out_diags
 
 
-def _add_diags(
+def _add_sparsedia_sparsedia(
     left_offsets: tuple[int, ...],
-    right_offsets: tuple[int, ...],
-    out_offsets: np.ndarray,
     left_diags: Array,
+    right_offsets: tuple[int, ...],
     right_diags: Array,
     *,
     stack: bool,
-) -> Array:
+) -> tuple[tuple[int, ...], Array]:
     # On GPU, build each output diagonal then stack them: XLA fuses this into one
     # kernel, while filling a zero array with `.at[i].add` is one kernel per diagonal.
     # On CPU, filling the zero array is twice as fast on a `sesolve` with a modulated
     # DIA Hamiltonian, whose terms are summed at every stage. Both add the same terms.
+    out_offsets = np.union1d(left_offsets, right_offsets).astype(int)
     batch_shape = jnp.broadcast_shapes(left_diags.shape[:-2], right_diags.shape[:-2])
     diag_shape = (*batch_shape, left_diags.shape[-1])
     dtype = jnp.promote_types(left_diags.dtype, right_diags.dtype)
@@ -231,7 +231,7 @@ def _add_diags(
             if offset in right_offsets:
                 right_diag = right_diags[..., right_offsets.index(offset), :]
                 out_diags = out_diags.at[..., i, :].add(right_diag)
-        return out_diags
+        return _numpy_to_tuple(out_offsets), out_diags
 
     out_diags = []
     for offset in out_offsets:
@@ -241,7 +241,7 @@ def _add_diags(
         if offset in right_offsets:
             diag = diag + right_diags[..., right_offsets.index(offset), :]
         out_diags.append(diag)
-    return jnp.stack(out_diags, axis=-2)
+    return _numpy_to_tuple(out_offsets), jnp.stack(out_diags, axis=-2)
 
 
 def matmul_sparsedia_sparsedia(
