@@ -19,7 +19,7 @@ implementation.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import cast
 
 import diffrax as dx
@@ -29,7 +29,7 @@ import jax.numpy as jnp
 import jax.tree_util as jtu
 import numpy as np
 from diffrax._custom_types import Args, BoolScalarLike, RealScalarLike, Y
-from jaxtyping import ArrayLike, PyTree
+from jaxtyping import Array, ArrayLike, PyTree
 
 
 def _combine(
@@ -59,7 +59,7 @@ def _dot(coefficients: Sequence[float] | np.ndarray, ks: list[PyTree]) -> PyTree
 
 
 class _UnrolledERK(dx.AbstractERK):
-    def _unrolled(
+    def _explicit(
         self,
         terms: dx.AbstractTerm,
         t0: RealScalarLike,
@@ -67,17 +67,23 @@ class _UnrolledERK(dx.AbstractERK):
         y0: Y,
         args: Args,
     ) -> bool:
+        # whether the step is a single explicit Butcher tableau with a cheap vector
+        # field, which the steps below support
         vf_expensive, _ = self._common(terms, t0, t1, y0, args)
         tableau = self.tableau
-        # On CPU, XLA fuses each stage's output into the later stages that read it and
-        # recomputes it there, which makes unrolled steps slower; there is also no
-        # synchronisation to save. Unroll on GPU only.
         return (
-            jax.default_backend() == 'gpu'
-            and not vf_expensive
+            not vf_expensive
             and isinstance(tableau, dx.ButcherTableau)
             and not tableau.implicit
         )
+
+    @staticmethod
+    def _unrolled() -> bool:
+        # On CPU, XLA fuses each stage's output into the later stages that read it and
+        # recomputes it there, which makes unrolled steps slower; there is also no
+        # synchronisation to save. Unroll on GPU only; on CPU, loop over the stages
+        # (`_looped_stages`).
+        return jax.default_backend() == 'gpu'
 
     def init(
         self,
@@ -87,7 +93,7 @@ class _UnrolledERK(dx.AbstractERK):
         y0: Y,
         args: Args,
     ) -> PyTree:
-        if not self._unrolled(terms, t0, t1, y0, args):
+        if not self._explicit(terms, t0, t1, y0, args):
             return super().init(terms, t0, t1, y0, args)
         _, fsal = self._common(terms, t0, t1, y0, args)
         if not fsal:
@@ -105,10 +111,10 @@ class _UnrolledERK(dx.AbstractERK):
         solver_state: PyTree,
         made_jump: BoolScalarLike,
     ) -> tuple:
-        if not self._unrolled(terms, t0, t1, y0, args):
+        if not self._explicit(terms, t0, t1, y0, args):
             return super().step(terms, t0, t1, y0, args, solver_state, made_jump)
         _, fsal = self._common(terms, t0, t1, y0, args)
-        # a single explicit Butcher tableau (checked by `_unrolled`)
+        # a single explicit Butcher tableau (checked by `_explicit`)
         tableau = cast(dx.ButcherTableau, self.tableau)
         control = terms.contr(t0, t1)
         dt = t1 - t0
@@ -131,8 +137,13 @@ class _UnrolledERK(dx.AbstractERK):
                 )
         else:
             f_first = f(t_first, y0)
+        k_first = terms.prod(f_first, control)
+        if not self._unrolled():
+            return self._looped_stages(
+                f, t0, t1, y0, k_first, f_first, control, terms, fsal
+            )
         fs = [f_first]
-        ks = [terms.prod(f_first, control)]
+        ks = [k_first]
 
         # === other stages
         yi = y0
@@ -149,6 +160,56 @@ class _UnrolledERK(dx.AbstractERK):
         k = jtu.tree_map(lambda *x: jnp.stack(x), *ks)
         dense_info = dict(y0=y0, y1=y1, k=k)
         new_solver_state = (jnp.array(False), fs[-1]) if fsal else None
+        return y1, y_error, dense_info, new_solver_state, dx.RESULTS.successful
+
+    def _looped_stages(
+        self,
+        f: Callable[[RealScalarLike, Y], PyTree],
+        t0: RealScalarLike,
+        t1: RealScalarLike,
+        y0: Y,
+        k_first: PyTree,
+        f_first: PyTree,
+        control: PyTree,
+        terms: dx.AbstractTerm,
+        fsal: bool,
+    ) -> tuple:
+        # The stages after the first, in a loop as Diffrax does (unrolled, XLA would
+        # recompute stages on CPU, see `_unrolled`), but each stage combines only the
+        # stages it reads, as the unrolled step: Diffrax's `tensordot` over all the
+        # stages runs on CPU as a complex matrix-vector product on one thread, several
+        # times slower than these elementwise sums.
+        tableau = cast(dx.ButcherTableau, self.tableau)
+        num_stages = len(tableau.c) + 1
+        dt = t1 - t0
+
+        def unstack(ks: PyTree) -> list[PyTree]:
+            return [jtu.tree_map(lambda k, j=j: k[j], ks) for j in range(num_stages)]
+
+        def combination(a_lower: np.ndarray) -> Callable[[PyTree], Y]:
+            return lambda ks: _combine(y0, a_lower, unstack(ks)[: len(a_lower)])
+
+        combinations = [combination(a_lower) for a_lower in tableau.a_lower]
+        # as Diffrax: a stage at c = 1 is exactly at t1
+        times = [t1 if c == 1 else t0 + float(c) * dt for c in tableau.c]
+
+        def stage(i: Array, carry: tuple) -> tuple:
+            ks, _, _ = carry
+            yi = jax.lax.switch(i - 1, combinations, ks)
+            ti = jnp.stack([jnp.asarray(t) for t in times])[i - 1]
+            fi = f(ti, yi)
+            ki = terms.prod(fi, control)
+            ks = jtu.tree_map(lambda buffer, k: buffer.at[i].set(k), ks, ki)
+            return ks, yi, fi
+
+        ks = jtu.tree_map(
+            lambda k: jnp.zeros((num_stages, *k.shape), k.dtype).at[0].set(k), k_first
+        )
+        ks, y_last, f_last = jax.lax.fori_loop(1, num_stages, stage, (ks, y0, f_first))
+        y1 = y_last if tableau.ssal else _combine(y0, tableau.b_sol, unstack(ks))
+        y_error = _dot(tableau.b_error, unstack(ks))
+        dense_info = dict(y0=y0, y1=y1, k=ks)
+        new_solver_state = (jnp.array(False), f_last) if fsal else None
         return y1, y_error, dense_info, new_solver_state, dx.RESULTS.successful
 
 
