@@ -107,7 +107,7 @@ class TestSparseDIAQArray:
         # check dia + dia
         assert _allclose(out_dense_dense, out_dia_dia)
 
-        # check the stacked dia + dia of GPUs, which CI (on CPU) does not run otherwise
+        # check the GPU stacked dia + dia exactly (CI, on CPU, runs it only in solves)
         _, stacked = _add_sparsedia_sparsedia(
             sA.data.offsets, sA.data.diags, sB.data.offsets, sB.data.diags, stack=True
         )
