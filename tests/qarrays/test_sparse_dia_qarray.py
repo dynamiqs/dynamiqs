@@ -11,6 +11,7 @@ from dynamiqs.qarrays.dense_dataarray import DenseDataArray
 from dynamiqs.qarrays.materialized_qarray import MaterializedQArray
 from dynamiqs.qarrays.sparsedia_dataarray import SparseDIADataArray
 from dynamiqs.qarrays.sparsedia_primitives import (
+    _add_sparsedia_sparsedia,
     _matmul_array_sparsedia,
     _matmul_sparsedia_array,
     _pad_on_gpu,
@@ -105,6 +106,12 @@ class TestSparseDIAQArray:
 
         # check dia + dia
         assert _allclose(out_dense_dense, out_dia_dia)
+
+        # check the GPU stacked dia + dia exactly (CI, on CPU, runs it only in solves)
+        _, stacked = _add_sparsedia_sparsedia(
+            sA.data.offsets, sA.data.diags, sB.data.offsets, sB.data.diags, stack=True
+        )
+        assert jnp.array_equal(stacked, (sA + sB).data.diags)
 
         # check dia + dense
         with warnings.catch_warnings():
