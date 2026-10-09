@@ -245,7 +245,8 @@ class MaterializedQArray(QArray):
         return replace(self, data=result)
 
     def __add__(self, y: QArrayLike) -> QArray:
-        if isinstance(y, int | float) and y == 0:
+        # no dtype promotion: `x + 0j` keeps a real `x` real
+        if isinstance(y, int | float | complex) and y == 0:
             return self
 
         if is_batched_scalar(y):

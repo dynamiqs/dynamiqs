@@ -65,6 +65,9 @@ class TestDenseQArray:
         assert jnp.array_equal(
             (self.qarray - self.qother).to_jax(), self.data - self.other
         )
+        assert jnp.array_equal((self.qarray - 0).to_jax(), self.data)
+        assert jnp.array_equal((self.qarray - 0.0).to_jax(), self.data)
+        assert jnp.array_equal((self.qarray - 0j).to_jax(), self.data)
         with pytest.raises(NotImplementedError):
             self.qarray - self.scalar
         with pytest.raises(NotImplementedError):

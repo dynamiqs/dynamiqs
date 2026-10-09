@@ -155,6 +155,11 @@ class TestSparseDIAQArray:
             out_dense_dia = (dA - sB).to_jax()
         assert _allclose(out_dense_dense, out_dense_dia)
 
+        # check subtracting zero returns the qarray, like adding it
+        assert _allclose((sA - 0).to_jax(), sA.to_jax())
+        assert _allclose((sA - 0.0).to_jax(), sA.to_jax())
+        assert _allclose((sA - 0j).to_jax(), sA.to_jax())
+
         # check subtraction with a scalar raises an error
         with pytest.raises(NotImplementedError):
             sA - self.scalar
