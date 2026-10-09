@@ -99,6 +99,11 @@ class TestConstantTimeQArray:
         assert_equal(x_clipped(0.0), [[0, 0], [0, 0]])
         assert_equal(x_clipped(1.5), [[0, 0], [0, 0]])
 
+        # check that adding a constant keeps the clip
+        x_sum = x_clipped + self.x
+        assert_equal(x_sum(0.0), self.x(0.0))
+        assert_equal(x_sum(0.5), 2 * self.x(0.5))
+
     def test_shift(self):
         # test unclipped operator
         t_shift = 0.5
@@ -605,6 +610,11 @@ class TestSummedQArray:
         # check outside both windows
         assert_equal(x_clipped(0.0), [[0, 0], [0, 0]])
         assert_equal(x_clipped(2.0), [[0, 0], [0, 0]])
+
+        # check that adding to the sum keeps each term's window
+        x_sum = x_clipped + x_modulated
+        assert_equal(x_sum(0.0), x_modulated(0.0))
+        assert_equal(x_sum(1.0), x_clipped(1.0) + x_modulated(1.0))
 
         # check that a clipped sum, alone or summed, keeps its bounds as discontinuities
         for x_sum in [x.clip(0.25, 1.25), x.clip(0.25, 1.25) + x_modulated]:
