@@ -606,6 +606,10 @@ class TestSummedQArray:
         assert_equal(x_clipped(0.0), [[0, 0], [0, 0]])
         assert_equal(x_clipped(2.0), [[0, 0], [0, 0]])
 
+        # check that a clipped sum, alone or summed, keeps its bounds as discontinuities
+        for x_sum in [x.clip(0.25, 1.25), x.clip(0.25, 1.25) + x_modulated]:
+            assert jnp.isin(jnp.array([0.25, 1.25]), x_sum.discontinuity_ts).all()
+
     def test_shift(self):
         f = lambda t: 1.0 + 2.0 * t
         qarray_modulated = jnp.array([[1.0, 2.0], [3.0, 4.0]])
@@ -632,3 +636,6 @@ class TestSummedQArray:
         t_inside = 1.0
         assert_equal(x_clipped_shifted(t_inside), x_clipped(t_inside - t_shift))
         assert_equal(x_clipped_shifted(0.0), [[0, 0], [0, 0]])
+        # inside the shifted window only, then the original window only
+        assert_equal(x_clipped_shifted(1.5), x_clipped(1.5 - t_shift))
+        assert_equal(x_clipped_shifted(0.5), [[0, 0], [0, 0]])

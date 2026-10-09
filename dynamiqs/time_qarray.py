@@ -855,8 +855,6 @@ class CallableTimeQArray(TimeQArray):
 
 
 class SummedTimeQArray(TimeQArray):
-    # note: tstart and tend are not used by this class
-
     timeqarrays: list[TimeQArray]
 
     def __init__(
@@ -923,11 +921,12 @@ class SummedTimeQArray(TimeQArray):
     @property
     def discontinuity_ts(self) -> Array:
         ts = [tqarray.discontinuity_ts for tqarray in self.timeqarrays]
-        return concatenate_sort(*ts)
+        return concatenate_sort(super().discontinuity_ts, *ts)
 
     def shift(self, tshift: float) -> TimeQArray:
+        tstart, tend = self._shift_bounds(tshift)
         timeqarrays = [tqarray.shift(tshift) for tqarray in self.timeqarrays]
-        return replace(self, timeqarrays=timeqarrays)
+        return replace(self, timeqarrays=timeqarrays, tstart=tstart, tend=tend)
 
     def reshape(self, *shape: int) -> TimeQArray:
         timeqarrays = [tqarray.reshape(*shape) for tqarray in self.timeqarrays]
