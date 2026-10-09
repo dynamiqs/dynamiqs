@@ -263,14 +263,19 @@ class MESolveLowRankIntegrator(
         # required by the cached solve: (cache_builder, linsolve_with_cache).
         solver_cache_builder, linsolve = linear_solvers[self.method.linear_solver]
 
-        # With constant operators, the non-Hermitian Hamiltonian -iH - 1/2 sum L^dag L
-        # is computed once, before the solve: a vector-field evaluation then applies
-        # one operator instead of H and each L^dag (for dense operators, a product
-        # with an n x n matrix each).
-        constant = all(isinstance(x, ConstantTimeQArray) for x in [self.H, *self.Ls])
+        # With constant operators (not clipped in time), the non-Hermitian Hamiltonian
+        # -iH - 1/2 sum L^dag L is computed once, before the solve: a vector-field
+        # evaluation then applies one operator instead of H and each L^dag (for dense
+        # operators, a product with an n x n matrix each).
+        constant = all(
+            isinstance(x, ConstantTimeQArray) and x.tstart is None and x.tend is None
+            for x in [self.H, *self.Ls]
+        )
         if constant:
             Ls0 = [L(self.t0) for L in self.Ls]
-            Hnh = -1j * self.H(self.t0) - 0.5 * sum(L.dag() @ L for L in Ls0)
+            Hnh = -1j * self.H(self.t0)
+            if Ls0:
+                Hnh = Hnh - 0.5 * sum(L.dag() @ L for L in Ls0)
 
         def vector_field(t, m, _):  # noqa: ANN001, ANN202
             if constant:
