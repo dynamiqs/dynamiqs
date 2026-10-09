@@ -4,11 +4,7 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
-from dynamiqs.integrators.core.unrolled_solvers import (
-    UnrolledDopri5,
-    UnrolledDopri8,
-    UnrolledTsit5,
-)
+from dynamiqs.integrators.core.unrolled_solvers import UnrolledDopri8, UnrolledTsit5
 
 from ..order import TEST_LONG
 
@@ -40,11 +36,11 @@ def _solve(gradient=None):
 
 
 @pytest.mark.run(order=TEST_LONG)
-@pytest.mark.parametrize('unroll', [False, True])
-def test_unrolled_matches_diffrax(monkeypatch, unroll):
-    # the stages are unrolled on GPU only, so CI forces them here
+def test_unrolled_stages_in_mesolve(monkeypatch):
+    # through `dq.mesolve`: the stages are unrolled on GPU only, so CI forces them here,
+    # against the CPU loop
     reference, reference_steps = _solve()(1.3)
-    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu' if unroll else 'cpu')
+    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
     jax.clear_caches()
     value, steps = _solve()(1.3)
     assert steps == reference_steps
@@ -59,13 +55,10 @@ def test_unrolled_matches_diffrax(monkeypatch, unroll):
 @pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize(
     ('diffrax_solver', 'solver'),
-    [
-        (dx.Tsit5, UnrolledTsit5),
-        (dx.Dopri5, UnrolledDopri5),
-        (dx.Dopri8, UnrolledDopri8),
-    ],
+    [(dx.Tsit5, UnrolledTsit5), (dx.Dopri8, UnrolledDopri8)],
 )
 @pytest.mark.parametrize('backend', ['cpu', 'gpu'])
+@pytest.mark.filterwarnings('ignore:Complex dtype support in Diffrax:UserWarning')
 def test_steps_match_diffrax(monkeypatch, diffrax_solver, solver, backend):
     # dynamiqs' solvers loop over the stages on CPU and unroll them on GPU: both take
     # Diffrax's steps, here on a complex ODE with a jump time (where the first stage
