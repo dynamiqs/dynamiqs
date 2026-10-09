@@ -274,8 +274,8 @@ class MESolveLowRankIntegrator(
         if constant:
             Ls0 = [L(self.t0) for L in self.Ls]
             Hnh = -1j * self.H(self.t0)
-            if Ls0:
-                Hnh = Hnh - 0.5 * sum(L.dag() @ L for L in Ls0)
+            for L in Ls0:
+                Hnh = Hnh - 0.5 * L.dag() @ L
 
         def vector_field(t, m, _):  # noqa: ANN001, ANN202
             if constant:
