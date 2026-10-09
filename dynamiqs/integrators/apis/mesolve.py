@@ -32,7 +32,7 @@ from ...options import Options, check_options
 from ...progress_meter import AbstractProgressMeter
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
-from ...result import MESolveResult
+from ...result import MESolveLowRankResult, MESolveResult
 from ...time_qarray import TimeQArray
 from .._utils import (
     assert_method_supported,
@@ -324,7 +324,8 @@ def _vectorized_mesolve(
 ) -> MESolveResult:
     # vectorize input over H, Ls and rho0
     in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, None, None, None, None, None)
-    out_axes = MESolveResult.out_axes()
+    result_type = MESolveLowRankResult if isinstance(method, LowRank) else MESolveResult
+    out_axes = result_type.out_axes()
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0.ndim - 2, 0, 0, 0, 0, 0)
