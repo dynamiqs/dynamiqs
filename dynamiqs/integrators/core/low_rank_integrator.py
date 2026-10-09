@@ -27,6 +27,7 @@ from ...method import (
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import asqarray
 from ...result import MESolveLowRankResult, Result, SolveSaved
+from ...time_qarray import ConstantTimeQArray
 from .._utils import assert_method_supported
 from .abstract_integrator import BaseIntegrator
 from .diffrax_integrator import AdaptiveStepInfos, FixedStepInfos, call_diffeqsolve
@@ -262,10 +263,21 @@ class MESolveLowRankIntegrator(
         # required by the cached solve: (cache_builder, linsolve_with_cache).
         solver_cache_builder, linsolve = linear_solvers[self.method.linear_solver]
 
+        # With constant operators, the non-Hermitian Hamiltonian -iH - 1/2 sum L^dag L
+        # is computed once, before the solve: a vector-field evaluation then applies
+        # one operator instead of H and each L^dag (for dense operators, a product
+        # with an n x n matrix each).
+        constant = all(isinstance(x, ConstantTimeQArray) for x in [self.H, *self.Ls])
+        if constant:
+            Ls0 = [L(self.t0) for L in self.Ls]
+            Hnh = -1j * self.H(self.t0) - 0.5 * sum(L.dag() @ L for L in Ls0)
+
         def vector_field(t, m, _):  # noqa: ANN001, ANN202
-            H = self.H(t)
-            Ls = [L(t) for L in self.Ls]
-            dm = (-1j) * (H @ m).to_jax()
+            if constant:
+                Ls, dm = Ls0, (Hnh @ m).to_jax()
+            else:
+                Ls = [L(t) for L in self.Ls]
+                dm = (-1j) * (self.H(t) @ m).to_jax()
             # `m` is fixed for this vector-field evaluation, so we compute and reuse
             # the decomposition/pseudoinverse across all jump operators.
             solve_cache = solver_cache_builder(m)
@@ -274,7 +286,8 @@ class MESolveLowRankIntegrator(
                 jump_action = (L @ m).to_jax()
                 projected_jump_action = linsolve(m, solve_cache, jump_action)
                 dm += 0.5 * (jump_action @ projected_jump_action.conj().T)
-                dm -= 0.5 * (L.dag() @ jump_action).to_jax()
+                if not constant:
+                    dm -= 0.5 * (L.dag() @ jump_action).to_jax()
 
             return dm
 
