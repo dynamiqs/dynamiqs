@@ -1,36 +1,38 @@
 import jax
-import jax.numpy as jnp
 import pytest
 
-import dynamiqs as dq
-from dynamiqs.method import Kvaerno5, Tsit5
+from dynamiqs.method import Tsit5
+
+from ..integrator_tester import IntegratorTester
+from ..order import TEST_LONG
+from ..systems import dense_nojump_cavity, dia_nojump_cavity
+
+# with no jump operators, the Lindbladian computes `-1j * H - 0.0`: we test each vector
+# field computing it, with and without `assume_hermitian` (implicit methods use the
+# latter) and the fused DIA Lindbladian
 
 
-@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
-@pytest.mark.parametrize('assume_hermitian', [True, False])
-@pytest.mark.parametrize('method', [Tsit5(), Kvaerno5()])
-@pytest.mark.parametrize('gpu_paths', [False, True])
-def test_no_jump_ops(layout, assume_hermitian, method, gpu_paths, monkeypatch):
-    # with no jump operators, mesolve evolves |psi><psi| as sesolve evolves |psi>
-    if gpu_paths:
-        # the GPU paths (fused DIA Lindbladian, unrolled stages): CI runs on CPU
-        monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
-    jax.clear_caches()
-    a = dq.destroy(8, layout=layout)
-    H = a.dag() @ a + 0.3 * (a + a.dag())
-    psi0 = dq.fock(8, 1)
-    tsave = jnp.linspace(0.0, 1.0, 5)
-
-    me = dq.mesolve(
-        H,
-        [],
-        psi0.todm(),
-        tsave,
-        method=method,
-        progress_meter=False,
-        assume_hermitian=assume_hermitian,
+@pytest.mark.run(order=TEST_LONG)
+class TestMESolveNoJumpOps(IntegratorTester):
+    @pytest.mark.parametrize(
+        'system', [dense_nojump_cavity, dia_nojump_cavity], ids=['dense', 'dia']
     )
-    se = dq.sesolve(H, psi0, tsave, method=method, progress_meter=False)
+    @pytest.mark.parametrize(
+        'assume_hermitian', [True, False], ids=['hermitian', 'standard']
+    )
+    def test_correctness(self, system, assume_hermitian):
+        self._test_correctness(system, Tsit5(), assume_hermitian=assume_hermitian)
 
-    assert jnp.allclose(me.states.to_jax(), se.states.todm().to_jax(), atol=1e-4)
-    jax.clear_caches()
+
+@pytest.mark.run(order=TEST_LONG)
+class TestMESolveNoJumpOpsGPUPaths(IntegratorTester):
+    # on GPU, the DIA Lindbladian is fused: CI runs on CPU, so this test forces it
+    @pytest.fixture(autouse=True)
+    def gpu_paths(self, monkeypatch):
+        monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
+        jax.clear_caches()
+        yield
+        jax.clear_caches()
+
+    def test_correctness(self):
+        self._test_correctness(dia_nojump_cavity, Tsit5())
