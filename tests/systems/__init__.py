@@ -6,6 +6,7 @@ from .open_system import (
     dense_ocavity,
     dia_nojump_cavity,
     dia_ocavity,
+    mixed_ocavity,
     otdqubit,
 )
 from .stochastic_system import (
