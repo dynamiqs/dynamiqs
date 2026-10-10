@@ -16,7 +16,7 @@ from dynamiqs.time_qarray import TimeQArray
 # closed systems: (H, psi0, tsave)
 ClosedSystem = tuple[QArray | TimeQArray, QArray, Array]
 # open systems: (H, Ls, rho0, tsave)
-OpenSystem = tuple[QArray | TimeQArray, list[QArray], QArray, Array]
+OpenSystem = tuple[QArray | TimeQArray, list[QArray | TimeQArray], QArray, Array]
 
 
 def cavity(n: int, *, layout: Layout = dq.dia, batch: int = 1) -> OpenSystem:
@@ -165,3 +165,89 @@ def driven_kerr(n: int, *, layout: Layout = dq.dia) -> tuple[TimeQArray, float, 
     period = 2 * jnp.pi / omega
     tsave = jnp.linspace(0.0, period, 11)
     return H, period, tsave
+
+
+def _rectangular_pulse(
+    operator: QArray, amplitude: Array, start: float, stop: float
+) -> TimeQArray:
+    # `amplitude * operator + h.c.` during [start, stop), zero outside: two modulated
+    # terms, whose edges the adaptive stepper must not step over
+    edges = jnp.array([start, stop])
+
+    def envelope(t: Array) -> Array:
+        return amplitude * jnp.where((t >= start) & (t < stop), 1.0, 0.0)
+
+    return dq.modulated(envelope, operator, discontinuity_ts=edges) + dq.modulated(
+        lambda t: jnp.conj(envelope(t)), operator.dag(), discontinuity_ts=edges
+    )
+
+
+def pulse_sequence(
+    n: int, m: int, npulses: int, *, layout: Layout = dq.dia, batch: int = 1
+) -> OpenSystem:
+    """Two modes, of dimensions `n` and `m` (total `n m`), driven by `npulses` pulses.
+
+    A Kerr mode `a` is coupled by cross-Kerr to a mode `b`. The rectangular pulses
+    alternate between a drive of `b` and an exchange coupling of `a` and `b`; each is
+    `A O` plus its Hermitian conjugate, two `dq.modulated` terms switched on and off at
+    times passed as `discontinuity_ts`. Both modes are dissipative, and the loss rate of
+    `b` is piecewise constant (a `dq.pwc` jump operator). The `batch` axis sweeps the
+    detuning of `b`.
+    """
+    a, b = dq.destroy(n, m, layout=layout)
+    detuning = 0.5 if batch == 1 else jnp.linspace(0.0, 1.0, batch)[:, None, None]
+    H = (
+        detuning * b.dag() @ b
+        - 0.01 * a.dag() @ a.dag() @ a @ a
+        - 0.1 * a.dag() @ a @ b.dag() @ b
+    )
+
+    # one pulse per unit of time, on during [0.1, 0.7) of it, its phase advancing
+    # from pulse to pulse
+    for k in range(npulses):
+        operator, amplitude = (b.dag(), 1.0) if k % 2 == 0 else (a.dag() @ b, 0.5)
+        phase = jnp.exp(0.5j * k)
+        H = H + _rectangular_pulse(operator, amplitude * phase, k + 0.1, k + 0.7)
+
+    duration = float(npulses)
+    loss_b = dq.pwc(
+        jnp.array([0.0, 0.5 * duration, duration]), jnp.sqrt(jnp.array([1.0, 2.0])), b
+    )
+    Ls = [
+        jnp.sqrt(0.01) * a,
+        jnp.sqrt(0.01) * a.dag() @ a,
+        loss_b,
+        jnp.sqrt(0.05) * b.dag(),
+    ]
+    rho0 = dq.tensor(dq.coherent_dm(n, 1.5), dq.fock_dm(m, 0))
+    tsave = jnp.linspace(0.0, duration, 101)
+    return H, Ls, rho0, tsave
+
+
+def three_modes(n: int, m: int, *, layout: Layout = dq.dia) -> OpenSystem:
+    """Three modes in a chain, of dimensions `n`, `m` and `n` (total `n^2 m`).
+
+    The outer modes are Kerr, neighbouring modes are coupled by exchange and cross-Kerr
+    terms, and the middle one is driven. Every mode has loss and dephasing, and the
+    middle one thermal excitation: seven jump operators. Tensor products put the
+    operators' diagonals far from the main one (offsets up to `m n`).
+    """
+    a, b, c = dq.destroy(n, m, n, layout=layout)
+    H = (
+        -0.01 * (a.dag() @ a.dag() @ a @ a + c.dag() @ c.dag() @ c @ c)
+        - 0.1 * (a.dag() @ a + c.dag() @ c) @ b.dag() @ b
+        + 1.0 * (a.dag() @ b + a @ b.dag() + c.dag() @ b + c @ b.dag())
+        + 0.3 * (b + b.dag())
+    )
+    Ls = [
+        jnp.sqrt(0.02) * a,
+        jnp.sqrt(2.0) * b,
+        jnp.sqrt(0.02) * c,
+        jnp.sqrt(0.01) * a.dag() @ a,
+        jnp.sqrt(0.01) * b.dag() @ b,
+        jnp.sqrt(0.01) * c.dag() @ c,
+        jnp.sqrt(0.05) * b.dag(),
+    ]
+    rho0 = dq.tensor(dq.coherent_dm(n, 0.7), dq.fock_dm(m, 0), dq.coherent_dm(n, 0.7))
+    tsave = jnp.linspace(0.0, 5.0, 101)
+    return H, Ls, rho0, tsave
