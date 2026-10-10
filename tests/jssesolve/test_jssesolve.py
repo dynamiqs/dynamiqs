@@ -2,9 +2,9 @@ import jax.tree_util as jtu
 import optimistix as optx
 import pytest
 
-from dynamiqs.method import EulerJump, Event
+from dynamiqs.method import EulerJump, Event, Rouchon2
 
-from ..order import TEST_LONG
+from ..order import TEST_INSTANT, TEST_LONG
 from ..stochastic_tester import StochasticTester
 from ..systems import (
     backaction_qubit,
@@ -67,3 +67,10 @@ class TestJSSESolve(StochasticTester):
     @pytest.mark.parametrize('method', _METHODS)
     def test_reject_wrong_rate(self, method):
         self._test_reject_wrong_rate(qnd_qubit, method)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_event_unsupported_noclick_method():
+    # an adaptive `Rouchon2` must not be reported as a fixed step size method
+    with pytest.raises(TypeError, match='but has type `Rouchon2`'):
+        Event(noclick_method=Rouchon2(), dtmax=1e-2)
