@@ -472,7 +472,7 @@ class TimeQArray(eqx.Module):
             y = ConstantTimeQArray(asqarray(y))
 
         if isinstance(y, TimeQArray):
-            return SummedTimeQArray([self, y])
+            return SummedTimeQArray([*_terms(self), *_terms(y)])
         else:
             return NotImplemented
 
@@ -958,13 +958,6 @@ class SummedTimeQArray(TimeQArray):
     def __mul__(self, y: ArrayLike) -> TimeQArray:
         timeqarrays = [tqarray * y for tqarray in self.timeqarrays]
         return replace(self, timeqarrays=timeqarrays)
-
-    def __add__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
-        if isqarraylike(y):
-            y = ConstantTimeQArray(asqarray(y))
-        if not isinstance(y, TimeQArray):
-            return NotImplemented
-        return SummedTimeQArray([*_terms(self), *_terms(y)])
 
 
 def _unclipped(x: TimeQArray) -> bool:

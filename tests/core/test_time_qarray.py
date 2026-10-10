@@ -574,6 +574,16 @@ class TestSummedQArray:
         assert isinstance(z.timeqarrays[3], ConstantTimeQArray)
         assert_equal(z(1.0), [[2, 4], [6, 8]])
 
+        # a sum is flattened into the other operand's terms, a clipped sum is not
+        w = f + x
+        assert isinstance(w, SummedTimeQArray)
+        assert len(w.timeqarrays) == 3
+        assert_equal(w(1.0), [[1, 3], [5, 7]])
+
+        w = f + x.clip(0.0, 0.5)
+        assert len(w.timeqarrays) == 2
+        assert_equal(w(1.0), [[0, 1], [2, 3]])
+
     def test_clip(self):
         # create a modulated and pwc TimeQArray to sum
         f = lambda t: 1.0 + 2.0 * t
