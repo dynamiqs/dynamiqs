@@ -42,6 +42,8 @@ Two caveats when reading a table:
 | `mesolve_cavity` | canonical large open bosonic system, constant operators — the `n²` density-matrix scaling |
 | `mesolve_cat` | cat qubit stabilized by two-photon dissipation, batched over the drive amplitude — a parameter scan |
 | `mesolve_cross_resonance` | two coupled transmons with decay and dephasing, batched over the drive — a gate-calibration sweep |
+| `mesolve_pulse_sequence` | two coupled modes driven by a sequence of rectangular pulses (two `modulated` terms each, edges passed as `discontinuity_ts`) and a piecewise-constant jump operator, batched over a detuning — a Hamiltonian of many time-dependent terms |
+| `mesolve_three_modes` | three coupled modes with loss and dephasing on each and thermal excitation of the middle one (seven jump operators), whose operators have diagonals far from the main one — a multi-mode open system |
 | `mesolve_grad` | reverse-mode gradient of a scalar loss through `mesolve` — the pulse-optimization workload |
 | `sepropagator_expm` | propagator of a constant generator by explicit matrix exponentiation |
 | `mepropagator_expm` | same for the Liouvillian, kept small because of the `O(n⁶)` scaling |

@@ -147,6 +147,18 @@ def _mesolve_cross_resonance(n: int, batch: int) -> Callable[[], Any]:
     return lambda: dq.mesolve(H, Ls, rho0, tsave, progress_meter=False)
 
 
+def _mesolve_pulse_sequence(
+    n: int, m: int, npulses: int, batch: int
+) -> Callable[[], Any]:
+    H, Ls, rho0, tsave = systems.pulse_sequence(n, m, npulses, batch=batch)
+    return lambda: dq.mesolve(H, Ls, rho0, tsave, progress_meter=False)
+
+
+def _mesolve_three_modes(n: int, m: int) -> Callable[[], Any]:
+    H, Ls, rho0, tsave = systems.three_modes(n, m)
+    return lambda: dq.mesolve(H, Ls, rho0, tsave, progress_meter=False)
+
+
 def _mesolve_grad(
     n: int, nparams: int, gradient: Gradient | None = None
 ) -> Callable[[], Any]:
@@ -249,6 +261,8 @@ _FULL_GRID = {
     'cavity': [64, 256],  # (n,)
     'cat': [(32, 2.0, 1), (48, 3.0, 8)],  # (n, alpha, batch)
     'cross_resonance': [(3, 16)],  # (n, batch)
+    'pulse_sequence': [(16, 6, 8, 4)],  # (n, m, npulses, batch)
+    'three_modes': [(8, 4)],  # (n, m)
     'grad': [(32, 20)],  # (n, nparams)
     'sepropagator': [(64, 21)],  # (n, ntsave)
     'mepropagator': [(16, 21)],  # (n, ntsave)
@@ -276,6 +290,8 @@ _QUICK_GRID = {
     'cavity': [8],
     'cat': [(8, 1.0, 2)],
     'cross_resonance': [(2, 2)],
+    'pulse_sequence': [(4, 2, 2, 2)],
+    'three_modes': [(3, 2)],
     'grad': [(8, 4)],
     'sepropagator': [(8, 11)],
     'mepropagator': [(4, 11)],
@@ -347,6 +363,18 @@ def _open_system_cases(g: _Grid) -> list[Case]:
         build = _partial(_mesolve_cross_resonance, n, batch)
         params = {'n': n * n, 'batch': batch}
         cases.append(Case('mesolve_cross_resonance', params, build))
+
+    # pulse sequence: many time-dependent terms, a discontinuity at each pulse edge and
+    # a piecewise-constant jump operator
+    for n, m, npulses, batch in g['pulse_sequence']:
+        build = _partial(_mesolve_pulse_sequence, n, m, npulses, batch)
+        params = {'n': n * m, 'npulses': npulses, 'batch': batch}
+        cases.append(Case('mesolve_pulse_sequence', params, build))
+
+    # three coupled modes: seven jump operators, diagonals far from the main one
+    for n, m in g['three_modes']:
+        build = _partial(_mesolve_three_modes, n, m)
+        cases.append(Case('mesolve_three_modes', {'n': n * n * m}, build))
 
     # pulse optimization: reverse-mode gradient of a scalar loss through `mesolve`
     for n, nparams in g['grad']:
