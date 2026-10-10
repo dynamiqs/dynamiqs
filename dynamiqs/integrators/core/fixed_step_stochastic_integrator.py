@@ -12,7 +12,7 @@ from diffrax._custom_types import RealScalarLike
 from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
 
-from ...method import Rouchon1, _DEFixedStep
+from ...method import EulerJump, EulerMaruyama, Rouchon1
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import stack
 from ...result import DiffusiveSolveSaved, JumpSolveSaved, Result, SolveSaved
@@ -96,7 +96,7 @@ class StochasticSolveFixedStepIntegrator(
 
     @property
     def dt(self) -> float:
-        method = cast(_DEFixedStep, self.method)
+        method = cast(EulerJump | EulerMaruyama | Rouchon1, self.method)
         return method.dt
 
     @property

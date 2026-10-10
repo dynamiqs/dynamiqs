@@ -118,7 +118,7 @@ class _DEMethod(Method):
 
 
 class _DEFixedStep(_DEMethod):
-    dt: float
+    dt: float | None  # `None` for the adaptive step size of Rouchon2 and Rouchon3
 
 
 class _DEAdaptiveStep(_DEMethod):
@@ -162,6 +162,8 @@ class Euler(_DEFixedStep):
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_EXPLICIT_ODE_GRADIENTS
+
+    dt: float
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
