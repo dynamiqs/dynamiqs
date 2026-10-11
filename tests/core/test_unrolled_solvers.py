@@ -56,10 +56,14 @@ def diffrax_reference():
 
 
 @pytest.mark.run(order=TEST_LONG)
-def test_unrolled_matches_diffrax(monkeypatch, diffrax_reference):
-    # the stages are unrolled on GPU only, so CI forces them here
+@pytest.mark.parametrize('odd', [False, True])
+def test_unrolled_matches_diffrax(monkeypatch, diffrax_reference, odd):
+    # the stages are unrolled on GPU only, so CI forces them here; odd: with the
+    # stages of large states written out with an odd size (forced on a small state)
     value_ref, steps_ref, jvp_ref, vjp_ref = diffrax_reference
     monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
+    if odd:
+        monkeypatch.setattr(unrolled_solvers, '_MIN_SIZE_ODD_STAGES', 0)
     jax.clear_caches()
     value, steps = _solve()(1.3)
     jvp, vjp = _derivatives()
@@ -151,3 +155,25 @@ def test_unrolled_dense_output(monkeypatch):
     assert jnp.allclose(expects_unrolled, expects, rtol=1e-12, atol=1e-12)
     assert jnp.allclose(states_unrolled, states, rtol=1e-10, atol=1e-10)
     assert jnp.allclose(clicktimes_unrolled, clicktimes, rtol=1e-10, equal_nan=True)
+
+
+# double precision, for a tight comparison: XLA fuses the flattened sums in a
+# different order
+@pytest.mark.run(order=TEST_LONG)
+@pytest.mark.usefixtures('_double_precision')
+def test_odd_sized_stages_match(monkeypatch):
+    # large states write their stages out with an odd number of elements: forced here
+    # on a small one, the solve under nested vmaps and its steps are unchanged (its
+    # derivatives are compared with Diffrax's in `test_unrolled_matches_diffrax`)
+    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
+
+    def run():
+        jax.clear_caches()
+        amplitudes = jnp.array([[1.3, 0.4], [0.9, 1.1]])
+        return jax.vmap(jax.vmap(_solve()))(amplitudes)
+
+    values, steps = run()
+    monkeypatch.setattr(unrolled_solvers, '_MIN_SIZE_ODD_STAGES', 0)
+    values_odd, steps_odd = run()
+    assert jnp.array_equal(steps_odd, steps)
+    assert jnp.allclose(values_odd, values, rtol=1e-12)

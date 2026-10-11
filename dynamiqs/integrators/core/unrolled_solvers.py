@@ -73,6 +73,67 @@ def _row_major(x: PyTree) -> PyTree:
     )
 
 
+# The size from which an unrolled step writes its stages out with an odd number of
+# elements (see `_odd_sized`), tuned on an A100: about the size from which XLA unrolls
+# GPU kernels there, the number of threads it runs at once (108 multiprocessors x
+# 2048).
+_MIN_SIZE_ODD_STAGES = 2**18
+
+
+def _flatten_odd(x: Array) -> Array:
+    # x flattened, with a trailing zero if it has an even number of elements
+    x = jnp.ravel(x)
+    return jnp.pad(x, (0, 1 - x.size % 2))
+
+
+def _odd_sized(fn: Callable, *xs: Array) -> tuple[Array, ...]:
+    # fn(*xs) for an elementwise fn of arrays of one shape that returns a tuple of
+    # arrays of that shape, with its outputs written out flattened to an odd number of
+    # elements. XLA unrolls an elementwise GPU kernel by gcd(number of elements, 4),
+    # and for complex arrays the unrolled kernels that evaluate a vector field reading
+    # its input at many offsets (the fused DIA Lindbladian) and combine it into the
+    # next stage input were 1.5-3x slower on an A100 (openxla/xla#50467). The barrier
+    # keeps XLA from slicing the outputs back to their shape before writing them.
+    # Under vmap, the whole batch is flattened, for an odd number of elements at any
+    # batch size; a batch sharded across devices is then no longer split evenly, and
+    # XLA moves data between them. The tangents are those of fn.
+
+    @jax.custom_batching.custom_vmap
+    def odd_sized(*xs: Array) -> tuple[Array, ...]:
+        out = jax.lax.optimization_barrier(fn(*map(_flatten_odd, xs)))
+        return tuple(x[: xs[0].size].reshape(xs[0].shape) for x in out)
+
+    @odd_sized.def_vmap
+    def odd_sized_vmap(
+        axis_size: int, in_batched: list[bool], *xs: Array
+    ) -> tuple[tuple[Array, ...], tuple[bool, ...]]:
+        xs = tuple(
+            x if batched else jnp.broadcast_to(x, (axis_size, *x.shape))
+            for x, batched in zip(xs, in_batched, strict=True)
+        )
+        out = odd_sized(*xs)
+        return out, (True,) * len(out)
+
+    @jax.custom_jvp
+    def odd_sized_jvp(*xs: Array) -> tuple[Array, ...]:
+        return odd_sized(*xs)
+
+    @odd_sized_jvp.defjvp
+    def _(primals: tuple, tangents: tuple) -> tuple:
+        return odd_sized_jvp(*primals), jax.jvp(fn, primals, tangents)[1]
+
+    return odd_sized_jvp(*xs)
+
+
+def _odd_sized_trees(
+    fn: Callable, treedef: jtu.PyTreeDef, *trees: PyTree
+) -> tuple[PyTree, ...]:
+    # `_odd_sized` on each array of `trees` (each with structure `treedef`)
+    arrays = [treedef.flatten_up_to(tree) for tree in trees]
+    outs = [_odd_sized(fn, *xs) for xs in zip(*arrays, strict=True)]
+    return tuple(treedef.unflatten(list(x)) for x in zip(*outs, strict=True))
+
+
 class _UnrolledERK(dx.AbstractERK):
     def _unrolled(
         self,
@@ -154,13 +215,42 @@ class _UnrolledERK(dx.AbstractERK):
         ks = [_row_major(terms.prod(f_first, control))]
 
         # === other stages
-        yi = y0
-        for c, a_lower in zip(tableau.c, tableau.a_lower, strict=True):
+        # Large states: each stage input is written out with an odd number of
+        # elements, by the kernel that evaluates the stage before it (see
+        # `_odd_sized`). The size is that of one batch element: under vmap, XLA sees
+        # the whole batch, so a batch of smaller states keeps the unrolled kernels.
+        leaves, treedef = jtu.tree_flatten(y0)
+        odd = all(x.size >= _MIN_SIZE_ODD_STAGES for x in leaves)
+
+        def odd_sized_stages(fn: Callable, *trees: PyTree) -> tuple[PyTree, ...]:
+            return _odd_sized_trees(fn, treedef, *trees) if odd else fn(*trees)
+
+        def next_stage(k: PyTree, a: np.ndarray) -> tuple[PyTree, PyTree]:
+            # the stage k, row-major, and the next stage input
+            if not odd:
+                k = _row_major(k)
+                return k, _combine(y0, a, [*ks, k])
+            # both written by one kernel
+            k, yi = _odd_sized_trees(
+                lambda y0, k, *ks: (k, _combine(y0, a, [*ks, k])), treedef, y0, k, *ks
+            )
+            return _row_major(k), yi
+
+        # the tableaus unrolled here (Tsit5, Dopri5, Dopri8) have several stages
+        stages = list(zip(tableau.c, tableau.a_lower, strict=True))
+        a = stages[0][1]
+        (yi,) = odd_sized_stages(lambda y0, k, a=a: (_combine(y0, a, [k]),), y0, ks[0])
+        for i, (c, _) in enumerate(stages):
             ti = t1 if c == 1 else t0 + float(c) * dt
-            yi = _combine(y0, a_lower, ks)
             fi = f(ti, yi)
+            if i + 1 < len(stages):
+                ki, yi = next_stage(terms.prod(fi, control), stages[i + 1][1])
+            else:
+                # the last stage, also the first stage of the next step if FSAL
+                (fi,) = odd_sized_stages(lambda f: (f,), fi)
+                ki = _row_major(terms.prod(fi, control))
             fs.append(fi)
-            ks.append(_row_major(terms.prod(fi, control)))
+            ks.append(ki)
 
         # === solution, error estimate and dense output
         y1 = yi if tableau.ssal else _combine(y0, tableau.b_sol, ks)
