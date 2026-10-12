@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Sequence
 from math import prod
+from numbers import Complex
 from typing import Any, TypeAlias, TypeGuard, Union, cast, get_args, overload
 
 import equinox as eqx
@@ -579,7 +580,7 @@ class QArray(eqx.Module):
         if not isqarraylike(y):
             return NotImplemented
         # keep Python scalars: `x - 0` returns `x`, like `x + 0` (e.g. `H - sum([])`)
-        if not isinstance(y, QArray | int | float | complex):
+        if not isinstance(y, QArray | Complex):
             y = to_jax(y)
         return self + (-y)
 
