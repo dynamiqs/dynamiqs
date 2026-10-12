@@ -275,7 +275,8 @@ class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _ROUCHON_GRADIENTS
 
-    dt: float | None = eqx.field(static=True, default=None)
+    # `dt=None` selects the adaptive step size
+    dt: float | None = eqx.field(static=True, default=None)  # ty: ignore[invalid-attribute-override]
     normalize: bool = eqx.field(static=True, default=True)
 
     # dummy init to have the signature in the documentation
@@ -331,7 +332,8 @@ class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _ROUCHON_GRADIENTS
 
-    dt: float | None = eqx.field(static=True, default=None)
+    # `dt=None` selects the adaptive step size
+    dt: float | None = eqx.field(static=True, default=None)  # ty: ignore[invalid-attribute-override]
     normalize: bool = eqx.field(static=True, default=True)
 
     # dummy init to have the signature in the documentation
