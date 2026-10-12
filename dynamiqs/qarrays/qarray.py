@@ -582,7 +582,7 @@ class QArray(eqx.Module):
         # keep Python scalars: `x - 0` returns `x`, like `x + 0` (e.g. `H - sum([])`)
         if not isinstance(y, QArray | Complex):
             y = to_jax(y)
-        return self + (-y)
+        return self + cast(QArrayLike, -y)
 
     def __rsub__(self, y: QArrayLike) -> QArray:
         return -self + y
