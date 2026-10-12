@@ -6,7 +6,13 @@ from dynamiqs.method import Kvaerno5, Tsit5
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
-from ..systems import dense_ocavity, dia_ocavity, otdqubit
+from ..systems import (
+    dense_nojump_cavity,
+    dense_ocavity,
+    dia_nojump_cavity,
+    dia_ocavity,
+    otdqubit,
+)
 
 # we only test Tsit5 to keep the unit test suite fast, and Kvaerno5 for the vector
 # field used by implicit methods
@@ -32,6 +38,9 @@ class TestMESolveAdaptive(IntegratorTester):
     def test_correctness_implicit(self):
         self._test_correctness(dense_ocavity, Kvaerno5())
 
+    def test_correctness_no_jump_ops(self):
+        self._test_correctness(dense_nojump_cavity, Tsit5())
+
 
 @pytest.mark.run(order=TEST_LONG)
 class TestMESolveAdaptiveGPUPaths(IntegratorTester):
@@ -54,3 +63,6 @@ class TestMESolveAdaptiveGPUPaths(IntegratorTester):
 
     def test_correctness_implicit(self):
         self._test_correctness(dia_ocavity, Kvaerno5())
+
+    def test_correctness_no_jump_ops(self):
+        self._test_correctness(dia_nojump_cavity, Tsit5())
