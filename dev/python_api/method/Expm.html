@@ -7413,8 +7413,11 @@
 
 
         <p>Explicit matrix exponentiation to compute propagators.</p>
-<p>Explicitly batch-compute the propagators for all time intervals in <code>tsave</code>. These
-propagators are then iteratively applied:</p>
+<p>Explicitly compute the propagators for all time intervals in <code>tsave</code>, then apply
+them iteratively. On GPU, all propagators are computed in one batch. On CPU, a
+propagator is computed only when it changes, at a discontinuity of the Hamiltonian
+or jump operators or for an interval of a different length, and is otherwise
+reused. The propagators are applied:</p>
 <ul>
 <li>starting from the initial state for <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.sesolve&lt;/span&gt;" href="../integrators/sesolve.html#dynamiqs.integrators.sesolve"><code>dq.sesolve()</code></a> and
   <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.mesolve&lt;/span&gt;" href="../integrators/mesolve.html#dynamiqs.integrators.mesolve"><code>dq.mesolve()</code></a>, to compute states for all times in <code>tsave</code>,</li>
