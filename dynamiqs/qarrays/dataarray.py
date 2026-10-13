@@ -3,8 +3,9 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Sequence
 from math import prod
+from numbers import Complex
 from types import EllipsisType
-from typing import TYPE_CHECKING, ClassVar, TypeAlias
+from typing import TYPE_CHECKING, ClassVar, TypeAlias, cast
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -281,9 +282,10 @@ class DataArray(eqx.Module):
         return self.__add__(y)
 
     def __sub__(self, y: DataArrayLike) -> DataArray:
-        if not isinstance(y, DataArray):
+        # keep Python scalars: `x - 0` returns `x`, like `x + 0`
+        if not isinstance(y, DataArray | Complex):
             y = jnp.asarray(y)
-        return self + (-y)
+        return self + cast(DataArrayLike, -y)
 
     def __rsub__(self, y: DataArrayLike) -> DataArray:
         return -self + y

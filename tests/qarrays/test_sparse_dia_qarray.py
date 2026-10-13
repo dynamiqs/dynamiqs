@@ -3,6 +3,7 @@ import warnings
 import jax
 import jax.numpy as jnp
 import jax.random as jr
+import numpy as np
 import pytest
 from equinox import EquinoxRuntimeError
 
@@ -160,6 +161,16 @@ class TestSparseDIAQArray:
             sA - self.scalar
         with pytest.raises(NotImplementedError):
             sA - self.bscalar
+
+    def test_sub_zero(self):
+        # subtracting zero from the data returns it (sparse), like adding it
+        d, s = self.denseA['simple'].data, self.sparseA['simple'].data
+        assert (d - 0) is d
+        assert (s - 0) is s
+        assert (d - 0j) is d
+        assert (s - 0j) is s
+        assert (d - np.float32(0)) is d
+        assert (s - np.float32(0)) is s
 
     @pytest.mark.parametrize('kA', ['simple', 'batch', 'batch_broadcast'])
     def test_mul(self, kA):

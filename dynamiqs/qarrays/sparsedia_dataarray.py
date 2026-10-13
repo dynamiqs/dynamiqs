@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import warnings
 from dataclasses import replace
+from numbers import Complex
 from typing import ClassVar, get_args
 
 import equinox as eqx
@@ -282,7 +283,8 @@ class SparseDIADataArray(DataArray):
         return NotImplemented
 
     def __add__(self, y: DataArrayLike) -> DataArray:
-        if isinstance(y, int | float) and y == 0:
+        # no dtype promotion: `x + 0j` keeps a real `x` real
+        if isinstance(y, Complex) and y == 0:
             return self
 
         if isinstance(y, SparseDIADataArray):
