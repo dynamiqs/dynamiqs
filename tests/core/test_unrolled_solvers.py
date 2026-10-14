@@ -52,6 +52,15 @@ def test_unrolled_stages_in_mesolve(monkeypatch):
     assert jnp.allclose(grad, grad_ref, rtol=1e-4)
 
 
+@pytest.fixture
+def _double_precision():
+    # so that the unrolled and Diffrax steps are the same
+    previous = jax.config.read('jax_enable_x64')
+    dq.set_precision('double')
+    yield
+    dq.set_precision('double' if previous else 'single')
+
+
 @pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize(
     ('diffrax_solver', 'solver'),
@@ -59,6 +68,7 @@ def test_unrolled_stages_in_mesolve(monkeypatch):
 )
 @pytest.mark.parametrize('backend', ['cpu', 'gpu'])
 @pytest.mark.filterwarnings('ignore:Complex dtype support in Diffrax:UserWarning')
+@pytest.mark.usefixtures('_double_precision')
 def test_steps_match_diffrax(monkeypatch, diffrax_solver, solver, backend):
     # dynamiqs' solvers loop over the stages on CPU and unroll them on GPU: both take
     # Diffrax's steps, here on a complex ODE with a jump time (where the first stage
@@ -86,15 +96,13 @@ def test_steps_match_diffrax(monkeypatch, diffrax_solver, solver, backend):
     def derivative(solver):
         return jax.jacfwd(lambda x: solve(solver, x)[0].real)(1.3)
 
-    # in double precision: in single precision, round-off moves the steps
-    with jax.enable_x64(True):
-        reference, reference_steps = solve(diffrax_solver(), 1.3)
-        reference_derivative = derivative(diffrax_solver())
-        monkeypatch.setattr(jax, 'default_backend', lambda: backend)
-        jax.clear_caches()
-        ys, steps = solve(solver(), 1.3)
-        assert steps == reference_steps
-        assert jnp.allclose(ys, reference, rtol=1e-12, atol=1e-12)
-        assert jnp.allclose(
-            derivative(solver()), reference_derivative, rtol=1e-10, atol=1e-10
-        )
+    reference, reference_steps = solve(diffrax_solver(), 1.3)
+    reference_derivative = derivative(diffrax_solver())
+    monkeypatch.setattr(jax, 'default_backend', lambda: backend)
+    jax.clear_caches()
+    ys, steps = solve(solver(), 1.3)
+    assert steps == reference_steps
+    assert jnp.allclose(ys, reference, rtol=1e-12, atol=1e-12)
+    assert jnp.allclose(
+        derivative(solver()), reference_derivative, rtol=1e-10, atol=1e-10
+    )
