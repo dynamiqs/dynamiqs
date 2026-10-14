@@ -194,54 +194,53 @@ def add_sparsedia_sparsedia(
     right_offsets: tuple[int, ...],
     right_diags: Array,
 ) -> tuple[tuple[int, ...], Array]:
+    out_offsets = np.union1d(left_offsets, right_offsets).astype(int)
+    batch_shape = jnp.broadcast_shapes(left_diags.shape[:-2], right_diags.shape[:-2])
+    out_shape = (*batch_shape, len(out_offsets), left_diags.shape[-1])
+    dtype = jnp.promote_types(left_diags.dtype, right_diags.dtype)
+    # the diagonals of the two operands that add up to each output diagonal
+    operands = ((left_offsets, left_diags), (right_offsets, right_diags))
+    terms = [
+        [
+            diags[..., offsets.index(offset), :]
+            for offsets, diags in operands
+            if offset in offsets
+        ]
+        for offset in out_offsets
+    ]
+
     # Chosen when tracing, with the default backend rather than the device a solve
     # runs on (as for the real-array saves of `_saveat`). With `lax.platform_dependent`
     # instead, a batched `mesolve` on an A100 was 1.24x slower.
-    return _add_sparsedia_sparsedia(
-        left_offsets,
-        left_diags,
-        right_offsets,
-        right_diags,
-        stack=jax.default_backend() == 'gpu',
-    )
+    if jax.default_backend() == 'gpu':
+        out_diags = _add_sparsedia_sparsedia_by_stacking(terms, out_shape, dtype)
+    else:
+        out_diags = _add_sparsedia_sparsedia_by_scattering(terms, out_shape, dtype)
+    return _numpy_to_tuple(out_offsets), out_diags
 
 
-def _add_sparsedia_sparsedia(
-    left_offsets: tuple[int, ...],
-    left_diags: Array,
-    right_offsets: tuple[int, ...],
-    right_diags: Array,
-    *,
-    stack: bool,
-) -> tuple[tuple[int, ...], Array]:
-    # On GPU, build each output diagonal then stack them: XLA fuses this into one
+def _add_sparsedia_sparsedia_by_stacking(
+    terms: list[list[Array]], shape: tuple[int, ...], dtype: jnp.dtype
+) -> Array:
+    # Each output diagonal built, then stacked: on GPU, XLA fuses this into one
     # kernel, while filling a zero array with `.at[i].add` is one kernel per diagonal.
-    # On CPU, filling the zero array is twice as fast on a `sesolve` with a modulated
-    # DIA Hamiltonian, whose terms are summed at every stage. Both add the same terms.
-    out_offsets = np.union1d(left_offsets, right_offsets).astype(int)
-    batch_shape = jnp.broadcast_shapes(left_diags.shape[:-2], right_diags.shape[:-2])
-    diag_shape = (*batch_shape, left_diags.shape[-1])
-    dtype = jnp.promote_types(left_diags.dtype, right_diags.dtype)
-    if not stack or len(out_offsets) == 0:
-        out_diags = jnp.zeros((*batch_shape, len(out_offsets), diag_shape[-1]), dtype)
-        for i, offset in enumerate(out_offsets):
-            if offset in left_offsets:
-                left_diag = left_diags[..., left_offsets.index(offset), :]
-                out_diags = out_diags.at[..., i, :].add(left_diag)
-            if offset in right_offsets:
-                right_diag = right_diags[..., right_offsets.index(offset), :]
-                out_diags = out_diags.at[..., i, :].add(right_diag)
-        return _numpy_to_tuple(out_offsets), out_diags
+    if len(terms) == 0:
+        return jnp.zeros(shape, dtype)
+    zero = jnp.zeros((*shape[:-2], shape[-1]), dtype)
+    return jnp.stack([sum(diag_terms, zero) for diag_terms in terms], axis=-2)
 
-    out_diags = []
-    for offset in out_offsets:
-        diag = jnp.zeros(diag_shape, dtype=dtype)
-        if offset in left_offsets:
-            diag = diag + left_diags[..., left_offsets.index(offset), :]
-        if offset in right_offsets:
-            diag = diag + right_diags[..., right_offsets.index(offset), :]
-        out_diags.append(diag)
-    return _numpy_to_tuple(out_offsets), jnp.stack(out_diags, axis=-2)
+
+def _add_sparsedia_sparsedia_by_scattering(
+    terms: list[list[Array]], shape: tuple[int, ...], dtype: jnp.dtype
+) -> Array:
+    # A zero array filled with one `.at[i].add` per term: on CPU, twice as fast as
+    # stacking on a `sesolve` with a modulated DIA Hamiltonian, whose terms are summed
+    # at every stage.
+    out_diags = jnp.zeros(shape, dtype)
+    for i, diag_terms in enumerate(terms):
+        for term in diag_terms:
+            out_diags = out_diags.at[..., i, :].add(term)
+    return out_diags
 
 
 def matmul_sparsedia_sparsedia(
