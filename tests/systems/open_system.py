@@ -20,6 +20,7 @@ from dynamiqs.result import Result
 from dynamiqs.time_qarray import TimeQArray
 
 from ._system import System
+from .closed_system import Cavity
 
 
 class OpenSystem(System):
@@ -212,6 +213,18 @@ class OTDQubit(OpenSystem):
         return jax.hessian(self._expect)(self.params_default, t)
 
 
+class NoJumpCavity(OpenSystem, Cavity):
+    # `Cavity` solved by `mesolve` with no jump operators: the state stays pure
+    def Ls(self, params: PyTree) -> list[QArray | TimeQArray]:  # noqa: ARG002
+        return []
+
+    def y0(self, params: PyTree) -> QArray:
+        return super().y0(params).todm()
+
+    def _state(self, params: PyTree, t: float) -> QArray:
+        return super()._state(params, t).todm()
+
+
 # # we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null
 # # gradients
 Hz = 2 * jnp.pi
@@ -221,6 +234,12 @@ dense_ocavity = OCavity(
 )
 dia_ocavity = OCavity(
     n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dq.dia
+)
+dense_nojump_cavity = NoJumpCavity(
+    n=8, delta=1.0 * Hz, alpha0=0.5, tsave=tsave, layout=dense
+)
+dia_nojump_cavity = NoJumpCavity(
+    n=8, delta=1.0 * Hz, alpha0=0.5, tsave=tsave, layout=dq.dia
 )
 
 tsave = np.linspace(0.0, 1.0, 11)
