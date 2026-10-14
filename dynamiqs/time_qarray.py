@@ -472,7 +472,7 @@ class TimeQArray(eqx.Module):
             y = ConstantTimeQArray(asqarray(y))
 
         if isinstance(y, TimeQArray):
-            return SummedTimeQArray([self, y])
+            return SummedTimeQArray([*_terms(self), *_terms(y)])
         else:
             return NotImplemented
 
@@ -571,7 +571,8 @@ class ConstantTimeQArray(TimeQArray):
         # handle addition with a constant object as a special case
         if isqarraylike(y):
             y = ConstantTimeQArray(asqarray(y))
-        if isinstance(y, ConstantTimeQArray):
+        # merge only unclipped constants, the sum of clipped ones is not a constant
+        if isinstance(y, ConstantTimeQArray) and _unclipped(self) and _unclipped(y):
             return ConstantTimeQArray(self.qarray + y.qarray)
 
         return super().__add__(y)
@@ -855,8 +856,6 @@ class CallableTimeQArray(TimeQArray):
 
 
 class SummedTimeQArray(TimeQArray):
-    # note: tstart and tend are not used by this class
-
     timeqarrays: list[TimeQArray]
 
     def __init__(
@@ -923,11 +922,12 @@ class SummedTimeQArray(TimeQArray):
     @property
     def discontinuity_ts(self) -> Array:
         ts = [tqarray.discontinuity_ts for tqarray in self.timeqarrays]
-        return concatenate_sort(*ts)
+        return concatenate_sort(super().discontinuity_ts, *ts)
 
     def shift(self, tshift: float) -> TimeQArray:
+        tstart, tend = self._shift_bounds(tshift)
         timeqarrays = [tqarray.shift(tshift) for tqarray in self.timeqarrays]
-        return replace(self, timeqarrays=timeqarrays)
+        return replace(self, timeqarrays=timeqarrays, tstart=tstart, tend=tend)
 
     def reshape(self, *shape: int) -> TimeQArray:
         timeqarrays = [tqarray.reshape(*shape) for tqarray in self.timeqarrays]
@@ -959,25 +959,17 @@ class SummedTimeQArray(TimeQArray):
         timeqarrays = [tqarray * y for tqarray in self.timeqarrays]
         return replace(self, timeqarrays=timeqarrays)
 
-    def __add__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
-        if isqarraylike(y):
-            y = ConstantTimeQArray(asqarray(y))
-        if isinstance(y, SummedTimeQArray):
-            # push clipping to internal timeqarrays before summing
-            self_timeqarrays = [
-                tqarray.clip(self.tstart, self.tend) for tqarray in self.timeqarrays
-            ]
-            y_timeqarrays = [
-                tqarray.clip(y.tstart, y.tend) for tqarray in y.timeqarrays
-            ]
-            return SummedTimeQArray(self_timeqarrays + y_timeqarrays)
 
-        self_timeqarrays = [
-            tqarray.clip(self.tstart, self.tend) for tqarray in self.timeqarrays
-        ]
-        if not isinstance(y, TimeQArray):
-            return NotImplemented
-        return SummedTimeQArray([*self_timeqarrays, y])
+def _unclipped(x: TimeQArray) -> bool:
+    return x.tstart is None and x.tend is None
+
+
+def _terms(x: TimeQArray) -> list[TimeQArray]:
+    # a sum without time bounds is flattened into its terms, which keep their own
+    # bounds; a clipped sum stays one term, so its bounds and its terms' both apply
+    if isinstance(x, SummedTimeQArray) and _unclipped(x):
+        return x.timeqarrays
+    return [x]
 
 
 class BatchedCallable(eqx.Module):

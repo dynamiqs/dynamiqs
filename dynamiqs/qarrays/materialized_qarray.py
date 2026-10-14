@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import replace
 from math import prod
+from numbers import Complex
 from typing import cast, overload
 
 import equinox as eqx
@@ -245,7 +246,8 @@ class MaterializedQArray(QArray):
         return replace(self, data=result)
 
     def __add__(self, y: QArrayLike) -> QArray:
-        if isinstance(y, int | float) and y == 0:
+        # no dtype promotion: `x + 0j` keeps a real `x` real
+        if isinstance(y, Complex) and y == 0:
             return self
 
         if is_batched_scalar(y):

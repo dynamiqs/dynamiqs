@@ -1,4 +1,5 @@
 import jax.numpy as jnp
+import numpy as np
 import pytest
 
 from dynamiqs import asqarray, tensor
@@ -65,6 +66,9 @@ class TestDenseQArray:
         assert jnp.array_equal(
             (self.qarray - self.qother).to_jax(), self.data - self.other
         )
+        assert jnp.array_equal((self.qarray - 0.0).to_jax(), self.data)
+        assert jnp.array_equal((self.qarray - 0j).to_jax(), self.data)
+        assert jnp.array_equal((self.qarray - np.float32(0)).to_jax(), self.data)
         with pytest.raises(NotImplementedError):
             self.qarray - self.scalar
         with pytest.raises(NotImplementedError):

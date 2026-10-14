@@ -275,7 +275,8 @@ class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _ROUCHON_GRADIENTS
 
-    dt: float | None = eqx.field(static=True, default=None)
+    # `dt=None` selects the adaptive step size
+    dt: float | None = eqx.field(static=True, default=None)  # ty: ignore[invalid-attribute-override]
     normalize: bool = eqx.field(static=True, default=True)
 
     # dummy init to have the signature in the documentation
@@ -331,7 +332,8 @@ class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _ROUCHON_GRADIENTS
 
-    dt: float | None = eqx.field(static=True, default=None)
+    # `dt=None` selects the adaptive step size
+    dt: float | None = eqx.field(static=True, default=None)  # ty: ignore[invalid-attribute-override]
     normalize: bool = eqx.field(static=True, default=True)
 
     # dummy init to have the signature in the documentation
@@ -635,6 +637,15 @@ class Event(_DEMethod):
         self.dtmax = dtmax
         self.root_finder = root_finder
         self.smart_sampling = smart_sampling
+
+        # `Rouchon2` and `Rouchon3` are both `_DEFixedStep` and `_DEAdaptiveStep`
+        supported = (Tsit5, Dopri5, Dopri8, Kvaerno3, Kvaerno5, Euler)
+        if not isinstance(self.noclick_method, supported):
+            supported_str = ', '.join(f'`{x.__name__}`' for x in supported)
+            raise TypeError(
+                f'Argument `noclick_method` must be one of {supported_str}, but has '
+                f'type `{type(self.noclick_method).__name__}`.'
+            )
 
         if self.dtmax is not None and isinstance(self.noclick_method, _DEFixedStep):
             raise ValueError(
