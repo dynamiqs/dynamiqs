@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from numbers import Complex
 from typing import TYPE_CHECKING, ClassVar, get_args
 
 import jax
@@ -166,7 +167,8 @@ class DenseDataArray(DataArray):
         return replace(self, data=data)
 
     def __add__(self, y: DataArrayLike) -> DataArray:
-        if isinstance(y, int | float) and y == 0:
+        # no dtype promotion: `x + 0j` keeps a real `x` real
+        if isinstance(y, Complex) and y == 0:
             return self
 
         if isinstance(y, DenseDataArray):

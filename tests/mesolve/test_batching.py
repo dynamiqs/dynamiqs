@@ -39,6 +39,40 @@ def test_cartesian_batching(nH, npsi0, nL1, nL2):
     assert result.expects.shape == (*nH, *nL1, *nL2, *npsi0, nEs, ntsave)
 
 
+@pytest.mark.run(order=TEST_LONG)
+@pytest.mark.parametrize(
+    ('cartesian_batching', 'nH', 'nL', 'npsi0'),
+    [(True, (2,), (3,), (4,)), (False, (3, 1), (), (4,))],
+)
+def test_lowrank_batching(cartesian_batching, nH, nL, npsi0):
+    n, rank = 4, 2
+    nEs = 2
+    ntsave = 11
+
+    # run mesolve
+    H, Ls, psi0, Es = rand_mesolve_args(n, nH, [nL], npsi0, nEs)
+    tsave = jnp.linspace(0, 0.01, ntsave)
+    method = dq.method.LowRank(rank=rank, key=jax.random.PRNGKey(0))
+    result = dq.mesolve(
+        H,
+        Ls,
+        psi0,
+        tsave,
+        exp_ops=Es,
+        method=method,
+        cartesian_batching=cartesian_batching,
+    )
+
+    # check result shape
+    if cartesian_batching:
+        bshape = (*nH, *nL, *npsi0)
+    else:
+        bshape = jnp.broadcast_shapes(nH, nL, npsi0)
+    assert result.lowrank_states.shape == (*bshape, ntsave, n, rank)
+    assert result.states.shape == (*bshape, ntsave, n, n)
+    assert result.expects.shape == (*bshape, nEs, ntsave)
+
+
 # H has fixed shape (3, 4, n, n) for the next test case, we test a broad ensemble of
 # compatible broadcastable shape
 @pytest.mark.run(order=TEST_LONG)
