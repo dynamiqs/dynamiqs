@@ -135,6 +135,11 @@ class KrausMapRK(eqx.Module):
         struct = jax.eval_shape(lambda: self.H(0.0))
         return eye(*struct.dims, layout=dense)
 
+    @property
+    def has_jump_ops(self) -> bool:
+        # without jump operators, the Kraus map is the no-jump operator U(1.0) alone
+        return len(self.L(self.t)) > 0
+
     def U(self, c: float) -> QArray:
         r"""No-jump propagator from 0 to $c \Delta t$ (relative to $t$)."""
         if c == 0.0:
@@ -179,6 +184,9 @@ class KrausMapRK(eqx.Module):
         return stages
 
     def __call__(self, rho0: QArray) -> QArray:
+        # before the stages, which sum over the jump operators
+        if not self.has_jump_ops:
+            return M_rho_Mdag(self.U(1.0), rho0)
         stages = self.compute_stages(rho0)
         rho_new = M_rho_Mdag(self.U(1.0), rho0)
         for i, bi in enumerate(self._b):
@@ -217,6 +225,8 @@ class KrausMapRK(eqx.Module):
     def S(self) -> QArray:
         r"""Compute $S = \sum_k M_k^\dagger M_k$, used for Cholesky normalization."""
         S = Mdag_M(self.U(1.0))
+        if not self.has_jump_ops:
+            return S
         for i, bi in enumerate(self._b):
             if bi == 0.0:
                 continue
@@ -258,11 +268,16 @@ class KrausEuler(KrausMapRK):
 
     def __call__(self, rho0: QArray) -> QArray:
         # override to enforce midpoint evaluation and single-stage structure
-        return M_rho_Mdag(self.U(1.0), rho0) + self.dt * self.dissipator(0.5, rho0)
+        nojump = M_rho_Mdag(self.U(1.0), rho0)
+        if not self.has_jump_ops:
+            return nojump
+        return nojump + self.dt * self.dissipator(0.5, rho0)
 
     def S(self) -> QArray:
         # override to enforce midpoint evaluation and single-stage structure
         nojump_S = Mdag_M(self.U(1.0))
+        if not self.has_jump_ops:
+            return nojump_S
         jump_S = self.dt * sum(Mdag_M(_L) for _L in self.L(self._t_mid))
         return nojump_S + jump_S
 
