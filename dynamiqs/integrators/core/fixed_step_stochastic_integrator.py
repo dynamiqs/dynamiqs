@@ -333,11 +333,11 @@ class JSMESolveEulerJumpIntegrator(JSMESolveFixedStepIntegrator):
         rho = y.state
         L, H = self.L(t), self.H(t)
         L = stack(L)  # todo: remove stack
-        Lm = stack(self.Lm(t))
 
         # === Ccal(rho)
         L_rho_Ldag = L @ rho @ L.dag()  # (nL, n, n)
-        Lm_rho_Lmdag = Lm @ rho @ Lm.dag()  # (nLm, n, n)
+        # the monitored operators are the last nLm entries of L = Lc + Lm
+        Lm_rho_Lmdag = L_rho_Ldag[len(self.Lcs) :]  # (nLm, n, n)
         thetas = self.thetas[:, None, None]  # (nLm, 1, 1)
         etas = self.etas[:, None, None]  # (nLm, 1, 1)
         Ccal_rho = thetas * rho + etas * Lm_rho_Lmdag  # (nLm, n, n)
