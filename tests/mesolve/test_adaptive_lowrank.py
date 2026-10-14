@@ -92,6 +92,26 @@ class TestMESolveAdaptiveLowRank(IntegratorTester):
         assert rho.shape[-2:] == (system.n, system.n)
 
 
+@pytest.mark.run(order=TEST_LONG)
+def test_clipped_constant_jump_operator():
+    # a constant operator clipped in time is not constant: the cavity decays only from
+    # t = 0.5, <n>(t) = exp(-kappa max(t - 0.5, 0))
+    n, kappa = 8, 1.0
+    a = dq.destroy(n)
+    tsave = jnp.linspace(0.0, 2.0, 9)
+    result = dq.mesolve(
+        dq.zeros(n),
+        [dq.constant(jnp.sqrt(kappa) * a).clip(0.5, None)],
+        dq.fock(n, 1),
+        tsave,
+        exp_ops=[a.dag() @ a],
+        method=LowRank(rank=2, key=jax.random.PRNGKey(0)),
+        progress_meter=False,
+    )
+    expected = jnp.exp(-kappa * jnp.maximum(tsave - 0.5, 0.0))
+    assert jnp.allclose(result.expects[0].real, expected, atol=1e-4)
+
+
 def test_expval_from_m_accepts_qarray():
     # expval_from_m must accept a QArray operator directly (e.g. dia layout)
     # without densifying it first

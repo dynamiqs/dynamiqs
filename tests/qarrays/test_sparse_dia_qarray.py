@@ -3,6 +3,7 @@ import warnings
 import jax
 import jax.numpy as jnp
 import jax.random as jr
+import numpy as np
 import pytest
 from equinox import EquinoxRuntimeError
 
@@ -161,6 +162,16 @@ class TestSparseDIAQArray:
         with pytest.raises(NotImplementedError):
             sA - self.bscalar
 
+    def test_sub_zero(self):
+        # subtracting zero from the data returns it (sparse), like adding it
+        d, s = self.denseA['simple'].data, self.sparseA['simple'].data
+        assert (d - 0) is d
+        assert (s - 0) is s
+        assert (d - 0j) is d
+        assert (s - 0j) is s
+        assert (d - np.float32(0)) is d
+        assert (s - np.float32(0)) is s
+
     @pytest.mark.parametrize('kA', ['simple', 'batch', 'batch_broadcast'])
     def test_mul(self, kA):
         d, s = self.denseA[kA], self.sparseA[kA]
@@ -303,15 +314,20 @@ class TestSparseDIAQArray:
         assert s.devices() == d.devices() == set(jax.devices())
 
     def test_outofbounds(self):
-        # set up matrix
-        N = 10
-        diags = jr.normal(jr.key(42), (4, N))
-        offsets = (-2, -1, 1, 3)
+        # every element outside the matrix bounds is checked, and only those: the
+        # last 2 of offset -2, none of offset 0, the first 3 of offset 3
+        N = 5
+        offsets = (-2, 0, 3)
+        outside = [(0, 3), (0, 4), (2, 0), (2, 1), (2, 2)]
+        diags = jnp.ones((2, len(offsets), N))
+        for i, j in outside:
+            diags = diags.at[:, i, j].set(0)
+        SparseDIADataArray(offsets, diags)
 
-        # assert an error is raised
         error_str = 'must contain zeros outside the matrix bounds'
-        with pytest.raises(EquinoxRuntimeError, match=error_str):
-            SparseDIADataArray(offsets, diags)
+        for i, j in outside:
+            with pytest.raises(EquinoxRuntimeError, match=error_str):
+                SparseDIADataArray(offsets, diags.at[1, i, j].set(1))
 
     @pytest.mark.parametrize('k', ['simple', 'batch', 'batch_broadcast'])
     def test_elpow(self, k):

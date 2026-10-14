@@ -126,6 +126,8 @@ ignore-words-list = "ket, braket, SME"
 division-by-zero = "error"
 possibly-unresolved-reference = "error"
 unused-ignore-comment = "error"
+# equinox modules are frozen, so narrowing a field type in a subclass is sound
+invalid-mutable-override = "ignore"
 
 # === taskipy tasks definition ===
 
