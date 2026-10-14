@@ -1,12 +1,19 @@
-"""Explicit Runge-Kutta solvers of Diffrax with their stages unrolled at trace time.
+"""Explicit Runge-Kutta solvers of Diffrax, with faster stages on GPU and CPU.
 
-Diffrax evaluates the stages of a Runge-Kutta step in a `while_loop`, which keeps
-compilation fast for any tableau but, on GPU, costs one device-to-host synchronisation
-per stage: XLA copies the loop condition back to the host before each iteration. For
-the small and medium systems dynamiqs solves, these synchronisations dominate the cost
-of a step. The solvers below take the same steps with the same tableaus, but write the
-stages out as straight-line code, which also lets XLA fuse the stage combinations into
-the vector field evaluations.
+Diffrax evaluates the stages of a Runge-Kutta step in a `while_loop` and combines them
+with a `tensordot` over all the stages. On GPU, the loop costs one device-to-host
+synchronisation per stage (XLA copies the loop condition back to the host before each
+iteration), which dominates the cost of a step for the small and medium systems dynamiqs
+solves; on CPU, XLA runs the complex `tensordot` as a matrix-vector product on one
+thread. The solvers below take the same steps with the same tableaus:
+- on GPU, they write the stages out as straight-line code, which also lets XLA fuse the
+  stage combinations into the vector field evaluations;
+- on CPU, they loop over the stages (unrolled, XLA would recompute stages there), and
+  each stage combines only the stages it reads, with elementwise sums;
+- on other backends, they are Diffrax's solvers.
+
+The choice follows `jax.default_backend()` when tracing, not the device a solve runs on:
+with `dq.set_device('cpu')` on a GPU machine, the stages are unrolled.
 
 The first stage of an FSAL method is the last stage of the previous step. Diffrax
 evaluates it inside the stage loop on the first step and after a jump; here `init`
@@ -46,6 +53,13 @@ def _combine(
         return total
 
     return jtu.tree_map(leaf, y0, *ks)
+
+
+def _stage_time(
+    t0: RealScalarLike, t1: RealScalarLike, dt: RealScalarLike, c: float
+) -> RealScalarLike:
+    # as Diffrax: a stage at c = 1 is exactly at t1
+    return t1 if c == 1 else t0 + float(c) * dt
 
 
 def _dot(coefficients: Sequence[float] | np.ndarray, ks: list[PyTree]) -> PyTree:
@@ -135,7 +149,7 @@ def _odd_sized_trees(
 
 
 class _UnrolledERK(dx.AbstractERK):
-    def _unrolled(
+    def _supported(
         self,
         terms: dx.AbstractTerm,
         t0: RealScalarLike,
@@ -143,17 +157,24 @@ class _UnrolledERK(dx.AbstractERK):
         y0: Y,
         args: Args,
     ) -> bool:
+        # whether the step is a single explicit Butcher tableau with a cheap vector
+        # field, on GPU or CPU, which the steps below support
         vf_expensive, _ = self._common(terms, t0, t1, y0, args)
         tableau = self.tableau
-        # On CPU, XLA fuses each stage's output into the later stages that read it and
-        # recomputes it there, which makes unrolled steps slower; there is also no
-        # synchronisation to save. Unroll on GPU only.
         return (
-            jax.default_backend() == 'gpu'
+            jax.default_backend() in ('gpu', 'cpu')
             and not vf_expensive
             and isinstance(tableau, dx.ButcherTableau)
             and not tableau.implicit
         )
+
+    @staticmethod
+    def _unrolled() -> bool:
+        # On CPU, XLA fuses each stage's output into the later stages that read it and
+        # recomputes it there, which makes unrolled steps slower; there is also no
+        # synchronisation to save. Unroll on GPU only (`_unrolled_stages`); on CPU,
+        # loop over the stages (`_looped_stages`).
+        return jax.default_backend() == 'gpu'
 
     def init(
         self,
@@ -163,7 +184,7 @@ class _UnrolledERK(dx.AbstractERK):
         y0: Y,
         args: Args,
     ) -> PyTree:
-        if not self._unrolled(terms, t0, t1, y0, args):
+        if not self._supported(terms, t0, t1, y0, args):
             return super().init(terms, t0, t1, y0, args)
         _, fsal = self._common(terms, t0, t1, y0, args)
         if not fsal:
@@ -181,10 +202,10 @@ class _UnrolledERK(dx.AbstractERK):
         solver_state: PyTree,
         made_jump: BoolScalarLike,
     ) -> tuple:
-        if not self._unrolled(terms, t0, t1, y0, args):
+        if not self._supported(terms, t0, t1, y0, args):
             return super().step(terms, t0, t1, y0, args, solver_state, made_jump)
         _, fsal = self._common(terms, t0, t1, y0, args)
-        # a single explicit Butcher tableau (checked by `_unrolled`)
+        # a single explicit Butcher tableau (checked by `_supported`)
         tableau = cast(dx.ButcherTableau, self.tableau)
         control = terms.contr(t0, t1)
         dt = t1 - t0
@@ -207,12 +228,33 @@ class _UnrolledERK(dx.AbstractERK):
                 )
         else:
             f_first = f(t_first, y0)
+        k_first = terms.prod(f_first, control)
+
+        # === other stages, solution, error estimate and dense output
+        stages = self._unrolled_stages if self._unrolled() else self._looped_stages
+        return stages(f, t0, t1, y0, k_first, f_first, control, terms, fsal)
+
+    def _unrolled_stages(
+        self,
+        f: Callable[[RealScalarLike, Y], PyTree],
+        t0: RealScalarLike,
+        t1: RealScalarLike,
+        y0: Y,
+        k_first: PyTree,
+        f_first: PyTree,
+        control: PyTree,
+        terms: dx.AbstractTerm,
+        fsal: bool,
+    ) -> tuple:
+        # The stages after the first, as straight-line code (see the module docstring).
+        tableau = cast(dx.ButcherTableau, self.tableau)
+        dt = t1 - t0
         # The stages are kept apart for the dense output (see `_StagesInterpolation`).
         # Kept apart, XLA may lay some stages out transposed (e.g. a vector field
         # ending in x + x^dag), and every later read then transposes them (on an A100,
         # 7% slower solves): each stage is kept row-major.
         fs = [f_first]
-        ks = [_row_major(terms.prod(f_first, control))]
+        ks = [_row_major(k_first)]
 
         # === other stages
         # Large states: each stage input is written out with an odd number of
@@ -241,7 +283,7 @@ class _UnrolledERK(dx.AbstractERK):
         a = stages[0][1]
         (yi,) = odd_sized_stages(lambda y0, k, a=a: (_combine(y0, a, [k]),), y0, ks[0])
         for i, (c, _) in enumerate(stages):
-            ti = t1 if c == 1 else t0 + float(c) * dt
+            ti = _stage_time(t0, t1, dt, c)
             fi = f(ti, yi)
             if i + 1 < len(stages):
                 ki, yi = next_stage(terms.prod(fi, control), stages[i + 1][1])
@@ -258,6 +300,56 @@ class _UnrolledERK(dx.AbstractERK):
         # the stages are kept apart (see `_StagesInterpolation`)
         dense_info = dict(y0=y0, y1=y1, k=_Stages(tuple(ks)))
         new_solver_state = (jnp.array(False), fs[-1]) if fsal else None
+        return y1, y_error, dense_info, new_solver_state, dx.RESULTS.successful
+
+    def _looped_stages(
+        self,
+        f: Callable[[RealScalarLike, Y], PyTree],
+        t0: RealScalarLike,
+        t1: RealScalarLike,
+        y0: Y,
+        k_first: PyTree,
+        f_first: PyTree,
+        control: PyTree,
+        terms: dx.AbstractTerm,
+        fsal: bool,
+    ) -> tuple:
+        # The stages after the first, in a loop as Diffrax does (unrolled, XLA would
+        # recompute stages on CPU, see `_unrolled`), but each stage combines only the
+        # stages it reads, as the unrolled step: Diffrax's `tensordot` over all the
+        # stages runs on CPU as a complex matrix-vector product on one thread, several
+        # times slower than these elementwise sums.
+        tableau = cast(dx.ButcherTableau, self.tableau)
+        num_stages = len(tableau.c) + 1
+        dt = t1 - t0
+
+        def unstack(ks: PyTree, count: int = num_stages) -> list[PyTree]:
+            # the first `count` stages
+            return [jtu.tree_map(lambda k, j=j: k[j], ks) for j in range(count)]
+
+        def combination(a_lower: np.ndarray) -> Callable[[PyTree], Y]:
+            return lambda ks: _combine(y0, a_lower, unstack(ks, len(a_lower)))
+
+        combinations = [combination(a_lower) for a_lower in tableau.a_lower]
+        times = jnp.stack([jnp.asarray(_stage_time(t0, t1, dt, c)) for c in tableau.c])
+
+        def stage(i: Array, carry: tuple) -> tuple:
+            ks, _, _ = carry
+            yi = jax.lax.switch(i - 1, combinations, ks)
+            ti = times[i - 1]
+            fi = f(ti, yi)
+            ki = terms.prod(fi, control)
+            ks = jtu.tree_map(lambda buffer, k: buffer.at[i].set(k), ks, ki)
+            return ks, yi, fi
+
+        ks = jtu.tree_map(
+            lambda k: jnp.zeros((num_stages, *k.shape), k.dtype).at[0].set(k), k_first
+        )
+        ks, y_last, f_last = jax.lax.fori_loop(1, num_stages, stage, (ks, y0, f_first))
+        y1 = y_last if tableau.ssal else _combine(y0, tableau.b_sol, unstack(ks))
+        y_error = _dot(tableau.b_error, unstack(ks))
+        dense_info = dict(y0=y0, y1=y1, k=ks)
+        new_solver_state = (jnp.array(False), f_last) if fsal else None
         return y1, y_error, dense_info, new_solver_state, dx.RESULTS.successful
 
 
@@ -329,7 +421,7 @@ def _interpolation(
 
 
 class UnrolledTsit5(_UnrolledERK, dx.Tsit5):
-    """Diffrax's `Tsit5`, with its stages unrolled."""
+    """Diffrax's `Tsit5`, with its stages unrolled on GPU and looped over on CPU."""
 
     # Diffrax types this as its own interpolation class; y1 has a zero weight
     interpolation_cls = staticmethod(  # ty: ignore[invalid-assignment]
@@ -338,7 +430,7 @@ class UnrolledTsit5(_UnrolledERK, dx.Tsit5):
 
 
 class UnrolledDopri5(_UnrolledERK, dx.Dopri5):
-    """Diffrax's `Dopri5`, with its stages unrolled."""
+    """Diffrax's `Dopri5`, with its stages unrolled on GPU and looped over on CPU."""
 
     # Diffrax types this as its own interpolation class; k[1] has a zero weight
     interpolation_cls = staticmethod(  # ty: ignore[invalid-assignment]
@@ -347,7 +439,7 @@ class UnrolledDopri5(_UnrolledERK, dx.Dopri5):
 
 
 class UnrolledDopri8(_UnrolledERK, dx.Dopri8):
-    """Diffrax's `Dopri8`, with its stages unrolled."""
+    """Diffrax's `Dopri8`, with its stages unrolled on GPU and looped over on CPU."""
 
     # Diffrax types this as its own interpolation class; y1 and k[1:5] have zero
     # weights

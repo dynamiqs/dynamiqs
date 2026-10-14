@@ -65,7 +65,7 @@ SOLVES = {
 def _force_split_saves(monkeypatch):
     # the unrolled Runge-Kutta stages and the fused DIA Lindbladian (also GPU-only)
     # change the round-off, enough to change the steps of an adaptive solve, so keep
-    # Diffrax's stages and the products here
+    # the CPU's stages (looped) and the products here
     monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
     monkeypatch.setattr(_UnrolledERK, '_unrolled', lambda *args: False)  # noqa: ARG005
     monkeypatch.setattr(
