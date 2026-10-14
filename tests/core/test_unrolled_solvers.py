@@ -9,7 +9,7 @@ import dynamiqs as dq
 from dynamiqs.integrators.core import unrolled_solvers
 from dynamiqs.integrators.core.unrolled_solvers import _UnrolledERK
 
-from ..order import TEST_INSTANT, TEST_LONG
+from ..order import TEST_INSTANT, TEST_LONG, TEST_SHORT
 
 
 def _solve(gradient=None):
@@ -236,3 +236,32 @@ def test_steps_match_diffrax(monkeypatch, diffrax_solver, solver, backend):
     assert jnp.allclose(
         derivative(solver()), reference_derivative, rtol=1e-10, atol=1e-10
     )
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_unrolled_stages_reuse_the_vector_field_trace(monkeypatch):
+    # the vector field is jitted: tracing a solve calls the Python of H(t) a few
+    # times, not once per Runge-Kutta stage and per trace of the step
+    calls = []
+
+    def solve():
+        a = dq.destroy(8)
+
+        def coefficient(t):
+            calls.append(t)
+            return jnp.where(t < 0.7, 1.0, 0.3)
+
+        H = a.dag() @ a + dq.modulated(coefficient, a + a.dag(), discontinuity_ts=[0.7])
+        tsave = jnp.linspace(0.0, 2.0, 11)
+        return dq.mesolve(H, [0.5 * a], dq.fock(8, 0), tsave, progress_meter=False)
+
+    counts = {}
+    for backend in ('cpu', 'gpu'):
+        monkeypatch.setattr(jax, 'default_backend', lambda b=backend: b)
+        jax.clear_caches()
+        calls.clear()
+        jax.jit(solve).trace()
+        counts[backend] = len(calls)
+    jax.clear_caches()
+    # the unrolled stages (gpu) trace it about as often as the stage loop (cpu)
+    assert counts['gpu'] <= counts['cpu'] + 4

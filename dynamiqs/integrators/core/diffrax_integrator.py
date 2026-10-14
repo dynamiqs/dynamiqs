@@ -42,6 +42,14 @@ from .jump_clip_controller import JumpClipController
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
 from .unrolled_solvers import UnrolledDopri5, UnrolledDopri8, UnrolledTsit5
 
+# `jax.Inline.JAX_LATE` (jax >= 0.11) keeps a jitted function as one call in the
+# jaxpr, so that JAX traces and differentiates it once, and inlines it into the
+# StableHLO program. Named explicitly: jax 0.11.0 and 0.11.1 map `inline=True` to
+# `JAX_EARLY`, which copies its equations into the jaxpr at every use, so that JAX
+# transforms each copy again. Older versions, without `jax.Inline`, only have
+# `inline=True`.
+_INLINE = getattr(getattr(jax, 'Inline', None), 'JAX_LATE', True)
+
 
 class FixedStepInfos(eqx.Module):
     nsteps: Array
@@ -220,9 +228,21 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                     get_dtmax, stepsize_controller, dtmax, is_leaf=lambda x: x is None
                 )
 
+            # === jit the vector field: Diffrax and the unrolled solvers evaluate it
+            # several times (per stage, in init, for shapes), and JAX then traces and
+            # differentiates it once; it is inlined when lowered, so XLA compiles the
+            # same program
+            terms = self.terms
+            if isinstance(terms, dx.ODETerm):
+                terms = eqx.tree_at(
+                    lambda term: term.vector_field,
+                    terms,
+                    jax.jit(terms.vector_field, inline=_INLINE),
+                )
+
             # === solve differential equation with diffrax
             return dx.diffeqsolve(
-                self.terms,
+                terms,
                 self.diffrax_solver,
                 t0=t0,
                 t1=t1,
