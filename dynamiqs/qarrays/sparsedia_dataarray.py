@@ -60,15 +60,20 @@ class SparseDIADataArray(DataArray):
                 f'(..., len(offsets), n), but got {self.diags.shape}'
             )
 
-        # check that diagonals contain zeros outside the bounds of the matrix using
-        # equinox runtime checks
+        # check that diagonals contain zeros outside the bounds of the matrix, with
+        # one equinox runtime check for all diagonals: the elements of diagonal i
+        # outside the matrix are its first offsets[i] (offset >= 0) or its last
+        # -offsets[i] (offset < 0)
         error = (
             'Diagonals of a `SparseDIADataArray` must contain zeros outside the '
             'matrix bounds.'
         )
-        for i, offset in enumerate(self.offsets):
-            zero_slice = slice(None, offset) if offset >= 0 else slice(offset, None)
-            check = jnp.any(self.diags[..., i, zero_slice] != 0)
+        n = self.diags.shape[-1]
+        offsets = np.asarray(self.offsets)[:, None]
+        columns = np.arange(n)
+        outside = np.where(offsets >= 0, columns < offsets, columns >= n + offsets)
+        if outside.any():
+            check = jnp.any((self.diags != 0) & outside)
             eqx.error_if(self.diags, check, error)
 
     @property
