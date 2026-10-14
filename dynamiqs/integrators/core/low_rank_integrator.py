@@ -272,17 +272,14 @@ class MESolveLowRankIntegrator(
             for x in [self.H, *self.Ls]
         )
         if constant:
-            Ls0 = [L(self.t0) for L in self.Ls]
             Hnh = -1j * self.H(self.t0)
-            for L in Ls0:
-                Hnh = Hnh - 0.5 * L.dag() @ L
+            for L in self.Ls:
+                L0 = L(self.t0)
+                Hnh = Hnh - 0.5 * L0.dag() @ L0
 
         def vector_field(t, m, _):  # noqa: ANN001, ANN202
-            if constant:
-                Ls, dm = Ls0, (Hnh @ m).to_jax()
-            else:
-                Ls = [L(t) for L in self.Ls]
-                dm = (-1j) * (self.H(t) @ m).to_jax()
+            Ls = [L(t) for L in self.Ls]
+            dm = (Hnh @ m).to_jax() if constant else (-1j) * (self.H(t) @ m).to_jax()
             # `m` is fixed for this vector-field evaluation, so we compute and reuse
             # the decomposition/pseudoinverse across all jump operators.
             solve_cache = solver_cache_builder(m)
