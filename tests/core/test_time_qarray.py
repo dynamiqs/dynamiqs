@@ -99,6 +99,11 @@ class TestConstantTimeQArray:
         assert_equal(x_clipped(0.0), [[0, 0], [0, 0]])
         assert_equal(x_clipped(1.5), [[0, 0], [0, 0]])
 
+        # check that adding a constant keeps the clip
+        x_sum = x_clipped + self.x
+        assert_equal(x_sum(0.0), self.x(0.0))
+        assert_equal(x_sum(0.5), 2 * self.x(0.5))
+
     def test_shift(self):
         # test unclipped operator
         t_shift = 0.5
@@ -569,6 +574,16 @@ class TestSummedQArray:
         assert isinstance(z.timeqarrays[3], ConstantTimeQArray)
         assert_equal(z(1.0), [[2, 4], [6, 8]])
 
+        # a sum is flattened into the other operand's terms, a clipped sum is not
+        w = f + x
+        assert isinstance(w, SummedTimeQArray)
+        assert len(w.timeqarrays) == 3
+        assert_equal(w(1.0), [[1, 3], [5, 7]])
+
+        w = f + x.clip(0.0, 0.5)
+        assert len(w.timeqarrays) == 2
+        assert_equal(w(1.0), [[0, 1], [2, 3]])
+
     def test_clip(self):
         # create a modulated and pwc TimeQArray to sum
         f = lambda t: 1.0 + 2.0 * t
@@ -606,6 +621,15 @@ class TestSummedQArray:
         assert_equal(x_clipped(0.0), [[0, 0], [0, 0]])
         assert_equal(x_clipped(2.0), [[0, 0], [0, 0]])
 
+        # check that adding to the sum keeps each term's window
+        x_sum = x_clipped + x_modulated
+        assert_equal(x_sum(0.0), x_modulated(0.0))
+        assert_equal(x_sum(1.0), x_clipped(1.0) + x_modulated(1.0))
+
+        # check that a clipped sum, alone or summed, keeps its bounds as discontinuities
+        for x_sum in [x.clip(0.25, 1.25), x.clip(0.25, 1.25) + x_modulated]:
+            assert jnp.isin(jnp.array([0.25, 1.25]), x_sum.discontinuity_ts).all()
+
     def test_shift(self):
         f = lambda t: 1.0 + 2.0 * t
         qarray_modulated = jnp.array([[1.0, 2.0], [3.0, 4.0]])
@@ -632,3 +656,6 @@ class TestSummedQArray:
         t_inside = 1.0
         assert_equal(x_clipped_shifted(t_inside), x_clipped(t_inside - t_shift))
         assert_equal(x_clipped_shifted(0.0), [[0, 0], [0, 0]])
+        # inside the shifted window only, then the original window only
+        assert_equal(x_clipped_shifted(1.5), x_clipped(1.5 - t_shift))
+        assert_equal(x_clipped_shifted(0.5), [[0, 0], [0, 0]])
