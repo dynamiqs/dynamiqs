@@ -2,7 +2,10 @@
 
 We test our solvers on systems with an analytical solution.
 
-## `Cavity` and `OCavity`
+## `Cavity`, `OCavity` and `NoJumpCavity`
+
+`NoJumpCavity` is `Cavity` solved by `mesolve` with no jump operators: the solution
+below with $\kappa = 0$.
 
 **Problem**
 
