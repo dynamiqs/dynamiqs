@@ -98,7 +98,7 @@ class TestSparseDIAQArray:
         assert _allclose(d.to_jax(), d.assparsedia().to_jax())
 
     @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
-    def test_add(self, kA, kB):
+    def test_add(self, monkeypatch, kA, kB):
         dA, sA = self.denseA[kA], self.sparseA[kA]
         dB, sB = self.denseB[kB], self.sparseB[kB]
         out_dense_dense = (dA + dB).to_jax()
@@ -106,6 +106,12 @@ class TestSparseDIAQArray:
 
         # check dia + dia
         assert _allclose(out_dense_dense, out_dia_dia)
+
+        # check the GPU stacked dia + dia exactly (CI, on CPU, runs it only in solves)
+        with monkeypatch.context() as m:
+            m.setattr(jax, 'default_backend', lambda: 'gpu')
+            stacked = (sA + sB).data.diags
+        assert jnp.array_equal(stacked, (sA + sB).data.diags)
 
         # check dia + dense
         with warnings.catch_warnings():

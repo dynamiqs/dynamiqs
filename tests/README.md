@@ -86,6 +86,10 @@ $$
 \end{aligned}
 $$
 
+## `MixedOCavity`
+
+`OCavity` from the mixed state $\rho_0 = p \ket{\alpha_0}\bra{\alpha_0} + (1-p) \ket{i\alpha_0}\bra{i\alpha_0}$. The evolution is linear and maps each coherent state as above, so the state and the expectation values at time $t$ are the same mixture of those of `OCavity` with $\alpha_0$ and with $i\alpha_0$; the gradients are their derivatives.
+
 ## `TDQubit` and `OTDQubit`
 
 **Problem**
