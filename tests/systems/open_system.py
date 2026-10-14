@@ -140,6 +140,27 @@ class OCavity(OpenSystem):
         return jax.hessian(self._expect)(self.params_default, t)
 
 
+class MixedOCavity(OCavity):
+    # starts from the mixture p |alpha0><alpha0| + (1 - p) |i alpha0><i alpha0|: each
+    # coherent state evolves as in `OCavity`, so the state stays such a mixture
+    def __init__(self, *, p: float, **kwargs):
+        super().__init__(**kwargs)
+        self.p = p
+
+    def _mixture(self, f: Callable, params: PyTree, *args) -> PyTree:
+        params_i = params._replace(alpha0=1j * params.alpha0)
+        return self.p * f(params, *args) + (1 - self.p) * f(params_i, *args)
+
+    def y0(self, params: PyTree) -> QArray:
+        return self._mixture(lambda q: OCavity.y0(self, q).todm(), params)
+
+    def _state(self, params: PyTree, t: float) -> QArray:
+        return self._mixture(super()._state, params, t)
+
+    def _expect(self, params: PyTree, t: float) -> Array:
+        return self._mixture(super()._expect, params, t)
+
+
 class OTDQubit(OpenSystem):
     class Params(NamedTuple):
         eps: float
@@ -240,6 +261,9 @@ dense_nojump_cavity = NoJumpCavity(
 )
 dia_nojump_cavity = NoJumpCavity(
     n=8, delta=1.0 * Hz, alpha0=0.5, tsave=tsave, layout=dq.dia
+)
+mixed_ocavity = MixedOCavity(
+    p=0.7, n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dense
 )
 
 tsave = np.linspace(0.0, 1.0, 11)

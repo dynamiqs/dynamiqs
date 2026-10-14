@@ -9,7 +9,7 @@ from dynamiqs.method import Kvaerno5, LinearSolver, LowRank, Tsit5
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
-from ..systems import dense_ocavity, dia_ocavity, otdqubit
+from ..systems import dense_ocavity, dia_ocavity, mixed_ocavity, otdqubit
 
 # we only test Tsit5 to keep the unit test suite fast, and Kvaerno5 for the real
 # splitting used by implicit methods
@@ -49,6 +49,16 @@ class TestMESolveAdaptiveLowRank(IntegratorTester):
     def test_correctness_implicit(self):
         method = LowRank(rank=4, ode_method=Kvaerno5(), key=jax.random.PRNGKey(0))
         self._test_correctness(dense_ocavity, method)
+
+    def test_correctness_from_dm(self):
+        # from a density matrix, the factor starts from its leading eigenvectors, and
+        # from small random columns where its eigenvalues vanish (two are nonzero here)
+        self._test_correctness(mixed_ocavity, _lowrank_method(mixed_ocavity))
+
+    def test_gradient_from_dm(self):
+        # through the eigendecomposition of rho0, whose other eigenvalues vanish
+        method = _lowrank_method(mixed_ocavity)
+        self._test_gradient(mixed_ocavity, method, BackwardCheckpointed())
 
     @pytest.mark.parametrize('linear_solver', [LinearSolver.QR, LinearSolver.CHOLESKY])
     @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
