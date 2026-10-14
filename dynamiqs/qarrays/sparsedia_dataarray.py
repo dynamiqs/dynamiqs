@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import warnings
 from dataclasses import replace
+from numbers import Complex
 from typing import ClassVar, get_args
 
 import equinox as eqx
@@ -60,15 +61,20 @@ class SparseDIADataArray(DataArray):
                 f'(..., len(offsets), n), but got {self.diags.shape}'
             )
 
-        # check that diagonals contain zeros outside the bounds of the matrix using
-        # equinox runtime checks
+        # check that diagonals contain zeros outside the bounds of the matrix, with
+        # one equinox runtime check for all diagonals: the elements of diagonal i
+        # outside the matrix are its first offsets[i] (offset >= 0) or its last
+        # -offsets[i] (offset < 0)
         error = (
             'Diagonals of a `SparseDIADataArray` must contain zeros outside the '
             'matrix bounds.'
         )
-        for i, offset in enumerate(self.offsets):
-            zero_slice = slice(None, offset) if offset >= 0 else slice(offset, None)
-            check = jnp.any(self.diags[..., i, zero_slice] != 0)
+        n = self.diags.shape[-1]
+        offsets = np.asarray(self.offsets)[:, None]
+        columns = np.arange(n)
+        outside = np.where(offsets >= 0, columns < offsets, columns >= n + offsets)
+        if outside.any():
+            check = jnp.any((self.diags != 0) & outside)
             eqx.error_if(self.diags, check, error)
 
     @property
@@ -282,7 +288,8 @@ class SparseDIADataArray(DataArray):
         return NotImplemented
 
     def __add__(self, y: DataArrayLike) -> DataArray:
-        if isinstance(y, int | float) and y == 0:
+        # no dtype promotion: `x + 0j` keeps a real `x` real
+        if isinstance(y, Complex) and y == 0:
             return self
 
         if isinstance(y, SparseDIADataArray):
