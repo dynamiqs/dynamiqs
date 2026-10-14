@@ -96,8 +96,8 @@ class _UnrolledERK(dx.AbstractERK):
     def _unrolled() -> bool:
         # On CPU, XLA fuses each stage's output into the later stages that read it and
         # recomputes it there, which makes unrolled steps slower; there is also no
-        # synchronisation to save. Unroll on GPU only; on CPU, loop over the stages
-        # (`_looped_stages`).
+        # synchronisation to save. Unroll on GPU only (`_unrolled_stages`); on CPU,
+        # loop over the stages (`_looped_stages`).
         return jax.default_backend() == 'gpu'
 
     def init(
@@ -153,14 +153,28 @@ class _UnrolledERK(dx.AbstractERK):
         else:
             f_first = f(t_first, y0)
         k_first = terms.prod(f_first, control)
-        if not self._unrolled():
-            return self._looped_stages(
-                f, t0, t1, y0, k_first, f_first, control, terms, fsal
-            )
+
+        # === other stages, solution, error estimate and dense output
+        stages = self._unrolled_stages if self._unrolled() else self._looped_stages
+        return stages(f, t0, t1, y0, k_first, f_first, control, terms, fsal)
+
+    def _unrolled_stages(
+        self,
+        f: Callable[[RealScalarLike, Y], PyTree],
+        t0: RealScalarLike,
+        t1: RealScalarLike,
+        y0: Y,
+        k_first: PyTree,
+        f_first: PyTree,
+        control: PyTree,
+        terms: dx.AbstractTerm,
+        fsal: bool,
+    ) -> tuple:
+        # The stages after the first, as straight-line code (see the module docstring).
+        tableau = cast(dx.ButcherTableau, self.tableau)
+        dt = t1 - t0
         fs = [f_first]
         ks = [k_first]
-
-        # === other stages
         yi = y0
         for c, a_lower in zip(tableau.c, tableau.a_lower, strict=True):
             ti = _stage_time(t0, t1, dt, c)
