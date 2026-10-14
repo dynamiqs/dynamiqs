@@ -638,6 +638,15 @@ class Event(_DEMethod):
         self.root_finder = root_finder
         self.smart_sampling = smart_sampling
 
+        # `Rouchon2` and `Rouchon3` are both `_DEFixedStep` and `_DEAdaptiveStep`
+        supported = (Tsit5, Dopri5, Dopri8, Kvaerno3, Kvaerno5, Euler)
+        if not isinstance(self.noclick_method, supported):
+            supported_str = ', '.join(f'`{x.__name__}`' for x in supported)
+            raise TypeError(
+                f'Argument `noclick_method` must be one of {supported_str}, but has '
+                f'type `{type(self.noclick_method).__name__}`.'
+            )
+
         if self.dtmax is not None and isinstance(self.noclick_method, _DEFixedStep):
             raise ValueError(
                 'Setting `dtmax` is not compatible with fixed step size methods to '
