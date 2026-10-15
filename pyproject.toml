@@ -55,18 +55,11 @@ dev = [
     "pytest-split",
     "pytest-sugar",
     "pytest-xdist",
-    "mkdocs-material",
-    "mkdocstrings[python]!=1.12.0", # bug with parsing strings in signatures, see https://github.com/mkdocstrings/python/issues/191
-    "mkdocs-gen-files",
-    "mkdocs-literate-nav",
-    "mkdocs-section-index",
-    "mkdocs-simple-hooks",
-    "mkdocs-glightbox",
-    "mkdocs-exclude",
+    "zensical==0.0.70",
+    "mkdocstrings[python]>=1.0.7",  # >=1.0.7 to support recent pymdown-extensions
     "sybil>=6",
     "black",  # needed by mkdocstrings to format function signatures
     "flit",
-    "mike",
     "optax",  # for gradient descent tutorials
     "ty",
 ]
@@ -183,11 +176,11 @@ cmd = 'task doctest-code && task doctest-docs'
 help = "check all examples (doctest)"
 
 [tool.taskipy.tasks.docbuild]
-cmd = 'mkdocs build'
+cmd = 'python docs/generate_python_api.py && zensical build --clean'
 help = "build the documentation website"
 
 [tool.taskipy.tasks.docserve]
-cmd = 'mkdocs serve'
+cmd = 'python docs/generate_python_api.py && zensical serve'
 help = "preview documentation website with hot-reloading"
 
 [tool.taskipy.tasks.all]
