@@ -27,7 +27,7 @@ dependencies = [
     # jax!=0.7.0,!=0.7.1 because of diffrax compatibility issues, see https://github.com/patrick-kidger/diffrax/issues/680
     "jax>=0.4.36,!=0.7.0,!=0.7.1",
     "jaxtyping",
-    "diffrax>=0.6.1", # for complex support (0.5.0), progress meter (0.5.1), compatibility with jax 0.4.36 (0.6.1)
+    "diffrax>=0.7.2", # for complex support (0.5.0), progress meter (0.5.1), `ClipStepSizeController` as an adaptive controller (0.7.1), fixed `VeryChord` divergence check for implicit solvers (0.7.2)
     "equinox",
     "optimistix", # for typing of root-finding in Event method
     "pillow",
