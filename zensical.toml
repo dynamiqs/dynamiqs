@@ -5,7 +5,8 @@ use_directory_urls = false
 repo_url = "https://github.com/dynamiqs/dynamiqs"
 repo_name = "dynamiqs"
 docs_dir = "docs"
-copyright = "&copy Copyright 2023-2025, Dynamiqs developers."
+# the end year is replaced by the current year in javascripts/copyright.js
+copyright = "&copy; Copyright 2023-<span class=\"copyright-year\">2026</span>, Dynamiqs developers."
 extra_css = [
   "stylesheets/extra.css",
   "stylesheets/theme.css",
@@ -13,6 +14,7 @@ extra_css = [
 ]
 extra_javascript = [
   "javascripts/katex.js",
+  "javascripts/copyright.js",
   "https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/contrib/auto-render.min.js",
 ]
