@@ -291,8 +291,9 @@ def test_entropy_relative(a, b, x, y):
     dq_ket_dm = dq.entropy_relative(psi, rho).item()
     dq_dm_ket = dq.entropy_relative(rho, psi).item()
 
-    assert qt_ket_dm == pytest.approx(dq_ket_dm, rel=1e-6, abs=1e-6)
-    assert qt_dm_ket == pytest.approx(dq_dm_ket, rel=1e-6, abs=1e-6)
+    # both are promoted to density matrices: the tolerance of dm vs dm
+    assert qt_ket_dm == pytest.approx(dq_ket_dm, rel=1e-5, abs=1e-5)
+    assert qt_dm_ket == pytest.approx(dq_dm_ket, rel=1e-5, abs=1e-5)
 
     # === check batching
     b1, b2 = 3, 5
