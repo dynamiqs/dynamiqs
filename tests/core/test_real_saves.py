@@ -16,6 +16,12 @@ from ..order import TEST_SHORT
 # the saves are split into real arrays on GPU only, so these tests force it on CPU,
 # with the other GPU-only paths off: the split then leaves every output unchanged
 
+# on a GPU, the reference itself splits the saves (and takes the other GPU-only
+# paths), so the comparisons with it run on CPU only
+cpu_only = pytest.mark.skipif(
+    jax.default_backend() != 'cpu', reason='the reference splits the saves on GPU'
+)
+
 n = 6
 a = dq.destroy(n)
 tsave = jnp.linspace(0.0, 1.0, 4)
@@ -82,6 +88,7 @@ def _assert_match(split, reference):
         assert jnp.array_equal(x, y, equal_nan=True)
 
 
+@cpu_only
 @pytest.mark.run(order=TEST_SHORT)
 @pytest.mark.parametrize('solver', SOLVES)
 def test_real_saves_match(monkeypatch, solver):
@@ -103,6 +110,7 @@ def test_saves_are_split(monkeypatch):
             assert not jnp.iscomplexobj(leaf)
 
 
+@cpu_only
 @pytest.mark.run(order=TEST_SHORT)
 def test_real_saves_gradient(monkeypatch):
     loss = lambda amplitude: SOLVES['mesolve'](amplitude).expects.real.sum()
