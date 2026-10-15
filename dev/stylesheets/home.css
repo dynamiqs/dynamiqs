@@ -7,11 +7,6 @@ Description: CSS for the homepage
 /* Homepage Layout Overrides     */
 /* ============================= */
 
-/* Application header should be static for the landing page */
-.md-header {
-    position: initial;
-}
-
 /* Remove spacing, as we cannot hide it completely */
 .md-main__inner {
     margin: 0;
@@ -164,12 +159,17 @@ Description: CSS for the homepage
 .tx-hero h1 {
     margin-bottom: 0.75rem;
     color: currentColor;
+    font-family: var(--md-header-font-family);
     font-weight: 700;
     font-size: 1.75em;
     letter-spacing: -0.02em;
     line-height: 1.15;
     max-width: 380px;
     text-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+.md-typeset .tx-hero__description {
+    text-align: inherit;
 }
 
 .tx-hero__description {
@@ -248,16 +248,20 @@ Description: CSS for the homepage
     }
 }
 
-/* Buttons */
+/* Buttons, shaped like the buttons of the documentation */
+.tx-hero .md-button,
+.cta-buttons .md-button {
+    border-radius: 1.2rem;
+    font-weight: 700;
+}
+
 .tx-hero .md-button {
     margin-top: .5rem;
     color: var(--md-primary-bg-color);
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.6em 1.2em;
-    font-weight: 500;
-    border-radius: 0.3rem;
+    padding: 0.6em 1.6em;
 }
 
 .tx-hero .md-button svg {
@@ -296,10 +300,10 @@ Description: CSS for the homepage
 
 .section-title {
     text-align: center;
+    font-family: var(--md-header-font-family);
     font-size: 1.1rem;
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 0.5rem;
-    opacity: 0.85;
 }
 
 .section-subtitle {
@@ -319,7 +323,7 @@ Description: CSS for the homepage
 
 .install-box {
     background: var(--md-default-bg-header-color);
-    border-radius: 12px;
+    border-radius: 0.4rem;
     padding: 1.5rem 2rem;
     max-width: 500px;
     margin: 0 auto;
@@ -347,14 +351,13 @@ Description: CSS for the homepage
 
 .install-code {
     background: var(--md-default-bg-color);
-    border-radius: 8px;
+    border-radius: 0.4rem;
     padding: 0.75rem 1rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     font-family: var(--md-code-font-family, monospace);
-    font-size: 0.75rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    font-size: 0.7rem;
 }
 
 .install-code code {
@@ -380,21 +383,20 @@ Description: CSS for the homepage
     background: var(--md-default-bg-color);
 }
 
+/* Code example, styled like the code blocks of the documentation */
 .code-example {
     position: relative;
     max-width: 700px;
     margin: 0 auto;
-    background: var(--md-default-bg-header-color);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
-    border: 1px solid rgba(0,0,0,0.08);
+    background: var(--md-code-bg-color);
+    border-radius: 0.4rem;
 }
 
 .code-block {
     margin: 0;
     padding: 1rem 1.25rem;
     overflow-x: auto;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     line-height: 1.5;
     color: var(--md-code-fg-color);
 }
@@ -405,10 +407,10 @@ Description: CSS for the homepage
 
 /* Syntax highlighting */
 .code-block .kw { color: var(--md-code-hl-keyword-color); }   /* Keywords */
-.code-block .lib { color: var(--md-code-hl-constant-color); }  /* Libraries/modules */
+.code-block .lib { color: var(--md-code-fg-color); }  /* Libraries/modules */
 .code-block .fn { color: var(--md-code-hl-function-color); }   /* Functions */
 .code-block .num { color: var(--md-code-hl-number-color); }    /* Numbers */
-.code-block .cmt { color: var(--md-typeset-color); opacity: 0.5; }  /* Comments */
+.code-block .cmt { color: var(--md-code-hl-comment-color); font-style: italic; }  /* Comments */
 .code-block .str { color: var(--md-code-hl-string-color); }    /* Strings */
 
 .quickstart-features {
@@ -448,7 +450,7 @@ Description: CSS for the homepage
 
 .feature-card {
     background: var(--md-default-bg-color);
-    border-radius: 12px;
+    border-radius: 0.4rem;
     padding: 1.75rem;
     box-shadow: 0 2px 12px rgba(0,0,0,0.05);
     transition: transform 0.2s, box-shadow 0.2s;
@@ -507,7 +509,7 @@ Description: CSS for the homepage
 
 .cta-box {
     background: var(--homepage-gradient);
-    border-radius: 16px;
+    border-radius: 0.4rem;
     padding: 2.5rem 2rem;
     display: flex;
     flex-direction: column;
@@ -532,8 +534,9 @@ Description: CSS for the homepage
 
 .cta-box h2 {
     margin: 0 0 0.5rem;
+    font-family: var(--md-header-font-family);
     font-size: 1.1rem;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .cta-box p {
