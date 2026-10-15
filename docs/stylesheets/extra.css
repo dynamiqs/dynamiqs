@@ -12,7 +12,11 @@ Description: Extra CSS for the Dynamiqs documentation
 .md-tabs {
   background-color: var(--md-default-bg-header-color);
   color: var(--md-typeset-color);
-  box-shadow: 0 0 .2rem #0000001a, 0 .0rem .6rem #0001;
+}
+
+/* Active tab underlined in the primary color, like the active sidebar item */
+.md-tabs__item--active {
+  border-bottom: .1rem solid var(--md-primary-fg-color);
 }
 
 .md-search__form {
@@ -36,7 +40,13 @@ Description: Extra CSS for the Dynamiqs documentation
   opacity: 1.0;
 }
 
-.md-header__topic * {
+/* Site title in the font of the page headings, page title in the text font */
+.md-header__topic:first-child {
+  font-family: var(--md-header-font-family);
+  font-weight: 700;
+}
+
+.md-header__topic + .md-header__topic * {
   font-weight: 400;
 }
 
@@ -204,7 +214,7 @@ Description: Extra CSS for the Dynamiqs documentation
   font-size: 0.72rem;
 }
 
-p {
+.md-typeset p {
   margin: 0.5em 0;
 }
 
@@ -248,20 +258,23 @@ p {
 }
 
 @media screen and (min-width: 76.25em) {
-    .md-nav__link {
-        margin-top: 0.325em;
-    }
-
-    .md-nav__container > .md-nav__link {
-        margin-bottom: 0.0em;
+    /* Compact sidebar items, the modern theme spaces them out for touch targets */
+    .md-sidebar .md-nav__link {
+        margin-top: 0;
+        padding-top: 0.15rem;
+        padding-bottom: 0.15rem;
     }
 
     .md-nav__item--section {
-        margin: 0 0 1.25em 0;
+        margin: 0 0 1em 0;
+    }
+
+    .md-nav__item--section > .md-nav__link {
+        margin-bottom: 0.3em;
     }
 
     .md-nav--lifted > .md-nav__list > .md-nav__item--active > .md-nav__link {
-        margin-bottom: 1em;
+        margin-bottom: 0.6em;
     }
 
     [dir="ltr"] .md-nav__item--section > .md-nav {
@@ -308,7 +321,7 @@ p {
   display: inline;
 }
 
-p {
+.md-typeset p {
   text-align: justify;
 }
 
