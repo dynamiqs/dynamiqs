@@ -110,8 +110,11 @@ plt.ylabel(r'$\langle \sigma_z \rangle$')
 plt.xlim(0, 10)
 plt.ylim(-1, 1)
 plt.legend(('Analytical', 'Dynamiqs'))
-renderfig('workflow')
 ```
+
+<!-- invisible-code-block: python
+renderfig('workflow')
+-->
 
 ![workflow](../../figs_docs/workflow.png){.fig}
 

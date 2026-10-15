@@ -74,9 +74,11 @@ plt.gca().set(
     xlabel=r'$t$',
     ylabel=r'$I^{[t,t+\Delta t)}$',
 )
-
-renderfig('diffusive-monitored-qubit-trajs')
 ```
+
+<!-- invisible-code-block: python
+renderfig('diffusive-monitored-qubit-trajs')
+-->
 
 ![plot_diffusive_monitored_qubit_trajs](../../figs_docs/diffusive-monitored-qubit-trajs.png){.fig}
 
@@ -93,9 +95,11 @@ plt.gca().set(
     xlabel=r'$t$',
     ylabel=r'$Y_t=\int_0^t \mathrm{d}Y_s$',
 )
-
-renderfig('monitored-qubit-cumsum-trajs')
 ```
+
+<!-- invisible-code-block: python
+renderfig('monitored-qubit-cumsum-trajs')
+-->
 
 ![plot_monitored_qubit_cumsum_trajs](../../figs_docs/monitored-qubit-cumsum-trajs.png){.fig}
 
@@ -115,9 +119,11 @@ plt.gca().set(
     ylabel=r'$\langle \sigma_z \rangle_t=\langle \psi_t | \sigma_z | \psi_t \rangle$',
     ylim=(-1.1, 1.1),
 )
-
-renderfig('monitored-qubit-sigmaz')
 ```
+
+<!-- invisible-code-block: python
+renderfig('monitored-qubit-sigmaz')
+-->
 
 ![plot_monitored_qubit_sigmaz](../../figs_docs/monitored-qubit-sigmaz.png){.fig}
 
@@ -163,9 +169,11 @@ plt.gca().set(
     ylabel=r'$\langle \sigma_z \rangle_t = \mathrm{Tr}[\sigma_z\rho_t]$',
     ylim=(-1.1, 1.1),
 )
-
-renderfig('monitored-qubit-sigmaz-eta')
 ```
+
+<!-- invisible-code-block: python
+renderfig('monitored-qubit-sigmaz-eta')
+-->
 
 ![plot_monitored_qubit_sigmaz_eta](../../figs_docs/monitored-qubit-sigmaz-eta.png){.fig}
 
@@ -240,9 +248,11 @@ for Ik_p in Iks_p[:3]:
     ax1.plot(tsave[:-1], Ik_p / np.sqrt(2), lw=1.5)
 
 ax1.set(xlabel=r'$t$', ylabel=r'$I_P^{[t,t+\Delta t)}/\sqrt{2}$')
-
-renderfig('monitored-oscillator-IxIp')
 ```
+
+<!-- invisible-code-block: python
+renderfig('monitored-oscillator-IxIp')
+-->
 
 ![plot_monitored_oscillator_IxIp](../../figs_docs/monitored-oscillator-IxIp.png){.fig}
 
@@ -272,7 +282,10 @@ plt.gca().set(
     ylim=(-2.5, 2.5),
 )
 plt.legend()
-renderfig('monitored-oscillator-mean')
 ```
+
+<!-- invisible-code-block: python
+renderfig('monitored-oscillator-mean')
+-->
 
 ![plot_monitored_oscillator_mean](../../figs_docs/monitored-oscillator-mean.png){.fig}

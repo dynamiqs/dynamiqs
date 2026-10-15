@@ -59,8 +59,11 @@ Alternatively, we can also plot the Wigner function of the evolved state.
 
 ```python
 gif = dq.plot.wigner_gif(result.states, ymax=3.0, gif_duration=10.0)
-rendergif(gif, 'wigner-kerr-oscillator')
 ```
+
+<!-- invisible-code-block: python
+rendergif(gif, 'wigner-kerr-oscillator')
+-->
 
 ![plot_wigner_gif_kerr](../../figs_docs/wigner-kerr-oscillator.gif){.fig}
 
@@ -100,8 +103,11 @@ result = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops)
 plt.plot(tsave * K / jnp.pi, jnp.abs(result.expects[0]))
 plt.xlabel(r'Time, $tK / \pi$')
 plt.ylabel(r'$|\langle a(t) \rangle|$')
-renderfig('photon-number-kerr-oscillator')
 ```
+
+<!-- invisible-code-block: python
+renderfig('photon-number-kerr-oscillator')
+-->
 
 ![plot_photon_number_kerr](../../figs_docs/photon-number-kerr-oscillator.png){.fig}
 
@@ -135,8 +141,11 @@ cbar = plt.colorbar(contour, label=r'$|\langle a(T) \rangle / \langle a(0) \rang
 plt.xlabel(r'Initial coherent state amplitude, $\bar{n}_0 = |\alpha_0|^2$')
 plt.ylabel(r'Loss rate, $\kappa / K$')
 plt.grid(False)
-renderfig('amplitude-revivals-kerr-oscillator')
 ```
+
+<!-- invisible-code-block: python
+renderfig('amplitude-revivals-kerr-oscillator')
+-->
 
 ![plot_amplitude_revivals_kerr](../../figs_docs/amplitude-revivals-kerr-oscillator.png){.fig}
 
@@ -192,8 +201,11 @@ plt.ylabel('Population')
 plt.ylim(0, 1)
 plt.xlim(0, T * epsilon / jnp.pi)
 plt.legend(frameon=True)
-renderfig('rabi-oscillations-kerr-oscillator')
 ```
+
+<!-- invisible-code-block: python
+renderfig('rabi-oscillations-kerr-oscillator')
+-->
 
 ![plot_rabi_oscillations_kerr](../../figs_docs/rabi-oscillations-kerr-oscillator.png){.fig}
 
@@ -278,8 +290,11 @@ plt.xlabel('Pulse width')
 plt.ylabel('Gate duration')
 plt.colorbar(label='log10(1 - Fidelity)')
 plt.grid(False)
-renderfig('pipulse-kerr-oscillator')
 ```
+
+<!-- invisible-code-block: python
+renderfig('pipulse-kerr-oscillator')
+-->
 
 ![plot_pipulse_kerr_oscillator](../../figs_docs/pipulse-kerr-oscillator.png){.fig}
 
@@ -368,8 +383,11 @@ for _ in range(nepochs):
 
 # plot optimized pulse
 dq.plot.pwc_pulse(tpulse, amps)
-renderfig('optimized-pulse-kerr-oscillator')
 ```
+
+<!-- invisible-code-block: python
+renderfig('optimized-pulse-kerr-oscillator')
+-->
 
 ![plot_optimized_pulse_kerr](../../figs_docs/optimized-pulse-kerr-oscillator.png){.fig}
 
@@ -387,8 +405,11 @@ plt.xlim(0, nepochs)
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend()
-renderfig('losses-kerr-oscillator')
 ```
+
+<!-- invisible-code-block: python
+renderfig('losses-kerr-oscillator')
+-->
 
 ![plot_losses_kerr](../../figs_docs/losses-kerr-oscillator.png){.fig}
 
