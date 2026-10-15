@@ -40,10 +40,9 @@ Description: Extra CSS for the Dynamiqs documentation
   opacity: 1.0;
 }
 
-/* Site title in the font of the page headings, page title in the text font */
+/* Site title in a lighter weight than the default bold */
 .md-header__topic:first-child {
-  font-family: var(--md-header-font-family);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .md-header__topic + .md-header__topic * {
@@ -349,7 +348,6 @@ article.md-typeset h1 {
   font-size: 2em;
   letter-spacing: -0.01em;
   font-family: var(--md-header-font-family);
-  color: var(--md-header-main-color);
 }
 
 .md-typeset h2 {

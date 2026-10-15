@@ -30,8 +30,6 @@ Description: Color theme of the Dynamiqs documentation
   --md-default-bg-color-base: 255, 255, 255;
   --md-default-bg-color: rgb(var(--md-default-bg-color-base));  --md-default-bg-header-color: #f5f5f5;
 
-  /* Header color */
-  --md-header-main-color: #000000a5;
 
   /* Code highlight */
   --md-code-fg-color: #39464b;
@@ -88,8 +86,6 @@ Description: Color theme of the Dynamiqs documentation
   --md-default-bg-color: rgb(var(--md-default-bg-color-base));  --md-default-bg-header-color: rgb(62, 66, 72);
   --md-code-bg-color: var(--md-default-bg-header-color);
 
-  /* Header color */
-  --md-header-main-color: #ffffffc8;
 
   /* Primary font color */
   --md-default-fg-color: #ececec;
