@@ -56,7 +56,7 @@ dev = [
     "pytest-sugar",
     "pytest-xdist",
     "zensical==0.0.70",
-    "mkdocstrings[python]!=1.12.0", # bug with parsing strings in signatures, see https://github.com/mkdocstrings/python/issues/191
+    "mkdocstrings[python]>=1.0.7",  # >=1.0.7 to support recent pymdown-extensions
     "sybil>=6",
     "black",  # needed by mkdocstrings to format function signatures
     "flit",
