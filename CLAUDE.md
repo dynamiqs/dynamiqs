@@ -52,7 +52,7 @@ dynamiqs/
   utils/  plot/  random/
   method.py  gradient.py  options.py  result.py
   conftest.py       # sybil setup: docstring examples are executed as tests
-docs/               # mkdocs sources; docs/conftest.py executes the markdown examples
+docs/               # Zensical sources; docs/conftest.py executes the markdown examples
 tests/  benchmarks/
 ```
 
@@ -225,7 +225,7 @@ PEP 8, line length **88**, single quotes. `task clean` handles formatting; the r
 
 ### Adding a public function
 
-Add it to (1) `__all__` in its module, (2) `mkdocs.yml`, (3) `docs/python_api/index.md`,
+Add it to (1) `__all__` in its module, (2) the `nav` in `zensical.toml`, (3) `docs/python_api/index.md`,
 then write the docstring (see `.claude/skills/docstring/SKILL.md`) and the mirroring
 test. **Steps 2 and 3 are the most commonly forgotten** — skip them and the function
 exists but is invisible in the docs. Check the rendering with `task docserve`.
@@ -243,8 +243,14 @@ raise ValueError(
 
 ## Documentation
 
-MkDocs + Material + mkdocstrings, sources in `docs/`. Internal links use a specific
-syntax: `[dq.sesolve()][dynamiqs.sesolve]` for a function (keep the `()`),
+Zensical (modern theme) + mkdocstrings, configured in `zensical.toml`, sources in `docs/`.
+The per-function API pages are generated into `docs/python_api/<section>/` (git-ignored)
+by `docs/generate_python_api.py`, which `task docbuild`/`task docserve` run first. Lines
+of docstring examples calling `renderfig`/`rendergif`/`default_mpl_style` or showing
+`[...]` are hidden by the griffe extension `docs/griffe_strip_lines.py`; in markdown
+pages, put `renderfig(...)` in a Sybil `<!-- invisible-code-block: python -->` instead.
+
+Internal links use a specific syntax: `[dq.sesolve()][dynamiqs.sesolve]` for a function (keep the `()`),
 `[dq.Options][dynamiqs.Options]` for a class, and `(doc page)(relative/path.md)` for
 another page (parentheses, not brackets). Icons are `:material-*`. Every code example in
 `docs/**.md` is executed by CI, so it must run.

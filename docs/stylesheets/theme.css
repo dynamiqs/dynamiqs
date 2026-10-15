@@ -30,8 +30,6 @@ Description: Color theme of the Dynamiqs documentation
   --md-default-bg-color-base: 255, 255, 255;
   --md-default-bg-color: rgb(var(--md-default-bg-color-base));  --md-default-bg-header-color: #f5f5f5;
 
-  /* Header color */
-  --md-header-main-color: #000000a5;
 
   /* Code highlight */
   --md-code-fg-color: #39464b;
@@ -53,19 +51,19 @@ Description: Color theme of the Dynamiqs documentation
 
   /* Warning color shades */
   --md-warning-fg-color: #e190b0;
-  --md-warning-bg-color: #fbdde9;
+  --md-warning-bg-color: #fdeef4;
 
   /* Note color shades */
   --md-note-fg-color: #25adab;
-  --md-note-bg-color: #cfe8e8;
+  --md-note-bg-color: #e7f3f3;
 
   /* Example color shades */
   --md-example-fg-color: #3E517A;
-  --md-example-bg-color: #c9cfde;
+  --md-example-bg-color: #e4e7ef;
 
   /* See also color shades */
   --md-seealso-fg-color: #3E517A;
-  --md-seealso-bg-color: #c9cfde;
+  --md-seealso-bg-color: #e4e7ef;
 
   /* Home page */
   --homepage-gradient:  linear-gradient(to right bottom, #d15540, #d86854, #de7a68, #e38b7c, #e79d90);
@@ -88,8 +86,6 @@ Description: Color theme of the Dynamiqs documentation
   --md-default-bg-color: rgb(var(--md-default-bg-color-base));  --md-default-bg-header-color: rgb(62, 66, 72);
   --md-code-bg-color: var(--md-default-bg-header-color);
 
-  /* Header color */
-  --md-header-main-color: #ffffffc8;
 
   /* Primary font color */
   --md-default-fg-color: #ececec;
