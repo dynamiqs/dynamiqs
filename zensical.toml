@@ -262,7 +262,7 @@ nav = [
 [project.theme]
 variant = "modern"
 custom_dir = "docs/overrides"
-logo = "media/logo.png"
+logo = "media/logo.svg"
 favicon = "media/favicon.svg"
 features = [
   "navigation.tabs",

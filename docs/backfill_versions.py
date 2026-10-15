@@ -40,6 +40,8 @@ THEME_FILES = [
     'docs/javascripts',
     'docs/templates',
     'docs/griffe_strip_lines.py',
+    'docs/media/logo.svg',
+    'docs/media/favicon.svg',
 ]
 
 # stands in for `mkdocs_gen_files` in the `generate_python_api.py` of past releases
