@@ -12,7 +12,7 @@ from dynamiqs.integrators.core.unrolled_solvers import _UnrolledERK
 from ..order import TEST_INSTANT, TEST_LONG, TEST_SHORT
 
 
-def _solve(gradient=None):
+def _solve(gradient=None, *, time_dependent_loss=False):
     # a driven, damped cavity with a pulse edge (a jump time), and its derivative
     # with respect to the drive amplitude
     a = dq.destroy(8)
@@ -24,9 +24,12 @@ def _solve(gradient=None):
             a + a.dag(),
             discontinuity_ts=[0.7],
         )
+        loss = 0.5 * a
+        if time_dependent_loss:
+            loss = dq.modulated(lambda t: 0.5 + 0.2 * jnp.cos(2.0 * t), a)
         result = dq.mesolve(
             H,
-            [0.5 * a],
+            [loss],
             dq.fock(8, 0),
             tsave,
             exp_ops=[a.dag() @ a],
@@ -79,6 +82,39 @@ def test_unrolled_matches_diffrax(monkeypatch, diffrax_reference, backend, odd):
     assert jnp.allclose(value, value_ref, rtol=1e-5)
     assert jnp.allclose(jvp, jvp_ref, rtol=1e-4)
     assert jnp.allclose(vjp, vjp_ref, rtol=1e-4)
+
+
+@pytest.mark.run(order=TEST_LONG)
+@pytest.mark.usefixtures('_double_precision')
+def test_unrolled_time_dependent_jump_operators(monkeypatch):
+    # the unrolled stages compute the products L^dag L of all their stages at once:
+    # with a time-dependent jump operator, the solve and its derivatives in forward
+    # and reverse mode are Diffrax's (double precision: in single precision, the
+    # GPU path and Diffrax take different numbers of steps, before and after this)
+    def run():
+        jax.clear_caches()
+        solve = _solve(time_dependent_loss=True)
+        jvp = jax.jacfwd(
+            lambda x: _solve(dq.gradient.Forward(), time_dependent_loss=True)(x)[0]
+        )(1.3)
+        vjp = jax.grad(
+            lambda x: _solve(
+                dq.gradient.BackwardCheckpointed(), time_dependent_loss=True
+            )(x)[0]
+        )(1.3)
+        return (*solve(1.3), jvp, vjp)
+
+    monkeypatch.setattr(jax, 'default_backend', lambda: 'cpu')
+    monkeypatch.setattr(_UnrolledERK, '_supported', lambda *args: False)  # noqa: ARG005
+    value_ref, steps_ref, jvp_ref, vjp_ref = run()
+    monkeypatch.undo()
+    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
+    value, steps, jvp, vjp = run()
+    jax.clear_caches()
+    assert steps == steps_ref
+    assert jnp.allclose(value, value_ref, rtol=1e-10)
+    assert jnp.allclose(jvp, jvp_ref, rtol=1e-8)
+    assert jnp.allclose(vjp, vjp_ref, rtol=1e-8)
 
 
 @pytest.fixture
@@ -255,6 +291,14 @@ def test_unrolled_stages_reuse_the_vector_field_trace(monkeypatch):
         tsave = jnp.linspace(0.0, 2.0, 11)
         return dq.mesolve(H, [0.5 * a], dq.fock(8, 0), tsave, progress_meter=False)
 
+    staged = []
+    stage_vector_fields = unrolled_solvers._stage_vector_fields
+
+    def spy(f, terms, times):
+        staged.append(isinstance(terms.term, unrolled_solvers.StagedODETerm))
+        return stage_vector_fields(f, terms, times)
+
+    monkeypatch.setattr(unrolled_solvers, '_stage_vector_fields', spy)
     counts = {}
     for backend in ('cpu', 'gpu'):
         monkeypatch.setattr(jax, 'default_backend', lambda b=backend: b)
@@ -265,3 +309,50 @@ def test_unrolled_stages_reuse_the_vector_field_trace(monkeypatch):
     jax.clear_caches()
     # the unrolled stages (gpu) trace it about as often as the stage loop (cpu)
     assert counts['gpu'] <= counts['cpu'] + 4
+    # and prepare the products L^dag L of all their stages at once
+    assert staged
+    assert all(staged)
+
+
+@pytest.mark.run(order=TEST_LONG)
+@pytest.mark.usefixtures('_double_precision')
+@pytest.mark.parametrize('backward', [False, True], ids=['forward', 'backward'])
+def test_staged_term_prepares_its_stages_at_once(monkeypatch, backward):
+    # an unrolled step prepares a staged term at all its stage times in one call, and
+    # takes the steps of the same vector field written out as one function, also
+    # backward in time (where Diffrax reverses the time of the term)
+    generator = jnp.array([[0.0, 1.0], [1.0, 0.5]]) - 0.1j * jnp.eye(2)
+    calls = []
+
+    def prepare(t):
+        calls.append(t)
+        return jnp.cos(3.0 * t) * generator
+
+    def apply(t, generator_t, y):
+        return -1j * jnp.exp(-0.1 * t) * generator_t @ y
+
+    def solve(term):
+        t0, t1 = (2.0, 0.0) if backward else (0.0, 2.0)
+        solution = dx.diffeqsolve(
+            term,
+            unrolled_solvers.UnrolledTsit5(),
+            t0=t0,
+            t1=t1,
+            dt0=None,
+            y0=jnp.array([1.0, 0.0], dtype=jnp.complex128),
+            saveat=dx.SaveAt(ts=jnp.linspace(t0, t1, 11)),
+            stepsize_controller=dx.PIDController(rtol=1e-8, atol=1e-8),
+        )
+        return solution.ys, solution.stats['num_steps']
+
+    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
+    jax.clear_caches()
+    ys, steps = solve(dx.ODETerm(lambda t, y, _: apply(t, prepare(t), y)))
+    plain_calls = len(calls)
+    calls.clear()
+    staged_ys, staged_steps = solve(unrolled_solvers.StagedODETerm(prepare, apply))
+    jax.clear_caches()
+    assert staged_steps == steps
+    assert jnp.allclose(staged_ys, ys, rtol=1e-12, atol=1e-12)
+    # tracing a step prepares its six stages in one call, not six
+    assert len(calls) <= plain_calls / 3

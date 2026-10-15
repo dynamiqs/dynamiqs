@@ -37,6 +37,7 @@ import jax.numpy as jnp
 import jax.tree_util as jtu
 import numpy as np
 from diffrax._custom_types import Args, BoolScalarLike, RealScalarLike, Y
+from diffrax._term import WrapTerm
 from jax.experimental import layout
 from jaxtyping import Array, ArrayLike, PyTree
 
@@ -146,6 +147,53 @@ def _odd_sized_trees(
     arrays = [treedef.flatten_up_to(tree) for tree in trees]
     outs = [_odd_sized(fn, *xs) for xs in zip(*arrays, strict=True)]
     return tuple(treedef.unflatten(list(x)) for x in zip(*outs, strict=True))
+
+
+class StagedODETerm(dx.ODETerm):
+    """An ODE term whose vector field is `apply(t, prepare(t), y)`, where `prepare`
+    computes what depends on time only. An unrolled step prepares all its stages at
+    once, under `jax.vmap` over t (see `_stage_vector_fields`).
+    """
+
+    prepare: Callable[[RealScalarLike], PyTree]
+    apply: Callable[[RealScalarLike, PyTree, Y], PyTree]
+
+    def __init__(
+        self,
+        prepare: Callable[[RealScalarLike], PyTree],
+        apply: Callable[[RealScalarLike, PyTree, Y], PyTree],
+    ):
+        self.prepare = prepare
+        self.apply = apply
+        self.vector_field = lambda t, y, _: apply(t, prepare(t), y)
+
+
+def _stage_vector_fields(
+    f: Callable[[RealScalarLike, Y], PyTree],
+    terms: dx.AbstractTerm,
+    times: list[RealScalarLike],
+) -> list[Callable[[Y], PyTree]]:
+    # The vector field at each of `times`, as a function of the state. A
+    # `StagedODETerm` (under Diffrax's `WrapTerm`, which reverses time for a backward
+    # solve) is prepared at all the times in one call: prepared per stage, XLA
+    # compiles each copy on its own, which doubled the first call of a solve with
+    # time-dependent jump operators on an A100, for the same kernels. Each stage then
+    # goes through `WrapTerm.vf`, like the first stage (a `StagedODETerm` takes no
+    # args).
+    if not (isinstance(terms, WrapTerm) and isinstance(terms.term, StagedODETerm)):
+        return [lambda y, t=t: f(t, y) for t in times]
+    term = terms.term
+    prepared = jax.vmap(term.prepare)(terms.direction * jnp.stack(times))
+    vector_fields = []
+    for i, t in enumerate(times):
+        stage = dx.ODETerm(
+            lambda t, y, _, i=i: term.apply(
+                t, jtu.tree_map(lambda x: x[i], prepared), y
+            )
+        )
+        stage_terms = eqx.tree_at(lambda wrap: wrap.term, terms, stage)
+        vector_fields.append(lambda y, t=t, w=stage_terms: w.vf(t, y, None))
+    return vector_fields
 
 
 class _UnrolledERK(dx.AbstractERK):
@@ -280,11 +328,12 @@ class _UnrolledERK(dx.AbstractERK):
 
         # the tableaus unrolled here (Tsit5, Dopri5, Dopri8) have several stages
         stages = list(zip(tableau.c, tableau.a_lower, strict=True))
+        times = [_stage_time(t0, t1, dt, c) for c, _ in stages]
+        vector_fields = _stage_vector_fields(f, terms, times)
         a = stages[0][1]
         (yi,) = odd_sized_stages(lambda y0, k, a=a: (_combine(y0, a, [k]),), y0, ks[0])
-        for i, (c, _) in enumerate(stages):
-            ti = _stage_time(t0, t1, dt, c)
-            fi = f(ti, yi)
+        for i, vector_field in enumerate(vector_fields):
+            fi = vector_field(yi)
             if i + 1 < len(stages):
                 ki, yi = next_stage(terms.prod(fi, control), stages[i + 1][1])
             else:

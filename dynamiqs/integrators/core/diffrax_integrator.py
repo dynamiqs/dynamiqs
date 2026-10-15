@@ -40,7 +40,12 @@ from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .jump_clip_controller import JumpClipController
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
-from .unrolled_solvers import UnrolledDopri5, UnrolledDopri8, UnrolledTsit5
+from .unrolled_solvers import (
+    StagedODETerm,
+    UnrolledDopri5,
+    UnrolledDopri8,
+    UnrolledTsit5,
+)
 
 # `jax.Inline.JAX_LATE` (jax >= 0.11) keeps a jitted function as one call in the
 # jaxpr, so that JAX traces and differentiates it once, and inlines it into the
@@ -233,7 +238,12 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             # differentiates it once; it is inlined when lowered, so XLA compiles the
             # same program
             terms = self.terms
-            if isinstance(terms, dx.ODETerm):
+            if isinstance(terms, StagedODETerm):
+                terms = StagedODETerm(
+                    jax.jit(terms.prepare, inline=_INLINE),
+                    jax.jit(terms.apply, inline=_INLINE),
+                )
+            elif isinstance(terms, dx.ODETerm):
                 terms = eqx.tree_at(
                     lambda term: term.vector_field,
                     terms,
@@ -443,28 +453,41 @@ class MESolveDiffraxIntegrator(
         # of (2), and its transpose, takes a pass over rho), unless its terms read too
         # many shifted copies of rho: it then returns None.
 
-        def vector_field_unvec_sparsedia(t, y, _):  # noqa: ANN001, ANN202
-            L, H = self.L(t), self.H(t)
-            half_LdL = 0.5 * sum([_L.dag() @ _L for _L in L])
+        # The products L^dag L depend on time only. In sparse DIA format, the term
+        # computes them apart (`StagedODETerm`), so that an unrolled step computes
+        # those of all its stages at once; H(t) and L(t) stay in the vector field,
+        # where XLA fuses them into the kernels that apply them.
+
+        implicit = isinstance(self.diffrax_solver, dx.AbstractImplicitSolver)
+
+        def jump_products(t):  # noqa: ANN001, ANN202
+            # [0.5 * sum_k L_k^dag L_k], or [] without jump operators: the vector
+            # fields sum this list, so that they get the Python 0 that `H - 0` skips
+            # (prepared under vmap, 0.5 * sum([]) would be an array)
+            return [0.5 * sum([_L.dag() @ _L for _L in self.L(t)])] if self.Ls else []
+
+        def apply_unfused(t, products, y):  # noqa: ANN001, ANN202
+            # (2) needs a Hermitian rho and is not holomorphic (see above)
+            if self.options.assume_hermitian and not implicit:
+                return apply_hermitian(t, products, y)
+            return apply_standard(t, products, y)
+
+        def apply_sparsedia(t, products, y):  # noqa: ANN001, ANN202
+            L, H, half_LdL = self.L(t), self.H(t), sum(products)
             fused = lindbladian_sparsedia_terms(
                 -1j * H - half_LdL, 1j * H - half_LdL, L, y
             )
-            if fused is not None:
-                return fused
-            if self.options.assume_hermitian and not implicit:
-                return vector_field_unvec_hermitian(t, y, _)
-            return vector_field_unvec_standard(t, y, _)
+            return apply_unfused(t, products, y) if fused is None else fused
 
-        def vector_field_unvec_standard(t, y, _):  # noqa: ANN001, ANN202
-            L, H = self.L(t), self.H(t)
-            half_LdL = 0.5 * sum([_L.dag() @ _L for _L in L])
+        def apply_standard(t, products, y):  # noqa: ANN001, ANN202
+            L, H, half_LdL = self.L(t), self.H(t), sum(products)
             nojump_term = (-1j * H - half_LdL) @ y + y @ (1j * H - half_LdL)
             jump_term = sum([_L @ y @ _L.dag() for _L in L])
             return nojump_term + jump_term
 
-        def vector_field_unvec_hermitian(t, y, _):  # noqa: ANN001, ANN202
-            L, H = self.L(t), self.H(t)
-            Hnh = -1j * H - 0.5 * sum([_L.dag() @ _L for _L in L])
+        def apply_hermitian(t, products, y):  # noqa: ANN001, ANN202
+            L, H, half_LdL = self.L(t), self.H(t), sum(products)
+            Hnh = -1j * H - half_LdL
             tmp = Hnh @ y + 0.5 * sum([_L @ y @ _L.dag() for _L in L])
             return tmp + tmp.dag()
 
@@ -472,17 +495,11 @@ class MESolveDiffraxIntegrator(
             L, H = self.L(t), self.H(t)
             return slindbladian(H, L) @ y
 
-        implicit = isinstance(self.diffrax_solver, dx.AbstractImplicitSolver)
         if self.options.vectorized:
-            vector_field = vector_field_vec
-        elif self._are_operators_sparsedia():
-            vector_field = vector_field_unvec_sparsedia
-        elif self.options.assume_hermitian and not implicit:
-            vector_field = vector_field_unvec_hermitian
-        else:
-            vector_field = vector_field_unvec_standard
-
-        return dx.ODETerm(vector_field)
+            return dx.ODETerm(vector_field_vec)
+        if self._are_operators_sparsedia():
+            return StagedODETerm(jump_products, apply_sparsedia)
+        return dx.ODETerm(lambda t, y, _: apply_unfused(t, jump_products(t), y))
 
     def _are_operators_sparsedia(self) -> bool:
         # whether H(t), the jump operators and the state allow the fused Lindbladian
