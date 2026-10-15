@@ -110,7 +110,7 @@ layout covered; a stochastic property test without its control; and a tolerance
 loosened in an existing test, which usually hides a regression.
 
 **API and documentation**
-- New public function registered in `__all__`, `mkdocs.yml`, **and**
+- New public function registered in `__all__`, the `nav` of `zensical.toml`, **and**
   `docs/python_api/index.md` (the last two are the usual omission).
 - `QArrayLike` in / `QArray` out, full annotations, validation through
   `dynamiqs/_checks.py`, a name that fits the flat `dq.*` namespace.

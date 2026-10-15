@@ -71,9 +71,11 @@ for i in range(ntrajs):
         xlabel=r'time $t$',
         ylabel='Pauli expectation values',
     )
-
-renderfig('jump-monitored-qubit-trajs')
 ```
+
+<!-- invisible-code-block: python
+renderfig('jump-monitored-qubit-trajs')
+-->
 
 ![plot_jump_monitored_qubit_trajs](../../figs_docs/jump-monitored-qubit-trajs.png){.fig}
 
@@ -118,9 +120,11 @@ for i in range(ntrajs):
         xlabel=r'time $t$',
         ylabel='Pauli expectation values',
     )
-
-renderfig('jump-monitored-qubit-eta-trajs')
 ```
+
+<!-- invisible-code-block: python
+renderfig('jump-monitored-qubit-eta-trajs')
+-->
 
 ![plot_jump_monitored_qubit_eta_trajs](../../figs_docs/jump-monitored-qubit-eta-trajs.png){.fig}
 
@@ -198,8 +202,10 @@ plt.plot(
 
 plt.gca().set(xlabel=r'time $t$', ylabel=r'$\langle a^\dagger a \rangle_t$')
 plt.legend()
-
-renderfig('jump-monitored-oscillator-trajs')
 ```
+
+<!-- invisible-code-block: python
+renderfig('jump-monitored-oscillator-trajs')
+-->
 
 ![plot_jump_monitored_oscillator_trajs](../../figs_docs/jump-monitored-oscillator-trajs.png){.fig}

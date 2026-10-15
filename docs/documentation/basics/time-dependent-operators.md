@@ -163,8 +163,11 @@ We can use [`dq.plot.pwc_pulse()`][dynamiqs.plot.pwc_pulse] to plot the PWC puls
 ```python
 dq.plot.pwc_pulse(H.times, H.values)
 plt.gca().set(xlabel='Time $t$')
-renderfig('tqarray_plot_pwc_pulse')
 ```
+
+<!-- invisible-code-block: python
+renderfig('tqarray_plot_pwc_pulse')
+-->
 
 ![tqarray_plot_pwc_pulse](../../figs_docs/tqarray_plot_pwc_pulse.png){.fig}
 
@@ -223,8 +226,11 @@ We can use the `prefactor()` method to plot $f(t)$ at different times:
 ts = jnp.linspace(-1.0, 1.0, 501)
 plt.plot(ts, H.prefactor(ts))
 plt.gca().set(xlabel='Time $t$', ylabel='$f(t)$')
-renderfig('tqarray_plot_modulated')
 ```
+
+<!-- invisible-code-block: python
+renderfig('tqarray_plot_modulated')
+-->
 
 ![tqarray_plot_modulated](../../figs_docs/tqarray_plot_modulated.png){.fig}
 
@@ -349,8 +355,11 @@ ax0.set(xlabel='Time $t$', ylabel='$f(t)$', title='H')
 
 ax1.plot(ts, H_clipped.prefactor(ts))
 ax1.set(xlabel='Time $t$', title='H.clip(0, 1)')
-renderfig('tqarray_plot_clip')
 ```
+
+<!-- invisible-code-block: python
+renderfig('tqarray_plot_clip')
+-->
 
 ![tqarray_plot_clip](../../figs_docs/tqarray_plot_clip.png){.fig}
 
@@ -394,7 +403,10 @@ ax1.set(title='H.shift(0.5)')
 
 ax2.plot(ts, H_clipped_shift.prefactor(ts))
 ax2.set(xlabel='Time $t$', title='H.clip(0, 1).shift(0.5)')
-renderfig('tqarray_plot_shift')
 ```
+
+<!-- invisible-code-block: python
+renderfig('tqarray_plot_shift')
+-->
 
 ![tqarray_plot_shift](../../figs_docs/tqarray_plot_shift.png){.fig}
