@@ -212,7 +212,8 @@ def test_cat():
     # batching over alpha matches the manually stacked result
     state1 = dq.cat(dim, alphas)
     state2 = dq.stack([dq.cat(dim, a) for a in alphas])
-    assert np.allclose(state1, state2)
+    # single precision: the batched and stacked results differ by round-off on GPU
+    assert np.allclose(state1, state2, atol=1e-6)
     assert state1.shape == (3, dim, 1)
 
     # alpha and theta are broadcast together
