@@ -27,7 +27,7 @@ dependencies = [
     # jax!=0.7.0,!=0.7.1 because of diffrax compatibility issues, see https://github.com/patrick-kidger/diffrax/issues/680
     "jax>=0.4.36,!=0.7.0,!=0.7.1",
     "jaxtyping",
-    "diffrax>=0.6.1", # for complex support (0.5.0), progress meter (0.5.1), compatibility with jax 0.4.36 (0.6.1)
+    "diffrax>=0.7.2", # for complex support (0.5.0), progress meter (0.5.1), `ClipStepSizeController` as an adaptive controller (0.7.1), fixed `VeryChord` divergence check for implicit solvers (0.7.2)
     "equinox",
     "optimistix", # for typing of root-finding in Event method
     "pillow",
@@ -55,18 +55,11 @@ dev = [
     "pytest-split",
     "pytest-sugar",
     "pytest-xdist",
-    "mkdocs-material",
-    "mkdocstrings[python]!=1.12.0", # bug with parsing strings in signatures, see https://github.com/mkdocstrings/python/issues/191
-    "mkdocs-gen-files",
-    "mkdocs-literate-nav",
-    "mkdocs-section-index",
-    "mkdocs-simple-hooks",
-    "mkdocs-glightbox",
-    "mkdocs-exclude",
+    "zensical==0.0.70",
+    "mkdocstrings[python]>=1.0.7",  # >=1.0.7 to support recent pymdown-extensions
     "sybil>=6",
     "black",  # needed by mkdocstrings to format function signatures
     "flit",
-    "mike",
     "optax",  # for gradient descent tutorials
     "ty",
 ]
@@ -183,11 +176,11 @@ cmd = 'task doctest-code && task doctest-docs'
 help = "check all examples (doctest)"
 
 [tool.taskipy.tasks.docbuild]
-cmd = 'mkdocs build'
+cmd = 'python docs/generate_python_api.py && zensical build --clean'
 help = "build the documentation website"
 
 [tool.taskipy.tasks.docserve]
-cmd = 'mkdocs serve'
+cmd = 'python docs/generate_python_api.py && zensical serve'
 help = "preview documentation website with hot-reloading"
 
 [tool.taskipy.tasks.all]

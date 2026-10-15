@@ -12,7 +12,11 @@ Description: Extra CSS for the Dynamiqs documentation
 .md-tabs {
   background-color: var(--md-default-bg-header-color);
   color: var(--md-typeset-color);
-  box-shadow: 0 0 .2rem #0000001a, 0 .0rem .6rem #0001;
+}
+
+/* Active tab underlined in the primary color, like the active sidebar item */
+.md-tabs__item--active {
+  border-bottom: .1rem solid var(--md-primary-fg-color);
 }
 
 .md-search__form {
@@ -27,23 +31,6 @@ Description: Extra CSS for the Dynamiqs documentation
   background-color: #0000001f;
 }
 
-/* Header background extension - ensures area above header matches header color */
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 50%;
-  background-color: var(--md-default-bg-header-color);
-  z-index: -1;
-}
-
-/* Footer background extension - ensures area below footer matches footer color */
-html {
-  background-color: var(--md-footer-bg-color);
-}
-
 .md-footer-meta {
     background-color: transparent;
 }
@@ -53,7 +40,12 @@ html {
   opacity: 1.0;
 }
 
-.md-header__topic * {
+/* Site title in a lighter weight than the default bold */
+.md-header__topic:first-child {
+  font-weight: 500;
+}
+
+.md-header__topic + .md-header__topic * {
   font-weight: 400;
 }
 
@@ -133,14 +125,16 @@ html {
 }
 
 
-/* Note admonition color shades */
+/* Admonitions: the whole box is tinted with the type color, with a left border */
 .md-typeset .admonition,
 .md-typeset details,
 .md-typeset .admonition.note,
 .md-typeset details.note,
 .md-typeset .admonition.info,
 .md-typeset details.info {
-  border-color: var(--md-note-fg-color);
+  background-color: var(--md-note-bg-color);
+  border-left: .2rem solid var(--md-note-fg-color);
+  margin: 1.0em 0;
 }
 
 .md-typeset .admonition-title::before,
@@ -161,18 +155,9 @@ html {
   color: var(--md-note-fg-color);
 }
 
-.md-typeset .admonition-title,
-.md-typeset summary,
-.md-typeset .note>.admonition-title,
-.md-typeset .note>summary,
-.md-typeset .info>.admonition-title,
-.md-typeset .info>summary {
-  background-color: var(--md-note-bg-color);
-}
-
-/* Warning admonition color shades */
 .md-typeset .admonition.warning,
 .md-typeset details.warning {
+  background-color: var(--md-warning-bg-color);
   border-color: var(--md-warning-fg-color);
 }
 
@@ -186,14 +171,9 @@ html {
   color: var(--md-warning-fg-color);
 }
 
-.md-typeset .warning>.admonition-title,
-.md-typeset .warning>summary {
-  background-color: var(--md-warning-bg-color);
-}
-
-/* Example admonition color shades */
 .md-typeset .admonition.example,
 .md-typeset details.example {
+  background-color: var(--md-example-bg-color);
   border-color: var(--md-example-fg-color);
 }
 
@@ -207,51 +187,24 @@ html {
   color: var(--md-example-fg-color);
 }
 
-.md-typeset .example>.admonition-title,
-.md-typeset .example>summary {
-  background-color: var(--md-example-bg-color);
-}
-
-/* Add a "See also" admonition */
+/* "See also" admonition */
 .md-typeset .admonition.see-also,
 .md-typeset details.see-also {
-border-color: var(--md-seealso-fg-color);
-}
-.md-typeset .see-also > .admonition-title,
-.md-typeset .see-also > summary {
-background-color: var(--md-seealso-bg-color);
-}
-.md-typeset .see-also > .admonition-title::before,
-.md-typeset .see-also > summary::before {
-background-color: var(--md-seealso-fg-color);
--webkit-mask-image: var(--md-admonition-icon--see-also);
-        mask-image: var(--md-admonition-icon--see-also);
+  background-color: var(--md-seealso-bg-color);
+  border-color: var(--md-seealso-fg-color);
 }
 
-/* Admonition styling */
-.md-typeset .admonition,
-.md-typeset details,
-.md-typeset .admonition.note,
-.md-typeset details.note,
-.md-typeset .admonition.info,
-.md-typeset details.info,
-.md-typeset .admonition.example,
-.md-typeset details.example {
-  margin: 1.0em 0;
+.md-typeset .see-also>.admonition-title::before,
+.md-typeset .see-also>summary::before {
+  background-color: var(--md-seealso-fg-color);
+  -webkit-mask-image: var(--md-admonition-icon--see-also);
+          mask-image: var(--md-admonition-icon--see-also);
 }
 
-.md-typeset .admonition,
-.md-typeset details {
-    border-left: .2rem solid var(--md-note-fg-color);
-    border-right: none;
-    border-top: none;
-    border-bottom: none;
-}
-
-.md-typeset .admonition-title:before,
-.md-typeset summary:before {
-  height:0.9rem;
-  width:0.9rem;
+.md-typeset .admonition-title::before,
+.md-typeset summary::before {
+  height: 0.9rem;
+  width: 0.9rem;
 }
 
 /* Page spacing */
@@ -260,7 +213,7 @@ background-color: var(--md-seealso-fg-color);
   font-size: 0.72rem;
 }
 
-p {
+.md-typeset p {
   margin: 0.5em 0;
 }
 
@@ -304,20 +257,32 @@ p {
 }
 
 @media screen and (min-width: 76.25em) {
-    .md-nav__link {
-        margin-top: 0.325em;
+    /* Compact sidebar items, the modern theme spaces them out for touch targets */
+    .md-sidebar .md-nav__link {
+        margin-top: 0;
+        padding-top: 0.15rem;
+        padding-bottom: 0.15rem;
     }
 
-    .md-nav__container > .md-nav__link {
-        margin-bottom: 0.0em;
+    /* Highlight of clickable items as tall as the spacing between them, the negative
+       margins offset the extra padding so that items stay as close together */
+    .md-sidebar .md-nav__item:not(.md-nav__item--section) > .md-nav__link {
+        margin-top: -0.1rem;
+        margin-bottom: -0.1rem;
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
     }
 
     .md-nav__item--section {
-        margin: 0 0 1.25em 0;
+        margin: 0 0 1em 0;
+    }
+
+    .md-nav__item--section > .md-nav__link {
+        margin-bottom: 0.3em;
     }
 
     .md-nav--lifted > .md-nav__list > .md-nav__item--active > .md-nav__link {
-        margin-bottom: 1em;
+        margin-bottom: 0.6em;
     }
 
     [dir="ltr"] .md-nav__item--section > .md-nav {
@@ -364,7 +329,7 @@ p {
   display: inline;
 }
 
-p {
+.md-typeset p {
   text-align: justify;
 }
 
@@ -392,7 +357,6 @@ article.md-typeset h1 {
   font-size: 2em;
   letter-spacing: -0.01em;
   font-family: var(--md-header-font-family);
-  color: var(--md-header-main-color);
 }
 
 .md-typeset h2 {
