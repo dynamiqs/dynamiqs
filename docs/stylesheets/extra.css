@@ -264,6 +264,15 @@ Description: Extra CSS for the Dynamiqs documentation
         padding-bottom: 0.15rem;
     }
 
+    /* Highlight of clickable items as tall as the spacing between them, the negative
+       margins offset the extra padding so that items stay as close together */
+    .md-sidebar .md-nav__item:not(.md-nav__item--section) > .md-nav__link {
+        margin-top: -0.1rem;
+        margin-bottom: -0.1rem;
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+    }
+
     .md-nav__item--section {
         margin: 0 0 1em 0;
     }
