@@ -1,6 +1,6 @@
 ---
 name: docstring
-description: Write docstrings for Dynamiqs functions, classes and methods following the Dynamiqs conventions (Google-style with mkdocs quirks, KaTeX math, shape annotations, doctested examples). Use when writing or updating docstrings in Dynamiqs code.
+description: Write docstrings for Dynamiqs functions, classes and methods following the Dynamiqs conventions (Google-style with mkdocstrings quirks, KaTeX math, shape annotations, doctested examples). Use when writing or updating docstrings in Dynamiqs code.
 ---
 
 # Write a Dynamiqs docstring
@@ -19,8 +19,8 @@ is Google-style with Dynamiqs-specific quirks. The reference docstrings are in
    `uv run pytest dynamiqs/<module>.py -q`.
 4. For math, admonitions, or a new page, check the rendering with `uv run task
    docserve`.
-5. For a *new* public function, also add it to `__all__`, `mkdocs.yml`, and
-   `docs/python_api/index.md`.
+5. For a *new* public function, also add it to `__all__`, the `nav` of
+   `zensical.toml`, and `docs/python_api/index.md`.
 
 ## Template
 
@@ -93,7 +93,7 @@ surprise a physicist ($\hbar=1$, normalization).
 - For examples producing a figure, follow the `renderfig` pattern of the plot
   docstrings.
 
-**See also.** mkdocs cross-reference syntax: `[dq.sesolve()][dynamiqs.sesolve]` for a
+**See also.** mkdocstrings cross-reference syntax: `[dq.sesolve()][dynamiqs.sesolve]` for a
 function (keep the `()` in the label), `[dq.Options][dynamiqs.Options]` for a class, and
 `(doc page)(relative/path.md)` for a documentation page.
 

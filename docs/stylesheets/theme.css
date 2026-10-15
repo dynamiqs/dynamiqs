@@ -53,19 +53,19 @@ Description: Color theme of the Dynamiqs documentation
 
   /* Warning color shades */
   --md-warning-fg-color: #e190b0;
-  --md-warning-bg-color: #fbdde9;
+  --md-warning-bg-color: #fdeef4;
 
   /* Note color shades */
   --md-note-fg-color: #25adab;
-  --md-note-bg-color: #cfe8e8;
+  --md-note-bg-color: #e7f3f3;
 
   /* Example color shades */
   --md-example-fg-color: #3E517A;
-  --md-example-bg-color: #c9cfde;
+  --md-example-bg-color: #e4e7ef;
 
   /* See also color shades */
   --md-seealso-fg-color: #3E517A;
-  --md-seealso-bg-color: #c9cfde;
+  --md-seealso-bg-color: #e4e7ef;
 
   /* Home page */
   --homepage-gradient:  linear-gradient(to right bottom, #d15540, #d86854, #de7a68, #e38b7c, #e79d90);
