@@ -5,7 +5,7 @@ import jax.numpy as jnp
 from jax import Array
 
 import dynamiqs as dq
-from dynamiqs.method import Method
+from dynamiqs.method import Event, Method
 
 from .systems.stochastic_system import StochasticSystem
 
@@ -29,6 +29,21 @@ def cross_trajectory_infidelity(result) -> Array:
     # back-action makes the trajectories differ.
     states = dq.unit(result.states, psd=True)
     return 1 - dq.overlap(states[0:1], states)
+
+
+def is_smart_sampled(result) -> bool:
+    return isinstance(result.method, Event) and result.method.smart_sampling
+
+
+def trajectory_moments(result, samples: Array, noclick_sample: Array | float = 0.0):
+    # Mean and variance over axis 0 of the trajectory-wise `samples`, as for an
+    # unconditional ensemble. With Event(smart_sampling=True) the saved trajectories
+    # are conditioned on at least one click, and the no-click trajectory (sampled
+    # once, with value `noclick_sample`) carries the weight p0 = noclick_prob.
+    p0 = result.infos.noclick_prob if is_smart_sampled(result) else 0.0
+    mean = p0 * noclick_sample + (1 - p0) * samples.mean(axis=0)
+    second_moment = p0 * noclick_sample**2 + (1 - p0) * (samples**2).mean(axis=0)
+    return mean, second_moment - mean**2
 
 
 def _keys(seed: int, ntrajs: int) -> Array:
@@ -119,14 +134,14 @@ class StochasticTester:
         # click count over [0, T) is Poisson(gamma T): mean = var = gamma T. The
         # tolerances are 5-sigma Monte Carlo confidence bounds (scale as 1/sqrt(N)).
         result = system.run(self.SOLVER, method, _keys(seed, ntrajs))
-        nclicks = result.nclicks[..., 0]
+        mean, var = trajectory_moments(result, result.nclicks[..., 0])
         poisson_lambda = system.poisson_lambda()
         mean_standard_error = jnp.sqrt(poisson_lambda / ntrajs)
         variance_standard_error = jnp.sqrt(
             (poisson_lambda + 2 * poisson_lambda**2) / ntrajs
         )
-        assert jnp.abs(nclicks.mean() - poisson_lambda) < 5 * mean_standard_error
-        assert jnp.abs(nclicks.var() - poisson_lambda) < 5 * variance_standard_error
+        assert jnp.abs(mean - poisson_lambda) < 5 * mean_standard_error
+        assert jnp.abs(var - poisson_lambda) < 5 * variance_standard_error
 
     def _test_diffusive_statistics(
         self,
@@ -158,7 +173,10 @@ class StochasticTester:
     ):
         result = system.run(self.SOLVER, method, _keys(seed, ntrajs))
         pe = result.expects[..., 0, :].real  # (ntrajs, ntsave), exactly 0 or 1
-        mean, var = pe.mean(axis=0), pe.var(axis=0)
+        noclick_pe = 0.0
+        if is_smart_sampled(result):
+            noclick_pe = result.infos.noclick_expects[0].real
+        mean, var = trajectory_moments(result, pe, noclick_pe)
         p = system.excited_population(system.tsave)
         # 5-sigma Bernoulli Monte Carlo bound; the floor absorbs the t=0 point (zero
         # variance) and the O(dt) fixed-step bias
@@ -177,5 +195,5 @@ class StochasticTester:
         # control for _test_jump_statistics: the measured click rate rejects a wrong
         # rate (2 gamma instead of gamma)
         result = system.run(self.SOLVER, method, _keys(seed, ntrajs))
-        nclicks = result.nclicks[..., 0]
-        assert jnp.abs(nclicks.mean() - 2 * system.poisson_lambda()) > 5e-2
+        mean, _ = trajectory_moments(result, result.nclicks[..., 0])
+        assert jnp.abs(mean - 2 * system.poisson_lambda()) > 5e-2
