@@ -35,11 +35,56 @@ from .interfaces import MEInterface, SolveInterface
 from .save_mixin import SolveSaveMixin
 
 
+def _cholesky_qr2(A: Array) -> tuple[Array, Array]:
+    # Reduced QR factorization of a tall A (n x r) by CholeskyQR2 (Yamamoto et al.,
+    # ETNA 44, 306, 2015): R from the Cholesky factorization of A^dag A and Q = A R^-1,
+    # repeated once on Q to make it orthonormal to round-off. As accurate as the
+    # Householder QR for cond(A) up to ~1e7, and made of matrix products instead of
+    # column-by-column reflections. Where a Cholesky factorization fails (cond(A)
+    # above ~1e8, e.g. trial stages of a rejected step), the Gram matrix is shifted
+    # as in shifted CholeskyQR (Fukaya et al., SIAM J. Sci. Comput. 42, A477, 2020),
+    # so that Q R = A still holds and no NaN reaches the step-size controller.
+    n, rank = A.shape
+    eye = jnp.eye(rank, dtype=A.dtype)
+    unit_roundoff = jnp.finfo(A.dtype).eps / 2
+
+    def cholesky_r(gram: Array) -> tuple[Array, Array]:
+        # upper-triangular R with R^dag R = gram, and R^-1
+        shift = 11 * rank * (n + rank + 1) * unit_roundoff * jnp.trace(gram).real
+        lower, shifted = jnp.linalg.cholesky(jnp.stack([gram, gram + shift * eye]))
+        lower = jnp.where(jnp.all(jnp.isfinite(lower)), lower, shifted)
+        lower_inv = jsp_linalg.solve_triangular(lower, eye, lower=True)
+        return lower.conj().T, lower_inv.conj().T
+
+    r1, r1_inv = cholesky_r(_gram(A))
+    q1 = A @ r1_inv
+    r2, r2_inv = cholesky_r(_gram(q1))
+    return q1 @ r2_inv, r2 @ r1
+
+
+def _gram(A: Array) -> Array:
+    # A^dag A. On GPU, a single product sums the n terms of an entry with a rounding
+    # error that grows with n (CholeskyQR2's least-squares solves ~1.5x less accurate
+    # than Householder's at n = 21952), and XLA merges it with the other products of
+    # A by concatenating their operands, dense n x n operators included, at every
+    # evaluation. Summing the Gram matrices of blocks of 128 rows avoids both.
+    if jax.default_backend() != 'gpu':
+        return A.conj().T @ A
+    n, rank = A.shape
+    blocks = jnp.pad(A, ((0, -n % 128), (0, 0))).reshape(-1, 128, rank)
+    return (blocks.conj().mT @ blocks).sum(0)
+
+
 def _qr_cache(A: Array) -> tuple[Array, Array]:
     # Cache the QR factorization once per vector-field evaluation.
     # We do this explicitly so that AD uses the JVP rule below instead of
     # differentiating through the QR decomposition.
-    q, r = jnp.linalg.qr(A, mode='reduced')
+    # CholeskyQR2 needs cond(A) below ~1e8 in double precision, but ~3e3 in single
+    # precision, less than the factors' (1/perturbation_scale = 1e5 at t0 by default)
+    if A.dtype == jnp.complex128:
+        q, r = _cholesky_qr2(A)
+    else:
+        q, r = jnp.linalg.qr(A, mode='reduced')
     q = jax.lax.stop_gradient(q)
     r = jax.lax.stop_gradient(r)
     return q, r
