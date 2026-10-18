@@ -100,7 +100,7 @@ jax.config.update('jax_compilation_cache_dir', '/path/to/cache')
 
 or set the `JAX_COMPILATION_CACHE_DIR` environment variable before starting Python. A new process still traces the simulation, but loads its compiled program from this directory instead of compiling it, if an earlier process compiled the same program with the same jaxlib version, `XLA_FLAGS`, device and driver. Anything that changes the program, such as another Dynamiqs or JAX version, another precision or other solver options, compiles it again. Only programs that took more than one second to compile are stored (`jax_persistent_cache_min_compile_time_secs`), and the directory grows until you clear it. Do not use a directory that other users can write to: JAX runs the programs it loads from it.
 
-For example, on an NVIDIA A100 with JAX 0.11, in double precision, this shortens the first call of a `mesolve` of dimension 900 with nine jump operators (`Tsit5`, batch of 4) from 116 s to 27 s (17 s of which run the simulation), and that of a reverse-mode gradient through a `mesolve` of dimension 56 (batch of 4) from 16 s to 7 s. On CPU, compilation is a smaller part of the first call, and the gain is smaller.
+For example, in our benchmarks, this shortened the first call of a `mesolve` of Hilbert space dimension 900 from 116 s to 27 s (17 s of which run the simulation), and that of a reverse-mode gradient through a `mesolve` of dimension 56 from 16 s to 7 s. On CPU, compilation is a smaller part of the first call, and the gain is smaller.
 
 ## Advanced: environment variables
 
@@ -136,7 +136,7 @@ uv run task bench --tier physics --out after.json
 python -m benchmarks compare before.json after.json
 ```
 
-See [benchmarks/README.md](https://github.com/dynamiqs/dynamiqs/blob/main/benchmarks/README.md) for the list of cases and for instructions on running them on a GPU. To time your own simulation, remember that the first call includes compilation (unless the [persistent compilation cache](#reuse-compiled-programs-across-runs) holds it), and that JAX dispatches work asynchronously (use `jax.block_until_ready` on the result before stopping the clock):
+See [benchmarks/README.md](https://github.com/dynamiqs/dynamiqs/blob/main/benchmarks/README.md) for the list of cases and for instructions on running them on a GPU. To time your own simulation, remember that the first call includes compilation, and that JAX dispatches work asynchronously (use `jax.block_until_ready` on the result before stopping the clock):
 
 ```python
 import jax
