@@ -1,4 +1,3 @@
-import itertools
 import warnings
 
 import jax
@@ -16,7 +15,7 @@ from dynamiqs.qarrays.sparsedia_primitives import (
     _matmul_array_sparsedia,
     _matmul_sparsedia_array,
     _pad_on_gpu,
-    _pass_starts,
+    _passes,
 )
 
 from ..order import TEST_SHORT
@@ -308,12 +307,14 @@ class TestSparseDIAQArray:
             ([2] * 31, [32, 30]),
             # 48 shifts: passes of 24 would give 23, 24 and 1
             ([2] * 11 + [1] + [2] * 12 + [1], [25, 23]),
+            # 64 shifts: passes of 32 would give 31, 32 and 1
+            ([2] * 15 + [1] + [2] * 15 + [1] * 3, [32, 32]),
         ],
     )
-    def test_lindbladian_pass_starts(self, sizes, expected):
+    def test_lindbladian_passes(self, sizes, expected):
         # shifts read by each pass; an item of size 2 is a shift and its mirror
-        bounds = [0, *_pass_starts(sizes), len(sizes)]
-        assert [sum(sizes[i:j]) for i, j in itertools.pairwise(bounds)] == expected
+        loads = [sum(sizes[i] for i in indices) for indices in _passes(sizes)]
+        assert loads == expected
 
     def test_kronecker(self):
         dA, sA = self.denseA['simple'], self.sparseA['simple']

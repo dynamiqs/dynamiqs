@@ -1,6 +1,7 @@
 from collections import defaultdict
 from collections.abc import Sequence
 from functools import partial, reduce
+from itertools import chain
 from math import ceil
 
 import jax
@@ -534,36 +535,41 @@ def lindbladian_sparsedia(
         if (p, q) not in done:
             done |= {(p, q), (q, p)}
             items.append((p, q, p != q and (q, p) in terms))
-    starts = _pass_starts([1 + paired for _, _, paired in items])
+    passes = _passes([1 + paired for _, _, paired in items])
+    starts = {indices[0] for indices in passes[1:]}
     out = jnp.zeros_like(rho)
-    for i, (p, q, paired) in enumerate(items):
+    for i in chain(*passes):
         if i in starts:
             # keeps XLA from fusing the passes back into one
             out = jax.lax.optimization_barrier(out)
+        p, q, paired = items[i]
         out = out + (term(p, q) + term(q, p) if paired else term(p, q))
     return out
 
 
-def _pass_starts(sizes: list[int]) -> list[int]:
-    # Indices of the items that start a new pass. Item i reads sizes[i] shifts: 1, or 2
-    # for a shift and its mirror, which stay in one pass. Passes read about the same
-    # number of shifts, at most `MAX_FUSED_SHIFTS`.
+def _passes(sizes: list[int]) -> list[list[int]]:
+    # The items of each pass, in order. Item i reads sizes[i] shifts: 1, or 2 for a
+    # shift and its mirror, which stay in one pass. Passes read about the same number
+    # of shifts, at most `MAX_FUSED_SHIFTS`.
     total = sum(sizes)
     passes = max(ceil(total / MAX_FUSED_SHIFTS), 1)
     pass_size = ceil(total / passes)
-    # A pass ends one shift short when a shift and its mirror do not fit. If that leaves
-    # an extra pass, one more shift per pass removes it, unless passes already read
-    # `MAX_FUSED_SHIFTS` shifts.
-    for limit in (pass_size, min(pass_size + 1, MAX_FUSED_SHIFTS)):
-        starts, in_pass = [], 0
+    # Items fill the last pass, and a pass ends one shift short when a shift and its
+    # mirror do not fit. If that leaves an extra pass, passes read one more shift (at
+    # most `MAX_FUSED_SHIFTS`) and a later lone shift fills a pass that ended short.
+    for limit, first in ((pass_size, -1), (min(pass_size + 1, MAX_FUSED_SHIFTS), 0)):
+        groups, shifts = [], []
         for i, size in enumerate(sizes):
-            if in_pass + size > limit:
-                starts.append(i)
-                in_pass = 0
-            in_pass += size
-        if len(starts) < passes:
+            open_passes = range(len(shifts))[first:]
+            k = next((k for k in open_passes if shifts[k] + size <= limit), len(shifts))
+            if k == len(shifts):
+                groups.append([])
+                shifts.append(0)
+            groups[k].append(i)
+            shifts[k] += size
+        if len(groups) <= passes:
             break
-    return starts
+    return groups
 
 
 def _lindbladian_sparsedia_terms(
