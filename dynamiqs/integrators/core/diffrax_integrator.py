@@ -499,11 +499,10 @@ class MESolveDiffraxIntegrator(
     def _are_operators_sparsedia(self) -> bool:
         # whether H(t), the jump operators and the state allow the fused Lindbladian
         # (the layout of a time-qarray's value does not depend on t)
-        # On CPU, the products' scatter-adds run on one thread, the fused sum on
-        # several: for a driven cavity with one jump operator, the fused sum is 1.05-
-        # 1.13x slower at n = 32-72, as fast at n = 80-88 and faster above (x0.92 at
-        # n = 96, x0.70 at n = 256). With a single thread, it is 1.02-1.12x slower at
-        # n = 80-256: fuse only with several threads.
+        # On CPU, the products run on one thread and the fused sum on several. On a
+        # Xeon 8581C, for a driven cavity with one jump operator, the fused sum is
+        # slower below n = 80 and faster above (x0.70 at n = 256). With one thread, it
+        # is slower at every n: fuse only with several threads.
         backend, n = jax.default_backend(), self.y0.shape[-1]
         fused_on_cpu = (
             backend == 'cpu' and n >= _MIN_DIMENSION_FUSED_ON_CPU and _cpu_threads() > 1
