@@ -64,7 +64,7 @@ def _cholesky_qr2(A: Array) -> tuple[Array, Array]:
 
 def _gram(A: Array) -> Array:
     # A^dag A. On GPU, a single product sums the n terms of an entry with a rounding
-    # error that grows with n (CholeskyQR2's least-squares solves ~1.5x less accurate
+    # error that grows with n (CholeskyQR2's least-squares solves ~1.4x less accurate
     # than Householder's at n = 21952), and XLA merges it with the other products of
     # A by concatenating their operands, dense n x n operators included, at every
     # evaluation. Summing the Gram matrices of blocks of 128 rows avoids both.
