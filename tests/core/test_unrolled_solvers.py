@@ -161,7 +161,7 @@ def test_unrolled_dense_output(monkeypatch, nodes):
     expects, steps, states, clicktimes = _dense_output()
     monkeypatch.undo()
     monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
-    # records the steps that hand the save loop the values at nodes
+    # whether a step hands the save loop the values at nodes (seen when it is traced)
     calls = []
     nodes_of = unrolled_solvers._nodes
 
