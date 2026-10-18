@@ -5,7 +5,7 @@ import pytest
 import dynamiqs as dq
 from dynamiqs.integrators.core import diffrax_integrator
 
-from ..order import TEST_LONG
+from ..order import TEST_LONG, TEST_SHORT
 
 
 def _final_state():
@@ -24,7 +24,7 @@ def _final_state():
 
 @pytest.mark.run(order=TEST_LONG)
 def test_fused_lindbladian_in_mesolve(monkeypatch):
-    # mesolve fuses the DIA Lindbladian on GPU only, so CI forces it here
+    # at this size, mesolve fuses the DIA Lindbladian on GPU only, so CI forces it here
     reference, reference_steps = _final_state()
     calls = []
     fused_terms = diffrax_integrator.lindbladian_sparsedia_terms
@@ -41,3 +41,28 @@ def test_fused_lindbladian_in_mesolve(monkeypatch):
     assert steps == reference_steps
     assert jnp.allclose(fused, reference, atol=1e-5)  # single precision
     assert jnp.array_equal(fused, fused.mT.conj())  # exactly Hermitian
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize(
+    ('n', 'threads', 'fused'), [(79, 16, False), (80, 16, True), (80, 1, False)]
+)
+def test_fused_lindbladian_on_cpu(monkeypatch, n, threads, fused):
+    # on CPU, mesolve fuses the DIA Lindbladian from n = 80 with several threads
+    # (traced only)
+    calls = []
+    fused_terms = diffrax_integrator.lindbladian_sparsedia_terms
+
+    def spy(*args):
+        calls.append(None)
+        return fused_terms(*args)
+
+    monkeypatch.setattr(diffrax_integrator, 'lindbladian_sparsedia_terms', spy)
+    monkeypatch.setattr(jax, 'default_backend', lambda: 'cpu')
+    monkeypatch.setattr(diffrax_integrator, '_cpu_threads', lambda: threads)
+    jax.clear_caches()
+    a = dq.destroy(n)
+    tsave = jnp.linspace(0.0, 1.0, 2)
+    solve = lambda: dq.mesolve(a.dag() @ a, [a], dq.fock(n, 0), tsave)
+    jax.eval_shape(solve)
+    assert bool(calls) == fused
