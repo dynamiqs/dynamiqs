@@ -1,35 +1,30 @@
 """Diffrax's `ClipStepSizeController`, with two workarounds for Diffrax 0.7.2.
 
-**Steps after a jump time move with it**, as in diffrax pull request #773. Without it,
-the derivative with respect to close traced jump times is wrong by many orders of
-magnitude (diffrax issue #772); `_drop_step_tangent` says why. Once the installed
-Diffrax fixes it, the strict xfail `test_derivative_wrt_close_jump_times[diffrax]`
-XPASSes, which fails the test suite: raise the `diffrax` lower bound in `pyproject.toml`
-to that release, then remove `_drop_step_tangent`.
+1. **Steps after a jump time move with it** (diffrax issue #772, fixed by diffrax pull
+   request #773). Without this, derivatives with respect to close jump times are wrong
+   by orders of magnitude. See `_drop_step_tangent`.
+   To remove: once Diffrax fixes it, the strict xfail
+   `test_derivative_wrt_close_jump_times[diffrax]` passes and fails the test suite.
+   Raise the `diffrax` lower bound in `pyproject.toml` to that release, then remove
+   `_drop_step_tangent`.
 
-**The search of the next jump time is loop-free.** `ClipStepSizeController` looks for
-the next jump time with two `while_loop`s (a linear search up and down from the previous
-index). On GPU, each costs at least one device-to-host synchronisation per step: XLA
-copies the loop condition back to the host before each iteration. `JumpClipController`
-finds the same index by counting the jump times before `t`, a single fused reduction
-over the (few) jump times.
+2. **The next jump time is found without a loop** (diffrax issue #776, fixed by diffrax
+   pull request #777). Diffrax searches it with two `while_loop`s. On GPU, each loop
+   iteration copies its condition to the host. `JumpClipController` counts the jump
+   times before `t` instead, in one reduction. To do so, it swaps Diffrax's private
+   `_find_idx_with_hint` while `adapt_step_size` is traced.
+   To remove: once Diffrax has no loops, the strict xfail
+   `test_diffrax_search_is_loop_free` passes and fails the test suite. Raise the
+   `diffrax` lower bound, then remove the swap (`_clip`, `_find_idx_by_counting`,
+   `private_search_available` and their tests).
 
-It relies on a private function of Diffrax, `_find_idx_with_hint` in
-`diffrax._step_size_controller.clip`, which it swaps while `adapt_step_size` is traced.
-If a Diffrax release moves or renames it, `JumpClipController` falls back to Diffrax's
-own search (the same steps, with the while loops), and
-`test_jump_clip_controller.py::test_private_search_exists` fails, as a reminder.
-Diffrax issue #776 tracks these loops, which are also in its search of the next
-`step_ts` time. Once the installed Diffrax has none (e.g. with diffrax pull request
-#777), the strict xfail `test_diffrax_search_is_loop_free` XPASSes, which fails the
-test suite: raise the `diffrax` lower bound in `pyproject.toml` to that release, then
-remove the swap (`_clip`, `_find_idx_by_counting`, `private_search_available` and their
-tests), or, once `_drop_step_tangent` is gone too, use `dx.ClipStepSizeController` in
-`diffrax_integrator.py` and delete this module and its tests.
+Once both are removed, use `dx.ClipStepSizeController` in `diffrax_integrator.py` and
+delete this module and its tests.
 
-`_drop_step_tangent` also reads the private state of `ClipStepSizeController`
-(`step_info`, `jump_info` and `reject_info`): if a Diffrax release changes it,
-`test_jump_clip_controller.py::test_private_clip_state` fails, as a reminder.
+This module reads private parts of Diffrax. If a release changes them, a test fails as
+a reminder: `test_private_search_exists` for `_find_idx_with_hint` (the controller then
+falls back to Diffrax's own search), `test_private_clip_state` for the state of
+`ClipStepSizeController` (`step_info`, `jump_info`, `reject_info`).
 """
 
 from __future__ import annotations
@@ -78,17 +73,18 @@ def _drop_step_tangent(
     step_info: tuple[Array, Array] | None,
     jump_info: tuple[Array, Array] | None,
 ) -> Array:
-    # A step clipped to just before a jump time is often tiny, but the tangent of its
-    # length, d(jump) - d(t0), is O(1), and `PIDController` scales it into every
-    # following step. So after a step that landed on a jump or `step_ts` time, give
-    # the proposed `next_t1` the tangent of `next_t0`, keeping its value: the
-    # following steps move with the time just landed on. This replays diffrax#773 on
-    # the output of `adapt_step_size`, with the same values bit for bit. There, the
-    # tangent is dropped before each clip: a `next_t1` clipped to the next jump time
-    # keeps the clip's tangent, and so does one clipped to the next `step_ts` time,
-    # unless the step landed on a jump (handled after the `step_ts` clip). It
-    # assumes, as for every controller dynamiqs builds, that the inner controller
-    # never reports `made_jump` and that rejected steps are not stored.
+    # Why: a step clipped to end just before a jump time can be tiny, but the
+    # derivative of its length, d(jump) - d(t0), is of order 1. `PIDController` then
+    # carries this derivative into every following step.
+    # What: after a step that landed on a jump time or a `step_ts` time, give the
+    # proposed `next_t1` the derivative of `next_t0`, keeping its value. The following
+    # steps then move with the time just landed on.
+    # This gives the same values as diffrax#773, bit for bit, including its two
+    # exceptions: a `next_t1` clipped to the next jump time keeps the clip's
+    # derivative, and so does one clipped to the next `step_ts` time, unless the step
+    # landed on a jump.
+    # It assumes, as for every controller dynamiqs builds, that the inner controller
+    # never reports `made_jump`, and that rejected steps are not stored.
     move = jnp.asarray(False)
     if step_info is not None:
         # `index` is that of the first `step_ts` time after the step's end
