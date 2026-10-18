@@ -483,10 +483,8 @@ def autopad_sparsedia_diags(offsets: tuple[int, ...], diags: Sequence[Array]) ->
 
 
 # Most shifts (p, q) that `lindbladian_sparsedia` reads in one pass over rho. Each
-# shift reads rho once more: on an A100, with 16 shifts (n = 1176, batch 16) one pass
-# is 5.6x faster than the products; with 71 (n = 900, batch 4: rho no longer fits in
-# L2) one pass is slower than the products, and three passes of 23-24 shifts make the
-# mesolve 1.11x faster than the products.
+# shift reads rho once more, so a pass over many shifts gets slow. On an A100, a solve
+# with 71 shifts was 1.11x faster in three passes than with the operator products.
 MAX_FUSED_SHIFTS = 32
 
 
@@ -546,27 +544,24 @@ def lindbladian_sparsedia(
 
 
 def _pass_starts(sizes: list[int]) -> list[int]:
-    # Indices of the items that start a new pass. Item i reads sizes[i] shifts: 1, or 2
-    # for a shift and its mirror, which stay in one pass. The passes read about the same
-    # number of shifts each, at most `MAX_FUSED_SHIFTS` (for the 71-shift mesolve in
-    # the comment on `MAX_FUSED_SHIFTS`, passes of 32, 32 and 7 shifts were 1.04x
-    # faster than the products, passes of 23-24 shifts 1.11x). A pass ends when the
-    # next item would make it read more than `pass_size` shifts. Passes can then end
-    # one shift short and need one more pass for the last 1-2 shifts: `pass_size` then
-    # grows by one.
+    # Indices of the items that start a new pass. Item i reads sizes[i] shifts: 2 for a
+    # shift and its mirror, which stay in one pass. Passes read about the same number of
+    # shifts, at most `MAX_FUSED_SHIFTS`.
     total = sum(sizes)
     passes = max(-(-total // MAX_FUSED_SHIFTS), 1)
     pass_size = -(-total // passes)
-    while True:
+    # A pass ends one shift short when a shift and its mirror do not fit. If that leaves
+    # an extra pass, one more shift per pass is enough.
+    for limit in (pass_size, min(pass_size + 1, MAX_FUSED_SHIFTS)):
         starts, in_pass = [], 0
         for i, size in enumerate(sizes):
-            if in_pass + size > pass_size:
+            if in_pass + size > limit:
                 starts.append(i)
                 in_pass = 0
             in_pass += size
-        if len(starts) < passes or pass_size >= MAX_FUSED_SHIFTS:
-            return starts
-        pass_size += 1
+        if len(starts) < passes:
+            break
+    return starts
 
 
 def _lindbladian_sparsedia_terms(
