@@ -101,6 +101,16 @@ EQX_ON_ERROR=off python simulation.py
 
 Because of compiler differences, the gain depends on the backend, but it can amount to several tens of percent speedup. This disables the checks entirely, so an invalid input silently produces a wrong result rather than an error. Validate your inputs with a short run first, then turn the checks off for production.
 
+### Run the solver loops on the GPU as CUDA graphs
+
+Solvers run their steps in a `while` loop. On GPUs, XLA copies the loop condition back to the host after each step and launches the next step from there, which costs tens of microseconds per step. On NVIDIA GPUs, XLA can instead record the loops as CUDA graphs, which the GPU runs without the host:
+
+```shell
+XLA_FLAGS="--xla_gpu_enable_command_buffer=+WHILE --xla_gpu_graph_min_graph_size=1" python simulation.py
+```
+
+Set both flags: the second one lets XLA also record loops of only a few kernels. This changes how XLA launches the kernels, not the kernels, so the results are the same. On an NVIDIA A100 with JAX 0.11, it made `sesolve` and `mesolve` with `Tsit5` 1.3 to 1.6 times faster from dimension 16 to 1,024, `jssesolve` with `Event` 1.5 times faster, and `Rouchon1`, `Rouchon2` and gradients of `mesolve` up to 1.2 times faster. It made no difference when a step takes milliseconds. It made `dssesolve` with `EulerMaruyama` 1.4 times slower, `Expm` with a small piecewise-constant Hamiltonian up to 1.2 times slower, and `floquet` and a large `mesolve` 1.05 times slower. Measure it on your own simulation (see [Measure](#measure)).
+
 ### Simulate larger systems than the GPU memory
 
 On NVIDIA GPUs, XLA can be allowed to spill its allocations out of the device into system memory (unified memory), which makes it possible to simulate systems that do not fit in the GPU memory:
