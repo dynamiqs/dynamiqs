@@ -692,9 +692,9 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
 def lindbladian_sparsedia_terms(
     A: QArray, B: QArray, jump_ops: list[QArray], rho: QArray
 ) -> QArray | None:
-    r"""Returns $A\rho + \rho B + \sum_k L_k \rho L_k^\dag$ computed in fused passes
-    over $\rho$ (`lindbladian_sparsedia`) if $A$, $B$ and the $L_k$ are in sparse DIA
-    format and $\rho$ is dense, and None otherwise.
+    r"""Returns $A\rho + \rho B + \sum_k L_k \rho L_k^\dag$, computed by
+    `lindbladian_sparsedia`, if $A$, $B$ and the $L_k$ are in sparse DIA format and
+    $\rho$ is dense. Returns None otherwise.
 
     With $A = -iH - \frac12\sum_k L_k^\dag L_k$ and $B = iH - \frac12\sum_k L_k^\dag
     L_k$, this is the Lindbladian.

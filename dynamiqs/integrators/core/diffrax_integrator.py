@@ -439,9 +439,9 @@ class MESolveDiffraxIntegrator(
 
         # When H and the jump operators are in sparse DIA format, we use (1) in both
         # cases (also holomorphic, for implicit solvers), computed by
-        # `lindbladian_sparsedia_terms` in a single fused pass over rho (each product
-        # of (2), and its transpose, takes a pass over rho), or in a few passes when
-        # its terms read many shifted copies of rho.
+        # `lindbladian_sparsedia_terms`. It takes one fused pass over rho, or a few
+        # when its terms read many shifted copies of rho. Each product of (2), and its
+        # transpose, takes its own pass.
 
         def vector_field_unvec_sparsedia(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)

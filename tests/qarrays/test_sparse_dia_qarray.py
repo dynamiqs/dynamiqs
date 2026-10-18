@@ -13,7 +13,6 @@ from dynamiqs.qarrays.dense_dataarray import DenseDataArray
 from dynamiqs.qarrays.materialized_qarray import MaterializedQArray
 from dynamiqs.qarrays.sparsedia_dataarray import SparseDIADataArray
 from dynamiqs.qarrays.sparsedia_primitives import (
-    MAX_FUSED_SHIFTS,
     _matmul_array_sparsedia,
     _matmul_sparsedia_array,
     _pad_on_gpu,
@@ -281,11 +280,11 @@ class TestSparseDIAQArray:
 
     def test_lindbladian_many_shifts(self):
         # a jump operator with 6 diagonals reads 36 shifted copies of rho, more than
-        # MAX_FUSED_SHIFTS: lindbladian sums them in two fused passes
+        # MAX_FUSED_SHIFTS, so lindbladian sums its terms in two passes
         a = dq.destroy(10, layout=dq.dia)
         L = a + a @ a + a @ a @ a + 0.5 * (a + a @ a + a @ a @ a).dag()
         H = a.dag() @ a + 0.3 * (a + a.dag())
-        r = self.denseA['simple']
+        r = self.denseA['batch']
         rho = r @ r.dag()
         out_dense = dq.lindbladian(H.asdense(), [L.asdense()], rho).to_jax()
         jaxpr = jax.make_jaxpr(lambda rho: dq.lindbladian(H, [L], rho).to_jax())(rho)
@@ -301,20 +300,20 @@ class TestSparseDIAQArray:
         assert jnp.array_equal(out.to_jax(), jnp.zeros_like(rho.to_jax()))
 
     @pytest.mark.parametrize(
-        'sizes',
+        ('sizes', 'expected'),
         [
-            [1] + [2] * 35,  # 71 shifts: passes of 23, 24 and 24
-            [2] * 31,  # 62 shifts: a plain greedy split gives 30, 30 and 2
-            [2] * 11 + [1] + [2] * 12 + [1],  # 48 shifts: it gives 23, 24 and 1
+            # 71 shifts: balanced passes, not 32, 32 and 7
+            ([1] + [2] * 35, [23, 24, 24]),
+            # 62 shifts: passes of 31 would end at 30 and need a third pass
+            ([2] * 31, [32, 30]),
+            # 48 shifts: passes of 24 would give 23, 24 and 1
+            ([2] * 11 + [1] + [2] * 12 + [1], [25, 23]),
         ],
     )
-    def test_lindbladian_pass_starts(self, sizes):
-        # no pass reads more than MAX_FUSED_SHIFTS shifts, and no more passes than
-        # needed: a short extra pass reads rho and the sum once more for a few shifts
+    def test_lindbladian_pass_starts(self, sizes, expected):
+        # shifts read by each pass; an item of size 2 is a shift and its mirror
         bounds = [0, *_pass_starts(sizes), len(sizes)]
-        shifts = [sum(sizes[i:j]) for i, j in itertools.pairwise(bounds)]
-        assert max(shifts) <= MAX_FUSED_SHIFTS
-        assert len(shifts) == -(-sum(sizes) // MAX_FUSED_SHIFTS)
+        assert [sum(sizes[i:j]) for i, j in itertools.pairwise(bounds)] == expected
 
     def test_kronecker(self):
         dA, sA = self.denseA['simple'], self.sparseA['simple']

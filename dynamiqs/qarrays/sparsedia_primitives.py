@@ -1,6 +1,7 @@
 from collections import defaultdict
 from collections.abc import Sequence
 from functools import partial, reduce
+from math import ceil
 
 import jax
 import jax.numpy as jnp
@@ -501,9 +502,9 @@ def lindbladian_sparsedia(
     $R[i]\,\rho[i+p, j+q]\,C[j]$, with $(p, q) = (o, 0)$ for each diagonal $o$ of $A$,
     $(0, -o)$ for each diagonal of $B$, and $(a, b)$ for each pair of diagonals of an
     $L_k$. The terms are grouped by shift and summed in one elementwise expression,
-    which XLA fuses into a single pass over $\rho$, instead of a pass per product. With
-    more than `MAX_FUSED_SHIFTS` shifts, they are summed in several passes of at most
-    `MAX_FUSED_SHIFTS` shifts, each adding its terms to the sum of the previous ones.
+    which XLA fuses into a single pass over $\rho$, instead of a pass per product.
+    Above `MAX_FUSED_SHIFTS` shifts, the sum takes several passes of at most
+    `MAX_FUSED_SHIFTS` shifts each.
     """
     n = rho.shape[-1]
     operators = [left, right, *jump_ops]
@@ -548,8 +549,8 @@ def _pass_starts(sizes: list[int]) -> list[int]:
     # for a shift and its mirror, which stay in one pass. Passes read about the same
     # number of shifts, at most `MAX_FUSED_SHIFTS`.
     total = sum(sizes)
-    passes = max(-(-total // MAX_FUSED_SHIFTS), 1)
-    pass_size = -(-total // passes)
+    passes = max(ceil(total / MAX_FUSED_SHIFTS), 1)
+    pass_size = ceil(total / passes)
     # A pass ends one shift short when a shift and its mirror do not fit. If that leaves
     # an extra pass, one more shift per pass removes it, unless passes already read
     # `MAX_FUSED_SHIFTS` shifts.
