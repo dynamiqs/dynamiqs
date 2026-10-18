@@ -1,3 +1,4 @@
+import itertools
 import warnings
 
 import jax
@@ -12,11 +13,12 @@ from dynamiqs.qarrays.dense_dataarray import DenseDataArray
 from dynamiqs.qarrays.materialized_qarray import MaterializedQArray
 from dynamiqs.qarrays.sparsedia_dataarray import SparseDIADataArray
 from dynamiqs.qarrays.sparsedia_primitives import (
+    MAX_FUSED_SHIFTS,
     _matmul_array_sparsedia,
     _matmul_sparsedia_array,
     _pad_on_gpu,
+    _pass_starts,
 )
-from dynamiqs.utils.general import lindbladian_sparsedia_terms
 
 from ..order import TEST_SHORT
 
@@ -279,16 +281,40 @@ class TestSparseDIAQArray:
 
     def test_lindbladian_many_shifts(self):
         # a jump operator with 6 diagonals reads 36 shifted copies of rho, more than
-        # MAX_FUSED_SHIFTS: lindbladian falls back to the products
+        # MAX_FUSED_SHIFTS: lindbladian sums them in two fused passes
         a = dq.destroy(10, layout=dq.dia)
         L = a + a @ a + a @ a @ a + 0.5 * (a + a @ a + a @ a @ a).dag()
-        H = self.sparseA['simple']
-        rho = self.denseA['simple'] @ self.denseB['simple'].dag()
-        Hnh = -1j * H - 0.5 * L.dag() @ L
-        assert lindbladian_sparsedia_terms(Hnh, Hnh.dag(), [L], rho) is None
+        H = a.dag() @ a + 0.3 * (a + a.dag())
+        r = self.denseA['simple']
+        rho = r @ r.dag()
         out_dense = dq.lindbladian(H.asdense(), [L.asdense()], rho).to_jax()
+        jaxpr = jax.make_jaxpr(lambda rho: dq.lindbladian(H, [L], rho).to_jax())(rho)
+        assert 'optimization_barrier' in str(jaxpr)
         out_dia = dq.lindbladian(H, [L], rho).to_jax()
         assert _allclose(out_dense, out_dia, atol=1e-6 * jnp.abs(out_dense).max())
+        assert jnp.array_equal(out_dia, out_dia.mT.conj())  # exactly Hermitian
+
+    def test_lindbladian_no_terms(self):
+        # an operator without diagonals and no jump operators: no shift at all
+        rho = self.denseA['simple'] @ self.denseB['simple'].dag()
+        out = dq.lindbladian(dq.zeros(rho.shape[-1], layout=dq.dia), [], rho)
+        assert jnp.array_equal(out.to_jax(), jnp.zeros_like(rho.to_jax()))
+
+    @pytest.mark.parametrize(
+        'sizes',
+        [
+            [1] + [2] * 35,  # 71 shifts: passes of 23, 24 and 24
+            [2] * 31,  # 62 shifts: without the fix, passes of 30, 30 and 2
+            [2] * 11 + [1] + [2] * 12 + [1],  # 48 shifts: same, 23, 24 and 1
+        ],
+    )
+    def test_lindbladian_pass_starts(self, sizes):
+        # no pass reads more than MAX_FUSED_SHIFTS shifts, and no more passes than
+        # needed: a short extra pass reads rho and the sum once more for a few shifts
+        bounds = [0, *_pass_starts(sizes), len(sizes)]
+        shifts = [sum(sizes[i:j]) for i, j in itertools.pairwise(bounds)]
+        assert max(shifts) <= MAX_FUSED_SHIFTS
+        assert len(shifts) == -(-sum(sizes) // MAX_FUSED_SHIFTS)
 
     def test_kronecker(self):
         dA, sA = self.denseA['simple'], self.sparseA['simple']

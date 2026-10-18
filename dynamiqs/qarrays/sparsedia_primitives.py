@@ -482,23 +482,12 @@ def autopad_sparsedia_diags(offsets: tuple[int, ...], diags: Sequence[Array]) ->
     return jnp.moveaxis(stacked_diags, 0, -2)
 
 
-# Most shifts (p, q) for which `lindbladian_sparsedia` is used (see
-# `lindbladian_sparsedia_shifts`). Each shift reads rho once more: on an A100, with 16
-# shifts (n = 1176, batch 16) the fused sum is 5.6x faster than the products, with 71
-# (n = 900, batch 4: rho no longer fits in L2) the products are 1.3x faster.
+# Most shifts (p, q) that `lindbladian_sparsedia` reads in one pass over rho. Each
+# shift reads rho once more: on an A100, with 16 shifts (n = 1176, batch 16) one pass
+# is 5.6x faster than the products; with 71 (n = 900, batch 4: rho no longer fits in
+# L2) one pass is slower than the products, and three passes of 23-24 shifts make the
+# mesolve 1.11x faster than the products.
 MAX_FUSED_SHIFTS = 32
-
-
-def lindbladian_sparsedia_shifts(
-    left_offsets: tuple[int, ...],
-    right_offsets: tuple[int, ...],
-    jump_offsets: Sequence[tuple[int, ...]],
-) -> int:
-    # number of distinct shifted copies of rho that `lindbladian_sparsedia` reads
-    shifts = {(o, 0) for o in left_offsets} | {(0, -o) for o in right_offsets}
-    for offsets in jump_offsets:
-        shifts |= {(a, b) for a in offsets for b in offsets}
-    return len(shifts)
 
 
 def lindbladian_sparsedia(
@@ -514,7 +503,9 @@ def lindbladian_sparsedia(
     $R[i]\,\rho[i+p, j+q]\,C[j]$, with $(p, q) = (o, 0)$ for each diagonal $o$ of $A$,
     $(0, -o)$ for each diagonal of $B$, and $(a, b)$ for each pair of diagonals of an
     $L_k$. The terms are grouped by shift and summed in one elementwise expression,
-    which XLA fuses into a single pass over $\rho$, instead of a pass per product.
+    which XLA fuses into a single pass over $\rho$, instead of a pass per product. With
+    more than `MAX_FUSED_SHIFTS` shifts, they are summed in several passes of at most
+    `MAX_FUSED_SHIFTS` shifts, each adding its terms to the sum of the previous ones.
     """
     n = rho.shape[-1]
     operators = [left, right, *jump_ops]
@@ -539,17 +530,42 @@ def lindbladian_sparsedia(
     # B = A^dag, the terms at (j, i) are then the exact complex conjugates of those at
     # (i, j), added in the same order: the result is exactly Hermitian, as the
     # Hermitian form tmp + tmp^dag is by construction.
-    out = jnp.zeros_like(rho)
-    done = set()
+    items, done = [], set()
     for p, q in terms:
-        if (p, q) in done:
-            continue
-        done |= {(p, q), (q, p)}
-        if p == q or (q, p) not in terms:
-            out = out + term(p, q)
-        else:
-            out = out + (term(p, q) + term(q, p))
+        if (p, q) not in done:
+            done |= {(p, q), (q, p)}
+            items.append((p, q, p != q and (q, p) in terms))
+    starts = _pass_starts([1 + paired for _, _, paired in items])
+    out = jnp.zeros_like(rho)
+    for i, (p, q, paired) in enumerate(items):
+        if i in starts:
+            # keeps XLA from fusing the passes back into one
+            out = jax.lax.optimization_barrier(out)
+        out = out + (term(p, q) + term(q, p) if paired else term(p, q))
     return out
+
+
+def _pass_starts(sizes: list[int]) -> list[int]:
+    # Indices of the items that start a new pass. Item i reads sizes[i] shifts: 1, or 2
+    # for a shift and its mirror, which stay in one pass. The passes read about the same
+    # number of shifts each, at most `MAX_FUSED_SHIFTS` (for the 71-shift mesolve of
+    # `MAX_FUSED_SHIFTS`, passes of 32, 32 and 7 shifts were 1.04x faster than the
+    # products, passes of 23-24 shifts 1.11x). A pass ends when the next item would
+    # make it read more than `pass_size` shifts. Passes can then end one shift short
+    # and need one more pass for the last 1-2 shifts: `pass_size` then grows by one.
+    total = sum(sizes)
+    passes = max(-(-total // MAX_FUSED_SHIFTS), 1)
+    pass_size = -(-total // passes)
+    while True:
+        starts, in_pass = [], 0
+        for i, size in enumerate(sizes):
+            if in_pass + size > pass_size:
+                starts.append(i)
+                in_pass = 0
+            in_pass += size
+        if len(starts) < passes or pass_size >= MAX_FUSED_SHIFTS:
+            return starts
+        pass_size += 1
 
 
 def _lindbladian_sparsedia_terms(
