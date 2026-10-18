@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import warnings
 from abc import abstractmethod
 from collections.abc import Callable
@@ -40,7 +41,12 @@ from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .jump_clip_controller import JumpClipController
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
-from .unrolled_solvers import UnrolledDopri5, UnrolledDopri8, UnrolledTsit5
+from .unrolled_solvers import (
+    UnrolledDopri5,
+    UnrolledDopri8,
+    UnrolledTsit5,
+    _UnrolledERK,
+)
 
 # `jax.Inline.JAX_LATE` (jax >= 0.11) keeps a jitted function as one call in the
 # jaxpr, so that JAX traces and differentiates it once, and inlines it into the
@@ -240,10 +246,16 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                     jax.jit(terms.vector_field, inline=_INLINE),
                 )
 
+            # === forward-mode solves are never transposed: the unrolled solvers can
+            # write their tangents out as their stages (see `_odd_sized_tangents`)
+            solver = self.diffrax_solver
+            if isinstance(self.gradient, Forward) and isinstance(solver, _UnrolledERK):
+                solver = dataclasses.replace(solver, forward_mode=True)
+
             # === solve differential equation with diffrax
             return dx.diffeqsolve(
                 terms,
-                self.diffrax_solver,
+                solver,
                 t0=t0,
                 t1=t1,
                 dt0=self.dt0,
