@@ -13,12 +13,12 @@ from ..order import TEST_INSTANT, TEST_LONG, TEST_SHORT
 
 
 def _solve(gradient=None):
-    # a driven, damped cavity with a pulse edge (a jump time), and its derivative
-    # with respect to the drive amplitude
+    # the population of a driven, damped cavity with a pulse edge (a jump time) at the
+    # save times, as a function of the drive amplitude
     a = dq.destroy(8)
     tsave = jnp.linspace(0.0, 2.0, 11)
 
-    def final_population(amplitude):
+    def population(amplitude):
         H = a.dag() @ a + dq.modulated(
             lambda t: amplitude * jnp.where(t < 0.7, 1.0, 0.3),
             a + a.dag(),
@@ -33,15 +33,15 @@ def _solve(gradient=None):
             gradient=gradient,
             progress_meter=False,
         )
-        return result.expects[0, -1].real, result.infos.nsteps
+        return result.expects[0].real, result.infos.nsteps
 
-    return final_population
+    return population
 
 
 def _derivatives():
-    # forward and reverse mode derivatives of `_solve`
-    jvp = jax.jacfwd(lambda x: _solve(dq.gradient.Forward())(x)[0])(1.3)
-    vjp = jax.grad(lambda x: _solve(dq.gradient.BackwardCheckpointed())(x)[0])(1.3)
+    # forward and reverse mode derivatives of the final population of `_solve`
+    jvp = jax.jacfwd(lambda x: _solve(dq.gradient.Forward())(x)[0][-1])(1.3)
+    vjp = jax.grad(lambda x: _solve(dq.gradient.BackwardCheckpointed())(x)[0][-1])(1.3)
     return jvp, vjp
 
 
@@ -125,14 +125,20 @@ def _dense_output():
         (unrolled_solvers.UnrolledDopri8, dx.Dopri8),
     ],
 )
-def test_unrolled_interpolation(unrolled, diffrax):
+@pytest.mark.parametrize('nodes', [False, True], ids=['stages', 'nodes'])
+def test_unrolled_interpolation(unrolled, diffrax, nodes):
     # the interpolation of the stages kept apart (without the inputs whose weight is
-    # always zero) is Diffrax's interpolation of the stacked stages
+    # always zero), or of its values at fixed nodes (large states), is Diffrax's
+    # interpolation of the stacked stages
     nk = len(diffrax.tableau.c) + 1
     keys = jax.random.split(jax.random.key(0), nk + 2)
     y0, y1, *ks = [dq.random.complex(key, (3, 2)) for key in keys]
     times = dict(t0=0.2, t1=0.7)
-    stages = unrolled_solvers._Stages(tuple(ks))
+    if nodes:
+        degree = unrolled._interpolation_degree
+        stages = unrolled_solvers._nodes(unrolled.interpolation_cls, degree, y0, y1, ks)
+    else:
+        stages = unrolled_solvers._Stages(tuple(ks))
     interpolation = unrolled.interpolation_cls(**times, y0=y0, y1=y1, k=stages)
     reference = diffrax.interpolation_cls(**times, y0=y0, y1=y1, k=jnp.stack(ks))
     for t in (0.2, 0.33, 0.5, 0.7):
@@ -144,20 +150,34 @@ def test_unrolled_interpolation(unrolled, diffrax):
 
 @pytest.mark.run(order=TEST_LONG)
 @pytest.mark.usefixtures('_double_precision')
-def test_unrolled_dense_output(monkeypatch):
+@pytest.mark.parametrize('nodes', [False, True], ids=['stages', 'nodes'])
+def test_unrolled_dense_output(monkeypatch, nodes):
     # the unrolled steps keep their stages apart for the interpolation at the save
-    # times and in the root finder: the saved values and click times must be Diffrax's
+    # times and in the root finder, or its values at fixed nodes (large states, forced
+    # on a small one): the saved values and click times must be Diffrax's
     monkeypatch.setattr(jax, 'default_backend', lambda: 'cpu')
     monkeypatch.setattr(_UnrolledERK, '_supported', lambda *args: False)  # noqa: ARG005
     jax.clear_caches()
     expects, steps, states, clicktimes = _dense_output()
     monkeypatch.undo()
     monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
+    # records the steps that hand the save loop the values at nodes
+    calls = []
+    nodes_of = unrolled_solvers._nodes
+
+    def spy(*args):
+        calls.append(None)
+        return nodes_of(*args)
+
+    monkeypatch.setattr(unrolled_solvers, '_nodes', spy)
+    if nodes:
+        monkeypatch.setattr(unrolled_solvers, '_MIN_SIZE_ODD_STAGES', 0)
     jax.clear_caches()
     expects_unrolled, steps_unrolled, states_unrolled, clicktimes_unrolled = (
         _dense_output()
     )
     jax.clear_caches()
+    assert bool(calls) == nodes
     assert steps_unrolled == steps
     assert steps < expects.shape[-1]  # several save times per step
     assert jnp.isfinite(clicktimes).any()  # clicks found by the root finder

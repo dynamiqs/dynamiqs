@@ -27,7 +27,8 @@ implementation.
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from typing import cast
+from functools import cache
+from typing import ClassVar, cast
 
 import diffrax as dx
 import equinox as eqx
@@ -149,6 +150,9 @@ def _odd_sized_trees(
 
 
 class _UnrolledERK(dx.AbstractERK):
+    # the degree in theta of the solver's interpolation (`_nodes`)
+    _interpolation_degree: ClassVar[int]
+
     def _supported(
         self,
         terms: dx.AbstractTerm,
@@ -297,8 +301,16 @@ class _UnrolledERK(dx.AbstractERK):
         # === solution, error estimate and dense output
         y1 = yi if tableau.ssal else _combine(y0, tableau.b_sol, ks)
         y_error = _dot(tableau.b_error, ks)
-        # the stages are kept apart (see `_StagesInterpolation`)
-        dense_info = dict(y0=y0, y1=y1, k=_Stages(tuple(ks)))
+        # The stages are kept apart (see `_StagesInterpolation`). Diffrax's save loop
+        # takes the dense output as loop operands at every step, and XLA would copy
+        # each odd-sized stage out of its padded buffer: for large states, the dense
+        # output is its values at fixed nodes instead (see `_NodesInterpolation`).
+        if odd:
+            degree = self._interpolation_degree
+            dense = _nodes(self.interpolation_cls, degree, y0, y1, ks)
+        else:
+            dense = _Stages(tuple(ks))
+        dense_info = dict(y0=y0, y1=y1, k=dense)
         new_solver_state = (jnp.array(False), fs[-1]) if fsal else None
         return y1, y_error, dense_info, new_solver_state, dx.RESULTS.successful
 
@@ -358,6 +370,106 @@ class _Stages(eqx.Module):
     ks: tuple[PyTree, ...]
 
 
+class _Nodes(eqx.Module):
+    # the dense output of an unrolled step at fixed nodes, for `_NodesInterpolation`
+    k0: PyTree
+    values: tuple[PyTree, ...]
+    nodes: tuple[float, ...] = eqx.field(static=True)
+
+
+def _linear_rescale(t0: RealScalarLike, t: RealScalarLike, t1: RealScalarLike) -> Array:
+    # (t - t0) / (t1 - t0), and 0 if t0 == t1, as Diffrax's private `linear_rescale`
+    cond = t0 == t1
+    numerator = jnp.where(cond, 0, t - t0)
+    denominator = jnp.where(cond, 1, t1 - t0)
+    return numerator / denominator
+
+
+class _NodesInterpolation(dx.AbstractLocalInterpolation):
+    # The dense output of an unrolled step, y0 + theta k[0] + theta^2 g(theta) with
+    # theta = (t - t0) / (t1 - t0), from the values of g at fixed nodes of the step
+    # (Lagrange interpolation). Diffrax's interpolations are polynomials of theta,
+    # linear in (y0, y1, k), with derivative k[0] at theta = 0: this is the same
+    # interpolation, from one combination of the inputs per node (`_nodes`).
+    t0: RealScalarLike  # ty: ignore[invalid-attribute-override]
+    t1: RealScalarLike  # ty: ignore[invalid-attribute-override]
+    y0: Y
+    k: _Nodes
+
+    def evaluate(
+        self, t0: RealScalarLike, t1: RealScalarLike | None = None, left: bool = True
+    ) -> Y:
+        del left
+        if t1 is not None:
+            return self.evaluate(t1) - self.evaluate(t0)
+        theta = _linear_rescale(self.t0, t0, self.t1)
+        nodes = self.k.nodes
+        lagrange = []
+        for node in nodes:
+            weight = theta**2
+            for other in nodes:
+                if other != node:
+                    weight = weight * (theta - other) / (node - other)
+            lagrange.append(weight)
+
+        def leaf(y0: Array, k0: Array, *values: Array) -> Array:
+            total = y0 + theta * k0
+            for weight, value in zip(lagrange, values, strict=True):
+                total = total + weight * value
+            return total.astype(y0.dtype)
+
+        return jtu.tree_map(leaf, self.y0, self.k.k0, *self.k.values)
+
+
+@cache
+def _node_weights(
+    base: Callable[..., dx.AbstractLocalInterpolation],
+    nk: int,
+    degree: int,
+    dtype: np.dtype,
+) -> tuple[tuple[float, ...], np.ndarray]:
+    # The nodes theta_i (`_NodesInterpolation`): the `degree` Chebyshev-Lobatto points
+    # of [0, 1] but 0 (g is a polynomial of degree `degree` - 2), and w[i, j], the
+    # weight of the j-th of (y0, y1, *k) in g(theta_i) for `base` (Diffrax's
+    # interpolation for stacked stages), a polynomial of theta of degree `degree`
+    nodes = 0.5 - 0.5 * np.cos(np.pi * np.arange(1, degree) / (degree - 1))
+
+    def weights(theta: Array) -> Array:
+        # `base` is linear in (y0, y1, k): its gradient with respect to them
+        def interpolate(x: Array) -> Array:
+            return base(t0=0.0, t1=1.0, y0=x[0], y1=x[1], k=x[2:]).evaluate(theta)
+
+        return jax.grad(interpolate)(jnp.zeros(nk + 2, dtype))
+
+    # compiled: op by op, about 10x slower (on the first call of a solve)
+    with jax.ensure_compile_time_eval():
+        values = jax.jit(jax.vmap(weights))(jnp.asarray(nodes, dtype))
+    w = np.array(values, np.float64)
+    # g(theta) = (y(theta) - y0 - theta k[0]) / theta^2
+    w[:, 0] -= 1
+    w[:, 2] -= nodes
+    w /= nodes[:, None] ** 2
+    # weights zero in exact arithmetic (e.g. those of Dopri5's stages at theta = 1)
+    # come out as rounding residues: zeroed, so that `_dot` skips their inputs
+    w[np.abs(w) < 1e3 * np.finfo(dtype).eps * np.abs(w).max(axis=1, keepdims=True)] = 0
+    w.setflags(write=False)
+    return tuple(nodes.tolist()), w
+
+
+def _nodes(
+    base: Callable[..., dx.AbstractLocalInterpolation],
+    degree: int,
+    y0: Y,
+    y1: Y,
+    ks: list[PyTree],
+) -> _Nodes:
+    # the dense output of `base` of that degree for the stages `ks`, at fixed nodes
+    dtype = np.finfo(jtu.tree_leaves(y0)[0].dtype).dtype
+    nodes, w = _node_weights(base, len(ks), degree, dtype)
+    values = tuple(_dot(row, [y0, y1, *ks]) for row in w)
+    return _Nodes(ks[0], values, nodes)
+
+
 class _StagesInterpolation(dx.AbstractLocalInterpolation):
     # The dense output of an unrolled step, from its stages kept apart. Diffrax's
     # interpolations take the stages stacked in one array, which a step would write
@@ -408,11 +520,13 @@ class _StagesInterpolation(dx.AbstractLocalInterpolation):
 def _interpolation(
     base: Callable[..., dx.AbstractLocalInterpolation], zero: tuple[int, ...]
 ) -> Callable[..., dx.AbstractLocalInterpolation]:
-    # `base` for stacked stages (Diffrax's steps), `_StagesInterpolation` for the
-    # stages of an unrolled step
+    # `base` for stacked stages (Diffrax's steps), `_StagesInterpolation` or
+    # `_NodesInterpolation` for an unrolled step
     def interpolation(
         *, t0: RealScalarLike, t1: RealScalarLike, y0: Y, y1: Y, k: PyTree
     ) -> dx.AbstractLocalInterpolation:
+        if type(k) is _Nodes:
+            return _NodesInterpolation(t0, t1, y0, k)
         if type(k) is _Stages:
             return _StagesInterpolation(t0, t1, y0, y1, k, base, zero)
         return base(t0=t0, t1=t1, y0=y0, y1=y1, k=k)
@@ -423,6 +537,7 @@ def _interpolation(
 class UnrolledTsit5(_UnrolledERK, dx.Tsit5):
     """Diffrax's `Tsit5`, with its stages unrolled on GPU and looped over on CPU."""
 
+    _interpolation_degree: ClassVar[int] = 4
     # Diffrax types this as its own interpolation class; y1 has a zero weight
     interpolation_cls = staticmethod(  # ty: ignore[invalid-assignment]
         _interpolation(dx.Tsit5.interpolation_cls, zero=(1,))
@@ -432,6 +547,7 @@ class UnrolledTsit5(_UnrolledERK, dx.Tsit5):
 class UnrolledDopri5(_UnrolledERK, dx.Dopri5):
     """Diffrax's `Dopri5`, with its stages unrolled on GPU and looped over on CPU."""
 
+    _interpolation_degree: ClassVar[int] = 4
     # Diffrax types this as its own interpolation class; k[1] has a zero weight
     interpolation_cls = staticmethod(  # ty: ignore[invalid-assignment]
         _interpolation(dx.Dopri5.interpolation_cls, zero=(3,))
@@ -441,6 +557,7 @@ class UnrolledDopri5(_UnrolledERK, dx.Dopri5):
 class UnrolledDopri8(_UnrolledERK, dx.Dopri8):
     """Diffrax's `Dopri8`, with its stages unrolled on GPU and looped over on CPU."""
 
+    _interpolation_degree: ClassVar[int] = 6
     # Diffrax types this as its own interpolation class; y1 and k[1:5] have zero
     # weights
     interpolation_cls = staticmethod(  # ty: ignore[invalid-assignment]
