@@ -304,8 +304,8 @@ class TestSparseDIAQArray:
         'sizes',
         [
             [1] + [2] * 35,  # 71 shifts: passes of 23, 24 and 24
-            [2] * 31,  # 62 shifts: without the fix, passes of 30, 30 and 2
-            [2] * 11 + [1] + [2] * 12 + [1],  # 48 shifts: same, 23, 24 and 1
+            [2] * 31,  # 62 shifts: a plain greedy split gives 30, 30 and 2
+            [2] * 11 + [1] + [2] * 12 + [1],  # 48 shifts: it gives 23, 24 and 1
         ],
     )
     def test_lindbladian_pass_starts(self, sizes):
