@@ -100,7 +100,7 @@ def _flatten_odd(x: Array) -> Array:
     return jnp.pad(x, (0, 1 - x.size % 2))
 
 
-def _odd_sized(fn: Callable, *xs: Array, min_size: int = 0) -> tuple[Array, ...]:
+def _odd_sized(fn: Callable, *xs: Array) -> tuple[Array, ...]:
     # fn(*xs) for an elementwise fn of arrays of one shape that returns a tuple of
     # arrays of that shape, with its outputs written out flattened to an odd number of
     # elements. XLA unrolls an elementwise GPU kernel by gcd(number of elements, 4),
@@ -110,12 +110,12 @@ def _odd_sized(fn: Callable, *xs: Array, min_size: int = 0) -> tuple[Array, ...]
     # keeps XLA from slicing the outputs back to their shape before writing them.
     # Under vmap, the whole batch is flattened, for an odd number of elements at any
     # batch size; a batch sharded across devices is then no longer split evenly, and
-    # XLA moves data between them. Arrays with fewer than `min_size` elements, counting
-    # the whole batch, are fn(*xs). The tangents are those of fn.
+    # XLA moves data between them. Arrays with fewer than `_MIN_SIZE_ODD_STAGES`
+    # elements, counting the whole batch, are fn(*xs). The tangents are those of fn.
 
     @jax.custom_batching.custom_vmap
     def odd_sized(*xs: Array) -> tuple[Array, ...]:
-        if xs[0].size < min_size:
+        if xs[0].size < _MIN_SIZE_ODD_STAGES:
             return fn(*xs)
         out = jax.lax.optimization_barrier(fn(*map(_flatten_odd, xs)))
         return tuple(x[: xs[0].size].reshape(xs[0].shape) for x in out)
@@ -142,36 +142,36 @@ def _odd_sized(fn: Callable, *xs: Array, min_size: int = 0) -> tuple[Array, ...]
     return odd_sized_jvp(*xs)
 
 
-def _odd_sized_tangents(fn: Callable, *xs: Array) -> tuple[Array, ...]:
-    # fn(*xs) for a linear fn as in `_odd_sized`, with only its tangents written out
-    # by `_odd_sized`, from `_MIN_SIZE_ODD_STAGES` elements. Under `jax.jacfwd`, XLA
-    # evaluates the tangents of a whole batch at once: e.g. 18 tangents of a 128 x 128
-    # state, 294,912 elements, unrolled as large states are (1.2x slower solves on an
-    # A100). `custom_vmap` has no transpose rule, so this is only for forward-mode
-    # solves (`Forward` gradient), which cannot be differentiated in reverse mode.
+def _odd_sized_trees(
+    fn: Callable, treedef: jtu.PyTreeDef, *trees: PyTree
+) -> tuple[PyTree, ...]:
+    # `_odd_sized` on each array of `trees` (each with structure `treedef`)
+    arrays = [treedef.flatten_up_to(tree) for tree in trees]
+    outs = [_odd_sized(fn, *xs) for xs in zip(*arrays, strict=True)]
+    return tuple(treedef.unflatten(list(x)) for x in zip(*outs, strict=True))
+
+
+def _odd_sized_tangents(
+    fn: Callable, treedef: jtu.PyTreeDef, *trees: PyTree
+) -> tuple[PyTree, ...]:
+    # fn(*trees) for a linear fn as in `_odd_sized_trees`, with only its tangents
+    # written out by `_odd_sized_trees`. Under `jax.jacfwd`, XLA evaluates the
+    # tangents of a whole batch at once: e.g. 18 tangents of a 128 x 128 state,
+    # 294,912 elements, unrolled as large states are (1.2x slower solves on an A100).
+    # `custom_vmap` has no transpose rule, so this is only for forward-mode solves
+    # (`Forward` gradient), which cannot be differentiated in reverse mode.
 
     @jax.custom_jvp
-    def odd_sized_tangents(*xs: Array) -> tuple[Array, ...]:
-        return fn(*xs)
+    def odd_sized_tangents(*trees: PyTree) -> tuple[PyTree, ...]:
+        return fn(*trees)
 
     @odd_sized_tangents.defjvp
     def _(primals: tuple, tangents: tuple) -> tuple:
         # fn is linear: its tangents are fn of the tangents
-        tangents_out = _odd_sized(fn, *tangents, min_size=_MIN_SIZE_ODD_STAGES)
+        tangents_out = _odd_sized_trees(fn, treedef, *tangents)
         return odd_sized_tangents(*primals), tangents_out
 
-    return odd_sized_tangents(*xs)
-
-
-def _odd_sized_trees(
-    fn: Callable, treedef: jtu.PyTreeDef, *trees: PyTree, tangents: bool = False
-) -> tuple[PyTree, ...]:
-    # `_odd_sized` (`_odd_sized_tangents` if `tangents`) on each array of `trees`
-    # (each with structure `treedef`)
-    odd_sized = _odd_sized_tangents if tangents else _odd_sized
-    arrays = [treedef.flatten_up_to(tree) for tree in trees]
-    outs = [odd_sized(fn, *xs) for xs in zip(*arrays, strict=True)]
-    return tuple(treedef.unflatten(list(x)) for x in zip(*outs, strict=True))
+    return odd_sized_tangents(*trees)
 
 
 class _UnrolledERK(dx.AbstractERK):
@@ -291,24 +291,28 @@ class _UnrolledERK(dx.AbstractERK):
         # elements, by the kernel that evaluates the stage before it (see
         # `_odd_sized`). The size is that of one batch element: under vmap, XLA sees
         # the whole batch, so a batch of smaller states keeps the unrolled kernels.
+        # Smaller states in a forward-mode solve: only their tangents are (see
+        # `_odd_sized_tangents`).
         leaves, treedef = jtu.tree_flatten(y0)
         odd = all(x.size >= _MIN_SIZE_ODD_STAGES for x in leaves)
-
-        # Small states in a forward-mode solve: their tangents are written out with an
-        # odd number of elements (see `_odd_sized_tangents`).
-        tangents = not odd and self.forward_mode
+        if odd:
+            odd_sized = _odd_sized_trees
+        elif self.forward_mode:
+            odd_sized = _odd_sized_tangents
+        else:
+            odd_sized = None
 
         def odd_sized_stages(fn: Callable, *trees: PyTree) -> tuple[PyTree, ...]:
-            if odd or tangents:
-                return _odd_sized_trees(fn, treedef, *trees, tangents=tangents)
-            return fn(*trees)
+            if odd_sized is None:
+                return fn(*trees)
+            return odd_sized(fn, treedef, *trees)
 
         def next_stage(k: PyTree, a: np.ndarray) -> tuple[PyTree, PyTree]:
             # the stage k, row-major, and the next stage input
             if not odd:
                 k = _row_major(k)
-                if not tangents:
-                    return k, _combine(y0, a, [*ks, k])
+            if odd_sized is None:
+                return k, _combine(y0, a, [*ks, k])
             # both written by one kernel
             k, yi = odd_sized_stages(
                 lambda y0, k, *ks: (k, _combine(y0, a, [*ks, k])), y0, k, *ks
