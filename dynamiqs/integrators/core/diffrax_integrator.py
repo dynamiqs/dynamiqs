@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import dataclasses
 import warnings
 from abc import abstractmethod
 from collections.abc import Callable
+from dataclasses import replace
 from functools import partial
 from typing import cast
 
@@ -250,7 +250,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             # write their tangents out as their stages (see `_odd_sized_tangents`)
             solver = self.diffrax_solver
             if isinstance(self.gradient, Forward) and isinstance(solver, _UnrolledERK):
-                solver = dataclasses.replace(solver, forward_mode=True)
+                solver = replace(solver, forward_mode=True)
 
             # === solve differential equation with diffrax
             return dx.diffeqsolve(
