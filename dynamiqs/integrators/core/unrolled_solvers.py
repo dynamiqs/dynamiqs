@@ -38,7 +38,6 @@ import jax.numpy as jnp
 import jax.tree_util as jtu
 import numpy as np
 from diffrax._custom_types import Args, BoolScalarLike, RealScalarLike, Y
-from diffrax._misc import linear_rescale
 from jax.experimental import layout
 from jaxtyping import Array, ArrayLike, PyTree
 
@@ -438,6 +437,14 @@ class _Nodes(eqx.Module):
     nodes: tuple[float, ...] = eqx.field(static=True)
 
 
+def _linear_rescale(t0: RealScalarLike, t: RealScalarLike, t1: RealScalarLike) -> Array:
+    # (t - t0) / (t1 - t0), or 0 if t0 == t1: Diffrax's private `linear_rescale`
+    cond = t0 == t1
+    numerator = jnp.where(cond, 0, t - t0)
+    denominator = jnp.where(cond, 1, t1 - t0)
+    return numerator / denominator
+
+
 class _NodesInterpolation(dx.AbstractLocalInterpolation):
     # The dense output of an unrolled step of a large state. Let theta be the time in
     # the step, theta = (t - t0) / (t1 - t0). Diffrax's interpolations are
@@ -457,7 +464,7 @@ class _NodesInterpolation(dx.AbstractLocalInterpolation):
         del left
         if t1 is not None:
             return self.evaluate(t1) - self.evaluate(t0)
-        theta = linear_rescale(self.t0, t0, self.t1)
+        theta = _linear_rescale(self.t0, t0, self.t1)
         nodes = self.k.nodes
         lagrange = []
         for node in nodes:
