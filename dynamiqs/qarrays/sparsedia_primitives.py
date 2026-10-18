@@ -544,14 +544,15 @@ def lindbladian_sparsedia(
 
 
 def _pass_starts(sizes: list[int]) -> list[int]:
-    # Indices of the items that start a new pass. Item i reads sizes[i] shifts: 2 for a
-    # shift and its mirror, which stay in one pass. Passes read about the same number of
-    # shifts, at most `MAX_FUSED_SHIFTS`.
+    # Indices of the items that start a new pass. Item i reads sizes[i] shifts: 1, or 2
+    # for a shift and its mirror, which stay in one pass. Passes read about the same
+    # number of shifts, at most `MAX_FUSED_SHIFTS`.
     total = sum(sizes)
     passes = max(-(-total // MAX_FUSED_SHIFTS), 1)
     pass_size = -(-total // passes)
     # A pass ends one shift short when a shift and its mirror do not fit. If that leaves
-    # an extra pass, one more shift per pass is enough.
+    # an extra pass, one more shift per pass removes it, unless passes already read
+    # `MAX_FUSED_SHIFTS` shifts.
     for limit in (pass_size, min(pass_size + 1, MAX_FUSED_SHIFTS)):
         starts, in_pass = [], 0
         for i, size in enumerate(sizes):
