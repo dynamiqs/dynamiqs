@@ -35,7 +35,9 @@ def test_complex_failed_step_is_rejected(controller):
         0.0,
         1.0,
         1.0,
-        jnp.array(1.0 + 0j),
+        # two entries: Diffrax's norm of a single entry is `abs`, which from JAX 0.12
+        # gives `inf` for `inf + nanj` and so hides the bug
+        jnp.array([1.0 + 0j, 1.0 + 0j]),
         stepsize_controller=controller,
         max_steps=1000,
         throw=False,
