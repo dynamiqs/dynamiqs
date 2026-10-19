@@ -53,7 +53,7 @@ _INLINE = getattr(getattr(jax, 'Inline', None), 'JAX_LATE', True)
 
 # The dimension from which mesolve fuses the DIA Lindbladian on CPU (on GPU, at every
 # dimension): see `MESolveDiffraxIntegrator._are_operators_sparsedia`.
-_MIN_DIMENSION_FUSED_ON_CPU = 80
+_MIN_DIMENSION_FUSED_ON_CPU = 160
 
 
 def _cpu_threads() -> int:
@@ -501,8 +501,9 @@ class MESolveDiffraxIntegrator(
         # (the layout of a time-qarray's value does not depend on t)
         # On CPU, the products run on one thread and the fused sum on several. On a
         # Xeon 8581C, for a driven cavity with one jump operator, the fused sum is
-        # slower below n = 80 and faster above (x0.70 at n = 256). With one thread, it
-        # is slower at every n: fuse only with several threads.
+        # faster from n = 160 in single and double precision, also when other processes
+        # share the cores (x0.80 at n = 192); below, it can be up to 12% slower. With
+        # one thread, it is slower at every n: fuse only with several threads.
         backend, n = jax.default_backend(), self.y0.shape[-1]
         fused_on_cpu = (
             backend == 'cpu' and n >= _MIN_DIMENSION_FUSED_ON_CPU and _cpu_threads() > 1

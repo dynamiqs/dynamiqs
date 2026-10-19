@@ -45,10 +45,10 @@ def test_fused_lindbladian_in_mesolve(monkeypatch):
 
 @pytest.mark.run(order=TEST_SHORT)
 @pytest.mark.parametrize(
-    ('n', 'threads', 'fused'), [(79, 16, False), (80, 16, True), (80, 1, False)]
+    ('n', 'threads', 'fused'), [(159, 16, False), (160, 16, True), (160, 1, False)]
 )
 def test_fused_lindbladian_on_cpu(monkeypatch, n, threads, fused):
-    # on CPU, mesolve fuses the DIA Lindbladian from n = 80 with several threads
+    # on CPU, mesolve fuses the DIA Lindbladian from n = 160 with several threads
     # (traced only)
     calls = []
     fused_terms = diffrax_integrator.lindbladian_sparsedia_terms
