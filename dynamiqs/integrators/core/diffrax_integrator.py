@@ -446,14 +446,9 @@ class MESolveDiffraxIntegrator(
         def vector_field_unvec_sparsedia(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
             half_LdL = 0.5 * sum([_L.dag() @ _L for _L in L])
-            fused = lindbladian_sparsedia_terms(
+            return lindbladian_sparsedia_terms(
                 -1j * H - half_LdL, 1j * H - half_LdL, L, y
             )
-            if fused is not None:
-                return fused
-            if self.options.assume_hermitian and not implicit:
-                return vector_field_unvec_hermitian(t, y, _)
-            return vector_field_unvec_standard(t, y, _)
 
         def vector_field_unvec_standard(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
