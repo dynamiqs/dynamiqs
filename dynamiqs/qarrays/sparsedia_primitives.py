@@ -526,10 +526,11 @@ def lindbladian_sparsedia(
                 weight = weight + column[..., None, :]
         return weight * block
 
-    # Each shift (p, q) is summed with its mirror (q, p). When rho is Hermitian and
-    # B = A^dag, the terms at (j, i) are then the exact complex conjugates of those at
-    # (i, j), added in the same order: the result is exactly Hermitian, as the
-    # Hermitian form tmp + tmp^dag is by construction.
+    # Each shift (p, q) is summed with its mirror (q, p), in the same pass. When rho is
+    # Hermitian and B = A^dag, the terms at (j, i) are then the exact complex
+    # conjugates of those at (i, j), added in the same order: run eagerly, the result
+    # is exactly Hermitian. Under jit, XLA can rewrite the sum, which leaves it
+    # Hermitian to round-off only, unlike the Hermitian form tmp + tmp^dag.
     items, done = [], set()
     for p, q in terms:
         if (p, q) not in done:
