@@ -290,13 +290,8 @@ class TestSparseDIAQArray:
         assert 'optimization_barrier' in str(jaxpr)
         out_dia = dq.lindbladian(H, [L], rho).to_jax()
         assert _allclose(out_dense, out_dia, atol=1e-6 * jnp.abs(out_dense).max())
-        assert jnp.array_equal(out_dia, out_dia.mT.conj())  # exactly Hermitian
-
-    def test_lindbladian_no_terms(self):
-        # an operator without diagonals and no jump operators: no shift at all
-        rho = self.denseA['simple'] @ self.denseB['simple'].dag()
-        out = dq.lindbladian(dq.zeros(rho.shape[-1], layout=dq.dia), [], rho)
-        assert jnp.array_equal(out.to_jax(), jnp.zeros_like(rho.to_jax()))
+        # a shift and its mirror share a pass: run eagerly, the sum is exactly Hermitian
+        assert jnp.array_equal(out_dia, out_dia.mT.conj())
 
     @pytest.mark.parametrize(
         ('sizes', 'expected'),
@@ -309,6 +304,8 @@ class TestSparseDIAQArray:
             ([2] * 11 + [1] + [2] * 12 + [1], [25, 23]),
             # 64 shifts: passes of 32 would give 31, 32 and 1
             ([2] * 15 + [1] + [2] * 15 + [1] * 3, [32, 32]),
+            # no shift at all
+            ([], []),
         ],
     )
     def test_lindbladian_passes(self, sizes, expected):
