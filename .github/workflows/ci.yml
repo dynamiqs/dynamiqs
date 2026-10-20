@@ -44,7 +44,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # lowest-direct installs the lowest versions that pyproject.toml allows for the
+        # direct dependencies, to check that they install and work
+        resolution: [highest, lowest-direct]
         group: [1, 2, 3, 4, 5]
+    env:
+      # for every uv command, as `uv run` would otherwise re-resolve to the highest versions
+      UV_RESOLUTION: ${{ matrix.resolution }}
     steps:
       - uses: actions/checkout@v4
 
@@ -54,6 +60,7 @@ jobs:
           python-version: "3.11"
           enable-cache: true
           cache-dependency-glob: "**/pyproject.toml"
+          cache-suffix: ${{ matrix.resolution }}
 
       - name: Install dependencies
         run: uv sync --extra dev
