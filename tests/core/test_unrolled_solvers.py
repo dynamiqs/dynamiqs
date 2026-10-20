@@ -188,6 +188,22 @@ def test_odd_sized_stages_match(monkeypatch):
     assert jnp.allclose(values_odd, values, rtol=1e-12)
 
 
+@pytest.mark.run(order=TEST_SHORT)
+def test_odd_sized_stages_count_the_batch(monkeypatch):
+    # small states get odd-sized stages when their whole batch, which XLA's kernels
+    # cover, is large: here a state of 64 elements alone stays below the size, a batch
+    # of 4 reaches it
+    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
+    monkeypatch.setattr(unrolled_solvers, '_MIN_BATCH_SIZE_ODD_STAGES', 4 * 8 * 8)
+
+    def odd_sized(fn, *args):
+        jaxpr = str(jax.make_jaxpr(fn)(*args))
+        return 'optimization_barrier' in jaxpr
+
+    assert not odd_sized(_solve(), 1.3)
+    assert odd_sized(jax.vmap(_solve()), jnp.array([1.3, 0.4, 0.9, 1.1]))
+
+
 @pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize(
     ('diffrax_solver', 'solver'),

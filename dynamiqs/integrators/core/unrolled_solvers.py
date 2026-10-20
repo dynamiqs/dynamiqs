@@ -87,11 +87,14 @@ def _row_major(x: PyTree) -> PyTree:
     )
 
 
-# The size from which an unrolled step writes its stages out with an odd number of
-# elements (see `_odd_sized`), tuned on an A100: about the size from which XLA unrolls
-# GPU kernels there, the number of threads it runs at once (108 multiprocessors x
-# 2048).
+# The sizes from which an unrolled step writes its stages out with an odd number of
+# elements (see `_odd_sized`), tuned on an A100. A state: about the size from which
+# XLA unrolls GPU kernels there, the number of threads it runs at once (108
+# multiprocessors x 2048). A batch of smaller states, which XLA's kernels cover whole:
+# twice that, since small states in batches just above it were up to 1.1x slower with
+# odd-sized stages (mesolve, n = 20 to 128).
 _MIN_SIZE_ODD_STAGES = 2**18
+_MIN_BATCH_SIZE_ODD_STAGES = 2**19
 
 
 def _flatten_odd(x: Array) -> Array:
@@ -110,10 +113,18 @@ def _odd_sized(fn: Callable, *xs: Array) -> tuple[Array, ...]:
     # keeps XLA from slicing the outputs back to their shape before writing them.
     # Under vmap, the whole batch is flattened, for an odd number of elements at any
     # batch size; a batch sharded across devices is then no longer split evenly, and
-    # XLA moves data between them. The tangents are those of fn.
+    # XLA moves data between them. Small states keep their shape, unless their batch
+    # is large (see `_MIN_BATCH_SIZE_ODD_STAGES`). The tangents are those of fn.
+    state_size = xs[0].size
 
     @jax.custom_batching.custom_vmap
     def odd_sized(*xs: Array) -> tuple[Array, ...]:
+        # xs: the whole batch under vmap
+        if (
+            state_size < _MIN_SIZE_ODD_STAGES
+            and xs[0].size < _MIN_BATCH_SIZE_ODD_STAGES
+        ):
+            return fn(*xs)
         out = jax.lax.optimization_barrier(fn(*map(_flatten_odd, xs)))
         return tuple(x[: xs[0].size].reshape(xs[0].shape) for x in out)
 
@@ -257,22 +268,14 @@ class _UnrolledERK(dx.AbstractERK):
         ks = [_row_major(k_first)]
 
         # === other stages
-        # Large states: each stage input is written out with an odd number of
-        # elements, by the kernel that evaluates the stage before it (see
-        # `_odd_sized`). The size is that of one batch element: under vmap, XLA sees
-        # the whole batch, so a batch of smaller states keeps the unrolled kernels.
-        leaves, treedef = jtu.tree_flatten(y0)
-        odd = all(x.size >= _MIN_SIZE_ODD_STAGES for x in leaves)
-
-        def odd_sized_stages(fn: Callable, *trees: PyTree) -> tuple[PyTree, ...]:
-            return _odd_sized_trees(fn, treedef, *trees) if odd else fn(*trees)
+        # Large states (under vmap, large batches): each stage input is written out
+        # with an odd number of elements, by the kernel that evaluates the stage
+        # before it (see `_odd_sized`).
+        treedef = jtu.tree_structure(y0)
 
         def next_stage(k: PyTree, a: np.ndarray) -> tuple[PyTree, PyTree]:
-            # the stage k, row-major, and the next stage input
-            if not odd:
-                k = _row_major(k)
-                return k, _combine(y0, a, [*ks, k])
-            # both written by one kernel
+            # the stage k, row-major, and the next stage input, both written by one
+            # kernel
             k, yi = _odd_sized_trees(
                 lambda y0, k, *ks: (k, _combine(y0, a, [*ks, k])), treedef, y0, k, *ks
             )
@@ -281,7 +284,9 @@ class _UnrolledERK(dx.AbstractERK):
         # the tableaus unrolled here (Tsit5, Dopri5, Dopri8) have several stages
         stages = list(zip(tableau.c, tableau.a_lower, strict=True))
         a = stages[0][1]
-        (yi,) = odd_sized_stages(lambda y0, k, a=a: (_combine(y0, a, [k]),), y0, ks[0])
+        (yi,) = _odd_sized_trees(
+            lambda y0, k, a=a: (_combine(y0, a, [k]),), treedef, y0, ks[0]
+        )
         for i, (c, _) in enumerate(stages):
             ti = _stage_time(t0, t1, dt, c)
             fi = f(ti, yi)
@@ -289,7 +294,7 @@ class _UnrolledERK(dx.AbstractERK):
                 ki, yi = next_stage(terms.prod(fi, control), stages[i + 1][1])
             else:
                 # the last stage, also the first stage of the next step if FSAL
-                (fi,) = odd_sized_stages(lambda f: (f,), fi)
+                (fi,) = _odd_sized_trees(lambda f: (f,), treedef, fi)
                 ki = _row_major(terms.prod(fi, control))
             fs.append(fi)
             ks.append(ki)
