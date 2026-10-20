@@ -224,10 +224,14 @@ def _add_sparsedia_sparsedia_by_stacking(
 ) -> Array:
     # Each output diagonal built, then stacked: on GPU, XLA fuses this into one
     # kernel, while filling a zero array with `.at[i].add` is one kernel per diagonal.
+    # Stacked with `jnp.concatenate` rather than `jnp.stack`: under `vmap`, `jnp.stack`
+    # lowers to a concatenate and a transpose (jax-ml/jax#41794), which XLA can fuse
+    # into a solver stage and slow it down.
     if len(terms) == 0:
         return jnp.zeros(shape, dtype)
     zero = jnp.zeros((*shape[:-2], shape[-1]), dtype)
-    return jnp.stack([sum(diag_terms, zero) for diag_terms in terms], axis=-2)
+    diags = [sum(diag_terms, zero)[..., None, :] for diag_terms in terms]
+    return jnp.concatenate(diags, axis=-2)
 
 
 def _add_sparsedia_sparsedia_by_scattering(
