@@ -26,6 +26,7 @@ implementation.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable, Sequence
 from typing import cast
 
@@ -103,6 +104,16 @@ def _flatten_odd(x: Array) -> Array:
     return jnp.pad(x, (0, 1 - x.size % 2))
 
 
+def _devices(x: Array) -> int:
+    # the number of devices x is split across, as traced (the mesh of its sharding,
+    # without the axes a `shard_map` body is local to); JAX >= 0.6, earlier versions
+    # count 1
+    if jax.__version_info__ < (0, 6):
+        return 1
+    mesh = jax.typeof(x).sharding.mesh
+    return mesh.size // math.prod(mesh.shape[axis] for axis in mesh.manual_axes)
+
+
 def _odd_sized(fn: Callable, *xs: Array) -> tuple[Array, ...]:
     # fn(*xs) for an elementwise fn of arrays of one shape that returns a tuple of
     # arrays of that shape, with its outputs written out flattened to an odd number of
@@ -114,15 +125,15 @@ def _odd_sized(fn: Callable, *xs: Array) -> tuple[Array, ...]:
     # Under vmap, the whole batch is flattened, for an odd number of elements at any
     # batch size; a batch sharded across devices is then no longer split evenly, and
     # XLA moves data between them. Small states keep their shape, unless their batch
-    # is large (see `_MIN_BATCH_SIZE_ODD_STAGES`). The tangents are those of fn.
+    # is large (see `_MIN_BATCH_SIZE_ODD_STAGES`) and on one device. The tangents are
+    # those of fn.
     state_size = xs[0].size
 
     @jax.custom_batching.custom_vmap
     def odd_sized(*xs: Array) -> tuple[Array, ...]:
         # xs: the whole batch under vmap
-        if (
-            state_size < _MIN_SIZE_ODD_STAGES
-            and xs[0].size < _MIN_BATCH_SIZE_ODD_STAGES
+        if state_size < _MIN_SIZE_ODD_STAGES and (
+            xs[0].size < _MIN_BATCH_SIZE_ODD_STAGES or any(_devices(x) > 1 for x in xs)
         ):
             return fn(*xs)
         out = jax.lax.optimization_barrier(fn(*map(_flatten_odd, xs)))

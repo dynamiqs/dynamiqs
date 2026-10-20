@@ -203,6 +203,16 @@ def test_odd_sized_stages_count_the_batch(monkeypatch):
     assert not odd_sized(_solve(), 1.3)
     amplitudes = jnp.array([[1.3, 0.4], [0.9, 1.1]])
     assert odd_sized(jax.vmap(jax.vmap(_solve())), amplitudes)
+    # a batch split across devices keeps its shape (flattened, it would no longer be
+    # split evenly)
+    if jax.__version_info__ >= (0, 6):
+        shd = jax.sharding
+        stage = jax.vmap(lambda x: unrolled_solvers._odd_sized(lambda x: (2 * x,), x))
+        mesh = shd.AbstractMesh((2,), ('batch',), axis_types=(shd.AxisType.Auto,))
+        sharding = shd.NamedSharding(mesh, shd.PartitionSpec('batch'))
+        assert odd_sized(stage, jax.ShapeDtypeStruct((4, 8, 8), jnp.complex128))
+        batch = jax.ShapeDtypeStruct((4, 8, 8), jnp.complex128, sharding=sharding)
+        assert not odd_sized(stage, batch)
 
 
 @pytest.mark.run(order=TEST_LONG)
