@@ -192,7 +192,7 @@ def test_odd_sized_stages_match(monkeypatch):
 def test_odd_sized_stages_count_the_batch(monkeypatch):
     # small states get odd-sized stages when their whole batch, which XLA's kernels
     # cover, is large: here a state of 64 elements alone stays below the size, a batch
-    # of 4 reaches it
+    # of 2 x 2 under nested vmaps (as cartesian batching) reaches it
     monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
     monkeypatch.setattr(unrolled_solvers, '_MIN_BATCH_SIZE_ODD_STAGES', 4 * 8 * 8)
 
@@ -201,7 +201,8 @@ def test_odd_sized_stages_count_the_batch(monkeypatch):
         return 'optimization_barrier' in jaxpr
 
     assert not odd_sized(_solve(), 1.3)
-    assert odd_sized(jax.vmap(_solve()), jnp.array([1.3, 0.4, 0.9, 1.1]))
+    amplitudes = jnp.array([[1.3, 0.4], [0.9, 1.1]])
+    assert odd_sized(jax.vmap(jax.vmap(_solve())), amplitudes)
 
 
 @pytest.mark.run(order=TEST_LONG)
