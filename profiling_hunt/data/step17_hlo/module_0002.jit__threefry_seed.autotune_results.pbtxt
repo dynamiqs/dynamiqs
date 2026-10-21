@@ -1,0 +1,15 @@
+version: 3
+results {
+  device: "CUDA: 8.9, Cores: 142, GPU clock: 2.52 GHz, Memory bandwidth: 864 GB/s, L2 cache: 96 MB, DNN version: 9.25.1"
+  hlo: "{\n  tmp_0 = s64[] parameter(0)\n  tmp_1 = s64[] constant(32)\n  tmp_2 = s64[] shift-right-logical(s64[] tmp_0, s64[] tmp_1)\n  tmp_3 = u32[] convert(s64[] tmp_2)\n  tmp_4 = u32[1]{0} bitcast(u32[] tmp_3)\n  tmp_5 = s64[] constant(4294967295)\n  tmp_6 = s64[] and(s64[] tmp_0, s64[] tmp_5)\n  tmp_7 = u32[] convert(s64[] tmp_6)\n  tmp_8 = u32[1]{0} bitcast(u32[] tmp_7)\n  ROOT tmp_9 = u32[2]{0} concatenate(u32[1]{0} tmp_4, u32[1]{0} tmp_8), dimensions={0}\n}"
+  result {
+    other {
+      name: "NATIVE_EMITTER"
+      config {
+        type_url: "type.googleapis.com/xla.autotuner.BackendConfig"
+        value: "2\000"
+      }
+    }
+  }
+  version: 45
+}

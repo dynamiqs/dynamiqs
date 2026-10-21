@@ -1,0 +1,85 @@
+HloModule jit_scatter-add, is_scheduled=true, entry_computation_layout={(c128[2,64]{1,0}, s32[1]{0}, c128[64]{0})->c128[2,64]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true,true,true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="a0663f8c9e47fbc1e86d3039e0bd03ba"}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step11_dump.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/qarray.py"
+3 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/materialized_qarray.py"
+4 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/sparsedia_dataarray.py"
+5 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/sparsedia_primitives.py"
+
+FunctionNames
+1 "<module>"
+2 "QArray.__sub__"
+3 "MaterializedQArray.__add__"
+4 "SparseDIADataArray.__add__"
+5 "add_sparsedia_sparsedia"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=78 end_line=78 column=21 end_column=49}
+2 {file_name_id=2 function_name_id=2 line=583 end_line=583 column=15 end_column=26}
+3 {file_name_id=3 function_name_id=3 line=262 end_line=262 column=17 end_column=35}
+4 {file_name_id=4 function_name_id=4 line=284 end_line=286 column=29 end_column=13}
+5 {file_name_id=5 function_name_id=5 line=194 end_line=194 column=24 end_column=63}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+4 {file_location_id=4 parent_frame_id=4}
+5 {file_location_id=5 parent_frame_id=5}
+
+
+%fused_complex (param_0.31: s32[1], param_1.44: c128[2,64], param_2.37: c128[64], param_3.19: pred[]) -> c128[2,64] {
+  %param_1.44 = c128[2,64]{1,0} parameter(1)
+  %scatter-add.19.4 = f64[2,64]{1,0} real(%param_1.44), metadata={op_name="jit(scatter-add)/scatter-add" stack_frame_id=5}
+  %param_3.19 = pred[] parameter(3)
+  %broadcast.27.1 = pred[1,64]{1,0} broadcast(%param_3.19), dimensions={}, metadata={stack_frame_id=5}
+  %param_0.31 = s32[1]{0} parameter(0)
+  %bitcast.15 = s32[] bitcast(%param_0.31), metadata={op_name="args[1]"}
+  %constant_12_2 = s32[] constant(0)
+  %dynamic-slice.8.3 = f64[1,64]{1,0} dynamic-slice(%scatter-add.19.4, %bitcast.15, %constant_12_2), dynamic_slice_sizes={1,64}, metadata={stack_frame_id=5}
+  %param_2.37 = c128[64]{0} parameter(2)
+  %scatter-add.20.1 = f64[64]{0} real(%param_2.37), metadata={op_name="jit(scatter-add)/scatter-add" stack_frame_id=5}
+  %bitcast.1.5 = f64[1,64]{1,0} bitcast(%scatter-add.20.1), metadata={op_name="jit(scatter-add)/scatter-add" stack_frame_id=5}
+  %scatter-add.2.5 = f64[1,64]{1,0} add(%dynamic-slice.8.3, %bitcast.1.5), metadata={op_name="jit(scatter-add)/scatter-add" stack_frame_id=5}
+  %select.2.3 = f64[1,64]{1,0} select(%broadcast.27.1, %scatter-add.2.5, %dynamic-slice.8.3), metadata={stack_frame_id=5}
+  %dynamic-update-slice.4.3 = f64[2,64]{1,0} dynamic-update-slice(%scatter-add.19.4, %select.2.3, %bitcast.15, %constant_12_2), metadata={op_name="jit(scatter-add)/scatter-add" stack_frame_id=5}
+  %scatter-add.22.4 = f64[2,64]{1,0} imag(%param_1.44), metadata={op_name="jit(scatter-add)/scatter-add" stack_frame_id=5}
+  %dynamic-slice.9.3 = f64[1,64]{1,0} dynamic-slice(%scatter-add.22.4, %bitcast.15, %constant_12_2), dynamic_slice_sizes={1,64}, metadata={stack_frame_id=5}
+  %scatter-add.23.1 = f64[64]{0} imag(%param_2.37), metadata={op_name="jit(scatter-add)/scatter-add" stack_frame_id=5}
+  %bitcast.2.5 = f64[1,64]{1,0} bitcast(%scatter-add.23.1), metadata={op_name="jit(scatter-add)/scatter-add" stack_frame_id=5}
+  %scatter-add.3.5 = f64[1,64]{1,0} add(%dynamic-slice.9.3, %bitcast.2.5), metadata={op_name="jit(scatter-add)/scatter-add" stack_frame_id=5}
+  %select.3.3 = f64[1,64]{1,0} select(%broadcast.27.1, %scatter-add.3.5, %dynamic-slice.9.3), metadata={stack_frame_id=5}
+  %dynamic-update-slice.5.3 = f64[2,64]{1,0} dynamic-update-slice(%scatter-add.22.4, %select.3.3, %bitcast.15, %constant_12_2), metadata={op_name="jit(scatter-add)/scatter-add" stack_frame_id=5}
+  ROOT %scatter-add.25.1 = c128[2,64]{1,0} complex(%dynamic-update-slice.4.3, %dynamic-update-slice.5.3), metadata={op_name="jit(scatter-add)/scatter-add" stack_frame_id=5}
+}
+
+%and.reduce_sub_computation (lhs: pred[], rhs: pred[]) -> pred[] {
+  %rhs = pred[] parameter(1)
+  %lhs = pred[] parameter(0)
+  ROOT %and.6 = pred[] and(%lhs, %rhs)
+}
+
+%fused_reduce (param_0.32: s32[2], param_1.45: s32[1]) -> pred[] {
+  %constant_12_1 = s32[] constant(0)
+  %broadcast.26.5 = s32[2]{0} broadcast(%constant_12_1), dimensions={}, metadata={stack_frame_id=5}
+  %param_1.45 = s32[1]{0} parameter(1)
+  %constant_36_1 = s32[1]{0} constant({0}), metadata={stack_frame_id=5}
+  %concatenate.2.1 = s32[2]{0} concatenate(%param_1.45, %constant_36_1), dimensions={0}, metadata={stack_frame_id=5}
+  %compare.6.5 = pred[2]{0} compare(%broadcast.26.5, %concatenate.2.1), direction=LE, metadata={stack_frame_id=5}
+  %param_0.32 = s32[2]{0} parameter(0)
+  %compare.7.1 = pred[2]{0} compare(%param_0.32, %concatenate.2.1), direction=GE, metadata={stack_frame_id=5}
+  %and.4.3 = pred[2]{0} and(%compare.6.5, %compare.7.1), metadata={stack_frame_id=5}
+  %constant_38_1 = pred[] constant(true), metadata={stack_frame_id=5}
+  ROOT %reduce.2.1 = pred[] reduce(%and.4.3, %constant_38_1), dimensions={0}, to_apply=%and.reduce_sub_computation, metadata={stack_frame_id=5}
+}
+
+ENTRY %main.3 (args_0_.1: c128[2,64], args_1_.1: s32[1], args_2_.1: c128[64]) -> c128[2,64] {
+  %args_1_.1 = s32[1]{0} parameter(1), metadata={op_name="args[1]"}
+  %constant_37_0 = s32[2]{0} constant({1, 0}), metadata={stack_frame_id=5}
+  %input_reduce_fusion = pred[] fusion(%constant_37_0, %args_1_.1), kind=kInput, calls=%fused_reduce, metadata={stack_frame_id=5}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %args_2_.1 = c128[64]{0} parameter(2), metadata={op_name="args[2]"}
+  %args_0_.1 = c128[2,64]{1,0} parameter(0), metadata={op_name="args[0]"}
+  ROOT %loop_complex_fusion = c128[2,64]{1,0} fusion(%args_1_.1, %args_0_.1, %args_2_.1, %input_reduce_fusion), kind=kLoop, calls=%fused_complex, metadata={op_name="jit(scatter-add)/scatter-add" stack_frame_id=5}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+}
+

@@ -1,0 +1,33 @@
+HloModule jit__threefry_seed, is_scheduled=true, entry_computation_layout={(s64[])->u32[2]{0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="d08bbe963b335ea596667cf875c4e9d5"}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step17_dump_bare.py"
+
+FunctionNames
+1 "<module>"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=24 end_line=24 column=22 end_column=39}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+
+
+%fused_concatenate (param_0.3: s64[]) -> u32[2] {
+  %param_0.3 = s64[] parameter(0)
+  %constant_3_1 = s64[] constant(32)
+  %shift_right_logical.1.1 = s64[] shift-right-logical(%param_0.3, %constant_3_1), metadata={op_name="jit(_threefry_seed)/shift_right_logical" stack_frame_id=1}
+  %convert_element_type.2.1 = u32[] convert(%shift_right_logical.1.1), metadata={op_name="jit(_threefry_seed)/convert_element_type" stack_frame_id=1}
+  %bitcast.3 = u32[1]{0} bitcast(%convert_element_type.2.1), metadata={op_name="jit(_threefry_seed)/convert_element_type" stack_frame_id=1}
+  %constant_2_1 = s64[] constant(4294967295)
+  %and.1.1 = s64[] and(%param_0.3, %constant_2_1), metadata={op_name="jit(_threefry_seed)/and" stack_frame_id=1}
+  %convert_element_type.3.1 = u32[] convert(%and.1.1), metadata={op_name="jit(_threefry_seed)/convert_element_type" stack_frame_id=1}
+  %bitcast.1.1 = u32[1]{0} bitcast(%convert_element_type.3.1), metadata={op_name="jit(_threefry_seed)/convert_element_type" stack_frame_id=1}
+  ROOT %concatenate.1.1 = u32[2]{0} concatenate(%bitcast.3, %bitcast.1.1), dimensions={0}, metadata={op_name="jit(_threefry_seed)/concatenate" stack_frame_id=1}
+}
+
+ENTRY %main.1 (seed.1: s64[]) -> u32[2] {
+  %seed.1 = s64[] parameter(0), metadata={op_name="seed"}
+  ROOT %input_concatenate_fusion = u32[2]{0} fusion(%seed.1), kind=kInput, calls=%fused_concatenate, metadata={op_name="jit(_threefry_seed)/concatenate" stack_frame_id=1}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+}
+

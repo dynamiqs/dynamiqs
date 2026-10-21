@@ -1,0 +1,28 @@
+#loc1 = loc("args[0]")
+#loc2 = loc("args[1]")
+#loc3 = loc("args[2]")
+#loc8 = loc("scatter")
+#loc13 = loc("scatter:"(#loc8))
+module @jit_scatter attributes {mhlo.num_partitions = 1 : i32, mhlo.num_replicas = 1 : i32} {
+  func.func public @main(%arg0: tensor<64x1xcomplex<f64>> loc("args[0]"), %arg1: tensor<1xi32> loc("args[1]"), %arg2: tensor<1xcomplex<f64>> loc("args[2]")) -> (tensor<64x1xcomplex<f64>> {jax.result_info = "result"}) {
+    %0 = "stablehlo.scatter"(%arg0, %arg1, %arg2) <{indices_are_sorted = true, scatter_dimension_numbers = #stablehlo.scatter<update_window_dims = [0], inserted_window_dims = [0], scatter_dims_to_operand_dims = [0]>, unique_indices = true}> ({
+    ^bb0(%arg3: tensor<complex<f64>> loc("scatter:"(#loc8)), %arg4: tensor<complex<f64>> loc("scatter:"(#loc8))):
+      stablehlo.return %arg4 : tensor<complex<f64>> loc(#loc17)
+    }) : (tensor<64x1xcomplex<f64>>, tensor<1xi32>, tensor<1xcomplex<f64>>) -> tensor<64x1xcomplex<f64>> loc(#loc17)
+    return %0 : tensor<64x1xcomplex<f64>> loc(#loc18)
+  } loc(#loc)
+} loc(#loc)
+#loc = loc(unknown)
+#loc4 = loc("/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/states.py":129:16 to :36)
+#loc5 = loc("/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/states.py":133:11 to :35)
+#loc6 = loc("/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/states.py":189:11 to :28)
+#loc7 = loc("/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step11_dump.py":79:7 to :23)
+#loc9 = loc("fock.<locals>._fock"(#loc4))
+#loc10 = loc("fock"(#loc5))
+#loc11 = loc("fock_dm"(#loc6))
+#loc12 = loc("<module>"(#loc7))
+#loc14 = loc(callsite(#loc11 at #loc12))
+#loc15 = loc(callsite(#loc10 at #loc14))
+#loc16 = loc(callsite(#loc9 at #loc15))
+#loc17 = loc("jit(scatter)/scatter"(#loc16))
+#loc18 = loc("jit(scatter)"(#loc16))

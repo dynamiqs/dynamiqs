@@ -1,0 +1,130 @@
+001: kCustomKernel  [source       | next=002 (1)] loop_minimum_multiply_select_fusion grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+002: kCustomKernel  [prev=001 (1) | next=003 (1)] loop_multiply_fusion_3 grid: [1, 1, 1] threads: [40, 1, 1]  shared_memory: 0 bytes
+003: kCustomKernel  [prev=002 (1) | next=007 (1)] input_reduce_fusion_3 grid: [1, 1, 1] threads: [32, 1, 1]  shared_memory: 0 bytes
+007: kConditional   [prev=003 (1) | next=008 (1)]   
+  false_branch:
+    004: kCustomCall [source       | next=005 (1)] kCustomCall
+    005: kCustomCall [prev=004 (1) | sink        ] kCustomCall
+  true_branch:
+    006: kCopy [source | sink] kCopy
+008: kCustomKernel  [prev=007 (1) | next=012 (1)] input_reduce_fusion_4 grid: [1, 1, 1] threads: [32, 1, 1]  shared_memory: 0 bytes
+012: kConditional   [prev=008 (1) | next=000 (1)]   
+  false_branch:
+    009: kCustomCall [source       | next=010 (1)] kCustomCall
+    010: kCustomCall [prev=009 (1) | sink        ] kCustomCall
+  true_branch:
+    011: kCopy [source | sink] kCopy
+000: kCommandBuffer [prev=012 (1) | next=027 (1)] 
+    013: kCustomKernel [source       | sink        ] loop_select_fusion_4 grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+    014: kCopy         [source       | sink        ] kCopy
+    015: kCustomKernel [source       | sink        ] loop_broadcast_fusion grid: [1, 1, 1] threads: [40, 1, 1]  shared_memory: 0 bytes
+    016: kCopy         [source       | next=017 (1)] kCopy
+    017: kCopy         [prev=016 (1) | sink        ] kCopy
+    018: kCopy         [prev=016 (2) | sink        ] kCopy
+    019: kCopy         [prev=016 (3) | sink        ] kCopy
+    020: kCopy         [prev=016 (4) | sink        ] kCopy
+    021: kCustomKernel [source       | sink        ] loop_broadcast_fusion_2 grid: [1280, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+    022: kCustomKernel [source       | next=023 (1)] input_transpose_fusion_3 grid: [4, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+    023: kCustomKernel [prev=022 (1) | sink        ] input_reduce_fusion_5 grid: [1, 1, 1] threads: [256, 1, 1]  shared_memory: 0 bytes
+027: kConditional   [prev=000 (1) | next=030 (3)]   
+  false_branch:
+    024: kCustomCall [source       | next=025 (1)] kCustomCall
+    025: kCustomCall [prev=024 (1) | sink        ] kCustomCall
+  true_branch:
+    026: kCopy [source | sink] kCopy
+028: kCustomKernel  [source       | next=031 (3)] loop_broadcast_fusion_1 grid: [32, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+029: kCustomCall    [source       | next=031 (2)] kCustomCall
+030: kCopy          [prev=027 (3) | next=031 (1)] kCopy
+031: kWhile         [prev=030 (1) | next=079 (1)]   
+condition:
+    032: kCustomKernel [source | sink] loop_and_fusion grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+  body:
+    000: kCommandBuffer [source       | next=043 (1)] 
+        033: kCopy         [source       | next=035 (2)] kCopy
+        034: kCopy         [source       | next=035 (1)] kCopy
+        035: kCustomKernel [prev=034 (1) | next=037 (2)] loop_multiply_fusion_2 grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+        036: kCustomKernel [source       | next=037 (1)] loop_select_fusion grid: [32, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+        037: kCustomKernel [prev=036 (1) | sink        ] loop_pad_fusion grid: [224, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+        038: kCustomKernel [source       | next=039 (1)] wrapped_transpose grid: [4, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+        039: kCopy         [prev=038 (1) | sink        ] kCopy
+        040: kCustomKernel [source       | sink        ] loop_select_fusion_2 grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+        041: kCopy         [source       | next=042 (1)] kCopy
+        042: kCopy         [prev=041 (1) | sink        ] kCopy
+    043: kWhile         [prev=000 (1) | next=000 (1)]       
+condition:
+        044: kCustomKernel [source | sink] loop_and_fusion_1 grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+      body:
+        000: kCommandBuffer [source | sink] 
+            045: kCustomKernel [source       | next=048 (3)] loop_reduce_fusion grid: [32, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+            046: kCustomKernel [source       | next=048 (2)] loop_multiply_fusion grid: [2, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+            047: kCustomKernel [source       | next=048 (1)] input_reduce_fusion grid: [1, 1, 1] threads: [32, 1, 1]  shared_memory: 0 bytes
+            048: kCustomKernel [prev=047 (1) | next=049 (1)] input_add_fusion grid: [32, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+            049: kCustomKernel [prev=048 (1) | next=050 (1)] input_transpose_fusion grid: [4, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+            050: kCustomKernel [prev=049 (1) | next=051 (1)] loop_dynamic_update_slice_fusion grid: [32, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+            051: kCustomKernel [prev=050 (1) | sink        ] loop_add_fusion grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+    000: kCommandBuffer [prev=043 (1) | next=059 (1)] 
+        052: kCustomKernel [source       | next=056 (4)] input_reduce_fusion_1 grid: [1, 1, 1] threads: [256, 1, 1]  shared_memory: 0 bytes
+        053: kCustomKernel [source       | next=054 (1)] loop_reduce_fusion_1 grid: [32, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+        054: kCustomKernel [prev=053 (1) | next=055 (1)] wrapped_transpose grid: [4, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+        055: kCustomKernel [prev=054 (1) | next=056 (1)] input_transpose_fusion_2 grid: [4, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+        056: kCustomKernel [prev=055 (1) | next=057 (1)] loop_multiply_fusion_1 grid: [32, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+        057: kCustomKernel [prev=056 (1) | next=058 (1)] input_reduce_fusion_2 grid: [1, 1, 1] threads: [256, 1, 1]  shared_memory: 0 bytes
+        058: kCustomKernel [prev=057 (1) | sink        ] loop_compare_minimum_select_fusion grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+    059: kWhile         [prev=000 (1) | next=000 (1)]       
+condition:
+        060: kCustomKernel [source | sink] loop_and_fusion_2 grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+      body:
+        061: kCustomKernel [source       | next=062 (1)] loop_concatenate_fusion grid: [1, 1, 1] threads: [7, 1, 1]  shared_memory: 0 bytes
+        062: kCustomKernel [prev=061 (1) | next=064 (2)] loop_dynamic_update_slice_fusion_1 grid: [32, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+        063: kCustomKernel [source       | next=064 (1)] loop_dynamic_update_slice_fusion_2 grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+        064: kCustomKernel [prev=063 (1) | sink        ] loop_add_fusion grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+    000: kCommandBuffer [prev=059 (1) | next=073 (1)] 
+        065: kCustomKernel [source | sink] wrapped_add_1 grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+        066: kCustomKernel [source | sink] wrapped_add_1 grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+        067: kCustomKernel [source | sink] input_transpose_fusion_1 grid: [4, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+        068: kCustomKernel [source | sink] loop_select_fusion_1 grid: [32, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+        069: kCustomKernel [source | sink] loop_divide_fusion grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+        070: kCustomKernel [source | sink] loop_compare_fusion grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+    073: kConditional   [prev=000 (1) | next=000 (1)]       
+      false_branch:
+        071: kCustomCall [source | sink] kCustomCall
+      true_branch:
+        072: kCopy [source | sink] kCopy
+    000: kCommandBuffer [prev=073 (1) | sink        ] 
+        074: kCopy         [source | sink] kCopy
+        075: kCustomKernel [source | sink] loop_add_fusion_2 grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+        076: kCustomKernel [source | sink] loop_add_fusion_3 grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+        077: kCustomKernel [source | sink] loop_select_fusion_3 grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+        078: kCustomKernel [source | sink] loop_add_fusion grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+079: kCustomCall    [prev=031 (1) | sink        ] kCustomCall
+080: kCustomKernel  [prev=031 (2) | next=084 (1)] loop_not_select_fusion grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+084: kConditional   [prev=080 (1) | next=000 (1)]   
+  false_branch:
+    081: kCustomCall [source       | next=082 (1)] kCustomCall
+    082: kCustomCall [prev=081 (1) | sink        ] kCustomCall
+  true_branch:
+    083: kCopy [source | sink] kCopy
+000: kCommandBuffer [prev=084 (1) | sink        ] 
+    085: kCustomKernel [source        | next=091 (1)] wrapped_compare grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+    091: kConditional  [prev=085 (1)  | next=095 (4)]       
+      false_branch:
+        086: kCustomKernel [source       | next=089 (1)] wrapped_compare grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes
+        089: kConditional  [prev=086 (1) | sink        ]           
+          false_branch:
+            087: kCustomKernel [source | sink] wrapped_broadcast grid: [1280, 1, 1] threads: [128, 1, 1]  shared_memory: 0 bytes
+          true_branch:
+            088: kCopy [source | sink] kCopy
+      true_branch:
+        090: kCopy [source | sink] kCopy
+    092: kCopy         [source        | sink        ] kCopy
+    093: kCopy         [source        | sink        ] kCopy
+    094: kCopy         [source        | sink        ] kCopy
+    095: kCopy         [prev=091 (4)  | sink        ] kCopy
+    096: kCopy         [prev=091 (5)  | sink        ] kCopy
+    097: kCopy         [source        | sink        ] kCopy
+    098: kCopy         [source        | sink        ] kCopy
+    099: kCopy         [source        | sink        ] kCopy
+    100: kCopy         [source        | sink        ] kCopy
+    101: kCopy         [source        | sink        ] kCopy
+    102: kCopy         [prev=091 (11) | sink        ] kCopy
+    103: kCopy         [prev=091 (12) | sink        ] kCopy

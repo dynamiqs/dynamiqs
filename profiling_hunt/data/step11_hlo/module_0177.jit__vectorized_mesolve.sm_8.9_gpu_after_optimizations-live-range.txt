@@ -1,0 +1,606 @@
+HloLiveRange (max 299):
+  InstructionSequence:
+    0:tsave.1
+    1:loop_minimum_multiply_select_fusion
+    2:get-tuple-element.2097
+    3:loop_multiply_fusion.3
+    4:tuple.83.0
+    5:input_reduce_fusion.3
+    6:cond.151.0
+    7:arg_empty_tuple.3
+    8:constant_33_0
+    9:pure_callback.6
+    10:pure_callback.7
+    11:tuple.549
+    12:Arg_.39
+    13:get-tuple-element.2080
+    14:copy.42
+    15:tuple.550
+    16:cond.152.clone
+    17:get-tuple-element.7.0
+    18:get-tuple-element.2096
+    19:get-tuple-element.2107
+    20:input_reduce_fusion.4
+    21:cond.153.0
+    22:arg_empty_tuple.5
+    23:constant_37_0
+    24:pure_callback.10
+    25:pure_callback.11
+    26:tuple.551
+    27:Arg_.43
+    28:get-tuple-element.2082
+    29:copy.44
+    30:tuple.552
+    31:cond.154.clone
+    32:get-tuple-element.2108
+    33:loop_select_fusion.4
+    34:copy.47
+    35:loop_broadcast_fusion
+    36:constant_140_0
+    37:copy.102
+    38:copy.52
+    39:copy.53
+    40:copy.54
+    41:copy.57
+    42:get-tuple-element.2086
+    43:loop_broadcast_fusion.2
+    44:rho0_data_data.1
+    45:input_transpose_fusion.3
+    46:input_reduce_fusion.5
+    47:tuple.80.0
+    48:cond.149.0
+    49:arg_empty_tuple.1
+    50:constant_13_0
+    51:pure_callback.2
+    52:pure_callback.3
+    53:tuple.547
+    54:Arg_.38
+    55:get-tuple-element.2078
+    56:copy.40
+    57:tuple.548
+    58:cond.150.clone
+    59:get-tuple-element.2084
+    60:loop_broadcast_fusion.1
+    61:io_callback.0
+    62:constant_221_0
+    63:copy.49
+    64:H_qarray_data_diags.1
+    65:Ls_0__qarray_data_diags.1
+    66:Ls_1__qarray_data_diags.1
+    67:method_atol.1
+    68:method_max_factor.1
+    69:method_min_factor.1
+    70:method_rtol.1
+    71:method_safety_factor.1
+    72:tuple.553
+    73:arg_tuple.26
+    74:get-tuple-element.1647.0
+    75:get-tuple-element.1648.0
+    76:get-tuple-element.1649.0
+    77:loop_and_fusion
+    78:arg_tuple.27
+    79:get-tuple-element.2111
+    80:copy.60
+    81:get-tuple-element.2112
+    82:copy.61
+    83:get-tuple-element.2149
+    84:loop_multiply_fusion.2
+    85:get-tuple-element.2113
+    86:get-tuple-element.2114
+    87:loop_select_fusion
+    88:loop_pad_fusion
+    89:get-tuple-element.2110
+    90:wrapped_transpose
+    91:bitcast.497.0
+    92:copy.15
+    93:loop_select_fusion.2
+    94:constant_2996_0
+    95:copy.115
+    96:copy.14
+    97:get-tuple-element.2150
+    98:get-tuple-element.2151
+    99:get-tuple-element.2152
+    100:tuple.537
+    101:arg_tuple.37
+    102:get-tuple-element.1847.0
+    103:get-tuple-element.1857.0
+    104:loop_and_fusion.1
+    105:arg_tuple.38
+    106:get-tuple-element.2020
+    107:get-tuple-element.2031
+    108:get-tuple-element.2024
+    109:constant_222__sunk2_4_0
+    110:loop_reduce_fusion
+    111:get-tuple-element.2036
+    112:get-tuple-element.2037
+    113:loop_multiply_fusion
+    114:get-tuple-element.2035
+    115:get-tuple-element.2038
+    116:input_reduce_fusion
+    117:input_add_fusion
+    118:get-tuple-element.2000
+    119:input_transpose_fusion
+    120:get-tuple-element.2039
+    121:constant_3146_0
+    122:loop_dynamic_update_slice_fusion
+    123:get-tuple-element.1999
+    124:bitcast.495.0
+    125:loop_add_fusion
+    126:tuple.539
+    127:while.290
+    128:while.279.0
+    129:input_reduce_fusion.1
+    130:get-tuple-element.2049
+    131:constant_224__sunk_8_0
+    132:loop_reduce_fusion.1
+    133:wrapped_transpose.1
+    134:input_transpose_fusion.2
+    135:get-tuple-element.2153
+    136:get-tuple-element.2154
+    137:loop_multiply_fusion.1
+    138:input_reduce_fusion.2
+    139:get-tuple-element.2148
+    140:get-tuple-element.2155
+    141:get-tuple-element.2156
+    142:get-tuple-element.2157
+    143:get-tuple-element.2158
+    144:loop_compare_minimum_select_fusion
+    145:get-tuple-element.2047
+    146:get-tuple-element.2160
+    147:get-tuple-element.2118
+    148:get-tuple-element.2119
+    149:get-tuple-element.2120
+    150:get-tuple-element.2121
+    151:tuple.540
+    152:arg_tuple.40
+    153:get-tuple-element.1923.0
+    154:get-tuple-element.1924.0
+    155:get-tuple-element.1926.0
+    156:get-tuple-element.1927.0
+    157:get-tuple-element.1939.0
+    158:loop_and_fusion.2
+    159:arg_tuple.41
+    160:get-tuple-element.2051
+    161:get-tuple-element.2063
+    162:get-tuple-element.2067
+    163:get-tuple-element.2068
+    164:get-tuple-element.2070
+    165:loop_concatenate_fusion
+    166:get-tuple-element.2066
+    167:get-tuple-element.2071
+    168:get-tuple-element.2072
+    169:constant_3205_0
+    170:get-tuple-element.2054
+    171:loop_dynamic_update_slice_fusion.1
+    172:get-tuple-element.2053
+    173:loop_dynamic_update_slice_fusion.2
+    174:loop_add_fusion.1
+    175:get-tuple-element.2069
+    176:tuple.542
+    177:while.291
+    178:get-tuple-element.1976.0
+    179:get-tuple-element.1981.0
+    180:wrapped_add.1
+    181:get-tuple-element.1977.0
+    182:wrapped_add
+    183:get-tuple-element.2145
+    184:get-tuple-element.2146
+    185:input_transpose_fusion.1
+    186:while.282.0
+    187:loop_select_fusion.1
+    188:get-tuple-element.2137
+    189:get-tuple-element.2159
+    190:loop_divide_fusion
+    191:get-tuple-element.2115
+    192:cond.166.0
+    193:tuple.498.0
+    194:get-tuple-element.2109
+    195:loop_compare_fusion
+    196:arg_tuple.6
+    197:get-tuple-element.108.0
+    198:get-tuple-element.109.0
+    199:pure_callback.25
+    200:tuple.543
+    201:while.41
+    202:get-tuple-element.2074
+    203:copy.36
+    204:tuple.544
+    205:cond.27.clone.9
+    206:get-tuple-element.2141
+    207:copy.77
+    208:get-tuple-element.2117
+    209:loop_add_fusion.2
+    210:get-tuple-element.2116
+    211:loop_add_fusion.3
+    212:loop_select_fusion.3
+    213:get-tuple-element.2138
+    214:loop_add_fusion.4
+    215:tuple.555
+    216:while.284
+    217:while.14.0
+    218:io_callback.1
+    219:while.39.0
+    220:loop_not_select_fusion
+    221:get-tuple-element.2005
+    222:tuple.93.0
+    223:get-tuple-element.2004
+    224:get-tuple-element.1517.0
+    225:tuple.92.0
+    226:Arg_.42
+    227:get-tuple-element.13.0
+    228:pure_callback.28
+    229:pure_callback.29
+    230:tuple.558
+    231:Arg_.41
+    232:get-tuple-element.2164
+    233:copy.87
+    234:tuple.559
+    235:cond.157.clone
+    236:get-tuple-element.2178
+    237:get-tuple-element.1271.0
+    238:get-tuple-element.1272.0
+    239:tuple.472.0
+    240:tuple.89.0
+    241:wrapped_compare
+    242:arg_tuple.15
+    243:get-tuple-element.1267.0
+    244:tuple.470.0
+    245:get-tuple-element.1268.0
+    246:tuple.471.0
+    247:get-tuple-element.1265.0
+    248:get-tuple-element.1266.0
+    249:wrapped_compare.1
+    250:arg_tuple.9
+    251:get-tuple-element.1159.0
+    252:wrapped_broadcast
+    253:tuple.545
+    254:while.292
+    255:get-tuple-element.2076
+    256:copy.38
+    257:tuple.546
+    258:cond.32.clone.1
+    259:while.42
+    260:get-tuple-element.2162
+    261:copy.85
+    262:tuple.557
+    263:cond.156.clone
+    264:get-tuple-element.2177
+    265:get-tuple-element.2179
+    266:get-tuple-element.2180
+    267:constant_217_0
+    268:constant_216_0
+    269:tuple.560
+    270:get-tuple-element.2181
+    271:get-tuple-element.2182
+    272:get-tuple-element.2183
+    273:get-tuple-element.2184
+    274:get-tuple-element.2185
+    275:get-tuple-element.2186
+    276:get-tuple-element.2187
+    277:get-tuple-element.2188
+    278:get-tuple-element.2189
+    279:get-tuple-element.2190
+    280:get-tuple-element.2191
+    281:get-tuple-element.2192
+    282:get-tuple-element.2193
+    283:get-tuple-element.2194
+    284:get-tuple-element.2195
+    285:get-tuple-element.2196
+    286:copy.103
+    287:copy.104
+    288:copy.105
+    289:copy.106
+    290:copy.107
+    291:copy.108
+    292:copy.109
+    293:copy.110
+    294:copy.111
+    295:copy.112
+    296:copy.113
+    297:copy.114
+    298:tuple.561
+  BufferLiveRange:
+    copy.40{}:56-58
+    tuple.548{}:57-58
+    constant_13_0{}:50-52
+    pure_callback.2{}:51-52
+    pure_callback.3{}:52-54
+    tuple.547{}:53-54
+    copy.42{}:14-16
+    tuple.550{}:15-16
+    constant_33_0{}:8-10
+    pure_callback.6{}:9-10
+    pure_callback.7{}:10-12
+    tuple.549{}:11-12
+    constant_37_0{}:23-25
+    pure_callback.10{}:24-25
+    pure_callback.11{}:25-27
+    tuple.551{}:26-27
+    copy.36{}:203-205
+    tuple.544{}:204-205
+    pure_callback.25{}:199-201
+    tuple.543{}:200-201
+    copy.85{}:261-263
+    tuple.557{}:262-263
+    copy.87{}:233-235
+    tuple.559{}:234-235
+    pure_callback.28{}:228-229
+    pure_callback.29{}:229-231
+    tuple.558{}:230-231
+    copy.44{}:29-31
+    tuple.552{}:30-31
+    copy.38{}:256-258
+    tuple.546{}:257-258
+    loop_and_fusion{}:77-78
+    loop_and_fusion.1{}:104-105
+    loop_and_fusion.2{}:158-159
+    constant_222__sunk2_4_0{}:109-110
+    loop_reduce_fusion{}:110-117
+    input_reduce_fusion{}:116-117
+    loop_multiply_fusion{}:113-117
+    input_add_fusion{}:117-123
+    input_add_fusion{0}:117-127
+    input_add_fusion{1}:117-119
+    input_transpose_fusion{}:119-127
+    constant_3146_0{}:121-122
+    loop_dynamic_update_slice_fusion{}:122-127
+    loop_add_fusion{}:125-127
+    tuple.539{}:126-127
+    loop_concatenate_fusion{}:165-171
+    loop_dynamic_update_slice_fusion.2{}:173-177
+    constant_3205_0{}:169-171
+    loop_dynamic_update_slice_fusion.1{}:171-177
+    loop_add_fusion.1{}:174-177
+    tuple.542{}:176-177
+    loop_compare_fusion{}:195-205
+    loop_add_fusion.4{}:214-216
+    constant_2996_0{}:94-95
+    copy.115{}:95-152
+    copy.61{}:82-177
+    copy.60{}:80-177
+    loop_multiply_fusion.2{}:84-127
+    input_transpose_fusion.2{}:134-137
+    wrapped_transpose{}:90-137
+    copy.14{}:96-101
+    loop_select_fusion.2{}:93-127
+    copy.15{}:92-101
+    loop_select_fusion{}:87-101
+    loop_pad_fusion{}:88-101
+    tuple.537{}:100-101
+    constant_224__sunk_8_0{}:131-132
+    loop_reduce_fusion.1{}:132-133
+    wrapped_transpose.1{}:133-137
+    input_reduce_fusion.1{}:129-137
+    loop_multiply_fusion.1{}:137-138
+    input_reduce_fusion.2{}:138-144
+    loop_compare_minimum_select_fusion{}:144-213
+    loop_compare_minimum_select_fusion{0}:144-216
+    loop_compare_minimum_select_fusion{1}:144-216
+    loop_compare_minimum_select_fusion{2}:144-212
+    tuple.540{}:151-152
+    input_transpose_fusion.1{}:185-216
+    loop_select_fusion.3{}:212-216
+    loop_select_fusion.1{}:187-216
+    loop_divide_fusion{}:190-205
+    cond.166.0{}:192-205
+    tuple.498.0{}:193-205
+    copy.77{}:207-216
+    loop_add_fusion.3{}:211-216
+    loop_add_fusion.2{}:209-216
+    wrapped_add{}:182-216
+    wrapped_add.1{}:180-216
+    tuple.555{}:215-216
+    wrapped_broadcast{}:252-254
+    tuple.545{}:253-254
+    wrapped_compare.1{}:249-258
+    tuple.471.0{}:246-258
+    tuple.470.0{}:244-258
+    constant_140_0{}:36-37
+    copy.102{}:37-73
+    rho0_data_data.1{}:0-299
+    input_transpose_fusion.3{}:45-46
+    input_reduce_fusion.5{}:46-58
+    cond.149.0{}:48-58
+    tuple.80.0{}:47-58
+    tsave.1{}:0-299
+    loop_minimum_multiply_select_fusion{}:1-42
+    loop_minimum_multiply_select_fusion{0}:1-73
+    loop_minimum_multiply_select_fusion{1}:1-263
+    loop_minimum_multiply_select_fusion{2}:1-263
+    loop_minimum_multiply_select_fusion{3}:1-216
+    copy.47{}:34-73
+    constant_221_0{}:62-297
+    copy.49{}:63-73
+    loop_broadcast_fusion.1{}:60-73
+    io_callback.0{}:61-73
+    copy.52{}:38-73
+    copy.53{}:39-73
+    copy.54{}:40-73
+    loop_broadcast_fusion{}:35-73
+    loop_broadcast_fusion.2{}:43-73
+    copy.57{}:41-73
+    Ls_0__qarray_data_diags.1{}:0-299
+    Ls_1__qarray_data_diags.1{}:0-299
+    H_qarray_data_diags.1{}:0-299
+    method_rtol.1{}:0-299
+    method_atol.1{}:0-299
+    method_min_factor.1{}:0-299
+    method_max_factor.1{}:0-299
+    method_safety_factor.1{}:0-299
+    loop_select_fusion.4{}:33-216
+    loop_multiply_fusion.3{}:3-16
+    input_reduce_fusion.3{}:5-16
+    cond.151.0{}:6-16
+    tuple.83.0{}:4-16
+    input_reduce_fusion.4{}:20-31
+    cond.153.0{}:21-31
+    tuple.553{}:72-73
+    io_callback.1{}:218-218
+    constant_217_0{}:267-295
+    constant_216_0{}:268-296
+    wrapped_compare{}:241-263
+    tuple.472.0{}:239-263
+    tuple.89.0{}:240-263
+    loop_not_select_fusion{}:220-223
+    loop_not_select_fusion{0}:220-235
+    loop_not_select_fusion{1}:220-235
+    tuple.93.0{}:222-235
+    tuple.92.0{}:225-235
+    tuple.560{}:269-285
+    copy.103{}:286-299
+    copy.104{}:287-299
+    copy.105{}:288-299
+    copy.106{}:289-299
+    copy.107{}:290-299
+    copy.108{}:291-299
+    copy.109{}:292-299
+    copy.110{}:293-299
+    copy.111{}:294-299
+    copy.112{}:295-299
+    copy.113{}:296-299
+    copy.114{}:297-299
+    tuple.561{}:298-299
+    cond.150.clone{}:58-59
+    cond.150.clone{0}:58-73
+    cond.152.clone{}:16-31
+    cond.152.clone{0}:16-31
+    cond.154.clone{}:31-32
+    cond.154.clone{0}:31-216
+    arg_tuple.26{}:73-78
+    arg_tuple.27{}:78-210
+    arg_tuple.37{}:101-105
+    arg_tuple.38{}:105-120
+    arg_tuple.37{0}:101-105
+    arg_tuple.37{2}:101-105
+    arg_tuple.37{3}:101-105
+    arg_tuple.37{4}:101-105
+    arg_tuple.38{0}:105-125
+    arg_tuple.38{2}:105-105
+    arg_tuple.38{3}:105-105
+    arg_tuple.38{4}:105-122
+    while.290{}:127-186
+    while.290{0}:127-127
+    while.290{2}:127-185
+    while.290{3}:127-187
+    while.290{4}:127-177
+    arg_tuple.40{}:152-159
+    arg_tuple.41{}:159-175
+    arg_tuple.40{0}:152-159
+    arg_tuple.40{2}:152-159
+    arg_tuple.40{3}:152-159
+    arg_tuple.41{0}:159-174
+    arg_tuple.41{2}:159-173
+    arg_tuple.41{3}:159-171
+    while.291{}:177-184
+    while.291{0}:177-182
+    while.291{2}:177-216
+    while.291{3}:177-216
+    cond.27.clone.9{}:205-206
+    cond.27.clone.9{0}:205-207
+    arg_tuple.26{0}:73-78
+    arg_tuple.26{1}:73-78
+    arg_tuple.26{2}:73-78
+    arg_tuple.26{3}:73-78
+    arg_tuple.26{4}:73-78
+    arg_tuple.26{5}:73-78
+    arg_tuple.26{6}:73-78
+    arg_tuple.26{7}:73-78
+    arg_tuple.26{8}:73-78
+    arg_tuple.26{9}:73-78
+    arg_tuple.26{10}:73-78
+    arg_tuple.26{11}:73-78
+    arg_tuple.26{12}:73-78
+    arg_tuple.27{0}:78-214
+    arg_tuple.27{1}:78-185
+    arg_tuple.27{2}:78-80
+    arg_tuple.27{3}:78-82
+    arg_tuple.27{4}:78-212
+    arg_tuple.27{5}:78-187
+    arg_tuple.27{6}:78-205
+    arg_tuple.27{7}:78-211
+    arg_tuple.27{8}:78-209
+    arg_tuple.27{9}:78-182
+    arg_tuple.27{10}:78-152
+    arg_tuple.27{11}:78-152
+    arg_tuple.27{12}:78-180
+    while.284{}:216-266
+    while.284{0}:216-235
+    while.284{1}:216-263
+    while.284{2}:216-220
+    while.284{3}:216-216
+    while.284{4}:216-216
+    while.284{5}:216-216
+    while.284{6}:216-218
+    while.284{7}:216-299
+    while.284{8}:216-299
+    while.284{9}:216-216
+    while.284{10}:216-216
+    while.284{11}:216-263
+    while.284{12}:216-216
+    cond.32.clone.1{}:258-259
+    cond.32.clone.1{0}:258-259
+    cond.156.clone{}:263-264
+    cond.156.clone{0}:263-299
+    cond.157.clone{}:235-236
+    cond.157.clone{0}:235-299
+  Live ranges at 53 (peak):
+    loop_broadcast_fusion.2{}: 2621440 bytes (cumulative: 2621440 bytes)
+    pure_callback.3{}: 65536 bytes (cumulative: 2686976 bytes)
+    rho0_data_data.1{}: 65536 bytes (cumulative: 2752512 bytes)
+    Ls_0__qarray_data_diags.1{}: 2048 bytes (cumulative: 2754560 bytes)
+    H_qarray_data_diags.1{}: 1024 bytes (cumulative: 2755584 bytes)
+    Ls_1__qarray_data_diags.1{}: 1024 bytes (cumulative: 2756608 bytes)
+    cond.154.clone{0}: 320 bytes (cumulative: 2756928 bytes)
+    loop_broadcast_fusion{}: 320 bytes (cumulative: 2757248 bytes)
+    tsave.1{}: 320 bytes (cumulative: 2757568 bytes)
+    copy.102{}: 8 bytes (cumulative: 2757576 bytes)
+    copy.47{}: 8 bytes (cumulative: 2757584 bytes)
+    copy.52{}: 8 bytes (cumulative: 2757592 bytes)
+    copy.53{}: 8 bytes (cumulative: 2757600 bytes)
+    copy.54{}: 8 bytes (cumulative: 2757608 bytes)
+    copy.57{}: 8 bytes (cumulative: 2757616 bytes)
+    loop_minimum_multiply_select_fusion{0}: 8 bytes (cumulative: 2757624 bytes)
+    loop_minimum_multiply_select_fusion{1}: 8 bytes (cumulative: 2757632 bytes)
+    loop_minimum_multiply_select_fusion{2}: 8 bytes (cumulative: 2757640 bytes)
+    loop_minimum_multiply_select_fusion{3}: 8 bytes (cumulative: 2757648 bytes)
+    loop_select_fusion.4{}: 8 bytes (cumulative: 2757656 bytes)
+    method_atol.1{}: 8 bytes (cumulative: 2757664 bytes)
+    method_max_factor.1{}: 8 bytes (cumulative: 2757672 bytes)
+    method_min_factor.1{}: 8 bytes (cumulative: 2757680 bytes)
+    method_rtol.1{}: 8 bytes (cumulative: 2757688 bytes)
+    method_safety_factor.1{}: 8 bytes (cumulative: 2757696 bytes)
+    tuple.547{}: 8 bytes (cumulative: 2757704 bytes)
+    tuple.80.0{}: 8 bytes (cumulative: 2757712 bytes)
+    input_reduce_fusion.5{}: 1 bytes (cumulative: 2757713 bytes)
+    cond.149.0{}: 0 bytes (cumulative: 2757713 bytes)
+  Stack trace breakdown for peak usage: 2 757 713 bytes
+    main.133 (100.0%, total: 2 757 713 bytes, current: 0 bytes, remaining: 2 757 713 bytes)
+      ├── jit(_vectorized_mesolve)/jit(diffeqsolve)/broadcast_in_dim (95.1%, total: 2 621 760 bytes, current: 2 621 760 bytes, remaining: 135 953 bytes)
+      ├── jit(_vectorized_mesolve)/jit(branched_error_if_impl)/cond (2.4%, total: 65 544 bytes, current: 0 bytes, remaining: 135 953 bytes)
+      │   └── region_2.5 (2.4%, total: 65 544 bytes, current: 0 bytes, remaining: 135 953 bytes)
+      │       ├── jit(_vectorized_mesolve)/jit(branched_error_if_impl)/cond/branch_1_fun/pure_callback (2.4%, total: 65 536 bytes, current: 65 536 bytes, remaining: 70 417 bytes)
+      │       └── tuple.547 (0.0%, total: 8 bytes, current: 8 bytes, remaining: 70 409 bytes)
+      ├── rho0.data.data (2.4%, total: 65 536 bytes, current: 65 536 bytes, remaining: 4 873 bytes)
+      ├── Ls[0].qarray.data.diags (0.1%, total: 2 048 bytes, current: 2 048 bytes, remaining: 2 825 bytes)
+      ├── H.qarray.data.diags (0.0%, total: 1 024 bytes, current: 1 024 bytes, remaining: 1 801 bytes)
+      ├── Ls[1].qarray.data.diags (0.0%, total: 1 024 bytes, current: 1 024 bytes, remaining: 777 bytes)
+      ├── jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond{0} (0.0%, total: 320 bytes, current: 320 bytes, remaining: 457 bytes)
+      ├── tsave (0.0%, total: 320 bytes, current: 320 bytes, remaining: 137 bytes)
+      ├── copy.102 (0.0%, total: 8 bytes, current: 8 bytes, remaining: 129 bytes)
+      ├── copy.47 (0.0%, total: 8 bytes, current: 8 bytes, remaining: 121 bytes)
+      ├── copy.52 (0.0%, total: 8 bytes, current: 8 bytes, remaining: 113 bytes)
+      ├── copy.53 (0.0%, total: 8 bytes, current: 8 bytes, remaining: 105 bytes)
+      ├── copy.54 (0.0%, total: 8 bytes, current: 8 bytes, remaining: 97 bytes)
+      ├── copy.57 (0.0%, total: 8 bytes, current: 8 bytes, remaining: 89 bytes)
+      ├── jit(_vectorized_mesolve)/jit(diffeqsolve)/jit(_where)/select_n (0.0%, total: 8 bytes, current: 8 bytes, remaining: 81 bytes)
+      ├── jit(_vectorized_mesolve)/jit(diffeqsolve)/min{0} (0.0%, total: 8 bytes, current: 8 bytes, remaining: 73 bytes)
+      ├── jit(_vectorized_mesolve)/jit(diffeqsolve)/min{1} (0.0%, total: 8 bytes, current: 8 bytes, remaining: 65 bytes)
+      ├── jit(_vectorized_mesolve)/jit(diffeqsolve)/min{2} (0.0%, total: 8 bytes, current: 8 bytes, remaining: 57 bytes)
+      ├── jit(_vectorized_mesolve)/jit(diffeqsolve)/min{3} (0.0%, total: 8 bytes, current: 8 bytes, remaining: 49 bytes)
+      ├── method.atol (0.0%, total: 8 bytes, current: 8 bytes, remaining: 41 bytes)
+      ├── method.max_factor (0.0%, total: 8 bytes, current: 8 bytes, remaining: 33 bytes)
+      ├── method.min_factor (0.0%, total: 8 bytes, current: 8 bytes, remaining: 25 bytes)
+      ├── method.rtol (0.0%, total: 8 bytes, current: 8 bytes, remaining: 17 bytes)
+      ├── method.safety_factor (0.0%, total: 8 bytes, current: 8 bytes, remaining: 9 bytes)
+      ├── tuple.80.0 (0.0%, total: 8 bytes, current: 8 bytes, remaining: 1 bytes)
+      └── jit(_vectorized_mesolve)/not (0.0%, total: 1 bytes, current: 1 bytes, remaining: 0 bytes)

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step11_boundary.py", line 41, in <module>
+    from dynamiqs.time_qarray import astimeqarray  # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ImportError: cannot import name 'astimeqarray' from 'dynamiqs.time_qarray' (/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/time_qarray.py)

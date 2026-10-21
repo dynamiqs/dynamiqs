@@ -1,0 +1,28 @@
+
+Total bytes used: 3060 (3.0KiB)
+
+Used values:
+<22 args_1_.1 @0>
+ positions:
+  args_1_.1
+ uses:
+  loop_complex_fusion, operand 0
+ from instruction: %args_1_.1 = s32[1]{0} parameter(1), metadata={op_name="args[1]"}
+<23 args_2_.1 @0>
+ positions:
+  args_2_.1
+ uses:
+  loop_complex_fusion, operand 1
+ from instruction: %args_2_.1 = c128[63]{0} parameter(2), metadata={op_name="args[2]"}
+<24 args_0_.1 @0>
+ positions:
+  args_0_.1
+ uses:
+  loop_complex_fusion, operand 2
+ from instruction: %args_0_.1 = c128[64]{0} parameter(0), metadata={op_name="args[0]"}
+<25 loop_complex_fusion @0>
+ positions:
+  loop_complex_fusion
+ uses:
+  (none)
+ from instruction: %loop_complex_fusion = c128[64]{0} fusion(%args_1_.1, %args_2_.1, %args_0_.1), kind=kLoop, calls=%fused_complex, metadata={op_name="jit(scatter-add)/scatter-add" stack_frame_id=4}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}

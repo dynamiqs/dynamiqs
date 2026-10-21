@@ -1,0 +1,17 @@
+# job 69449 higgs GPU=0 2026-09-14T10:42:59+02:00
+
+=== traced=0 ===
+### traced_t0t1=False ntsave=20  peak=532,202,752 B = 0.49565 GiB = 33.2627 R
+### traced_t0t1=False ntsave=50  peak=1,012,203,520 B = 0.94269 GiB = 63.2627 R
+### traced_t0t1=False ntsave=100  peak=1,812,205,056 B = 1.68775 GiB = 113.2628 R
+### traced_t0t1=False ntsave=200  peak=3,412,207,360 B = 3.17787 GiB = 213.2630 R
+### traced_t0t1=False ntsave=400  peak=6,612,211,968 B = 6.15810 GiB = 413.2632 R
+
+=== traced=1 ===
+### traced_t0t1=True ntsave=20  peak=740,206,080 B = 0.68937 GiB = 46.2629 R
+### traced_t0t1=True ntsave=50  peak=1,700,206,848 B = 1.58344 GiB = 106.2629 R
+### traced_t0t1=True ntsave=100  peak=3,300,208,384 B = 3.07356 GiB = 206.2630 R
+### traced_t0t1=True ntsave=200  peak=6,500,210,688 B = 6.05379 GiB = 406.2632 R
+### traced_t0t1=True ntsave=400  peak=12,900,215,296 B = 12.01426 GiB = 806.2635 R
+
+### STEP 18 COMPLETE  json=/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step18_69449.jsonl ###

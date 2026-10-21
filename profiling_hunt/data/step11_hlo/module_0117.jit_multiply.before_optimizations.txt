@@ -1,0 +1,35 @@
+HloModule jit_multiply, entry_computation_layout={(f64[], c128[2,64]{1,0})->c128[2,64]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step11_dump.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/qarray.py"
+3 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/materialized_qarray.py"
+4 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/sparsedia_dataarray.py"
+
+FunctionNames
+1 "<module>"
+2 "QArray.__rmul__"
+3 "MaterializedQArray.__mul__"
+4 "SparseDIADataArray.__mul__"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=78 end_line=78 column=6 end_column=50}
+2 {file_name_id=2 function_name_id=2 line=550 end_line=550 column=15 end_column=23}
+3 {file_name_id=3 function_name_id=3 line=244 end_line=244 column=17 end_column=30}
+4 {file_name_id=4 function_name_id=4 line=270 end_line=270 column=24 end_column=42}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+4 {file_location_id=4 parent_frame_id=4}
+
+
+ENTRY %main.1 (x.1: f64[], y.1: c128[2,64]) -> c128[2,64] {
+  %x.1 = f64[] parameter(0), metadata={op_name="x"}
+  %convert_element_type.1 = c128[] convert(%x.1), metadata={op_name="jit(multiply)/convert_element_type" stack_frame_id=4}
+  %mul.2 = c128[2,64]{1,0} broadcast(%convert_element_type.1), dimensions={}, metadata={op_name="jit(multiply)/mul" stack_frame_id=4}
+  %y.1 = c128[2,64]{1,0} parameter(1), metadata={op_name="y"}
+  ROOT %mul.3 = c128[2,64]{1,0} multiply(%mul.2, %y.1), metadata={op_name="jit(multiply)/mul" stack_frame_id=4}
+}
+

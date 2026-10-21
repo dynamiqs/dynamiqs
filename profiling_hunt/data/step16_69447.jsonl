@@ -1,0 +1,10 @@
+{"variant": "baseline", "ntsave": 20, "R": 16000000, "status": "ok", "peak": 1008097792, "peak_in_R": 63.006112, "finite": true}
+{"variant": "baseline", "ntsave": 50, "R": 16000000, "status": "ok", "peak": 2448098816, "peak_in_R": 153.006176, "finite": true}
+{"variant": "baseline", "ntsave": 100, "R": 16000000, "status": "ok", "peak": 4848100864, "peak_in_R": 303.006304, "finite": true}
+{"variant": "baseline", "ntsave": 200, "R": 16000000, "status": "ok", "peak": 9648103936, "peak_in_R": 603.006496, "finite": true}
+{"variant": "baseline", "ntsave": 400, "R": 16000000, "status": "ok", "peak": 19248110080, "peak_in_R": 1203.00688, "finite": true}
+{"variant": "patched", "ntsave": 20, "R": 16000000, "status": "ok", "peak": 761096448, "peak_in_R": 47.568528, "finite": true}
+{"variant": "patched", "ntsave": 50, "R": 16000000, "status": "ok", "peak": 1721097472, "peak_in_R": 107.568592, "finite": true}
+{"variant": "patched", "ntsave": 100, "R": 16000000, "status": "ok", "peak": 3321099520, "peak_in_R": 207.56872, "finite": true}
+{"variant": "patched", "ntsave": 200, "R": 16000000, "status": "ok", "peak": 6521102592, "peak_in_R": 407.568912, "finite": true}
+{"variant": "patched", "ntsave": 400, "R": 16000000, "status": "ok", "peak": 12921108736, "peak_in_R": 807.569296, "finite": true}

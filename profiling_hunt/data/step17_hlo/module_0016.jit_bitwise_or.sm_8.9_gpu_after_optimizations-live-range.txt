@@ -1,0 +1,18 @@
+HloLiveRange (max 3):
+  InstructionSequence:
+    0:y.1
+    1:x.1
+    2:wrapped_or
+  BufferLiveRange:
+    x.1{}:0-3
+    y.1{}:0-3
+    wrapped_or{}:2-3
+  Live ranges at 2 (peak):
+    wrapped_or{}: 1 bytes (cumulative: 1 bytes)
+    x.1{}: 1 bytes (cumulative: 2 bytes)
+    y.1{}: 1 bytes (cumulative: 3 bytes)
+  Stack trace breakdown for peak usage: 3 bytes
+    main.1 (100.0%, total: 3 bytes, current: 0 bytes, remaining: 3 bytes)
+      ├── jit(bitwise_or)/or (33.3%, total: 1 bytes, current: 1 bytes, remaining: 2 bytes)
+      ├── x (33.3%, total: 1 bytes, current: 1 bytes, remaining: 1 bytes)
+      └── y (33.3%, total: 1 bytes, current: 1 bytes, remaining: 0 bytes)

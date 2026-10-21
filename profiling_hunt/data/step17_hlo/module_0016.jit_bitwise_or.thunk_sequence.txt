@@ -1,0 +1,1 @@
+001: kCustomKernel [source | sink] wrapped_or grid: [1, 1, 1] threads: [1, 1, 1]  shared_memory: 0 bytes

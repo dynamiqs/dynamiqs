@@ -1,0 +1,17 @@
+module @jit_iota attributes {mhlo.num_partitions = 1 : i32, mhlo.num_replicas = 1 : i32} {
+  func.func public @main() -> (tensor<63xcomplex<f64>> {jax.result_info = "result"}) {
+    %0 = stablehlo.iota dim = 0 : tensor<63xcomplex<f64>> loc(#loc9)
+    return %0 : tensor<63xcomplex<f64>> loc(#loc10)
+  } loc(#loc)
+} loc(#loc)
+#loc = loc(unknown)
+#loc1 = loc("/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/operators.py":301:24 to :58)
+#loc2 = loc("/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/operators.py":308:15 to :38)
+#loc3 = loc("/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step11_dump.py":76:4 to :17)
+#loc4 = loc("destroy.<locals>.destroy_single"(#loc1))
+#loc5 = loc("destroy"(#loc2))
+#loc6 = loc("<module>"(#loc3))
+#loc7 = loc(callsite(#loc5 at #loc6))
+#loc8 = loc(callsite(#loc4 at #loc7))
+#loc9 = loc("jit(iota)/iota"(#loc8))
+#loc10 = loc("jit(iota)"(#loc8))

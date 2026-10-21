@@ -1,0 +1,39 @@
+# job 69441 higgs GPU=0 2026-09-14T10:09:07+02:00
+
+=== dynamiqs_baseline ===
+### dynamiqs_baseline  N=64  ntsave=10  R=65,536 B
+  peak = 50,404,608 B = 0.046943 GiB = 769.1133 R
+### dynamiqs_baseline  N=64  ntsave=20  R=65,536 B
+  peak = 50,404,608 B = 0.046943 GiB = 769.1133 R
+### dynamiqs_baseline  N=64  ntsave=40  R=65,536 B
+  peak = 50,405,376 B = 0.046944 GiB = 769.1250 R
+### dynamiqs_baseline  N=64  ntsave=80  R=65,536 B
+  peak = 50,406,400 B = 0.046945 GiB = 769.1406 R
+### dynamiqs_baseline  N=64  ntsave=160  R=65,536 B
+  peak = 50,407,680 B = 0.046946 GiB = 769.1602 R
+
+=== bare_throw_true ===
+### bare_throw_true  N=64  ntsave=10  R=65,536 B
+  peak = 38,143,744 B = 0.035524 GiB = 582.0273 R
+### bare_throw_true  N=64  ntsave=20  R=65,536 B
+  peak = 38,143,744 B = 0.035524 GiB = 582.0273 R
+### bare_throw_true  N=64  ntsave=40  R=65,536 B
+  peak = 38,144,000 B = 0.035524 GiB = 582.0312 R
+### bare_throw_true  N=64  ntsave=80  R=65,536 B
+  peak = 38,144,256 B = 0.035525 GiB = 582.0352 R
+### bare_throw_true  N=64  ntsave=160  R=65,536 B
+  peak = 38,144,768 B = 0.035525 GiB = 582.0430 R
+
+=== bare_throw_false ===
+### bare_throw_false  N=64  ntsave=10  R=65,536 B
+  peak = 38,143,744 B = 0.035524 GiB = 582.0273 R
+### bare_throw_false  N=64  ntsave=20  R=65,536 B
+  peak = 38,143,744 B = 0.035524 GiB = 582.0273 R
+### bare_throw_false  N=64  ntsave=40  R=65,536 B
+  peak = 38,144,000 B = 0.035524 GiB = 582.0312 R
+### bare_throw_false  N=64  ntsave=80  R=65,536 B
+  peak = 38,144,256 B = 0.035525 GiB = 582.0352 R
+### bare_throw_false  N=64  ntsave=160  R=65,536 B
+  peak = 38,144,768 B = 0.035525 GiB = 582.0430 R
+
+### STEP 12 COMPLETE  json=/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step12_69441.jsonl ###

@@ -1,0 +1,16 @@
+
+Total bytes used: 16 (16B)
+
+Used values:
+<8 seed.1 @0>
+ positions:
+  seed.1
+ uses:
+  input_concatenate_fusion, operand 0
+ from instruction: %seed.1 = s64[] parameter(0), metadata={op_name="seed"}
+<9 input_concatenate_fusion @0>
+ positions:
+  input_concatenate_fusion
+ uses:
+  (none)
+ from instruction: %input_concatenate_fusion = u32[2]{0} fusion(%seed.1), kind=kInput, calls=%fused_concatenate, metadata={op_name="jit(_threefry_seed)/concatenate" stack_frame_id=1}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}

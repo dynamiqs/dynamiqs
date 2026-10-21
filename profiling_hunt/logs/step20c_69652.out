@@ -1,0 +1,290 @@
+# job 69652 on higgs 2026-09-23T10:39:43+02:00 GPU=0
+#   XLA_PYTHON_CLIENT_MEM_FRACTION=.95
+#   XLA_PYTHON_CLIENT_PREALLOCATE=true
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=1792  R=51,380,224 B (49.000 MiB)  ntsave=20  save_states=False  n_obs=0 (none)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=51,495,424 peak=51,581,184  op_bytes=114,688  obs_bytes=0 (0.0000 R)
+  after mesolve: peak=722,662,656 (14.065 R, 0.6730 GiB)  traj=1.000 R  expects=0 B  nsteps=3  3.6s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=1792  R=51,380,224 B (49.000 MiB)  ntsave=20  save_states=False  n_obs=1 (dia)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=51,552,768 peak=51,784,704  op_bytes=114,688  obs_bytes=57,344 (0.0011 R)
+  after mesolve: peak=748,412,416 (14.566 R, 0.6970 GiB)  traj=1.000 R  expects=320 B  nsteps=3  3.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=1792  R=51,380,224 B (49.000 MiB)  ntsave=20  save_states=False  n_obs=1 (dense)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=102,875,648 peak=205,693,184  op_bytes=114,688  obs_bytes=51,380,224 (1.0000 R)
+  after mesolve: peak=851,144,192 (16.566 R, 0.7927 GiB)  traj=1.000 R  expects=320 B  nsteps=3  3.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=1920  R=58,982,400 B (56.250 MiB)  ntsave=20  save_states=False  n_obs=0 (none)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=59,105,792 peak=59,197,696  op_bytes=122,880  obs_bytes=0 (0.0000 R)
+  after mesolve: peak=829,576,448 (14.065 R, 0.7726 GiB)  traj=1.000 R  expects=0 B  nsteps=3  3.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=1920  R=58,982,400 B (56.250 MiB)  ntsave=20  save_states=False  n_obs=1 (dia)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=59,167,232 peak=59,415,552  op_bytes=122,880  obs_bytes=61,440 (0.0010 R)
+  after mesolve: peak=859,131,392 (14.566 R, 0.8001 GiB)  traj=1.000 R  expects=320 B  nsteps=3  4.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=1920  R=58,982,400 B (56.250 MiB)  ntsave=20  save_states=False  n_obs=1 (dense)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=118,088,192 peak=236,114,176  op_bytes=122,880  obs_bytes=58,982,400 (1.0000 R)
+  after mesolve: peak=977,065,472 (16.565 R, 0.9100 GiB)  traj=1.000 R  expects=320 B  nsteps=3  3.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2048  R=67,108,864 B (64.000 MiB)  ntsave=20  save_states=False  n_obs=0 (none)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=67,240,448 peak=67,338,496  op_bytes=131,072  obs_bytes=0 (0.0000 R)
+  after mesolve: peak=943,863,040 (14.065 R, 0.8790 GiB)  traj=1.000 R  expects=0 B  nsteps=3  4.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2048  R=67,108,864 B (64.000 MiB)  ntsave=20  save_states=False  n_obs=1 (dia)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=67,305,984 peak=67,570,688  op_bytes=131,072  obs_bytes=65,536 (0.0010 R)
+  after mesolve: peak=977,485,312 (14.566 R, 0.9104 GiB)  traj=1.000 R  expects=320 B  nsteps=3  4.2s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2048  R=67,108,864 B (64.000 MiB)  ntsave=20  save_states=False  n_obs=1 (dense)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=134,349,312 peak=268,632,320  op_bytes=131,072  obs_bytes=67,108,864 (1.0000 R)
+  after mesolve: peak=1,111,670,272 (16.565 R, 1.0353 GiB)  traj=1.000 R  expects=320 B  nsteps=3  4.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2112  R=71,368,704 B (68.062 MiB)  ntsave=20  save_states=False  n_obs=0 (none)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=71,504,384 peak=71,605,504  op_bytes=135,168  obs_bytes=0 (0.0000 R)
+  after mesolve: peak=1,003,771,136 (14.065 R, 0.9348 GiB)  traj=1.000 R  expects=0 B  nsteps=3  3.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2112  R=71,368,704 B (68.062 MiB)  ntsave=20  save_states=False  n_obs=1 (dia)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=71,571,968 peak=71,844,864  op_bytes=135,168  obs_bytes=67,584 (0.0009 R)
+  after mesolve: peak=1,039,525,376 (14.566 R, 0.9681 GiB)  traj=1.000 R  expects=320 B  nsteps=3  4.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2112  R=71,368,704 B (68.062 MiB)  ntsave=20  save_states=False  n_obs=1 (dense)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=142,873,088 peak=285,677,824  op_bytes=135,168  obs_bytes=71,368,704 (1.0000 R)
+  after mesolve: peak=1,182,228,992 (16.565 R, 1.1010 GiB)  traj=1.000 R  expects=320 B  nsteps=3  4.3s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2176  R=75,759,616 B (72.250 MiB)  ntsave=20  save_states=False  n_obs=0 (none)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=75,899,392 peak=76,003,584  op_bytes=139,264  obs_bytes=0 (0.0000 R)
+  after mesolve: peak=1,065,522,432 (14.065 R, 0.9923 GiB)  traj=1.000 R  expects=0 B  nsteps=3  3.7s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2176  R=75,759,616 B (72.250 MiB)  ntsave=20  save_states=False  n_obs=1 (dia)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=75,969,024 peak=76,250,112  op_bytes=139,264  obs_bytes=69,632 (0.0009 R)
+  after mesolve: peak=1,103,474,176 (14.565 R, 1.0277 GiB)  traj=1.000 R  expects=320 B  nsteps=3  4.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2176  R=75,759,616 B (72.250 MiB)  ntsave=20  save_states=False  n_obs=1 (dense)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+(worker exit 143)
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2240  R=80,281,600 B (76.562 MiB)  ntsave=20  save_states=False  n_obs=0 (none)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=80,461,568 peak=80,568,832  op_bytes=143,360  obs_bytes=0 (0.0000 R)
+  after mesolve: peak=1,129,153,024 (14.065 R, 1.0516 GiB)  traj=1.000 R  expects=0 B  nsteps=3  3.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2240  R=80,281,600 B (76.562 MiB)  ntsave=20  save_states=False  n_obs=1 (dia)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=80,497,152 peak=80,786,432  op_bytes=143,360  obs_bytes=71,680 (0.0009 R)
+  after mesolve: peak=1,169,331,712 (14.565 R, 1.0890 GiB)  traj=1.000 R  expects=320 B  nsteps=3  3.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2240  R=80,281,600 B (76.562 MiB)  ntsave=20  save_states=False  n_obs=1 (dense)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=160,707,072 peak=321,341,696  op_bytes=143,360  obs_bytes=80,281,600 (1.0000 R)
+  after mesolve: peak=1,329,859,072 (16.565 R, 1.2385 GiB)  traj=1.000 R  expects=320 B  nsteps=3  3.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2304  R=84,934,656 B (81.000 MiB)  ntsave=20  save_states=False  n_obs=0 (none)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=85,082,624 peak=85,192,960  op_bytes=147,456  obs_bytes=0 (0.0000 R)
+  after mesolve: peak=1,194,554,880 (14.064 R, 1.1125 GiB)  traj=1.000 R  expects=0 B  nsteps=3  3.7s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2304  R=84,934,656 B (81.000 MiB)  ntsave=20  save_states=False  n_obs=1 (dia)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=85,156,352 peak=85,453,824  op_bytes=147,456  obs_bytes=73,728 (0.0009 R)
+  after mesolve: peak=1,237,098,240 (14.565 R, 1.1521 GiB)  traj=1.000 R  expects=320 B  nsteps=3  3.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2304  R=84,934,656 B (81.000 MiB)  ntsave=20  save_states=False  n_obs=1 (dense)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=170,017,280 peak=339,960,064  op_bytes=147,456  obs_bytes=84,934,656 (1.0000 R)
+  after mesolve: peak=1,406,930,688 (16.565 R, 1.3103 GiB)  traj=1.000 R  expects=320 B  nsteps=3  3.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2368  R=89,718,784 B (85.562 MiB)  ntsave=20  save_states=False  n_obs=0 (none)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=89,870,848 peak=89,984,256  op_bytes=151,552  obs_bytes=0 (0.0000 R)
+  after mesolve: peak=1,261,835,520 (14.064 R, 1.1752 GiB)  traj=1.000 R  expects=0 B  nsteps=3  3.6s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2368  R=89,718,784 B (85.562 MiB)  ntsave=20  save_states=False  n_obs=1 (dia)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=89,946,624 peak=90,252,288  op_bytes=151,552  obs_bytes=75,776 (0.0008 R)
+  after mesolve: peak=1,306,772,992 (14.565 R, 1.2170 GiB)  traj=1.000 R  expects=320 B  nsteps=3  3.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2368  R=89,718,784 B (85.562 MiB)  ntsave=20  save_states=False  n_obs=1 (dense)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=179,589,632 peak=359,102,720  op_bytes=151,552  obs_bytes=89,718,784 (1.0000 R)
+  after mesolve: peak=1,486,172,672 (16.565 R, 1.3841 GiB)  traj=1.000 R  expects=320 B  nsteps=3  3.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2432  R=94,633,984 B (90.250 MiB)  ntsave=20  save_states=False  n_obs=0 (none)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=94,790,144 peak=94,906,624  op_bytes=155,648  obs_bytes=0 (0.0000 R)
+  after mesolve: peak=1,330,959,616 (14.064 R, 1.2396 GiB)  traj=1.000 R  expects=0 B  nsteps=3  3.6s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2432  R=94,633,984 B (90.250 MiB)  ntsave=20  save_states=False  n_obs=1 (dia)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=94,867,968 peak=95,181,824  op_bytes=155,648  obs_bytes=77,824 (0.0008 R)
+  after mesolve: peak=1,378,356,736 (14.565 R, 1.2837 GiB)  traj=1.000 R  expects=320 B  nsteps=3  3.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2432  R=94,633,984 B (90.250 MiB)  ntsave=20  save_states=False  n_obs=1 (dense)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=189,424,128 peak=378,769,664  op_bytes=155,648  obs_bytes=94,633,984 (1.0000 R)
+  after mesolve: peak=1,567,585,792 (16.565 R, 1.4599 GiB)  traj=1.000 R  expects=320 B  nsteps=3  4.0s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2496  R=99,680,256 B (95.062 MiB)  ntsave=20  save_states=False  n_obs=0 (none)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=99,840,512 peak=99,960,064  op_bytes=159,744  obs_bytes=0 (0.0000 R)
+  after mesolve: peak=1,401,926,912 (14.064 R, 1.3056 GiB)  traj=1.000 R  expects=0 B  nsteps=3  3.6s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2496  R=99,680,256 B (95.062 MiB)  ntsave=20  save_states=False  n_obs=1 (dia)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=99,920,384 peak=100,242,432  op_bytes=159,744  obs_bytes=79,872 (0.0008 R)
+  after mesolve: peak=1,451,849,216 (14.565 R, 1.3521 GiB)  traj=1.000 R  expects=320 B  nsteps=3  3.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2496  R=99,680,256 B (95.062 MiB)  ntsave=20  save_states=False  n_obs=1 (dense)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=199,520,768 peak=398,960,896  op_bytes=159,744  obs_bytes=99,680,256 (1.0000 R)
+  after mesolve: peak=1,651,169,792 (16.565 R, 1.5378 GiB)  traj=1.000 R  expects=320 B  nsteps=3  3.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2560  R=104,857,600 B (100.000 MiB)  ntsave=20  save_states=False  n_obs=0 (none)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=105,021,952 peak=105,144,576  op_bytes=163,840  obs_bytes=0 (0.0000 R)
+  after mesolve: peak=1,677,981,696 (16.002 R, 1.5627 GiB)  traj=1.000 R  expects=0 B  nsteps=3  3.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2560  R=104,857,600 B (100.000 MiB)  ntsave=20  save_states=False  n_obs=1 (dia)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=105,103,872 peak=105,434,112  op_bytes=163,840  obs_bytes=81,920 (0.0008 R)
+  after mesolve: peak=1,678,065,664 (16.003 R, 1.5628 GiB)  traj=1.000 R  expects=320 B  nsteps=3  3.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2560  R=104,857,600 B (100.000 MiB)  ntsave=20  save_states=False  n_obs=1 (dense)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=209,879,552 peak=419,676,416  op_bytes=163,840  obs_bytes=104,857,600 (1.0000 R)
+  after mesolve: peak=1,887,739,904 (18.003 R, 1.7581 GiB)  traj=1.000 R  expects=320 B  nsteps=3  3.8s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2816  R=126,877,696 B (121.000 MiB)  ntsave=20  save_states=False  n_obs=0 (none)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=127,058,432 peak=127,193,344  op_bytes=180,224  obs_bytes=0 (0.0000 R)
+  after mesolve: peak=2,030,327,808 (16.002 R, 1.8909 GiB)  traj=1.000 R  expects=0 B  nsteps=3  3.6s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2816  R=126,877,696 B (121.000 MiB)  ntsave=20  save_states=False  n_obs=1 (dia)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=127,148,544 peak=127,511,552  op_bytes=180,224  obs_bytes=90,112 (0.0007 R)
+  after mesolve: peak=2,030,419,968 (16.003 R, 1.8910 GiB)  traj=1.000 R  expects=320 B  nsteps=3  3.9s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+####################################################################################################
+STEP 20 study C  dynamiqs 0.3.6  N=2816  R=126,877,696 B (121.000 MiB)  ntsave=20  save_states=False  n_obs=1 (dense)
+  XLA_PYTHON_CLIENT_MEM_FRACTION = .95
+  XLA_PYTHON_CLIENT_PREALLOCATE = true
+  bytes_limit = 45,285,900,288
+  before mesolve: in_use=253,936,128 peak=507,781,376  op_bytes=180,224  obs_bytes=126,877,696 (1.0000 R)
+  after mesolve: peak=2,284,130,304 (18.003 R, 2.1273 GiB)  traj=1.000 R  expects=320 B  nsteps=3  4.1s
+  -> appended to /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl
+### STEP 20C COMPLETE json=/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step20c_69652.jsonl ###

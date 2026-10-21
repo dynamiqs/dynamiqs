@@ -1,0 +1,211 @@
+BufferAssignment:
+allocation 0: size 2621440, maybe-live-out:
+ value: <203 loop_dynamic_update_slice_fusion @0> (size=2621440,offset=0): c128[40,64,64]{2,1,0}
+ value: <449 loop_broadcast_fusion.1 @0> (size=2621440,offset=0): c128[40,64,64]{2,1,0}
+ value: <489 arg_tuple.36{3} (phi) @0> (size=2621440,offset=0): c128[40,64,64]{2,1,0}
+ value: <499 arg_tuple.37{3} (phi) @0> (size=2621440,offset=0): c128[40,64,64]{2,1,0}
+ value: <510 while.150{3} (phi) @0> (size=2621440,offset=0): c128[40,64,64]{2,1,0}
+ value: <527 arg_tuple.23{10} (phi) @0> (size=2621440,offset=0): c128[40,64,64]{2,1,0}
+ value: <539 arg_tuple.24{10} (phi) @0> (size=2621440,offset=0): c128[40,64,64]{2,1,0}
+ value: <552 while.143{10} (phi) @0> (size=2621440,offset=0): c128[40,64,64]{2,1,0}
+allocation 1: size 65536, parameter 0, shape |c128[64,64]| at ShapeIndex {}:
+ value: <438 y0.1 @0> (size=65536,offset=0): c128[64,64]{1,0}
+allocation 2: size 65536, constant:
+ value: <258 constant_3044_0 @0> (size=65536,offset=0): c128[64,64]{1,0}
+allocation 3: size 784, constant:
+ value: <256 constant_3041_0 @0> (size=784,offset=0): c128[7,7]{1,0}
+allocation 4: size 320, maybe-live-out:
+ value: <201 loop_dynamic_update_slice_fusion.1 @0> (size=320,offset=0): f64[40]{0}
+ value: <448 loop_broadcast_fusion.2 @0> (size=320,offset=0): f64[40]{0}
+ value: <488 arg_tuple.36{2} (phi) @0> (size=320,offset=0): f64[40]{0}
+ value: <498 arg_tuple.37{2} (phi) @0> (size=320,offset=0): f64[40]{0}
+ value: <509 while.150{2} (phi) @0> (size=320,offset=0): f64[40]{0}
+ value: <526 arg_tuple.23{9} (phi) @0> (size=320,offset=0): f64[40]{0}
+ value: <538 arg_tuple.24{9} (phi) @0> (size=320,offset=0): f64[40]{0}
+ value: <551 while.143{9} (phi) @0> (size=320,offset=0): f64[40]{0}
+allocation 5: size 320, constant:
+ value: <47 constant_2682__sunk2_7_0 @0> (size=320,offset=0): f64[40]{0}
+allocation 6: size 320, constant:
+ value: <199 constant_2682__sunk2_8_0 @0> (size=320,offset=0): f64[40]{0}
+allocation 7: size 112, constant:
+ value: <415 constant_2833_0 @0> (size=112,offset=0): c128[7]{0}
+allocation 8: size 1, thread-local:
+ value: <5 and.88 @0> (size=1,offset=0): pred[]
+allocation 9: size 1, thread-local:
+ value: <4 rhs @0> (size=1,offset=0): pred[]
+allocation 10: size 72, output shape is |(f64[], f64[], f64[40], c128[40,64,64], s64[], /*index=5*/s64[], s64[], s64[], s32[])|, maybe-live-out:
+ value: <457 tuple.106{} @0> (size=72,offset=0): (f64[], f64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/s64[], s64[], s64[], s32[])
+allocation 11: size 1, thread-local:
+ value: <3 lhs @0> (size=1,offset=0): pred[]
+allocation 12: size 1, thread-local:
+ value: <11 and.87.0 @0> (size=1,offset=0): pred[]
+allocation 13: size 1, thread-local:
+ value: <10 rhs.4 @0> (size=1,offset=0): pred[]
+allocation 14: size 1, thread-local:
+ value: <9 lhs.4 @0> (size=1,offset=0): pred[]
+allocation 15: size 12, constant:
+ value: <262 constant_3047_0 @0> (size=12,offset=0): s32[3]{0}
+allocation 16: size 12, constant:
+ value: <202 constant_3012_0 @0> (size=12,offset=0): s32[3]{0}
+allocation 17: size 8, maybe-live-out:
+ value: <434 copy.61 @0> (size=8,offset=0): f64[]
+allocation 18: size 8, maybe-live-out:
+ value: <403 loop_add_fusion.5 @0> (size=8,offset=0): s64[]
+ value: <437 copy.69 @0> (size=8,offset=0): s64[]
+ value: <517 arg_tuple.23{0} (phi) @0> (size=8,offset=0): s64[]
+ value: <529 arg_tuple.24{0} (phi) @0> (size=8,offset=0): s64[]
+ value: <542 while.143{0} (phi) @0> (size=8,offset=0): s64[]
+allocation 19: size 8, maybe-live-out:
+ value: <427 loop_add_fusion.4 @0> (size=8,offset=0): s64[]
+ value: <445 copy.30 @0> (size=8,offset=0): s64[]
+ value: <523 arg_tuple.23{6} (phi) @0> (size=8,offset=0): s64[]
+ value: <535 arg_tuple.24{6} (phi) @0> (size=8,offset=0): s64[]
+ value: <548 while.143{6} (phi) @0> (size=8,offset=0): s64[]
+allocation 20: size 8, maybe-live-out:
+ value: <428 loop_add_fusion.3 @0> (size=8,offset=0): s64[]
+ value: <446 copy.31 @0> (size=8,offset=0): s64[]
+ value: <524 arg_tuple.23{7} (phi) @0> (size=8,offset=0): s64[]
+ value: <536 arg_tuple.24{7} (phi) @0> (size=8,offset=0): s64[]
+ value: <549 while.143{7} (phi) @0> (size=8,offset=0): s64[]
+allocation 21: size 8, maybe-live-out:
+ value: <56 loop_and_fusion.2 @0> (size=1,offset=0): pred[]
+ value: <420 loop_compare_minimum_select_fusion{0} @0> (size=8,offset=0): f64[]
+ value: <441 copy.72 @0> (size=8,offset=0): f64[]
+ value: <455 copy.73 @0> (size=8,offset=0): f64[]
+ value: <520 arg_tuple.23{3} (phi) @0> (size=8,offset=0): f64[]
+ value: <532 arg_tuple.24{3} (phi) @0> (size=8,offset=0): f64[]
+ value: <545 while.143{3} (phi) @0> (size=8,offset=0): f64[]
+allocation 22: size 8, maybe-live-out:
+ value: <407 loop_select_fusion.3 @0> (size=8,offset=0): s64[]
+ value: <416 input_reduce_fusion @0> (size=1,offset=0): pred[]
+ value: <418 input_reduce_fusion.1 @0> (size=8,offset=0): f64[]
+ value: <421 loop_compare_minimum_select_fusion{1} @0> (size=8,offset=0): f64[]
+ value: <433 copy.71 @0> (size=8,offset=0): f64[]
+ value: <456 copy.74 @0> (size=8,offset=0): s64[]
+ value: <519 arg_tuple.23{2} (phi) @0> (size=8,offset=0): f64[]
+ value: <531 arg_tuple.24{2} (phi) @0> (size=8,offset=0): f64[]
+ value: <544 while.143{2} (phi) @0> (size=8,offset=0): f64[]
+allocation 23: size 8, constant:
+ value: <432 constant_256_0 @0> (size=8,offset=0): f64[]
+allocation 24: size 8, constant:
+ value: <435 constant_260_0 @0> (size=8,offset=0): f64[]
+allocation 25: size 8, constant:
+ value: <436 constant_3_0 @0> (size=8,offset=0): s64[]
+allocation 26: size 8, constant:
+ value: <440 constant_266_0 @0> (size=8,offset=0): f64[]
+allocation 27: size 8, constant:
+ value: <452 constant_164_0 @0> (size=8,offset=0): s64[]
+allocation 28: size 8, constant:
+ value: <404 constant_2828_0 @0> (size=8,offset=0): s64[]
+allocation 29: size 4, maybe-live-out:
+ value: <425 loop_select_fusion.4 @0> (size=1,offset=0): pred[]
+ value: <443 copy.70 @0> (size=1,offset=0): pred[]
+ value: <453 loop_select_fusion.5 @0> (size=4,offset=0): s32[]
+ value: <521 arg_tuple.23{4} (phi) @0> (size=1,offset=0): pred[]
+ value: <533 arg_tuple.24{4} (phi) @0> (size=1,offset=0): pred[]
+ value: <546 while.143{4} (phi) @0> (size=1,offset=0): pred[]
+allocation 30: size 1, constant:
+ value: <442 constant_4_0 @0> (size=1,offset=0): pred[]
+allocation 31: size 1, thread-local:
+ value: <2 reduce_or.21.0 @0> (size=1,offset=0): pred[]
+allocation 32: size 16, thread-local:
+ value: <6 scalar_lhs @0> (size=16,offset=0): c128[]
+allocation 33: size 16, thread-local:
+ value: <7 scalar_rhs @0> (size=16,offset=0): c128[]
+allocation 34: size 16, thread-local:
+ value: <8 add.5.0 @0> (size=16,offset=0): c128[]
+allocation 35: size 16, thread-local:
+ value: <12 scalar_lhs.4 @0> (size=16,offset=0): c128[]
+allocation 36: size 16, thread-local:
+ value: <13 scalar_rhs.4 @0> (size=16,offset=0): c128[]
+allocation 37: size 16, thread-local:
+ value: <14 add.249.0 @0> (size=16,offset=0): c128[]
+allocation 38: size 16, thread-local:
+ value: <18 scalar_lhs.6 @0> (size=16,offset=0): c128[]
+allocation 39: size 16, thread-local:
+ value: <19 scalar_rhs.6 @0> (size=16,offset=0): c128[]
+allocation 40: size 16, thread-local:
+ value: <20 add.251.0 @0> (size=16,offset=0): c128[]
+allocation 41: size 16, thread-local:
+ value: <15 scalar_lhs.5 @0> (size=16,offset=0): c128[]
+allocation 42: size 16, thread-local:
+ value: <16 scalar_rhs.5 @0> (size=16,offset=0): c128[]
+allocation 43: size 16, thread-local:
+ value: <17 add.250.0 @0> (size=16,offset=0): c128[]
+allocation 44: size 1, thread-local:
+ value: <0 reduce_or.19 @0> (size=1,offset=0): pred[]
+allocation 45: size 1, thread-local:
+ value: <1 reduce_or.20 @0> (size=1,offset=0): pred[]
+allocation 46: size 4918368, preallocated-temp:
+ value: <28 loop_and_fusion @0> (size=1,offset=4915200): pred[]
+ value: <48 loop_and_fusion.1 @0> (size=1,offset=4915968): pred[]
+ value: <200 loop_concatenate_fusion @0> (size=56,offset=4718592): f64[7]{0}
+ value: <204 loop_add_fusion @0> (size=8,offset=4915712): s64[]
+ value: <205 tuple.101{} @0> (size=80,offset=4918016): (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0})
+ value: <257 loop_add_fusion.1 @0> (size=65536,offset=4653056): c128[64,64]{1,0}
+ value: <259 custom-call.1{} @0> (size=16,offset=4916992): (c128[64,64]{1,0}, s8[4194304]{0})
+ value: <260 custom-call.1{0} @0> (size=65536,offset=4718592): c128[64,64]{1,0}
+ value: <261 custom-call.1{1} @0> (size=4194304,offset=0): s8[4194304]{0}
+ value: <263 loop_dynamic_update_slice_fusion.2 @0> (size=458752,offset=4194304): c128[7,64,64]{2,1,0}
+ value: <264 loop_add_fusion.2 @0> (size=8,offset=4916224): s64[]
+ value: <265 tuple.98{} @0> (size=56,offset=4917504): (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[])
+ value: <405 copy.75 @0> (size=8,offset=4915712): s64[]
+ value: <406 copy.3 @0> (size=8,offset=4916224): s64[]
+ value: <408 copy.4 @0> (size=65536,offset=4653056): c128[64,64]{1,0}
+ value: <409 loop_select_fusion @0> (size=65536,offset=4718592): c128[64,64]{1,0}
+ value: <410 copy.39 @0> (size=8,offset=4915200): f64[]
+ value: <411 copy.38 @0> (size=8,offset=4915456): f64[]
+ value: <412 wrapped_subtract @0> (size=8,offset=4915968): f64[]
+ value: <413 loop_pad_fusion @0> (size=458752,offset=4194304): c128[7,64,64]{2,1,0}
+ value: <414 tuple.96{} @0> (size=56,offset=4917504): (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[])
+ value: <417 loop_multiply_fusion @0> (size=65536,offset=0): c128[64,64]{1,0}
+ value: <419 loop_compare_minimum_select_fusion{} @0> (size=24,offset=4917248): (f64[], f64[], pred[])
+ value: <422 loop_compare_minimum_select_fusion{2} @0> (size=1,offset=4916224): pred[]
+ value: <423 tuple.99{} @0> (size=80,offset=4918016): (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0})
+ value: <424 loop_select_fusion.1 @0> (size=65536,offset=4784128): c128[64,64]{1,0}
+ value: <426 loop_select_fusion.2 @0> (size=65536,offset=4849664): c128[64,64]{1,0}
+ value: <429 wrapped_add @0> (size=8,offset=4916480): s64[]
+ value: <430 wrapped_add.1 @0> (size=8,offset=4916736): s64[]
+ value: <431 tuple.104{} @0> (size=96,offset=4918272): (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[])
+ value: <439 copy.68 @0> (size=65536,offset=4784128): c128[64,64]{1,0}
+ value: <444 loop_broadcast_fusion @0> (size=65536,offset=4849664): c128[64,64]{1,0}
+ value: <447 copy.32 @0> (size=8,offset=4916480): s64[]
+ value: <450 copy.35 @0> (size=8,offset=4916736): s64[]
+ value: <451 tuple.102{} @0> (size=96,offset=4918272): (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[])
+ value: <454 tuple.105{} @0> (size=72,offset=4917760): (f64[], f64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/s64[], s64[], s64[], s32[])
+ value: <458 arg_tuple.23{} (phi) @0> (size=96,offset=4918272): (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[])
+ value: <459 arg_tuple.24{} (phi) @0> (size=96,offset=4918272): (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[])
+ value: <460 arg_tuple.39{} (phi) @0> (size=56,offset=4917504): (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[])
+ value: <461 arg_tuple.40{} (phi) @0> (size=56,offset=4917504): (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[])
+ value: <462 arg_tuple.39{0} (phi) @0> (size=8,offset=4916224): s64[]
+ value: <464 arg_tuple.39{2} (phi) @0> (size=65536,offset=4653056): c128[64,64]{1,0}
+ value: <465 arg_tuple.39{3} (phi) @0> (size=65536,offset=4718592): c128[64,64]{1,0}
+ value: <466 arg_tuple.39{4} (phi) @0> (size=458752,offset=4194304): c128[7,64,64]{2,1,0}
+ value: <469 arg_tuple.40{0} (phi) @0> (size=8,offset=4916224): s64[]
+ value: <471 arg_tuple.40{2} (phi) @0> (size=65536,offset=4653056): c128[64,64]{1,0}
+ value: <472 arg_tuple.40{3} (phi) @0> (size=65536,offset=4718592): c128[64,64]{1,0}
+ value: <473 arg_tuple.40{4} (phi) @0> (size=458752,offset=4194304): c128[7,64,64]{2,1,0}
+ value: <476 while.151{} (phi) @0> (size=56,offset=4917504): (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[])
+ value: <477 while.151{0} (phi) @0> (size=8,offset=4916224): s64[]
+ value: <479 while.151{2} (phi) @0> (size=65536,offset=4653056): c128[64,64]{1,0}
+ value: <480 while.151{3} (phi) @0> (size=65536,offset=4718592): c128[64,64]{1,0}
+ value: <481 while.151{4} (phi) @0> (size=458752,offset=4194304): c128[7,64,64]{2,1,0}
+ value: <484 arg_tuple.36{} (phi) @0> (size=80,offset=4918016): (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0})
+ value: <485 arg_tuple.37{} (phi) @0> (size=80,offset=4918016): (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0})
+ value: <486 arg_tuple.36{0} (phi) @0> (size=8,offset=4915712): s64[]
+ value: <496 arg_tuple.37{0} (phi) @0> (size=8,offset=4915712): s64[]
+ value: <506 while.150{} (phi) @0> (size=80,offset=4918016): (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0})
+ value: <507 while.150{0} (phi) @0> (size=8,offset=4915712): s64[]
+ value: <518 arg_tuple.23{1} (phi) @0> (size=65536,offset=4784128): c128[64,64]{1,0}
+ value: <522 arg_tuple.23{5} (phi) @0> (size=65536,offset=4849664): c128[64,64]{1,0}
+ value: <525 arg_tuple.23{8} (phi) @0> (size=8,offset=4916480): s64[]
+ value: <528 arg_tuple.23{11} (phi) @0> (size=8,offset=4916736): s64[]
+ value: <530 arg_tuple.24{1} (phi) @0> (size=65536,offset=4784128): c128[64,64]{1,0}
+ value: <534 arg_tuple.24{5} (phi) @0> (size=65536,offset=4849664): c128[64,64]{1,0}
+ value: <537 arg_tuple.24{8} (phi) @0> (size=8,offset=4916480): s64[]
+ value: <540 arg_tuple.24{11} (phi) @0> (size=8,offset=4916736): s64[]
+ value: <541 while.143{} (phi) @0> (size=96,offset=4918272): (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[])
+ value: <543 while.143{1} (phi) @0> (size=65536,offset=4784128): c128[64,64]{1,0}
+ value: <547 while.143{5} (phi) @0> (size=65536,offset=4849664): c128[64,64]{1,0}
+ value: <550 while.143{8} (phi) @0> (size=8,offset=4916480): s64[]
+ value: <553 while.143{11} (phi) @0> (size=8,offset=4916736): s64[]

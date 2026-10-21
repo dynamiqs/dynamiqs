@@ -1,0 +1,40 @@
+HloModule jit_bitwise_or, entry_computation_layout={(pred[], pred[])->pred[]}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_eval_shape.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/diffrax/_integrate.py"
+3 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_module/_prebuilt.py"
+4 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/diffrax/_solver/runge_kutta.py"
+5 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/diffrax/_solution.py"
+
+FunctionNames
+1 "filter_eval_shape.<locals>._fn"
+2 "loop.<locals>.body_fun_aux"
+3 "BoundMethod.__call__"
+4 "AbstractRungeKutta.step"
+5 "AbstractRungeKutta.step.<locals>.<lambda>"
+6 "is_okay"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=33 end_line=33 column=15 end_column=38}
+2 {file_name_id=2 function_name_id=2 line=373 end_line=381 column=64 end_column=9}
+3 {file_name_id=3 function_name_id=3 line=46 end_line=46 column=15 end_column=60}
+4 {file_name_id=4 function_name_id=4 line=1194 end_line=1197 column=18 end_column=9}
+5 {file_name_id=4 function_name_id=5 line=1195 end_line=1195 column=39 end_column=54}
+6 {file_name_id=5 function_name_id=6 line=54 end_line=54 column=15 end_column=55}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+4 {file_location_id=4 parent_frame_id=4}
+5 {file_location_id=5 parent_frame_id=5}
+6 {file_location_id=6 parent_frame_id=6}
+
+
+ENTRY %main.1 (x.1: pred[], y.1: pred[]) -> pred[] {
+  %x.1 = pred[] parameter(0), metadata={op_name="x"}
+  %y.1 = pred[] parameter(1), metadata={op_name="y"}
+  ROOT %or.1 = pred[] or(%x.1, %y.1), metadata={op_name="jit(bitwise_or)/or" stack_frame_id=6}
+}
+

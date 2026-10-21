@@ -1,0 +1,13 @@
+BufferAssignment:
+allocation 0: size 65536, output shape is |c128[64,64]|, maybe-live-out:
+ value: <1133 loop_add_fusion @0> (size=8,offset=0): u32[2]{0}
+ value: <1140 loop_multiply_fusion @0> (size=65536,offset=0): c128[64,64]{1,0}
+allocation 1: size 8, parameter 0, shape |u32[2]| at ShapeIndex {}:
+ value: <1132 key.1 @0> (size=8,offset=0): u32[2]{0}
+allocation 2: size 66308, preallocated-temp:
+ value: <1134 loop_slice_fusion{} @0> (size=16,offset=256): (u32[1]{0}, u32[1]{0})
+ value: <1135 loop_slice_fusion{0} @0> (size=4,offset=66048): u32[1]{0}
+ value: <1136 loop_slice_fusion{1} @0> (size=4,offset=66304): u32[1]{0}
+ value: <1137 loop_maximum_multiply_fusion{} @0> (size=16,offset=0): (f64[64,64]{1,0}, f64[64,64]{1,0})
+ value: <1138 loop_maximum_multiply_fusion{0} @0> (size=32768,offset=512): f64[64,64]{1,0}
+ value: <1139 loop_maximum_multiply_fusion{1} @0> (size=32768,offset=33280): f64[64,64]{1,0}

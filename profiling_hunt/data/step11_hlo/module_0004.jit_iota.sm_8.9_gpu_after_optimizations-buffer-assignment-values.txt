@@ -1,0 +1,10 @@
+
+Total bytes used: 1008 (1008B)
+
+Used values:
+<1 wrapped_iota @0>
+ positions:
+  wrapped_iota
+ uses:
+  (none)
+ from instruction: %wrapped_iota = c128[63]{0} fusion(), kind=kLoop, calls=%wrapped_iota_computation, metadata={op_name="jit(iota)/iota" stack_frame_id=3}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}

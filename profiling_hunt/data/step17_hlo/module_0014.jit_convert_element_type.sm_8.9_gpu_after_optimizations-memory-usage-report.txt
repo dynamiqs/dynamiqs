@@ -1,0 +1,11 @@
+Memory Space: default (color=0)
+Total bytes: 2 (2B)
+  cumulative_size;       size;       offset; used_by_n_values; shapes_list
+  ------------------------------------------------------------
+         1B(100%);         1B;            0;                1; pred[]
+
+  cumulative_size;       size;       offset; used_by_n_values; shapes_list
+  ------------------------------------------------------------
+         1B(100%);         1B;            0;                1; pred[]
+
+

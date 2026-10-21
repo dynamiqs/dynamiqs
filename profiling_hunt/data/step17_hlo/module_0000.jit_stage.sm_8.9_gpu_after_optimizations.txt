@@ -1,0 +1,7 @@
+HloModule jit_stage, is_scheduled=true, entry_computation_layout={(s64[])->s64[]}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="8bf231bad77e5e4d252768e99f66c5aa"}
+
+ENTRY %main.1 (args_0_.1: s64[]) -> s64[] {
+  %args_0_.1 = s64[] parameter(0), metadata={op_name="args[0]"}
+  ROOT %copy.1 = s64[] copy(%args_0_.1)
+}
+

@@ -1,0 +1,67 @@
+
+Total bytes used: 4092 (4.0KiB)
+
+Used values:
+<0 lhs @0>
+ positions:
+  lhs
+ uses:
+  and.3, operand 0
+ from instruction: %lhs = pred[] parameter(0)
+<1 rhs @0>
+ positions:
+  rhs
+ uses:
+  and.3, operand 1
+ from instruction: %rhs = pred[] parameter(1)
+<2 and.3 @0>
+ positions:
+  and.3
+ uses:
+  (none)
+ from instruction: %and.3 = pred[] and(%lhs, %rhs)
+<30 args_0_.1 @0>
+ positions:
+  args_0_.1
+ uses:
+  copy.2, operand 0
+ from instruction: %args_0_.1 = c128[1,64]{1,0} parameter(0), metadata={op_name="args[0]"}
+<31 copy.2 @0>
+ positions:
+  copy.2
+ uses:
+  loop_dynamic_slice_fusion, operand 0
+  loop_dynamic_update_slice_fusion, operand 0
+ from instruction: %copy.2 = c128[1,64]{1,0} copy(%args_0_.1)
+<32 args_1_.1 @0>
+ positions:
+  args_1_.1
+ uses:
+  input_reduce_fusion, operand 0
+  loop_dynamic_slice_fusion, operand 1
+  loop_dynamic_update_slice_fusion, operand 4
+ from instruction: %args_1_.1 = s32[2]{0} parameter(1), metadata={op_name="args[1]"}
+<33 loop_dynamic_slice_fusion @0>
+ positions:
+  loop_dynamic_slice_fusion
+ uses:
+  loop_dynamic_update_slice_fusion, operand 1
+ from instruction: %loop_dynamic_slice_fusion = c128[1,63]{1,0} fusion(%copy.2, %args_1_.1), kind=kLoop, calls=%fused_dynamic_slice, metadata={stack_frame_id=7}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<34 args_2_.1 @0>
+ positions:
+  args_2_.1
+ uses:
+  loop_dynamic_update_slice_fusion, operand 2
+ from instruction: %args_2_.1 = c128[63]{0} parameter(2), metadata={op_name="args[2]"}
+<35 input_reduce_fusion @0>
+ positions:
+  input_reduce_fusion
+ uses:
+  loop_dynamic_update_slice_fusion, operand 3
+ from instruction: %input_reduce_fusion = pred[] fusion(%args_1_.1), kind=kInput, calls=%fused_reduce, metadata={stack_frame_id=7}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<36 loop_dynamic_update_slice_fusion @0>
+ positions:
+  loop_dynamic_update_slice_fusion
+ uses:
+  (none)
+ from instruction: %loop_dynamic_update_slice_fusion = c128[1,64]{1,0} fusion(%copy.2, %loop_dynamic_slice_fusion, %args_2_.1, %input_reduce_fusion, %args_1_.1), kind=kLoop, calls=%fused_dynamic_update_slice, metadata={op_name="jit(scatter)/scatter" stack_frame_id=7}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}

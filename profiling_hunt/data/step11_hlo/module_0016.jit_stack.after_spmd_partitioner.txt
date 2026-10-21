@@ -1,0 +1,35 @@
+HloModule jit_stack, entry_computation_layout={(c128[64]{0})->c128[1,64]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step11_dump.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/operators.py"
+3 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/utils.py"
+4 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/sparsedia_primitives.py"
+
+FunctionNames
+1 "<module>"
+2 "destroy"
+3 "destroy.<locals>.destroy_single"
+4 "sparsedia_from_dict"
+5 "autopad_sparsedia_diags"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=76 end_line=76 column=4 end_column=17}
+2 {file_name_id=2 function_name_id=2 line=308 end_line=308 column=15 end_column=38}
+3 {file_name_id=2 function_name_id=3 line=305 end_line=305 column=19 end_column=49}
+4 {file_name_id=3 function_name_id=4 line=498 end_line=498 column=12 end_column=51}
+5 {file_name_id=4 function_name_id=5 line=368 end_line=368 column=20 end_column=49}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+4 {file_location_id=4 parent_frame_id=4}
+5 {file_location_id=5 parent_frame_id=5}
+
+
+ENTRY %main.1 (args_0_.1: c128[64]) -> c128[1,64] {
+  %args_0_.1 = c128[64]{0} parameter(0), metadata={op_name="args[0]"}
+  ROOT %stack.1 = c128[1,64]{1,0} reshape(%args_0_.1), metadata={op_name="jit(stack)/stack" stack_frame_id=5}
+}
+

@@ -1,0 +1,32 @@
+HloLiveRange (max 9):
+  InstructionSequence:
+    0:key.1
+    1:loop_add_fusion
+    2:loop_slice_fusion
+    3:get-tuple-element.17
+    4:get-tuple-element.16
+    5:loop_maximum_multiply_fusion
+    6:get-tuple-element.19
+    7:get-tuple-element.18
+    8:loop_multiply_fusion
+  BufferLiveRange:
+    key.1{}:0-9
+    loop_add_fusion{}:1-5
+    loop_slice_fusion{}:2-4
+    loop_slice_fusion{0}:2-5
+    loop_slice_fusion{1}:2-5
+    loop_maximum_multiply_fusion{}:5-7
+    loop_maximum_multiply_fusion{0}:5-8
+    loop_maximum_multiply_fusion{1}:5-8
+    loop_multiply_fusion{}:8-9
+  Live ranges at 8 (peak):
+    loop_multiply_fusion{}: 65536 bytes (cumulative: 65536 bytes)
+    loop_maximum_multiply_fusion{0}: 32768 bytes (cumulative: 98304 bytes)
+    loop_maximum_multiply_fusion{1}: 32768 bytes (cumulative: 131072 bytes)
+    key.1{}: 8 bytes (cumulative: 131080 bytes)
+  Stack trace breakdown for peak usage: 131 080 bytes
+    main.6 (100.0%, total: 131 080 bytes, current: 0 bytes, remaining: 131 080 bytes)
+      ├── jit(_normal)/div (50.0%, total: 65 536 bytes, current: 65 536 bytes, remaining: 65 544 bytes)
+      ├── jit(_normal)/jit(_normal_real)/jit(_uniform)/max{0} (25.0%, total: 32 768 bytes, current: 32 768 bytes, remaining: 32 776 bytes)
+      ├── jit(_normal)/jit(_normal_real)/jit(_uniform)/max{1} (25.0%, total: 32 768 bytes, current: 32 768 bytes, remaining: 8 bytes)
+      └── key (0.0%, total: 8 bytes, current: 8 bytes, remaining: 0 bytes)

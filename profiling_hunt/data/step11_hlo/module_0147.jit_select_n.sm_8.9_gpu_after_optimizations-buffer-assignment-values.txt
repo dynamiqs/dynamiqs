@@ -1,0 +1,28 @@
+
+Total bytes used: 25 (25B)
+
+Used values:
+<4 args_0_.1 @0>
+ positions:
+  args_0_.1
+ uses:
+  wrapped_select, operand 0
+ from instruction: %args_0_.1 = pred[] parameter(0), metadata={op_name="args[0]"}
+<5 args_2_.1 @0>
+ positions:
+  args_2_.1
+ uses:
+  wrapped_select, operand 1
+ from instruction: %args_2_.1 = s64[] parameter(2), metadata={op_name="args[2]"}
+<6 args_1_.1 @0>
+ positions:
+  args_1_.1
+ uses:
+  wrapped_select, operand 2
+ from instruction: %args_1_.1 = s64[] parameter(1), metadata={op_name="args[1]"}
+<7 wrapped_select @0>
+ positions:
+  wrapped_select
+ uses:
+  (none)
+ from instruction: %wrapped_select = s64[] fusion(%args_0_.1, %args_2_.1, %args_1_.1), kind=kLoop, calls=%wrapped_select_computation, metadata={op_name="jit(select_n)/select_n" stack_frame_id=4}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}

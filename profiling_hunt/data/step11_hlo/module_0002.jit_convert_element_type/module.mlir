@@ -1,0 +1,16 @@
+#loc1 = loc("args[0]")
+module @jit_convert_element_type attributes {mhlo.num_partitions = 1 : i32, mhlo.num_replicas = 1 : i32} {
+  func.func public @main(%arg0: tensor<complex<f64>> loc("args[0]")) -> (tensor<complex<f64>> {jax.result_info = "result"}) {
+    return %arg0 : tensor<complex<f64>> loc(#loc10)
+  } loc(#loc)
+} loc(#loc)
+#loc = loc(unknown)
+#loc2 = loc("/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/operators.py":301:24 to :58)
+#loc3 = loc("/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/operators.py":308:15 to :38)
+#loc4 = loc("/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step11_dump.py":76:4 to :17)
+#loc5 = loc("destroy.<locals>.destroy_single"(#loc2))
+#loc6 = loc("destroy"(#loc3))
+#loc7 = loc("<module>"(#loc4))
+#loc8 = loc(callsite(#loc6 at #loc7))
+#loc9 = loc(callsite(#loc5 at #loc8))
+#loc10 = loc("jit(convert_element_type)"(#loc9))

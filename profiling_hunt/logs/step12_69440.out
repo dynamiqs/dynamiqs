@@ -1,0 +1,4 @@
+job 69440 higgs GPU=0
+### dynamiqs_memstats  N=64  R=65,536 B  (measured with device.memory_stats()['peak_bytes_in_use'], one process would be cleaner but clear_caches+gc between calls is used here for speed)
+  dynamiqs baseline ntsave=  10: peak=    50,404,608 B = 0.04694 GiB = 769.1133 R
+  dynamiqs baseline ntsave=  20: peak=    50,404,608 B = 0.04694 GiB = 769.1133 R

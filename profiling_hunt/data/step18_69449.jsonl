@@ -1,0 +1,10 @@
+{"traced": false, "ntsave": 20, "R": 16000000, "status": "ok", "peak": 532202752, "peak_in_R": 33.262672}
+{"traced": false, "ntsave": 50, "R": 16000000, "status": "ok", "peak": 1012203520, "peak_in_R": 63.26272}
+{"traced": false, "ntsave": 100, "R": 16000000, "status": "ok", "peak": 1812205056, "peak_in_R": 113.262816}
+{"traced": false, "ntsave": 200, "R": 16000000, "status": "ok", "peak": 3412207360, "peak_in_R": 213.26296}
+{"traced": false, "ntsave": 400, "R": 16000000, "status": "ok", "peak": 6612211968, "peak_in_R": 413.263248}
+{"traced": true, "ntsave": 20, "R": 16000000, "status": "ok", "peak": 740206080, "peak_in_R": 46.26288}
+{"traced": true, "ntsave": 50, "R": 16000000, "status": "ok", "peak": 1700206848, "peak_in_R": 106.262928}
+{"traced": true, "ntsave": 100, "R": 16000000, "status": "ok", "peak": 3300208384, "peak_in_R": 206.263024}
+{"traced": true, "ntsave": 200, "R": 16000000, "status": "ok", "peak": 6500210688, "peak_in_R": 406.263168}
+{"traced": true, "ntsave": 400, "R": 16000000, "status": "ok", "peak": 12900215296, "peak_in_R": 806.263456}

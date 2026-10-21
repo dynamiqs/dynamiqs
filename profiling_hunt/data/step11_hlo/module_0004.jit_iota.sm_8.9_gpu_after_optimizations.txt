@@ -1,0 +1,30 @@
+HloModule jit_iota, is_scheduled=true, entry_computation_layout={()->c128[63]{0}}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="6154cb40b0b3292a81f67a382cb56285"}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step11_dump.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/operators.py"
+
+FunctionNames
+1 "<module>"
+2 "destroy"
+3 "destroy.<locals>.destroy_single"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=76 end_line=76 column=4 end_column=17}
+2 {file_name_id=2 function_name_id=2 line=308 end_line=308 column=15 end_column=38}
+3 {file_name_id=2 function_name_id=3 line=301 end_line=301 column=24 end_column=58}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+
+
+%wrapped_iota_computation () -> c128[63] {
+  ROOT %iota.1.1 = c128[63]{0} iota(), iota_dimension=0, metadata={op_name="jit(iota)/iota" stack_frame_id=3}
+}
+
+ENTRY %main.1 () -> c128[63] {
+  ROOT %wrapped_iota = c128[63]{0} fusion(), kind=kLoop, calls=%wrapped_iota_computation, metadata={op_name="jit(iota)/iota" stack_frame_id=3}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+}
+

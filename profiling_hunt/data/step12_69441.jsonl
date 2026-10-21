@@ -1,0 +1,15 @@
+{"which": "dynamiqs_baseline", "ntsave": 10, "R": 65536, "status": "ok", "peak": 50404608, "peak_in_R": 769.11328125}
+{"which": "dynamiqs_baseline", "ntsave": 20, "R": 65536, "status": "ok", "peak": 50404608, "peak_in_R": 769.11328125}
+{"which": "dynamiqs_baseline", "ntsave": 40, "R": 65536, "status": "ok", "peak": 50405376, "peak_in_R": 769.125}
+{"which": "dynamiqs_baseline", "ntsave": 80, "R": 65536, "status": "ok", "peak": 50406400, "peak_in_R": 769.140625}
+{"which": "dynamiqs_baseline", "ntsave": 160, "R": 65536, "status": "ok", "peak": 50407680, "peak_in_R": 769.16015625}
+{"which": "bare_throw_true", "ntsave": 10, "R": 65536, "status": "ok", "peak": 38143744, "peak_in_R": 582.02734375}
+{"which": "bare_throw_true", "ntsave": 20, "R": 65536, "status": "ok", "peak": 38143744, "peak_in_R": 582.02734375}
+{"which": "bare_throw_true", "ntsave": 40, "R": 65536, "status": "ok", "peak": 38144000, "peak_in_R": 582.03125}
+{"which": "bare_throw_true", "ntsave": 80, "R": 65536, "status": "ok", "peak": 38144256, "peak_in_R": 582.03515625}
+{"which": "bare_throw_true", "ntsave": 160, "R": 65536, "status": "ok", "peak": 38144768, "peak_in_R": 582.04296875}
+{"which": "bare_throw_false", "ntsave": 10, "R": 65536, "status": "ok", "peak": 38143744, "peak_in_R": 582.02734375}
+{"which": "bare_throw_false", "ntsave": 20, "R": 65536, "status": "ok", "peak": 38143744, "peak_in_R": 582.02734375}
+{"which": "bare_throw_false", "ntsave": 40, "R": 65536, "status": "ok", "peak": 38144000, "peak_in_R": 582.03125}
+{"which": "bare_throw_false", "ntsave": 80, "R": 65536, "status": "ok", "peak": 38144256, "peak_in_R": 582.03515625}
+{"which": "bare_throw_false", "ntsave": 160, "R": 65536, "status": "ok", "peak": 38144768, "peak_in_R": 582.04296875}

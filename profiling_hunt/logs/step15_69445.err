@@ -1,0 +1,60 @@
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step15_pytreewrap.py", line 44, in <module>
+    jtu.register_pytree_node(
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/tree_util.py", line 329, in register_pytree_node
+    registry.register_node(
+ValueError: Duplicate custom PyTreeDef type registration for <class '__main__.Wrapped'>.
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step15_pytreewrap.py", line 44, in <module>
+    jtu.register_pytree_node(
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/tree_util.py", line 329, in register_pytree_node
+    registry.register_node(
+ValueError: Duplicate custom PyTreeDef type registration for <class '__main__.Wrapped'>.
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step15_pytreewrap.py", line 44, in <module>
+    jtu.register_pytree_node(
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/tree_util.py", line 329, in register_pytree_node
+    registry.register_node(
+ValueError: Duplicate custom PyTreeDef type registration for <class '__main__.Wrapped'>.
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step15_pytreewrap.py", line 44, in <module>
+    jtu.register_pytree_node(
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/tree_util.py", line 329, in register_pytree_node
+    registry.register_node(
+ValueError: Duplicate custom PyTreeDef type registration for <class '__main__.Wrapped'>.
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step15_pytreewrap.py", line 44, in <module>
+    jtu.register_pytree_node(
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/tree_util.py", line 329, in register_pytree_node
+    registry.register_node(
+ValueError: Duplicate custom PyTreeDef type registration for <class '__main__.Wrapped'>.
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step15_pytreewrap.py", line 44, in <module>
+    jtu.register_pytree_node(
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/tree_util.py", line 329, in register_pytree_node
+    registry.register_node(
+ValueError: Duplicate custom PyTreeDef type registration for <class '__main__.Wrapped'>.
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step15_pytreewrap.py", line 44, in <module>
+    jtu.register_pytree_node(
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/tree_util.py", line 329, in register_pytree_node
+    registry.register_node(
+ValueError: Duplicate custom PyTreeDef type registration for <class '__main__.Wrapped'>.
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step15_pytreewrap.py", line 44, in <module>
+    jtu.register_pytree_node(
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/tree_util.py", line 329, in register_pytree_node
+    registry.register_node(
+ValueError: Duplicate custom PyTreeDef type registration for <class '__main__.Wrapped'>.
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step15_pytreewrap.py", line 44, in <module>
+    jtu.register_pytree_node(
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/tree_util.py", line 329, in register_pytree_node
+    registry.register_node(
+ValueError: Duplicate custom PyTreeDef type registration for <class '__main__.Wrapped'>.
+Traceback (most recent call last):
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step15_pytreewrap.py", line 44, in <module>
+    jtu.register_pytree_node(
+  File "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/jax/_src/tree_util.py", line 329, in register_pytree_node
+    registry.register_node(
+ValueError: Duplicate custom PyTreeDef type registration for <class '__main__.Wrapped'>.

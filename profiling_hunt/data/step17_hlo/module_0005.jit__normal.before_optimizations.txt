@@ -1,0 +1,695 @@
+HloModule jit__normal, entry_computation_layout={(u32[2]{0})->c128[64,64]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={xla.sdy.meshes={empty_mesh = #sdy.mesh<[]>}}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step17_dump_bare.py"
+
+FunctionNames
+1 "<module>"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=24 end_line=24 column=4 end_column=70}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+
+
+%threefry2x32.1 (Arg_0.2: u32[], Arg_1.1: u32[], Arg_2.1: u32[2], Arg_3.1: u32[2]) -> (u32[2], u32[2]) {
+  %Arg_2.1 = u32[2]{0} parameter(2)
+  %Arg_0.2 = u32[] parameter(0)
+  %add.49 = u32[2]{0} broadcast(%Arg_0.2), dimensions={}, metadata={op_name="add"}
+  %add.50 = u32[2]{0} add(%Arg_2.1, %add.49), metadata={op_name="add"}
+  %Arg_3.1 = u32[2]{0} parameter(3)
+  %Arg_1.1 = u32[] parameter(1)
+  %add.51 = u32[2]{0} broadcast(%Arg_1.1), dimensions={}, metadata={op_name="add"}
+  %add.52 = u32[2]{0} add(%Arg_3.1, %add.51), metadata={op_name="add"}
+  %add.53 = u32[2]{0} add(%add.50, %add.52), metadata={op_name="add"}
+  %constant.33 = u32[] constant(13)
+  %broadcast.30 = u32[2]{0} broadcast(%constant.33), dimensions={}
+  %shift_left.20 = u32[2]{0} shift-left(%add.52, %broadcast.30), metadata={op_name="shift_left"}
+  %constant.32 = u32[] constant(19)
+  %broadcast.29 = u32[2]{0} broadcast(%constant.32), dimensions={}
+  %shift_right_logical.20 = u32[2]{0} shift-right-logical(%add.52, %broadcast.29), metadata={op_name="shift_right_logical"}
+  %or.20 = u32[2]{0} or(%shift_left.20, %shift_right_logical.20), metadata={op_name="or"}
+  %xor.24 = u32[2]{0} xor(%add.53, %or.20), metadata={op_name="xor"}
+  %add.54 = u32[2]{0} add(%add.53, %xor.24), metadata={op_name="add"}
+  %constant.31 = u32[] constant(15)
+  %broadcast.28 = u32[2]{0} broadcast(%constant.31), dimensions={}
+  %shift_left.21 = u32[2]{0} shift-left(%xor.24, %broadcast.28), metadata={op_name="shift_left"}
+  %constant.30 = u32[] constant(17)
+  %broadcast.27 = u32[2]{0} broadcast(%constant.30), dimensions={}
+  %shift_right_logical.21 = u32[2]{0} shift-right-logical(%xor.24, %broadcast.27), metadata={op_name="shift_right_logical"}
+  %or.21 = u32[2]{0} or(%shift_left.21, %shift_right_logical.21), metadata={op_name="or"}
+  %xor.25 = u32[2]{0} xor(%add.54, %or.21), metadata={op_name="xor"}
+  %add.55 = u32[2]{0} add(%add.54, %xor.25), metadata={op_name="add"}
+  %constant.29 = u32[] constant(26)
+  %broadcast.26 = u32[2]{0} broadcast(%constant.29), dimensions={}
+  %shift_left.22 = u32[2]{0} shift-left(%xor.25, %broadcast.26), metadata={op_name="shift_left"}
+  %constant.28 = u32[] constant(6)
+  %broadcast.25 = u32[2]{0} broadcast(%constant.28), dimensions={}
+  %shift_right_logical.22 = u32[2]{0} shift-right-logical(%xor.25, %broadcast.25), metadata={op_name="shift_right_logical"}
+  %or.22 = u32[2]{0} or(%shift_left.22, %shift_right_logical.22), metadata={op_name="or"}
+  %xor.26 = u32[2]{0} xor(%add.55, %or.22), metadata={op_name="xor"}
+  %add.56 = u32[2]{0} add(%add.55, %xor.26), metadata={op_name="add"}
+  %add.57 = u32[2]{0} broadcast(%Arg_1.1), dimensions={}, metadata={op_name="add"}
+  %add.58 = u32[2]{0} add(%add.56, %add.57), metadata={op_name="add"}
+  %shift_left.23 = u32[2]{0} shift-left(%xor.26, %broadcast.25), metadata={op_name="shift_left"}
+  %shift_right_logical.23 = u32[2]{0} shift-right-logical(%xor.26, %broadcast.26), metadata={op_name="shift_right_logical"}
+  %or.23 = u32[2]{0} or(%shift_left.23, %shift_right_logical.23), metadata={op_name="or"}
+  %xor.27 = u32[2]{0} xor(%add.56, %or.23), metadata={op_name="xor"}
+  %xor.22 = u32[] xor(%Arg_0.2, %Arg_1.1), metadata={op_name="xor"}
+  %constant.34 = u32[] constant(466688986)
+  %xor.23 = u32[] xor(%xor.22, %constant.34), metadata={op_name="xor"}
+  %add.59 = u32[2]{0} broadcast(%xor.23), dimensions={}, metadata={op_name="add"}
+  %add.60 = u32[2]{0} add(%xor.27, %add.59), metadata={op_name="add"}
+  %constant.27 = u32[] constant(1)
+  %broadcast.24 = u32[2]{0} broadcast(%constant.27), dimensions={}
+  %add.61 = u32[2]{0} add(%add.60, %broadcast.24), metadata={op_name="add"}
+  %add.62 = u32[2]{0} add(%add.58, %add.61), metadata={op_name="add"}
+  %shift_left.24 = u32[2]{0} shift-left(%add.61, %broadcast.27), metadata={op_name="shift_left"}
+  %shift_right_logical.24 = u32[2]{0} shift-right-logical(%add.61, %broadcast.28), metadata={op_name="shift_right_logical"}
+  %or.24 = u32[2]{0} or(%shift_left.24, %shift_right_logical.24), metadata={op_name="or"}
+  %xor.28 = u32[2]{0} xor(%add.62, %or.24), metadata={op_name="xor"}
+  %add.63 = u32[2]{0} add(%add.62, %xor.28), metadata={op_name="add"}
+  %constant.26 = u32[] constant(29)
+  %broadcast.23 = u32[2]{0} broadcast(%constant.26), dimensions={}
+  %shift_left.25 = u32[2]{0} shift-left(%xor.28, %broadcast.23), metadata={op_name="shift_left"}
+  %constant.25 = u32[] constant(3)
+  %broadcast.22 = u32[2]{0} broadcast(%constant.25), dimensions={}
+  %shift_right_logical.25 = u32[2]{0} shift-right-logical(%xor.28, %broadcast.22), metadata={op_name="shift_right_logical"}
+  %or.25 = u32[2]{0} or(%shift_left.25, %shift_right_logical.25), metadata={op_name="or"}
+  %xor.29 = u32[2]{0} xor(%add.63, %or.25), metadata={op_name="xor"}
+  %add.64 = u32[2]{0} add(%add.63, %xor.29), metadata={op_name="add"}
+  %constant.24 = u32[] constant(16)
+  %broadcast.21 = u32[2]{0} broadcast(%constant.24), dimensions={}
+  %shift_left.26 = u32[2]{0} shift-left(%xor.29, %broadcast.21), metadata={op_name="shift_left"}
+  %shift_right_logical.26 = u32[2]{0} shift-right-logical(%xor.29, %broadcast.21), metadata={op_name="shift_right_logical"}
+  %or.26 = u32[2]{0} or(%shift_left.26, %shift_right_logical.26), metadata={op_name="or"}
+  %xor.30 = u32[2]{0} xor(%add.64, %or.26), metadata={op_name="xor"}
+  %add.65 = u32[2]{0} add(%add.64, %xor.30), metadata={op_name="add"}
+  %add.66 = u32[2]{0} broadcast(%xor.23), dimensions={}, metadata={op_name="add"}
+  %add.67 = u32[2]{0} add(%add.65, %add.66), metadata={op_name="add"}
+  %constant.23 = u32[] constant(24)
+  %broadcast.20 = u32[2]{0} broadcast(%constant.23), dimensions={}
+  %shift_left.27 = u32[2]{0} shift-left(%xor.30, %broadcast.20), metadata={op_name="shift_left"}
+  %constant.22 = u32[] constant(8)
+  %broadcast.19 = u32[2]{0} broadcast(%constant.22), dimensions={}
+  %shift_right_logical.27 = u32[2]{0} shift-right-logical(%xor.30, %broadcast.19), metadata={op_name="shift_right_logical"}
+  %or.27 = u32[2]{0} or(%shift_left.27, %shift_right_logical.27), metadata={op_name="or"}
+  %xor.31 = u32[2]{0} xor(%add.65, %or.27), metadata={op_name="xor"}
+  %add.68 = u32[2]{0} broadcast(%Arg_0.2), dimensions={}, metadata={op_name="add"}
+  %add.69 = u32[2]{0} add(%xor.31, %add.68), metadata={op_name="add"}
+  %constant.21 = u32[] constant(2)
+  %broadcast.18 = u32[2]{0} broadcast(%constant.21), dimensions={}
+  %add.70 = u32[2]{0} add(%add.69, %broadcast.18), metadata={op_name="add"}
+  %add.71 = u32[2]{0} add(%add.67, %add.70), metadata={op_name="add"}
+  %shift_left.28 = u32[2]{0} shift-left(%add.70, %broadcast.30), metadata={op_name="shift_left"}
+  %shift_right_logical.28 = u32[2]{0} shift-right-logical(%add.70, %broadcast.29), metadata={op_name="shift_right_logical"}
+  %or.28 = u32[2]{0} or(%shift_left.28, %shift_right_logical.28), metadata={op_name="or"}
+  %xor.32 = u32[2]{0} xor(%add.71, %or.28), metadata={op_name="xor"}
+  %add.72 = u32[2]{0} add(%add.71, %xor.32), metadata={op_name="add"}
+  %shift_left.29 = u32[2]{0} shift-left(%xor.32, %broadcast.28), metadata={op_name="shift_left"}
+  %shift_right_logical.29 = u32[2]{0} shift-right-logical(%xor.32, %broadcast.27), metadata={op_name="shift_right_logical"}
+  %or.29 = u32[2]{0} or(%shift_left.29, %shift_right_logical.29), metadata={op_name="or"}
+  %xor.33 = u32[2]{0} xor(%add.72, %or.29), metadata={op_name="xor"}
+  %add.73 = u32[2]{0} add(%add.72, %xor.33), metadata={op_name="add"}
+  %shift_left.30 = u32[2]{0} shift-left(%xor.33, %broadcast.26), metadata={op_name="shift_left"}
+  %shift_right_logical.30 = u32[2]{0} shift-right-logical(%xor.33, %broadcast.25), metadata={op_name="shift_right_logical"}
+  %or.30 = u32[2]{0} or(%shift_left.30, %shift_right_logical.30), metadata={op_name="or"}
+  %xor.34 = u32[2]{0} xor(%add.73, %or.30), metadata={op_name="xor"}
+  %add.74 = u32[2]{0} add(%add.73, %xor.34), metadata={op_name="add"}
+  %add.75 = u32[2]{0} broadcast(%Arg_0.2), dimensions={}, metadata={op_name="add"}
+  %add.76 = u32[2]{0} add(%add.74, %add.75), metadata={op_name="add"}
+  %shift_left.31 = u32[2]{0} shift-left(%xor.34, %broadcast.25), metadata={op_name="shift_left"}
+  %shift_right_logical.31 = u32[2]{0} shift-right-logical(%xor.34, %broadcast.26), metadata={op_name="shift_right_logical"}
+  %or.31 = u32[2]{0} or(%shift_left.31, %shift_right_logical.31), metadata={op_name="or"}
+  %xor.35 = u32[2]{0} xor(%add.74, %or.31), metadata={op_name="xor"}
+  %add.77 = u32[2]{0} broadcast(%Arg_1.1), dimensions={}, metadata={op_name="add"}
+  %add.78 = u32[2]{0} add(%xor.35, %add.77), metadata={op_name="add"}
+  %add.79 = u32[2]{0} add(%add.78, %broadcast.22), metadata={op_name="add"}
+  %add.80 = u32[2]{0} add(%add.76, %add.79), metadata={op_name="add"}
+  %shift_left.32 = u32[2]{0} shift-left(%add.79, %broadcast.27), metadata={op_name="shift_left"}
+  %shift_right_logical.32 = u32[2]{0} shift-right-logical(%add.79, %broadcast.28), metadata={op_name="shift_right_logical"}
+  %or.32 = u32[2]{0} or(%shift_left.32, %shift_right_logical.32), metadata={op_name="or"}
+  %xor.36 = u32[2]{0} xor(%add.80, %or.32), metadata={op_name="xor"}
+  %add.81 = u32[2]{0} add(%add.80, %xor.36), metadata={op_name="add"}
+  %shift_left.33 = u32[2]{0} shift-left(%xor.36, %broadcast.23), metadata={op_name="shift_left"}
+  %shift_right_logical.33 = u32[2]{0} shift-right-logical(%xor.36, %broadcast.22), metadata={op_name="shift_right_logical"}
+  %or.33 = u32[2]{0} or(%shift_left.33, %shift_right_logical.33), metadata={op_name="or"}
+  %xor.37 = u32[2]{0} xor(%add.81, %or.33), metadata={op_name="xor"}
+  %add.82 = u32[2]{0} add(%add.81, %xor.37), metadata={op_name="add"}
+  %shift_left.34 = u32[2]{0} shift-left(%xor.37, %broadcast.21), metadata={op_name="shift_left"}
+  %shift_right_logical.34 = u32[2]{0} shift-right-logical(%xor.37, %broadcast.21), metadata={op_name="shift_right_logical"}
+  %or.34 = u32[2]{0} or(%shift_left.34, %shift_right_logical.34), metadata={op_name="or"}
+  %xor.38 = u32[2]{0} xor(%add.82, %or.34), metadata={op_name="xor"}
+  %add.83 = u32[2]{0} add(%add.82, %xor.38), metadata={op_name="add"}
+  %add.84 = u32[2]{0} broadcast(%Arg_1.1), dimensions={}, metadata={op_name="add"}
+  %add.85 = u32[2]{0} add(%add.83, %add.84), metadata={op_name="add"}
+  %shift_left.35 = u32[2]{0} shift-left(%xor.38, %broadcast.20), metadata={op_name="shift_left"}
+  %shift_right_logical.35 = u32[2]{0} shift-right-logical(%xor.38, %broadcast.19), metadata={op_name="shift_right_logical"}
+  %or.35 = u32[2]{0} or(%shift_left.35, %shift_right_logical.35), metadata={op_name="or"}
+  %xor.39 = u32[2]{0} xor(%add.83, %or.35), metadata={op_name="xor"}
+  %add.86 = u32[2]{0} broadcast(%xor.23), dimensions={}, metadata={op_name="add"}
+  %add.87 = u32[2]{0} add(%xor.39, %add.86), metadata={op_name="add"}
+  %constant.20 = u32[] constant(4)
+  %broadcast.17 = u32[2]{0} broadcast(%constant.20), dimensions={}
+  %add.88 = u32[2]{0} add(%add.87, %broadcast.17), metadata={op_name="add"}
+  %add.89 = u32[2]{0} add(%add.85, %add.88), metadata={op_name="add"}
+  %shift_left.36 = u32[2]{0} shift-left(%add.88, %broadcast.30), metadata={op_name="shift_left"}
+  %shift_right_logical.36 = u32[2]{0} shift-right-logical(%add.88, %broadcast.29), metadata={op_name="shift_right_logical"}
+  %or.36 = u32[2]{0} or(%shift_left.36, %shift_right_logical.36), metadata={op_name="or"}
+  %xor.40 = u32[2]{0} xor(%add.89, %or.36), metadata={op_name="xor"}
+  %add.90 = u32[2]{0} add(%add.89, %xor.40), metadata={op_name="add"}
+  %shift_left.37 = u32[2]{0} shift-left(%xor.40, %broadcast.28), metadata={op_name="shift_left"}
+  %shift_right_logical.37 = u32[2]{0} shift-right-logical(%xor.40, %broadcast.27), metadata={op_name="shift_right_logical"}
+  %or.37 = u32[2]{0} or(%shift_left.37, %shift_right_logical.37), metadata={op_name="or"}
+  %xor.41 = u32[2]{0} xor(%add.90, %or.37), metadata={op_name="xor"}
+  %add.91 = u32[2]{0} add(%add.90, %xor.41), metadata={op_name="add"}
+  %shift_left.38 = u32[2]{0} shift-left(%xor.41, %broadcast.26), metadata={op_name="shift_left"}
+  %shift_right_logical.38 = u32[2]{0} shift-right-logical(%xor.41, %broadcast.25), metadata={op_name="shift_right_logical"}
+  %or.38 = u32[2]{0} or(%shift_left.38, %shift_right_logical.38), metadata={op_name="or"}
+  %xor.42 = u32[2]{0} xor(%add.91, %or.38), metadata={op_name="xor"}
+  %add.92 = u32[2]{0} add(%add.91, %xor.42), metadata={op_name="add"}
+  %add.93 = u32[2]{0} broadcast(%xor.23), dimensions={}, metadata={op_name="add"}
+  %add.94 = u32[2]{0} add(%add.92, %add.93), metadata={op_name="add"}
+  %shift_left.39 = u32[2]{0} shift-left(%xor.42, %broadcast.25), metadata={op_name="shift_left"}
+  %shift_right_logical.39 = u32[2]{0} shift-right-logical(%xor.42, %broadcast.26), metadata={op_name="shift_right_logical"}
+  %or.39 = u32[2]{0} or(%shift_left.39, %shift_right_logical.39), metadata={op_name="or"}
+  %xor.43 = u32[2]{0} xor(%add.92, %or.39), metadata={op_name="xor"}
+  %add.95 = u32[2]{0} broadcast(%Arg_0.2), dimensions={}, metadata={op_name="add"}
+  %add.96 = u32[2]{0} add(%xor.43, %add.95), metadata={op_name="add"}
+  %constant.19 = u32[] constant(5)
+  %broadcast.16 = u32[2]{0} broadcast(%constant.19), dimensions={}
+  %add.97 = u32[2]{0} add(%add.96, %broadcast.16), metadata={op_name="add"}
+  ROOT %tuple.1 = (u32[2]{0}, u32[2]{0}) tuple(%add.94, %add.97)
+}
+
+%_threefry_split.2 (Arg_0.3: u32[2]) -> u32[2,2] {
+  %Arg_0.3 = u32[2]{0} parameter(0)
+  %slice.2 = u32[1]{0} slice(%Arg_0.3), slice={[0:1]}, metadata={op_name="slice"}
+  %squeeze.2 = u32[] reshape(%slice.2), metadata={op_name="squeeze"}
+  %slice.3 = u32[1]{0} slice(%Arg_0.3), slice={[1:2]}, metadata={op_name="slice"}
+  %squeeze.3 = u32[] reshape(%slice.3), metadata={op_name="squeeze"}
+  %iota_2x32_shape.4 = u64[2]{0} iota(), iota_dimension=0, metadata={op_name="iota_2x32_shape"}
+  %constant.35 = u64[] constant(32)
+  %broadcast.31 = u64[2]{0} broadcast(%constant.35), dimensions={}
+  %iota_2x32_shape.5 = u64[2]{0} shift-right-logical(%iota_2x32_shape.4, %broadcast.31), metadata={op_name="iota_2x32_shape"}
+  %iota_2x32_shape.7 = u32[2]{0} convert(%iota_2x32_shape.5), metadata={op_name="iota_2x32_shape"}
+  %iota_2x32_shape.6 = u32[2]{0} convert(%iota_2x32_shape.4), metadata={op_name="iota_2x32_shape"}
+  %call.1 = (u32[2]{0}, u32[2]{0}) call(%squeeze.2, %squeeze.3, %iota_2x32_shape.7, %iota_2x32_shape.6), to_apply=%threefry2x32.1
+  %get-tuple-element.2 = u32[2]{0} get-tuple-element(%call.1), index=0
+  %stack.3 = u32[2,1]{1,0} reshape(%get-tuple-element.2), metadata={op_name="stack"}
+  %get-tuple-element.3 = u32[2]{0} get-tuple-element(%call.1), index=1
+  %stack.4 = u32[2,1]{1,0} reshape(%get-tuple-element.3), metadata={op_name="stack"}
+  ROOT %stack.5 = u32[2,2]{1,0} concatenate(%stack.3, %stack.4), dimensions={1}, metadata={op_name="stack"}
+}
+
+%threefry2x32_0.3 (Arg_0.7: u32[], Arg_1.4: u32[], Arg_2.4: u32[64,64], Arg_3.3: u32[64,64]) -> (u32[64,64], u32[64,64]) {
+  %Arg_2.4 = u32[64,64]{1,0} parameter(2)
+  %Arg_0.7 = u32[] parameter(0)
+  %add.155 = u32[64,64]{1,0} broadcast(%Arg_0.7), dimensions={}, metadata={op_name="add"}
+  %add.156 = u32[64,64]{1,0} add(%Arg_2.4, %add.155), metadata={op_name="add"}
+  %Arg_3.3 = u32[64,64]{1,0} parameter(3)
+  %Arg_1.4 = u32[] parameter(1)
+  %add.157 = u32[64,64]{1,0} broadcast(%Arg_1.4), dimensions={}, metadata={op_name="add"}
+  %add.158 = u32[64,64]{1,0} add(%Arg_3.3, %add.157), metadata={op_name="add"}
+  %add.159 = u32[64,64]{1,0} add(%add.156, %add.158), metadata={op_name="add"}
+  %constant.140 = u32[] constant(13)
+  %broadcast.54 = u32[64,64]{1,0} broadcast(%constant.140), dimensions={}
+  %shift_left.60 = u32[64,64]{1,0} shift-left(%add.158, %broadcast.54), metadata={op_name="shift_left"}
+  %constant.139 = u32[] constant(19)
+  %broadcast.53 = u32[64,64]{1,0} broadcast(%constant.139), dimensions={}
+  %shift_right_logical.61 = u32[64,64]{1,0} shift-right-logical(%add.158, %broadcast.53), metadata={op_name="shift_right_logical"}
+  %or.61 = u32[64,64]{1,0} or(%shift_left.60, %shift_right_logical.61), metadata={op_name="or"}
+  %xor.68 = u32[64,64]{1,0} xor(%add.159, %or.61), metadata={op_name="xor"}
+  %add.160 = u32[64,64]{1,0} add(%add.159, %xor.68), metadata={op_name="add"}
+  %constant.138 = u32[] constant(15)
+  %broadcast.52 = u32[64,64]{1,0} broadcast(%constant.138), dimensions={}
+  %shift_left.61 = u32[64,64]{1,0} shift-left(%xor.68, %broadcast.52), metadata={op_name="shift_left"}
+  %constant.137 = u32[] constant(17)
+  %broadcast.51 = u32[64,64]{1,0} broadcast(%constant.137), dimensions={}
+  %shift_right_logical.62 = u32[64,64]{1,0} shift-right-logical(%xor.68, %broadcast.51), metadata={op_name="shift_right_logical"}
+  %or.62 = u32[64,64]{1,0} or(%shift_left.61, %shift_right_logical.62), metadata={op_name="or"}
+  %xor.69 = u32[64,64]{1,0} xor(%add.160, %or.62), metadata={op_name="xor"}
+  %add.161 = u32[64,64]{1,0} add(%add.160, %xor.69), metadata={op_name="add"}
+  %constant.136 = u32[] constant(26)
+  %broadcast.50 = u32[64,64]{1,0} broadcast(%constant.136), dimensions={}
+  %shift_left.62 = u32[64,64]{1,0} shift-left(%xor.69, %broadcast.50), metadata={op_name="shift_left"}
+  %constant.135 = u32[] constant(6)
+  %broadcast.49 = u32[64,64]{1,0} broadcast(%constant.135), dimensions={}
+  %shift_right_logical.63 = u32[64,64]{1,0} shift-right-logical(%xor.69, %broadcast.49), metadata={op_name="shift_right_logical"}
+  %or.63 = u32[64,64]{1,0} or(%shift_left.62, %shift_right_logical.63), metadata={op_name="or"}
+  %xor.70 = u32[64,64]{1,0} xor(%add.161, %or.63), metadata={op_name="xor"}
+  %add.162 = u32[64,64]{1,0} add(%add.161, %xor.70), metadata={op_name="add"}
+  %add.163 = u32[64,64]{1,0} broadcast(%Arg_1.4), dimensions={}, metadata={op_name="add"}
+  %add.164 = u32[64,64]{1,0} add(%add.162, %add.163), metadata={op_name="add"}
+  %shift_left.63 = u32[64,64]{1,0} shift-left(%xor.70, %broadcast.49), metadata={op_name="shift_left"}
+  %shift_right_logical.64 = u32[64,64]{1,0} shift-right-logical(%xor.70, %broadcast.50), metadata={op_name="shift_right_logical"}
+  %or.64 = u32[64,64]{1,0} or(%shift_left.63, %shift_right_logical.64), metadata={op_name="or"}
+  %xor.71 = u32[64,64]{1,0} xor(%add.162, %or.64), metadata={op_name="xor"}
+  %xor.66 = u32[] xor(%Arg_0.7, %Arg_1.4), metadata={op_name="xor"}
+  %constant.141 = u32[] constant(466688986)
+  %xor.67 = u32[] xor(%xor.66, %constant.141), metadata={op_name="xor"}
+  %add.165 = u32[64,64]{1,0} broadcast(%xor.67), dimensions={}, metadata={op_name="add"}
+  %add.166 = u32[64,64]{1,0} add(%xor.71, %add.165), metadata={op_name="add"}
+  %constant.134 = u32[] constant(1)
+  %add.154 = u32[64,64]{1,0} broadcast(%constant.134), dimensions={}, metadata={op_name="add"}
+  %add.167 = u32[64,64]{1,0} add(%add.166, %add.154), metadata={op_name="add"}
+  %add.168 = u32[64,64]{1,0} add(%add.164, %add.167), metadata={op_name="add"}
+  %shift_left.64 = u32[64,64]{1,0} shift-left(%add.167, %broadcast.51), metadata={op_name="shift_left"}
+  %shift_right_logical.65 = u32[64,64]{1,0} shift-right-logical(%add.167, %broadcast.52), metadata={op_name="shift_right_logical"}
+  %or.65 = u32[64,64]{1,0} or(%shift_left.64, %shift_right_logical.65), metadata={op_name="or"}
+  %xor.72 = u32[64,64]{1,0} xor(%add.168, %or.65), metadata={op_name="xor"}
+  %add.169 = u32[64,64]{1,0} add(%add.168, %xor.72), metadata={op_name="add"}
+  %constant.133 = u32[] constant(29)
+  %broadcast.48 = u32[64,64]{1,0} broadcast(%constant.133), dimensions={}
+  %shift_left.65 = u32[64,64]{1,0} shift-left(%xor.72, %broadcast.48), metadata={op_name="shift_left"}
+  %constant.132 = u32[] constant(3)
+  %broadcast.47 = u32[64,64]{1,0} broadcast(%constant.132), dimensions={}
+  %shift_right_logical.66 = u32[64,64]{1,0} shift-right-logical(%xor.72, %broadcast.47), metadata={op_name="shift_right_logical"}
+  %or.66 = u32[64,64]{1,0} or(%shift_left.65, %shift_right_logical.66), metadata={op_name="or"}
+  %xor.73 = u32[64,64]{1,0} xor(%add.169, %or.66), metadata={op_name="xor"}
+  %add.170 = u32[64,64]{1,0} add(%add.169, %xor.73), metadata={op_name="add"}
+  %constant.131 = u32[] constant(16)
+  %broadcast.46 = u32[64,64]{1,0} broadcast(%constant.131), dimensions={}
+  %shift_left.66 = u32[64,64]{1,0} shift-left(%xor.73, %broadcast.46), metadata={op_name="shift_left"}
+  %shift_right_logical.67 = u32[64,64]{1,0} shift-right-logical(%xor.73, %broadcast.46), metadata={op_name="shift_right_logical"}
+  %or.67 = u32[64,64]{1,0} or(%shift_left.66, %shift_right_logical.67), metadata={op_name="or"}
+  %xor.74 = u32[64,64]{1,0} xor(%add.170, %or.67), metadata={op_name="xor"}
+  %add.171 = u32[64,64]{1,0} add(%add.170, %xor.74), metadata={op_name="add"}
+  %add.172 = u32[64,64]{1,0} broadcast(%xor.67), dimensions={}, metadata={op_name="add"}
+  %add.173 = u32[64,64]{1,0} add(%add.171, %add.172), metadata={op_name="add"}
+  %constant.130 = u32[] constant(24)
+  %broadcast.45 = u32[64,64]{1,0} broadcast(%constant.130), dimensions={}
+  %shift_left.67 = u32[64,64]{1,0} shift-left(%xor.74, %broadcast.45), metadata={op_name="shift_left"}
+  %constant.129 = u32[] constant(8)
+  %broadcast.44 = u32[64,64]{1,0} broadcast(%constant.129), dimensions={}
+  %shift_right_logical.68 = u32[64,64]{1,0} shift-right-logical(%xor.74, %broadcast.44), metadata={op_name="shift_right_logical"}
+  %or.68 = u32[64,64]{1,0} or(%shift_left.67, %shift_right_logical.68), metadata={op_name="or"}
+  %xor.75 = u32[64,64]{1,0} xor(%add.171, %or.68), metadata={op_name="xor"}
+  %add.174 = u32[64,64]{1,0} broadcast(%Arg_0.7), dimensions={}, metadata={op_name="add"}
+  %add.175 = u32[64,64]{1,0} add(%xor.75, %add.174), metadata={op_name="add"}
+  %constant.128 = u32[] constant(2)
+  %add.153 = u32[64,64]{1,0} broadcast(%constant.128), dimensions={}, metadata={op_name="add"}
+  %add.176 = u32[64,64]{1,0} add(%add.175, %add.153), metadata={op_name="add"}
+  %add.177 = u32[64,64]{1,0} add(%add.173, %add.176), metadata={op_name="add"}
+  %shift_left.68 = u32[64,64]{1,0} shift-left(%add.176, %broadcast.54), metadata={op_name="shift_left"}
+  %shift_right_logical.69 = u32[64,64]{1,0} shift-right-logical(%add.176, %broadcast.53), metadata={op_name="shift_right_logical"}
+  %or.69 = u32[64,64]{1,0} or(%shift_left.68, %shift_right_logical.69), metadata={op_name="or"}
+  %xor.76 = u32[64,64]{1,0} xor(%add.177, %or.69), metadata={op_name="xor"}
+  %add.178 = u32[64,64]{1,0} add(%add.177, %xor.76), metadata={op_name="add"}
+  %shift_left.69 = u32[64,64]{1,0} shift-left(%xor.76, %broadcast.52), metadata={op_name="shift_left"}
+  %shift_right_logical.70 = u32[64,64]{1,0} shift-right-logical(%xor.76, %broadcast.51), metadata={op_name="shift_right_logical"}
+  %or.70 = u32[64,64]{1,0} or(%shift_left.69, %shift_right_logical.70), metadata={op_name="or"}
+  %xor.77 = u32[64,64]{1,0} xor(%add.178, %or.70), metadata={op_name="xor"}
+  %add.179 = u32[64,64]{1,0} add(%add.178, %xor.77), metadata={op_name="add"}
+  %shift_left.70 = u32[64,64]{1,0} shift-left(%xor.77, %broadcast.50), metadata={op_name="shift_left"}
+  %shift_right_logical.71 = u32[64,64]{1,0} shift-right-logical(%xor.77, %broadcast.49), metadata={op_name="shift_right_logical"}
+  %or.71 = u32[64,64]{1,0} or(%shift_left.70, %shift_right_logical.71), metadata={op_name="or"}
+  %xor.78 = u32[64,64]{1,0} xor(%add.179, %or.71), metadata={op_name="xor"}
+  %add.180 = u32[64,64]{1,0} add(%add.179, %xor.78), metadata={op_name="add"}
+  %add.181 = u32[64,64]{1,0} broadcast(%Arg_0.7), dimensions={}, metadata={op_name="add"}
+  %add.182 = u32[64,64]{1,0} add(%add.180, %add.181), metadata={op_name="add"}
+  %shift_left.71 = u32[64,64]{1,0} shift-left(%xor.78, %broadcast.49), metadata={op_name="shift_left"}
+  %shift_right_logical.72 = u32[64,64]{1,0} shift-right-logical(%xor.78, %broadcast.50), metadata={op_name="shift_right_logical"}
+  %or.72 = u32[64,64]{1,0} or(%shift_left.71, %shift_right_logical.72), metadata={op_name="or"}
+  %xor.79 = u32[64,64]{1,0} xor(%add.180, %or.72), metadata={op_name="xor"}
+  %add.183 = u32[64,64]{1,0} broadcast(%Arg_1.4), dimensions={}, metadata={op_name="add"}
+  %add.184 = u32[64,64]{1,0} add(%xor.79, %add.183), metadata={op_name="add"}
+  %add.185 = u32[64,64]{1,0} add(%add.184, %broadcast.47), metadata={op_name="add"}
+  %add.186 = u32[64,64]{1,0} add(%add.182, %add.185), metadata={op_name="add"}
+  %shift_left.72 = u32[64,64]{1,0} shift-left(%add.185, %broadcast.51), metadata={op_name="shift_left"}
+  %shift_right_logical.73 = u32[64,64]{1,0} shift-right-logical(%add.185, %broadcast.52), metadata={op_name="shift_right_logical"}
+  %or.73 = u32[64,64]{1,0} or(%shift_left.72, %shift_right_logical.73), metadata={op_name="or"}
+  %xor.80 = u32[64,64]{1,0} xor(%add.186, %or.73), metadata={op_name="xor"}
+  %add.187 = u32[64,64]{1,0} add(%add.186, %xor.80), metadata={op_name="add"}
+  %shift_left.73 = u32[64,64]{1,0} shift-left(%xor.80, %broadcast.48), metadata={op_name="shift_left"}
+  %shift_right_logical.74 = u32[64,64]{1,0} shift-right-logical(%xor.80, %broadcast.47), metadata={op_name="shift_right_logical"}
+  %or.74 = u32[64,64]{1,0} or(%shift_left.73, %shift_right_logical.74), metadata={op_name="or"}
+  %xor.81 = u32[64,64]{1,0} xor(%add.187, %or.74), metadata={op_name="xor"}
+  %add.188 = u32[64,64]{1,0} add(%add.187, %xor.81), metadata={op_name="add"}
+  %shift_left.74 = u32[64,64]{1,0} shift-left(%xor.81, %broadcast.46), metadata={op_name="shift_left"}
+  %shift_right_logical.75 = u32[64,64]{1,0} shift-right-logical(%xor.81, %broadcast.46), metadata={op_name="shift_right_logical"}
+  %or.75 = u32[64,64]{1,0} or(%shift_left.74, %shift_right_logical.75), metadata={op_name="or"}
+  %xor.82 = u32[64,64]{1,0} xor(%add.188, %or.75), metadata={op_name="xor"}
+  %add.189 = u32[64,64]{1,0} add(%add.188, %xor.82), metadata={op_name="add"}
+  %add.190 = u32[64,64]{1,0} broadcast(%Arg_1.4), dimensions={}, metadata={op_name="add"}
+  %add.191 = u32[64,64]{1,0} add(%add.189, %add.190), metadata={op_name="add"}
+  %shift_left.75 = u32[64,64]{1,0} shift-left(%xor.82, %broadcast.45), metadata={op_name="shift_left"}
+  %shift_right_logical.76 = u32[64,64]{1,0} shift-right-logical(%xor.82, %broadcast.44), metadata={op_name="shift_right_logical"}
+  %or.76 = u32[64,64]{1,0} or(%shift_left.75, %shift_right_logical.76), metadata={op_name="or"}
+  %xor.83 = u32[64,64]{1,0} xor(%add.189, %or.76), metadata={op_name="xor"}
+  %add.192 = u32[64,64]{1,0} broadcast(%xor.67), dimensions={}, metadata={op_name="add"}
+  %add.193 = u32[64,64]{1,0} add(%xor.83, %add.192), metadata={op_name="add"}
+  %constant.127 = u32[] constant(4)
+  %add.152 = u32[64,64]{1,0} broadcast(%constant.127), dimensions={}, metadata={op_name="add"}
+  %add.194 = u32[64,64]{1,0} add(%add.193, %add.152), metadata={op_name="add"}
+  %add.195 = u32[64,64]{1,0} add(%add.191, %add.194), metadata={op_name="add"}
+  %shift_left.76 = u32[64,64]{1,0} shift-left(%add.194, %broadcast.54), metadata={op_name="shift_left"}
+  %shift_right_logical.77 = u32[64,64]{1,0} shift-right-logical(%add.194, %broadcast.53), metadata={op_name="shift_right_logical"}
+  %or.77 = u32[64,64]{1,0} or(%shift_left.76, %shift_right_logical.77), metadata={op_name="or"}
+  %xor.84 = u32[64,64]{1,0} xor(%add.195, %or.77), metadata={op_name="xor"}
+  %add.196 = u32[64,64]{1,0} add(%add.195, %xor.84), metadata={op_name="add"}
+  %shift_left.77 = u32[64,64]{1,0} shift-left(%xor.84, %broadcast.52), metadata={op_name="shift_left"}
+  %shift_right_logical.78 = u32[64,64]{1,0} shift-right-logical(%xor.84, %broadcast.51), metadata={op_name="shift_right_logical"}
+  %or.78 = u32[64,64]{1,0} or(%shift_left.77, %shift_right_logical.78), metadata={op_name="or"}
+  %xor.85 = u32[64,64]{1,0} xor(%add.196, %or.78), metadata={op_name="xor"}
+  %add.197 = u32[64,64]{1,0} add(%add.196, %xor.85), metadata={op_name="add"}
+  %shift_left.78 = u32[64,64]{1,0} shift-left(%xor.85, %broadcast.50), metadata={op_name="shift_left"}
+  %shift_right_logical.79 = u32[64,64]{1,0} shift-right-logical(%xor.85, %broadcast.49), metadata={op_name="shift_right_logical"}
+  %or.79 = u32[64,64]{1,0} or(%shift_left.78, %shift_right_logical.79), metadata={op_name="or"}
+  %xor.86 = u32[64,64]{1,0} xor(%add.197, %or.79), metadata={op_name="xor"}
+  %add.198 = u32[64,64]{1,0} add(%add.197, %xor.86), metadata={op_name="add"}
+  %add.199 = u32[64,64]{1,0} broadcast(%xor.67), dimensions={}, metadata={op_name="add"}
+  %add.200 = u32[64,64]{1,0} add(%add.198, %add.199), metadata={op_name="add"}
+  %shift_left.79 = u32[64,64]{1,0} shift-left(%xor.86, %broadcast.49), metadata={op_name="shift_left"}
+  %shift_right_logical.80 = u32[64,64]{1,0} shift-right-logical(%xor.86, %broadcast.50), metadata={op_name="shift_right_logical"}
+  %or.80 = u32[64,64]{1,0} or(%shift_left.79, %shift_right_logical.80), metadata={op_name="or"}
+  %xor.87 = u32[64,64]{1,0} xor(%add.198, %or.80), metadata={op_name="xor"}
+  %add.201 = u32[64,64]{1,0} broadcast(%Arg_0.7), dimensions={}, metadata={op_name="add"}
+  %add.202 = u32[64,64]{1,0} add(%xor.87, %add.201), metadata={op_name="add"}
+  %constant.126 = u32[] constant(5)
+  %add.151 = u32[64,64]{1,0} broadcast(%constant.126), dimensions={}, metadata={op_name="add"}
+  %add.203 = u32[64,64]{1,0} add(%add.202, %add.151), metadata={op_name="add"}
+  ROOT %tuple.3 = (u32[64,64]{1,0}, u32[64,64]{1,0}) tuple(%add.200, %add.203)
+}
+
+%_uniform.4 (Arg_0.8: u32[2], Arg_1.5: f64[], Arg_2.5: f64[]) -> f64[64,64] {
+  %Arg_1.5 = f64[] parameter(1)
+  %broadcast_in_dim.2 = f64[1,1]{1,0} reshape(%Arg_1.5), metadata={op_name="broadcast_in_dim"}
+  %max.4 = f64[1,1]{1,0} broadcast(%broadcast_in_dim.2), dimensions={0,1}, metadata={op_name="max"}
+  %max.5 = f64[] reshape(%max.4), metadata={op_name="max"}
+  %max.6 = f64[64,64]{1,0} broadcast(%max.5), dimensions={}, metadata={op_name="max"}
+  %Arg_0.8 = u32[2]{0} parameter(0)
+  %slice.8 = u32[1]{0} slice(%Arg_0.8), slice={[0:1]}, metadata={op_name="slice"}
+  %squeeze.8 = u32[] reshape(%slice.8), metadata={op_name="squeeze"}
+  %slice.9 = u32[1]{0} slice(%Arg_0.8), slice={[1:2]}, metadata={op_name="slice"}
+  %squeeze.9 = u32[] reshape(%slice.9), metadata={op_name="squeeze"}
+  %iota_2x32_shape.19 = u64[64]{0} iota(), iota_dimension=0, metadata={op_name="iota_2x32_shape"}
+  %iota_2x32_shape.20 = u64[64,64]{1,0} broadcast(%iota_2x32_shape.19), dimensions={0}, metadata={op_name="iota_2x32_shape"}
+  %constant.146 = u64[] constant(64)
+  %iota_2x32_shape.18 = u64[64,64]{1,0} broadcast(%constant.146), dimensions={}, metadata={op_name="iota_2x32_shape"}
+  %iota_2x32_shape.23 = u64[64,64]{1,0} multiply(%iota_2x32_shape.20, %iota_2x32_shape.18), metadata={op_name="iota_2x32_shape"}
+  %iota_2x32_shape.21 = u64[64]{0} iota(), iota_dimension=0, metadata={op_name="iota_2x32_shape"}
+  %iota_2x32_shape.22 = u64[64,64]{1,0} broadcast(%iota_2x32_shape.21), dimensions={1}, metadata={op_name="iota_2x32_shape"}
+  %iota_2x32_shape.24 = u64[64,64]{1,0} add(%iota_2x32_shape.23, %iota_2x32_shape.22), metadata={op_name="iota_2x32_shape"}
+  %constant.145 = u64[] constant(32)
+  %broadcast.55 = u64[64,64]{1,0} broadcast(%constant.145), dimensions={}
+  %iota_2x32_shape.25 = u64[64,64]{1,0} shift-right-logical(%iota_2x32_shape.24, %broadcast.55), metadata={op_name="iota_2x32_shape"}
+  %iota_2x32_shape.27 = u32[64,64]{1,0} convert(%iota_2x32_shape.25), metadata={op_name="iota_2x32_shape"}
+  %iota_2x32_shape.26 = u32[64,64]{1,0} convert(%iota_2x32_shape.24), metadata={op_name="iota_2x32_shape"}
+  %call.3 = (u32[64,64]{1,0}, u32[64,64]{1,0}) call(%squeeze.8, %squeeze.9, %iota_2x32_shape.27, %iota_2x32_shape.26), to_apply=%threefry2x32_0.3
+  %get-tuple-element.6 = u32[64,64]{1,0} get-tuple-element(%call.3), index=0
+  %convert_element_type.2 = u64[64,64]{1,0} convert(%get-tuple-element.6), metadata={op_name="convert_element_type"}
+  %shift_left.81 = u64[64,64]{1,0} shift-left(%convert_element_type.2, %broadcast.55), metadata={op_name="shift_left"}
+  %get-tuple-element.7 = u32[64,64]{1,0} get-tuple-element(%call.3), index=1
+  %convert_element_type.3 = u64[64,64]{1,0} convert(%get-tuple-element.7), metadata={op_name="convert_element_type"}
+  %or.84 = u64[64,64]{1,0} or(%shift_left.81, %convert_element_type.3), metadata={op_name="or"}
+  %constant.144 = u64[] constant(12)
+  %shift_right_logical.82 = u64[64,64]{1,0} broadcast(%constant.144), dimensions={}, metadata={op_name="shift_right_logical"}
+  %shift_right_logical.83 = u64[64,64]{1,0} shift-right-logical(%or.84, %shift_right_logical.82), metadata={op_name="shift_right_logical"}
+  %constant.143 = u64[] constant(4607182418800017408)
+  %or.83 = u64[64,64]{1,0} broadcast(%constant.143), dimensions={}, metadata={op_name="or"}
+  %or.85 = u64[64,64]{1,0} or(%shift_right_logical.83, %or.83), metadata={op_name="or"}
+  %bitcast_convert_type.1 = f64[64,64]{1,0} bitcast-convert(%or.85), metadata={op_name="bitcast_convert_type"}
+  %constant.142 = f64[] constant(1)
+  %sub.3 = f64[64,64]{1,0} broadcast(%constant.142), dimensions={}, metadata={op_name="sub"}
+  %sub.4 = f64[64,64]{1,0} subtract(%bitcast_convert_type.1, %sub.3), metadata={op_name="sub"}
+  %Arg_2.5 = f64[] parameter(2)
+  %broadcast_in_dim.3 = f64[1,1]{1,0} reshape(%Arg_2.5), metadata={op_name="broadcast_in_dim"}
+  %sub.5 = f64[1,1]{1,0} subtract(%broadcast_in_dim.3, %broadcast_in_dim.2), metadata={op_name="sub"}
+  %mul.6 = f64[1,1]{1,0} broadcast(%sub.5), dimensions={0,1}, metadata={op_name="mul"}
+  %mul.7 = f64[] reshape(%mul.6), metadata={op_name="mul"}
+  %mul.8 = f64[64,64]{1,0} broadcast(%mul.7), dimensions={}, metadata={op_name="mul"}
+  %mul.9 = f64[64,64]{1,0} multiply(%sub.4, %mul.8), metadata={op_name="mul"}
+  %add.208 = f64[1,1]{1,0} broadcast(%broadcast_in_dim.2), dimensions={0,1}, metadata={op_name="add"}
+  %add.209 = f64[] reshape(%add.208), metadata={op_name="add"}
+  %add.210 = f64[64,64]{1,0} broadcast(%add.209), dimensions={}, metadata={op_name="add"}
+  %add.211 = f64[64,64]{1,0} add(%mul.9, %add.210), metadata={op_name="add"}
+  ROOT %max.7 = f64[64,64]{1,0} maximum(%max.6, %add.211), metadata={op_name="max"}
+}
+
+%_normal_real.5 (Arg_0.9: u32[2]) -> f64[64,64] {
+  %Arg_0.9 = u32[2]{0} parameter(0)
+  %constant.214 = f64[] constant(-0.99999999999999989)
+  %constant.215 = f64[] constant(1)
+  %jit__uniform_.1 = f64[64,64]{1,0} call(%Arg_0.9, %constant.214, %constant.215), to_apply=%_uniform.4, metadata={op_name="jit(_uniform)"}
+  %erf_inv.332 = f64[64,64]{1,0} abs(%jit__uniform_.1), metadata={op_name="erf_inv"}
+  %constant.149 = f64[] constant(1)
+  %erf_inv.169 = f64[64,64]{1,0} broadcast(%constant.149), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.333 = pred[64,64]{1,0} compare(%erf_inv.332, %erf_inv.169), direction=EQ, metadata={op_name="erf_inv"}
+  %constant.148 = f64[] constant(inf)
+  %erf_inv.168 = f64[64,64]{1,0} broadcast(%constant.148), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.334 = f64[64,64]{1,0} multiply(%jit__uniform_.1, %erf_inv.168), metadata={op_name="erf_inv"}
+  %erf_inv.234 = f64[64,64]{1,0} negate(%jit__uniform_.1), metadata={op_name="erf_inv"}
+  %erf_inv.235 = f64[64,64]{1,0} multiply(%jit__uniform_.1, %erf_inv.234), metadata={op_name="erf_inv"}
+  %erf_inv.236 = f64[64,64]{1,0} log-plus-one(%erf_inv.235), metadata={op_name="erf_inv"}
+  %erf_inv.237 = f64[64,64]{1,0} negate(%erf_inv.236), metadata={op_name="erf_inv"}
+  %constant.213 = f64[] constant(6.25)
+  %erf_inv.233 = f64[64,64]{1,0} broadcast(%constant.213), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.238 = pred[64,64]{1,0} compare(%erf_inv.237, %erf_inv.233), direction=LT, metadata={op_name="erf_inv"}
+  %constant.212 = f64[] constant(16)
+  %erf_inv.232 = f64[64,64]{1,0} broadcast(%constant.212), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.239 = pred[64,64]{1,0} compare(%erf_inv.237, %erf_inv.232), direction=LT, metadata={op_name="erf_inv"}
+  %constant.155 = f64[] constant(0.00018673420803405714)
+  %erf_inv.175 = f64[64,64]{1,0} broadcast(%constant.155), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.154 = f64[] constant(3.0838856104922208)
+  %erf_inv.174 = f64[64,64]{1,0} broadcast(%constant.154), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.315 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.175, %erf_inv.174), metadata={op_name="erf_inv"}
+  %constant.157 = f64[] constant(-1.3882523362786469e-05)
+  %erf_inv.177 = f64[64,64]{1,0} broadcast(%constant.157), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.156 = f64[] constant(1.0052589676941592)
+  %erf_inv.176 = f64[64,64]{1,0} broadcast(%constant.156), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.311 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.177, %erf_inv.176), metadata={op_name="erf_inv"}
+  %constant.160 = f64[] constant(-1.3654692000834679e-06)
+  %erf_inv.180 = f64[64,64]{1,0} broadcast(%constant.160), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.159 = f64[] constant(0.0053709145535900636)
+  %erf_inv.179 = f64[64,64]{1,0} broadcast(%constant.159), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.307 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.180, %erf_inv.179), metadata={op_name="erf_inv"}
+  %constant.158 = f64[] constant(4.8499064014085844)
+  %erf_inv.178 = f64[64,64]{1,0} broadcast(%constant.158), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.308 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.307, %erf_inv.178), metadata={op_name="erf_inv"}
+  %constant.163 = f64[] constant(4.2347877827932404e-07)
+  %erf_inv.183 = f64[64,64]{1,0} broadcast(%constant.163), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.162 = f64[] constant(-0.0037512085075692412)
+  %erf_inv.182 = f64[64,64]{1,0} broadcast(%constant.162), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.303 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.183, %erf_inv.182), metadata={op_name="erf_inv"}
+  %constant.161 = f64[] constant(1.0103004648645344)
+  %erf_inv.181 = f64[64,64]{1,0} broadcast(%constant.161), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.304 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.303, %erf_inv.181), metadata={op_name="erf_inv"}
+  %constant.166 = f64[] constant(-2.9070369957882005e-08)
+  %erf_inv.186 = f64[64,64]{1,0} broadcast(%constant.166), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.165 = f64[] constant(0.0024914420961078508)
+  %erf_inv.185 = f64[64,64]{1,0} broadcast(%constant.165), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.299 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.186, %erf_inv.185), metadata={op_name="erf_inv"}
+  %constant.164 = f64[] constant(-0.00013871931833623122)
+  %erf_inv.184 = f64[64,64]{1,0} broadcast(%constant.164), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.300 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.299, %erf_inv.184), metadata={op_name="erf_inv"}
+  %constant.169 = f64[] constant(-4.1126339803469837e-09)
+  %erf_inv.189 = f64[64,64]{1,0} broadcast(%constant.169), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.168 = f64[] constant(-0.0016882755560235047)
+  %erf_inv.188 = f64[64,64]{1,0} broadcast(%constant.168), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.295 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.189, %erf_inv.188), metadata={op_name="erf_inv"}
+  %constant.167 = f64[] constant(-0.00021503011930044477)
+  %erf_inv.187 = f64[64,64]{1,0} broadcast(%constant.167), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.296 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.295, %erf_inv.187), metadata={op_name="erf_inv"}
+  %constant.172 = f64[] constant(1.0512122733215323e-09)
+  %erf_inv.192 = f64[64,64]{1,0} broadcast(%constant.172), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.171 = f64[] constant(0.0009532893797373805)
+  %erf_inv.191 = f64[64,64]{1,0} broadcast(%constant.171), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.291 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.192, %erf_inv.191), metadata={op_name="erf_inv"}
+  %constant.170 = f64[] constant(7.5995277030017761e-05)
+  %erf_inv.190 = f64[64,64]{1,0} broadcast(%constant.170), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.292 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.291, %erf_inv.190), metadata={op_name="erf_inv"}
+  %constant.175 = f64[] constant(-5.4154120542946279e-11)
+  %erf_inv.195 = f64[64,64]{1,0} broadcast(%constant.175), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.174 = f64[] constant(-0.00035503752036284748)
+  %erf_inv.194 = f64[64,64]{1,0} broadcast(%constant.174), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.287 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.195, %erf_inv.194), metadata={op_name="erf_inv"}
+  %constant.173 = f64[] constant(-1.9681778105531671e-05)
+  %erf_inv.193 = f64[64,64]{1,0} broadcast(%constant.173), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.288 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.287, %erf_inv.193), metadata={op_name="erf_inv"}
+  %constant.178 = f64[] constant(-1.2975133253453532e-11)
+  %erf_inv.198 = f64[64,64]{1,0} broadcast(%constant.178), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.177 = f64[] constant(2.4031110387097894e-05)
+  %erf_inv.197 = f64[64,64]{1,0} broadcast(%constant.177), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.283 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.198, %erf_inv.197), metadata={op_name="erf_inv"}
+  %constant.176 = f64[] constant(4.5260625972231537e-06)
+  %erf_inv.196 = f64[64,64]{1,0} broadcast(%constant.176), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.284 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.283, %erf_inv.196), metadata={op_name="erf_inv"}
+  %constant.181 = f64[] constant(2.6335093153082323e-12)
+  %erf_inv.201 = f64[64,64]{1,0} broadcast(%constant.181), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.180 = f64[] constant(6.8284851459573175e-05)
+  %erf_inv.200 = f64[64,64]{1,0} broadcast(%constant.180), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.279 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.201, %erf_inv.200), metadata={op_name="erf_inv"}
+  %constant.179 = f64[] constant(-9.9298272942317e-07)
+  %erf_inv.199 = f64[64,64]{1,0} broadcast(%constant.179), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.280 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.279, %erf_inv.199), metadata={op_name="erf_inv"}
+  %constant.184 = f64[] constant(-8.1519341976054722e-14)
+  %erf_inv.204 = f64[64,64]{1,0} broadcast(%constant.184), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.183 = f64[] constant(-4.7318229009055734e-05)
+  %erf_inv.203 = f64[64,64]{1,0} broadcast(%constant.183), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.275 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.204, %erf_inv.203), metadata={op_name="erf_inv"}
+  %constant.182 = f64[] constant(2.2900482228026655e-07)
+  %erf_inv.202 = f64[64,64]{1,0} broadcast(%constant.182), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.276 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.275, %erf_inv.202), metadata={op_name="erf_inv"}
+  %constant.187 = f64[] constant(-4.0545662729752069e-14)
+  %erf_inv.207 = f64[64,64]{1,0} broadcast(%constant.187), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.186 = f64[] constant(1.2475304481671779e-05)
+  %erf_inv.206 = f64[64,64]{1,0} broadcast(%constant.186), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.271 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.207, %erf_inv.206), metadata={op_name="erf_inv"}
+  %constant.185 = f64[] constant(-6.7711997758452339e-08)
+  %erf_inv.205 = f64[64,64]{1,0} broadcast(%constant.185), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.272 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.271, %erf_inv.205), metadata={op_name="erf_inv"}
+  %constant.190 = f64[] constant(6.6376381343583238e-15)
+  %erf_inv.210 = f64[64,64]{1,0} broadcast(%constant.190), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.189 = f64[] constant(2.9234449089955446e-06)
+  %erf_inv.209 = f64[64,64]{1,0} broadcast(%constant.189), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.267 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.210, %erf_inv.209), metadata={op_name="erf_inv"}
+  %constant.188 = f64[] constant(2.9147953450901081e-08)
+  %erf_inv.208 = f64[64,64]{1,0} broadcast(%constant.188), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.268 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.267, %erf_inv.208), metadata={op_name="erf_inv"}
+  %constant.193 = f64[] constant(2.0972767875968562e-17)
+  %erf_inv.213 = f64[64,64]{1,0} broadcast(%constant.193), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.192 = f64[] constant(-4.013867526981546e-06)
+  %erf_inv.212 = f64[64,64]{1,0} broadcast(%constant.192), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.263 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.213, %erf_inv.212), metadata={op_name="erf_inv"}
+  %constant.191 = f64[] constant(-1.496002662714924e-08)
+  %erf_inv.211 = f64[64,64]{1,0} broadcast(%constant.191), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.264 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.263, %erf_inv.211), metadata={op_name="erf_inv"}
+  %constant.196 = f64[] constant(-1.3331716628546209e-16)
+  %erf_inv.216 = f64[64,64]{1,0} broadcast(%constant.196), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.195 = f64[] constant(1.5027403968909828e-06)
+  %erf_inv.215 = f64[64,64]{1,0} broadcast(%constant.195), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.259 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.216, %erf_inv.215), metadata={op_name="erf_inv"}
+  %constant.194 = f64[] constant(7.61570120807834e-09)
+  %erf_inv.214 = f64[64,64]{1,0} broadcast(%constant.194), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.260 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.259, %erf_inv.214), metadata={op_name="erf_inv"}
+  %constant.199 = f64[] constant(1.1157877678025181e-17)
+  %erf_inv.219 = f64[64,64]{1,0} broadcast(%constant.199), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.198 = f64[] constant(1.8239629214389228e-08)
+  %erf_inv.218 = f64[64,64]{1,0} broadcast(%constant.198), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.255 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.219, %erf_inv.218), metadata={op_name="erf_inv"}
+  %constant.197 = f64[] constant(-3.789465440126737e-09)
+  %erf_inv.217 = f64[64,64]{1,0} broadcast(%constant.197), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.256 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.255, %erf_inv.217), metadata={op_name="erf_inv"}
+  %constant.202 = f64[] constant(1.28584807152564e-18)
+  %erf_inv.222 = f64[64,64]{1,0} broadcast(%constant.202), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.201 = f64[] constant(-2.7517406297064545e-07)
+  %erf_inv.221 = f64[64,64]{1,0} broadcast(%constant.201), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.251 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.222, %erf_inv.221), metadata={op_name="erf_inv"}
+  %constant.200 = f64[] constant(1.5076572693500548e-09)
+  %erf_inv.220 = f64[64,64]{1,0} broadcast(%constant.200), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.252 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.251, %erf_inv.220), metadata={op_name="erf_inv"}
+  %constant.205 = f64[] constant(-1.6850591381820166e-19)
+  %erf_inv.225 = f64[64,64]{1,0} broadcast(%constant.205), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.204 = f64[] constant(9.0756561938885391e-08)
+  %erf_inv.224 = f64[64,64]{1,0} broadcast(%constant.204), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.247 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.225, %erf_inv.224), metadata={op_name="erf_inv"}
+  %constant.203 = f64[] constant(-2.5556418169965252e-10)
+  %erf_inv.223 = f64[64,64]{1,0} broadcast(%constant.203), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.248 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.247, %erf_inv.223), metadata={op_name="erf_inv"}
+  %constant.208 = f64[] constant(-3.64441206401782e-21)
+  %erf_inv.228 = f64[64,64]{1,0} broadcast(%constant.208), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.207 = f64[] constant(2.2137376921775787e-09)
+  %erf_inv.227 = f64[64,64]{1,0} broadcast(%constant.207), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.245 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.228, %erf_inv.227), metadata={op_name="erf_inv"}
+  %constant.206 = f64[] constant(-2.7109920616438573e-11)
+  %erf_inv.226 = f64[64,64]{1,0} broadcast(%constant.206), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.246 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.245, %erf_inv.226), metadata={op_name="erf_inv"}
+  %constant.211 = f64[] constant(3.125)
+  %erf_inv.231 = f64[64,64]{1,0} broadcast(%constant.211), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.241 = f64[64,64]{1,0} subtract(%erf_inv.237, %erf_inv.231), metadata={op_name="erf_inv"}
+  %erf_inv.240 = f64[64,64]{1,0} sqrt(%erf_inv.237), metadata={op_name="erf_inv"}
+  %constant.210 = f64[] constant(3.25)
+  %erf_inv.230 = f64[64,64]{1,0} broadcast(%constant.210), dimensions={}, metadata={op_name="erf_inv"}
+  %constant.209 = f64[] constant(5)
+  %erf_inv.229 = f64[64,64]{1,0} broadcast(%constant.209), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.242 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.230, %erf_inv.229), metadata={op_name="erf_inv"}
+  %erf_inv.243 = f64[64,64]{1,0} subtract(%erf_inv.240, %erf_inv.242), metadata={op_name="erf_inv"}
+  %erf_inv.244 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.241, %erf_inv.243), metadata={op_name="erf_inv"}
+  %erf_inv.249 = f64[64,64]{1,0} multiply(%erf_inv.246, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.250 = f64[64,64]{1,0} add(%erf_inv.248, %erf_inv.249), metadata={op_name="erf_inv"}
+  %erf_inv.253 = f64[64,64]{1,0} multiply(%erf_inv.250, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.254 = f64[64,64]{1,0} add(%erf_inv.252, %erf_inv.253), metadata={op_name="erf_inv"}
+  %erf_inv.257 = f64[64,64]{1,0} multiply(%erf_inv.254, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.258 = f64[64,64]{1,0} add(%erf_inv.256, %erf_inv.257), metadata={op_name="erf_inv"}
+  %erf_inv.261 = f64[64,64]{1,0} multiply(%erf_inv.258, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.262 = f64[64,64]{1,0} add(%erf_inv.260, %erf_inv.261), metadata={op_name="erf_inv"}
+  %erf_inv.265 = f64[64,64]{1,0} multiply(%erf_inv.262, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.266 = f64[64,64]{1,0} add(%erf_inv.264, %erf_inv.265), metadata={op_name="erf_inv"}
+  %erf_inv.269 = f64[64,64]{1,0} multiply(%erf_inv.266, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.270 = f64[64,64]{1,0} add(%erf_inv.268, %erf_inv.269), metadata={op_name="erf_inv"}
+  %erf_inv.273 = f64[64,64]{1,0} multiply(%erf_inv.270, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.274 = f64[64,64]{1,0} add(%erf_inv.272, %erf_inv.273), metadata={op_name="erf_inv"}
+  %erf_inv.277 = f64[64,64]{1,0} multiply(%erf_inv.274, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.278 = f64[64,64]{1,0} add(%erf_inv.276, %erf_inv.277), metadata={op_name="erf_inv"}
+  %erf_inv.281 = f64[64,64]{1,0} multiply(%erf_inv.278, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.282 = f64[64,64]{1,0} add(%erf_inv.280, %erf_inv.281), metadata={op_name="erf_inv"}
+  %erf_inv.285 = f64[64,64]{1,0} multiply(%erf_inv.282, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.286 = f64[64,64]{1,0} add(%erf_inv.284, %erf_inv.285), metadata={op_name="erf_inv"}
+  %erf_inv.289 = f64[64,64]{1,0} multiply(%erf_inv.286, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.290 = f64[64,64]{1,0} add(%erf_inv.288, %erf_inv.289), metadata={op_name="erf_inv"}
+  %erf_inv.293 = f64[64,64]{1,0} multiply(%erf_inv.290, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.294 = f64[64,64]{1,0} add(%erf_inv.292, %erf_inv.293), metadata={op_name="erf_inv"}
+  %erf_inv.297 = f64[64,64]{1,0} multiply(%erf_inv.294, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.298 = f64[64,64]{1,0} add(%erf_inv.296, %erf_inv.297), metadata={op_name="erf_inv"}
+  %erf_inv.301 = f64[64,64]{1,0} multiply(%erf_inv.298, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.302 = f64[64,64]{1,0} add(%erf_inv.300, %erf_inv.301), metadata={op_name="erf_inv"}
+  %erf_inv.305 = f64[64,64]{1,0} multiply(%erf_inv.302, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.306 = f64[64,64]{1,0} add(%erf_inv.304, %erf_inv.305), metadata={op_name="erf_inv"}
+  %erf_inv.309 = f64[64,64]{1,0} multiply(%erf_inv.306, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.310 = f64[64,64]{1,0} add(%erf_inv.308, %erf_inv.309), metadata={op_name="erf_inv"}
+  %erf_inv.312 = f64[64,64]{1,0} multiply(%erf_inv.310, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.313 = f64[64,64]{1,0} add(%erf_inv.311, %erf_inv.312), metadata={op_name="erf_inv"}
+  %erf_inv.314 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.313, %erf_inv.310), metadata={op_name="erf_inv"}
+  %erf_inv.316 = f64[64,64]{1,0} multiply(%erf_inv.314, %erf_inv.244), metadata={op_name="erf_inv"}
+  %erf_inv.317 = f64[64,64]{1,0} add(%erf_inv.315, %erf_inv.316), metadata={op_name="erf_inv"}
+  %erf_inv.318 = f64[64,64]{1,0} select(%erf_inv.239, %erf_inv.317, %erf_inv.314), metadata={op_name="erf_inv"}
+  %erf_inv.319 = f64[64,64]{1,0} multiply(%erf_inv.318, %erf_inv.244), metadata={op_name="erf_inv"}
+  %constant.153 = f64[] constant(-0.000740702534166267)
+  %erf_inv.173 = f64[64,64]{1,0} broadcast(%constant.153), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.320 = f64[64,64]{1,0} add(%erf_inv.319, %erf_inv.173), metadata={op_name="erf_inv"}
+  %erf_inv.321 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.320, %erf_inv.318), metadata={op_name="erf_inv"}
+  %erf_inv.322 = f64[64,64]{1,0} multiply(%erf_inv.321, %erf_inv.244), metadata={op_name="erf_inv"}
+  %constant.152 = f64[] constant(-0.0060336708714301491)
+  %erf_inv.172 = f64[64,64]{1,0} broadcast(%constant.152), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.323 = f64[64,64]{1,0} add(%erf_inv.322, %erf_inv.172), metadata={op_name="erf_inv"}
+  %erf_inv.324 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.323, %erf_inv.321), metadata={op_name="erf_inv"}
+  %erf_inv.325 = f64[64,64]{1,0} multiply(%erf_inv.324, %erf_inv.244), metadata={op_name="erf_inv"}
+  %constant.151 = f64[] constant(0.24015818242558962)
+  %erf_inv.171 = f64[64,64]{1,0} broadcast(%constant.151), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.326 = f64[64,64]{1,0} add(%erf_inv.325, %erf_inv.171), metadata={op_name="erf_inv"}
+  %erf_inv.327 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.326, %erf_inv.324), metadata={op_name="erf_inv"}
+  %erf_inv.328 = f64[64,64]{1,0} multiply(%erf_inv.327, %erf_inv.244), metadata={op_name="erf_inv"}
+  %constant.150 = f64[] constant(1.6536545626831027)
+  %erf_inv.170 = f64[64,64]{1,0} broadcast(%constant.150), dimensions={}, metadata={op_name="erf_inv"}
+  %erf_inv.329 = f64[64,64]{1,0} add(%erf_inv.328, %erf_inv.170), metadata={op_name="erf_inv"}
+  %erf_inv.330 = f64[64,64]{1,0} select(%erf_inv.238, %erf_inv.329, %erf_inv.327), metadata={op_name="erf_inv"}
+  %erf_inv.331 = f64[64,64]{1,0} multiply(%erf_inv.330, %jit__uniform_.1), metadata={op_name="erf_inv"}
+  %erf_inv.335 = f64[64,64]{1,0} select(%erf_inv.333, %erf_inv.334, %erf_inv.331), metadata={op_name="erf_inv"}
+  %constant.147 = f64[] constant(1.4142135623730951)
+  %mul.11 = f64[64,64]{1,0} broadcast(%constant.147), dimensions={}, metadata={op_name="mul"}
+  ROOT %mul.12 = f64[64,64]{1,0} multiply(%erf_inv.335, %mul.11), metadata={op_name="mul"}
+}
+
+ENTRY %main.6 (key.1: u32[2]) -> c128[64,64] {
+  %key.1 = u32[2]{0} parameter(0), metadata={op_name="key"}
+  %jit__normal_.1 = u32[2]{0} custom-call(%key.1), custom_call_target="Sharding", sharding={replicated}, frontend_attributes={xla.sdy.sharding="#sdy.sharding_per_value<[<@empty_mesh, [{}]>]>"}, metadata={op_name="jit(_normal)" stack_frame_id=1}
+  %jit__threefry_split_.1 = u32[2,2]{1,0} call(%jit__normal_.1), to_apply=%_threefry_split.2, metadata={op_name="jit(_normal)/jit(_threefry_split)" stack_frame_id=1}
+  %slice.10 = u32[1,2]{1,0} slice(%jit__threefry_split_.1), slice={[0:1], [0:2]}, metadata={op_name="jit(_normal)/slice" stack_frame_id=1}
+  %squeeze.10 = u32[2]{0} reshape(%slice.10), metadata={op_name="jit(_normal)/squeeze" stack_frame_id=1}
+  %jit__normal_real_.2 = f64[64,64]{1,0} call(%squeeze.10), to_apply=%_normal_real.5, metadata={op_name="jit(_normal)/jit(_normal_real)" stack_frame_id=1}
+  %convert_element_type.6 = c128[64,64]{1,0} convert(%jit__normal_real_.2), metadata={op_name="jit(_normal)/convert_element_type" stack_frame_id=1}
+  %slice.11 = u32[1,2]{1,0} slice(%jit__threefry_split_.1), slice={[1:2], [0:2]}, metadata={op_name="jit(_normal)/slice" stack_frame_id=1}
+  %squeeze.11 = u32[2]{0} reshape(%slice.11), metadata={op_name="jit(_normal)/squeeze" stack_frame_id=1}
+  %jit__normal_real_.3 = f64[64,64]{1,0} call(%squeeze.11), to_apply=%_normal_real.5, metadata={op_name="jit(_normal)/jit(_normal_real)" stack_frame_id=1}
+  %convert_element_type.7 = c128[64,64]{1,0} convert(%jit__normal_real_.3), metadata={op_name="jit(_normal)/convert_element_type" stack_frame_id=1}
+  %constant.217 = c128[] constant((0, 1))
+  %mul.14 = c128[64,64]{1,0} broadcast(%constant.217), dimensions={}, metadata={op_name="jit(_normal)/mul" stack_frame_id=1}
+  %mul.15 = c128[64,64]{1,0} multiply(%convert_element_type.7, %mul.14), metadata={op_name="jit(_normal)/mul" stack_frame_id=1}
+  %add.213 = c128[64,64]{1,0} add(%convert_element_type.6, %mul.15), metadata={op_name="jit(_normal)/add" stack_frame_id=1}
+  %constant.216 = c128[] constant((1.4142135623730951, 0))
+  %div.2 = c128[64,64]{1,0} broadcast(%constant.216), dimensions={}, metadata={op_name="jit(_normal)/div" stack_frame_id=1}
+  ROOT %div.3 = c128[64,64]{1,0} divide(%add.213, %div.2), metadata={op_name="jit(_normal)/div" stack_frame_id=1}
+}
+

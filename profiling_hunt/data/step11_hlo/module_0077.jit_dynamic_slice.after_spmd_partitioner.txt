@@ -1,0 +1,37 @@
+HloModule jit_dynamic_slice, entry_computation_layout={(c128[1,64]{1,0}, s64[], s64[])->c128[1,2]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true,true,true}, allow_spmd_sharding_propagation_to_output={true}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step11_dump.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/materialized_qarray.py"
+3 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/sparsedia_dataarray.py"
+4 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_module/_module.py"
+
+FunctionNames
+1 "<module>"
+2 "MaterializedQArray.__matmul__"
+3 "SparseDIADataArray.__matmul__"
+4 "_ModuleMeta.__call__"
+5 "SparseDIADataArray.__check_init__"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=78 end_line=78 column=21 end_column=26}
+2 {file_name_id=2 function_name_id=2 line=281 end_line=281 column=17 end_column=35}
+3 {file_name_id=3 function_name_id=3 line=310 end_line=310 column=19 end_column=62}
+4 {file_name_id=4 function_name_id=4 line=434 end_line=434 column=16 end_column=32}
+5 {file_name_id=3 function_name_id=5 line=71 end_line=71 column=28 end_column=58}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+4 {file_location_id=4 parent_frame_id=4}
+5 {file_location_id=5 parent_frame_id=5}
+
+
+ENTRY %main.1 (args_0_.1: c128[1,64], args_1_.1: s64[], args_2_.1: s64[]) -> c128[1,2] {
+  %args_0_.1 = c128[1,64]{1,0} parameter(0), metadata={op_name="args[0]"}
+  %args_1_.1 = s64[] parameter(1), metadata={op_name="args[1]"}
+  %args_2_.1 = s64[] parameter(2), metadata={op_name="args[2]"}
+  ROOT %dynamic_slice.1 = c128[1,2]{1,0} dynamic-slice(%args_0_.1, %args_1_.1, %args_2_.1), dynamic_slice_sizes={1,2}, metadata={op_name="jit(dynamic_slice)/dynamic_slice" stack_frame_id=5}
+}
+

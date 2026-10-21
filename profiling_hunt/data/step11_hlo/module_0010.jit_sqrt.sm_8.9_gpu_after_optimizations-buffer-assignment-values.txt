@@ -1,0 +1,16 @@
+
+Total bytes used: 2016 (2.0KiB)
+
+Used values:
+<110 x.1 @0>
+ positions:
+  x.1
+ uses:
+  loop_complex_fusion, operand 0
+ from instruction: %x.1 = c128[63]{0} parameter(0), metadata={op_name="x"}
+<111 loop_complex_fusion @0>
+ positions:
+  loop_complex_fusion
+ uses:
+  (none)
+ from instruction: %loop_complex_fusion = c128[63]{0} fusion(%x.1), kind=kLoop, calls=%fused_complex, metadata={op_name="jit(sqrt)/sqrt" stack_frame_id=3}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}

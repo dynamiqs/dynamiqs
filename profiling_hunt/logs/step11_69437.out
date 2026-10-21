@@ -1,0 +1,21 @@
+job 69437 higgs GPU=0
+
+### baseline (throw=True, as shipped)   -- compiled EXACTLY as mesolve.py's own top-level jit, NO extra outer jit
+  ntsave=  10  output=     655,645  temp=   1,450,960  total/traj=3.2144
+  ntsave=  20  output=   1,311,085  temp=   2,761,680  total/traj=3.1073
+  ntsave=  40  output=   2,621,965  temp=   5,383,376  total/traj=3.0538
+  ntsave=  80  output=   5,243,725  temp=  10,626,512  total/traj=3.0270
+  ntsave= 160  output=  10,487,245  temp=  21,112,784  total/traj=3.0136
+  output  =          205 B +  1.0001 R per saved state
+  temp    =      140,165 B +  2.0001 R per saved state
+  total   =      140,370 B +  3.0002 R per saved state
+
+### patched (throw=False + scalar error_if)   -- compiled EXACTLY as mesolve.py's own top-level jit, NO extra outer jit
+  ntsave=  10  output=     655,645  temp=   1,450,960  total/traj=3.2144
+  ntsave=  20  output=   1,311,085  temp=   2,761,680  total/traj=3.1073
+  ntsave=  40  output=   2,621,965  temp=   5,383,376  total/traj=3.0538
+  ntsave=  80  output=   5,243,725  temp=  10,626,512  total/traj=3.0270
+  ntsave= 160  output=  10,487,245  temp=  21,112,784  total/traj=3.0136
+  output  =          205 B +  1.0001 R per saved state
+  temp    =      140,165 B +  2.0001 R per saved state
+  total   =      140,370 B +  3.0002 R per saved state

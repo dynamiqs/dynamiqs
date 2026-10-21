@@ -1,0 +1,17 @@
+# job 69445 higgs GPU=0 2026-09-14T10:28:44+02:00
+
+=== wrap=0 ===
+(exit 1)
+(exit 1)
+(exit 1)
+(exit 1)
+(exit 1)
+
+=== wrap=1 ===
+(exit 1)
+(exit 1)
+(exit 1)
+(exit 1)
+(exit 1)
+
+### STEP 15 COMPLETE  json=/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step15_69445.jsonl ###

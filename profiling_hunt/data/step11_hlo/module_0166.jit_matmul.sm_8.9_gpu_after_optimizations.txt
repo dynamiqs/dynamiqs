@@ -1,0 +1,58 @@
+HloModule jit_matmul, is_scheduled=true, entry_computation_layout={(c128[64,1]{1,0}, c128[1,64]{1,0})->c128[64,64]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="6b582bceaffeaed9966d8d665b810d6d"}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step11_dump.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/states.py"
+3 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_module/_prebuilt.py"
+4 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/qarray.py"
+5 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/general.py"
+6 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/materialized_qarray.py"
+7 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/qarrays/dense_dataarray.py"
+
+FunctionNames
+1 "<module>"
+2 "fock_dm"
+3 "BoundMethod.__call__"
+4 "QArray.todm"
+5 "todm"
+6 "proj"
+7 "MaterializedQArray.__matmul__"
+8 "DenseDataArray.__matmul__"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=79 end_line=79 column=7 end_column=23}
+2 {file_name_id=2 function_name_id=2 line=189 end_line=189 column=11 end_column=35}
+3 {file_name_id=3 function_name_id=3 line=46 end_line=46 column=15 end_column=60}
+4 {file_name_id=4 function_name_id=4 line=481 end_line=481 column=15 end_column=25}
+5 {file_name_id=5 function_name_id=5 line=854 end_line=854 column=15 end_column=22}
+6 {file_name_id=5 function_name_id=6 line=885 end_line=885 column=24 end_column=34}
+7 {file_name_id=6 function_name_id=7 line=281 end_line=281 column=17 end_column=35}
+8 {file_name_id=7 function_name_id=8 line=186 end_line=186 column=19 end_column=37}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+4 {file_location_id=4 parent_frame_id=4}
+5 {file_location_id=5 parent_frame_id=5}
+6 {file_location_id=6 parent_frame_id=6}
+7 {file_location_id=7 parent_frame_id=7}
+8 {file_location_id=8 parent_frame_id=8}
+
+
+%fused_multiply (param_0.8: c128[64,1], param_1.4: c128[1,64]) -> c128[64,64] {
+  %param_0.8 = c128[64,1]{1,0} parameter(0)
+  %bitcast.5 = c128[64]{0} bitcast(%param_0.8), metadata={op_name="a"}
+  %broadcast.5 = c128[64,64]{1,0} broadcast(%bitcast.5), dimensions={0}, metadata={op_name="jit(matmul)/dot_general" stack_frame_id=8}
+  %param_1.4 = c128[1,64]{1,0} parameter(1)
+  %bitcast.1.3 = c128[64]{0} bitcast(%param_1.4), metadata={op_name="b"}
+  %broadcast.1.3 = c128[64,64]{1,0} broadcast(%bitcast.1.3), dimensions={1}, metadata={op_name="jit(matmul)/dot_general" stack_frame_id=8}
+  ROOT %multiply.2 = c128[64,64]{1,0} multiply(%broadcast.5, %broadcast.1.3), metadata={op_name="jit(matmul)/dot_general" stack_frame_id=8}
+}
+
+ENTRY %main.1 (a.1: c128[64,1], b.1: c128[1,64]) -> c128[64,64] {
+  %b.1 = c128[1,64]{1,0} parameter(1), metadata={op_name="b"}
+  %a.1 = c128[64,1]{1,0} parameter(0), metadata={op_name="a"}
+  ROOT %loop_multiply_fusion = c128[64,64]{1,0} fusion(%a.1, %b.1), kind=kLoop, calls=%fused_multiply, metadata={op_name="jit(matmul)/dot_general" stack_frame_id=8}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+}
+

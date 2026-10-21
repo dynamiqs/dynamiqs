@@ -1,0 +1,13 @@
+# job 69450 higgs GPU=0 2026-09-14T10:57:07+02:00
+
+=== A) bare diffrax, float(ts[0])/float(ts[-1]) applied pre-jit ===
+### bare_float_fix ntsave=20  peak=532,202,752 B = 0.49565 GiB = 33.2627 R
+### bare_float_fix ntsave=50  peak=1,012,203,520 B = 0.94269 GiB = 63.2627 R
+### bare_float_fix ntsave=100  peak=1,812,205,056 B = 1.68775 GiB = 113.2628 R
+### bare_float_fix ntsave=200  peak=3,412,207,360 B = 3.17787 GiB = 213.2630 R
+### bare_float_fix ntsave=400  peak=6,612,211,968 B = 6.15810 GiB = 413.2632 R
+
+=== B) the naive fix dropped directly into DiffraxIntegrator.run() ===
+### dynamiqs_naive_property_fix ntsave=100: RAISED ConcretizationTypeError: Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]
+
+### STEP 19 COMPLETE  json=/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step19_69450.jsonl ###

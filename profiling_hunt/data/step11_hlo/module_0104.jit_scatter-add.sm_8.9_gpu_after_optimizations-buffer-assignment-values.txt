@@ -1,0 +1,59 @@
+
+Total bytes used: 5136 (5.0KiB)
+
+Used values:
+<0 lhs @0>
+ positions:
+  lhs
+ uses:
+  and.6, operand 0
+ from instruction: %lhs = pred[] parameter(0)
+<1 rhs @0>
+ positions:
+  rhs
+ uses:
+  and.6, operand 1
+ from instruction: %rhs = pred[] parameter(1)
+<2 and.6 @0>
+ positions:
+  and.6
+ uses:
+  (none)
+ from instruction: %and.6 = pred[] and(%lhs, %rhs)
+<33 args_1_.1 @0>
+ positions:
+  args_1_.1
+ uses:
+  input_reduce_fusion, operand 1
+  loop_complex_fusion, operand 0
+ from instruction: %args_1_.1 = s32[1]{0} parameter(1), metadata={op_name="args[1]"}
+<34 args_0_.1 @0>
+ positions:
+  args_0_.1
+ uses:
+  loop_complex_fusion, operand 1
+ from instruction: %args_0_.1 = c128[2,64]{1,0} parameter(0), metadata={op_name="args[0]"}
+<35 args_2_.1 @0>
+ positions:
+  args_2_.1
+ uses:
+  loop_complex_fusion, operand 2
+ from instruction: %args_2_.1 = c128[64]{0} parameter(2), metadata={op_name="args[2]"}
+<36 constant_37_0 @0>
+ positions:
+  constant_37_0
+ uses:
+  input_reduce_fusion, operand 0
+ from instruction: %constant_37_0 = s32[2]{0} constant({1, 0}), metadata={stack_frame_id=5}
+<37 input_reduce_fusion @0>
+ positions:
+  input_reduce_fusion
+ uses:
+  loop_complex_fusion, operand 3
+ from instruction: %input_reduce_fusion = pred[] fusion(%constant_37_0, %args_1_.1), kind=kInput, calls=%fused_reduce, metadata={stack_frame_id=5}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<38 loop_complex_fusion @0>
+ positions:
+  loop_complex_fusion
+ uses:
+  (none)
+ from instruction: %loop_complex_fusion = c128[2,64]{1,0} fusion(%args_1_.1, %args_0_.1, %args_2_.1, %input_reduce_fusion), kind=kLoop, calls=%fused_complex, metadata={op_name="jit(scatter-add)/scatter-add" stack_frame_id=5}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}

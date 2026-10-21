@@ -1,0 +1,17 @@
+# job 69444 higgs GPU=0 2026-09-14T10:17:23+02:00
+
+=== throw=0 ===
+### throw=False ntsave=20  peak=772,204,032 B = 0.71917 GiB = 48.2628 R
+### throw=False ntsave=50  peak=1,252,204,800 B = 1.16621 GiB = 78.2628 R
+### throw=False ntsave=100  peak=2,052,206,336 B = 1.91127 GiB = 128.2629 R
+### throw=False ntsave=200  peak=3,652,208,640 B = 3.40138 GiB = 228.2630 R
+### throw=False ntsave=400  peak=6,852,213,248 B = 6.38162 GiB = 428.2633 R
+
+=== throw=1 ===
+### throw=True ntsave=20  peak=1,088,011,776 B = 1.01329 GiB = 68.0007 R
+### throw=True ntsave=50  peak=2,528,012,800 B = 2.35440 GiB = 158.0008 R
+### throw=True ntsave=100  peak=4,928,014,848 B = 4.58957 GiB = 308.0009 R
+### throw=True ntsave=200  peak=9,728,017,920 B = 9.05992 GiB = 608.0011 R
+### throw=True ntsave=400  peak=19,328,024,064 B = 18.00063 GiB = 1208.0015 R
+
+### STEP 14 COMPLETE  json=/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step14_69444.jsonl ###

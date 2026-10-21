@@ -1,0 +1,10 @@
+/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_jit.py:55: UserWarning: Complex dtype support in Diffrax is a work in progress and may not yet produce correct results. Consider splitting your computation into real and imaginary parts instead.
+  out = fun(*args, **kwargs)
+/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_jit.py:55: UserWarning: Complex dtype support in Diffrax is a work in progress and may not yet produce correct results. Consider splitting your computation into real and imaginary parts instead.
+  out = fun(*args, **kwargs)
+/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_jit.py:55: UserWarning: Complex dtype support in Diffrax is a work in progress and may not yet produce correct results. Consider splitting your computation into real and imaginary parts instead.
+  out = fun(*args, **kwargs)
+/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_jit.py:55: UserWarning: Complex dtype support in Diffrax is a work in progress and may not yet produce correct results. Consider splitting your computation into real and imaginary parts instead.
+  out = fun(*args, **kwargs)
+/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_jit.py:55: UserWarning: Complex dtype support in Diffrax is a work in progress and may not yet produce correct results. Consider splitting your computation into real and imaginary parts instead.
+  out = fun(*args, **kwargs)

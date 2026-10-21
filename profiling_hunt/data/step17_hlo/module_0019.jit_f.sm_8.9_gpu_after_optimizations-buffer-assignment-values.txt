@@ -1,0 +1,1266 @@
+
+Total bytes used: 7673134 (7.32MiB)
+
+Used values:
+<0 reduce_or.19 @0>
+ positions:
+  reduce_or.19
+ uses:
+  reduce_or.21.0, operand 0
+ from instruction: %reduce_or.19 = pred[] parameter(0), metadata={op_name="reduce_or"}
+<1 reduce_or.20 @0>
+ positions:
+  reduce_or.20
+ uses:
+  reduce_or.21.0, operand 1
+ from instruction: %reduce_or.20 = pred[] parameter(1), metadata={op_name="reduce_or"}
+<2 reduce_or.21.0 @0>
+ positions:
+  reduce_or.21.0
+ uses:
+  (none)
+ from instruction: %reduce_or.21.0 = pred[] or(%reduce_or.19, %reduce_or.20), metadata={op_name="outer-loop/checkpointed-no-vjp/while/body/reduce_or" stack_frame_id=121}
+<3 lhs @0>
+ positions:
+  lhs
+ uses:
+  and.88, operand 0
+ from instruction: %lhs = pred[] parameter(0)
+<4 rhs @0>
+ positions:
+  rhs
+ uses:
+  and.88, operand 1
+ from instruction: %rhs = pred[] parameter(1)
+<5 and.88 @0>
+ positions:
+  and.88
+ uses:
+  (none)
+ from instruction: %and.88 = pred[] and(%lhs, %rhs)
+<6 scalar_lhs @0>
+ positions:
+  scalar_lhs
+ uses:
+  add.5.0, operand 0
+ from instruction: %scalar_lhs = c128[] parameter(0)
+<7 scalar_rhs @0>
+ positions:
+  scalar_rhs
+ uses:
+  add.5.0, operand 1
+ from instruction: %scalar_rhs = c128[] parameter(1)
+<8 add.5.0 @0>
+ positions:
+  add.5.0
+ uses:
+  (none)
+ from instruction: %add.5.0 = c128[] add(%scalar_lhs, %scalar_rhs)
+<9 lhs.4 @0>
+ positions:
+  lhs.4
+ uses:
+  and.87.0, operand 0
+ from instruction: %lhs.4 = pred[] parameter(0)
+<10 rhs.4 @0>
+ positions:
+  rhs.4
+ uses:
+  and.87.0, operand 1
+ from instruction: %rhs.4 = pred[] parameter(1)
+<11 and.87.0 @0>
+ positions:
+  and.87.0
+ uses:
+  (none)
+ from instruction: %and.87.0 = pred[] and(%lhs.4, %rhs.4)
+<12 scalar_lhs.4 @0>
+ positions:
+  scalar_lhs.4
+ uses:
+  add.249.0, operand 0
+ from instruction: %scalar_lhs.4 = c128[] parameter(0)
+<13 scalar_rhs.4 @0>
+ positions:
+  scalar_rhs.4
+ uses:
+  add.249.0, operand 1
+ from instruction: %scalar_rhs.4 = c128[] parameter(1)
+<14 add.249.0 @0>
+ positions:
+  add.249.0
+ uses:
+  (none)
+ from instruction: %add.249.0 = c128[] add(%scalar_lhs.4, %scalar_rhs.4)
+<15 scalar_lhs.5 @0>
+ positions:
+  scalar_lhs.5
+ uses:
+  add.250.0, operand 0
+ from instruction: %scalar_lhs.5 = c128[] parameter(0)
+<16 scalar_rhs.5 @0>
+ positions:
+  scalar_rhs.5
+ uses:
+  add.250.0, operand 1
+ from instruction: %scalar_rhs.5 = c128[] parameter(1)
+<17 add.250.0 @0>
+ positions:
+  add.250.0
+ uses:
+  (none)
+ from instruction: %add.250.0 = c128[] add(%scalar_lhs.5, %scalar_rhs.5)
+<18 scalar_lhs.6 @0>
+ positions:
+  scalar_lhs.6
+ uses:
+  add.251.0, operand 0
+ from instruction: %scalar_lhs.6 = c128[] parameter(0)
+<19 scalar_rhs.6 @0>
+ positions:
+  scalar_rhs.6
+ uses:
+  add.251.0, operand 1
+ from instruction: %scalar_rhs.6 = c128[] parameter(1)
+<20 add.251.0 @0>
+ positions:
+  add.251.0
+ uses:
+  (none)
+ from instruction: %add.251.0 = c128[] add(%scalar_lhs.6, %scalar_rhs.6)
+<28 loop_and_fusion @0>
+ positions:
+  loop_and_fusion
+ uses:
+  (none)
+ from instruction: %loop_and_fusion = pred[] fusion(%get-tuple-element.408.0, %get-tuple-element.407.0), kind=kLoop, calls=%fused_and, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/cond/and" stack_frame_id=886}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<47 constant_2682__sunk2_7_0 @0>
+ positions:
+  constant_2682__sunk2_7_0
+ uses:
+  loop_and_fusion.1, operand 2
+ from instruction: %constant_2682__sunk2_7_0 = f64[40]{0} constant({...}), metadata={op_name="jit(f)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond" stack_frame_id=535}
+<48 loop_and_fusion.1 @0>
+ positions:
+  loop_and_fusion.1
+ uses:
+  (none)
+ from instruction: %loop_and_fusion.1 = pred[] fusion(%get-tuple-element.583.0, %get-tuple-element.585.0, %constant_2682__sunk2_7_0, %get-tuple-element.586.0, %get-tuple-element.597.0), kind=kLoop, calls=%fused_and.1, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/cond/and" stack_frame_id=833}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<56 loop_and_fusion.2 @0>
+ positions:
+  loop_and_fusion.2
+ uses:
+  (none)
+ from instruction: %loop_and_fusion.2 = pred[] fusion(%get-tuple-element.664.0, %get-tuple-element.657.0), kind=kLoop, calls=%fused_and.2, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/cond/and" stack_frame_id=685}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<199 constant_2682__sunk2_8_0 @0>
+ positions:
+  constant_2682__sunk2_8_0
+ uses:
+  loop_dynamic_update_slice_fusion.1, operand 1
+  loop_concatenate_fusion, operand 2
+ from instruction: %constant_2682__sunk2_8_0 = f64[40]{0} constant({...}), metadata={op_name="jit(f)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond" stack_frame_id=535}
+<200 loop_concatenate_fusion @0>
+ positions:
+  loop_concatenate_fusion
+ uses:
+  loop_dynamic_update_slice_fusion, operand 3
+ from instruction: %loop_concatenate_fusion = f64[7]{0} fusion(%get-tuple-element.746, %get-tuple-element.744, %constant_2682__sunk2_8_0, %get-tuple-element.740, %get-tuple-element.729), kind=kLoop, calls=%fused_concatenate, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/stack" stack_frame_id=795}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<201 loop_dynamic_update_slice_fusion.1 @0>
+ positions:
+  loop_dynamic_update_slice_fusion.1
+  tuple.101 {2}
+ uses:
+  tuple.101, operand 2
+ from instruction: %loop_dynamic_update_slice_fusion.1 = f64[40]{0} fusion(%get-tuple-element.731, %constant_2682__sunk2_8_0, %get-tuple-element.740, %get-tuple-element.729, %get-tuple-element.743), kind=kLoop, calls=%fused_dynamic_update_slice.1, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/scatter" stack_frame_id=762}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<202 constant_3012_0 @0>
+ positions:
+  constant_3012_0
+ uses:
+  loop_dynamic_update_slice_fusion, operand 6
+ from instruction: %constant_3012_0 = s32[3]{0} constant({39, 0, 0}), metadata={stack_frame_id=783}
+<203 loop_dynamic_update_slice_fusion @0>
+ positions:
+  loop_dynamic_update_slice_fusion
+  tuple.101 {3}
+ uses:
+  tuple.101, operand 3
+ from instruction: %loop_dynamic_update_slice_fusion = c128[40,64,64]{2,1,0} fusion(%get-tuple-element.732, %get-tuple-element.748, %get-tuple-element.747, %loop_concatenate_fusion, %get-tuple-element.743, /*index=5*/%get-tuple-element.729, %constant_3012_0), kind=kLoop, calls=%fused_dynamic_update_slice, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/scatter" stack_frame_id=783}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<204 loop_add_fusion @0>
+ positions:
+  loop_add_fusion
+  tuple.101 {0}
+ uses:
+  tuple.101, operand 0
+ from instruction: %loop_add_fusion = s64[] fusion(%get-tuple-element.729), kind=kLoop, calls=%fused_add, control-predecessors={%loop_dynamic_update_slice_fusion, %loop_dynamic_update_slice_fusion.1, %loop_concatenate_fusion}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/add" deduplicated_name="loop_add_fusion" stack_frame_id=737}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<205 tuple.101{} @0>
+ positions:
+  tuple.101 {}
+ uses:
+  (none)
+ from instruction: %tuple.101 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) tuple(%loop_add_fusion, %get-tuple-element.740, %loop_dynamic_update_slice_fusion.1, %loop_dynamic_update_slice_fusion, %get-tuple-element.743, /*index=5*/%get-tuple-element.744, %get-tuple-element.745, %get-tuple-element.746, %get-tuple-element.747, %get-tuple-element.748)
+<256 constant_3041_0 @0>
+ positions:
+  constant_3041_0
+ uses:
+  loop_add_fusion.1, operand 2
+ from instruction: %constant_3041_0 = c128[7,7]{1,0} constant({...}), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+<257 loop_add_fusion.1 @0>
+ positions:
+  loop_add_fusion.1
+  tuple.98 {2}
+ uses:
+  custom-call.1, operand 1
+  tuple.98, operand 2
+ from instruction: %loop_add_fusion.1 = c128[64,64]{1,0} fusion(%get-tuple-element.717, %get-tuple-element.709, %constant_3041_0, %get-tuple-element.713, %get-tuple-element.705), kind=kLoop, calls=%fused_add.1, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/add" stack_frame_id=630}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<258 constant_3044_0 @0>
+ positions:
+  constant_3044_0
+ uses:
+  custom-call.1, operand 0
+ from instruction: %constant_3044_0 = c128[64,64]{1,0} constant({...}), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+<259 custom-call.1{} @0>
+ positions:
+  custom-call.1 {}
+ uses:
+  get-tuple-element.715, operand 0 {}
+ from instruction: %custom-call.1 = (c128[64,64]{1,0}, s8[4194304]{0}) custom-call(%constant_3044_0, %loop_add_fusion.1), custom_call_target="__cublas$lt$matmul", metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=640}, backend_config={"operation_queue_id":"0","gemm_backend_config":{"selected_algorithm":"2","alpha_real":1,"beta":0,"dot_dimension_numbers":{"lhs_contracting_dimensions":["1"],"rhs_contracting_dimensions":["0"],"lhs_batch_dimensions":[],"rhs_batch_dimensions":[]},"alpha_imag":0,"precision_config":{"operand_precision":["DEFAULT","DEFAULT"],"algorithm":"ALG_UNSET"},"epilogue":"DEFAULT","lhs_stride":"4096","rhs_stride":"4096","grad_x":false,"grad_y":false,"damax_output":false,"autotune_workspace_size":"4194304","scale_mode":0},"force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID"}
+<260 custom-call.1{0} @0>
+ positions:
+  custom-call.1 {0}
+  get-tuple-element.715
+  tuple.98 {3}
+ uses:
+  loop_dynamic_update_slice_fusion.2, operand 1
+  tuple.98, operand 3
+ from instruction: %custom-call.1 = (c128[64,64]{1,0}, s8[4194304]{0}) custom-call(%constant_3044_0, %loop_add_fusion.1), custom_call_target="__cublas$lt$matmul", metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=640}, backend_config={"operation_queue_id":"0","gemm_backend_config":{"selected_algorithm":"2","alpha_real":1,"beta":0,"dot_dimension_numbers":{"lhs_contracting_dimensions":["1"],"rhs_contracting_dimensions":["0"],"lhs_batch_dimensions":[],"rhs_batch_dimensions":[]},"alpha_imag":0,"precision_config":{"operand_precision":["DEFAULT","DEFAULT"],"algorithm":"ALG_UNSET"},"epilogue":"DEFAULT","lhs_stride":"4096","rhs_stride":"4096","grad_x":false,"grad_y":false,"damax_output":false,"autotune_workspace_size":"4194304","scale_mode":0},"force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID"}
+<261 custom-call.1{1} @0>
+ positions:
+  custom-call.1 {1}
+ uses:
+  (none)
+ from instruction: %custom-call.1 = (c128[64,64]{1,0}, s8[4194304]{0}) custom-call(%constant_3044_0, %loop_add_fusion.1), custom_call_target="__cublas$lt$matmul", metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=640}, backend_config={"operation_queue_id":"0","gemm_backend_config":{"selected_algorithm":"2","alpha_real":1,"beta":0,"dot_dimension_numbers":{"lhs_contracting_dimensions":["1"],"rhs_contracting_dimensions":["0"],"lhs_batch_dimensions":[],"rhs_batch_dimensions":[]},"alpha_imag":0,"precision_config":{"operand_precision":["DEFAULT","DEFAULT"],"algorithm":"ALG_UNSET"},"epilogue":"DEFAULT","lhs_stride":"4096","rhs_stride":"4096","grad_x":false,"grad_y":false,"damax_output":false,"autotune_workspace_size":"4194304","scale_mode":0},"force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID"}
+<262 constant_3047_0 @0>
+ positions:
+  constant_3047_0
+ uses:
+  loop_dynamic_update_slice_fusion.2, operand 5
+ from instruction: %constant_3047_0 = s32[3]{0} constant({6, 0, 0}), metadata={stack_frame_id=668}
+<263 loop_dynamic_update_slice_fusion.2 @0>
+ positions:
+  loop_dynamic_update_slice_fusion.2
+  tuple.98 {4}
+ uses:
+  tuple.98, operand 4
+ from instruction: %loop_dynamic_update_slice_fusion.2 = c128[7,64,64]{2,1,0} fusion(%get-tuple-element.709, %get-tuple-element.715, %get-tuple-element.718, %get-tuple-element.713, %get-tuple-element.705, /*index=5*/%constant_3047_0), kind=kLoop, calls=%fused_dynamic_update_slice.2, control-predecessors={%loop_add_fusion.1}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/scatter" stack_frame_id=668}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<264 loop_add_fusion.2 @0>
+ positions:
+  loop_add_fusion.2
+  tuple.98 {0}
+ uses:
+  tuple.98, operand 0
+ from instruction: %loop_add_fusion.2 = s64[] fusion(%get-tuple-element.705), kind=kLoop, calls=%fused_add.2, control-predecessors={%loop_dynamic_update_slice_fusion.2, %loop_add_fusion.1}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/add" deduplicated_name="loop_add_fusion" stack_frame_id=613}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<265 tuple.98{} @0>
+ positions:
+  tuple.98 {}
+ uses:
+  (none)
+ from instruction: %tuple.98 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) tuple(%loop_add_fusion.2, %get-tuple-element.713, %loop_add_fusion.1, %get-tuple-element.715, %loop_dynamic_update_slice_fusion.2, /*index=5*/%get-tuple-element.717, %get-tuple-element.718)
+<403 loop_add_fusion.5 @0>
+ positions:
+  loop_add_fusion.5
+  tuple.104 {0}
+ uses:
+  tuple.104, operand 0
+ from instruction: %loop_add_fusion.5 = s64[] fusion(%get-tuple-element.761), kind=kLoop, calls=%fused_add.5, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/add" deduplicated_name="loop_add_fusion" stack_frame_id=834}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<404 constant_2828_0 @0>
+ positions:
+  constant_2828_0
+ uses:
+  copy.75, operand 0
+ from instruction: %constant_2828_0 = s64[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+<405 copy.75 @0>
+ positions:
+  copy.75
+  tuple.99 {0}
+ uses:
+  copy.3, operand 0
+  while.150, operand 0 {0}
+ from instruction: %copy.75 = s64[] copy(%constant_2828_0)
+<406 copy.3 @0>
+ positions:
+  copy.3
+  tuple.96 {0}
+ uses:
+  while.151, operand 0 {0}
+ from instruction: %copy.3 = s64[] copy(%copy.75)
+<407 loop_select_fusion.3 @0>
+ positions:
+  loop_select_fusion.3
+  while.151 {1}
+  tuple.96 {1}
+  arg_tuple.39 {1}
+  get-tuple-element.664.0
+  arg_tuple.40 {1}
+  get-tuple-element.713
+  tuple.98 {1}
+ uses:
+  while.151, operand 0 {1}
+  loop_and_fusion.2, operand 0
+  loop_add_fusion.1, operand 3
+  loop_dynamic_update_slice_fusion.2, operand 3
+  tuple.98, operand 1
+ from instruction: %loop_select_fusion.3 = s64[] fusion(%get-tuple-element.765), kind=kLoop, calls=%fused_select.3, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=856}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<408 copy.4 @0>
+ positions:
+  copy.4
+  tuple.96 {2}
+ uses:
+  while.151, operand 0 {2}
+ from instruction: %copy.4 = c128[64,64]{1,0} copy(%get-tuple-element.762)
+<409 loop_select_fusion @0>
+ positions:
+  loop_select_fusion
+  tuple.96 {3}
+ uses:
+  loop_pad_fusion, operand 0
+  while.151, operand 0 {3}
+ from instruction: %loop_select_fusion = c128[64,64]{1,0} fusion(%get-tuple-element.766, %get-tuple-element.765), kind=kLoop, calls=%fused_select, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=858}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<410 copy.39 @0>
+ positions:
+  copy.39
+  while.150 {5}
+  tuple.99 {5}
+  arg_tuple.36 {5}
+  get-tuple-element.585.0
+  arg_tuple.37 {5}
+  get-tuple-element.744
+  tuple.101 {5}
+ uses:
+  loop_compare_minimum_select_fusion, operand 1
+  wrapped_subtract, operand 0
+  while.150, operand 0 {5}
+  loop_and_fusion.1, operand 1
+  loop_concatenate_fusion, operand 1
+  tuple.101, operand 5
+ from instruction: %copy.39 = f64[] copy(%get-tuple-element.764)
+<411 copy.38 @0>
+ positions:
+  copy.38
+  while.150 {7}
+  tuple.99 {7}
+  arg_tuple.36 {7}
+  arg_tuple.37 {7}
+  get-tuple-element.746
+  tuple.101 {7}
+ uses:
+  wrapped_subtract, operand 1
+  loop_compare_minimum_select_fusion, operand 2
+  while.150, operand 0 {7}
+  loop_concatenate_fusion, operand 0
+  tuple.101, operand 7
+ from instruction: %copy.38 = f64[] copy(%get-tuple-element.763)
+<412 wrapped_subtract @0>
+ positions:
+  wrapped_subtract
+  while.151 {6}
+  tuple.96 {6}
+  arg_tuple.39 {6}
+  arg_tuple.40 {6}
+  get-tuple-element.718
+  tuple.98 {6}
+ uses:
+  loop_pad_fusion, operand 1
+  loop_compare_minimum_select_fusion, operand 0
+  while.151, operand 0 {6}
+  loop_dynamic_update_slice_fusion.2, operand 2
+  tuple.98, operand 6
+ from instruction: %wrapped_subtract = f64[] fusion(%copy.39, %copy.38), kind=kLoop, calls=%wrapped_subtract_computation, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=575}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<413 loop_pad_fusion @0>
+ positions:
+  loop_pad_fusion
+  tuple.96 {4}
+ uses:
+  while.151, operand 0 {4}
+ from instruction: %loop_pad_fusion = c128[7,64,64]{2,1,0} fusion(%loop_select_fusion, %wrapped_subtract), kind=kLoop, calls=%fused_pad, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/scatter" stack_frame_id=595}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<414 tuple.96{} @0>
+ positions:
+  tuple.96 {}
+ uses:
+  while.151, operand 0 {}
+ from instruction: %tuple.96 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) tuple(%copy.3, %loop_select_fusion.3, %copy.4, %loop_select_fusion, %loop_pad_fusion, /*index=5*/%get-tuple-element.762, %wrapped_subtract)
+<415 constant_2833_0 @0>
+ positions:
+  constant_2833_0
+ uses:
+  loop_multiply_fusion, operand 3
+ from instruction: %constant_2833_0 = c128[7]{0} constant({(0.0017800110522257773, 0), (0.00081643445965674626, 0), (-0.0078808780102619935, 0), (0.14471100717326291, 0), (-0.58235716545255523, 0), (0.45808210592918686, 0), (-0.015151515151515152, 0)}), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+<416 input_reduce_fusion @0>
+ positions:
+  input_reduce_fusion
+ uses:
+  loop_multiply_fusion, operand 4
+ from instruction: %input_reduce_fusion = pred[] fusion(%while.138.0), kind=kInput, calls=%fused_reduce, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/reduce_or" stack_frame_id=700}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<417 loop_multiply_fusion @0>
+ positions:
+  loop_multiply_fusion
+ uses:
+  input_reduce_fusion.1, operand 0
+ from instruction: %loop_multiply_fusion = c128[64,64]{1,0} fusion(%get-tuple-element.762, %while.138.0, %get-tuple-element.727, %constant_2833_0, %input_reduce_fusion), kind=kLoop, calls=%fused_multiply, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=717}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<418 input_reduce_fusion.1 @0>
+ positions:
+  input_reduce_fusion.1
+ uses:
+  loop_compare_minimum_select_fusion, operand 3
+ from instruction: %input_reduce_fusion.1 = f64[] fusion(%loop_multiply_fusion), kind=kInput, calls=%fused_reduce.1, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/sqrt" stack_frame_id=718}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<419 loop_compare_minimum_select_fusion{} @0>
+ positions:
+  loop_compare_minimum_select_fusion {}
+ uses:
+  get-tuple-element.776, operand 0 {}
+  get-tuple-element.775, operand 0 {}
+  get-tuple-element.725, operand 0 {}
+ from instruction: %loop_compare_minimum_select_fusion = (f64[], f64[], pred[]) fusion(%wrapped_subtract, %copy.39, %copy.38, %input_reduce_fusion.1), kind=kLoop, calls=%fused_compare_minimum_select, control-predecessors={%wrapped_subtract}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=874}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<420 loop_compare_minimum_select_fusion{0} @0>
+ positions:
+  loop_compare_minimum_select_fusion {0}
+  get-tuple-element.776
+  tuple.104 {3}
+ uses:
+  tuple.104, operand 3
+ from instruction: %loop_compare_minimum_select_fusion = (f64[], f64[], pred[]) fusion(%wrapped_subtract, %copy.39, %copy.38, %input_reduce_fusion.1), kind=kLoop, calls=%fused_compare_minimum_select, control-predecessors={%wrapped_subtract}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=874}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<421 loop_compare_minimum_select_fusion{1} @0>
+ positions:
+  loop_compare_minimum_select_fusion {1}
+  get-tuple-element.775
+  tuple.104 {2}
+ uses:
+  tuple.104, operand 2
+ from instruction: %loop_compare_minimum_select_fusion = (f64[], f64[], pred[]) fusion(%wrapped_subtract, %copy.39, %copy.38, %input_reduce_fusion.1), kind=kLoop, calls=%fused_compare_minimum_select, control-predecessors={%wrapped_subtract}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=874}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<422 loop_compare_minimum_select_fusion{2} @0>
+ positions:
+  loop_compare_minimum_select_fusion {2}
+  while.150 {6}
+  get-tuple-element.725
+  tuple.99 {6}
+  arg_tuple.36 {6}
+  get-tuple-element.583.0
+  arg_tuple.37 {6}
+  get-tuple-element.745
+  tuple.101 {6}
+ uses:
+  loop_select_fusion.4, operand 0
+  loop_add_fusion.4, operand 1
+  loop_select_fusion.2, operand 2
+  loop_add_fusion.3, operand 1
+  loop_select_fusion.1, operand 2
+  while.150, operand 0 {6}
+  loop_and_fusion.1, operand 0
+  tuple.101, operand 6
+ from instruction: %loop_compare_minimum_select_fusion = (f64[], f64[], pred[]) fusion(%wrapped_subtract, %copy.39, %copy.38, %input_reduce_fusion.1), kind=kLoop, calls=%fused_compare_minimum_select, control-predecessors={%wrapped_subtract}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=874}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<423 tuple.99{} @0>
+ positions:
+  tuple.99 {}
+ uses:
+  while.150, operand 0 {}
+ from instruction: %tuple.99 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) tuple(%copy.75, %get-tuple-element.769, %get-tuple-element.770, %get-tuple-element.771, %get-tuple-element.772, /*index=5*/%copy.39, %get-tuple-element.725, %copy.38, %get-tuple-element.727, %get-tuple-element.762)
+<424 loop_select_fusion.1 @0>
+ positions:
+  loop_select_fusion.1
+  tuple.104 {1}
+ uses:
+  tuple.104, operand 1
+ from instruction: %loop_select_fusion.1 = c128[64,64]{1,0} fusion(%while.138.0, %get-tuple-element.762, %get-tuple-element.725), kind=kLoop, calls=%fused_select.1, control-predecessors={%loop_multiply_fusion, %while.150, %while.151}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" deduplicated_name="loop_select_fusion.1" stack_frame_id=869}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<425 loop_select_fusion.4 @0>
+ positions:
+  loop_select_fusion.4
+  tuple.104 {4}
+ uses:
+  tuple.104, operand 4
+ from instruction: %loop_select_fusion.4 = pred[] fusion(%get-tuple-element.725, %get-tuple-element.765), kind=kLoop, calls=%fused_select.4, control-predecessors={%loop_select_fusion.3, %loop_select_fusion}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=876}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<426 loop_select_fusion.2 @0>
+ positions:
+  loop_select_fusion.2
+  tuple.104 {5}
+ uses:
+  tuple.104, operand 5
+ from instruction: %loop_select_fusion.2 = c128[64,64]{1,0} fusion(%while.141.0, %get-tuple-element.766, %get-tuple-element.725), kind=kLoop, calls=%fused_select.2, control-predecessors={%loop_select_fusion}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" deduplicated_name="loop_select_fusion.1" stack_frame_id=876}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<427 loop_add_fusion.4 @0>
+ positions:
+  loop_add_fusion.4
+  tuple.104 {6}
+ uses:
+  tuple.104, operand 6
+ from instruction: %loop_add_fusion.4 = s64[] fusion(%get-tuple-element.767, %get-tuple-element.725), kind=kLoop, calls=%fused_add.4, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=852}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<428 loop_add_fusion.3 @0>
+ positions:
+  loop_add_fusion.3
+  tuple.104 {7}
+ uses:
+  tuple.104, operand 7
+ from instruction: %loop_add_fusion.3 = s64[] fusion(%get-tuple-element.768, %get-tuple-element.725), kind=kLoop, calls=%fused_add.3, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=853}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<429 wrapped_add @0>
+ positions:
+  wrapped_add
+  tuple.104 {8}
+ uses:
+  tuple.104, operand 8
+ from instruction: %wrapped_add = s64[] fusion(%get-tuple-element.632.0, %get-tuple-element.631.0), kind=kLoop, calls=%wrapped_add_computation, control-predecessors={%while.150}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=735}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<430 wrapped_add.1 @0>
+ positions:
+  wrapped_add.1
+  tuple.104 {11}
+ uses:
+  tuple.104, operand 11
+ from instruction: %wrapped_add.1 = s64[] fusion(%get-tuple-element.636.0, %get-tuple-element.631.0), kind=kLoop, calls=%wrapped_add_computation.1, control-predecessors={%while.150}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=735}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<431 tuple.104{} @0>
+ positions:
+  tuple.104 {}
+ uses:
+  (none)
+ from instruction: %tuple.104 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) tuple(%loop_add_fusion.5, %loop_select_fusion.1, %get-tuple-element.775, %get-tuple-element.776, %loop_select_fusion.4, /*index=5*/%loop_select_fusion.2, %loop_add_fusion.4, %loop_add_fusion.3, %wrapped_add, %get-tuple-element.782, /*index=10*/%get-tuple-element.783, %wrapped_add.1)
+<432 constant_256_0 @0>
+ positions:
+  constant_256_0
+ uses:
+  copy.71, operand 0
+ from instruction: %constant_256_0 = f64[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)/mul" stack_frame_id=463}
+<433 copy.71 @0>
+ positions:
+  copy.71
+  tuple.102 {2}
+ uses:
+  copy.61, operand 0
+  while.143, operand 0 {2}
+ from instruction: %copy.71 = f64[] copy(%constant_256_0)
+<434 copy.61 @0>
+ positions:
+  copy.61
+  tuple.105 {0}
+  get-tuple-element.794
+  tuple.106 {0}
+ uses:
+  tuple.106, operand 0
+ from instruction: %copy.61 = f64[] copy(%copy.71)
+<435 constant_260_0 @0>
+ positions:
+  constant_260_0
+  tuple.105 {1}
+  get-tuple-element.795
+ uses:
+  copy.73, operand 0
+ from instruction: %constant_260_0 = f64[] constant(0.1), metadata={op_name="jit(f)/jit(diffeqsolve)/mul" stack_frame_id=464}
+<436 constant_3_0 @0>
+ positions:
+  constant_3_0
+ uses:
+  copy.69, operand 0
+ from instruction: %constant_3_0 = s64[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+<437 copy.69 @0>
+ positions:
+  copy.69
+  tuple.102 {0}
+ uses:
+  copy.32, operand 0
+  copy.35, operand 0
+  copy.30, operand 0
+  copy.31, operand 0
+  while.143, operand 0 {0}
+ from instruction: %copy.69 = s64[] copy(%constant_3_0)
+<438 y0.1 @0>
+ positions:
+  y0.1
+ uses:
+  copy.68, operand 0
+ from instruction: %y0.1 = c128[64,64]{1,0} parameter(0), metadata={op_name="y0"}
+<439 copy.68 @0>
+ positions:
+  copy.68
+  tuple.102 {1}
+ uses:
+  while.143, operand 0 {1}
+ from instruction: %copy.68 = c128[64,64]{1,0} copy(%y0.1)
+<440 constant_266_0 @0>
+ positions:
+  constant_266_0
+ uses:
+  copy.72, operand 0
+ from instruction: %constant_266_0 = f64[] constant(0.01), metadata={op_name="jit(f)/jit(diffeqsolve)/min" stack_frame_id=476}
+<441 copy.72 @0>
+ positions:
+  copy.72
+  tuple.102 {3}
+ uses:
+  while.143, operand 0 {3}
+ from instruction: %copy.72 = f64[] copy(%constant_266_0)
+<442 constant_4_0 @0>
+ positions:
+  constant_4_0
+ uses:
+  copy.70, operand 0
+ from instruction: %constant_4_0 = pred[] constant(true), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+<443 copy.70 @0>
+ positions:
+  copy.70
+  tuple.102 {4}
+ uses:
+  while.143, operand 0 {4}
+ from instruction: %copy.70 = pred[] copy(%constant_4_0)
+<444 loop_broadcast_fusion @0>
+ positions:
+  loop_broadcast_fusion
+  tuple.102 {5}
+ uses:
+  while.143, operand 0 {5}
+ from instruction: %loop_broadcast_fusion = c128[64,64]{1,0} fusion(), kind=kLoop, calls=%fused_broadcast, metadata={op_name="jit(f)/jit(diffeqsolve)/broadcast_in_dim" stack_frame_id=480}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<445 copy.30 @0>
+ positions:
+  copy.30
+  tuple.102 {6}
+ uses:
+  while.143, operand 0 {6}
+ from instruction: %copy.30 = s64[] copy(%copy.69)
+<446 copy.31 @0>
+ positions:
+  copy.31
+  tuple.102 {7}
+ uses:
+  while.143, operand 0 {7}
+ from instruction: %copy.31 = s64[] copy(%copy.69)
+<447 copy.32 @0>
+ positions:
+  copy.32
+  tuple.102 {8}
+ uses:
+  while.143, operand 0 {8}
+ from instruction: %copy.32 = s64[] copy(%copy.69)
+<448 loop_broadcast_fusion.2 @0>
+ positions:
+  loop_broadcast_fusion.2
+  tuple.102 {9}
+ uses:
+  while.143, operand 0 {9}
+ from instruction: %loop_broadcast_fusion.2 = f64[40]{0} fusion(), kind=kLoop, calls=%fused_broadcast.2, metadata={op_name="jit(f)/jit(diffeqsolve)/broadcast_in_dim" stack_frame_id=483}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<449 loop_broadcast_fusion.1 @0>
+ positions:
+  loop_broadcast_fusion.1
+  tuple.102 {10}
+ uses:
+  while.143, operand 0 {10}
+ from instruction: %loop_broadcast_fusion.1 = c128[40,64,64]{2,1,0} fusion(), kind=kLoop, calls=%fused_broadcast.1, metadata={op_name="jit(f)/jit(diffeqsolve)/broadcast_in_dim" stack_frame_id=485}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<450 copy.35 @0>
+ positions:
+  copy.35
+  tuple.102 {11}
+ uses:
+  while.143, operand 0 {11}
+ from instruction: %copy.35 = s64[] copy(%copy.69)
+<451 tuple.102{} @0>
+ positions:
+  tuple.102 {}
+ uses:
+  while.143, operand 0 {}
+ from instruction: %tuple.102 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) tuple(%copy.69, %copy.68, %copy.71, %copy.72, %copy.70, /*index=5*/%loop_broadcast_fusion, %copy.30, %copy.31, %copy.32, %loop_broadcast_fusion.2, /*index=10*/%loop_broadcast_fusion.1, %copy.35)
+<452 constant_164_0 @0>
+ positions:
+  constant_164_0
+  tuple.105 {4}
+  get-tuple-element.798
+ uses:
+  copy.74, operand 0
+ from instruction: %constant_164_0 = s64[] constant(100000)
+<453 loop_select_fusion.5 @0>
+ positions:
+  loop_select_fusion.5
+  tuple.105 {8}
+  get-tuple-element.802
+  tuple.106 {8}
+ uses:
+  tuple.106, operand 8
+ from instruction: %loop_select_fusion.5 = s32[] fusion(%while.36.0), kind=kLoop, calls=%fused_select.5, metadata={op_name="jit(f)/jit(diffeqsolve)/jit(_where)/select_n" stack_frame_id=905}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+<454 tuple.105{} @0>
+ positions:
+  tuple.105 {}
+ uses:
+  get-tuple-element.794, operand 0 {}
+  get-tuple-element.795, operand 0 {}
+  get-tuple-element.796, operand 0 {}
+  get-tuple-element.797, operand 0 {}
+  get-tuple-element.798, operand 0 {}
+  get-tuple-element.799, operand 0 {}
+  get-tuple-element.800, operand 0 {}
+  get-tuple-element.801, operand 0 {}
+  get-tuple-element.802, operand 0 {}
+ from instruction: %tuple.105 = (f64[], f64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/s64[], s64[], s64[], s32[]) tuple(%copy.61, %constant_260_0, %get-tuple-element.787, %get-tuple-element.788, %constant_164_0, /*index=5*/%get-tuple-element.790, %get-tuple-element.791, %get-tuple-element.792, %loop_select_fusion.5)
+<455 copy.73 @0>
+ positions:
+  copy.73
+  tuple.106 {1}
+ uses:
+  tuple.106, operand 1
+ from instruction: %copy.73 = f64[] copy(%get-tuple-element.795)
+<456 copy.74 @0>
+ positions:
+  copy.74
+  tuple.106 {4}
+ uses:
+  tuple.106, operand 4
+ from instruction: %copy.74 = s64[] copy(%get-tuple-element.798)
+<457 tuple.106{} @0>
+ positions:
+  tuple.106 {}
+ uses:
+  (none)
+ from instruction: %tuple.106 = (f64[], f64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/s64[], s64[], s64[], s32[]) tuple(%get-tuple-element.794, %copy.73, %get-tuple-element.796, %get-tuple-element.797, %copy.74, /*index=5*/%get-tuple-element.799, %get-tuple-element.800, %get-tuple-element.801, %get-tuple-element.802)
+<458 arg_tuple.23{} (phi) @0>
+ positions:
+  arg_tuple.23 {}
+ uses:
+  get-tuple-element.408.0, operand 0 {}
+  get-tuple-element.407.0, operand 0 {}
+ from instruction: %arg_tuple.23 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<459 arg_tuple.24{} (phi) @0>
+ positions:
+  arg_tuple.24 {}
+ uses:
+  get-tuple-element.772, operand 0 {}
+  get-tuple-element.771, operand 0 {}
+  get-tuple-element.770, operand 0 {}
+  get-tuple-element.769, operand 0 {}
+  get-tuple-element.768, operand 0 {}
+  get-tuple-element.767, operand 0 {}
+  get-tuple-element.766, operand 0 {}
+  get-tuple-element.765, operand 0 {}
+  get-tuple-element.764, operand 0 {}
+  get-tuple-element.763, operand 0 {}
+  get-tuple-element.762, operand 0 {}
+  get-tuple-element.761, operand 0 {}
+ from instruction: %arg_tuple.24 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<460 arg_tuple.39{} (phi) @0>
+ positions:
+  arg_tuple.39 {}
+ uses:
+  get-tuple-element.664.0, operand 0 {}
+  get-tuple-element.657.0, operand 0 {}
+ from instruction: %arg_tuple.39 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) parameter(0)
+<461 arg_tuple.40{} (phi) @0>
+ positions:
+  arg_tuple.40 {}
+ uses:
+  get-tuple-element.718, operand 0 {}
+  get-tuple-element.717, operand 0 {}
+  get-tuple-element.709, operand 0 {}
+  get-tuple-element.705, operand 0 {}
+  get-tuple-element.713, operand 0 {}
+ from instruction: %arg_tuple.40 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) parameter(0)
+<462 arg_tuple.39{0} (phi) @0>
+ positions:
+  arg_tuple.39 {0}
+  get-tuple-element.657.0
+ uses:
+  loop_and_fusion.2, operand 1
+ from instruction: %arg_tuple.39 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) parameter(0)
+<464 arg_tuple.39{2} (phi) @0>
+ positions:
+  arg_tuple.39 {2}
+ uses:
+  (none)
+ from instruction: %arg_tuple.39 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) parameter(0)
+<465 arg_tuple.39{3} (phi) @0>
+ positions:
+  arg_tuple.39 {3}
+ uses:
+  (none)
+ from instruction: %arg_tuple.39 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) parameter(0)
+<466 arg_tuple.39{4} (phi) @0>
+ positions:
+  arg_tuple.39 {4}
+ uses:
+  (none)
+ from instruction: %arg_tuple.39 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) parameter(0)
+<469 arg_tuple.40{0} (phi) @0>
+ positions:
+  arg_tuple.40 {0}
+  get-tuple-element.705
+ uses:
+  loop_dynamic_update_slice_fusion.2, operand 4
+  loop_add_fusion.1, operand 4
+  loop_add_fusion.2, operand 0
+ from instruction: %arg_tuple.40 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) parameter(0)
+<471 arg_tuple.40{2} (phi) @0>
+ positions:
+  arg_tuple.40 {2}
+ uses:
+  (none)
+ from instruction: %arg_tuple.40 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) parameter(0)
+<472 arg_tuple.40{3} (phi) @0>
+ positions:
+  arg_tuple.40 {3}
+ uses:
+  (none)
+ from instruction: %arg_tuple.40 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) parameter(0)
+<473 arg_tuple.40{4} (phi) @0>
+ positions:
+  arg_tuple.40 {4}
+  get-tuple-element.709
+ uses:
+  loop_dynamic_update_slice_fusion.2, operand 0
+  loop_add_fusion.1, operand 1
+ from instruction: %arg_tuple.40 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) parameter(0)
+<476 while.151{} (phi) @0>
+ positions:
+  while.151 {}
+ uses:
+  while.138.0, operand 0 {}
+  while.141.0, operand 0 {}
+  get-tuple-element.727, operand 0 {}
+ from instruction: %while.151 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) while(%tuple.96), condition=%region_10.18.clone.clone.clone.clone, body=%region_8.17.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while" stack_frame_id=600}
+<477 while.151{0} (phi) @0>
+ positions:
+  while.151 {0}
+ uses:
+  (none)
+ from instruction: %while.151 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) while(%tuple.96), condition=%region_10.18.clone.clone.clone.clone, body=%region_8.17.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while" stack_frame_id=600}
+<479 while.151{2} (phi) @0>
+ positions:
+  while.151 {2}
+  while.138.0
+ uses:
+  loop_select_fusion.1, operand 0
+  input_reduce_fusion, operand 0
+  loop_multiply_fusion, operand 1
+ from instruction: %while.151 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) while(%tuple.96), condition=%region_10.18.clone.clone.clone.clone, body=%region_8.17.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while" stack_frame_id=600}
+<480 while.151{3} (phi) @0>
+ positions:
+  while.151 {3}
+  while.141.0
+ uses:
+  loop_select_fusion.2, operand 0
+ from instruction: %while.151 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) while(%tuple.96), condition=%region_10.18.clone.clone.clone.clone, body=%region_8.17.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while" stack_frame_id=600}
+<481 while.151{4} (phi) @0>
+ positions:
+  while.151 {4}
+  while.150 {8}
+  get-tuple-element.727
+  tuple.99 {8}
+  arg_tuple.36 {8}
+  arg_tuple.37 {8}
+  get-tuple-element.747
+  tuple.101 {8}
+ uses:
+  loop_multiply_fusion, operand 2
+  while.150, operand 0 {8}
+  loop_dynamic_update_slice_fusion, operand 2
+  tuple.101, operand 8
+ from instruction: %while.151 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) while(%tuple.96), condition=%region_10.18.clone.clone.clone.clone, body=%region_8.17.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while" stack_frame_id=600}
+<484 arg_tuple.36{} (phi) @0>
+ positions:
+  arg_tuple.36 {}
+ uses:
+  get-tuple-element.597.0, operand 0 {}
+  get-tuple-element.585.0, operand 0 {}
+  get-tuple-element.586.0, operand 0 {}
+  get-tuple-element.583.0, operand 0 {}
+ from instruction: %arg_tuple.36 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) parameter(0)
+<485 arg_tuple.37{} (phi) @0>
+ positions:
+  arg_tuple.37 {}
+ uses:
+  get-tuple-element.748, operand 0 {}
+  get-tuple-element.747, operand 0 {}
+  get-tuple-element.746, operand 0 {}
+  get-tuple-element.745, operand 0 {}
+  get-tuple-element.744, operand 0 {}
+  get-tuple-element.743, operand 0 {}
+  get-tuple-element.732, operand 0 {}
+  get-tuple-element.731, operand 0 {}
+  get-tuple-element.740, operand 0 {}
+  get-tuple-element.729, operand 0 {}
+ from instruction: %arg_tuple.37 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) parameter(0)
+<486 arg_tuple.36{0} (phi) @0>
+ positions:
+  arg_tuple.36 {0}
+  get-tuple-element.586.0
+ uses:
+  loop_and_fusion.1, operand 3
+ from instruction: %arg_tuple.36 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) parameter(0)
+<488 arg_tuple.36{2} (phi) @0>
+ positions:
+  arg_tuple.36 {2}
+ uses:
+  (none)
+ from instruction: %arg_tuple.36 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) parameter(0)
+<489 arg_tuple.36{3} (phi) @0>
+ positions:
+  arg_tuple.36 {3}
+ uses:
+  (none)
+ from instruction: %arg_tuple.36 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) parameter(0)
+<496 arg_tuple.37{0} (phi) @0>
+ positions:
+  arg_tuple.37 {0}
+  get-tuple-element.729
+ uses:
+  loop_dynamic_update_slice_fusion.1, operand 3
+  loop_concatenate_fusion, operand 4
+  loop_add_fusion, operand 0
+  loop_dynamic_update_slice_fusion, operand 5
+ from instruction: %arg_tuple.37 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) parameter(0)
+<498 arg_tuple.37{2} (phi) @0>
+ positions:
+  arg_tuple.37 {2}
+  get-tuple-element.731
+ uses:
+  loop_dynamic_update_slice_fusion.1, operand 0
+ from instruction: %arg_tuple.37 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) parameter(0)
+<499 arg_tuple.37{3} (phi) @0>
+ positions:
+  arg_tuple.37 {3}
+  get-tuple-element.732
+ uses:
+  loop_dynamic_update_slice_fusion, operand 0
+ from instruction: %arg_tuple.37 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) parameter(0)
+<506 while.150{} (phi) @0>
+ positions:
+  while.150 {}
+ uses:
+  get-tuple-element.631.0, operand 0 {}
+  get-tuple-element.632.0, operand 0 {}
+  get-tuple-element.636.0, operand 0 {}
+  get-tuple-element.782, operand 0 {}
+  get-tuple-element.783, operand 0 {}
+ from instruction: %while.150 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) while(%tuple.99), condition=%region_15.32.sunk.clone.clone.clone, body=%region_12.31.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=735}
+<507 while.150{0} (phi) @0>
+ positions:
+  while.150 {0}
+  get-tuple-element.631.0
+ uses:
+  wrapped_add, operand 1
+  wrapped_add.1, operand 1
+ from instruction: %while.150 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) while(%tuple.99), condition=%region_15.32.sunk.clone.clone.clone, body=%region_12.31.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=735}
+<509 while.150{2} (phi) @0>
+ positions:
+  while.150 {2}
+  get-tuple-element.782
+  tuple.104 {9}
+ uses:
+  tuple.104, operand 9
+ from instruction: %while.150 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) while(%tuple.99), condition=%region_15.32.sunk.clone.clone.clone, body=%region_12.31.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=735}
+<510 while.150{3} (phi) @0>
+ positions:
+  while.150 {3}
+  get-tuple-element.783
+  tuple.104 {10}
+ uses:
+  tuple.104, operand 10
+ from instruction: %while.150 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) while(%tuple.99), condition=%region_15.32.sunk.clone.clone.clone, body=%region_12.31.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=735}
+<517 arg_tuple.23{0} (phi) @0>
+ positions:
+  arg_tuple.23 {0}
+  get-tuple-element.408.0
+ uses:
+  loop_and_fusion, operand 0
+ from instruction: %arg_tuple.23 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<518 arg_tuple.23{1} (phi) @0>
+ positions:
+  arg_tuple.23 {1}
+ uses:
+  (none)
+ from instruction: %arg_tuple.23 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<519 arg_tuple.23{2} (phi) @0>
+ positions:
+  arg_tuple.23 {2}
+  get-tuple-element.407.0
+ uses:
+  loop_and_fusion, operand 1
+ from instruction: %arg_tuple.23 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<520 arg_tuple.23{3} (phi) @0>
+ positions:
+  arg_tuple.23 {3}
+ uses:
+  (none)
+ from instruction: %arg_tuple.23 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<521 arg_tuple.23{4} (phi) @0>
+ positions:
+  arg_tuple.23 {4}
+ uses:
+  (none)
+ from instruction: %arg_tuple.23 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<522 arg_tuple.23{5} (phi) @0>
+ positions:
+  arg_tuple.23 {5}
+ uses:
+  (none)
+ from instruction: %arg_tuple.23 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<523 arg_tuple.23{6} (phi) @0>
+ positions:
+  arg_tuple.23 {6}
+ uses:
+  (none)
+ from instruction: %arg_tuple.23 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<524 arg_tuple.23{7} (phi) @0>
+ positions:
+  arg_tuple.23 {7}
+ uses:
+  (none)
+ from instruction: %arg_tuple.23 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<525 arg_tuple.23{8} (phi) @0>
+ positions:
+  arg_tuple.23 {8}
+ uses:
+  (none)
+ from instruction: %arg_tuple.23 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<526 arg_tuple.23{9} (phi) @0>
+ positions:
+  arg_tuple.23 {9}
+ uses:
+  (none)
+ from instruction: %arg_tuple.23 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<527 arg_tuple.23{10} (phi) @0>
+ positions:
+  arg_tuple.23 {10}
+ uses:
+  (none)
+ from instruction: %arg_tuple.23 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<528 arg_tuple.23{11} (phi) @0>
+ positions:
+  arg_tuple.23 {11}
+ uses:
+  (none)
+ from instruction: %arg_tuple.23 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<529 arg_tuple.24{0} (phi) @0>
+ positions:
+  arg_tuple.24 {0}
+  get-tuple-element.761
+ uses:
+  loop_add_fusion.5, operand 0
+ from instruction: %arg_tuple.24 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<530 arg_tuple.24{1} (phi) @0>
+ positions:
+  arg_tuple.24 {1}
+  while.150 {9}
+  while.151 {5}
+  tuple.96 {5}
+  tuple.99 {9}
+  get-tuple-element.762
+  arg_tuple.36 {9}
+  arg_tuple.37 {9}
+  get-tuple-element.748
+  tuple.101 {9}
+  arg_tuple.39 {5}
+  arg_tuple.40 {5}
+  get-tuple-element.717
+  tuple.98 {5}
+ uses:
+  while.151, operand 0 {5}
+  while.150, operand 0 {9}
+  loop_multiply_fusion, operand 0
+  copy.4, operand 0
+  loop_select_fusion.1, operand 1
+  loop_dynamic_update_slice_fusion, operand 1
+  tuple.101, operand 9
+  loop_add_fusion.1, operand 0
+  tuple.98, operand 5
+ from instruction: %arg_tuple.24 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<531 arg_tuple.24{2} (phi) @0>
+ positions:
+  arg_tuple.24 {2}
+  get-tuple-element.763
+ uses:
+  copy.38, operand 0
+ from instruction: %arg_tuple.24 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<532 arg_tuple.24{3} (phi) @0>
+ positions:
+  arg_tuple.24 {3}
+  get-tuple-element.764
+ uses:
+  copy.39, operand 0
+ from instruction: %arg_tuple.24 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<533 arg_tuple.24{4} (phi) @0>
+ positions:
+  arg_tuple.24 {4}
+  get-tuple-element.765
+ uses:
+  loop_select_fusion.3, operand 0
+  loop_select_fusion, operand 1
+  loop_select_fusion.4, operand 1
+ from instruction: %arg_tuple.24 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<534 arg_tuple.24{5} (phi) @0>
+ positions:
+  arg_tuple.24 {5}
+  get-tuple-element.766
+ uses:
+  loop_select_fusion.2, operand 1
+  loop_select_fusion, operand 0
+ from instruction: %arg_tuple.24 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<535 arg_tuple.24{6} (phi) @0>
+ positions:
+  arg_tuple.24 {6}
+  get-tuple-element.767
+ uses:
+  loop_add_fusion.4, operand 0
+ from instruction: %arg_tuple.24 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<536 arg_tuple.24{7} (phi) @0>
+ positions:
+  arg_tuple.24 {7}
+  get-tuple-element.768
+ uses:
+  loop_add_fusion.3, operand 0
+ from instruction: %arg_tuple.24 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<537 arg_tuple.24{8} (phi) @0>
+ positions:
+  arg_tuple.24 {8}
+  while.150 {1}
+  get-tuple-element.632.0
+  tuple.99 {1}
+  get-tuple-element.769
+  arg_tuple.36 {1}
+  get-tuple-element.597.0
+  arg_tuple.37 {1}
+  get-tuple-element.740
+  tuple.101 {1}
+ uses:
+  wrapped_add, operand 0
+  while.150, operand 0 {1}
+  loop_and_fusion.1, operand 4
+  loop_concatenate_fusion, operand 3
+  loop_dynamic_update_slice_fusion.1, operand 2
+  tuple.101, operand 1
+ from instruction: %arg_tuple.24 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<538 arg_tuple.24{9} (phi) @0>
+ positions:
+  arg_tuple.24 {9}
+  tuple.99 {2}
+  get-tuple-element.770
+ uses:
+  while.150, operand 0 {2}
+ from instruction: %arg_tuple.24 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<539 arg_tuple.24{10} (phi) @0>
+ positions:
+  arg_tuple.24 {10}
+  tuple.99 {3}
+  get-tuple-element.771
+ uses:
+  while.150, operand 0 {3}
+ from instruction: %arg_tuple.24 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<540 arg_tuple.24{11} (phi) @0>
+ positions:
+  arg_tuple.24 {11}
+  while.150 {4}
+  get-tuple-element.636.0
+  tuple.99 {4}
+  get-tuple-element.772
+  arg_tuple.36 {4}
+  arg_tuple.37 {4}
+  get-tuple-element.743
+  tuple.101 {4}
+ uses:
+  wrapped_add.1, operand 0
+  while.150, operand 0 {4}
+  loop_dynamic_update_slice_fusion, operand 4
+  loop_dynamic_update_slice_fusion.1, operand 4
+  tuple.101, operand 4
+ from instruction: %arg_tuple.24 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+<541 while.143{} (phi) @0>
+ positions:
+  while.143 {}
+ uses:
+  get-tuple-element.792, operand 0 {}
+  get-tuple-element.790, operand 0 {}
+  while.36.0, operand 0 {}
+  get-tuple-element.788, operand 0 {}
+  get-tuple-element.787, operand 0 {}
+  get-tuple-element.791, operand 0 {}
+ from instruction: %while.143 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) while(%tuple.102), condition=%region_16.34.clone.sunk.clone.clone.clone, body=%region_6.33.sunk.clone.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+<542 while.143{0} (phi) @0>
+ positions:
+  while.143 {0}
+  get-tuple-element.792
+  tuple.105 {7}
+  get-tuple-element.801
+  tuple.106 {7}
+ uses:
+  tuple.106, operand 7
+ from instruction: %while.143 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) while(%tuple.102), condition=%region_16.34.clone.sunk.clone.clone.clone, body=%region_6.33.sunk.clone.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+<543 while.143{1} (phi) @0>
+ positions:
+  while.143 {1}
+ uses:
+  (none)
+ from instruction: %while.143 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) while(%tuple.102), condition=%region_16.34.clone.sunk.clone.clone.clone, body=%region_6.33.sunk.clone.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+<544 while.143{2} (phi) @0>
+ positions:
+  while.143 {2}
+  while.36.0
+ uses:
+  loop_select_fusion.5, operand 0
+ from instruction: %while.143 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) while(%tuple.102), condition=%region_16.34.clone.sunk.clone.clone.clone, body=%region_6.33.sunk.clone.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+<545 while.143{3} (phi) @0>
+ positions:
+  while.143 {3}
+ uses:
+  (none)
+ from instruction: %while.143 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) while(%tuple.102), condition=%region_16.34.clone.sunk.clone.clone.clone, body=%region_6.33.sunk.clone.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+<546 while.143{4} (phi) @0>
+ positions:
+  while.143 {4}
+ uses:
+  (none)
+ from instruction: %while.143 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) while(%tuple.102), condition=%region_16.34.clone.sunk.clone.clone.clone, body=%region_6.33.sunk.clone.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+<547 while.143{5} (phi) @0>
+ positions:
+  while.143 {5}
+ uses:
+  (none)
+ from instruction: %while.143 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) while(%tuple.102), condition=%region_16.34.clone.sunk.clone.clone.clone, body=%region_6.33.sunk.clone.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+<548 while.143{6} (phi) @0>
+ positions:
+  while.143 {6}
+  get-tuple-element.790
+  tuple.105 {5}
+  get-tuple-element.799
+  tuple.106 {5}
+ uses:
+  tuple.106, operand 5
+ from instruction: %while.143 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) while(%tuple.102), condition=%region_16.34.clone.sunk.clone.clone.clone, body=%region_6.33.sunk.clone.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+<549 while.143{7} (phi) @0>
+ positions:
+  while.143 {7}
+  get-tuple-element.791
+  tuple.105 {6}
+  get-tuple-element.800
+  tuple.106 {6}
+ uses:
+  tuple.106, operand 6
+ from instruction: %while.143 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) while(%tuple.102), condition=%region_16.34.clone.sunk.clone.clone.clone, body=%region_6.33.sunk.clone.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+<550 while.143{8} (phi) @0>
+ positions:
+  while.143 {8}
+ uses:
+  (none)
+ from instruction: %while.143 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) while(%tuple.102), condition=%region_16.34.clone.sunk.clone.clone.clone, body=%region_6.33.sunk.clone.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+<551 while.143{9} (phi) @0>
+ positions:
+  while.143 {9}
+  get-tuple-element.787
+  tuple.105 {2}
+  get-tuple-element.796
+  tuple.106 {2}
+ uses:
+  tuple.106, operand 2
+ from instruction: %while.143 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) while(%tuple.102), condition=%region_16.34.clone.sunk.clone.clone.clone, body=%region_6.33.sunk.clone.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+<552 while.143{10} (phi) @0>
+ positions:
+  while.143 {10}
+  get-tuple-element.788
+  tuple.105 {3}
+  get-tuple-element.797
+  tuple.106 {3}
+ uses:
+  tuple.106, operand 3
+ from instruction: %while.143 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) while(%tuple.102), condition=%region_16.34.clone.sunk.clone.clone.clone, body=%region_6.33.sunk.clone.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+<553 while.143{11} (phi) @0>
+ positions:
+  while.143 {11}
+ uses:
+  (none)
+ from instruction: %while.143 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) while(%tuple.102), condition=%region_16.34.clone.sunk.clone.clone.clone, body=%region_6.33.sunk.clone.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}

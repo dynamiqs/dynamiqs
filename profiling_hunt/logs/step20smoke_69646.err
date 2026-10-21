@@ -1,0 +1,10 @@
+E0923 10:30:17.569856 2503285 numa_hwloc.cc:121] Call to hwloc_set_cpubind() failed: Invalid argument [22]
+WALL 11.50 s
+E0923 10:30:28.058659 2503528 numa_hwloc.cc:121] Call to hwloc_set_cpubind() failed: Invalid argument [22]
+WALL 10.69 s
+E0923 10:30:38.754633 2503782 numa_hwloc.cc:121] Call to hwloc_set_cpubind() failed: Invalid argument [22]
+WALL 10.40 s
+E0923 10:30:49.170595 2504030 numa_hwloc.cc:121] Call to hwloc_set_cpubind() failed: Invalid argument [22]
+WALL 12.98 s
+E0923 10:31:02.148126 2504303 numa_hwloc.cc:121] Call to hwloc_set_cpubind() failed: Invalid argument [22]
+WALL 12.98 s

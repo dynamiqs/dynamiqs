@@ -1,0 +1,17 @@
+# job 69447 higgs GPU=0 2026-09-14T10:35:04+02:00
+
+=== baseline ===
+### baseline  N=1000 ntsave=20  peak=1,008,097,792 B = 0.93886 GiB = 63.0061 R  finite=True
+### baseline  N=1000 ntsave=50  peak=2,448,098,816 B = 2.27997 GiB = 153.0062 R  finite=True
+### baseline  N=1000 ntsave=100  peak=4,848,100,864 B = 4.51515 GiB = 303.0063 R  finite=True
+### baseline  N=1000 ntsave=200  peak=9,648,103,936 B = 8.98550 GiB = 603.0065 R  finite=True
+### baseline  N=1000 ntsave=400  peak=19,248,110,080 B = 17.92620 GiB = 1203.0069 R  finite=True
+
+=== patched ===
+### patched  N=1000 ntsave=20  peak=761,096,448 B = 0.70883 GiB = 47.5685 R  finite=True
+### patched  N=1000 ntsave=50  peak=1,721,097,472 B = 1.60290 GiB = 107.5686 R  finite=True
+### patched  N=1000 ntsave=100  peak=3,321,099,520 B = 3.09301 GiB = 207.5687 R  finite=True
+### patched  N=1000 ntsave=200  peak=6,521,102,592 B = 6.07325 GiB = 407.5689 R  finite=True
+### patched  N=1000 ntsave=400  peak=12,921,108,736 B = 12.03372 GiB = 807.5693 R  finite=True
+
+### STEP 16 COMPLETE  json=/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/data/step16_69447.jsonl ###

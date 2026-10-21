@@ -1,0 +1,16 @@
+
+Total bytes used: 1040 (1.0KiB)
+
+Used values:
+<2 args_0_.1 @0>
+ positions:
+  args_0_.1
+ uses:
+  wrapped_broadcast, operand 0
+ from instruction: %args_0_.1 = c128[] parameter(0), metadata={op_name="args[0]"}
+<3 wrapped_broadcast @0>
+ positions:
+  wrapped_broadcast
+ uses:
+  (none)
+ from instruction: %wrapped_broadcast = c128[64]{0} fusion(%args_0_.1), kind=kLoop, calls=%wrapped_broadcast_computation, metadata={op_name="jit(broadcast_in_dim)/broadcast_in_dim" stack_frame_id=5}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}

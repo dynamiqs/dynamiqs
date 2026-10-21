@@ -1,0 +1,28 @@
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_add_fusion"
+    thunk_id: 1
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_slice_fusion"
+    thunk_id: 2
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_maximum_multiply_fusion"
+    thunk_id: 3
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_multiply_fusion"
+    thunk_id: 4
+  }
+  thunk_kind: "kCustomKernel"
+}

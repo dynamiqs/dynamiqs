@@ -1,0 +1,149 @@
+STEP 20 analysis   files: data/step20_69647_*.jsonl data/step20c*_*.jsonl
+records: 370   ok: 370   OOM/ERR: 0
+
+FLOOR  N=16 control peaks: ['50,339,840', '50,339,840', '50,405,376']
+       K used = 50,405,376 B = 48.070 MiB   (Step 6: 50,404,608 B)
+
+================================================================================================
+STUDY A - save_states=True, no exp_ops, Tsit5
+================================================================================================
+cells ok: 25   kept above 2·K: 25   dropped by floor: 0
+resident trajectory / (ntsave·R): min 1.000000  max 1.000000
+
+A full   peak = a·R·ntsave + b·R + c + d·ntsave   n=25   R^2 = 1.0000000   max|resid| = 0.005 MiB   max|rel resid| = 0.002%
+    R·ntsave         =      3.00000 R    contribution =  99.5021% of span
+    R                =      3.00190 R    contribution =   0.4978% of span
+    const            =       0.0437 MiB    contribution =   0.0000% of span
+    ntsave           =       0.0000 MiB    contribution =   0.0000% of span
+
+A law    (terms >= 0.05% of span)   n=25   R^2 = 1.0000000   max|resid| = 0.037 MiB   max|rel resid| = 0.013%
+    R·ntsave         =      3.00000 R    contribution =  99.5022% of span
+    R                =      3.00363 R    contribution =   0.4981% of span
+
+Step 6 formula 3R(ntsave+1), NO free parameter:  R^2 = 1.0000000  max|rel err| = 0.019%
+
+per-N fits  peak = slope·ntsave + intercept   (in units of that N's R)
+    N=  512  slope = 3.00001 R/saved state   intercept = 3.0116 R   R^2 = 1.0000000
+    N=  768  slope = 3.00000 R/saved state   intercept = 3.0070 R   R^2 = 1.0000000
+    N= 1024  slope = 3.00000 R/saved state   intercept = 3.0049 R   R^2 = 1.0000000
+    N= 1280  slope = 3.00000 R/saved state   intercept = 3.0037 R   R^2 = 1.0000000
+    N= 1536  slope = 3.00000 R/saved state   intercept = 3.0030 R   R^2 = 1.0000000
+
+per-ntsave power law  peak ∝ N^p
+    ntsave=  20  p = 1.99987   R^2(log) = 1.0000000
+    ntsave=  60  p = 1.99996   R^2(log) = 1.0000000
+    ntsave= 100  p = 1.99997   R^2(log) = 1.0000000
+    ntsave= 140  p = 1.99998   R^2(log) = 1.0000000
+    ntsave= 180  p = 1.99998   R^2(log) = 1.0000000
+
+figure -> /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/../data/step20_A_save_states.png
+
+================================================================================================
+STUDY B - save_states=False, with exp_ops (quadratures), Tsit5
+================================================================================================
+cells ok: 275   kept above 2·K: 275   dropped by floor: 0
+
+BASELINE n_obs=0 (Step 6 law: (7.07 + S)·R = 14.07 R)
+    N= 1024  peak/R = 14.0674   spread over ntsave = 0.00031 R   regime = lo
+    N= 1536  peak/R = 14.0655   spread over ntsave = 0.00014 R   regime = lo
+    N= 2048  peak/R = 14.0647   spread over ntsave = 0.00008 R   regime = lo
+    N= 2560  peak/R = 16.0025   spread over ntsave = 0.00005 R   regime = hi
+    N= 3072  peak/R = 16.0021   spread over ntsave = 0.00003 R   regime = hi
+
+--- layout = dense  (n_obs=0 cells shared as the baseline) ---
+observable storage per op: 1.00000 R = 32768.00 B·N
+
+B[dense] full   9 terms   n=150   R^2 = 1.0000000   max|resid| = 0.084 MiB   max|rel resid| = 0.008%
+    R·[lo]           =     14.06360 R    contribution =  13.4564% of span
+    R·[hi]           =     16.00164 R    contribution =  34.4493% of span
+    R·[n_E>0]·[lo]   =      0.49976 R    contribution =   0.4782% of span
+    R·[n_E>0]·[hi]   =     -0.00014 R    contribution =  -0.0003% of span
+    R·n_E            =      1.99994 R    contribution =  68.8897% of span
+    N·n_E            =       35.045 B    contribution =   0.0246% of span
+    R·n_ts           =      0.00000 R    contribution =   0.0001% of span
+    R·n_E·n_ts       =      0.00000 R    contribution =   0.0011% of span
+    const            =       0.0669 MiB    contribution =   0.0000% of span
+
+B[dense] LAW    (terms >= 0.05% of span)   n=150   R^2 = 1.0000000   max|resid| = 0.360 MiB   max|rel resid| = 0.048%
+    R·[lo]           =     14.06501 R    contribution =  13.4578% of span
+    R·[hi]           =     16.00181 R    contribution =  34.4497% of span
+    R·[n_E>0]·[lo]   =      0.50215 R    contribution =   0.4805% of span
+    R·n_E            =      2.00078 R    contribution =  68.9183% of span
+
+B[dense] TRANSIENT law  (peak − bytes resident before the solve)   n=150   R^2 = 1.0000000   max|resid| = 0.331 MiB   max|rel resid| = 0.070%
+    R·[lo]           =     13.06280 R    contribution =  19.6403% of span
+    R·[hi]           =     15.00041 R    contribution =  50.7456% of span
+    R·[n_E>0]·[lo]   =      0.50215 R    contribution =   0.7550% of span
+    R·n_E            =      1.00078 R    contribution =  54.1691% of span
+
+B[dense] per-N marginal cost, Δ = peak(n_obs) − peak(0) at equal (N, ntsave):
+    N= 1024  per observable = 2.00212 R (32802.67 B·N)   switch-on = +0.4997 R   R^2 = 1.000000
+    N= 1536  per observable = 2.00138 R (49185.95 B·N)   switch-on = +0.4998 R   R^2 = 1.000000
+    N= 2048  per observable = 2.00102 R (65569.50 B·N)   switch-on = +0.4998 R   R^2 = 1.000000
+    N= 2560  per observable = 2.00081 R (81953.28 B·N)   switch-on = -0.0001 R   R^2 = 1.000000
+    N= 3072  per observable = 2.00068 R (98337.35 B·N)   switch-on = -0.0002 R   R^2 = 1.000000
+
+--- layout = dia  (n_obs=0 cells shared as the baseline) ---
+observable storage per op: 0.00113 R = 32.00 B·N
+
+B[dia] full   9 terms   n=150   R^2 = 1.0000000   max|resid| = 0.031 MiB   max|rel resid| = 0.012%
+    R·[lo]           =     14.06356 R    contribution =  43.2564% of span
+    R·[hi]           =     16.00163 R    contribution = 110.7393% of span
+    R·[n_E>0]·[lo]   =      0.49999 R    contribution =   1.5379% of span
+    R·[n_E>0]·[hi]   =      0.00001 R    contribution =   0.0001% of span
+    R·n_E            =     -0.00006 R    contribution =  -0.0069% of span
+    N·n_E            =       34.605 B    contribution =   0.0780% of span
+    R·n_ts           =      0.00000 R    contribution =   0.0003% of span
+    R·n_E·n_ts       =      0.00000 R    contribution =   0.0043% of span
+    const            =       0.0694 MiB    contribution =   0.0000% of span
+
+B[dia] LAW    (terms >= 0.05% of span)   n=150   R^2 = 1.0000000   max|resid| = 0.068 MiB   max|rel resid| = 0.029%
+    R·[lo]           =     14.06501 R    contribution =  43.2608% of span
+    R·[hi]           =     16.00216 R    contribution = 110.7429% of span
+    R·[n_E>0]·[lo]   =      0.50002 R    contribution =   1.5380% of span
+    N·n_E            =       33.288 B    contribution =   0.0750% of span
+
+B[dia] TRANSIENT law  (peak − bytes resident before the solve)   n=150   R^2 = 1.0000000   max|resid| = 0.085 MiB   max|rel resid| = 0.025%
+    R·[lo]           =     13.06280 R    contribution =  42.8475% of span
+    R·[hi]           =     15.00090 R    contribution = 110.7107% of span
+    R·[n_E>0]·[lo]   =      0.50029 R    contribution =   1.6410% of span
+
+B[dia] per-N marginal cost, Δ = peak(n_obs) − peak(0) at equal (N, ntsave):
+    N= 1024  per observable = 0.00205 R (   33.61 B·N)   switch-on = +0.5003 R   R^2 = 0.997757
+    N= 1536  per observable = 0.00135 R (   33.29 B·N)   switch-on = +0.5000 R   R^2 = 0.998948
+    N= 2048  per observable = 0.00101 R (   33.26 B·N)   switch-on = +0.5000 R   R^2 = 0.999008
+    N= 2560  per observable = 0.00080 R (   32.91 B·N)   switch-on = +0.0000 R   R^2 = 0.999196
+    N= 3072  per observable = 0.00067 R (   32.70 B·N)   switch-on = +0.0000 R   R^2 = 0.999624
+
+================================================================================================
+STUDY C - boundary scan of the save_states=False working set (ntsave=20)
+================================================================================================
+    N= 1792  R=   49.00 MiB     0none:  14.0650 R    1dense:  16.5656 R      1dia:  14.5662 R
+    N= 1920  R=   56.25 MiB     0none:  14.0648 R    1dense:  16.5654 R      1dia:  14.5659 R
+    N= 2048  R=   64.00 MiB     0none:  14.0647 R    1dense:  16.5652 R      1dia:  14.5657 R
+    N= 2112  R=   68.06 MiB     0none:  14.0646 R    1dense:  16.5651 R      1dia:  14.5656 R
+    N= 2176  R=   72.25 MiB     0none:  14.0645 R      1dia:  14.5655 R
+    N= 2240  R=   76.56 MiB     0none:  14.0649 R    1dense:  16.5649 R      1dia:  14.5654 R
+    N= 2304  R=   81.00 MiB     0none:  14.0644 R    1dense:  16.5649 R      1dia:  14.5653 R
+    N= 2368  R=   85.56 MiB     0none:  14.0643 R    1dense:  16.5648 R      1dia:  14.5652 R
+    N= 2432  R=   90.25 MiB     0none:  14.0643 R    1dense:  16.5647 R      1dia:  14.5651 R
+    N= 2496  R=   95.06 MiB     0none:  14.0642 R    1dense:  16.5647 R      1dia:  14.5651 R
+    N= 2512  R=   96.29 MiB     0none:  16.0025 R    1dense:  18.0030 R      1dia:  16.0034 R
+    N= 2528  R=   97.52 MiB     0none:  16.0025 R    1dense:  18.0029 R      1dia:  16.0033 R
+    N= 2544  R=   98.75 MiB     0none:  16.0025 R    1dense:  18.0029 R      1dia:  16.0033 R
+    N= 2560  R=  100.00 MiB     0none:  16.0025 R    1dense:  18.0029 R      1dia:  16.0033 R
+    N= 2816  R=  121.00 MiB     0none:  16.0022 R    1dense:  18.0026 R      1dia:  16.0030 R
+    N= 3136  R=  150.06 MiB     0none:  16.0020 R      1dia:  16.0027 R
+    N= 3200  R=  156.25 MiB     0none:  16.0020 R      1dia:  16.0026 R
+    N= 3264  R=  162.56 MiB     0none:  16.0019 R      1dia:  16.0025 R
+    N= 3328  R=  169.00 MiB     0none:  16.0019 R      1dia:  16.0025 R
+    N= 3392  R=  175.56 MiB     0none:  16.0018 R      1dia:  16.0024 R
+    N= 3456  R=  182.25 MiB     0none:  16.0018 R      1dia:  16.0027 R
+    N= 3520  R=  189.06 MiB     0none:  16.0018 R      1dia:  16.0024 R
+    N= 3584  R=  196.00 MiB     0none:  14.0637 R    1dense:  16.5637 R      1dia:  14.5643 R
+    N= 4096  R=  256.00 MiB     0none:  14.0635 R    1dense:  16.5635 R      1dia:  14.5640 R
+    N= 5120  R=  400.00 MiB     0none:  14.0633 R    1dense:  16.5633 R      1dia:  14.5637 R
+
+figure -> /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/../data/step20_B_observables.png
+
+figure -> /srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/../data/step20_regimes.png

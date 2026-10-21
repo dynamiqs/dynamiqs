@@ -1,0 +1,16 @@
+#loc1 = loc("a")
+module @jit__squeeze attributes {mhlo.num_partitions = 1 : i32, mhlo.num_replicas = 1 : i32} {
+  func.func public @main(%arg0: tensor<1xi64> loc("a")) -> (tensor<1xi64> {jax.result_info = "result"}) {
+    return %arg0 : tensor<1xi64> loc(#loc10)
+  } loc(#loc)
+} loc(#loc)
+#loc = loc(unknown)
+#loc2 = loc("/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/states.py":133:11 to :35)
+#loc3 = loc("/srv/data/users/nlepage/new_dynamiqs/dynamiqs/dynamiqs/utils/states.py":189:11 to :28)
+#loc4 = loc("/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step11_dump.py":79:7 to :23)
+#loc5 = loc("fock"(#loc2))
+#loc6 = loc("fock_dm"(#loc3))
+#loc7 = loc("<module>"(#loc4))
+#loc8 = loc(callsite(#loc6 at #loc7))
+#loc9 = loc(callsite(#loc5 at #loc8))
+#loc10 = loc("jit(_squeeze)"(#loc9))

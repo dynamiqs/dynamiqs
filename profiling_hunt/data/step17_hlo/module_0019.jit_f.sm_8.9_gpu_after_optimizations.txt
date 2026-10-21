@@ -1,0 +1,1983 @@
+HloModule jit_f, is_scheduled=true, entry_computation_layout={(c128[64,64]{1,0})->(f64[], f64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/s64[], s64[], s64[], s32[])}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true,true,true,true,true,true,true,true,true}, frontend_attributes={fingerprint_before_lhs="dc923a4924a651a8541a0536fc8f2ab7",xla.sdy.meshes={maximal_mesh_0 = #sdy.mesh<[], device_ids=[0]>}}
+
+FileNames
+1 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_jit.py"
+2 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_errors.py"
+3 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_unvmap.py"
+4 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_ad.py"
+5 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/diffrax/_integrate.py"
+6 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_module/_prebuilt.py"
+7 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/diffrax/_adjoint.py"
+8 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/internal/_loop/loop.py"
+9 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/internal/_loop/checkpointed.py"
+10 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_make_jaxpr.py"
+11 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/internal/_loop/common.py"
+12 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/diffrax/_solver/runge_kutta.py"
+13 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/diffrax/_solver/base.py"
+14 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/diffrax/_term.py"
+15 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/profiling_hunt/scripts/step17_dump_bare.py"
+16 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/diffrax/_misc.py"
+17 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/diffrax/_step_size_controller/pid.py"
+18 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/diffrax/_solver/tsit5.py"
+19 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/internal/_omega.py"
+20 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/optimistix/_misc.py"
+21 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/lineax/_norm.py"
+22 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/internal/_nextafter.py"
+23 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_tree.py"
+24 "/srv/data/users/nlepage/new_dynamiqs/dynamiqs/.venv/lib/python3.11/site-packages/equinox/_enum.py"
+
+FunctionNames
+1 "_filter_jit_cache.<locals>.fun_wrapped"
+2 "branched_error_if_impl"
+3 "unvmap_any"
+4 "filter_custom_jvp.__call__"
+5 "filter_custom_jvp.__init__.<locals>.fn_wrapper"
+6 "_error"
+7 "_error.<locals>.handle_error"
+8 "diffeqsolve"
+9 "BoundMethod.__call__"
+10 "RecursiveCheckpointAdjoint.loop"
+11 "loop"
+12 "while_loop"
+13 "checkpointed_while_loop"
+14 "filter_custom_vjp.__call__"
+15 "filter_custom_vjp._defvjp.<locals>.fn_wrapped"
+16 "_checkpointed_while_loop"
+17 "_MakeJaxpr.__call__.<locals>._fn"
+18 "common_rewrite.<locals>.new_body_fun"
+19 "loop.<locals>.body_fun"
+20 "loop.<locals>.body_fun_aux"
+21 "AbstractRungeKutta.step"
+22 "AbstractRungeKutta.step.<locals>.rk_stage"
+23 "AbstractRungeKutta.step.<locals>.t_map"
+24 "AbstractRungeKutta.step.<locals>.t_map.<locals>._fn"
+25 "AbstractRungeKutta.step.<locals>.rk_stage.<locals>.<lambda>"
+26 "AbstractRungeKutta.step.<locals>.cond_stage"
+27 "vector_tree_dot"
+28 "vector_tree_dot.<locals>.<lambda>"
+29 "AbstractRungeKutta.step.<locals>.y_map"
+30 "AbstractRungeKutta.step.<locals>.y_map.<locals>._fn"
+31 "_sum"
+32 "AbstractRungeKutta.step.<locals>.vf"
+33 "AbstractRungeKutta.step.<locals>.vf.<locals>.<lambda>"
+34 "WrapTerm.vf"
+35 "ODETerm.vf"
+36 "<lambda>"
+37 "AbstractRungeKutta.step.<locals>.ty_map"
+38 "AbstractRungeKutta.step.<locals>.ty_map.<locals>.<lambda>"
+39 "_BufferItem.set"
+40 "_Buffer._op"
+41 "_maybe_set"
+42 "AbstractRungeKutta.step.<locals>.prod"
+43 "AbstractRungeKutta.step.<locals>.prod.<locals>.<lambda>"
+44 "WrapTerm.prod"
+45 "ODETerm.prod"
+46 "ODETerm.prod.<locals>._mul"
+47 "upcast_or_raise"
+48 "common_rewrite.<locals>.new_cond_fun"
+49 "PIDController.adapt_step_size"
+50 "PIDController.adapt_step_size.<locals>._scale"
+51 "loop.<locals>.body_fun_aux.<locals>.save_ts"
+52 "loop.<locals>.body_fun_aux.<locals>.save_ts_impl"
+53 "loop.<locals>.body_fun_aux.<locals>.save_ts_impl.<locals>._body_fun"
+54 "loop.<locals>.body_fun_aux.<locals>.save_ts_impl.<locals>._cond_fun"
+55 "loop.<locals>.body_fun_aux.<locals>.save_ts_impl.<locals>._body_fun.<locals>.<lambda>"
+56 "_Tsit5Interpolation.evaluate"
+57 "linear_rescale"
+58 "_set_binary.<locals>.fn"
+59 "AbstractRungeKutta._common"
+60 "WrapTerm.is_vf_expensive"
+61 "common_rewrite"
+62 "AbstractRungeKutta.step.<locals>.<lambda>"
+63 "WrapTerm.contr"
+64 "_set_binary.<locals>.fn.<locals>.<lambda>"
+65 "_rev.<locals>.__rev"
+66 "ODETerm.contr"
+67 "loop.<locals>.body_fun_aux.<locals>.<lambda>"
+68 "_wrap.<locals>.wrapped_fn"
+69 "rms_norm"
+70 "two_norm"
+71 "_two_norm"
+72 "sum_squares"
+73 "tree_dot"
+74 "loop.<locals>.cond_fun"
+75 "_clip_to_end"
+76 "loop.<locals>.<lambda>"
+77 "loop.<locals>.<lambda>.<locals>.<lambda>"
+78 "loop.<locals>._save_if_t0_equals_t1"
+79 "_save"
+80 "_save.<locals>.<lambda>"
+81 "PIDController.init"
+82 "AbstractRungeKutta.init"
+83 "AbstractRungeKutta.init.<locals>.<lambda>"
+84 "diffeqsolve.<locals>._allocate_output"
+85 "diffeqsolve.<locals>._allocate_output.<locals>.<lambda>"
+86 "prevbefore"
+87 "tree_at"
+88 "tree_at.<locals>._make_replacement"
+89 "tree_at.<locals>._replace_fn"
+90 "diffeqsolve.<locals>.<lambda>"
+91 "diffeqsolve.<locals>._check_subsaveat_ts"
+92 "error_if"
+93 "branched_error_if"
+94 "_JitWrapper.__call__"
+95 "_call"
+96 "Enumeration.where"
+97 "<module>"
+98 "f"
+
+FileLocations
+1 {file_name_id=1 function_name_id=1 line=55 end_line=55 column=14 end_column=34}
+2 {file_name_id=2 function_name_id=2 line=293 end_line=293 column=19 end_column=35}
+3 {file_name_id=3 function_name_id=3 line=50 end_line=50 column=23 end_column=43}
+4 {file_name_id=2 function_name_id=2 line=342 end_line=344 column=16 end_column=5}
+5 {file_name_id=4 function_name_id=4 line=822 end_line=822 column=15 end_column=39}
+6 {file_name_id=4 function_name_id=5 line=779 end_line=779 column=19 end_column=38}
+7 {file_name_id=2 function_name_id=6 line=118 end_line=118 column=15 end_column=54}
+8 {file_name_id=2 function_name_id=7 line=111 end_line=111 column=18 end_column=58}
+9 {file_name_id=2 function_name_id=7 line=115 end_line=115 column=19 end_column=65}
+10 {file_name_id=5 function_name_id=8 line=1456 end_line=1472 column=29 end_column=5}
+11 {file_name_id=6 function_name_id=9 line=46 end_line=46 column=15 end_column=60}
+12 {file_name_id=7 function_name_id=10 line=299 end_line=307 column=22 end_column=9}
+13 {file_name_id=5 function_name_id=11 line=685 end_line=687 column=18 end_column=5}
+14 {file_name_id=8 function_name_id=12 line=107 end_line=114 column=15 end_column=9}
+15 {file_name_id=9 function_name_id=13 line=249 end_line=251 column=17 end_column=5}
+16 {file_name_id=4 function_name_id=14 line=1107 end_line=1113 column=14 end_column=9}
+17 {file_name_id=4 function_name_id=15 line=1012 end_line=1012 column=18 end_column=51}
+18 {file_name_id=9 function_name_id=16 line=271 end_line=271 column=11 end_column=77}
+19 {file_name_id=10 function_name_id=17 line=39 end_line=39 column=19 end_column=45}
+20 {file_name_id=11 function_name_id=18 line=511 end_line=511 column=22 end_column=42}
+21 {file_name_id=5 function_name_id=19 line=682 end_line=682 column=26 end_column=45}
+22 {file_name_id=5 function_name_id=20 line=373 end_line=381 column=64 end_column=9}
+23 {file_name_id=12 function_name_id=21 line=1151 end_line=1160 column=20 end_column=9}
+24 {file_name_id=12 function_name_id=22 line=856 end_line=856 column=18 end_column=65}
+25 {file_name_id=12 function_name_id=23 line=606 end_line=606 column=19 end_column=54}
+26 {file_name_id=12 function_name_id=24 line=604 end_line=604 column=27 end_column=38}
+27 {file_name_id=12 function_name_id=25 line=856 end_line=856 column=36 end_column=52}
+28 {file_name_id=12 function_name_id=22 line=1023 end_line=1023 column=17 end_column=82}
+29 {file_name_id=12 function_name_id=25 line=1023 end_line=1023 column=46 end_column=55}
+30 {file_name_id=12 function_name_id=25 line=1023 end_line=1023 column=66 end_column=75}
+31 {file_name_id=12 function_name_id=25 line=1023 end_line=1023 column=61 end_column=75}
+32 {file_name_id=12 function_name_id=25 line=1023 end_line=1023 column=36 end_column=76}
+33 {file_name_id=11 function_name_id=18 line=543 end_line=543 column=16 end_column=24}
+34 {file_name_id=12 function_name_id=22 line=1061 end_line=1061 column=16 end_column=31}
+35 {file_name_id=11 function_name_id=18 line=544 end_line=544 column=23 end_column=44}
+36 {file_name_id=12 function_name_id=26 line=845 end_line=845 column=19 end_column=43}
+37 {file_name_id=11 function_name_id=18 line=544 end_line=544 column=16 end_column=44}
+38 {file_name_id=12 function_name_id=22 line=855 end_line=855 column=24 end_column=77}
+39 {file_name_id=12 function_name_id=25 line=855 end_line=855 column=42 end_column=58}
+40 {file_name_id=12 function_name_id=22 line=870 end_line=870 column=28 end_column=72}
+41 {file_name_id=13 function_name_id=27 line=38 end_line=41 column=11 end_column=5}
+42 {file_name_id=13 function_name_id=28 line=39 end_line=39 column=19 end_column=80}
+43 {file_name_id=12 function_name_id=22 line=871 end_line=871 column=25 end_column=62}
+44 {file_name_id=12 function_name_id=29 line=613 end_line=613 column=19 end_column=48}
+45 {file_name_id=12 function_name_id=30 line=611 end_line=611 column=23 end_column=34}
+46 {file_name_id=12 function_name_id=31 line=304 end_line=304 column=16 end_column=26}
+47 {file_name_id=12 function_name_id=22 line=1027 end_line=1027 column=21 end_column=57}
+48 {file_name_id=12 function_name_id=32 line=653 end_line=653 column=18 end_column=65}
+49 {file_name_id=12 function_name_id=33 line=652 end_line=652 column=38 end_column=61}
+50 {file_name_id=14 function_name_id=34 line=740 end_line=740 column=15 end_column=39}
+51 {file_name_id=14 function_name_id=35 line=194 end_line=194 column=14 end_column=43}
+52 {file_name_id=15 function_name_id=36 line=26 end_line=26 column=37 end_column=42}
+53 {file_name_id=12 function_name_id=22 line=1052 end_line=1052 column=21 end_column=76}
+54 {file_name_id=12 function_name_id=37 line=627 end_line=627 column=19 end_column=68}
+55 {file_name_id=12 function_name_id=38 line=627 end_line=627 column=41 end_column=59}
+56 {file_name_id=12 function_name_id=25 line=1052 end_line=1052 column=42 end_column=67}
+57 {file_name_id=11 function_name_id=39 line=383 end_line=385 column=15 end_column=9}
+58 {file_name_id=11 function_name_id=40 line=338 end_line=345 column=20 end_column=13}
+59 {file_name_id=11 function_name_id=41 line=288 end_line=297 column=12 end_column=5}
+60 {file_name_id=12 function_name_id=22 line=1031 end_line=1031 column=25 end_column=33}
+61 {file_name_id=12 function_name_id=42 line=669 end_line=669 column=18 end_column=49}
+62 {file_name_id=12 function_name_id=43 line=668 end_line=668 column=51 end_column=78}
+63 {file_name_id=14 function_name_id=44 line=749 end_line=749 column=19 end_column=46}
+64 {file_name_id=14 function_name_id=45 line=226 end_line=226 column=15 end_column=37}
+65 {file_name_id=14 function_name_id=46 line=218 end_line=223 column=16 end_column=13}
+66 {file_name_id=16 function_name_id=47 line=191 end_line=191 column=11 end_column=39}
+67 {file_name_id=14 function_name_id=46 line=224 end_line=224 column=19 end_column=24}
+68 {file_name_id=11 function_name_id=48 line=475 end_line=475 column=25 end_column=45}
+69 {file_name_id=11 function_name_id=48 line=479 end_line=479 column=25 end_column=41}
+70 {file_name_id=11 function_name_id=48 line=479 end_line=479 column=18 end_column=42}
+71 {file_name_id=5 function_name_id=20 line=396 end_line=405 column=12 end_column=9}
+72 {file_name_id=17 function_name_id=49 line=492 end_line=492 column=33 end_column=80}
+73 {file_name_id=17 function_name_id=50 line=486 end_line=486 column=19 end_column=43}
+74 {file_name_id=5 function_name_id=20 line=489 end_line=491 column=21 end_column=9}
+75 {file_name_id=5 function_name_id=51 line=453 end_line=453 column=29 end_column=81}
+76 {file_name_id=5 function_name_id=52 line=480 end_line=487 column=19 end_column=13}
+77 {file_name_id=5 function_name_id=53 line=474 end_line=474 column=36 end_column=67}
+78 {file_name_id=5 function_name_id=54 line=460 end_line=460 column=23 end_column=54}
+79 {file_name_id=5 function_name_id=54 line=459 end_line=460 column=20 end_column=70}
+80 {file_name_id=5 function_name_id=54 line=461 end_line=461 column=23 end_column=60}
+81 {file_name_id=5 function_name_id=53 line=467 end_line=467 column=22 end_column=71}
+82 {file_name_id=11 function_name_id=40 line=336 end_line=336 column=20 end_column=81}
+83 {file_name_id=5 function_name_id=53 line=465 end_line=465 column=21 end_column=52}
+84 {file_name_id=5 function_name_id=53 line=468 end_line=472 column=22 end_column=17}
+85 {file_name_id=5 function_name_id=55 line=469 end_line=469 column=38 end_column=78}
+86 {file_name_id=5 function_name_id=53 line=466 end_line=466 column=21 end_column=46}
+87 {file_name_id=18 function_name_id=56 line=123 end_line=123 column=12 end_column=48}
+88 {file_name_id=16 function_name_id=57 line=84 end_line=84 column=11 end_column=19}
+89 {file_name_id=16 function_name_id=57 line=85 end_line=85 column=47 end_column=53}
+90 {file_name_id=16 function_name_id=57 line=85 end_line=85 column=28 end_column=54}
+91 {file_name_id=16 function_name_id=57 line=86 end_line=86 column=49 end_column=56}
+92 {file_name_id=16 function_name_id=57 line=86 end_line=86 column=30 end_column=57}
+93 {file_name_id=16 function_name_id=57 line=87 end_line=87 column=11 end_column=34}
+94 {file_name_id=18 function_name_id=56 line=127 end_line=128 column=12 end_column=15}
+95 {file_name_id=18 function_name_id=56 line=129 end_line=129 column=15 end_column=37}
+96 {file_name_id=18 function_name_id=56 line=130 end_line=130 column=15 end_column=19}
+97 {file_name_id=18 function_name_id=56 line=130 end_line=130 column=22 end_column=44}
+98 {file_name_id=18 function_name_id=56 line=155 end_line=155 column=34 end_column=73}
+99 {file_name_id=18 function_name_id=56 line=132 end_line=132 column=22 end_column=26}
+100 {file_name_id=18 function_name_id=56 line=132 end_line=132 column=13 end_column=26}
+101 {file_name_id=18 function_name_id=56 line=132 end_line=132 column=30 end_column=34}
+102 {file_name_id=18 function_name_id=56 line=132 end_line=132 column=37 end_column=59}
+103 {file_name_id=18 function_name_id=56 line=135 end_line=135 column=14 end_column=18}
+104 {file_name_id=18 function_name_id=56 line=134 end_line=135 column=12 end_column=18}
+105 {file_name_id=18 function_name_id=56 line=136 end_line=136 column=15 end_column=19}
+106 {file_name_id=18 function_name_id=56 line=136 end_line=136 column=22 end_column=45}
+107 {file_name_id=18 function_name_id=56 line=140 end_line=140 column=15 end_column=38}
+108 {file_name_id=18 function_name_id=56 line=139 end_line=140 column=12 end_column=39}
+109 {file_name_id=18 function_name_id=56 line=141 end_line=141 column=15 end_column=38}
+110 {file_name_id=18 function_name_id=56 line=142 end_line=142 column=14 end_column=18}
+111 {file_name_id=18 function_name_id=56 line=146 end_line=146 column=15 end_column=39}
+112 {file_name_id=18 function_name_id=56 line=145 end_line=146 column=12 end_column=40}
+113 {file_name_id=18 function_name_id=56 line=147 end_line=147 column=15 end_column=39}
+114 {file_name_id=18 function_name_id=56 line=148 end_line=148 column=14 end_column=18}
+115 {file_name_id=18 function_name_id=56 line=150 end_line=150 column=38 end_column=45}
+116 {file_name_id=18 function_name_id=56 line=150 end_line=150 column=13 end_column=46}
+117 {file_name_id=18 function_name_id=56 line=150 end_line=150 column=50 end_column=74}
+118 {file_name_id=18 function_name_id=56 line=150 end_line=150 column=78 end_column=82}
+119 {file_name_id=18 function_name_id=56 line=151 end_line=151 column=20 end_column=25}
+120 {file_name_id=18 function_name_id=56 line=151 end_line=151 column=13 end_column=26}
+121 {file_name_id=18 function_name_id=56 line=151 end_line=151 column=30 end_column=37}
+122 {file_name_id=18 function_name_id=56 line=151 end_line=151 column=41 end_column=45}
+123 {file_name_id=18 function_name_id=56 line=155 end_line=155 column=18 end_column=82}
+124 {file_name_id=18 function_name_id=56 line=154 end_line=155 column=16 end_column=88}
+125 {file_name_id=19 function_name_id=58 line=100 end_line=100 column=16 end_column=73}
+126 {file_name_id=5 function_name_id=53 line=477 end_line=477 column=31 end_column=57}
+127 {file_name_id=12 function_name_id=21 line=505 end_line=505 column=29 end_column=66}
+128 {file_name_id=12 function_name_id=59 line=395 end_line=395 column=23 end_column=62}
+129 {file_name_id=14 function_name_id=60 line=762 end_line=762 column=24 end_column=43}
+130 {file_name_id=14 function_name_id=60 line=762 end_line=762 column=49 end_column=52}
+131 {file_name_id=14 function_name_id=60 line=762 end_line=762 column=14 end_column=53}
+132 {file_name_id=14 function_name_id=60 line=763 end_line=763 column=24 end_column=43}
+133 {file_name_id=14 function_name_id=60 line=763 end_line=763 column=49 end_column=52}
+134 {file_name_id=14 function_name_id=60 line=763 end_line=763 column=14 end_column=53}
+135 {file_name_id=12 function_name_id=21 line=688 end_line=688 column=31 end_column=64}
+136 {file_name_id=9 function_name_id=13 line=241 end_line=243 column=48 end_column=5}
+137 {file_name_id=11 function_name_id=61 line=549 end_line=549 column=26 end_column=51}
+138 {file_name_id=12 function_name_id=21 line=691 end_line=691 column=17 end_column=78}
+139 {file_name_id=12 function_name_id=62 line=691 end_line=691 column=40 end_column=73}
+140 {file_name_id=12 function_name_id=21 line=644 end_line=644 column=18 end_column=67}
+141 {file_name_id=12 function_name_id=62 line=644 end_line=644 column=39 end_column=59}
+142 {file_name_id=14 function_name_id=63 line=745 end_line=745 column=16 end_column=74}
+143 {file_name_id=19 function_name_id=58 line=105 end_line=105 column=16 end_column=83}
+144 {file_name_id=19 function_name_id=64 line=105 end_line=105 column=39 end_column=51}
+145 {file_name_id=19 function_name_id=65 line=130 end_line=130 column=15 end_column=23}
+146 {file_name_id=14 function_name_id=63 line=744 end_line=744 column=24 end_column=43}
+147 {file_name_id=14 function_name_id=63 line=744 end_line=744 column=49 end_column=52}
+148 {file_name_id=14 function_name_id=63 line=744 end_line=744 column=14 end_column=53}
+149 {file_name_id=14 function_name_id=63 line=743 end_line=743 column=24 end_column=43}
+150 {file_name_id=14 function_name_id=63 line=743 end_line=743 column=49 end_column=52}
+151 {file_name_id=14 function_name_id=63 line=743 end_line=743 column=14 end_column=53}
+152 {file_name_id=14 function_name_id=63 line=745 end_line=745 column=33 end_column=68}
+153 {file_name_id=14 function_name_id=66 line=214 end_line=214 column=15 end_column=22}
+154 {file_name_id=12 function_name_id=21 line=695 end_line=695 column=21 end_column=29}
+155 {file_name_id=12 function_name_id=21 line=771 end_line=771 column=21 end_column=66}
+156 {file_name_id=12 function_name_id=62 line=771 end_line=771 column=42 end_column=57}
+157 {file_name_id=12 function_name_id=21 line=643 end_line=643 column=13 end_column=20}
+158 {file_name_id=5 function_name_id=20 line=416 end_line=416 column=40 end_column=69}
+159 {file_name_id=12 function_name_id=21 line=1186 end_line=1192 column=18 end_column=9}
+160 {file_name_id=12 function_name_id=62 line=1187 end_line=1189 column=27 end_column=13}
+161 {file_name_id=12 function_name_id=21 line=1194 end_line=1197 column=18 end_column=9}
+162 {file_name_id=12 function_name_id=62 line=1195 end_line=1195 column=29 end_column=74}
+163 {file_name_id=5 function_name_id=20 line=386 end_line=386 column=18 end_column=86}
+164 {file_name_id=5 function_name_id=67 line=386 end_line=386 column=51 end_column=63}
+165 {file_name_id=5 function_name_id=67 line=386 end_line=386 column=41 end_column=76}
+166 {file_name_id=17 function_name_id=50 line=488 end_line=488 column=29 end_column=41}
+167 {file_name_id=17 function_name_id=50 line=487 end_line=487 column=28 end_column=63}
+168 {file_name_id=17 function_name_id=50 line=488 end_line=488 column=43 end_column=65}
+169 {file_name_id=17 function_name_id=50 line=488 end_line=488 column=17 end_column=66}
+170 {file_name_id=17 function_name_id=50 line=490 end_line=490 column=47 end_column=61}
+171 {file_name_id=17 function_name_id=50 line=490 end_line=490 column=35 end_column=61}
+172 {file_name_id=17 function_name_id=50 line=490 end_line=490 column=23 end_column=62}
+173 {file_name_id=17 function_name_id=49 line=492 end_line=492 column=23 end_column=81}
+174 {file_name_id=20 function_name_id=68 line=31 end_line=31 column=15 end_column=34}
+175 {file_name_id=21 function_name_id=69 line=120 end_line=120 column=15 end_column=26}
+176 {file_name_id=21 function_name_id=70 line=67 end_line=67 column=11 end_column=23}
+177 {file_name_id=21 function_name_id=71 line=82 end_line=82 column=24 end_column=38}
+178 {file_name_id=21 function_name_id=72 line=56 end_line=56 column=11 end_column=25}
+179 {file_name_id=21 function_name_id=73 line=39 end_line=39 column=16 end_column=31}
+180 {file_name_id=21 function_name_id=73 line=40 end_line=40 column=16 end_column=38}
+181 {file_name_id=21 function_name_id=73 line=38 end_line=42 column=12 end_column=13}
+182 {file_name_id=21 function_name_id=71 line=82 end_line=82 column=15 end_column=39}
+183 {file_name_id=17 function_name_id=49 line=493 end_line=493 column=20 end_column=36}
+184 {file_name_id=17 function_name_id=49 line=557 end_line=557 column=18 end_column=46}
+185 {file_name_id=5 function_name_id=20 line=412 end_line=412 column=16 end_column=38}
+186 {file_name_id=5 function_name_id=74 line=361 end_line=361 column=18 end_column=34}
+187 {file_name_id=5 function_name_id=20 line=423 end_line=423 column=12 end_column=42}
+188 {file_name_id=5 function_name_id=67 line=422 end_line=422 column=28 end_column=54}
+189 {file_name_id=17 function_name_id=49 line=476 end_line=476 column=18 end_column=25}
+190 {file_name_id=17 function_name_id=49 line=498 end_line=498 column=27 end_column=56}
+191 {file_name_id=17 function_name_id=49 line=515 end_line=515 column=48 end_column=72}
+192 {file_name_id=17 function_name_id=49 line=522 end_line=522 column=12 end_column=33}
+193 {file_name_id=17 function_name_id=49 line=520 end_line=520 column=20 end_column=69}
+194 {file_name_id=17 function_name_id=49 line=518 end_line=518 column=20 end_column=59}
+195 {file_name_id=17 function_name_id=49 line=521 end_line=525 column=17 end_column=9}
+196 {file_name_id=17 function_name_id=49 line=531 end_line=531 column=13 end_column=62}
+197 {file_name_id=17 function_name_id=49 line=558 end_line=558 column=18 end_column=30}
+198 {file_name_id=5 function_name_id=20 line=413 end_line=413 column=16 end_column=72}
+199 {file_name_id=5 function_name_id=75 line=282 end_line=282 column=11 end_column=32}
+200 {file_name_id=5 function_name_id=75 line=283 end_line=283 column=52 end_column=62}
+201 {file_name_id=5 function_name_id=75 line=283 end_line=283 column=45 end_column=63}
+202 {file_name_id=5 function_name_id=75 line=283 end_line=283 column=37 end_column=63}
+203 {file_name_id=5 function_name_id=75 line=283 end_line=283 column=12 end_column=64}
+204 {file_name_id=5 function_name_id=75 line=284 end_line=284 column=11 end_column=40}
+205 {file_name_id=5 function_name_id=20 line=424 end_line=424 column=23 end_column=75}
+206 {file_name_id=17 function_name_id=49 line=537 end_line=537 column=16 end_column=37}
+207 {file_name_id=17 function_name_id=49 line=537 end_line=537 column=41 end_column=68}
+208 {file_name_id=17 function_name_id=49 line=537 end_line=537 column=15 end_column=68}
+209 {file_name_id=17 function_name_id=49 line=538 end_line=538 column=27 end_column=63}
+210 {file_name_id=17 function_name_id=49 line=560 end_line=560 column=27 end_column=88}
+211 {file_name_id=17 function_name_id=49 line=561 end_line=563 column=32 end_column=9}
+212 {file_name_id=5 function_name_id=20 line=433 end_line=433 column=20 end_column=39}
+213 {file_name_id=5 function_name_id=20 line=434 end_line=434 column=56 end_column=82}
+214 {file_name_id=5 function_name_id=20 line=434 end_line=434 column=29 end_column=82}
+215 {file_name_id=5 function_name_id=20 line=437 end_line=437 column=56 end_column=82}
+216 {file_name_id=5 function_name_id=20 line=437 end_line=437 column=29 end_column=82}
+217 {file_name_id=5 function_name_id=11 line=833 end_line=845 column=17 end_column=5}
+218 {file_name_id=5 function_name_id=76 line=835 end_line=842 column=29 end_column=9}
+219 {file_name_id=5 function_name_id=77 line=837 end_line=839 column=32 end_column=13}
+220 {file_name_id=5 function_name_id=78 line=825 end_line=827 column=25 end_column=13}
+221 {file_name_id=5 function_name_id=79 line=257 end_line=257 column=16 end_column=83}
+222 {file_name_id=5 function_name_id=79 line=258 end_line=258 column=9 end_column=75}
+223 {file_name_id=5 function_name_id=79 line=264 end_line=270 column=9 end_column=5}
+224 {file_name_id=5 function_name_id=80 line=266 end_line=266 column=17 end_column=58}
+225 {file_name_id=5 function_name_id=80 line=265 end_line=267 column=24 end_column=9}
+226 {file_name_id=5 function_name_id=76 line=836 end_line=836 column=12 end_column=20}
+227 {file_name_id=5 function_name_id=8 line=1157 end_line=1157 column=16 end_column=41}
+228 {file_name_id=5 function_name_id=8 line=1158 end_line=1158 column=9 end_column=23}
+229 {file_name_id=5 function_name_id=8 line=1159 end_line=1159 column=9 end_column=23}
+230 {file_name_id=5 function_name_id=8 line=1254 end_line=1256 column=36 end_column=9}
+231 {file_name_id=17 function_name_id=81 line=380 end_line=380 column=13 end_column=21}
+232 {file_name_id=5 function_name_id=8 line=1265 end_line=1265 column=12 end_column=34}
+233 {file_name_id=5 function_name_id=8 line=1268 end_line=1268 column=23 end_column=62}
+234 {file_name_id=12 function_name_id=82 line=431 end_line=431 column=25 end_column=80}
+235 {file_name_id=12 function_name_id=83 line=431 end_line=431 column=48 end_column=75}
+236 {file_name_id=5 function_name_id=8 line=1305 end_line=1305 column=17 end_column=83}
+237 {file_name_id=5 function_name_id=84 line=1296 end_line=1296 column=32 end_column=51}
+238 {file_name_id=5 function_name_id=84 line=1296 end_line=1296 column=13 end_column=70}
+239 {file_name_id=5 function_name_id=84 line=1298 end_line=1300 column=13 end_column=9}
+240 {file_name_id=5 function_name_id=85 line=1299 end_line=1299 column=22 end_column=77}
+241 {file_name_id=5 function_name_id=11 line=322 end_line=322 column=24 end_column=54}
+242 {file_name_id=22 function_name_id=86 line=29 end_line=29 column=21 end_column=27}
+243 {file_name_id=22 function_name_id=86 line=28 end_line=28 column=8 end_column=34}
+244 {file_name_id=22 function_name_id=86 line=29 end_line=29 column=11 end_column=57}
+245 {file_name_id=5 function_name_id=8 line=1162 end_line=1164 column=13 end_column=5}
+246 {file_name_id=23 function_name_id=87 line=231 end_line=233 column=10 end_column=5}
+247 {file_name_id=23 function_name_id=88 line=229 end_line=229 column=15 end_column=63}
+248 {file_name_id=23 function_name_id=89 line=210 end_line=210 column=23 end_column=36}
+249 {file_name_id=5 function_name_id=90 line=1163 end_line=1163 column=57 end_column=71}
+250 {file_name_id=5 function_name_id=8 line=1235 end_line=1235 column=13 end_column=83}
+251 {file_name_id=5 function_name_id=91 line=1225 end_line=1225 column=12 end_column=18}
+252 {file_name_id=5 function_name_id=91 line=1225 end_line=1225 column=21 end_column=28}
+253 {file_name_id=5 function_name_id=91 line=1223 end_line=1227 column=13 end_column=9}
+254 {file_name_id=2 function_name_id=92 line=250 end_line=250 column=11 end_column=66}
+255 {file_name_id=2 function_name_id=93 line=271 end_line=271 column=15 end_column=82}
+256 {file_name_id=1 function_name_id=94 line=209 end_line=209 column=19 end_column=51}
+257 {file_name_id=1 function_name_id=95 line=263 end_line=265 column=37 end_column=17}
+258 {file_name_id=5 function_name_id=91 line=1230 end_line=1230 column=13 end_column=20}
+259 {file_name_id=5 function_name_id=91 line=1230 end_line=1230 column=25 end_column=32}
+260 {file_name_id=5 function_name_id=91 line=1230 end_line=1230 column=12 end_column=33}
+261 {file_name_id=5 function_name_id=91 line=1228 end_line=1232 column=13 end_column=9}
+262 {file_name_id=5 function_name_id=8 line=1514 end_line=1514 column=9 end_column=23}
+263 {file_name_id=5 function_name_id=8 line=1515 end_line=1515 column=9 end_column=23}
+264 {file_name_id=5 function_name_id=11 line=834 end_line=834 column=24 end_column=32}
+265 {file_name_id=5 function_name_id=8 line=1480 end_line=1482 column=9 end_column=5}
+266 {file_name_id=5 function_name_id=90 line=1481 end_line=1481 column=18 end_column=34}
+267 {file_name_id=5 function_name_id=11 line=883 end_line=883 column=27 end_column=48}
+268 {file_name_id=5 function_name_id=11 line=883 end_line=883 column=13 end_column=84}
+269 {file_name_id=24 function_name_id=96 line=374 end_line=374 column=36 end_column=71}
+270 {file_name_id=15 function_name_id=97 line=39 end_line=39 column=4 end_column=24}
+271 {file_name_id=15 function_name_id=98 line=32 end_line=36 column=11 end_column=5}
+
+StackFrames
+1 {file_location_id=1 parent_frame_id=1}
+2 {file_location_id=2 parent_frame_id=2}
+3 {file_location_id=3 parent_frame_id=3}
+4 {file_location_id=1 parent_frame_id=4}
+5 {file_location_id=2 parent_frame_id=5}
+6 {file_location_id=3 parent_frame_id=6}
+7 {file_location_id=4 parent_frame_id=2}
+8 {file_location_id=5 parent_frame_id=8}
+9 {file_location_id=6 parent_frame_id=9}
+10 {file_location_id=7 parent_frame_id=10}
+11 {file_location_id=8 parent_frame_id=11}
+12 {file_location_id=9 parent_frame_id=11}
+13 {file_location_id=10 parent_frame_id=2}
+14 {file_location_id=11 parent_frame_id=14}
+15 {file_location_id=12 parent_frame_id=15}
+16 {file_location_id=13 parent_frame_id=16}
+17 {file_location_id=14 parent_frame_id=17}
+18 {file_location_id=15 parent_frame_id=18}
+19 {file_location_id=16 parent_frame_id=19}
+20 {file_location_id=17 parent_frame_id=20}
+21 {file_location_id=18 parent_frame_id=21}
+22 {file_location_id=19 parent_frame_id=22}
+23 {file_location_id=20 parent_frame_id=23}
+24 {file_location_id=21 parent_frame_id=24}
+25 {file_location_id=22 parent_frame_id=25}
+26 {file_location_id=11 parent_frame_id=26}
+27 {file_location_id=23 parent_frame_id=27}
+28 {file_location_id=14 parent_frame_id=28}
+29 {file_location_id=15 parent_frame_id=29}
+30 {file_location_id=16 parent_frame_id=30}
+31 {file_location_id=17 parent_frame_id=31}
+32 {file_location_id=18 parent_frame_id=32}
+33 {file_location_id=19 parent_frame_id=33}
+34 {file_location_id=20 parent_frame_id=34}
+35 {file_location_id=24 parent_frame_id=35}
+36 {file_location_id=25 parent_frame_id=36}
+37 {file_location_id=26 parent_frame_id=37}
+38 {file_location_id=27 parent_frame_id=38}
+39 {file_location_id=28 parent_frame_id=35}
+40 {file_location_id=25 parent_frame_id=40}
+41 {file_location_id=26 parent_frame_id=41}
+42 {file_location_id=29 parent_frame_id=42}
+43 {file_location_id=30 parent_frame_id=42}
+44 {file_location_id=31 parent_frame_id=42}
+45 {file_location_id=32 parent_frame_id=42}
+46 {file_location_id=33 parent_frame_id=34}
+47 {file_location_id=34 parent_frame_id=35}
+48 {file_location_id=35 parent_frame_id=34}
+49 {file_location_id=36 parent_frame_id=49}
+50 {file_location_id=37 parent_frame_id=34}
+51 {file_location_id=38 parent_frame_id=35}
+52 {file_location_id=25 parent_frame_id=52}
+53 {file_location_id=26 parent_frame_id=53}
+54 {file_location_id=39 parent_frame_id=54}
+55 {file_location_id=40 parent_frame_id=35}
+56 {file_location_id=25 parent_frame_id=56}
+57 {file_location_id=26 parent_frame_id=57}
+58 {file_location_id=41 parent_frame_id=58}
+59 {file_location_id=42 parent_frame_id=59}
+60 {file_location_id=43 parent_frame_id=35}
+61 {file_location_id=44 parent_frame_id=61}
+62 {file_location_id=45 parent_frame_id=62}
+63 {file_location_id=46 parent_frame_id=63}
+64 {file_location_id=47 parent_frame_id=35}
+65 {file_location_id=48 parent_frame_id=65}
+66 {file_location_id=25 parent_frame_id=66}
+67 {file_location_id=26 parent_frame_id=67}
+68 {file_location_id=49 parent_frame_id=68}
+69 {file_location_id=11 parent_frame_id=69}
+70 {file_location_id=50 parent_frame_id=70}
+71 {file_location_id=11 parent_frame_id=71}
+72 {file_location_id=51 parent_frame_id=72}
+73 {file_location_id=52 parent_frame_id=73}
+74 {file_location_id=53 parent_frame_id=35}
+75 {file_location_id=54 parent_frame_id=75}
+76 {file_location_id=25 parent_frame_id=76}
+77 {file_location_id=26 parent_frame_id=77}
+78 {file_location_id=55 parent_frame_id=78}
+79 {file_location_id=44 parent_frame_id=79}
+80 {file_location_id=45 parent_frame_id=80}
+81 {file_location_id=56 parent_frame_id=81}
+82 {file_location_id=11 parent_frame_id=82}
+83 {file_location_id=57 parent_frame_id=83}
+84 {file_location_id=11 parent_frame_id=84}
+85 {file_location_id=58 parent_frame_id=85}
+86 {file_location_id=59 parent_frame_id=86}
+87 {file_location_id=19 parent_frame_id=87}
+88 {file_location_id=20 parent_frame_id=88}
+89 {file_location_id=53 parent_frame_id=89}
+90 {file_location_id=54 parent_frame_id=90}
+91 {file_location_id=25 parent_frame_id=91}
+92 {file_location_id=26 parent_frame_id=92}
+93 {file_location_id=55 parent_frame_id=93}
+94 {file_location_id=44 parent_frame_id=94}
+95 {file_location_id=45 parent_frame_id=95}
+96 {file_location_id=56 parent_frame_id=96}
+97 {file_location_id=11 parent_frame_id=97}
+98 {file_location_id=57 parent_frame_id=98}
+99 {file_location_id=11 parent_frame_id=99}
+100 {file_location_id=58 parent_frame_id=100}
+101 {file_location_id=59 parent_frame_id=101}
+102 {file_location_id=60 parent_frame_id=35}
+103 {file_location_id=61 parent_frame_id=103}
+104 {file_location_id=25 parent_frame_id=104}
+105 {file_location_id=26 parent_frame_id=105}
+106 {file_location_id=62 parent_frame_id=106}
+107 {file_location_id=11 parent_frame_id=107}
+108 {file_location_id=63 parent_frame_id=108}
+109 {file_location_id=11 parent_frame_id=109}
+110 {file_location_id=64 parent_frame_id=110}
+111 {file_location_id=65 parent_frame_id=111}
+112 {file_location_id=66 parent_frame_id=112}
+113 {file_location_id=67 parent_frame_id=111}
+114 {file_location_id=68 parent_frame_id=34}
+115 {file_location_id=36 parent_frame_id=115}
+116 {file_location_id=69 parent_frame_id=34}
+117 {file_location_id=70 parent_frame_id=34}
+118 {file_location_id=71 parent_frame_id=25}
+119 {file_location_id=11 parent_frame_id=119}
+120 {file_location_id=72 parent_frame_id=120}
+121 {file_location_id=73 parent_frame_id=121}
+122 {file_location_id=74 parent_frame_id=25}
+123 {file_location_id=75 parent_frame_id=123}
+124 {file_location_id=76 parent_frame_id=124}
+125 {file_location_id=14 parent_frame_id=125}
+126 {file_location_id=15 parent_frame_id=126}
+127 {file_location_id=16 parent_frame_id=127}
+128 {file_location_id=17 parent_frame_id=128}
+129 {file_location_id=18 parent_frame_id=129}
+130 {file_location_id=19 parent_frame_id=130}
+131 {file_location_id=33 parent_frame_id=131}
+132 {file_location_id=20 parent_frame_id=131}
+133 {file_location_id=77 parent_frame_id=133}
+134 {file_location_id=35 parent_frame_id=131}
+135 {file_location_id=78 parent_frame_id=135}
+136 {file_location_id=79 parent_frame_id=135}
+137 {file_location_id=80 parent_frame_id=135}
+138 {file_location_id=37 parent_frame_id=131}
+139 {file_location_id=81 parent_frame_id=133}
+140 {file_location_id=11 parent_frame_id=140}
+141 {file_location_id=57 parent_frame_id=141}
+142 {file_location_id=11 parent_frame_id=142}
+143 {file_location_id=82 parent_frame_id=143}
+144 {file_location_id=11 parent_frame_id=144}
+145 {file_location_id=58 parent_frame_id=145}
+146 {file_location_id=59 parent_frame_id=146}
+147 {file_location_id=19 parent_frame_id=147}
+148 {file_location_id=20 parent_frame_id=148}
+149 {file_location_id=81 parent_frame_id=149}
+150 {file_location_id=11 parent_frame_id=150}
+151 {file_location_id=57 parent_frame_id=151}
+152 {file_location_id=11 parent_frame_id=152}
+153 {file_location_id=82 parent_frame_id=153}
+154 {file_location_id=11 parent_frame_id=154}
+155 {file_location_id=58 parent_frame_id=155}
+156 {file_location_id=59 parent_frame_id=156}
+157 {file_location_id=83 parent_frame_id=133}
+158 {file_location_id=84 parent_frame_id=133}
+159 {file_location_id=85 parent_frame_id=159}
+160 {file_location_id=11 parent_frame_id=160}
+161 {file_location_id=57 parent_frame_id=161}
+162 {file_location_id=11 parent_frame_id=162}
+163 {file_location_id=82 parent_frame_id=163}
+164 {file_location_id=11 parent_frame_id=164}
+165 {file_location_id=58 parent_frame_id=165}
+166 {file_location_id=59 parent_frame_id=166}
+167 {file_location_id=19 parent_frame_id=167}
+168 {file_location_id=20 parent_frame_id=168}
+169 {file_location_id=84 parent_frame_id=169}
+170 {file_location_id=85 parent_frame_id=170}
+171 {file_location_id=11 parent_frame_id=171}
+172 {file_location_id=57 parent_frame_id=172}
+173 {file_location_id=11 parent_frame_id=173}
+174 {file_location_id=82 parent_frame_id=174}
+175 {file_location_id=11 parent_frame_id=175}
+176 {file_location_id=58 parent_frame_id=176}
+177 {file_location_id=59 parent_frame_id=177}
+178 {file_location_id=86 parent_frame_id=133}
+179 {file_location_id=11 parent_frame_id=179}
+180 {file_location_id=87 parent_frame_id=180}
+181 {file_location_id=88 parent_frame_id=181}
+182 {file_location_id=89 parent_frame_id=181}
+183 {file_location_id=90 parent_frame_id=181}
+184 {file_location_id=91 parent_frame_id=181}
+185 {file_location_id=92 parent_frame_id=181}
+186 {file_location_id=93 parent_frame_id=181}
+187 {file_location_id=94 parent_frame_id=180}
+188 {file_location_id=95 parent_frame_id=180}
+189 {file_location_id=96 parent_frame_id=180}
+190 {file_location_id=97 parent_frame_id=180}
+191 {file_location_id=98 parent_frame_id=180}
+192 {file_location_id=99 parent_frame_id=180}
+193 {file_location_id=100 parent_frame_id=180}
+194 {file_location_id=101 parent_frame_id=180}
+195 {file_location_id=102 parent_frame_id=180}
+196 {file_location_id=103 parent_frame_id=180}
+197 {file_location_id=104 parent_frame_id=180}
+198 {file_location_id=105 parent_frame_id=180}
+199 {file_location_id=106 parent_frame_id=180}
+200 {file_location_id=107 parent_frame_id=180}
+201 {file_location_id=108 parent_frame_id=180}
+202 {file_location_id=109 parent_frame_id=180}
+203 {file_location_id=110 parent_frame_id=180}
+204 {file_location_id=111 parent_frame_id=180}
+205 {file_location_id=112 parent_frame_id=180}
+206 {file_location_id=113 parent_frame_id=180}
+207 {file_location_id=114 parent_frame_id=180}
+208 {file_location_id=115 parent_frame_id=180}
+209 {file_location_id=116 parent_frame_id=180}
+210 {file_location_id=117 parent_frame_id=180}
+211 {file_location_id=118 parent_frame_id=180}
+212 {file_location_id=119 parent_frame_id=180}
+213 {file_location_id=120 parent_frame_id=180}
+214 {file_location_id=121 parent_frame_id=180}
+215 {file_location_id=122 parent_frame_id=180}
+216 {file_location_id=123 parent_frame_id=180}
+217 {file_location_id=41 parent_frame_id=217}
+218 {file_location_id=42 parent_frame_id=218}
+219 {file_location_id=124 parent_frame_id=180}
+220 {file_location_id=125 parent_frame_id=220}
+221 {file_location_id=126 parent_frame_id=133}
+222 {file_location_id=68 parent_frame_id=131}
+223 {file_location_id=78 parent_frame_id=223}
+224 {file_location_id=79 parent_frame_id=223}
+225 {file_location_id=80 parent_frame_id=223}
+226 {file_location_id=69 parent_frame_id=131}
+227 {file_location_id=70 parent_frame_id=131}
+228 {file_location_id=127 parent_frame_id=27}
+229 {file_location_id=11 parent_frame_id=229}
+230 {file_location_id=128 parent_frame_id=230}
+231 {file_location_id=11 parent_frame_id=231}
+232 {file_location_id=129 parent_frame_id=232}
+233 {file_location_id=130 parent_frame_id=232}
+234 {file_location_id=131 parent_frame_id=232}
+235 {file_location_id=132 parent_frame_id=232}
+236 {file_location_id=133 parent_frame_id=232}
+237 {file_location_id=134 parent_frame_id=232}
+238 {file_location_id=135 parent_frame_id=27}
+239 {file_location_id=136 parent_frame_id=29}
+240 {file_location_id=137 parent_frame_id=240}
+241 {file_location_id=36 parent_frame_id=241}
+242 {file_location_id=138 parent_frame_id=27}
+243 {file_location_id=139 parent_frame_id=243}
+244 {file_location_id=140 parent_frame_id=27}
+245 {file_location_id=25 parent_frame_id=245}
+246 {file_location_id=26 parent_frame_id=246}
+247 {file_location_id=141 parent_frame_id=247}
+248 {file_location_id=11 parent_frame_id=248}
+249 {file_location_id=142 parent_frame_id=249}
+250 {file_location_id=143 parent_frame_id=250}
+251 {file_location_id=144 parent_frame_id=251}
+252 {file_location_id=145 parent_frame_id=252}
+253 {file_location_id=146 parent_frame_id=249}
+254 {file_location_id=147 parent_frame_id=249}
+255 {file_location_id=148 parent_frame_id=249}
+256 {file_location_id=149 parent_frame_id=249}
+257 {file_location_id=150 parent_frame_id=249}
+258 {file_location_id=151 parent_frame_id=249}
+259 {file_location_id=152 parent_frame_id=249}
+260 {file_location_id=11 parent_frame_id=260}
+261 {file_location_id=153 parent_frame_id=261}
+262 {file_location_id=154 parent_frame_id=27}
+263 {file_location_id=61 parent_frame_id=263}
+264 {file_location_id=25 parent_frame_id=264}
+265 {file_location_id=26 parent_frame_id=265}
+266 {file_location_id=62 parent_frame_id=266}
+267 {file_location_id=11 parent_frame_id=267}
+268 {file_location_id=63 parent_frame_id=268}
+269 {file_location_id=11 parent_frame_id=269}
+270 {file_location_id=64 parent_frame_id=270}
+271 {file_location_id=65 parent_frame_id=271}
+272 {file_location_id=66 parent_frame_id=272}
+273 {file_location_id=67 parent_frame_id=271}
+274 {file_location_id=155 parent_frame_id=27}
+275 {file_location_id=54 parent_frame_id=275}
+276 {file_location_id=25 parent_frame_id=276}
+277 {file_location_id=26 parent_frame_id=277}
+278 {file_location_id=55 parent_frame_id=278}
+279 {file_location_id=44 parent_frame_id=279}
+280 {file_location_id=45 parent_frame_id=280}
+281 {file_location_id=156 parent_frame_id=281}
+282 {file_location_id=157 parent_frame_id=27}
+283 {file_location_id=158 parent_frame_id=25}
+284 {file_location_id=88 parent_frame_id=284}
+285 {file_location_id=159 parent_frame_id=27}
+286 {file_location_id=25 parent_frame_id=286}
+287 {file_location_id=26 parent_frame_id=287}
+288 {file_location_id=160 parent_frame_id=288}
+289 {file_location_id=41 parent_frame_id=289}
+290 {file_location_id=42 parent_frame_id=290}
+291 {file_location_id=161 parent_frame_id=27}
+292 {file_location_id=162 parent_frame_id=292}
+293 {file_location_id=163 parent_frame_id=25}
+294 {file_location_id=164 parent_frame_id=294}
+295 {file_location_id=165 parent_frame_id=294}
+296 {file_location_id=166 parent_frame_id=121}
+297 {file_location_id=167 parent_frame_id=121}
+298 {file_location_id=168 parent_frame_id=121}
+299 {file_location_id=169 parent_frame_id=121}
+300 {file_location_id=170 parent_frame_id=121}
+301 {file_location_id=171 parent_frame_id=121}
+302 {file_location_id=172 parent_frame_id=121}
+303 {file_location_id=173 parent_frame_id=120}
+304 {file_location_id=174 parent_frame_id=304}
+305 {file_location_id=175 parent_frame_id=305}
+306 {file_location_id=176 parent_frame_id=306}
+307 {file_location_id=177 parent_frame_id=307}
+308 {file_location_id=178 parent_frame_id=308}
+309 {file_location_id=179 parent_frame_id=309}
+310 {file_location_id=177 parent_frame_id=310}
+311 {file_location_id=178 parent_frame_id=311}
+312 {file_location_id=179 parent_frame_id=312}
+313 {file_location_id=180 parent_frame_id=309}
+314 {file_location_id=181 parent_frame_id=309}
+315 {file_location_id=182 parent_frame_id=307}
+316 {file_location_id=183 parent_frame_id=120}
+317 {file_location_id=184 parent_frame_id=120}
+318 {file_location_id=185 parent_frame_id=25}
+319 {file_location_id=89 parent_frame_id=284}
+320 {file_location_id=90 parent_frame_id=284}
+321 {file_location_id=91 parent_frame_id=284}
+322 {file_location_id=92 parent_frame_id=284}
+323 {file_location_id=136 parent_frame_id=126}
+324 {file_location_id=137 parent_frame_id=324}
+325 {file_location_id=78 parent_frame_id=325}
+326 {file_location_id=79 parent_frame_id=325}
+327 {file_location_id=80 parent_frame_id=325}
+328 {file_location_id=33 parent_frame_id=23}
+329 {file_location_id=35 parent_frame_id=23}
+330 {file_location_id=186 parent_frame_id=330}
+331 {file_location_id=37 parent_frame_id=23}
+332 {file_location_id=187 parent_frame_id=25}
+333 {file_location_id=188 parent_frame_id=333}
+334 {file_location_id=189 parent_frame_id=120}
+335 {file_location_id=190 parent_frame_id=120}
+336 {file_location_id=191 parent_frame_id=120}
+337 {file_location_id=192 parent_frame_id=120}
+338 {file_location_id=193 parent_frame_id=120}
+339 {file_location_id=194 parent_frame_id=120}
+340 {file_location_id=195 parent_frame_id=120}
+341 {file_location_id=196 parent_frame_id=120}
+342 {file_location_id=197 parent_frame_id=120}
+343 {file_location_id=198 parent_frame_id=25}
+344 {file_location_id=199 parent_frame_id=344}
+345 {file_location_id=200 parent_frame_id=344}
+346 {file_location_id=201 parent_frame_id=344}
+347 {file_location_id=202 parent_frame_id=344}
+348 {file_location_id=203 parent_frame_id=344}
+349 {file_location_id=204 parent_frame_id=344}
+350 {file_location_id=205 parent_frame_id=25}
+351 {file_location_id=188 parent_frame_id=351}
+352 {file_location_id=206 parent_frame_id=120}
+353 {file_location_id=207 parent_frame_id=120}
+354 {file_location_id=208 parent_frame_id=120}
+355 {file_location_id=209 parent_frame_id=120}
+356 {file_location_id=210 parent_frame_id=120}
+357 {file_location_id=211 parent_frame_id=120}
+358 {file_location_id=212 parent_frame_id=25}
+359 {file_location_id=213 parent_frame_id=25}
+360 {file_location_id=214 parent_frame_id=25}
+361 {file_location_id=215 parent_frame_id=25}
+362 {file_location_id=216 parent_frame_id=25}
+363 {file_location_id=68 parent_frame_id=23}
+364 {file_location_id=186 parent_frame_id=364}
+365 {file_location_id=69 parent_frame_id=23}
+366 {file_location_id=70 parent_frame_id=23}
+367 {file_location_id=217 parent_frame_id=16}
+368 {file_location_id=218 parent_frame_id=368}
+369 {file_location_id=219 parent_frame_id=369}
+370 {file_location_id=220 parent_frame_id=370}
+371 {file_location_id=221 parent_frame_id=371}
+372 {file_location_id=222 parent_frame_id=371}
+373 {file_location_id=223 parent_frame_id=371}
+374 {file_location_id=224 parent_frame_id=374}
+375 {file_location_id=225 parent_frame_id=374}
+376 {file_location_id=226 parent_frame_id=368}
+377 {file_location_id=227 parent_frame_id=2}
+378 {file_location_id=228 parent_frame_id=2}
+379 {file_location_id=229 parent_frame_id=2}
+380 {file_location_id=136 parent_frame_id=18}
+381 {file_location_id=137 parent_frame_id=381}
+382 {file_location_id=186 parent_frame_id=382}
+383 {file_location_id=230 parent_frame_id=2}
+384 {file_location_id=11 parent_frame_id=384}
+385 {file_location_id=231 parent_frame_id=385}
+386 {file_location_id=232 parent_frame_id=2}
+387 {file_location_id=233 parent_frame_id=2}
+388 {file_location_id=11 parent_frame_id=388}
+389 {file_location_id=234 parent_frame_id=389}
+390 {file_location_id=235 parent_frame_id=390}
+391 {file_location_id=236 parent_frame_id=2}
+392 {file_location_id=237 parent_frame_id=392}
+393 {file_location_id=238 parent_frame_id=392}
+394 {file_location_id=239 parent_frame_id=392}
+395 {file_location_id=240 parent_frame_id=395}
+396 {file_location_id=241 parent_frame_id=16}
+397 {file_location_id=242 parent_frame_id=397}
+398 {file_location_id=243 parent_frame_id=397}
+399 {file_location_id=244 parent_frame_id=397}
+400 {file_location_id=245 parent_frame_id=2}
+401 {file_location_id=246 parent_frame_id=401}
+402 {file_location_id=247 parent_frame_id=402}
+403 {file_location_id=248 parent_frame_id=403}
+404 {file_location_id=249 parent_frame_id=404}
+405 {file_location_id=250 parent_frame_id=2}
+406 {file_location_id=246 parent_frame_id=406}
+407 {file_location_id=247 parent_frame_id=407}
+408 {file_location_id=248 parent_frame_id=408}
+409 {file_location_id=251 parent_frame_id=409}
+410 {file_location_id=252 parent_frame_id=409}
+411 {file_location_id=253 parent_frame_id=409}
+412 {file_location_id=254 parent_frame_id=412}
+413 {file_location_id=255 parent_frame_id=413}
+414 {file_location_id=256 parent_frame_id=414}
+415 {file_location_id=257 parent_frame_id=415}
+416 {file_location_id=258 parent_frame_id=409}
+417 {file_location_id=259 parent_frame_id=409}
+418 {file_location_id=260 parent_frame_id=409}
+419 {file_location_id=261 parent_frame_id=409}
+420 {file_location_id=254 parent_frame_id=420}
+421 {file_location_id=255 parent_frame_id=421}
+422 {file_location_id=256 parent_frame_id=422}
+423 {file_location_id=257 parent_frame_id=423}
+424 {file_location_id=262 parent_frame_id=2}
+425 {file_location_id=263 parent_frame_id=2}
+426 {file_location_id=264 parent_frame_id=16}
+427 {file_location_id=265 parent_frame_id=2}
+428 {file_location_id=266 parent_frame_id=428}
+429 {file_location_id=267 parent_frame_id=16}
+430 {file_location_id=186 parent_frame_id=430}
+431 {file_location_id=268 parent_frame_id=16}
+432 {file_location_id=269 parent_frame_id=432}
+433 {file_location_id=270 parent_frame_id=1}
+434 {file_location_id=271 parent_frame_id=434}
+435 {file_location_id=256 parent_frame_id=435}
+436 {file_location_id=257 parent_frame_id=436}
+437 {file_location_id=1 parent_frame_id=416}
+438 {file_location_id=2 parent_frame_id=438}
+439 {file_location_id=3 parent_frame_id=439}
+440 {file_location_id=1 parent_frame_id=440}
+441 {file_location_id=2 parent_frame_id=441}
+442 {file_location_id=3 parent_frame_id=442}
+443 {file_location_id=4 parent_frame_id=438}
+444 {file_location_id=5 parent_frame_id=444}
+445 {file_location_id=6 parent_frame_id=445}
+446 {file_location_id=7 parent_frame_id=446}
+447 {file_location_id=8 parent_frame_id=447}
+448 {file_location_id=9 parent_frame_id=447}
+449 {file_location_id=1 parent_frame_id=424}
+450 {file_location_id=2 parent_frame_id=450}
+451 {file_location_id=3 parent_frame_id=451}
+452 {file_location_id=1 parent_frame_id=452}
+453 {file_location_id=2 parent_frame_id=453}
+454 {file_location_id=3 parent_frame_id=454}
+455 {file_location_id=4 parent_frame_id=450}
+456 {file_location_id=5 parent_frame_id=456}
+457 {file_location_id=6 parent_frame_id=457}
+458 {file_location_id=7 parent_frame_id=458}
+459 {file_location_id=8 parent_frame_id=459}
+460 {file_location_id=9 parent_frame_id=459}
+461 {file_location_id=1 parent_frame_id=437}
+462 {file_location_id=227 parent_frame_id=462}
+463 {file_location_id=228 parent_frame_id=462}
+464 {file_location_id=229 parent_frame_id=462}
+465 {file_location_id=10 parent_frame_id=462}
+466 {file_location_id=11 parent_frame_id=466}
+467 {file_location_id=12 parent_frame_id=467}
+468 {file_location_id=13 parent_frame_id=468}
+469 {file_location_id=14 parent_frame_id=469}
+470 {file_location_id=136 parent_frame_id=470}
+471 {file_location_id=137 parent_frame_id=471}
+472 {file_location_id=186 parent_frame_id=472}
+473 {file_location_id=230 parent_frame_id=462}
+474 {file_location_id=11 parent_frame_id=474}
+475 {file_location_id=231 parent_frame_id=475}
+476 {file_location_id=232 parent_frame_id=462}
+477 {file_location_id=233 parent_frame_id=462}
+478 {file_location_id=11 parent_frame_id=478}
+479 {file_location_id=234 parent_frame_id=479}
+480 {file_location_id=235 parent_frame_id=480}
+481 {file_location_id=236 parent_frame_id=462}
+482 {file_location_id=237 parent_frame_id=482}
+483 {file_location_id=238 parent_frame_id=482}
+484 {file_location_id=239 parent_frame_id=482}
+485 {file_location_id=240 parent_frame_id=485}
+486 {file_location_id=241 parent_frame_id=468}
+487 {file_location_id=242 parent_frame_id=487}
+488 {file_location_id=243 parent_frame_id=487}
+489 {file_location_id=244 parent_frame_id=487}
+490 {file_location_id=245 parent_frame_id=462}
+491 {file_location_id=246 parent_frame_id=491}
+492 {file_location_id=247 parent_frame_id=492}
+493 {file_location_id=248 parent_frame_id=493}
+494 {file_location_id=249 parent_frame_id=494}
+495 {file_location_id=250 parent_frame_id=462}
+496 {file_location_id=246 parent_frame_id=496}
+497 {file_location_id=247 parent_frame_id=497}
+498 {file_location_id=248 parent_frame_id=498}
+499 {file_location_id=251 parent_frame_id=499}
+500 {file_location_id=252 parent_frame_id=499}
+501 {file_location_id=253 parent_frame_id=499}
+502 {file_location_id=254 parent_frame_id=502}
+503 {file_location_id=255 parent_frame_id=503}
+504 {file_location_id=256 parent_frame_id=504}
+505 {file_location_id=257 parent_frame_id=505}
+506 {file_location_id=1 parent_frame_id=506}
+507 {file_location_id=2 parent_frame_id=507}
+508 {file_location_id=3 parent_frame_id=508}
+509 {file_location_id=1 parent_frame_id=509}
+510 {file_location_id=2 parent_frame_id=510}
+511 {file_location_id=3 parent_frame_id=511}
+512 {file_location_id=4 parent_frame_id=507}
+513 {file_location_id=5 parent_frame_id=513}
+514 {file_location_id=6 parent_frame_id=514}
+515 {file_location_id=7 parent_frame_id=515}
+516 {file_location_id=8 parent_frame_id=516}
+517 {file_location_id=9 parent_frame_id=516}
+518 {file_location_id=258 parent_frame_id=499}
+519 {file_location_id=259 parent_frame_id=499}
+520 {file_location_id=260 parent_frame_id=499}
+521 {file_location_id=261 parent_frame_id=499}
+522 {file_location_id=254 parent_frame_id=522}
+523 {file_location_id=255 parent_frame_id=523}
+524 {file_location_id=256 parent_frame_id=524}
+525 {file_location_id=257 parent_frame_id=525}
+526 {file_location_id=1 parent_frame_id=526}
+527 {file_location_id=2 parent_frame_id=527}
+528 {file_location_id=3 parent_frame_id=528}
+529 {file_location_id=1 parent_frame_id=529}
+530 {file_location_id=2 parent_frame_id=530}
+531 {file_location_id=3 parent_frame_id=531}
+532 {file_location_id=4 parent_frame_id=527}
+533 {file_location_id=5 parent_frame_id=533}
+534 {file_location_id=6 parent_frame_id=534}
+535 {file_location_id=7 parent_frame_id=535}
+536 {file_location_id=8 parent_frame_id=536}
+537 {file_location_id=9 parent_frame_id=536}
+538 {file_location_id=15 parent_frame_id=470}
+539 {file_location_id=16 parent_frame_id=539}
+540 {file_location_id=17 parent_frame_id=540}
+541 {file_location_id=18 parent_frame_id=541}
+542 {file_location_id=19 parent_frame_id=542}
+543 {file_location_id=20 parent_frame_id=543}
+544 {file_location_id=21 parent_frame_id=544}
+545 {file_location_id=22 parent_frame_id=545}
+546 {file_location_id=11 parent_frame_id=546}
+547 {file_location_id=127 parent_frame_id=547}
+548 {file_location_id=11 parent_frame_id=548}
+549 {file_location_id=128 parent_frame_id=549}
+550 {file_location_id=11 parent_frame_id=550}
+551 {file_location_id=129 parent_frame_id=551}
+552 {file_location_id=130 parent_frame_id=551}
+553 {file_location_id=132 parent_frame_id=551}
+554 {file_location_id=133 parent_frame_id=551}
+555 {file_location_id=23 parent_frame_id=547}
+556 {file_location_id=14 parent_frame_id=556}
+557 {file_location_id=136 parent_frame_id=557}
+558 {file_location_id=137 parent_frame_id=558}
+559 {file_location_id=36 parent_frame_id=559}
+560 {file_location_id=140 parent_frame_id=547}
+561 {file_location_id=25 parent_frame_id=561}
+562 {file_location_id=26 parent_frame_id=562}
+563 {file_location_id=141 parent_frame_id=563}
+564 {file_location_id=11 parent_frame_id=564}
+565 {file_location_id=142 parent_frame_id=565}
+566 {file_location_id=143 parent_frame_id=566}
+567 {file_location_id=144 parent_frame_id=567}
+568 {file_location_id=145 parent_frame_id=568}
+569 {file_location_id=146 parent_frame_id=565}
+570 {file_location_id=147 parent_frame_id=565}
+571 {file_location_id=149 parent_frame_id=565}
+572 {file_location_id=150 parent_frame_id=565}
+573 {file_location_id=152 parent_frame_id=565}
+574 {file_location_id=11 parent_frame_id=574}
+575 {file_location_id=153 parent_frame_id=575}
+576 {file_location_id=154 parent_frame_id=547}
+577 {file_location_id=61 parent_frame_id=577}
+578 {file_location_id=25 parent_frame_id=578}
+579 {file_location_id=26 parent_frame_id=579}
+580 {file_location_id=62 parent_frame_id=580}
+581 {file_location_id=11 parent_frame_id=581}
+582 {file_location_id=63 parent_frame_id=582}
+583 {file_location_id=11 parent_frame_id=583}
+584 {file_location_id=64 parent_frame_id=584}
+585 {file_location_id=65 parent_frame_id=585}
+586 {file_location_id=66 parent_frame_id=586}
+587 {file_location_id=67 parent_frame_id=585}
+588 {file_location_id=155 parent_frame_id=547}
+589 {file_location_id=54 parent_frame_id=589}
+590 {file_location_id=25 parent_frame_id=590}
+591 {file_location_id=26 parent_frame_id=591}
+592 {file_location_id=55 parent_frame_id=592}
+593 {file_location_id=44 parent_frame_id=593}
+594 {file_location_id=45 parent_frame_id=594}
+595 {file_location_id=156 parent_frame_id=595}
+596 {file_location_id=157 parent_frame_id=547}
+597 {file_location_id=15 parent_frame_id=557}
+598 {file_location_id=16 parent_frame_id=598}
+599 {file_location_id=17 parent_frame_id=599}
+600 {file_location_id=18 parent_frame_id=600}
+601 {file_location_id=19 parent_frame_id=601}
+602 {file_location_id=20 parent_frame_id=602}
+603 {file_location_id=24 parent_frame_id=603}
+604 {file_location_id=25 parent_frame_id=604}
+605 {file_location_id=26 parent_frame_id=605}
+606 {file_location_id=27 parent_frame_id=606}
+607 {file_location_id=28 parent_frame_id=603}
+608 {file_location_id=25 parent_frame_id=608}
+609 {file_location_id=26 parent_frame_id=609}
+610 {file_location_id=29 parent_frame_id=610}
+611 {file_location_id=30 parent_frame_id=610}
+612 {file_location_id=31 parent_frame_id=610}
+613 {file_location_id=33 parent_frame_id=602}
+614 {file_location_id=34 parent_frame_id=603}
+615 {file_location_id=35 parent_frame_id=602}
+616 {file_location_id=36 parent_frame_id=616}
+617 {file_location_id=37 parent_frame_id=602}
+618 {file_location_id=38 parent_frame_id=603}
+619 {file_location_id=25 parent_frame_id=619}
+620 {file_location_id=26 parent_frame_id=620}
+621 {file_location_id=39 parent_frame_id=621}
+622 {file_location_id=40 parent_frame_id=603}
+623 {file_location_id=25 parent_frame_id=623}
+624 {file_location_id=26 parent_frame_id=624}
+625 {file_location_id=41 parent_frame_id=625}
+626 {file_location_id=42 parent_frame_id=626}
+627 {file_location_id=43 parent_frame_id=603}
+628 {file_location_id=44 parent_frame_id=628}
+629 {file_location_id=45 parent_frame_id=629}
+630 {file_location_id=46 parent_frame_id=630}
+631 {file_location_id=47 parent_frame_id=603}
+632 {file_location_id=48 parent_frame_id=632}
+633 {file_location_id=25 parent_frame_id=633}
+634 {file_location_id=26 parent_frame_id=634}
+635 {file_location_id=49 parent_frame_id=635}
+636 {file_location_id=11 parent_frame_id=636}
+637 {file_location_id=50 parent_frame_id=637}
+638 {file_location_id=11 parent_frame_id=638}
+639 {file_location_id=51 parent_frame_id=639}
+640 {file_location_id=52 parent_frame_id=640}
+641 {file_location_id=53 parent_frame_id=603}
+642 {file_location_id=54 parent_frame_id=642}
+643 {file_location_id=25 parent_frame_id=643}
+644 {file_location_id=26 parent_frame_id=644}
+645 {file_location_id=55 parent_frame_id=645}
+646 {file_location_id=44 parent_frame_id=646}
+647 {file_location_id=45 parent_frame_id=647}
+648 {file_location_id=56 parent_frame_id=648}
+649 {file_location_id=11 parent_frame_id=649}
+650 {file_location_id=57 parent_frame_id=650}
+651 {file_location_id=11 parent_frame_id=651}
+652 {file_location_id=58 parent_frame_id=652}
+653 {file_location_id=59 parent_frame_id=653}
+654 {file_location_id=19 parent_frame_id=654}
+655 {file_location_id=20 parent_frame_id=655}
+656 {file_location_id=53 parent_frame_id=656}
+657 {file_location_id=54 parent_frame_id=657}
+658 {file_location_id=25 parent_frame_id=658}
+659 {file_location_id=26 parent_frame_id=659}
+660 {file_location_id=55 parent_frame_id=660}
+661 {file_location_id=44 parent_frame_id=661}
+662 {file_location_id=45 parent_frame_id=662}
+663 {file_location_id=56 parent_frame_id=663}
+664 {file_location_id=11 parent_frame_id=664}
+665 {file_location_id=57 parent_frame_id=665}
+666 {file_location_id=11 parent_frame_id=666}
+667 {file_location_id=58 parent_frame_id=667}
+668 {file_location_id=59 parent_frame_id=668}
+669 {file_location_id=60 parent_frame_id=603}
+670 {file_location_id=61 parent_frame_id=670}
+671 {file_location_id=25 parent_frame_id=671}
+672 {file_location_id=26 parent_frame_id=672}
+673 {file_location_id=62 parent_frame_id=673}
+674 {file_location_id=11 parent_frame_id=674}
+675 {file_location_id=63 parent_frame_id=675}
+676 {file_location_id=11 parent_frame_id=676}
+677 {file_location_id=64 parent_frame_id=677}
+678 {file_location_id=65 parent_frame_id=678}
+679 {file_location_id=66 parent_frame_id=679}
+680 {file_location_id=67 parent_frame_id=678}
+681 {file_location_id=32 parent_frame_id=610}
+682 {file_location_id=68 parent_frame_id=602}
+683 {file_location_id=36 parent_frame_id=683}
+684 {file_location_id=69 parent_frame_id=602}
+685 {file_location_id=70 parent_frame_id=602}
+686 {file_location_id=158 parent_frame_id=545}
+687 {file_location_id=88 parent_frame_id=687}
+688 {file_location_id=159 parent_frame_id=547}
+689 {file_location_id=25 parent_frame_id=689}
+690 {file_location_id=26 parent_frame_id=690}
+691 {file_location_id=160 parent_frame_id=691}
+692 {file_location_id=41 parent_frame_id=692}
+693 {file_location_id=42 parent_frame_id=693}
+694 {file_location_id=163 parent_frame_id=545}
+695 {file_location_id=164 parent_frame_id=695}
+696 {file_location_id=71 parent_frame_id=545}
+697 {file_location_id=11 parent_frame_id=697}
+698 {file_location_id=72 parent_frame_id=698}
+699 {file_location_id=166 parent_frame_id=699}
+700 {file_location_id=73 parent_frame_id=699}
+701 {file_location_id=168 parent_frame_id=699}
+702 {file_location_id=169 parent_frame_id=699}
+703 {file_location_id=170 parent_frame_id=699}
+704 {file_location_id=171 parent_frame_id=699}
+705 {file_location_id=172 parent_frame_id=699}
+706 {file_location_id=173 parent_frame_id=698}
+707 {file_location_id=174 parent_frame_id=707}
+708 {file_location_id=175 parent_frame_id=708}
+709 {file_location_id=176 parent_frame_id=709}
+710 {file_location_id=177 parent_frame_id=710}
+711 {file_location_id=178 parent_frame_id=711}
+712 {file_location_id=179 parent_frame_id=712}
+713 {file_location_id=177 parent_frame_id=713}
+714 {file_location_id=178 parent_frame_id=714}
+715 {file_location_id=179 parent_frame_id=715}
+716 {file_location_id=180 parent_frame_id=712}
+717 {file_location_id=181 parent_frame_id=712}
+718 {file_location_id=182 parent_frame_id=710}
+719 {file_location_id=183 parent_frame_id=698}
+720 {file_location_id=185 parent_frame_id=545}
+721 {file_location_id=89 parent_frame_id=687}
+722 {file_location_id=91 parent_frame_id=687}
+723 {file_location_id=74 parent_frame_id=545}
+724 {file_location_id=75 parent_frame_id=724}
+725 {file_location_id=76 parent_frame_id=725}
+726 {file_location_id=14 parent_frame_id=726}
+727 {file_location_id=136 parent_frame_id=727}
+728 {file_location_id=137 parent_frame_id=728}
+729 {file_location_id=78 parent_frame_id=729}
+730 {file_location_id=79 parent_frame_id=729}
+731 {file_location_id=80 parent_frame_id=729}
+732 {file_location_id=15 parent_frame_id=727}
+733 {file_location_id=16 parent_frame_id=733}
+734 {file_location_id=17 parent_frame_id=734}
+735 {file_location_id=18 parent_frame_id=735}
+736 {file_location_id=19 parent_frame_id=736}
+737 {file_location_id=33 parent_frame_id=737}
+738 {file_location_id=20 parent_frame_id=737}
+739 {file_location_id=77 parent_frame_id=739}
+740 {file_location_id=35 parent_frame_id=737}
+741 {file_location_id=78 parent_frame_id=741}
+742 {file_location_id=79 parent_frame_id=741}
+743 {file_location_id=80 parent_frame_id=741}
+744 {file_location_id=37 parent_frame_id=737}
+745 {file_location_id=81 parent_frame_id=739}
+746 {file_location_id=11 parent_frame_id=746}
+747 {file_location_id=57 parent_frame_id=747}
+748 {file_location_id=11 parent_frame_id=748}
+749 {file_location_id=82 parent_frame_id=749}
+750 {file_location_id=11 parent_frame_id=750}
+751 {file_location_id=58 parent_frame_id=751}
+752 {file_location_id=59 parent_frame_id=752}
+753 {file_location_id=19 parent_frame_id=753}
+754 {file_location_id=20 parent_frame_id=754}
+755 {file_location_id=81 parent_frame_id=755}
+756 {file_location_id=11 parent_frame_id=756}
+757 {file_location_id=57 parent_frame_id=757}
+758 {file_location_id=11 parent_frame_id=758}
+759 {file_location_id=82 parent_frame_id=759}
+760 {file_location_id=11 parent_frame_id=760}
+761 {file_location_id=58 parent_frame_id=761}
+762 {file_location_id=59 parent_frame_id=762}
+763 {file_location_id=83 parent_frame_id=739}
+764 {file_location_id=84 parent_frame_id=739}
+765 {file_location_id=85 parent_frame_id=765}
+766 {file_location_id=11 parent_frame_id=766}
+767 {file_location_id=57 parent_frame_id=767}
+768 {file_location_id=11 parent_frame_id=768}
+769 {file_location_id=82 parent_frame_id=769}
+770 {file_location_id=11 parent_frame_id=770}
+771 {file_location_id=58 parent_frame_id=771}
+772 {file_location_id=59 parent_frame_id=772}
+773 {file_location_id=19 parent_frame_id=773}
+774 {file_location_id=20 parent_frame_id=774}
+775 {file_location_id=84 parent_frame_id=775}
+776 {file_location_id=85 parent_frame_id=776}
+777 {file_location_id=11 parent_frame_id=777}
+778 {file_location_id=57 parent_frame_id=778}
+779 {file_location_id=11 parent_frame_id=779}
+780 {file_location_id=82 parent_frame_id=780}
+781 {file_location_id=11 parent_frame_id=781}
+782 {file_location_id=58 parent_frame_id=782}
+783 {file_location_id=59 parent_frame_id=783}
+784 {file_location_id=86 parent_frame_id=739}
+785 {file_location_id=11 parent_frame_id=785}
+786 {file_location_id=87 parent_frame_id=786}
+787 {file_location_id=88 parent_frame_id=787}
+788 {file_location_id=89 parent_frame_id=787}
+789 {file_location_id=91 parent_frame_id=787}
+790 {file_location_id=93 parent_frame_id=787}
+791 {file_location_id=94 parent_frame_id=786}
+792 {file_location_id=95 parent_frame_id=786}
+793 {file_location_id=96 parent_frame_id=786}
+794 {file_location_id=97 parent_frame_id=786}
+795 {file_location_id=98 parent_frame_id=786}
+796 {file_location_id=99 parent_frame_id=786}
+797 {file_location_id=100 parent_frame_id=786}
+798 {file_location_id=101 parent_frame_id=786}
+799 {file_location_id=102 parent_frame_id=786}
+800 {file_location_id=103 parent_frame_id=786}
+801 {file_location_id=104 parent_frame_id=786}
+802 {file_location_id=105 parent_frame_id=786}
+803 {file_location_id=106 parent_frame_id=786}
+804 {file_location_id=107 parent_frame_id=786}
+805 {file_location_id=108 parent_frame_id=786}
+806 {file_location_id=109 parent_frame_id=786}
+807 {file_location_id=110 parent_frame_id=786}
+808 {file_location_id=111 parent_frame_id=786}
+809 {file_location_id=112 parent_frame_id=786}
+810 {file_location_id=113 parent_frame_id=786}
+811 {file_location_id=114 parent_frame_id=786}
+812 {file_location_id=115 parent_frame_id=786}
+813 {file_location_id=116 parent_frame_id=786}
+814 {file_location_id=117 parent_frame_id=786}
+815 {file_location_id=118 parent_frame_id=786}
+816 {file_location_id=119 parent_frame_id=786}
+817 {file_location_id=120 parent_frame_id=786}
+818 {file_location_id=121 parent_frame_id=786}
+819 {file_location_id=122 parent_frame_id=786}
+820 {file_location_id=123 parent_frame_id=786}
+821 {file_location_id=41 parent_frame_id=821}
+822 {file_location_id=42 parent_frame_id=822}
+823 {file_location_id=124 parent_frame_id=786}
+824 {file_location_id=125 parent_frame_id=824}
+825 {file_location_id=126 parent_frame_id=739}
+826 {file_location_id=90 parent_frame_id=787}
+827 {file_location_id=92 parent_frame_id=787}
+828 {file_location_id=68 parent_frame_id=737}
+829 {file_location_id=78 parent_frame_id=829}
+830 {file_location_id=79 parent_frame_id=829}
+831 {file_location_id=80 parent_frame_id=829}
+832 {file_location_id=69 parent_frame_id=737}
+833 {file_location_id=70 parent_frame_id=737}
+834 {file_location_id=33 parent_frame_id=543}
+835 {file_location_id=35 parent_frame_id=543}
+836 {file_location_id=186 parent_frame_id=836}
+837 {file_location_id=37 parent_frame_id=543}
+838 {file_location_id=189 parent_frame_id=698}
+839 {file_location_id=190 parent_frame_id=698}
+840 {file_location_id=191 parent_frame_id=698}
+841 {file_location_id=192 parent_frame_id=698}
+842 {file_location_id=196 parent_frame_id=698}
+843 {file_location_id=197 parent_frame_id=698}
+844 {file_location_id=198 parent_frame_id=545}
+845 {file_location_id=199 parent_frame_id=845}
+846 {file_location_id=200 parent_frame_id=845}
+847 {file_location_id=201 parent_frame_id=845}
+848 {file_location_id=202 parent_frame_id=845}
+849 {file_location_id=206 parent_frame_id=698}
+850 {file_location_id=208 parent_frame_id=698}
+851 {file_location_id=212 parent_frame_id=545}
+852 {file_location_id=214 parent_frame_id=545}
+853 {file_location_id=216 parent_frame_id=545}
+854 {file_location_id=131 parent_frame_id=551}
+855 {file_location_id=134 parent_frame_id=551}
+856 {file_location_id=135 parent_frame_id=547}
+857 {file_location_id=138 parent_frame_id=547}
+858 {file_location_id=139 parent_frame_id=858}
+859 {file_location_id=148 parent_frame_id=565}
+860 {file_location_id=151 parent_frame_id=565}
+861 {file_location_id=161 parent_frame_id=547}
+862 {file_location_id=162 parent_frame_id=862}
+863 {file_location_id=165 parent_frame_id=695}
+864 {file_location_id=167 parent_frame_id=699}
+865 {file_location_id=184 parent_frame_id=698}
+866 {file_location_id=90 parent_frame_id=687}
+867 {file_location_id=92 parent_frame_id=687}
+868 {file_location_id=187 parent_frame_id=545}
+869 {file_location_id=188 parent_frame_id=869}
+870 {file_location_id=193 parent_frame_id=698}
+871 {file_location_id=194 parent_frame_id=698}
+872 {file_location_id=195 parent_frame_id=698}
+873 {file_location_id=203 parent_frame_id=845}
+874 {file_location_id=204 parent_frame_id=845}
+875 {file_location_id=205 parent_frame_id=545}
+876 {file_location_id=188 parent_frame_id=876}
+877 {file_location_id=207 parent_frame_id=698}
+878 {file_location_id=209 parent_frame_id=698}
+879 {file_location_id=210 parent_frame_id=698}
+880 {file_location_id=211 parent_frame_id=698}
+881 {file_location_id=213 parent_frame_id=545}
+882 {file_location_id=215 parent_frame_id=545}
+883 {file_location_id=68 parent_frame_id=543}
+884 {file_location_id=186 parent_frame_id=884}
+885 {file_location_id=69 parent_frame_id=543}
+886 {file_location_id=70 parent_frame_id=543}
+887 {file_location_id=262 parent_frame_id=462}
+888 {file_location_id=263 parent_frame_id=462}
+889 {file_location_id=264 parent_frame_id=468}
+890 {file_location_id=217 parent_frame_id=468}
+891 {file_location_id=226 parent_frame_id=891}
+892 {file_location_id=218 parent_frame_id=891}
+893 {file_location_id=219 parent_frame_id=893}
+894 {file_location_id=220 parent_frame_id=894}
+895 {file_location_id=221 parent_frame_id=895}
+896 {file_location_id=222 parent_frame_id=895}
+897 {file_location_id=223 parent_frame_id=895}
+898 {file_location_id=224 parent_frame_id=898}
+899 {file_location_id=225 parent_frame_id=898}
+900 {file_location_id=265 parent_frame_id=462}
+901 {file_location_id=266 parent_frame_id=901}
+902 {file_location_id=267 parent_frame_id=468}
+903 {file_location_id=186 parent_frame_id=903}
+904 {file_location_id=268 parent_frame_id=468}
+905 {file_location_id=269 parent_frame_id=905}
+
+
+%fused_concatenate (param_0.84: f64[], param_1.112: f64[], param_2.93: f64[40], param_3.77: s64[], param_4.64: s64[]) -> f64[7] {
+  %param_0.84 = f64[] parameter(0)
+  %param_1.112 = f64[] parameter(1)
+  %eq.229.1 = pred[] compare(%param_0.84, %param_1.112), direction=EQ, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/eq" stack_frame_id=787}
+  %constant_3015_1 = f64[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/jit(_where)/convert_element_type" stack_frame_id=826}
+  %param_2.93 = f64[40]{0} parameter(2)
+  %param_3.77 = s64[] parameter(3)
+  %param_4.64 = s64[] parameter(4)
+  %add.232.3 = s64[] add(%param_3.77, %param_4.64)
+  %constant_2994_3 = s64[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %lt.117.3 = pred[] compare(%add.232.3, %constant_2994_3), direction=LT, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/lt" stack_frame_id=763}
+  %constant_2995_3 = s64[] constant(40), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.216.3 = s64[] add(%add.232.3, %constant_2995_3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=763}
+  %select_n.551.3 = s64[] select(%lt.117.3, %add.216.3, %add.232.3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/select_n" stack_frame_id=763}
+  %dynamic_slice.27.3 = f64[1]{0} dynamic-slice(%param_2.93, %select_n.551.3), dynamic_slice_sizes={1}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/dynamic_slice" stack_frame_id=763}
+  %bitcast.2.7 = f64[] bitcast(%dynamic_slice.27.3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/dynamic_slice" stack_frame_id=763}
+  %sub.60.7 = f64[] subtract(%bitcast.2.7, %param_0.84), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=788}
+  %select_n.552.5 = f64[] select(%eq.229.1, %constant_3015_1, %sub.60.7), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=826}
+  %constant_3016_1 = f64[] constant(1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/jit(_where)/convert_element_type" stack_frame_id=827}
+  %sub.61.1 = f64[] subtract(%param_1.112, %param_0.84), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=789}
+  %select_n.553.3 = f64[] select(%eq.229.1, %constant_3016_1, %sub.61.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=827}
+  %div.22.3 = f64[] divide(%select_n.552.5, %select_n.553.3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/div" stack_frame_id=790}
+  %constant_2996_1 = f64[] constant(-1.0530884977290216), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %mul.188.1 = f64[] multiply(%div.22.3, %constant_2996_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=791}
+  %constant_3017_1 = f64[] constant(-1.3299890189751411), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.222.1 = f64[] add(%div.22.3, %constant_3017_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=792}
+  %mul.189.1 = f64[] multiply(%mul.188.1, %add.222.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=791}
+  %integer_pow.4.1 = f64[] multiply(%div.22.3, %div.22.3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/integer_pow" stack_frame_id=793}
+  %constant_2997_1 = f64[] constant(1.4364028541716352), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %mul.190.1 = f64[] multiply(%div.22.3, %constant_2997_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=794}
+  %sub.62.1 = f64[] subtract(%integer_pow.4.1, %mul.190.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=793}
+  %constant_2998_1 = f64[] constant(0.71398169170742087), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.217.1 = f64[] add(%sub.62.1, %constant_2998_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=793}
+  %mul.191.1 = f64[] multiply(%mul.189.1, %add.217.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=791}
+  %bitcast.3.1 = f64[1]{0} bitcast(%mul.191.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=791}
+  %constant_2999_1 = f64[] constant(0.1017), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %mul.192.1 = f64[] multiply(%integer_pow.4.1, %constant_2999_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=797}
+  %constant_3000_1 = f64[] constant(2.1966568338249752), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %mul.193.1 = f64[] multiply(%div.22.3, %constant_3000_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=799}
+  %sub.63.1 = f64[] subtract(%integer_pow.4.1, %mul.193.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=798}
+  %constant_3001_1 = f64[] constant(1.2949852507374631), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.218.1 = f64[] add(%sub.63.1, %constant_3001_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=798}
+  %mul.194.1 = f64[] multiply(%mul.192.1, %add.218.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=797}
+  %bitcast.4.1 = f64[1]{0} bitcast(%mul.194.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=797}
+  %constant_3002_1 = f64[] constant(2.4906272856512528), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %mul.195.1 = f64[] multiply(%integer_pow.4.1, %constant_3002_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=801}
+  %constant_3003_1 = f64[] constant(2.3853564547206165), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %mul.196.1 = f64[] multiply(%div.22.3, %constant_3003_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=803}
+  %sub.64.1 = f64[] subtract(%integer_pow.4.1, %mul.196.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=802}
+  %constant_3004_1 = f64[] constant(1.5780346820809248), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.219.1 = f64[] add(%sub.64.1, %constant_3004_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=802}
+  %mul.197.1 = f64[] multiply(%mul.195.1, %add.219.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=801}
+  %bitcast.5.1 = f64[1]{0} bitcast(%mul.197.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=801}
+  %constant_3018_1 = f64[] constant(-1.2171292729553325), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.223.1 = f64[] add(%div.22.3, %constant_3018_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=804}
+  %constant_3005_1 = f64[] constant(-16.548102889244902), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %mul.198.1 = f64[] multiply(%add.223.1, %constant_3005_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=805}
+  %constant_3019_1 = f64[] constant(-0.61620406037800091), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.224.1 = f64[] add(%div.22.3, %constant_3019_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=806}
+  %mul.199.1 = f64[] multiply(%mul.198.1, %add.224.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=805}
+  %mul.200.1 = f64[] multiply(%mul.199.1, %integer_pow.4.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=805}
+  %bitcast.6.1 = f64[1]{0} bitcast(%mul.200.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=805}
+  %constant_3020_1 = f64[] constant(-1.2030712083723627), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.225.1 = f64[] add(%div.22.3, %constant_3020_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=808}
+  %constant_3006_1 = f64[] constant(47.379521962819283), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %mul.201.1 = f64[] multiply(%add.225.1, %constant_3006_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=809}
+  %constant_3021_1 = f64[] constant(-0.65804729265354733), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.226.1 = f64[] add(%div.22.3, %constant_3021_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=810}
+  %mul.202.1 = f64[] multiply(%mul.201.1, %add.226.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=809}
+  %mul.203.1 = f64[] multiply(%mul.202.1, %integer_pow.4.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=809}
+  %bitcast.7.1 = f64[1]{0} bitcast(%mul.203.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=809}
+  %constant_3022_1 = f64[] constant(-1.2), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.227.1 = f64[] add(%div.22.3, %constant_3022_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=812}
+  %constant_3007_1 = f64[] constant(-34.870657861496611), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %mul.204.1 = f64[] multiply(%add.227.1, %constant_3007_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=813}
+  %constant_3023_1 = f64[] constant(-0.66666666666666663), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.228.1 = f64[] add(%div.22.3, %constant_3023_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=814}
+  %mul.205.1 = f64[] multiply(%mul.204.1, %add.228.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=813}
+  %mul.206.1 = f64[] multiply(%mul.205.1, %integer_pow.4.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=813}
+  %bitcast.8.1 = f64[1]{0} bitcast(%mul.206.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=813}
+  %constant_3024_1 = f64[] constant(-1), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.229.1 = f64[] add(%div.22.3, %constant_3024_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=816}
+  %constant_3008_1 = f64[] constant(2.5), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %mul.207.1 = f64[] multiply(%add.229.1, %constant_3008_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=817}
+  %constant_3025_1 = f64[] constant(-0.6), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.230.1 = f64[] add(%div.22.3, %constant_3025_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=818}
+  %mul.208.1 = f64[] multiply(%mul.207.1, %add.230.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=817}
+  %mul.209.1 = f64[] multiply(%mul.208.1, %integer_pow.4.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=817}
+  %bitcast.9.1 = f64[1]{0} bitcast(%mul.209.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=817}
+  ROOT %stack.47.1 = f64[7]{0} concatenate(%bitcast.3.1, %bitcast.4.1, %bitcast.5.1, %bitcast.6.1, %bitcast.7.1, /*index=5*/%bitcast.8.1, %bitcast.9.1), dimensions={0}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/stack" stack_frame_id=795}
+}
+
+%scalar_add_computation.clone.1 (scalar_lhs.5: c128[], scalar_rhs.5: c128[]) -> c128[] {
+  %scalar_rhs.5 = c128[] parameter(1)
+  %scalar_lhs.5 = c128[] parameter(0)
+  ROOT %add.250.0 = c128[] add(%scalar_lhs.5, %scalar_rhs.5)
+}
+
+%and.reduce_sub_computation (lhs: pred[], rhs: pred[]) -> pred[] {
+  %rhs = pred[] parameter(1)
+  %lhs = pred[] parameter(0)
+  ROOT %and.88 = pred[] and(%lhs, %rhs)
+}
+
+%fused_dynamic_update_slice (param_0.38: c128[40,64,64], param_1.108: c128[64,64], param_2.88: c128[7,64,64], param_3.71: f64[7], param_4.57: s64[], param_5.50: s64[], param_6.47: s32[3]) -> c128[40,64,64] {
+  %param_0.38 = c128[40,64,64]{2,1,0} parameter(0)
+  %constant_3009_1 = s32[] constant(0)
+  %broadcast.112.7 = s32[3]{0} broadcast(%constant_3009_1), dimensions={}, metadata={stack_frame_id=783}
+  %param_4.57 = s64[] parameter(4)
+  %param_5.50 = s64[] parameter(5)
+  %add.231.9 = s64[] add(%param_4.57, %param_5.50)
+  %constant_2994_2 = s64[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %lt.116.9 = pred[] compare(%add.231.9, %constant_2994_2), direction=LT, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/lt" stack_frame_id=762}
+  %constant_2995_2 = s64[] constant(40), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.215.9 = s64[] add(%add.231.9, %constant_2995_2), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=762}
+  %select_n.550.9 = s64[] select(%lt.116.9, %add.215.9, %add.231.9), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/select_n" stack_frame_id=762}
+  %convert_element_type.86.9 = s32[] convert(%select_n.550.9), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/convert_element_type" stack_frame_id=762}
+  %bitcast.1.13 = s32[1]{0} bitcast(%convert_element_type.86.9), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/convert_element_type" stack_frame_id=762}
+  %constant_3011_1 = s32[1]{0} constant({0}), metadata={stack_frame_id=783}
+  %concatenate.14.5 = s32[3]{0} concatenate(%bitcast.1.13, %constant_3011_1, %constant_3011_1), dimensions={0}, metadata={stack_frame_id=783}
+  %compare.43.7 = pred[3]{0} compare(%broadcast.112.7, %concatenate.14.5), direction=LE, metadata={stack_frame_id=783}
+  %param_6.47 = s32[3]{0} parameter(6)
+  %compare.44.5 = pred[3]{0} compare(%param_6.47, %concatenate.14.5), direction=GE, metadata={stack_frame_id=783}
+  %and.82.5 = pred[3]{0} and(%compare.43.7, %compare.44.5), metadata={stack_frame_id=783}
+  %constant_3013_1 = pred[] constant(true), metadata={stack_frame_id=783}
+  %reduce.46.3 = pred[] reduce(%and.82.5, %constant_3013_1), dimensions={0}, to_apply=%and.reduce_sub_computation, metadata={stack_frame_id=783}
+  %broadcast.113.1 = pred[1,64,64]{2,1,0} broadcast(%reduce.46.3), dimensions={}, metadata={stack_frame_id=783}
+  %param_1.108 = c128[64,64]{1,0} parameter(1)
+  %param_3.71 = f64[7]{0} parameter(3)
+  %dot_general.13.1 = c128[7]{0} convert(%param_3.71), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=822}
+  %broadcast.114.9 = c128[7,64,64]{2,1,0} broadcast(%dot_general.13.1), dimensions={0}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=822}
+  %param_2.88 = c128[7,64,64]{2,1,0} parameter(2)
+  %multiply.48.9 = c128[7,64,64]{2,1,0} multiply(%broadcast.114.9, %param_2.88), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=822}
+  %constant_3010_1 = c128[] constant((0, 0))
+  %reduce.47.7 = c128[64,64]{1,0} reduce(%multiply.48.9, %constant_3010_1), dimensions={0}, to_apply=%scalar_add_computation.clone.1, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=822}
+  %add.220.5 = c128[64,64]{1,0} add(%param_1.108, %reduce.47.7), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=824}
+  %bitcast.10.3 = c128[1,64,64]{2,1,0} bitcast(%add.220.5), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=824}
+  %dynamic-slice.30.1 = c128[1,64,64]{2,1,0} dynamic-slice(%param_0.38, %convert_element_type.86.9, %constant_3009_1, %constant_3009_1), dynamic_slice_sizes={1,64,64}, metadata={stack_frame_id=783}
+  %select.19.3 = c128[1,64,64]{2,1,0} select(%broadcast.113.1, %bitcast.10.3, %dynamic-slice.30.1), metadata={stack_frame_id=783}
+  ROOT %dynamic-update-slice.24.1 = c128[40,64,64]{2,1,0} dynamic-update-slice(%param_0.38, %select.19.3, %convert_element_type.86.9, %constant_3009_1, %constant_3009_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/scatter" stack_frame_id=783}
+}
+
+%fused_dynamic_update_slice.1 (param_0.52: f64[40], param_1.110: f64[40], param_2.90: s64[], param_3.73: s64[], param_4.59: s64[]) -> f64[40] {
+  %param_0.52 = f64[40]{0} parameter(0)
+  %constant_3011_2 = s32[1]{0} constant({0}), metadata={stack_frame_id=783}
+  %param_4.59 = s64[] parameter(4)
+  %param_3.73 = s64[] parameter(3)
+  %add.231.7 = s64[] add(%param_4.59, %param_3.73)
+  %constant_2994_1 = s64[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %lt.116.7 = pred[] compare(%add.231.7, %constant_2994_1), direction=LT, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/lt" stack_frame_id=762}
+  %constant_2995_1 = s64[] constant(40), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.215.7 = s64[] add(%add.231.7, %constant_2995_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=762}
+  %select_n.550.7 = s64[] select(%lt.116.7, %add.215.7, %add.231.7), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/select_n" stack_frame_id=762}
+  %convert_element_type.86.7 = s32[] convert(%select_n.550.7), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/convert_element_type" stack_frame_id=762}
+  %bitcast.1.7 = s32[1]{0} bitcast(%convert_element_type.86.7), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/convert_element_type" stack_frame_id=762}
+  %compare.45.5 = pred[1]{0} compare(%constant_3011_2, %bitcast.1.7), direction=LE, metadata={stack_frame_id=762}
+  %constant_3014_1 = s32[1]{0} constant({39}), metadata={stack_frame_id=762}
+  %compare.46.3 = pred[1]{0} compare(%constant_3014_1, %bitcast.1.7), direction=GE, metadata={stack_frame_id=762}
+  %and.83.3 = pred[1]{0} and(%compare.45.5, %compare.46.3), metadata={stack_frame_id=762}
+  %param_1.110 = f64[40]{0} parameter(1)
+  %param_2.90 = s64[] parameter(2)
+  %add.232.5 = s64[] add(%param_2.90, %param_3.73)
+  %lt.117.5 = pred[] compare(%add.232.5, %constant_2994_1), direction=LT, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/lt" stack_frame_id=763}
+  %add.216.5 = s64[] add(%add.232.5, %constant_2995_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=763}
+  %select_n.551.5 = s64[] select(%lt.117.5, %add.216.5, %add.232.5), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/select_n" stack_frame_id=763}
+  %dynamic_slice.27.5 = f64[1]{0} dynamic-slice(%param_1.110, %select_n.551.5), dynamic_slice_sizes={1}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/dynamic_slice" stack_frame_id=763}
+  %dynamic-slice.31.1 = f64[1]{0} dynamic-slice(%param_0.52, %convert_element_type.86.7), dynamic_slice_sizes={1}, metadata={stack_frame_id=762}
+  %select.20.1 = f64[1]{0} select(%and.83.3, %dynamic_slice.27.5, %dynamic-slice.31.1), metadata={stack_frame_id=762}
+  ROOT %dynamic-update-slice.25.1 = f64[40]{0} dynamic-update-slice(%param_0.52, %select.20.1, %convert_element_type.86.7), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/scatter" stack_frame_id=762}
+}
+
+%fused_add (param_0.83: s64[]) -> s64[] {
+  %param_0.83 = s64[] parameter(0)
+  %constant_2993_1 = s64[] constant(1), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  ROOT %add.213.1 = s64[] add(%param_0.83, %constant_2993_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=737}
+}
+
+%region_12.31.sunk.clone.clone.clone.clone (arg_tuple.37: (s64[], s64[], f64[40], c128[40,64,64], s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64], c128[64,64])) -> (s64[], s64[], f64[40], c128[40,64,64], s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64], c128[64,64]) {
+  %arg_tuple.37 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) parameter(0)
+  %get-tuple-element.729 = s64[] get-tuple-element(%arg_tuple.37), index=0
+  %get-tuple-element.740 = s64[] get-tuple-element(%arg_tuple.37), index=1
+  %get-tuple-element.743 = s64[] get-tuple-element(%arg_tuple.37), index=4
+  %get-tuple-element.744 = f64[] get-tuple-element(%arg_tuple.37), index=5
+  %get-tuple-element.745 = pred[] get-tuple-element(%arg_tuple.37), index=6
+  %get-tuple-element.746 = f64[] get-tuple-element(%arg_tuple.37), index=7
+  %get-tuple-element.747 = c128[7,64,64]{2,1,0} get-tuple-element(%arg_tuple.37), index=8
+  %get-tuple-element.748 = c128[64,64]{1,0} get-tuple-element(%arg_tuple.37), index=9
+  %constant_2682__sunk2_8_0 = f64[40]{0} constant({...}), metadata={op_name="jit(f)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond" stack_frame_id=535}
+  %get-tuple-element.731 = f64[40]{0} get-tuple-element(%arg_tuple.37), index=2
+  %get-tuple-element.732 = c128[40,64,64]{2,1,0} get-tuple-element(%arg_tuple.37), index=3
+  %constant_3012_0 = s32[3]{0} constant({39, 0, 0}), metadata={stack_frame_id=783}
+  %loop_concatenate_fusion = f64[7]{0} fusion(%get-tuple-element.746, %get-tuple-element.744, %constant_2682__sunk2_8_0, %get-tuple-element.740, %get-tuple-element.729), kind=kLoop, calls=%fused_concatenate, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/stack" stack_frame_id=795}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %loop_dynamic_update_slice_fusion.1 = f64[40]{0} fusion(%get-tuple-element.731, %constant_2682__sunk2_8_0, %get-tuple-element.740, %get-tuple-element.729, %get-tuple-element.743), kind=kLoop, calls=%fused_dynamic_update_slice.1, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/scatter" stack_frame_id=762}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %loop_dynamic_update_slice_fusion = c128[40,64,64]{2,1,0} fusion(%get-tuple-element.732, %get-tuple-element.748, %get-tuple-element.747, %loop_concatenate_fusion, %get-tuple-element.743, /*index=5*/%get-tuple-element.729, %constant_3012_0), kind=kLoop, calls=%fused_dynamic_update_slice, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/scatter" stack_frame_id=783}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %loop_add_fusion = s64[] fusion(%get-tuple-element.729), kind=kLoop, calls=%fused_add, control-predecessors={%loop_dynamic_update_slice_fusion, %loop_dynamic_update_slice_fusion.1, %loop_concatenate_fusion}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/body/add" deduplicated_name="loop_add_fusion" stack_frame_id=737}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  ROOT %tuple.101 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) tuple(%loop_add_fusion, %get-tuple-element.740, %loop_dynamic_update_slice_fusion.1, %loop_dynamic_update_slice_fusion, %get-tuple-element.743, /*index=5*/%get-tuple-element.744, %get-tuple-element.745, %get-tuple-element.746, %get-tuple-element.747, %get-tuple-element.748)
+}
+
+%fused_and.1 (param_0.13: pred[], param_1.19: f64[], param_2.16: f64[40], param_3.12: s64[], param_4.8: s64[]) -> pred[] {
+  %param_0.13 = pred[] parameter(0)
+  %param_2.16 = f64[40]{0} parameter(2)
+  %param_4.8 = s64[] parameter(4)
+  %param_3.12 = s64[] parameter(3)
+  %add.212.1 = s64[] add(%param_4.8, %param_3.12)
+  %constant_2991_1 = s64[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %lt.113.1 = pred[] compare(%add.212.1, %constant_2991_1), direction=LT, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/cond/lt" stack_frame_id=829}
+  %constant_2992_1 = s64[] constant(40), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.210.1 = s64[] add(%add.212.1, %constant_2992_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/cond/add" stack_frame_id=829}
+  %select_n.549.1 = s64[] select(%lt.113.1, %add.210.1, %add.212.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/cond/select_n" stack_frame_id=829}
+  %dynamic_slice.26.7 = f64[1]{0} dynamic-slice(%param_2.16, %select_n.549.1), dynamic_slice_sizes={1}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/cond/dynamic_slice" stack_frame_id=829}
+  %bitcast.24 = f64[] bitcast(%dynamic_slice.26.7), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/cond/dynamic_slice" stack_frame_id=829}
+  %param_1.19 = f64[] parameter(1)
+  %le.16.7 = pred[] compare(%bitcast.24, %param_1.19), direction=LE, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/cond/le" stack_frame_id=829}
+  %and.79.5 = pred[] and(%param_0.13, %le.16.7), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/cond/and" stack_frame_id=830}
+  %lt.114.1 = pred[] compare(%add.212.1, %constant_2992_1), direction=LT, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/cond/lt" stack_frame_id=831}
+  %and.80.3 = pred[] and(%and.79.5, %lt.114.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/cond/and" stack_frame_id=830}
+  %lt.115.1 = pred[] compare(%param_3.12, %constant_2992_1), direction=LT, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/cond/lt" stack_frame_id=832}
+  ROOT %and.81.1 = pred[] and(%and.80.3, %lt.115.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/cond/and" stack_frame_id=833}
+}
+
+%region_15.32.sunk.clone.clone.clone (arg_tuple.36: (s64[], s64[], f64[40], c128[40,64,64], s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64], c128[64,64])) -> pred[] {
+  %arg_tuple.36 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) parameter(0)
+  %get-tuple-element.583.0 = pred[] get-tuple-element(%arg_tuple.36), index=6
+  %get-tuple-element.586.0 = s64[] get-tuple-element(%arg_tuple.36), index=0
+  %get-tuple-element.585.0 = f64[] get-tuple-element(%arg_tuple.36), index=5
+  %get-tuple-element.597.0 = s64[] get-tuple-element(%arg_tuple.36), index=1
+  %constant_2682__sunk2_7_0 = f64[40]{0} constant({...}), metadata={op_name="jit(f)/jit(diffeqsolve)/jit(branched_error_if_impl)/cond" stack_frame_id=535}
+  ROOT %loop_and_fusion.1 = pred[] fusion(%get-tuple-element.583.0, %get-tuple-element.585.0, %constant_2682__sunk2_7_0, %get-tuple-element.586.0, %get-tuple-element.597.0), kind=kLoop, calls=%fused_and.1, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while/cond/and" stack_frame_id=833}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+}
+
+%scalar_add_computation.clone.2 (scalar_lhs.6: c128[], scalar_rhs.6: c128[]) -> c128[] {
+  %scalar_rhs.6 = c128[] parameter(1)
+  %scalar_lhs.6 = c128[] parameter(0)
+  ROOT %add.251.0 = c128[] add(%scalar_lhs.6, %scalar_rhs.6)
+}
+
+%fused_add.1 (param_0.96: c128[64,64], param_1.154: c128[7,64,64], param_2.127: c128[7,7], param_3.104: s64[], param_4.92: s64[]) -> c128[64,64] {
+  %param_0.96 = c128[64,64]{1,0} parameter(0)
+  %param_2.127 = c128[7,7]{1,0} parameter(2)
+  %param_3.104 = s64[] parameter(3)
+  %param_4.92 = s64[] parameter(4)
+  %add.247.7 = s64[] add(%param_3.104, %param_4.92)
+  %convert_element_type.90.3 = s32[] convert(%add.247.7), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/convert_element_type" stack_frame_id=621}
+  %constant_3042_2 = s32[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %lt.122.3 = pred[] compare(%convert_element_type.90.3, %constant_3042_2), direction=LT, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/lt" stack_frame_id=621}
+  %constant_3043_1 = s32[] constant(7), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.244.3 = s32[] add(%convert_element_type.90.3, %constant_3043_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/add" stack_frame_id=621}
+  %select_n.556.3 = s32[] select(%lt.122.3, %add.244.3, %convert_element_type.90.3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/select_n" stack_frame_id=621}
+  %dynamic_slice.29.3 = c128[1,7]{1,0} dynamic-slice(%param_2.127, %select_n.556.3, %constant_3042_2), dynamic_slice_sizes={1,7}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/dynamic_slice" stack_frame_id=621}
+  %bitcast.11.7 = c128[7]{0} bitcast(%dynamic_slice.29.3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/dynamic_slice" stack_frame_id=621}
+  %broadcast.120.7 = c128[7,64,64]{2,1,0} broadcast(%bitcast.11.7), dimensions={0}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=626}
+  %param_1.154 = c128[7,64,64]{2,1,0} parameter(1)
+  %multiply.56.5 = c128[7,64,64]{2,1,0} multiply(%broadcast.120.7, %param_1.154), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=626}
+  %constant_3045_1 = c128[] constant((0, 0))
+  %reduce.51.3 = c128[64,64]{1,0} reduce(%multiply.56.5, %constant_3045_1), dimensions={0}, to_apply=%scalar_add_computation.clone.2, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=626}
+  ROOT %add.245.1 = c128[64,64]{1,0} add(%param_0.96, %reduce.51.3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/add" stack_frame_id=630}
+}
+
+%and.reduce_sub_computation.clone (lhs.4: pred[], rhs.4: pred[]) -> pred[] {
+  %rhs.4 = pred[] parameter(1)
+  %lhs.4 = pred[] parameter(0)
+  ROOT %and.87.0 = pred[] and(%lhs.4, %rhs.4)
+}
+
+%fused_dynamic_update_slice.2 (param_0.98: c128[7,64,64], param_1.153: c128[64,64], param_2.126: f64[], param_3.103: s64[], param_4.89: s64[], param_5.82: s32[3]) -> c128[7,64,64] {
+  %param_0.98 = c128[7,64,64]{2,1,0} parameter(0)
+  %constant_3042_1 = s32[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %broadcast.118.7 = s32[3]{0} broadcast(%constant_3042_1), dimensions={}, metadata={stack_frame_id=668}
+  %param_3.103 = s64[] parameter(3)
+  %param_4.89 = s64[] parameter(4)
+  %add.247.9 = s64[] add(%param_3.103, %param_4.89)
+  %constant_3038_1 = s64[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %lt.123.6 = pred[] compare(%add.247.9, %constant_3038_1), direction=LT, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/lt" stack_frame_id=668}
+  %constant_3039_1 = s64[] constant(7), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %add.246.6 = s64[] add(%add.247.9, %constant_3039_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/add" stack_frame_id=668}
+  %select_n.557.6 = s64[] select(%lt.123.6, %add.246.6, %add.247.9), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/select_n" stack_frame_id=668}
+  %convert_element_type.91.6 = s32[] convert(%select_n.557.6), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/convert_element_type" stack_frame_id=668}
+  %bitcast.12.5 = s32[1]{0} bitcast(%convert_element_type.91.6), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/convert_element_type" stack_frame_id=668}
+  %constant_3046_1 = s32[1]{0} constant({0}), metadata={stack_frame_id=668}
+  %concatenate.16.5 = s32[3]{0} concatenate(%bitcast.12.5, %constant_3046_1, %constant_3046_1), dimensions={0}, metadata={stack_frame_id=668}
+  %compare.49.7 = pred[3]{0} compare(%broadcast.118.7, %concatenate.16.5), direction=LE, metadata={stack_frame_id=668}
+  %param_5.82 = s32[3]{0} parameter(5)
+  %compare.50.5 = pred[3]{0} compare(%param_5.82, %concatenate.16.5), direction=GE, metadata={stack_frame_id=668}
+  %and.86.5 = pred[3]{0} and(%compare.49.7, %compare.50.5), metadata={stack_frame_id=668}
+  %constant_3048_1 = pred[] constant(true), metadata={stack_frame_id=668}
+  %reduce.50.3 = pred[] reduce(%and.86.5, %constant_3048_1), dimensions={0}, to_apply=%and.reduce_sub_computation.clone, metadata={stack_frame_id=668}
+  %broadcast.119.1 = pred[1,64,64]{2,1,0} broadcast(%reduce.50.3), dimensions={}, metadata={stack_frame_id=668}
+  %param_2.126 = f64[] parameter(2)
+  %convert_element_type.92.1 = c128[] convert(%param_2.126), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/convert_element_type" stack_frame_id=679}
+  %mul.212.1 = c128[64,64]{1,0} broadcast(%convert_element_type.92.1), dimensions={}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/mul" stack_frame_id=680}
+  %param_1.153 = c128[64,64]{1,0} parameter(1)
+  %mul.213.1 = c128[64,64]{1,0} multiply(%mul.212.1, %param_1.153), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/mul" stack_frame_id=680}
+  %bitcast.13.3 = c128[1,64,64]{2,1,0} bitcast(%mul.213.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/mul" stack_frame_id=680}
+  %dynamic-slice.33.1 = c128[1,64,64]{2,1,0} dynamic-slice(%param_0.98, %convert_element_type.91.6, %constant_3042_1, %constant_3042_1), dynamic_slice_sizes={1,64,64}, metadata={stack_frame_id=668}
+  %select.22.3 = c128[1,64,64]{2,1,0} select(%broadcast.119.1, %bitcast.13.3, %dynamic-slice.33.1), metadata={stack_frame_id=668}
+  ROOT %dynamic-update-slice.27.1 = c128[7,64,64]{2,1,0} dynamic-update-slice(%param_0.98, %select.22.3, %convert_element_type.91.6, %constant_3042_1, %constant_3042_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/scatter" stack_frame_id=668}
+}
+
+%fused_add.2 (param_0.113: s64[]) -> s64[] {
+  %param_0.113 = s64[] parameter(0)
+  %constant_3040_1 = s64[] constant(1), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  ROOT %add.242.1 = s64[] add(%param_0.113, %constant_3040_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/add" stack_frame_id=613}
+}
+
+%region_8.17.clone.clone.clone.clone.clone (arg_tuple.40: (s64[], s64[], c128[64,64], c128[64,64], c128[7,64,64], /*index=5*/c128[64,64], f64[])) -> (s64[], s64[], c128[64,64], c128[64,64], c128[7,64,64], /*index=5*/c128[64,64], f64[]) {
+  %arg_tuple.40 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) parameter(0)
+  %get-tuple-element.713 = s64[] get-tuple-element(%arg_tuple.40), index=1
+  %get-tuple-element.705 = s64[] get-tuple-element(%arg_tuple.40), index=0
+  %get-tuple-element.718 = f64[] get-tuple-element(%arg_tuple.40), index=6
+  %get-tuple-element.709 = c128[7,64,64]{2,1,0} get-tuple-element(%arg_tuple.40), index=4
+  %get-tuple-element.717 = c128[64,64]{1,0} get-tuple-element(%arg_tuple.40), index=5
+  %constant_3047_0 = s32[3]{0} constant({6, 0, 0}), metadata={stack_frame_id=668}
+  %constant_3044_0 = c128[64,64]{1,0} constant({...}), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %constant_3041_0 = c128[7,7]{1,0} constant({...}), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %loop_add_fusion.1 = c128[64,64]{1,0} fusion(%get-tuple-element.717, %get-tuple-element.709, %constant_3041_0, %get-tuple-element.713, %get-tuple-element.705), kind=kLoop, calls=%fused_add.1, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/add" stack_frame_id=630}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %custom-call.1 = (c128[64,64]{1,0}, s8[4194304]{0}) custom-call(%constant_3044_0, %loop_add_fusion.1), custom_call_target="__cublas$lt$matmul", metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=640}, backend_config={"operation_queue_id":"0","gemm_backend_config":{"selected_algorithm":"2","alpha_real":1,"beta":0,"dot_dimension_numbers":{"lhs_contracting_dimensions":["1"],"rhs_contracting_dimensions":["0"],"lhs_batch_dimensions":[],"rhs_batch_dimensions":[]},"alpha_imag":0,"precision_config":{"operand_precision":["DEFAULT","DEFAULT"],"algorithm":"ALG_UNSET"},"epilogue":"DEFAULT","lhs_stride":"4096","rhs_stride":"4096","grad_x":false,"grad_y":false,"damax_output":false,"autotune_workspace_size":"4194304","scale_mode":0},"force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID"}
+  %get-tuple-element.715 = c128[64,64]{1,0} get-tuple-element(%custom-call.1), index=0, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=640}
+  %loop_dynamic_update_slice_fusion.2 = c128[7,64,64]{2,1,0} fusion(%get-tuple-element.709, %get-tuple-element.715, %get-tuple-element.718, %get-tuple-element.713, %get-tuple-element.705, /*index=5*/%constant_3047_0), kind=kLoop, calls=%fused_dynamic_update_slice.2, control-predecessors={%loop_add_fusion.1}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/scatter" stack_frame_id=668}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %loop_add_fusion.2 = s64[] fusion(%get-tuple-element.705), kind=kLoop, calls=%fused_add.2, control-predecessors={%loop_dynamic_update_slice_fusion.2, %loop_add_fusion.1}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/body/add" deduplicated_name="loop_add_fusion" stack_frame_id=613}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  ROOT %tuple.98 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) tuple(%loop_add_fusion.2, %get-tuple-element.713, %loop_add_fusion.1, %get-tuple-element.715, %loop_dynamic_update_slice_fusion.2, /*index=5*/%get-tuple-element.717, %get-tuple-element.718)
+}
+
+%fused_and.2 (param_0.20: s64[], param_1.27: s64[]) -> pred[] {
+  %param_0.20 = s64[] parameter(0)
+  %param_1.27 = s64[] parameter(1)
+  %add.241.3 = s64[] add(%param_0.20, %param_1.27)
+  %constant_3037_1 = s64[] constant(7), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %lt.120.3 = pred[] compare(%add.241.3, %constant_3037_1), direction=LT, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/cond/lt" stack_frame_id=683}
+  %lt.121.1 = pred[] compare(%param_1.27, %constant_3037_1), direction=LT, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/cond/lt" stack_frame_id=684}
+  ROOT %and.85.1 = pred[] and(%lt.120.3, %lt.121.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/cond/and" stack_frame_id=685}
+}
+
+%region_10.18.clone.clone.clone.clone (arg_tuple.39: (s64[], s64[], c128[64,64], c128[64,64], c128[7,64,64], /*index=5*/c128[64,64], f64[])) -> pred[] {
+  %arg_tuple.39 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) parameter(0)
+  %get-tuple-element.657.0 = s64[] get-tuple-element(%arg_tuple.39), index=0
+  %get-tuple-element.664.0 = s64[] get-tuple-element(%arg_tuple.39), index=1
+  ROOT %loop_and_fusion.2 = pred[] fusion(%get-tuple-element.664.0, %get-tuple-element.657.0), kind=kLoop, calls=%fused_and.2, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while/cond/and" stack_frame_id=685}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+}
+
+%region_11.21 (reduce_or.19: pred[], reduce_or.20: pred[]) -> pred[] {
+  %reduce_or.20 = pred[] parameter(1), metadata={op_name="reduce_or"}
+  %reduce_or.19 = pred[] parameter(0), metadata={op_name="reduce_or"}
+  ROOT %reduce_or.21.0 = pred[] or(%reduce_or.19, %reduce_or.20), metadata={op_name="outer-loop/checkpointed-no-vjp/while/body/reduce_or" stack_frame_id=121}
+}
+
+%fused_reduce (param_0.187: c128[64,64]) -> pred[] {
+  %param_0.187 = c128[64,64]{1,0} parameter(0)
+  %ne.15.1 = pred[64,64]{1,0} compare(%param_0.187, %param_0.187), direction=NE, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/ne" stack_frame_id=700}
+  %bitcast.15.1 = pred[4096]{0} bitcast(%ne.15.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/ne" stack_frame_id=700}
+  %constant_2834_1 = pred[] constant(false), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  ROOT %reduce_or.18.1 = pred[] reduce(%bitcast.15.1, %constant_2834_1), dimensions={0}, to_apply=%region_11.21, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/reduce_or" stack_frame_id=700}
+}
+
+%fused_pad (param_0.185: c128[64,64], param_1.247: f64[]) -> c128[7,64,64] {
+  %param_1.247 = f64[] parameter(1)
+  %convert_element_type.72.1 = c128[] convert(%param_1.247), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/convert_element_type" stack_frame_id=586}
+  %mul.110.1 = c128[64,64]{1,0} broadcast(%convert_element_type.72.1), dimensions={}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=587}
+  %param_0.185 = c128[64,64]{1,0} parameter(0)
+  %mul.111.1 = c128[64,64]{1,0} multiply(%mul.110.1, %param_0.185), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=587}
+  %bitcast.14.1 = c128[1,64,64]{2,1,0} bitcast(%mul.111.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=587}
+  %constant_2831_1 = c128[] constant((0, 0)), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  ROOT %pad.4.1 = c128[7,64,64]{2,1,0} pad(%bitcast.14.1, %constant_2831_1), padding=0_6x0_0x0_0, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/scatter" stack_frame_id=595}
+}
+
+%fused_select (param_0.150: c128[64,64], param_1.248: pred[]) -> c128[64,64] {
+  %param_1.248 = pred[] parameter(1)
+  %select_n.511.1 = pred[64,64]{1,0} broadcast(%param_1.248), dimensions={}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=858}
+  %constant_2831_4 = c128[] constant((0, 0)), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %broadcast_in_dim.31.1 = c128[64,64]{1,0} broadcast(%constant_2831_4), dimensions={}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/broadcast_in_dim" stack_frame_id=858}
+  %param_0.150 = c128[64,64]{1,0} parameter(0)
+  ROOT %select_n.512.1 = c128[64,64]{1,0} select(%select_n.511.1, %broadcast_in_dim.31.1, %param_0.150), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=858}
+}
+
+%scalar_add_computation.clone (scalar_lhs.4: c128[], scalar_rhs.4: c128[]) -> c128[] {
+  %scalar_rhs.4 = c128[] parameter(1)
+  %scalar_lhs.4 = c128[] parameter(0)
+  ROOT %add.249.0 = c128[] add(%scalar_lhs.4, %scalar_rhs.4)
+}
+
+%fused_multiply (param_0.151: c128[64,64], param_1.205: c128[64,64], param_2.196: c128[7,64,64], param_3.145: c128[7], param_4.120: pred[]) -> c128[64,64] {
+  %param_3.145 = c128[7]{0} parameter(3)
+  %broadcast.93.7 = c128[7,64,64]{2,1,0} broadcast(%param_3.145), dimensions={0}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=693}
+  %param_2.196 = c128[7,64,64]{2,1,0} parameter(2)
+  %multiply.37.7 = c128[7,64,64]{2,1,0} multiply(%broadcast.93.7, %param_2.196), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=693}
+  %constant_2831_2 = c128[] constant((0, 0)), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %reduce.33.5 = c128[64,64]{1,0} reduce(%multiply.37.7, %constant_2831_2), dimensions={0}, to_apply=%scalar_add_computation.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=693}
+  %ne.14.3 = pred[64,64]{1,0} compare(%reduce.33.5, %reduce.33.5), direction=NE, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/ne" stack_frame_id=695}
+  %constant_2844_1 = c128[] constant((inf, 0)), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/convert_element_type" stack_frame_id=863}
+  %broadcast_in_dim.32.3 = c128[64,64]{1,0} broadcast(%constant_2844_1), dimensions={}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/broadcast_in_dim" stack_frame_id=863}
+  %select_n.513.3 = c128[64,64]{1,0} select(%ne.14.3, %broadcast_in_dim.32.3, %reduce.33.5), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=863}
+  %param_0.151 = c128[64,64]{1,0} parameter(0)
+  %abs.20.7 = f64[64,64]{1,0} abs(%param_0.151), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/abs" stack_frame_id=699}
+  %param_4.120 = pred[] parameter(4)
+  %select_n.514.1 = pred[64,64]{1,0} broadcast(%param_4.120), dimensions={}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=864}
+  %param_1.205 = c128[64,64]{1,0} parameter(1)
+  %select_n.515.9 = c128[64,64]{1,0} select(%select_n.514.1, %param_0.151, %param_1.205), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=864}
+  %abs.21.9 = f64[64,64]{1,0} abs(%select_n.515.9), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/abs" stack_frame_id=701}
+  %max.15.7 = f64[64,64]{1,0} maximum(%abs.20.7, %abs.21.9), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/max" stack_frame_id=702}
+  %constant_2835_1 = f64[] constant(1e-06), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %broadcast.92.1 = f64[64,64]{1,0} broadcast(%constant_2835_1), dimensions={}, metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %mul.112.5 = f64[64,64]{1,0} multiply(%max.15.7, %broadcast.92.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=703}
+  %add.126.5 = f64[64,64]{1,0} add(%mul.112.5, %broadcast.92.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=704}
+  %convert_element_type.73.3 = c128[64,64]{1,0} convert(%add.126.5), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/convert_element_type" stack_frame_id=705}
+  %div.17.3 = c128[64,64]{1,0} divide(%select_n.513.3, %convert_element_type.73.3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/div" stack_frame_id=705}
+  %real.14.1 = f64[64,64]{1,0} real(%div.17.3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/real" stack_frame_id=715}
+  %imag.7.1 = f64[64,64]{1,0} imag(%div.17.3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/imag" stack_frame_id=715}
+  %neg.15.1 = f64[64,64]{1,0} negate(%imag.7.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/neg" stack_frame_id=715}
+  %complex.7.1 = c128[64,64]{1,0} complex(%real.14.1, %neg.15.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/complex" stack_frame_id=715}
+  ROOT %multiply.36.1 = c128[64,64]{1,0} multiply(%complex.7.1, %div.17.3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=717}
+}
+
+%fused_select.1 (param_0.147: c128[64,64], param_1.201: c128[64,64], param_2.160: pred[]) -> c128[64,64] {
+  %param_2.160 = pred[] parameter(2)
+  %select_n.517.1 = pred[64,64]{1,0} broadcast(%param_2.160), dimensions={}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=869}
+  %param_0.147 = c128[64,64]{1,0} parameter(0)
+  %param_1.201 = c128[64,64]{1,0} parameter(1)
+  ROOT %select_n.518.1 = c128[64,64]{1,0} select(%select_n.517.1, %param_0.147, %param_1.201), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=869}
+}
+
+%fused_select.2 (param_0.149: c128[64,64], param_1.203: c128[64,64], param_2.162: pred[]) -> c128[64,64] {
+  %param_2.162 = pred[] parameter(2)
+  %select_n.517.2 = pred[64,64]{1,0} broadcast(%param_2.162), dimensions={}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=869}
+  %param_0.149 = c128[64,64]{1,0} parameter(0)
+  %param_1.203 = c128[64,64]{1,0} parameter(1)
+  ROOT %select_n.524.1 = c128[64,64]{1,0} select(%select_n.517.2, %param_0.149, %param_1.203), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=876}
+}
+
+%scalar_add_computation (scalar_lhs: c128[], scalar_rhs: c128[]) -> c128[] {
+  %scalar_rhs = c128[] parameter(1)
+  %scalar_lhs = c128[] parameter(0)
+  ROOT %add.5.0 = c128[] add(%scalar_lhs, %scalar_rhs)
+}
+
+%fused_reduce.1 (param_0.186: c128[64,64]) -> f64[] {
+  %param_0.186 = c128[64,64]{1,0} parameter(0)
+  %bitcast.16.5 = c128[4096]{0} bitcast(%param_0.186), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=717}
+  %constant_2831_3 = c128[] constant((0, 0)), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %reduce.32.5 = c128[] reduce(%bitcast.16.5, %constant_2831_3), dimensions={0}, to_apply=%scalar_add_computation, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=717}
+  %real.15.3 = f64[] real(%reduce.32.5), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/real" stack_frame_id=711}
+  ROOT %sqrt.7.1 = f64[] sqrt(%real.15.3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/sqrt" stack_frame_id=718}
+}
+
+%fused_compare_minimum_select (param_0.198: f64[], param_1.259: f64[], param_2.204: f64[], param_3.150: f64[]) -> (f64[], f64[], pred[]) {
+  %param_3.150 = f64[] parameter(3)
+  %constant_2843_1 = f64[] constant(0.015625), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %multiply.35.1.clone.1 = f64[] multiply(%param_3.150, %constant_2843_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/div" stack_frame_id=708}
+  %constant_2836_2 = f64[] constant(1), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %lt.79.1.clone.1 = pred[] compare(%multiply.35.1.clone.1, %constant_2836_2), direction=LT, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/lt" stack_frame_id=719}
+  %param_1.259 = f64[] parameter(1)
+  %param_2.204 = f64[] parameter(2)
+  %select_n.516.2 = f64[] select(%lt.79.1.clone.1, %param_1.259, %param_2.204), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=865}
+  %param_0.198 = f64[] parameter(0)
+  %constant_2840_1 = f64[] constant(10), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %constant_2839_1 = f64[] constant(0.9), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %select_n.519.1 = f64[] select(%lt.79.1.clone.1, %constant_2840_1, %constant_2839_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=870}
+  %constant_2838_1 = f64[] constant(0.2), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %select_n.520.1 = f64[] select(%lt.79.1.clone.1, %constant_2836_2, %constant_2838_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=871}
+  %div.18.7 = f64[] divide(%constant_2836_2, %multiply.35.1.clone.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/div" stack_frame_id=839}
+  %pow.7.7 = f64[] power(%div.18.7, %constant_2838_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/pow" stack_frame_id=840}
+  %mul.113.7 = f64[] multiply(%pow.7.7, %constant_2839_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=841}
+  %max.16.5 = f64[] maximum(%select_n.520.1, %mul.113.7), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(clip)/max" stack_frame_id=872}
+  %min.18.3 = f64[] minimum(%select_n.519.1, %max.16.5), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(clip)/min" stack_frame_id=872}
+  %mul.114.3 = f64[] multiply(%param_0.198, %min.18.3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=842}
+  %add.129.3 = f64[] add(%select_n.516.2, %mul.114.3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=843}
+  %constant_2668__sunk_4_1 = f64[] constant(0.099999999999998618), metadata={op_name="jit(f)/jit(diffeqsolve)/jit(_where)/select_n" stack_frame_id=489}
+  %gt.11.1 = pred[] compare(%add.129.3, %constant_2668__sunk_4_1), direction=GT, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/gt" stack_frame_id=845}
+  %constant_260__sunk_8_2 = f64[] constant(0.1), metadata={op_name="jit(f)/jit(diffeqsolve)/mul" stack_frame_id=464}
+  %min.17.1.clone.1 = f64[] minimum(%select_n.516.2, %constant_260__sunk_8_2), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/min" stack_frame_id=720}
+  %sub.44.5 = f64[] subtract(%constant_260__sunk_8_2, %min.17.1.clone.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=846}
+  %constant_2841_1 = f64[] constant(0.5), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %mul.115.5 = f64[] multiply(%sub.44.5, %constant_2841_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/mul" stack_frame_id=847}
+  %add.130.5 = f64[] add(%min.17.1.clone.1, %mul.115.5), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=848}
+  %select_n.521.3 = f64[] select(%lt.79.1.clone.1, %constant_260__sunk_8_2, %add.130.5), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=873}
+  %select_n.522.1 = f64[] select(%gt.11.1, %select_n.521.3, %add.129.3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=874}
+  ROOT %tuple.95 = (f64[], f64[], pred[]) tuple(%select_n.522.1, %min.17.1.clone.1, %lt.79.1.clone.1)
+}
+
+%fused_add.3 (param_0.177: s64[], param_1.237: pred[]) -> s64[] {
+  %param_0.177 = s64[] parameter(0)
+  %param_1.237 = pred[] parameter(1)
+  %constant_2828_3 = s64[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %constant_2827_1 = s64[] constant(1), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %select_n.526.1 = s64[] select(%param_1.237, %constant_2828_3, %constant_2827_1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=882}
+  ROOT %add.132.1 = s64[] add(%param_0.177, %select_n.526.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=853}
+}
+
+%fused_add.4 (param_0.178: s64[], param_1.239: pred[]) -> s64[] {
+  %param_0.178 = s64[] parameter(0)
+  %param_1.239 = pred[] parameter(1)
+  %constant_2827_2 = s64[] constant(1), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %constant_2828_2 = s64[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %select_n.525.1 = s64[] select(%param_1.239, %constant_2827_2, %constant_2828_2), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=881}
+  ROOT %add.131.1 = s64[] add(%param_0.178, %select_n.525.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=852}
+}
+
+%fused_select.3 (param_0.183: pred[]) -> s64[] {
+  %param_0.183 = pred[] parameter(0)
+  %constant_2828_1 = s64[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %constant_2827_3 = s64[] constant(1), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  ROOT %select_n.510.1 = s64[] select(%param_0.183, %constant_2828_1, %constant_2827_3), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=856}
+}
+
+%fused_add.5 (param_0.184: s64[]) -> s64[] {
+  %param_0.184 = s64[] parameter(0)
+  %constant_2827_4 = s64[] constant(1), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  ROOT %add.128.1 = s64[] add(%param_0.184, %constant_2827_4), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=834}
+}
+
+%fused_select.4 (param_0.188: pred[], param_1.250: pred[]) -> pred[] {
+  %param_0.188 = pred[] parameter(0)
+  %constant_2834_2 = pred[] constant(false), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %param_1.250 = pred[] parameter(1)
+  ROOT %select_n.523.1 = pred[] select(%param_0.188, %constant_2834_2, %param_1.250), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=876}
+}
+
+%wrapped_subtract_computation (param_0.199: f64[], param_1.260: f64[]) -> f64[] {
+  %param_0.199 = f64[] parameter(0)
+  %param_1.260 = f64[] parameter(1)
+  ROOT %sub.43.1 = f64[] subtract(%param_0.199, %param_1.260), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=575}
+}
+
+%wrapped_add_computation (param_0.200: s64[], param_1.261: s64[]) -> s64[] {
+  %param_0.200 = s64[] parameter(0)
+  %param_1.261 = s64[] parameter(1)
+  ROOT %add.233.1 = s64[] add(%param_0.200, %param_1.261), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=735}
+}
+
+%wrapped_add_computation.1 (param_0.201: s64[], param_1.262: s64[]) -> s64[] {
+  %param_0.201 = s64[] parameter(0)
+  %param_1.262 = s64[] parameter(1)
+  ROOT %add.234.1 = s64[] add(%param_0.201, %param_1.262), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=735}
+}
+
+%region_6.33.sunk.clone.sunk.clone.clone.clone.clone (arg_tuple.24: (s64[], c128[64,64], f64[], f64[], pred[], /*index=5*/c128[64,64], s64[], s64[], s64[], f64[40], /*index=10*/c128[40,64,64], s64[])) -> (s64[], c128[64,64], f64[], f64[], pred[], /*index=5*/c128[64,64], s64[], s64[], s64[], f64[40], /*index=10*/c128[40,64,64], s64[]) {
+  %constant_2828_0 = s64[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %copy.75 = s64[] copy(%constant_2828_0)
+  %copy.3 = s64[] copy(%copy.75)
+  %arg_tuple.24 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+  %get-tuple-element.761 = s64[] get-tuple-element(%arg_tuple.24), index=0
+  %loop_add_fusion.5 = s64[] fusion(%get-tuple-element.761), kind=kLoop, calls=%fused_add.5, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/add" deduplicated_name="loop_add_fusion" stack_frame_id=834}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %get-tuple-element.763 = f64[] get-tuple-element(%arg_tuple.24), index=2
+  %copy.38 = f64[] copy(%get-tuple-element.763)
+  %get-tuple-element.764 = f64[] get-tuple-element(%arg_tuple.24), index=3
+  %copy.39 = f64[] copy(%get-tuple-element.764)
+  %wrapped_subtract = f64[] fusion(%copy.39, %copy.38), kind=kLoop, calls=%wrapped_subtract_computation, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/sub" stack_frame_id=575}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %get-tuple-element.765 = pred[] get-tuple-element(%arg_tuple.24), index=4
+  %loop_select_fusion.3 = s64[] fusion(%get-tuple-element.765), kind=kLoop, calls=%fused_select.3, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=856}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %get-tuple-element.767 = s64[] get-tuple-element(%arg_tuple.24), index=6
+  %get-tuple-element.768 = s64[] get-tuple-element(%arg_tuple.24), index=7
+  %get-tuple-element.769 = s64[] get-tuple-element(%arg_tuple.24), index=8
+  %get-tuple-element.772 = s64[] get-tuple-element(%arg_tuple.24), index=11
+  %get-tuple-element.762 = c128[64,64]{1,0} get-tuple-element(%arg_tuple.24), index=1
+  %get-tuple-element.766 = c128[64,64]{1,0} get-tuple-element(%arg_tuple.24), index=5
+  %get-tuple-element.770 = f64[40]{0} get-tuple-element(%arg_tuple.24), index=9
+  %get-tuple-element.771 = c128[40,64,64]{2,1,0} get-tuple-element(%arg_tuple.24), index=10
+  %constant_2833_0 = c128[7]{0} constant({(0.0017800110522257773, 0), (0.00081643445965674626, 0), (-0.0078808780102619935, 0), (0.14471100717326291, 0), (-0.58235716545255523, 0), (0.45808210592918686, 0), (-0.015151515151515152, 0)}), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %loop_select_fusion = c128[64,64]{1,0} fusion(%get-tuple-element.766, %get-tuple-element.765), kind=kLoop, calls=%fused_select, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=858}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %copy.4 = c128[64,64]{1,0} copy(%get-tuple-element.762)
+  %loop_pad_fusion = c128[7,64,64]{2,1,0} fusion(%loop_select_fusion, %wrapped_subtract), kind=kLoop, calls=%fused_pad, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/scatter" stack_frame_id=595}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %tuple.96 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) tuple(%copy.3, %loop_select_fusion.3, %copy.4, %loop_select_fusion, %loop_pad_fusion, /*index=5*/%get-tuple-element.762, %wrapped_subtract)
+  %while.151 = (s64[], s64[], c128[64,64]{1,0}, c128[64,64]{1,0}, c128[7,64,64]{2,1,0}, /*index=5*/c128[64,64]{1,0}, f64[]) while(%tuple.96), condition=%region_10.18.clone.clone.clone.clone, body=%region_8.17.clone.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while" stack_frame_id=600}
+  %while.138.0 = c128[64,64]{1,0} get-tuple-element(%while.151), index=2, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while" stack_frame_id=600}
+  %input_reduce_fusion = pred[] fusion(%while.138.0), kind=kInput, calls=%fused_reduce, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/reduce_or" stack_frame_id=700}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %get-tuple-element.727 = c128[7,64,64]{2,1,0} get-tuple-element(%while.151), index=4, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while" stack_frame_id=600}
+  %while.141.0 = c128[64,64]{1,0} get-tuple-element(%while.151), index=3, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/checkpointed-no-vjp/while" stack_frame_id=600}
+  %loop_multiply_fusion = c128[64,64]{1,0} fusion(%get-tuple-element.762, %while.138.0, %get-tuple-element.727, %constant_2833_0, %input_reduce_fusion), kind=kLoop, calls=%fused_multiply, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/dot_general" stack_frame_id=717}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %input_reduce_fusion.1 = f64[] fusion(%loop_multiply_fusion), kind=kInput, calls=%fused_reduce.1, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/sqrt" stack_frame_id=718}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %loop_compare_minimum_select_fusion = (f64[], f64[], pred[]) fusion(%wrapped_subtract, %copy.39, %copy.38, %input_reduce_fusion.1), kind=kLoop, calls=%fused_compare_minimum_select, control-predecessors={%wrapped_subtract}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=874}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %get-tuple-element.725 = pred[] get-tuple-element(%loop_compare_minimum_select_fusion), index=2, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=874}
+  %loop_add_fusion.3 = s64[] fusion(%get-tuple-element.768, %get-tuple-element.725), kind=kLoop, calls=%fused_add.3, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=853}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %loop_add_fusion.4 = s64[] fusion(%get-tuple-element.767, %get-tuple-element.725), kind=kLoop, calls=%fused_add.4, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/add" stack_frame_id=852}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %loop_select_fusion.4 = pred[] fusion(%get-tuple-element.725, %get-tuple-element.765), kind=kLoop, calls=%fused_select.4, control-predecessors={%loop_select_fusion.3, %loop_select_fusion}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=876}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %get-tuple-element.775 = f64[] get-tuple-element(%loop_compare_minimum_select_fusion), index=1, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=874}
+  %get-tuple-element.776 = f64[] get-tuple-element(%loop_compare_minimum_select_fusion), index=0, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" stack_frame_id=874}
+  %loop_select_fusion.2 = c128[64,64]{1,0} fusion(%while.141.0, %get-tuple-element.766, %get-tuple-element.725), kind=kLoop, calls=%fused_select.2, control-predecessors={%loop_select_fusion}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" deduplicated_name="loop_select_fusion.1" stack_frame_id=876}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %tuple.99 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) tuple(%copy.75, %get-tuple-element.769, %get-tuple-element.770, %get-tuple-element.771, %get-tuple-element.772, /*index=5*/%copy.39, %get-tuple-element.725, %copy.38, %get-tuple-element.727, %get-tuple-element.762)
+  %while.150 = (s64[], s64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/f64[], pred[], f64[], c128[7,64,64]{2,1,0}, c128[64,64]{1,0}) while(%tuple.99), condition=%region_15.32.sunk.clone.clone.clone, body=%region_12.31.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=735}
+  %get-tuple-element.636.0 = s64[] get-tuple-element(%while.150), index=4
+  %get-tuple-element.632.0 = s64[] get-tuple-element(%while.150), index=1
+  %get-tuple-element.631.0 = s64[] get-tuple-element(%while.150), index=0
+  %wrapped_add.1 = s64[] fusion(%get-tuple-element.636.0, %get-tuple-element.631.0), kind=kLoop, calls=%wrapped_add_computation.1, control-predecessors={%while.150}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=735}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %wrapped_add = s64[] fusion(%get-tuple-element.632.0, %get-tuple-element.631.0), kind=kLoop, calls=%wrapped_add_computation, control-predecessors={%while.150}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=735}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %loop_select_fusion.1 = c128[64,64]{1,0} fusion(%while.138.0, %get-tuple-element.762, %get-tuple-element.725), kind=kLoop, calls=%fused_select.1, control-predecessors={%loop_multiply_fusion, %while.150, %while.151}, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/jit(_where)/select_n" deduplicated_name="loop_select_fusion.1" stack_frame_id=869}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %get-tuple-element.783 = c128[40,64,64]{2,1,0} get-tuple-element(%while.150), index=3, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=735}
+  %get-tuple-element.782 = f64[40]{0} get-tuple-element(%while.150), index=2, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/body/inner-loop/checkpointed-no-vjp/while" stack_frame_id=735}
+  ROOT %tuple.104 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) tuple(%loop_add_fusion.5, %loop_select_fusion.1, %get-tuple-element.775, %get-tuple-element.776, %loop_select_fusion.4, /*index=5*/%loop_select_fusion.2, %loop_add_fusion.4, %loop_add_fusion.3, %wrapped_add, %get-tuple-element.782, /*index=10*/%get-tuple-element.783, %wrapped_add.1)
+}
+
+%fused_and (param_0.1: s64[], param_1.3: f64[]) -> pred[] {
+  %param_1.3 = f64[] parameter(1)
+  %constant_260__sunk_7_1 = f64[] constant(0.1), metadata={op_name="jit(f)/jit(diffeqsolve)/mul" stack_frame_id=464}
+  %lt.76.1 = pred[] compare(%param_1.3, %constant_260__sunk_7_1), direction=LT, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/cond/lt" stack_frame_id=884}
+  %param_0.1 = s64[] parameter(0)
+  %constant_2826_1 = s64[] constant(100000), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %lt.77.1 = pred[] compare(%param_0.1, %constant_2826_1), direction=LT, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/cond/lt" stack_frame_id=885}
+  ROOT %and.51.1 = pred[] and(%lt.76.1, %lt.77.1), metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/cond/and" stack_frame_id=886}
+}
+
+%region_16.34.clone.sunk.clone.clone.clone (arg_tuple.23: (s64[], c128[64,64], f64[], f64[], pred[], /*index=5*/c128[64,64], s64[], s64[], s64[], f64[40], /*index=10*/c128[40,64,64], s64[])) -> pred[] {
+  %arg_tuple.23 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) parameter(0)
+  %get-tuple-element.407.0 = f64[] get-tuple-element(%arg_tuple.23), index=2
+  %get-tuple-element.408.0 = s64[] get-tuple-element(%arg_tuple.23), index=0
+  ROOT %loop_and_fusion = pred[] fusion(%get-tuple-element.408.0, %get-tuple-element.407.0), kind=kLoop, calls=%fused_and, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while/cond/and" stack_frame_id=886}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+}
+
+%fused_select.5 (param_0.196: f64[]) -> s32[] {
+  %param_0.196 = f64[] parameter(0)
+  %constant_260_1 = f64[] constant(0.1), metadata={op_name="jit(f)/jit(diffeqsolve)/mul" stack_frame_id=464}
+  %lt.4.1 = pred[] compare(%param_0.196, %constant_260_1), direction=LT, metadata={op_name="jit(f)/jit(diffeqsolve)/lt" stack_frame_id=903}
+  %constant_21_1 = s32[] constant(1), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %constant_24_1 = s32[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  ROOT %select_n.380.1 = s32[] select(%lt.4.1, %constant_21_1, %constant_24_1), metadata={op_name="jit(f)/jit(diffeqsolve)/jit(_where)/select_n" stack_frame_id=905}
+}
+
+%fused_broadcast () -> c128[64,64] {
+  %constant_10_1 = c128[] constant((0, 0)), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  ROOT %broadcast_in_dim.3.1 = c128[64,64]{1,0} broadcast(%constant_10_1), dimensions={}, metadata={op_name="jit(f)/jit(diffeqsolve)/broadcast_in_dim" stack_frame_id=480}
+}
+
+%fused_broadcast.1 () -> c128[40,64,64] {
+  %constant_13_1 = c128[] constant((inf, 0)), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  ROOT %broadcast_in_dim.7.1 = c128[40,64,64]{2,1,0} broadcast(%constant_13_1), dimensions={}, metadata={op_name="jit(f)/jit(diffeqsolve)/broadcast_in_dim" stack_frame_id=485}
+}
+
+%fused_broadcast.2 () -> f64[40] {
+  %constant_268_1 = f64[] constant(inf), metadata={op_name="jit(f)/jit(diffeqsolve)/mul" stack_frame_id=482}
+  ROOT %broadcast_in_dim.5.1 = f64[40]{0} broadcast(%constant_268_1), dimensions={}, metadata={op_name="jit(f)/jit(diffeqsolve)/broadcast_in_dim" stack_frame_id=483}
+}
+
+ENTRY %main.41 (y0.1: c128[64,64]) -> (f64[], f64[], f64[40], c128[40,64,64], s64[], /*index=5*/s64[], s64[], s64[], s32[]) {
+  %constant_266_0 = f64[] constant(0.01), metadata={op_name="jit(f)/jit(diffeqsolve)/min" stack_frame_id=476}
+  %copy.72 = f64[] copy(%constant_266_0)
+  %constant_260_0 = f64[] constant(0.1), metadata={op_name="jit(f)/jit(diffeqsolve)/mul" stack_frame_id=464}
+  %constant_256_0 = f64[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)/mul" stack_frame_id=463}
+  %copy.71 = f64[] copy(%constant_256_0)
+  %copy.61 = f64[] copy(%copy.71)
+  %constant_4_0 = pred[] constant(true), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %copy.70 = pred[] copy(%constant_4_0)
+  %constant_3_0 = s64[] constant(0), metadata={op_name="jit(f)/jit(diffeqsolve)" stack_frame_id=436}
+  %copy.69 = s64[] copy(%constant_3_0)
+  %copy.32 = s64[] copy(%copy.69)
+  %copy.31 = s64[] copy(%copy.69)
+  %copy.30 = s64[] copy(%copy.69)
+  %copy.35 = s64[] copy(%copy.69)
+  %constant_164_0 = s64[] constant(100000)
+  %y0.1 = c128[64,64]{1,0} parameter(0), metadata={op_name="y0"}
+  %copy.68 = c128[64,64]{1,0} copy(%y0.1)
+  %loop_broadcast_fusion.2 = f64[40]{0} fusion(), kind=kLoop, calls=%fused_broadcast.2, metadata={op_name="jit(f)/jit(diffeqsolve)/broadcast_in_dim" stack_frame_id=483}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %loop_broadcast_fusion = c128[64,64]{1,0} fusion(), kind=kLoop, calls=%fused_broadcast, metadata={op_name="jit(f)/jit(diffeqsolve)/broadcast_in_dim" stack_frame_id=480}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %loop_broadcast_fusion.1 = c128[40,64,64]{2,1,0} fusion(), kind=kLoop, calls=%fused_broadcast.1, metadata={op_name="jit(f)/jit(diffeqsolve)/broadcast_in_dim" stack_frame_id=485}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %tuple.102 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) tuple(%copy.69, %copy.68, %copy.71, %copy.72, %copy.70, /*index=5*/%loop_broadcast_fusion, %copy.30, %copy.31, %copy.32, %loop_broadcast_fusion.2, /*index=10*/%loop_broadcast_fusion.1, %copy.35)
+  %while.143 = (s64[], c128[64,64]{1,0}, f64[], f64[], pred[], /*index=5*/c128[64,64]{1,0}, s64[], s64[], s64[], f64[40]{0}, /*index=10*/c128[40,64,64]{2,1,0}, s64[]) while(%tuple.102), condition=%region_16.34.clone.sunk.clone.clone.clone, body=%region_6.33.sunk.clone.sunk.clone.clone.clone.clone, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+  %get-tuple-element.791 = s64[] get-tuple-element(%while.143), index=7, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+  %while.36.0 = f64[] get-tuple-element(%while.143), index=2, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+  %loop_select_fusion.5 = s32[] fusion(%while.36.0), kind=kLoop, calls=%fused_select.5, metadata={op_name="jit(f)/jit(diffeqsolve)/jit(_where)/select_n" stack_frame_id=905}, backend_config={"operation_queue_id":"0","force_earliest_schedule":false,"reification_cost":[],"device_type":"DEVICE_TYPE_INVALID","native_emitter_backend_config":{"type":"NATIVE_EMITTER_TYPE_INVALID","unroll_factor":0}}
+  %get-tuple-element.790 = s64[] get-tuple-element(%while.143), index=6, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+  %get-tuple-element.792 = s64[] get-tuple-element(%while.143), index=0, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+  %get-tuple-element.787 = f64[40]{0} get-tuple-element(%while.143), index=9, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+  %get-tuple-element.788 = c128[40,64,64]{2,1,0} get-tuple-element(%while.143), index=10, metadata={op_name="jit(f)/jit(diffeqsolve)/outer-loop/checkpointed-no-vjp/while" stack_frame_id=541}
+  %tuple.105 = (f64[], f64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/s64[], s64[], s64[], s32[]) tuple(%copy.61, %constant_260_0, %get-tuple-element.787, %get-tuple-element.788, %constant_164_0, /*index=5*/%get-tuple-element.790, %get-tuple-element.791, %get-tuple-element.792, %loop_select_fusion.5)
+  %get-tuple-element.794 = f64[] get-tuple-element(%tuple.105), index=0
+  %get-tuple-element.795 = f64[] get-tuple-element(%tuple.105), index=1
+  %get-tuple-element.796 = f64[40]{0} get-tuple-element(%tuple.105), index=2
+  %get-tuple-element.797 = c128[40,64,64]{2,1,0} get-tuple-element(%tuple.105), index=3
+  %get-tuple-element.798 = s64[] get-tuple-element(%tuple.105), index=4
+  %get-tuple-element.799 = s64[] get-tuple-element(%tuple.105), index=5
+  %get-tuple-element.800 = s64[] get-tuple-element(%tuple.105), index=6
+  %get-tuple-element.801 = s64[] get-tuple-element(%tuple.105), index=7
+  %get-tuple-element.802 = s32[] get-tuple-element(%tuple.105), index=8
+  %copy.73 = f64[] copy(%get-tuple-element.795)
+  %copy.74 = s64[] copy(%get-tuple-element.798)
+  ROOT %tuple.106 = (f64[], f64[], f64[40]{0}, c128[40,64,64]{2,1,0}, s64[], /*index=5*/s64[], s64[], s64[], s32[]) tuple(%get-tuple-element.794, %copy.73, %get-tuple-element.796, %get-tuple-element.797, %copy.74, /*index=5*/%get-tuple-element.799, %get-tuple-element.800, %get-tuple-element.801, %get-tuple-element.802)
+}
+

@@ -1,0 +1,798 @@
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_minimum_multiply_select_fusion"
+    thunk_id: 1
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_multiply_fusion.3"
+    thunk_id: 2
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "input_reduce_fusion.3"
+    thunk_id: 3
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "cond.152.clone"
+    thunk_id: 7
+  }
+  thunk_kind: "kConditional"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "pure_callback.6"
+    thunk_id: 4
+  }
+  thunk_kind: "kCustomCall"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "pure_callback.7"
+    thunk_id: 5
+  }
+  thunk_kind: "kCustomCall"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.42"
+    thunk_id: 6
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "input_reduce_fusion.4"
+    thunk_id: 8
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "cond.154.clone"
+    thunk_id: 12
+  }
+  thunk_kind: "kConditional"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "pure_callback.10"
+    thunk_id: 9
+  }
+  thunk_kind: "kCustomCall"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "pure_callback.11"
+    thunk_id: 10
+  }
+  thunk_kind: "kCustomCall"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.44"
+    thunk_id: 11
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "command_buffer_13"
+  }
+  thunk_kind: "kCommandBuffer"
+}
+thunk_metadata {
+  thunk_info {
+  }
+  thunk_kind: "kSequential"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_select_fusion.4"
+    thunk_id: 13
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.47"
+    thunk_id: 14
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_broadcast_fusion"
+    thunk_id: 15
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.102"
+    thunk_id: 16
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.52"
+    thunk_id: 17
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.53"
+    thunk_id: 18
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.54"
+    thunk_id: 19
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.57"
+    thunk_id: 20
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_broadcast_fusion.2"
+    thunk_id: 21
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "input_transpose_fusion.3"
+    thunk_id: 22
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "input_reduce_fusion.5"
+    thunk_id: 23
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "cond.150.clone"
+    thunk_id: 27
+  }
+  thunk_kind: "kConditional"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "pure_callback.2"
+    thunk_id: 24
+  }
+  thunk_kind: "kCustomCall"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "pure_callback.3"
+    thunk_id: 25
+  }
+  thunk_kind: "kCustomCall"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.40"
+    thunk_id: 26
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_broadcast_fusion.1"
+    thunk_id: 28
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "io_callback.0"
+    thunk_id: 29
+  }
+  thunk_kind: "kCustomCall"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.49"
+    thunk_id: 30
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "while.284"
+    thunk_id: 31
+  }
+  thunk_kind: "kWhile"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_and_fusion"
+    thunk_id: 32
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "command_buffer_33"
+  }
+  thunk_kind: "kCommandBuffer"
+}
+thunk_metadata {
+  thunk_info {
+  }
+  thunk_kind: "kSequential"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.60"
+    thunk_id: 33
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.61"
+    thunk_id: 34
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_multiply_fusion.2"
+    thunk_id: 35
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_select_fusion"
+    thunk_id: 36
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_pad_fusion"
+    thunk_id: 37
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "wrapped_transpose"
+    thunk_id: 38
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.15"
+    thunk_id: 39
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_select_fusion.2"
+    thunk_id: 40
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.115"
+    thunk_id: 41
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.14"
+    thunk_id: 42
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "while.290"
+    thunk_id: 43
+  }
+  thunk_kind: "kWhile"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_and_fusion.1"
+    thunk_id: 44
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "command_buffer_45"
+  }
+  thunk_kind: "kCommandBuffer"
+}
+thunk_metadata {
+  thunk_info {
+  }
+  thunk_kind: "kSequential"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_reduce_fusion"
+    thunk_id: 45
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_multiply_fusion"
+    thunk_id: 46
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "input_reduce_fusion"
+    thunk_id: 47
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "input_add_fusion"
+    thunk_id: 48
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "input_transpose_fusion"
+    thunk_id: 49
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_dynamic_update_slice_fusion"
+    thunk_id: 50
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_add_fusion"
+    thunk_id: 51
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "command_buffer_52"
+  }
+  thunk_kind: "kCommandBuffer"
+}
+thunk_metadata {
+  thunk_info {
+  }
+  thunk_kind: "kSequential"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "input_reduce_fusion.1"
+    thunk_id: 52
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_reduce_fusion.1"
+    thunk_id: 53
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "wrapped_transpose.1"
+    thunk_id: 54
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "input_transpose_fusion.2"
+    thunk_id: 55
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_multiply_fusion.1"
+    thunk_id: 56
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "input_reduce_fusion.2"
+    thunk_id: 57
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_compare_minimum_select_fusion"
+    thunk_id: 58
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "while.291"
+    thunk_id: 59
+  }
+  thunk_kind: "kWhile"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_and_fusion.2"
+    thunk_id: 60
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_concatenate_fusion"
+    thunk_id: 61
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_dynamic_update_slice_fusion.1"
+    thunk_id: 62
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_dynamic_update_slice_fusion.2"
+    thunk_id: 63
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_add_fusion.1"
+    thunk_id: 64
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "command_buffer_65"
+  }
+  thunk_kind: "kCommandBuffer"
+}
+thunk_metadata {
+  thunk_info {
+  }
+  thunk_kind: "kSequential"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "wrapped_add.1"
+    thunk_id: 65
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "wrapped_add"
+    thunk_id: 66
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "input_transpose_fusion.1"
+    thunk_id: 67
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_select_fusion.1"
+    thunk_id: 68
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_divide_fusion"
+    thunk_id: 69
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_compare_fusion"
+    thunk_id: 70
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "cond.27.clone.9"
+    thunk_id: 73
+  }
+  thunk_kind: "kConditional"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "pure_callback.25"
+    thunk_id: 71
+  }
+  thunk_kind: "kCustomCall"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.36"
+    thunk_id: 72
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "command_buffer_74"
+  }
+  thunk_kind: "kCommandBuffer"
+}
+thunk_metadata {
+  thunk_info {
+  }
+  thunk_kind: "kSequential"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.77"
+    thunk_id: 74
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_add_fusion.2"
+    thunk_id: 75
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_add_fusion.3"
+    thunk_id: 76
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_select_fusion.3"
+    thunk_id: 77
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_add_fusion.4"
+    thunk_id: 78
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "io_callback.1"
+    thunk_id: 79
+  }
+  thunk_kind: "kCustomCall"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "loop_not_select_fusion"
+    thunk_id: 80
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "cond.157.clone"
+    thunk_id: 84
+  }
+  thunk_kind: "kConditional"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "pure_callback.28"
+    thunk_id: 81
+  }
+  thunk_kind: "kCustomCall"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "pure_callback.29"
+    thunk_id: 82
+  }
+  thunk_kind: "kCustomCall"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.87"
+    thunk_id: 83
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "command_buffer_85"
+  }
+  thunk_kind: "kCommandBuffer"
+}
+thunk_metadata {
+  thunk_info {
+  }
+  thunk_kind: "kSequential"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "wrapped_compare"
+    thunk_id: 85
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "cond.156.clone"
+    thunk_id: 91
+  }
+  thunk_kind: "kConditional"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "wrapped_compare.1"
+    thunk_id: 86
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "cond.32.clone.1"
+    thunk_id: 89
+  }
+  thunk_kind: "kConditional"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "wrapped_broadcast"
+    thunk_id: 87
+  }
+  thunk_kind: "kCustomKernel"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.38"
+    thunk_id: 88
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.85"
+    thunk_id: 90
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.103"
+    thunk_id: 92
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.104"
+    thunk_id: 93
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.105"
+    thunk_id: 94
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.106"
+    thunk_id: 95
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.107"
+    thunk_id: 96
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.108"
+    thunk_id: 97
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.109"
+    thunk_id: 98
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.110"
+    thunk_id: 99
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.111"
+    thunk_id: 100
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.112"
+    thunk_id: 101
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.113"
+    thunk_id: 102
+  }
+  thunk_kind: "kCopy"
+}
+thunk_metadata {
+  thunk_info {
+    profile_annotation: "copy.114"
+    thunk_id: 103
+  }
+  thunk_kind: "kCopy"
+}
