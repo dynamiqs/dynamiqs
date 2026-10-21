@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from dataclasses import replace
 from functools import reduce
 from math import prod
+from numbers import Integral
 from typing import cast, overload
 
 import equinox as eqx
@@ -23,6 +24,9 @@ from .qarray import QArray, QArrayLike
 from .sparsedia_dataarray import SparseDIADataArray
 
 __all__ = []
+
+# sparse diagonal offsets of each operator of a term, `None` to find them from data
+_TermOffsets = tuple[tuple[int, ...] | None, ...]
 
 
 def _devices(x: PyTree) -> set[Device]:
@@ -223,16 +227,22 @@ class CompositeTerm(eqx.Module):
     def asdense(self) -> CompositeTerm:
         return replace(self, operators=tuple(op.asdense() for op in self.operators))
 
-    def assparsedia(
-        self, offsets: tuple[int, ...] | None = None
-    ) -> CompositeTerm | MaterializedQArray:
-        # `offsets` designates diagonals of the full matrix, which do not decompose
-        # into per-operator offsets
-        if offsets is not None:
-            return cast(
-                MaterializedQArray, self._materialize().assparsedia(offsets=offsets)
+    def assparsedia(self, offsets: _TermOffsets | None = None) -> CompositeTerm:
+        # finding offsets from data needs concrete values, so under `jax.jit` every
+        # dense operator needs static offsets
+        if offsets is None:
+            offsets = (None,) * len(self.operators)
+        if len(offsets) != len(self.operators):
+            raise ValueError(
+                'Argument `offsets` of `CompositeTerm.assparsedia` must contain one '
+                f'entry per operator ({len(self.operators)}), but got '
+                f'{len(offsets)} entries.'
             )
-        return replace(self, operators=tuple(op.assparsedia() for op in self.operators))
+        operators = tuple(
+            op.assparsedia(offsets=op_offsets)
+            for op, op_offsets in zip(self.operators, offsets, strict=True)
+        )
+        return replace(self, operators=operators)
 
     # === Quantum methods ===
 
@@ -493,23 +503,44 @@ class CompositeQArray(QArray):
         """
         return replace(self, terms=tuple(term.asdense() for term in self.terms))
 
-    def assparsedia(self, offsets: tuple[int, ...] | None = None) -> QArray:
+    def assparsedia(
+        self, offsets: tuple[int, ...] | tuple[_TermOffsets | None, ...] | None = None
+    ) -> CompositeQArray:
         """Converts to a sparse diagonal layout.
 
         Args:
-            offsets: Offsets of the stored diagonals. If `None`, offsets are determined
-                automatically from the matrix structure. This argument can also be
-                explicitly specified to ensure compatibility with JAX transformations,
-                which require static offset values.
+            offsets: Offsets of the stored diagonals of each operator of each term,
+                e.g. `((offsets_A0, offsets_B0), (offsets_A1, offsets_B1))`, with
+                `None` for any term or operator whose offsets should be determined
+                automatically from its structure. If `None`, all offsets are
+                determined automatically. Static offsets ensure compatibility with
+                JAX transformations. Offsets of an operator that is already in sparse
+                diagonal layout are ignored.
 
         Returns:
             A qarray with sparse diagonal data layout.
         """
-        # `offsets` designates diagonals of the full matrix, which do not decompose
-        # into per-operator offsets
-        if offsets is not None:
-            return self._materialize().assparsedia(offsets=offsets)
-        return replace(self, terms=tuple(term.assparsedia() for term in self.terms))
+        # the signature accepts `tuple[int, ...]` to match `QArray.assparsedia`, but
+        # diagonals of the full matrix do not decompose into per-operator offsets
+        if offsets is None:
+            offsets = (None,) * len(self.terms)
+        if any(isinstance(o, Integral) for o in offsets):
+            raise ValueError(
+                'Argument `offsets` of `CompositeQArray.assparsedia` must contain the '
+                'offsets of each operator of each term, but got integers, which '
+                'designate diagonals of the full matrix.'
+            )
+        if len(offsets) != len(self.terms):
+            raise ValueError(
+                'Argument `offsets` of `CompositeQArray.assparsedia` must contain one '
+                f'entry per term ({len(self.terms)}), but got {len(offsets)} entries.'
+            )
+        term_offsets = cast(tuple[_TermOffsets | None, ...], offsets)
+        terms = tuple(
+            term.assparsedia(offsets=o)
+            for term, o in zip(self.terms, term_offsets, strict=True)
+        )
+        return replace(self, terms=terms)
 
     # === Repr ===
 

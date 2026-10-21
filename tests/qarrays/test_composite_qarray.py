@@ -5,7 +5,6 @@ import pytest
 
 import dynamiqs as dq
 from dynamiqs.qarrays.composite_qarray import CompositeQArray, CompositeTerm
-from dynamiqs.qarrays.materialized_qarray import MaterializedQArray
 
 from ..order import TEST_SHORT
 
@@ -172,13 +171,28 @@ def test_layout_conversion_stays_lazy():
     assert sparse.layout is dq.dia
     assert jnp.allclose(sparse.to_jax(), c_dense.to_jax())
 
-    # explicit offsets designate diagonals of the full matrix, which do not
-    # decompose into per-operator offsets: this branch must materialize
-    materialized = c_dense._materialize()
-    offsets = materialized.assparsedia().data.offsets
-    explicit = c_dense.assparsedia(offsets=offsets)
-    assert type(explicit) is MaterializedQArray
-    assert jnp.allclose(explicit.to_jax(), materialized.to_jax())
+    # off-diagonal operators, so that wrong per-operator offsets would drop entries
+    A = dq.asqarray(np.array([[0.0, 1.0], [1.0, 0.0]]), dims=(2,))
+    B = dq.asqarray(np.diag([1.0, 2.0, 3.0]) + np.diag([4.0, 5.0], k=-1), dims=(3,))
+    c_off = CompositeQArray((2, 3), (CompositeTerm(operators=(A, B)),))
+    offsets = (((-1, 1), (-1, 0)),)
+
+    # static per-operator offsets stay lazy under `jax.jit`, where finding the
+    # offsets from data is impossible
+    with pytest.raises(jax.errors.ConcretizationTypeError):
+        jax.jit(lambda c: c.assparsedia())(c_off)
+    explicit = jax.jit(lambda c: c.assparsedia(offsets=offsets))(c_off)
+    assert type(explicit) is CompositeQArray
+    assert explicit.layout is dq.dia
+    assert jnp.allclose(explicit.to_jax(), c_off.to_jax())
+
+    with pytest.raises(ValueError, match='one entry per operator'):
+        c_off.assparsedia(offsets=(((-1, 1),),))
+    with pytest.raises(ValueError, match='one entry per term'):
+        c_off.assparsedia(offsets=(None, None))
+    # diagonals of the full matrix do not decompose into per-operator offsets
+    with pytest.raises(ValueError, match='diagonals of the full matrix'):
+        c_off.assparsedia(offsets=c_off._materialize().assparsedia().data.offsets)
 
 
 @pytest.mark.run(order=TEST_SHORT)
