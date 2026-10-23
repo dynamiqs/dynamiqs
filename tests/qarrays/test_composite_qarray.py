@@ -458,3 +458,258 @@ def test_getitem_matrix_axis_materializes():
 
     assert not isinstance(indexed, CompositeQArray)
     assert jnp.allclose(jnp.asarray(indexed), oracle[key])
+
+
+# === unary algebra ===
+# each method is compared with the same method on `_materialize()`, which
+# `test_qarray_matches_independent_oracle` checks against numpy; `_batched_composite`
+# is real and diagonal, which most wrong formulas survive, so the builders below use
+# complex, non-normal and non-Hermitian data
+
+
+def _general_composite() -> CompositeQArray:
+    # two terms of batch shapes () and (3,), the second with a batched coefficient
+    k0, k1, k2, k3, k4 = jax.random.split(jax.random.key(42), 5)
+    A0 = dq.asqarray(dq.random.complex(k0, (2, 2)))
+    B0 = dq.asqarray(dq.random.complex(k1, (3, 3)))
+    A1 = dq.asqarray(dq.random.complex(k2, (3, 2, 2)))
+    B1 = dq.asqarray(dq.random.complex(k3, (3, 3)))
+    term0 = CompositeTerm((A0, B0), 1.5 - 0.5j)
+    term1 = CompositeTerm((A1, B1), dq.random.complex(k4, 3))
+    return CompositeQArray((2, 3), (term0, term1))
+
+
+def _single_term_composite() -> CompositeQArray:
+    # non-normal factors with distinct eigenvalues, the second one batched only
+    A = dq.asqarray([[1.0, 2.0], [0.0, 3.0]])
+    B = dq.asqarray(dq.random.complex(jax.random.key(42), (3, 3, 3)))
+    return CompositeQArray((2, 3), (CompositeTerm((A, B), 0.5j),))
+
+
+def _hermitian_term_composite() -> CompositeQArray:
+    # (iA) ⊗ (iB) = -A ⊗ B with A and B Hermitian: Hermitian, with factors that
+    # are not, like iY ⊗ iY
+    k0, k1 = jax.random.split(jax.random.key(42))
+    iA, iB = 1j * dq.random.herm(k0, (2, 2)), 1j * dq.random.herm(k1, (3, 3))
+    return CompositeQArray((2, 3), (CompositeTerm((iA, iB)),))
+
+
+def _hermitian_sum_composite() -> CompositeQArray:
+    # A ⊗ A† + A† ⊗ A: Hermitian by cancellation between terms
+    A = dq.asqarray(dq.random.complex(jax.random.key(42), (2, 2)))
+    terms = (CompositeTerm((A, A.dag())), CompositeTerm((A.dag(), A)))
+    return CompositeQArray((2, 2), terms)
+
+
+def _nearly_hermitian_composite() -> CompositeQArray:
+    # A is Hermitian up to `atol=1e-8` but A ⊗ B is not, since B scales the error
+    eps, scale = 5e-9, 100.0
+    A, B = dq.asqarray([[1.0, eps], [0.0, 1.0]]), dq.asqarray(scale * np.eye(2))
+    return CompositeQArray((2, 2), (CompositeTerm((A, B)),))
+
+
+def _ptrace_composite(layout: Layout) -> CompositeQArray:
+    # dims (2, 3, 2), the second term with an operator spanning subsystems 0 and 1
+    k0, k1, k2, k3, k4 = jax.random.split(jax.random.key(42), 5)
+    A0 = dq.asqarray(dq.random.complex(k0, (2, 2)), layout=layout)
+    B0 = dq.asqarray(dq.random.complex(k1, (3, 3)), layout=layout)
+    C0 = dq.asqarray(dq.random.complex(k2, (2, 2)), layout=layout)
+    AB1 = dq.asqarray(dq.random.complex(k3, (6, 6)), dims=(2, 3), layout=layout)
+    C1 = dq.asqarray(dq.random.complex(k4, (2, 2)), layout=layout)
+    terms = (CompositeTerm((A0, B0, C0), 1.5), CompositeTerm((AB1, C1), 0.5j))
+    return CompositeQArray((2, 3, 2), terms)
+
+
+# one scalar per batch element
+_BATCHED_SCALAR = np.array([1.0, 2.0j, -1.5])[:, None, None]
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize(
+    ('build', 'method', 'stays_lazy'),
+    [
+        pytest.param(_general_composite, lambda x: x.conj(), True, id='conj'),
+        pytest.param(
+            _general_composite,
+            lambda x: x * _BATCHED_SCALAR,
+            True,
+            id='mul-batched-scalar',
+        ),
+        pytest.param(
+            _general_composite,
+            lambda x: x.addscalar(_BATCHED_SCALAR),
+            True,
+            id='addscalar-batched-scalar',
+        ),
+        pytest.param(
+            _general_composite,
+            lambda x: x.addscalar(np.arange(x.shape[-1])),
+            False,
+            id='addscalar-vector',
+        ),
+        pytest.param(
+            _single_term_composite, lambda x: x.powm(3), True, id='powm-single-term'
+        ),
+        pytest.param(
+            _general_composite, lambda x: x.powm(3), False, id='powm-multi-term'
+        ),
+        pytest.param(
+            _single_term_composite, lambda x: x.elpow(3), True, id='elpow-single-term'
+        ),
+        pytest.param(
+            _general_composite, lambda x: x.elpow(3), False, id='elpow-multi-term'
+        ),
+        pytest.param(
+            _hermitian_term_composite, lambda x: x.elpow(-1), False, id='elpow-negative'
+        ),
+        pytest.param(
+            _single_term_composite, lambda x: x.elpow(0.5), False, id='elpow-fractional'
+        ),
+    ],
+)
+def test_qarray_methods_match_materialized(build, method, stays_lazy):
+    c = build()
+
+    result = method(c)
+
+    expected = method(c._materialize())
+    assert isinstance(result, CompositeQArray) is stays_lazy
+    assert result.shape == expected.shape
+    assert result.dims == expected.dims
+    assert result.dtype == expected.dtype
+    assert result.layout is expected.layout
+    assert jnp.allclose(result.to_jax(), expected.to_jax(), atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize(
+    ('build', 'method'),
+    [
+        pytest.param(_general_composite, lambda x: x.trace(), id='trace'),
+        pytest.param(
+            lambda: _batched_composite(dq.dense)[0],
+            lambda x: x.isherm(),
+            id='isherm-hermitian-factors',
+        ),
+        pytest.param(
+            lambda: _batched_composite(dq.dense)[0] * 1j,
+            lambda x: x.isherm(),
+            id='isherm-complex-coefficient',
+        ),
+        pytest.param(
+            _hermitian_term_composite, lambda x: x.isherm(), id='isherm-hermitian-term'
+        ),
+        pytest.param(
+            _hermitian_sum_composite, lambda x: x.isherm(), id='isherm-hermitian-sum'
+        ),
+        pytest.param(
+            _nearly_hermitian_composite,
+            lambda x: x.isherm(),
+            id='isherm-nearly-hermitian',
+        ),
+        pytest.param(
+            _general_composite, lambda x: x.isherm(), id='isherm-not-hermitian'
+        ),
+        pytest.param(
+            _hermitian_term_composite,
+            lambda x: x._eigvalsh(),
+            id='eigvalsh-single-term',
+        ),
+        pytest.param(
+            _hermitian_term_composite, lambda x: x.norm(psd=True), id='norm-psd-true'
+        ),
+        pytest.param(
+            _hermitian_term_composite, lambda x: x.norm(psd=False), id='norm-psd-false'
+        ),
+    ],
+)
+def test_array_methods_match_materialized(build, method):
+    c = build()
+
+    result = method(c)
+
+    expected = method(c._materialize())
+    assert result.shape == expected.shape
+    assert result.dtype == expected.dtype
+    assert jnp.allclose(result, expected, atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_mul_rejects_non_scalar():
+    c = _general_composite()
+
+    with pytest.raises(NotImplementedError, match='element-wise multiplication, use'):
+        c * jnp.ones(c.shape[-2:])
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_eig_single_term_returns_eigenpairs():
+    c = _single_term_composite()
+    H = c.to_jax()
+
+    eigvals, V = c._eig()
+
+    # H V = V diag(eigvals), column by column: the order of the eigenvalues and the
+    # phase of the eigenvectors differ from those of the materialized `_eig`
+    V = V.to_jax()
+    assert jnp.allclose(H @ V, V * eigvals[..., None, :], atol=1e-5)
+    assert jnp.allclose(c._eigvals(), eigvals)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_isherm_works_under_jit():
+    # the sufficient check gives a tracer, which cannot decide a branch
+    c, _ = _batched_composite(dq.dense)
+
+    assert bool(jax.jit(lambda x: x.isherm())(c))
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+@pytest.mark.parametrize(
+    ('keep', 'stays_lazy'),
+    [
+        pytest.param((0, 1), True, id='whole-operators'),
+        pytest.param((2, 0), True, id='part-of-an-operator'),
+        pytest.param((1,), False, id='single-subsystem'),
+    ],
+)
+def test_ptrace_matches_materialized(layout, keep, stays_lazy):
+    c = _ptrace_composite(layout)
+
+    reduced = c.ptrace(*keep)
+
+    expected = c._materialize().ptrace(*keep)
+    assert isinstance(reduced, CompositeQArray) is stays_lazy
+    assert reduced.dims == expected.dims
+    assert reduced.layout is expected.layout
+    assert jnp.allclose(reduced.to_jax(), expected.to_jax(), atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize(
+    ('keep', 'match'),
+    [
+        pytest.param((), r'at least one subsystem, but got `keep=\(\)`', id='empty'),
+        pytest.param((0, 0), r'duplicates, but got `keep=\(0, 0\)`', id='duplicate'),
+        pytest.param((0, 3), 'Hilbert space structure', id='out-of-range'),
+    ],
+)
+def test_ptrace_rejects_invalid_keep(keep, match):
+    c = _ptrace_composite(dq.dense)
+
+    with pytest.raises(ValueError, match=match):
+        c.ptrace(*keep)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_addscalar_dia_warns_and_converts_to_dense():
+    c, oracle = _batched_composite(dq.dia)
+    y = 2.0
+
+    with pytest.warns(UserWarning, match='converted to dense layout'):
+        shifted = c.addscalar(y)
+
+    assert type(shifted) is CompositeQArray
+    assert shifted.layout is dq.dense
+    assert np.allclose(shifted.to_jax(), oracle + y)
