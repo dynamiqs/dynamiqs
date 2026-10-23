@@ -245,7 +245,7 @@ class MaterializedQArray(QArray):
         result = self.data * y
         return replace(self, data=result)
 
-    def __add__(self, y: QArrayLike) -> QArray:
+    def __add__(self, y: QArrayLike) -> MaterializedQArray:
         # no dtype promotion: `x + 0j` keeps a real `x` real
         if isinstance(y, Complex) and y == 0:
             return self
