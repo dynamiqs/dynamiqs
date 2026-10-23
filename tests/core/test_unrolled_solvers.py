@@ -125,15 +125,21 @@ def _dense_output():
         (unrolled_solvers.UnrolledDopri8, dx.Dopri8),
     ],
 )
-def test_unrolled_interpolation(unrolled, diffrax):
-    # the interpolation of the stages kept apart (without the inputs whose weight is
-    # always zero) is Diffrax's interpolation of the stacked stages
+@pytest.mark.parametrize('nodes', [False, True], ids=['stages', 'nodes'])
+def test_unrolled_interpolation(unrolled, diffrax, nodes):
+    # the dense output of an unrolled step gives Diffrax's interpolation of the
+    # stacked stages: from the stages kept apart (without the inputs whose weight is
+    # always zero), and from the values at the nodes (large states)
     nk = len(diffrax.tableau.c) + 1
     keys = jax.random.split(jax.random.key(0), nk + 2)
     y0, y1, *ks = [dq.random.complex(key, (3, 2)) for key in keys]
     times = dict(t0=0.2, t1=0.7)
-    stages = unrolled_solvers._Stages(tuple(ks))
-    interpolation = unrolled.interpolation_cls(**times, y0=y0, y1=y1, k=stages)
+    if nodes:
+        degree = unrolled._interpolation_degree
+        dense = unrolled_solvers._nodes(unrolled.interpolation_cls, degree, y0, y1, ks)
+    else:
+        dense = unrolled_solvers._Stages(tuple(ks))
+    interpolation = unrolled.interpolation_cls(**times, y0=y0, y1=y1, k=dense)
     reference = diffrax.interpolation_cls(**times, y0=y0, y1=y1, k=jnp.stack(ks))
     for t in (0.2, 0.33, 0.5, 0.7):
         value = interpolation.evaluate(t)
@@ -144,20 +150,34 @@ def test_unrolled_interpolation(unrolled, diffrax):
 
 @pytest.mark.run(order=TEST_LONG)
 @pytest.mark.usefixtures('_double_precision')
-def test_unrolled_dense_output(monkeypatch):
-    # the unrolled steps keep their stages apart for the interpolation at the save
-    # times and in the root finder: the saved values and click times must be Diffrax's
+@pytest.mark.parametrize('nodes', [False, True], ids=['stages', 'nodes'])
+def test_unrolled_dense_output(monkeypatch, nodes):
+    # the save times and the root finder interpolate the dense output of the unrolled
+    # steps: the stages kept apart, or the values at the nodes (large states, forced
+    # here on a small one). The saved values and click times must be Diffrax's.
     monkeypatch.setattr(jax, 'default_backend', lambda: 'cpu')
     monkeypatch.setattr(_UnrolledERK, '_supported', lambda *args: False)  # noqa: ARG005
     jax.clear_caches()
     expects, steps, states, clicktimes = _dense_output()
     monkeypatch.undo()
     monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
+    # whether the step uses the nodes, seen when it is traced
+    calls = []
+    nodes_of = unrolled_solvers._nodes
+
+    def spy(*args):
+        calls.append(None)
+        return nodes_of(*args)
+
+    monkeypatch.setattr(unrolled_solvers, '_nodes', spy)
+    if nodes:
+        monkeypatch.setattr(unrolled_solvers, '_MIN_SIZE_ODD_STAGES', 0)
     jax.clear_caches()
     expects_unrolled, steps_unrolled, states_unrolled, clicktimes_unrolled = (
         _dense_output()
     )
     jax.clear_caches()
+    assert bool(calls) == nodes
     assert steps_unrolled == steps
     assert steps < expects.shape[-1]  # several save times per step
     assert jnp.isfinite(clicktimes).any()  # clicks found by the root finder
