@@ -1,4 +1,5 @@
 import diffrax._step_size_controller.clip as dx_clip
+import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
@@ -27,5 +28,23 @@ def test_find_idx_matches_diffrax():
 def test_private_search_exists():
     # JumpClipController replaces this private function of Diffrax; if a release moved
     # or renamed it, the controller falls back to Diffrax's search (with while loops):
-    # find its new home, or drop the controller
+    # find its new home, or drop the controller if the new search has no while loop
     assert private_search_available()
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.xfail(
+    reason="diffrax#776: Diffrax's search of the next `step_ts` or `jump_ts` time "
+    'compiles to while loops; an XPASS means the installed Diffrax has none: see the '
+    'docstring of `jump_clip_controller.py` for what to remove',
+    raises=AssertionError,
+    strict=True,
+)
+def test_diffrax_search_is_loop_free():
+    # the lowered program, not the jaxpr: a `scan` or `fori_loop` is no `while` in the
+    # jaxpr, but still an XLA while loop
+    if not private_search_available():
+        pytest.skip('Diffrax moved its search: see `test_private_search_exists`')
+    ts = jnp.linspace(0.0, 1.0, 10)
+    search = jax.jit(lambda t: dx_clip._find_idx_with_hint(t, ts, 0))
+    assert 'stablehlo.while' not in search.lower(0.5).as_text()

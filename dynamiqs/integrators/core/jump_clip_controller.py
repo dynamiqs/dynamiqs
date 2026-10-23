@@ -11,6 +11,12 @@ It relies on a private function of Diffrax, `_find_idx_with_hint` in
 If a Diffrax release moves or renames it, `JumpClipController` falls back to Diffrax's
 own search (the same steps, with the while loops), and
 `test_jump_clip_controller.py::test_private_search_exists` fails, as a reminder.
+Diffrax issue #776 tracks these loops, which are also in its search of the next
+`step_ts` time. Once the installed Diffrax has none (e.g. with diffrax pull request
+#777), the strict xfail `test_diffrax_search_is_loop_free` XPASSes, which fails the
+test suite: raise the `diffrax` lower bound in `pyproject.toml` to that release, then
+use `dx.ClipStepSizeController` in `diffrax_integrator.py` and delete this module and
+its tests.
 """
 
 from __future__ import annotations
