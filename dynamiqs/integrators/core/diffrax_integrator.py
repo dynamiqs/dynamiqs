@@ -4,6 +4,7 @@ import os
 import warnings
 from abc import abstractmethod
 from collections.abc import Callable
+from dataclasses import replace
 from functools import partial
 from typing import cast
 
@@ -42,7 +43,12 @@ from .error_norm import error_norm
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .jump_clip_controller import JumpClipController
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
-from .unrolled_solvers import UnrolledDopri5, UnrolledDopri8, UnrolledTsit5
+from .unrolled_solvers import (
+    UnrolledDopri5,
+    UnrolledDopri8,
+    UnrolledTsit5,
+    _UnrolledERK,
+)
 
 # `jax.Inline.JAX_LATE` (jax >= 0.11) keeps a jitted function as one call in the
 # jaxpr, so that JAX traces and differentiates it once, and inlines it into the
@@ -219,6 +225,13 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         else:
             raise TypeError(f'Unknown gradient type {obj_type_str(self.gradient)}.')
 
+    @property
+    def solver(self) -> dx.AbstractSolver:
+        # the unrolled solvers adapt to the gradient
+        if isinstance(self.diffrax_solver, _UnrolledERK):
+            return replace(self.diffrax_solver, gradient=self.gradient)
+        return self.diffrax_solver
+
     def diffeqsolve(
         self,
         t0: Scalar,
@@ -261,7 +274,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             # === solve differential equation with diffrax
             return dx.diffeqsolve(
                 terms,
-                self.diffrax_solver,
+                self.solver,
                 t0=t0,
                 t1=t1,
                 dt0=self.dt0,
