@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import replace
-from typing import ClassVar
+from typing import ClassVar, Protocol
 
 import diffrax as dx
 import equinox as eqx
@@ -20,6 +20,7 @@ from ...qarrays.layout import dense
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import asqarray
 from ...result import MESolveResult
+from ...time_qarray import TimeQArray
 from ...utils.operators import eye
 from .._utils import sum_qarrays
 from .diffrax_integrator import MESolveDiffraxIntegrator
@@ -321,14 +322,20 @@ class KrausHeun3(KrausMapRK):
     _b = (0.25, 0.0, 0.75)
 
 
+class _JumpOperators(Protocol):
+    # signature of `MEInterface.L` and `SMEInterface.L`, which a `Callable` cannot
+    # express since it cannot name the argument `t`
+    def __call__(self, t: RealScalarLike) -> list[QArray]: ...
+
+
 class RouchonPropertiesMixin:
     """Mixin providing shared properties for Rouchon integrators.
 
     Expects ``self.H`` and ``self.L`` to be callable.
     """
 
-    H: Callable[[RealScalarLike], QArray]
-    L: Callable[[RealScalarLike], Sequence[QArray]]
+    H: TimeQArray
+    L: _JumpOperators
     gradient: Gradient | None
 
     method: Rouchon1 | Rouchon2 | Rouchon3
