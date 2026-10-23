@@ -717,7 +717,7 @@ def test_addscalar_dia_warns_and_converts_to_dense():
 
 # === binary algebra ===
 # each operation is compared with the same one on the materialized operands; dia
-# rows use `_batched_composite`, whose few diagonals keep the eager kernels fast
+# rows use operators with few diagonals, which keep the eager kernels fast
 
 
 def _factorizations_composite(seed: int) -> CompositeQArray:
@@ -739,49 +739,74 @@ def _factorizations_composite(seed: int) -> CompositeQArray:
     return CompositeQArray((2, 3, 4), terms)
 
 
+def _shared_boundary_composite(seed: int) -> CompositeQArray:
+    # the terms (2,)(3,)(4,) and (2, 3)(4,) of `_factorizations_composite`: every
+    # pair of terms shares the boundary before the subsystem of dimension 4
+    return CompositeQArray((2, 3, 4), _factorizations_composite(seed).terms[:2])
+
+
 @pytest.mark.run(order=TEST_SHORT)
 @pytest.mark.parametrize(
-    ('build_x', 'build_y', 'method'),
+    ('build_x', 'build_y', 'method', 'stays_lazy'),
     [
         pytest.param(
             lambda: _factorizations_composite(0),
             lambda: _factorizations_composite(1),
             lambda x, y: x + y,
+            True,
             id='add',
         ),
         pytest.param(
-            lambda: _factorizations_composite(0),
-            lambda: _factorizations_composite(1),
+            lambda: _shared_boundary_composite(0),
+            lambda: _shared_boundary_composite(1),
             lambda x, y: x @ y,
+            True,
             id='matmul',
         ),
         pytest.param(
             lambda: _factorizations_composite(0),
             lambda: _factorizations_composite(1),
+            lambda x, y: x @ y,
+            False,
+            id='matmul-no-shared-boundary',
+        ),
+        pytest.param(
+            lambda: _shared_boundary_composite(0),
+            lambda: _shared_boundary_composite(1),
             lambda x, y: x.elmul(y),
+            True,
             id='elmul',
+        ),
+        pytest.param(
+            lambda: _factorizations_composite(0),
+            lambda: _factorizations_composite(1),
+            lambda x, y: x.elmul(y),
+            False,
+            id='elmul-no-shared-boundary',
         ),
         pytest.param(
             lambda: _factorizations_composite(0),
             _hermitian_term_composite,
             lambda x, y: x & y,
+            True,
             id='and',
         ),
         pytest.param(
             lambda: _batched_composite(dq.dense)[0],
             lambda: _batched_composite(dq.dia)[0],
             lambda x, y: x & y,
+            True,
             id='and-mixed',
         ),
     ],
 )
-def test_composite_operations_match_materialized(build_x, build_y, method):
+def test_composite_operations_match_materialized(build_x, build_y, method, stays_lazy):
     x, y = build_x(), build_y()
 
     result = method(x, y)
 
     expected = method(x._materialize(), y._materialize())
-    assert type(result) is CompositeQArray
+    assert isinstance(result, CompositeQArray) is stays_lazy
     assert result.shape == expected.shape
     assert result.dims == expected.dims
     assert result.dtype == expected.dtype
@@ -797,6 +822,14 @@ def _operator(dims: tuple[int, ...]) -> MaterializedQArray:
 def _density_matrix(dims: tuple[int, ...]) -> MaterializedQArray:
     n = np.prod(dims)
     return dq.asqarray(dq.random.complex(jax.random.key(0), (4, n, n)), dims=dims)
+
+
+def _ladder_composite() -> CompositeQArray:
+    # a ⊗ b† + 0.5j a†a ⊗ b: dia factors with non-zero offsets and no symmetry, so
+    # that a transposed operator or a swapped axis changes the product
+    a, b = dq.destroy(2, layout=dq.dia), dq.destroy(3, layout=dq.dia)
+    terms = (CompositeTerm((a, b.dag())), CompositeTerm((a.dag() @ a, b), 0.5j))
+    return CompositeQArray((2, 3), terms)
 
 
 @pytest.mark.run(order=TEST_SHORT)
@@ -825,10 +858,16 @@ def _density_matrix(dims: tuple[int, ...]) -> MaterializedQArray:
             id='add-array',
         ),
         pytest.param(
-            lambda: _batched_composite(dq.dia)[0],
+            _ladder_composite,
             lambda x: x @ _density_matrix(x.dims),
             False,
             id='matmul-dia',
+        ),
+        pytest.param(
+            _ladder_composite,
+            lambda x: _density_matrix(x.dims) @ x,
+            False,
+            id='rmatmul-dia',
         ),
         pytest.param(
             lambda: _batched_composite(dq.dia)[0],
@@ -925,6 +964,19 @@ def test_add_mixed_layouts_warns_and_converts_to_dense():
             ValueError,
             'incompatible Hilbert space dimensions',
             id='matmul-dims',
+        ),
+        # the materialized operand comes first, as in `materialized + materialized`
+        pytest.param(
+            lambda x: dq.eye(x.shape[-1]) + x,
+            ValueError,
+            r'Got \(24,\) and \(2, 3, 4\)',
+            id='radd-dims',
+        ),
+        pytest.param(
+            lambda x: dq.eye(x.shape[-1]).elmul(x),
+            ValueError,
+            r'Got \(24,\) and \(2, 3, 4\)',
+            id='relmul-dims',
         ),
     ],
 )

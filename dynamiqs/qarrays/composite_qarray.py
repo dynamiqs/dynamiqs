@@ -54,9 +54,9 @@ def _batch_broadcastable(x_shape: tuple[int, ...], y_shape: tuple[int, ...]) -> 
     return all(a == b or 1 in (a, b) for a, b in zip(x_batch, y_batch, strict=False))
 
 
-def _separable_dense_term(operators: tuple[Array, ...], rho_tensor: Array) -> Array:
-    # rho in tensor form (d_0, ..., d_{N-1}, K): operator k contracts axis k
-    tensor = rho_tensor
+def _separable_dense_term(operators: tuple[Array, ...], y_tensor: Array) -> Array:
+    # y in tensor form (d_0, ..., d_{N-1}, k): operator i contracts axis i
+    tensor = y_tensor
     for axis, op in enumerate(operators):
         tensor = jnp.tensordot(op, tensor, axes=(1, axis))
         tensor = jnp.moveaxis(tensor, 0, axis)
@@ -64,12 +64,12 @@ def _separable_dense_term(operators: tuple[Array, ...], rho_tensor: Array) -> Ar
 
 
 def _separable_sparse_term(
-    operators: tuple[SparseDIADataArray, ...], rho_tensor: Array
+    operators: tuple[SparseDIADataArray, ...], y_tensor: Array
 ) -> Array:
-    # as `_separable_dense_term`, with the dia kernel on (d_k, rest); the axis order
+    # as `_separable_dense_term`, with the dia kernel on (d_i, rest); the axis order
     # is tracked, so that the data is transposed back only once
-    tensor = rho_tensor
-    axis_order = list(range(rho_tensor.ndim))
+    tensor = y_tensor
+    axis_order = list(range(y_tensor.ndim))
     for original_axis, op in enumerate(operators):
         current_axis = axis_order.index(original_axis)
         tensor = jnp.moveaxis(tensor, current_axis, 0)
@@ -79,7 +79,7 @@ def _separable_sparse_term(
         tensor = (op @ tensor.reshape(old_shape[0], -1)).to_jax()
         tensor = tensor.reshape(old_shape)
 
-    inverse_perm = [axis_order.index(i) for i in range(rho_tensor.ndim)]
+    inverse_perm = [axis_order.index(i) for i in range(y_tensor.ndim)]
     return jnp.transpose(tensor, inverse_perm)
 
 
@@ -499,6 +499,12 @@ class CompositeTerm(eqx.Module):
         # first subsystem of each operator: dims (2, 3)(4,) give [0, 2]
         return list(accumulate((len(op.dims) for op in self.operators[:-1]), initial=0))
 
+    def _shares_inner_boundary(self, other: CompositeTerm) -> bool:
+        # dims (2, 3)(4,) and (2,)(3, 4) share only the start 0: both coarsen to one
+        # operator on the full space, whose product costs the materialized one
+        starts = set(self._operator_starts()) & set(other._operator_starts())
+        return len(starts) > 1
+
     def __and__(self, other: CompositeTerm) -> CompositeTerm:
         # (c A ⊗ B) ⊗ (d C) = cd A ⊗ B ⊗ C
         operators = (*self.operators, *other.operators)
@@ -506,18 +512,20 @@ class CompositeTerm(eqx.Module):
         return replace(self, operators=operators, coeff=coeff)
 
     def _matmul_array(self, y: Array) -> Array:
-        # ★ (A ⊗ B) y without A ⊗ B, on y in tensor form (d_A, d_B, K). `tensordot`
-        # does not broadcast, so the batch goes through `vmap`: operators of shapes
+        # ★ (A ⊗ B) y without A ⊗ B, on y in tensor form (d_A, d_B, k); `vmap` maps
+        # the batch of the operators and y, not of `coeff`, which only scales: shapes
         # (3, 2, 2) and (5, 5) with y of shape (10, 4) map over 3 copies of y and A
-        batch = jnp.broadcast_shapes(self.shape[:-2], y.shape[:-2])
-        n, (D, K) = prod(batch), y.shape[-2:]
-        y = jnp.broadcast_to(y, (*batch, D, K))
-        rho_tensor = y.reshape(n, *(op.shape[-1] for op in self.operators), K)
+        batch = jnp.broadcast_shapes(
+            *(op.shape[:-2] for op in self.operators), y.shape[:-2]
+        )
+        batch_size, (n, k) = prod(batch), y.shape[-2:]
+        y = jnp.broadcast_to(y, (*batch, n, k))
+        y_tensor = y.reshape(batch_size, *(op.shape[-1] for op in self.operators), k)
 
         operators = [
             op
             if op.ndim == 2
-            else op.broadcast_to(*batch, *op.shape[-2:]).reshape(n, *op.shape[-2:])
+            else op.broadcast_to(*batch, *op.shape[-2:]).reshape(-1, *op.shape[-2:])
             for op in self.operators
         ]
         operators = cast(list[MaterializedQArray], operators)
@@ -525,12 +533,12 @@ class CompositeTerm(eqx.Module):
         if self.layout is dia:
             sparse_ops = tuple(cast(SparseDIADataArray, op.data) for op in operators)
             term = jax.vmap(_separable_sparse_term, in_axes=(in_axes, 0))
-            Hy = term(sparse_ops, rho_tensor)
+            Hy = term(sparse_ops, y_tensor)
         else:
             dense_ops = tuple(op.to_jax() for op in operators)
             term = jax.vmap(_separable_dense_term, in_axes=(in_axes, 0))
-            Hy = term(dense_ops, rho_tensor)
-        return self._coeff_with_matrix_axes() * Hy.reshape(*batch, D, K)
+            Hy = term(dense_ops, y_tensor)
+        return self._coeff_with_matrix_axes() * Hy.reshape(*batch, n, k)
 
 
 class CompositeQArray(QArray):
@@ -995,7 +1003,10 @@ class CompositeQArray(QArray):
 
         if isinstance(y, CompositeQArray):
             check_compatible_dims(self.dims, y.dims)
-            if not _batch_broadcastable(self.shape, y.shape):
+            # MATERIALIZE if a pair of terms would cost a full product, once per pair
+            if not _batch_broadcastable(self.shape, y.shape) or not all(
+                tj._shares_inner_boundary(tl) for tj in self.terms for tl in y.terms
+            ):
                 return self._materialize() @ y._materialize()
             # LAZY ★ (Σ_j T_j)(Σ_l T'_l) = Σ_jl T_j T'_l
             terms = tuple(tj @ tl for tj in self.terms for tl in y.terms)
@@ -1152,7 +1163,10 @@ class CompositeQArray(QArray):
             return self._materialize().elmul(y)
 
         check_compatible_dims(self.dims, y.dims)
-        if not _batch_broadcastable(self.shape, y.shape):
+        # MATERIALIZE if a pair of terms would cost a full product, see `__matmul__`
+        if not _batch_broadcastable(self.shape, y.shape) or not all(
+            tj._shares_inner_boundary(tl) for tj in self.terms for tl in y.terms
+        ):
             return self._materialize().elmul(y._materialize())
 
         # LAZY (Σ_j T_j) ∘ (Σ_l T'_l) = Σ_jl T_j ∘ T'_l
