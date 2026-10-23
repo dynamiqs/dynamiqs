@@ -7276,6 +7276,22 @@ which results in imprecise click times. You can either:</p>
   precision, see for example the
   <a href="https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton">optimistix library Newton root finder</a>.</li>
 </ul>
+</details>  
+
+<details class="warning"  open >
+  <summary>Click statistics with smart sampling</summary>
+  <p>With <code>smart_sampling=True</code>, every saved trajectory has at least one click, so
+the statistics of <code>result.states</code>, <code>result.expects</code>, <code>result.clicktimes</code> and
+<code>result.nclicks</code> are conditional on a click having occurred. For example, the
+mean of <code>result.nclicks</code> is larger than the mean number of clicks.
+<code>result.mean_states()</code> and <code>result.mean_expects()</code> already account for this. For
+any other per-trajectory quantity <span class="arithmatex">\(f\)</span>, recover its unconditional mean with
+$$
+    \mathbb{E}[f] = p_0 f_0 + (1 - p_0)\,\bar f,
+$$
+where <span class="arithmatex">\(p_0\)</span> is <code>result.infos.noclick_prob</code>, <span class="arithmatex">\(f_0\)</span> is the value of <span class="arithmatex">\(f\)</span> on the
+no-click trajectory (for instance <span class="arithmatex">\(f_0 = 0\)</span> for the number of clicks) and
+<span class="arithmatex">\(\bar f\)</span> is the average of <span class="arithmatex">\(f\)</span> over the saved trajectories.</p>
 </details>
 
 <p><span class="doc-section-title">Parameters:</span></p>

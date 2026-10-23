@@ -1064,6 +1064,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reuse-compiled-programs-across-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Reuse compiled programs across runs
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#advanced-environment-variables" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -7403,6 +7414,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reuse-compiled-programs-across-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Reuse compiled programs across runs
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#advanced-environment-variables" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -7530,6 +7552,15 @@
 
 <p>This reduces the number of significand bits carried through each matrix product. Adaptive methods compensate for the lost accuracy by taking smaller steps, so the speedup is not guaranteed. Always check the result against a <code>'highest'</code> run before relying on it.</p>
 <p>Finally, <code>save_states=False</code> avoids storing and returning the state at every time in <code>tsave</code> when only expectation values are needed, which matters for large systems and many save times.</p>
+<h2 id="reuse-compiled-programs-across-runs">Reuse compiled programs across runs</h2>
+<p>The first call of a simulation also traces and compiles it, which on a GPU can take longer than the simulation itself. Later calls with the same shapes reuse the compiled program, but only within the same Python process. To also skip the compilation in a new process, for example when running a script again or restarting a notebook kernel, turn on JAX's <a href="https://jax.readthedocs.io/en/latest/persistent_compilation_cache.html">persistent compilation cache</a> before the first simulation:</p>
+<!-- skip: next -->
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+
+<span class="n">jax</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s1">'jax_compilation_cache_dir'</span><span class="p">,</span> <span class="s1">'/path/to/cache'</span><span class="p">)</span>
+</code></pre></div>
+<p>or set the <code>JAX_COMPILATION_CACHE_DIR</code> environment variable before starting Python. A new process still traces the simulation, but loads its compiled program from this directory instead of compiling it, if an earlier process compiled the same program with the same jaxlib version, <code>XLA_FLAGS</code>, device and driver. Anything that changes the program, such as another Dynamiqs or JAX version, another precision or other solver options, compiles it again. Only programs that took more than one second to compile are stored (<code>jax_persistent_cache_min_compile_time_secs</code>), and the directory grows until you clear it. Do not use a directory that other users can write to: JAX runs the programs it loads from it.</p>
+<p>For example, in our benchmarks, this shortened the first call of a <code>mesolve</code> of Hilbert space dimension 900 from 116 s to 27 s (17 s of which run the simulation), and that of a reverse-mode gradient through a <code>mesolve</code> of dimension 56 from 16 s to 7 s. On CPU, compilation is a smaller part of the first call, and the gain is smaller.</p>
 <h2 id="advanced-environment-variables">Advanced: environment variables</h2>
 <p>These variables are read when JAX and Equinox are imported, so they must be set before importing Dynamiqs either from the shell, or with <code>os.environ</code> at the very top of the script.</p>
 <h3 id="turn-off-runtime-error-checking">Turn off runtime error checking</h3>
