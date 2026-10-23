@@ -567,7 +567,7 @@ class Kvaerno5(_DEAdaptiveStep):
 
 
 class Event(_DEMethod):
-    """Event method for the jump SSE.
+    r"""Event method for the jump SSE.
 
     This method uses the [Diffrax](https://docs.kidger.site/diffrax/) library event
     handling to interrupt the no-click integration at the next sampled click time,
@@ -584,6 +584,20 @@ class Event(_DEMethod):
         - or use the `root_finder` argument to refine the exact click times to a chosen
           precision, see for example the
           [optimistix library Newton root finder](https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton).
+
+    Warning: Click statistics with smart sampling
+        With `smart_sampling=True`, every saved trajectory has at least one click, so
+        the statistics of `result.states`, `result.expects`, `result.clicktimes` and
+        `result.nclicks` are conditional on a click having occurred. For example, the
+        mean of `result.nclicks` is larger than the mean number of clicks.
+        `result.mean_states()` and `result.mean_expects()` already account for this. For
+        any other per-trajectory quantity $f$, recover its unconditional mean with
+        $$
+            \mathbb{E}[f] = p_0 f_0 + (1 - p_0)\,\bar f,
+        $$
+        where $p_0$ is `result.infos.noclick_prob`, $f_0$ is the value of $f$ on the
+        no-click trajectory (for instance $f_0 = 0$ for the number of clicks) and
+        $\bar f$ is the average of $f$ over the saved trajectories.
 
     Args:
         noclick_method: Method for the no-click evolution. Defaults to
