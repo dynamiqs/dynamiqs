@@ -124,7 +124,7 @@ Solvers run their steps in a `while` loop. On GPUs, XLA copies the loop conditio
 XLA_FLAGS="--xla_gpu_enable_command_buffer=+WHILE --xla_gpu_graph_min_graph_size=1" python simulation.py
 ```
 
-Set both flags: the second one lets XLA also record loops of only a few kernels. This changes how XLA launches the kernels, not the kernels, so the results are the same. On an NVIDIA A100 with JAX 0.11, it made `sesolve` and `mesolve` with `Tsit5` 1.3 to 1.6 times faster from dimension 16 to 1,024, `jssesolve` with `Event` 1.5 times faster, and `Rouchon1`, `Rouchon2` and gradients of `mesolve` up to 1.2 times faster. It made little difference when a step takes milliseconds. It made `dssesolve` with `EulerMaruyama` 1.4 times slower, `Expm` with a small piecewise-constant Hamiltonian up to 1.2 times slower, and `floquet` and a `mesolve` of dimension 2,304 in the `dia` layout 1.05 times slower. Measure it on your own simulation (see [Measure](#measure)).
+Set both flags: the second one also records loops of only a few kernels. The GPU runs the same kernels, only without returning to the host between steps, so the results are identical. Simulations with many short steps can run up to about 1.5 times faster, but a few solvers run slower: measure it on your own simulation (see [Measure](#measure)).
 
 ### Simulate larger systems than the GPU memory
 
