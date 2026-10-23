@@ -421,6 +421,12 @@
         <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/eye_like.html</loc>
       </url>
       <url>
+        <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/fcreate.html</loc>
+      </url>
+      <url>
+        <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/fdestroy.html</loc>
+      </url>
+      <url>
         <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/hadamard.html</loc>
       </url>
       <url>
