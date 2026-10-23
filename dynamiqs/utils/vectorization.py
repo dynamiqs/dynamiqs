@@ -7,6 +7,7 @@ import numpy as np
 
 from .._checks import check_shape
 from ..qarrays.layout import dense
+from ..qarrays.materialized_qarray import MaterializedQArray
 from ..qarrays.qarray import QArray, QArrayLike
 from ..qarrays.utils import asqarray
 from .general import dag
@@ -54,6 +55,12 @@ def vectorize(x: QArrayLike) -> QArray:
     """
     x = asqarray(x, layout=dense)
     check_shape(x, 'x', '(..., n, n)')
+    if isinstance(x, MaterializedQArray) and x.vectorized:
+        raise ValueError(
+            'Argument `x` must be an operator, but is already a vectorized '
+            f'superoperator (x.vectorized=True, x.shape={x.shape}). To vectorize its '
+            'matrix anyway, convert it first to a JAX array with `x.to_jax()`.'
+        )
     bshape = x.shape[:-2]
     x = x.mT._reshape_unchecked(*bshape, -1, 1)
     return replace(x, vectorized=True)

@@ -584,6 +584,38 @@ class TestSummedQArray:
         assert len(w.timeqarrays) == 2
         assert_equal(w(1.0), [[0, 1], [2, 3]])
 
+    def test_add_many_terms(self, monkeypatch):
+        # adding a term to a sum must not re-check the terms already in it
+        calls = []
+        eval_shape = jax.eval_shape
+
+        def counting_eval_shape(*args, **kwargs):
+            calls.append(None)
+            return eval_shape(*args, **kwargs)
+
+        monkeypatch.setattr(jax, 'eval_shape', counting_eval_shape)
+
+        op = jnp.eye(2)
+        term = lambda k: modulated(lambda t: jnp.cos(k * t), op)
+
+        def nevalshape_adding_term(nterms):
+            x = SummedTimeQArray([term(k) for k in range(nterms)])
+            calls.clear()
+            x = x + term(nterms)
+            assert len(x.timeqarrays) == nterms + 1
+            return len(calls)
+
+        assert nevalshape_adding_term(3) == nevalshape_adding_term(12)
+
+        # a batched term still broadcasts the whole sum, other dims raise
+        x = term(0) + term(1)
+        y = x + modulated(lambda t: jnp.cos(jnp.arange(3.0) * t), op)
+        assert y.shape == (3, 2, 2)
+        expected = x(1.0).to_jax() + jnp.cos(jnp.arange(3.0))[:, None, None] * op
+        assert jnp.allclose(y(1.0).to_jax(), expected)
+        with pytest.raises(ValueError, match='Hilbert space dimensions'):
+            x + constant(asqarray(jnp.eye(2), dims=(1, 2)))
+
     def test_clip(self):
         # create a modulated and pwc TimeQArray to sum
         f = lambda t: 1.0 + 2.0 * t
