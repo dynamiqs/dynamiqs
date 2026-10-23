@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import warnings
 from abc import abstractmethod
 from collections.abc import Callable
@@ -50,6 +51,17 @@ from .unrolled_solvers import UnrolledDopri5, UnrolledDopri8, UnrolledTsit5
 # transforms each copy again. Older versions, without `jax.Inline`, only have
 # `inline=True`.
 _INLINE = getattr(getattr(jax, 'Inline', None), 'JAX_LATE', True)
+
+# The dimension from which mesolve fuses the DIA Lindbladian on CPU (on GPU, at every
+# dimension): see `MESolveDiffraxIntegrator._are_operators_sparsedia`.
+_MIN_DIMENSION_FUSED_ON_CPU = 160
+
+
+def _cpu_threads() -> int:
+    # the number of threads of XLA's CPU backend, which follows the CPU affinity
+    if hasattr(os, 'sched_getaffinity'):
+        return len(os.sched_getaffinity(0))
+    return os.cpu_count() or 1
 
 
 class FixedStepInfos(eqx.Module):
@@ -493,10 +505,16 @@ class MESolveDiffraxIntegrator(
     def _are_operators_sparsedia(self) -> bool:
         # whether H(t), the jump operators and the state allow the fused Lindbladian
         # (the layout of a time-qarray's value does not depend on t)
-        # On CPU, inside a solve, the fused Lindbladian is up to 1.9x slower than the
-        # products for small and medium systems (n = 32-96, faster from n ~ 128), and
-        # there is no synchronisation to save. Fuse on GPU only.
-        if jax.default_backend() != 'gpu':
+        # On CPU, the products run on one thread and the fused sum on several. On a
+        # Xeon 8581C, for a driven cavity with one jump operator, the fused sum is
+        # faster from n = 160 in single and double precision, also when other processes
+        # share the cores (x0.80 at n = 192); below, it can be up to 12% slower. With
+        # one thread, it is slower at every n: fuse only with several threads.
+        backend, n = jax.default_backend(), self.y0.shape[-1]
+        fused_on_cpu = (
+            backend == 'cpu' and n >= _MIN_DIMENSION_FUSED_ON_CPU and _cpu_threads() > 1
+        )
+        if not (backend == 'gpu' or fused_on_cpu):
             return False
         t = self.ts[0]
         data = [getattr(x, 'data', None) for x in [self.H(t), *self.L(t)]]
