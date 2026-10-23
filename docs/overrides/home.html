@@ -63,10 +63,6 @@ function copyToClipboard(button, text) {
                 <g class="bloch-trails" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
                 <g class="bloch-front" fill="none" stroke="rgba(255,255,255,0.32)" stroke-width="1.2"></g>
                 <g class="bloch-vectors" stroke-linecap="round"></g>
-                <g fill="rgba(255,255,255,0.85)" font-size="20" text-anchor="middle">
-                    <text y="-162">|0⟩</text>
-                    <text y="180">|1⟩</text>
-                </g>
             </svg>
         </div>
         <div class="tx-hero__content">
@@ -239,7 +235,7 @@ function copyToClipboard(button, text) {
     function frame(now) {
         const dt = last === null ? 0 : Math.min(0.05, (now - last) / 1000);
         last = now;
-        spin += 0.1 * dt;
+        spin += 0.12 * dt;
         azimuth += (spin + targetAzimuth - azimuth) * Math.min(1, 4 * dt);
         tilt += (targetTilt - tilt) * Math.min(1, 4 * dt);
         advance(dt);
