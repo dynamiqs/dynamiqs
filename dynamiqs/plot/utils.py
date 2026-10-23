@@ -53,6 +53,10 @@ def optional_ax(func: Callable) -> Callable:
     """Decorator to build an `Axes` object to pass as an argument to a plot
     function if it wasn't passed by the user.
 
+    The decorated function must declare the keyword arguments `ax`, `w` and `h` with
+    the defaults of `wrapper` below, so that they appear in its signature and
+    documentation. Only `ax` is forwarded to it.
+
     Examples:
         Replace
         ```
@@ -64,8 +68,8 @@ def optional_ax(func: Callable) -> Callable:
         ```
         by
         ```
-        @optax
-        def myplot(ax=None):
+        @optional_ax
+        def myplot(*, ax=None, w=7.0, h=None):
             # ...
         ```
     """
@@ -92,12 +96,22 @@ def grid(
 ) -> tuple[Figure, Iterable[Axes]]:
     """Returns a figure and an iterator of subplots organised in a grid.
 
-    Warning:
-        Documentation redaction in progress.
+    Args:
+        n: Number of subplots.
+        nrows: Number of rows of the grid. The number of columns is the smallest
+            integer such that the grid holds `n` subplots.
+        w: Width of each subplot in inches.
+        h: Height of each subplot in inches. If `None`, defaults to `w`.
+        sharexy: Whether the subplots share both their x and y axes.
+
+    Returns:
+        fig (matplotlib Figure): Figure containing the grid.
+        axs (iterator of matplotlib Axes): Iterator over the subplots, row by row.
 
     Note:
         This method is a shortcut to Matplotlib
-        [`plt.subplots()`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots).
+        [`plt.subplots()`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots),
+        to which additional keyword arguments are passed.
 
     Examples:
         For example, to plot six different curves:
@@ -157,8 +171,12 @@ colors = {
 def mplstyle(*, usetex: bool = False, dpi: int = 72):
     r"""Set custom Matplotlib style.
 
-    Warning:
-        Documentation redaction in progress.
+    The style is applied globally by updating `plt.rcParams`.
+
+    Args:
+        usetex: Whether to render text with LaTeX, which requires a working LaTeX
+            installation.
+        dpi: Resolution of the figures in dots per inch.
 
     Examples:
         >>> x = jnp.linspace(0, 2 * jnp.pi, 101)

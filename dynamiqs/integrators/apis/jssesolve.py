@@ -107,58 +107,26 @@ def jssesolve(
         psi0 (qarray-like of shape (...psi0, n, 1)): Initial state.
         tsave (array-like of shape (ntsave,)): Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
-            `tsave[-1]`.
+            `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified.
         keys (list of PRNG keys): PRNG keys used to sample the point processes.
             The number of elements defines the number of sampled stochastic
             trajectories.
-        exp_ops (list of array-like, each of shape (n, n), optional): List of
+        exp_ops (list of qarray-like, each of shape (n, n), optional): List of
             operators for which the expectation value is computed.
-        method: Method for the integration. No defaults for now, you have to specify a
-            method (supported: [`Event`][dynamiqs.method.Event],
+        method: Method for the integration, must be specified (supported:
+            [`Event`][dynamiqs.method.Event],
             [`EulerJump`][dynamiqs.method.EulerJump]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
 
     Returns:
-        `dq.JSSESolveResult` object holding the result of the jump SSE integration. Use
+        [`dq.JSSESolveResult`][dynamiqs.JSSESolveResult] object holding the result of
+            the jump SSE integration, with `ntrajs = len(keys)` trajectories. Use
             `result.states` to access the saved states, `result.expects` to access the
             saved expectation values and `result.clicktimes` to access the detector
-            click times.
-
-            ??? "Detailed result API"
-                ```python
-                dq.JSSESolveResult
-                ```
-
-                For the shape indications we define `ntrajs` as the number of
-                trajectories (`ntrajs = len(keys)`).
-
-                **Attributes:**
-
-                - **`states`** _(qarray of shape (..., ntrajs, nsave, n, 1))_ - Saved
-                    states with `nsave = ntsave`, or `nsave = 1` if
-                    `save_states=False`.
-                - **`final_state`** _(qarray of shape (..., ntrajs, n, 1))_ - Saved
-                    final state.
-                - **`expects`** _(array of shape (..., ntrajs, len(exp_ops), ntsave) or
-                    None)_ - Saved expectation values, if specified by `exp_ops`.
-                - **`clicktimes`** _(array of shape (..., ntrajs, len(jump_ops),
-                    nmaxclick))_ - Times at which the detectors clicked. Variable-length
-                    array padded with `jnp.nan` up to `nmaxclick`.
-                - **`nclicks`** _(array of shape (..., ntrajs, len(jump_ops))_ - Number
-                    of clicks for each jump operator.
-                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
-                    if specified.
-                - **`keys`** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
-                    sample the point processes.
-                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
-                    resolution.
-                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
-                    were saved.
-                - **`method`** _(Method)_ - Method used.
-                - **`gradient`** _(Gradient)_ - Gradient used.
-                - **`options`** _(Options)_ - Options used.
+            click times. Use `result.mean_states()` and `result.mean_expects()` to
+            average the states and expectation values over the trajectories.
 
     Other Parameters:
         save_states: If `True`, the state is saved at every time in
@@ -166,9 +134,10 @@ def jssesolve(
         cartesian_batching: If `True`, batched arguments are treated
             as separated batch dimensions, otherwise the batching is performed over a
             single shared batch dimension. Defaults to `True`.
-        t0: Initial time. If `None`, defaults to the first time in
-            `tsave`.
-        save_extra: A function with signature
+        t0: Initial time. If `None`, defaults to the first
+            time in `tsave`. Only supported by the [`Event`][dynamiqs.method.Event]
+            method. Defaults to `None`.
+        save_extra: Function with signature
             `f(Scalar, QArray) -> PyTree` that takes the current time and state as
             input and returns a PyTree. This can be used to save additional
             arbitrary data during the integration, accessible in `result.extra`.
@@ -178,39 +147,28 @@ def jssesolve(
             `10_000`.
 
     Examples:
-        ```python
-        import dynamiqs as dq
-        import jax.numpy as jnp
-        import jax
-
-        n = 16
-        a = dq.destroy(n)
-
-        H = a.dag() @ a
-        jump_ops = [a]
-        psi0 = dq.coherent(n, 1.0)
-        tsave = jnp.linspace(0, 1.0, 11)
-        keys = jax.random.split(jax.random.key(42), 100)
-
-        method = dq.method.EulerJump(dt=1e-3)
-        result = dq.jssesolve(H, jump_ops, psi0, tsave, keys, method=method)
-        print(result)
-        ```
-
-        ```text title="Output"
+        >>> n = 16
+        >>> a = dq.destroy(n)
+        >>> H = a.dag() @ a
+        >>> jump_ops = [a]
+        >>> psi0 = dq.coherent(n, 1.0)
+        >>> tsave = jnp.linspace(0, 1.0, 11)
+        >>> keys = jax.random.split(jax.random.key(42), 100)
+        >>> method = dq.method.EulerJump(dt=1e-3)
+        >>> result = dq.jssesolve(H, jump_ops, psi0, tsave, keys, method=method)
+        >>> print(result)
         ==== JSSESolveResult ====
         Method     : EulerJump
         Infos      : 1000 steps | infos shape (100,)
         States     : QArray complex64 (100, 11, 16, 1) | 137.5 Kb
         Clicktimes : Array float32 (100, 1, 10000) | 3.8 Mb
-        ```
 
     # Advanced use-cases
 
     ## Defining a time-dependent Hamiltonian or jump operator
 
     If the Hamiltonian or the jump operators depend on time, they can be converted
-    to time-arrays using [`dq.pwc()`][dynamiqs.pwc],
+    to timeqarrays using [`dq.pwc()`][dynamiqs.pwc],
     [`dq.modulated()`][dynamiqs.modulated], or
     [`dq.timecallable()`][dynamiqs.timecallable]. See the
     [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
@@ -220,8 +178,8 @@ def jssesolve(
 
     The Hamiltonian `H`, the jump operators `jump_ops` and the initial state `psi0` can
     be batched to solve multiple SSEs concurrently. Other arguments are common to every
-    batch. The `keys` argument is automatically broadcasted to ensure different
-    trajectories between batch elements. The resulting states, measurements and
+    batch. The `keys` argument is automatically broadcast to ensure different
+    trajectories between batch elements. The resulting states, click times and
     expectation values are batched according to the leading dimensions of `H`,
     `jump_ops` and `psi0`. The behaviour depends on the value of the
     `cartesian_batching` option.
@@ -242,7 +200,7 @@ def jssesolve(
     === "If `cartesian_batching = False`"
         The results leading dimensions are
         ```
-        ... = ...H = ...L0 = ...L1 = (...) = ...psi0  # (once broadcasted)
+        ... = ...H = ...L0 = ...L1 = (...) = ...psi0  # (once broadcast)
         ```
         For example if:
 

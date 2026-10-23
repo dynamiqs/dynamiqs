@@ -6,27 +6,27 @@
   </picture>
 </h1>
 
-[P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois), [D. Weiss](https://github.com/dkweiss31)
+[P. Guilmin](https://github.com/pierreguilmin), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois), [D. Weiss](https://github.com/dkweiss31), [R. Gautier](https://github.com/gautierronan)
 
 [![ci](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml?query=branch%3Amain) ![python version](https://img.shields.io/badge/python-3.11%2B-blue) [![chat](https://img.shields.io/badge/chat-on%20slack-orange.svg?logo=slack)](https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA) [![license: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-yellow)](https://github.com/dynamiqs/dynamiqs/blob/main/LICENSE) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 High-performance quantum systems simulation with JAX.
 
-**Dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger equation, the Lindblad master equation, the stochastic master equation, and others. The library is built with [JAX](https://jax.readthedocs.io/en/latest/index.html) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
+**Dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger equation, the Lindblad master equation, their propagators, Floquet modes, and the stochastic Schrödinger and master equations with jump or diffusive measurements. The library is built with [JAX](https://docs.jax.dev/) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
 
 Documentation is available on our website, <https://www.dynamiqs.org>; see the [Python API](https://www.dynamiqs.org/stable/python_api/index.html) for a list of all implemented functions.
 
 The main features of **Dynamiqs** are:
 
-- Running simulations on **CPUs** and **GPUs** with high-performance.
+- Running simulations on **CPUs**, **GPUs** and **TPUs** with high performance.
 - Executing many simulations **concurrently** by batching over Hamiltonians, initial states or jump operators.
 - Computing **gradients** of arbitrary functions with respect to arbitrary parameters of the system.
-- Full **compatibility** with the [JAX](https://jax.readthedocs.io/en/latest/index.html) ecosystem with a [QuTiP](https://qutip.org/)-like API.
+- Full **compatibility** with the [JAX](https://docs.jax.dev/) ecosystem with a [QuTiP](https://qutip.org/)-like API.
 
 We hope that this library will prove useful to the community for e.g. simulation of large quantum systems, gradient-based parameter estimation or quantum optimal control. The library is designed for large-scale problems, but also runs efficiently on CPUs for smaller problems.
 
-> [!WARNING]
-> This library is under active development and some APIs and solvers are still finding their footing. While most of the library is stable, new releases might introduce breaking changes.
+> [!NOTE]
+> Starting with version 1.0, Dynamiqs follows [semantic versioning](https://semver.org/): breaking changes to the public API only happen in major releases.
 
 ## Installation
 
@@ -37,7 +37,7 @@ pip install dynamiqs
 ```
 
 > [!Note]
-> If you're using a GPU, please refer to the [JAX installation](https://jax.readthedocs.io/en/latest/installation.html) documentation page for detailed instructions on how to install JAX for your device.
+> To run on an NVIDIA GPU (Linux), install the CUDA build of JAX with `pip install -U dynamiqs "jax[cuda13]"` (or `"jax[cuda12]"` for older drivers). See the [installation guide](https://www.dynamiqs.org/stable/documentation/getting_started/installation.html) and the [JAX installation](https://docs.jax.dev/en/latest/installation.html) page for other devices.
 
 ## Examples
 
@@ -146,20 +146,18 @@ Gradient w.r.t. alpha0: 1.0670
 
 ## More features!
 
-Below are some cool features of **Dynamiqs** that are either already available or planned for the near future.
+Below are some cool features of **Dynamiqs**, followed by what is planned for the near future.
 
 **Solvers**
 
 - Choose between a variety of methods for each solver, from **modern** explicit and implicit ODE methods (e.g. Tsit5 and PID controllers for adaptive step-sizing) to **quantum-tailored** methods that preserve the physicality of the evolution (the state trace and positivity are preserved).
 - Simulate **time-varying problems** (both Hamiltonian and jump operators) with support for various formats (piecewise constant operator, constant operator modulated by a time-dependent factor, etc.).
-- Define a **custom save function** during the evolution (e.g. to register only the state purity, to track a subsystem by taking the partial trace of the full system, or to compute the population in the last Fock states to regularise your QOC problem).
-- Easily implement **your own solvers** by subclassing our base solver class and focusing directly on the solver logic.
-- Simulate SME trajectories **orders of magnitude faster** by batching the simulation over the stochastic trajectories.
-- **Parallelise** large simulations across multiple CPUs/GPUs.
+- Define a **custom save function** during the evolution (e.g. to register only the state purity, to track a subsystem by taking the partial trace of the full system, or to compute the population in the last Fock states to regularize your QOC problem).
+- Simulate jump and diffusive **quantum trajectories** orders of magnitude faster by batching the simulation over the stochastic trajectories.
 
 **Gradients**
 
-- Choose between **various methods** to compute the gradient, to tradeoff speed and memory (e.g. use the optimal online checkpointing scheme of [Diffrax](https://github.com/patrick-kidger/diffrax) to compute gradients for large systems).
+- Choose between **various methods** to compute the gradient, to trade off speed and memory (e.g. use the optimal online checkpointing scheme of [Diffrax](https://github.com/patrick-kidger/diffrax) to compute gradients for large systems).
 - Compute gradients with **machine-precision accuracy**.
 - Evaluate **derivatives with respect to evolution time** (e.g. for time-optimal quantum control).
 - Compute **higher order derivatives** (e.g. the Hessian).
@@ -168,8 +166,8 @@ Below are some cool features of **Dynamiqs** that are either already available o
 
 - Balance **accuracy and speed** by choosing between single precision (`float32` and `complex64`) or double precision (`float64` and `complex128`).
 - Discover a custom **sparse data format** designed for matrices with only a few dense diagonals, offering substantial speedups for large systems.
-- Plot beautiful figures by using our **handcrafted plotting function**.
-- Apply any functions to **batched arrays** (e.g. `dq.wigner(states)` to compute the wigners of many states at once).
+- Plot beautiful figures by using our **handcrafted plotting functions**.
+- Apply any functions to **batched arrays** (e.g. `dq.wigner(states)` to compute the Wigner functions of many states at once).
 - Use **QuTiP objects as arguments** to any functions (e.g. if you have existing code to define your Hamiltonian in QuTiP, or if you want to use our nice plotting functions on a list of QuTiP states).
 
 **Library development**
@@ -179,8 +177,7 @@ Below are some cool features of **Dynamiqs** that are either already available o
 
 **Coming soon**
 
-- Simulate using propagators solvers based on **Krylov subspace methods**.
-- **Benchmark code** to compare solvers and performance for different systems.
+- Simulate using propagator solvers based on **Krylov subspace methods**.
 
 ## The Dynamiqs project
 
@@ -190,7 +187,7 @@ There is a noticeable gap in the availability of an open-source library that sim
 
 **Team and sponsoring**
 
-The library is being developed by a **team of physicists and developers**. We are working with theorists, experimentalists, machine learning practitioners, optimisation and numerical methods experts to make the library as useful and as powerful as possible. The library is sponsored by the startup [Alice & Bob](https://alice-bob.com/), where it is being used to simulate, calibrate and control chips made of superconducting-based dissipative cat qubits.
+The library is being developed by a **team of physicists and developers**. We are working with theorists, experimentalists, machine learning practitioners, optimization and numerical methods experts to make the library as useful and as powerful as possible. The library is sponsored by the startup [Alice & Bob](https://alice-bob.com/), where it is being used to simulate, calibrate and control chips made of superconducting-based dissipative cat qubits.
 
 **History**
 
@@ -209,12 +206,12 @@ We warmly welcome all contributions. If you're a junior developer or physicist, 
 If you have found this library useful in your academic research, you can cite:
 
 ```bibtex
-@unpublished{guilmin2025dynamiqs,
+@unpublished{guilmin2026dynamiqs,
   title  = {Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems},
   author = {Pierre Guilmin and Adrien Bocquet and {\'{E}}lie Genois and Daniel Weiss and Ronan Gautier},
-  year   = {2025},
+  year   = {2026},
   url    = {https://github.com/dynamiqs/dynamiqs}
 }
 ```
 
-> P. Guilmin, A. Bocquet, E. Genois, D. Weiss, R. Gautier. Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems (2025), in preparation.
+> P. Guilmin, A. Bocquet, E. Genois, D. Weiss, R. Gautier. Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems (2026), in preparation.

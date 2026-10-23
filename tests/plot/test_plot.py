@@ -37,6 +37,13 @@ class TestPlots:
     def test_plot_wigner_rhos(self):
         plot.wigner_mosaic(self.rhos)
 
+    def test_plot_wigner_mosaic_selects_evenly_spaced_states(self):
+        # 3 states out of 10 must be the first, middle and last ones
+        plot.wigner_mosaic(self.psis, n=3, xmax=2.0, npixels=11)
+        images = [ax.images[0].get_array() for ax in plt.gcf().axes]
+        _, _, expected = wigner(self.psis[np.array([0, 4, 9])], 2.0, 2.0, 11)
+        np.testing.assert_allclose(images, expected.mT, atol=1e-6)
+
     def test_diag_element(self):
         mat = jnp.arange(25).reshape(5, 5)
         for diag in range(-4, 5):

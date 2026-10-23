@@ -17,7 +17,7 @@ def snap_gate(phase: ArrayLike) -> QArray:
     r"""Returns a SNAP gate.
 
     The *selective number-dependent arbitrary phase* (SNAP) gate imparts a different
-    phase $\theta_k$ to each Fock state $\ket{k}\bra{k}$. It is defined by
+    phase $\theta_k$ to each Fock state $\ket{k}$. It is defined by
     $$
         \mathrm{SNAP}(\theta_0,\dots,\theta_{n-1}) =
         \sum_{k=0}^{n-1} e^{i\theta_k} \ket{k}\bra{k}.
@@ -28,7 +28,7 @@ def snap_gate(phase: ArrayLike) -> QArray:
             dimension of the array _n_ defines the Hilbert space dimension.
 
     Returns:
-        (qarray of shape (..., n, n)): SNAP gate operator.
+        (qarray of shape (..., n, n)): SNAP gate operator, always in `dq.dense` layout.
 
     Examples:
         >>> dq.snap_gate([0, 1, 2])
@@ -52,21 +52,24 @@ def cd_gate(dim: int, alpha: ArrayLike) -> QArray:
     r"""Returns a conditional displacement gate.
 
     The *conditional displacement* (CD) gate displaces an oscillator conditioned on
-    the state of a coupled two-level system (TLS) state. It is defined by
+    the state of a coupled two-level system (TLS). It is defined by
     $$
-       \mathrm{CD}(\alpha) = D(\alpha/2)\ket{g}\bra{g} + D(-\alpha/2)\ket{e}\bra{e},
+        \mathrm{CD}(\alpha) = D(\alpha/2) \otimes \ket{g}\bra{g}
+            + D(-\alpha/2) \otimes \ket{e}\bra{e},
     $$
-    where $\ket{g}$ (defined by [`dq.ground()`][dynamiqs.ground]) and $\ket{e}$
-    (defined by [`dq.excited()`][dynamiqs.excited]) are the ground and excited states of
-    the TLS.
+    where $D(\alpha)$ is the displacement operator (see
+    [`dq.displace()`][dynamiqs.displace]), and $\ket{g}$ (defined by
+    [`dq.ground()`][dynamiqs.ground]) and $\ket{e}$ (defined by
+    [`dq.excited()`][dynamiqs.excited]) are the ground and excited states of the TLS.
+    The oscillator is the first subsystem and the TLS the second.
 
     Args:
         dim: Dimension of the oscillator Hilbert space.
         alpha (array-like of shape (...)): Displacement amplitude.
 
     Returns:
-        (qarray of shape (..., n, n)): CD gate operator (acting on the oscillator + TLS
-            system of dimension _n = 2 x dim_).
+        (qarray of shape (..., n, n)): CD gate operator acting on the oscillator
+            $\otimes$ TLS system, with _n = 2 x dim_, always in `dq.dense` layout.
 
     Examples:
         >>> dq.cd_gate(2, 0.1)

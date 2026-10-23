@@ -3,6 +3,17 @@
 {% block site_meta %}
 {{ super() }}
 <link rel="mask-icon" href="{{ config.theme.favicon | url }}" color="#ffffff">
+{% set description = page.meta.description if page.meta and page.meta.description else config.site_description %}
+{% set title = page.meta.title if page.meta and page.meta.title else page.title %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{ config.site_name }}">
+<meta property="og:title" content="{{ title | striptags }} - {{ config.site_name }}">
+<meta property="og:description" content="{{ description }}">
+{% if page.canonical_url %}
+<meta property="og:url" content="{{ page.canonical_url }}">
+{% endif %}
+<meta property="og:image" content="{{ config.site_url }}/stable/media/logo-large.png">
+<meta name="twitter:card" content="summary">
 {% endblock %}
 
 {% block outdated %}

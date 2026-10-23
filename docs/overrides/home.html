@@ -39,77 +39,35 @@ function copyToClipboard(button, text) {
     <div class="md-grid md-typeset">
       <div class="tx-hero">
         <div class="tx-hero__image">
-            <!-- Abstract quantum illustration -->
-            <svg class="quantum-illustration" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-                <!-- Outer orbital rings -->
-                <ellipse cx="200" cy="200" rx="180" ry="60" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" transform="rotate(-20 200 200)">
-                    <animateTransform attributeName="transform" type="rotate" from="-20 200 200" to="340 200 200" dur="30s" repeatCount="indefinite"/>
-                </ellipse>
-                <ellipse cx="200" cy="200" rx="150" ry="50" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2.5" transform="rotate(40 200 200)">
-                    <animateTransform attributeName="transform" type="rotate" from="40 200 200" to="-320 200 200" dur="25s" repeatCount="indefinite"/>
-                </ellipse>
-                <ellipse cx="200" cy="200" rx="120" ry="40" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3" transform="rotate(-60 200 200)">
-                    <animateTransform attributeName="transform" type="rotate" from="-60 200 200" to="300 200 200" dur="20s" repeatCount="indefinite"/>
-                </ellipse>
-                
-                <!-- Probability cloud / Wavefunction visualization -->
+            <!-- Bloch sphere: a batch of driven, damped qubits spiralling to their steady states, drawn by the script below -->
+            <svg class="quantum-illustration bloch" viewBox="-200 -200 400 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bloch sphere showing a batch of driven, damped qubit trajectories. Drag to rotate it, click it to prepare a new initial state.">
                 <defs>
-                    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stop-color="rgba(255,255,255,0.4)"/>
-                        <stop offset="50%" stop-color="rgba(255,255,255,0.1)"/>
-                        <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+                    <radialGradient id="bloch-shade" cx="35%" cy="30%" r="80%">
+                        <stop offset="0%" stop-color="#fff" stop-opacity="0.2"/>
+                        <stop offset="100%" stop-color="#fff" stop-opacity="0.03"/>
                     </radialGradient>
-                    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
-                        <feGaussianBlur in="SourceGraphic" stdDeviation="3"/>
+                    <filter id="bloch-glow" x="-200%" y="-200%" width="500%" height="500%">
+                        <feGaussianBlur stdDeviation="3.5" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
                     </filter>
                 </defs>
-                
-                <!-- Central quantum state -->
-                <circle cx="200" cy="200" r="80" fill="url(#glow)">
-                    <animate attributeName="r" values="75;85;75" dur="4s" repeatCount="indefinite"/>
-                </circle>
-                
-                <!-- Quantum particles on orbits -->
-                <circle r="8" fill="rgba(255,255,255,0.9)" filter="url(#blur)">
-                    <animateMotion dur="30s" repeatCount="indefinite">
-                        <mpath href="#orbit1"/>
-                    </animateMotion>
-                </circle>
-                <circle r="6" fill="rgba(255,255,255,0.8)" filter="url(#blur)">
-                    <animateMotion dur="25s" repeatCount="indefinite">
-                        <mpath href="#orbit2"/>
-                    </animateMotion>
-                </circle>
-                <circle r="5" fill="rgba(255,255,255,0.7)" filter="url(#blur)">
-                    <animateMotion dur="20s" repeatCount="indefinite">
-                        <mpath href="#orbit3"/>
-                    </animateMotion>
-                </circle>
-                
-                <!-- Motion paths -->
-                <path id="orbit1" d="M 20,200 A 180,60 -20 1,1 20,200.01" fill="none" transform="rotate(-20 200 200)"/>
-                <path id="orbit2" d="M 50,200 A 150,50 40 1,0 50,200.01" fill="none" transform="rotate(40 200 200)"/>
-                <path id="orbit3" d="M 80,200 A 120,40 -60 1,1 80,200.01" fill="none" transform="rotate(-60 200 200)"/>
-                
-                <!-- Wavefunction nodes -->
-                <g opacity="0.7">
-                    <circle cx="200" cy="200" r="5" fill="white">
-                        <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/>
-                    </circle>
-                    <circle cx="200" cy="200" r="25" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2">
-                        <animate attributeName="r" values="20;35;20" dur="3s" repeatCount="indefinite"/>
-                        <animate attributeName="opacity" values="0.6;0.15;0.6" dur="3s" repeatCount="indefinite"/>
-                    </circle>
-                    <circle cx="200" cy="200" r="45" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5">
-                        <animate attributeName="r" values="40;55;40" dur="3.5s" repeatCount="indefinite"/>
-                        <animate attributeName="opacity" values="0.4;0.1;0.4" dur="3.5s" repeatCount="indefinite"/>
-                    </circle>
-                </g>
+                <circle class="bloch-ball" r="150" fill="url(#bloch-shade)" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+                <g class="bloch-back" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1" stroke-dasharray="3 5"></g>
+                <line x1="0" y1="-150" x2="0" y2="150" stroke="rgba(255,255,255,0.3)" stroke-width="1" stroke-dasharray="2 4"/>
+                <g class="bloch-trails" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
+                <g class="bloch-front" fill="none" stroke="rgba(255,255,255,0.32)" stroke-width="1.2"></g>
+                <g class="bloch-vectors" stroke-linecap="round"></g>
+                <g class="bloch-effects" fill="none" stroke="#fff"></g>
             </svg>
+            <div class="bloch-readout" aria-hidden="true">
+                <code>dq.mesolve(H, jump_ops, psi0, tsave)</code>
+                <span class="bloch-time">t = 0.0</span>
+            </div>
+            <div class="bloch-hint" aria-hidden="true">Drag to rotate · Click to prepare a state</div>
         </div>
         <div class="tx-hero__content">
           <h1>High-performance quantum systems simulation with JAX</h1>
-          <p class="tx-hero__description">GPU-accelerated and differentiable solvers for the Schrödinger equation, Lindblad master equation, and more.</p>
+          <p class="tx-hero__description">GPU-accelerated and differentiable solvers for the Schrödinger equation, the Lindblad master equation, stochastic master equations, and more.</p>
           <div class="tx-hero__buttons">
             <a href="{{ page.next_page.url | url }}" class="md-button md-button--primary">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58 13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42Z"/></svg>
@@ -124,6 +82,268 @@ function copyToClipboard(button, text) {
       </div>
     </div>
 </section>
+<script>
+// Hero animation: Bloch vectors of a batch of qubits with H = Δ/2 σz + Ω/2 σx and
+// relaxation at rate γ, i.e. the Bloch equations of the Lindblad master equation
+(function() {
+    const svg = document.querySelector('.bloch');
+    if (!svg) return;
+    const NS = 'http://www.w3.org/2000/svg';
+    const R = 150;
+    const OMEGA = 2.6;
+    const EPISODE = 16;
+    const FADE = 1.2;
+    const TRAIL = 220;
+    const CHUNKS = 11;
+    const COLORS = ['#ffffff', '#ffe1a8', '#ffc9bd', '#fff3e6'];
+    const SPIN = 0.12, HOVER_SPIN = 0.03, TILT = 0.32;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const timeLabel = document.querySelector('.bloch-time');
+
+    const layer = (name) => svg.querySelector('.bloch-' + name);
+    const create = (tag, parent, attributes = {}) => {
+        const node = document.createElementNS(NS, tag);
+        for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, value);
+        parent.appendChild(node);
+        return node;
+    };
+
+    let azimuth = 0.6, tilt = TILT;
+
+    function project([x, y, z]) {
+        const ca = Math.cos(azimuth), sa = Math.sin(azimuth);
+        const ct = Math.cos(tilt), st = Math.sin(tilt);
+        const x1 = x * ca - y * sa, y1 = x * sa + y * ca;  // y1 points into the screen
+        return [R * x1, -R * (z * ct + y1 * st), z * st - y1 * ct];  // screen x, y, depth
+    }
+
+    // inverse of `project` for a point of the visible hemisphere, null outside the sphere
+    function unproject(sx, sy) {
+        const u = sx / R, up = -sy / R, depth2 = 1 - u * u - up * up;
+        if (depth2 < 0) return null;
+        const depth = Math.sqrt(depth2);
+        const ca = Math.cos(azimuth), sa = Math.sin(azimuth);
+        const ct = Math.cos(tilt), st = Math.sin(tilt);
+        const y1 = up * st - depth * ct, z = up * ct + depth * st;
+        return [u * ca + y1 * sa, -u * sa + y1 * ca, z];
+    }
+
+    // draw a closed curve on the sphere as its hidden and visible parts
+    function sphereCurve(point, n = 120) {
+        const d = { back: '', front: '' };
+        let previous = null;
+        for (let i = 0; i <= n; i++) {
+            const [sx, sy, depth] = project(point(2 * Math.PI * i / n));
+            const side = depth >= 0 ? 'front' : 'back';
+            const xy = sx.toFixed(1) + ' ' + sy.toFixed(1);
+            if (previous && previous !== side) d[previous] += 'L' + xy;
+            d[side] += (previous === side ? 'L' : 'M') + xy;
+            previous = side;
+        }
+        return d;
+    }
+
+    const circles = [
+        (s) => [Math.cos(s), Math.sin(s), 0],
+        (s) => [Math.cos(s), 0, Math.sin(s)],
+        (s) => [0, Math.cos(s), Math.sin(s)],
+    ].map((point) => ({
+        point,
+        back: create('path', layer('back')),
+        front: create('path', layer('front')),
+    }));
+
+    const qubits = COLORS.map((color) => ({
+        color,
+        chunks: Array.from({ length: CHUNKS }, () => create('path', layer('trails'), { stroke: color })),
+        arrow: create('line', layer('vectors'), { stroke: color, 'stroke-width': 1.6 }),
+        head: create('circle', layer('vectors'), { fill: color, filter: 'url(#bloch-glow)' }),
+    }));
+
+    // click feedback: a ring spreading over the sphere from the prepared state, and a
+    // shock wave leaving the sphere into the page
+    const ripple = {
+        age: Infinity,
+        surface: create('path', layer('effects'), { 'stroke-width': 2 }),
+        wave: create('circle', layer('effects'), { 'stroke-width': 1.5, r: R }),
+    };
+
+    let time = 0;
+
+    function newBatch(initial = [0, 0, 1]) {
+        // one shared drive, a sweep of detunings and decay rates: a batched simulation
+        const spread = 0.5 + 0.7 * Math.random();
+        qubits.forEach((qubit, k) => {
+            qubit.delta = OMEGA * spread * (k - (qubits.length - 1) / 2) * 0.55;
+            qubit.gamma = 0.1 + 0.12 * Math.random();
+            qubit.state = initial.slice();
+            qubit.trail = [initial.slice()];
+        });
+        time = 0;
+    }
+
+    function derivative([x, y, z], { delta, gamma }) {
+        return [
+            -delta * y - 0.5 * gamma * x,
+            delta * x - OMEGA * z - 0.5 * gamma * y,
+            OMEGA * y - gamma * (z + 1),
+        ];
+    }
+
+    function step(qubit, h) {
+        const add = (a, b, c) => a.map((ai, i) => ai + c * b[i]);
+        const k1 = derivative(qubit.state, qubit);
+        const k2 = derivative(add(qubit.state, k1, h / 2), qubit);
+        const k3 = derivative(add(qubit.state, k2, h / 2), qubit);
+        const k4 = derivative(add(qubit.state, k3, h), qubit);
+        qubit.state = qubit.state.map((s, i) => s + h / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]));
+    }
+
+    function advance(dt) {
+        for (const qubit of qubits) {
+            for (let i = 0; i < 4; i++) step(qubit, dt / 4);
+            qubit.trail.push(qubit.state);
+            if (qubit.trail.length > TRAIL) qubit.trail.shift();
+        }
+        time += dt;
+    }
+
+    function drawRipple() {
+        const progress = ripple.age / 1.1;
+        if (progress >= 1) {
+            ripple.surface.setAttribute('d', '');
+            ripple.wave.setAttribute('stroke-opacity', 0);
+            return;
+        }
+        // circle of angular radius a around the prepared state p, on the sphere
+        const p = ripple.center, a = 1.4 * Math.sqrt(progress);
+        const helper = Math.abs(p[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0];
+        const cross = (u, v) => [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+        const normalize = (u) => { const n = Math.hypot(...u); return u.map((ui) => ui / n); };
+        const e1 = normalize(cross(p, helper)), e2 = cross(p, e1);
+        const curve = sphereCurve((s) => p.map((pi, i) => pi * Math.cos(a) + (e1[i] * Math.cos(s) + e2[i] * Math.sin(s)) * Math.sin(a)), 72);
+        ripple.surface.setAttribute('d', curve.front);
+        ripple.surface.setAttribute('stroke-opacity', (0.9 * (1 - progress)).toFixed(3));
+        ripple.wave.setAttribute('r', (R * (1 + 0.45 * progress)).toFixed(1));
+        ripple.wave.setAttribute('stroke-opacity', (0.5 * (1 - progress) ** 2).toFixed(3));
+    }
+
+    function draw() {
+        const fade = Math.min(1, time / FADE, Math.max(0, (EPISODE + FADE - time) / FADE));
+        for (const circle of circles) {
+            const d = sphereCurve(circle.point);
+            circle.back.setAttribute('d', d.back);
+            circle.front.setAttribute('d', d.front);
+        }
+        for (const qubit of qubits) {
+            const points = qubit.trail.map(project);
+            const size = Math.ceil(points.length / CHUNKS);
+            qubit.chunks.forEach((chunk, j) => {
+                const part = points.slice(j * size, (j + 1) * size + 1);
+                if (part.length < 2) return chunk.setAttribute('d', '');
+                const depth = part.reduce((sum, p) => sum + p[2], 0) / part.length;
+                chunk.setAttribute('d', 'M' + part.map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L'));
+                chunk.setAttribute('stroke-opacity', (fade * ((j + 1) / CHUNKS) ** 1.5 * (0.7 + 0.3 * depth)).toFixed(3));
+                chunk.setAttribute('stroke-width', (1 + 1.6 * (j + 1) / CHUNKS).toFixed(2));
+            });
+            const [hx, hy, depth] = project(qubit.state);
+            qubit.arrow.setAttribute('x2', hx.toFixed(1));
+            qubit.arrow.setAttribute('y2', hy.toFixed(1));
+            qubit.arrow.setAttribute('stroke-opacity', (fade * (0.45 + 0.25 * depth)).toFixed(3));
+            qubit.head.setAttribute('cx', hx.toFixed(1));
+            qubit.head.setAttribute('cy', hy.toFixed(1));
+            qubit.head.setAttribute('r', (4.5 + 1.5 * depth).toFixed(2));
+            qubit.head.setAttribute('opacity', (fade * (0.75 + 0.25 * depth)).toFixed(3));
+        }
+        if (ripple.center) drawRipple();
+        if (timeLabel) timeLabel.textContent = 't = ' + time.toFixed(1);
+    }
+
+    newBatch();
+    if (reduceMotion) {
+        for (let i = 0; i < 300; i++) advance(1 / 60);
+        time = FADE;
+        return draw();
+    }
+
+    // pointer: hovering slows the spin, dragging rotates the sphere (with inertia once
+    // released), and a click prepares the whole batch in the clicked state
+    let spin = SPIN, hovering = false, drag = null;
+    const toSvg = (event) => {
+        const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(svg.getScreenCTM().inverse());
+        return [point.x, point.y];
+    };
+    svg.addEventListener('pointerenter', () => { hovering = true; });
+    svg.addEventListener('pointerleave', () => { hovering = false; });
+    svg.addEventListener('pointerdown', (event) => {
+        const [x, y] = toSvg(event);
+        drag = { x, y, startX: x, startY: y, start: performance.now(), moved: false };
+        svg.setPointerCapture(event.pointerId);
+        svg.classList.add('dragging');
+    });
+    svg.addEventListener('pointermove', (event) => {
+        if (!drag) return;
+        const [x, y] = toSvg(event);
+        const dAzimuth = (x - drag.x) / R, dTilt = (y - drag.y) / R;
+        azimuth += dAzimuth;
+        tilt = Math.max(-1.2, Math.min(1.2, tilt + dTilt));
+        spin = dAzimuth / Math.max(1e-3, (event.timeStamp - (drag.timeStamp || event.timeStamp - 16)) / 1000);
+        drag.timeStamp = event.timeStamp;
+        drag.x = x;
+        drag.y = y;
+        if (Math.hypot(x - drag.startX, y - drag.startY) > 6) drag.moved = true;
+    });
+    const release = (event) => {
+        if (!drag) return;
+        if (!drag.moved && performance.now() - drag.start < 500) {
+            const initial = unproject(...toSvg(event));
+            if (initial) {
+                newBatch(initial);
+                time = FADE;
+                ripple.center = initial;
+                ripple.age = 0;
+            }
+            spin = hovering ? HOVER_SPIN : SPIN;
+        }
+        drag = null;
+        svg.classList.remove('dragging');
+    };
+    svg.addEventListener('pointerup', release);
+    svg.addEventListener('pointercancel', release);
+
+    let visible = true, running = false, last = null;
+    function frame(now) {
+        const dt = last === null ? 0 : Math.min(0.05, (now - last) / 1000);
+        last = now;
+        if (!drag) {
+            const target = hovering ? HOVER_SPIN : SPIN;
+            spin += (target - spin) * Math.min(1, 2.5 * dt);
+            spin = Math.max(-6, Math.min(6, spin));
+            azimuth += spin * dt;
+            tilt += (TILT - tilt) * Math.min(1, 0.8 * dt);
+        }
+        ripple.age += dt;
+        advance(dt);
+        if (time > EPISODE + FADE) newBatch();
+        draw();
+        running = visible && !document.hidden;
+        if (running) requestAnimationFrame(frame);
+    }
+    const start = () => {
+        if (running) return;
+        running = true;
+        last = null;
+        requestAnimationFrame(frame);
+    };
+    new IntersectionObserver(([entry]) => {
+        visible = entry.isIntersecting;
+        if (visible) start();
+    }).observe(svg);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && visible) start(); });
+    start();
+})();
+</script>
+
 <div class="home-background">
     <svg class="waves waves-back" viewBox="0 0 1440 320" preserveAspectRatio="none">
         <path d="M0,160L34.3,160C68.6,160,137,160,206,154.7C274.3,149,343,139,411,128C480,117,549,107,617,85.3C685.7,64,754,32,823,42.7C891.4,53,960,107,1029,154.7C1097.1,203,1166,245,1234,224C1302.9,203,1371,117,1406,74.7L1440,32L1440,320L1405.7,320C1371.4,320,1303,320,1234,320C1165.7,320,1097,320,1029,320C960,320,891,320,823,320C754.3,320,686,320,617,320C548.6,320,480,320,411,320C342.9,320,274,320,206,320C137.1,320,69,320,34,320L0,320Z"/>
@@ -162,7 +382,7 @@ function copyToClipboard(button, text) {
         <h2 class="section-title">Get started with Dynamiqs</h2>
         <p class="section-subtitle">Simulate a lossy quantum harmonic oscillator in just a few lines.</p>
         <div class="code-example">
-            <button class="copy-button code-copy-button" onclick="copyToClipboard(this, `import dynamiqs as dq\nimport jax.numpy as jnp\n\n# Define system parameters\nn = 16           # Hilbert space dimension\nomega = 1.0      # Oscillator frequency\nkappa = 0.1      # Decay rate\n\n# Create operators and initial state\na = dq.destroy(n)\nH = omega * a.dag() @ a\njump_ops = [jnp.sqrt(kappa) * a]\npsi0 = dq.coherent(n, 1.0)\n\n# Run simulation\nresult = dq.mesolve(H, jump_ops, psi0, jnp.linspace(0, 10, 101))`)">
+            <button class="copy-button code-copy-button" onclick="copyToClipboard(this, `import dynamiqs as dq\nimport jax.numpy as jnp\n\n# Define system parameters\nn = 16           # Hilbert space dimension\nomega = 1.0      # Oscillator frequency\nkappa = 0.1      # Decay rate\n\n# Create operators and initial state\na = dq.destroy(n)\nH = omega * a.dag() @ a\njump_ops = [jnp.sqrt(kappa) * a]\npsi0 = dq.coherent(n, 1.0)\ntsave = jnp.linspace(0, 10, 101)\n\n# Run simulation and track the photon number\nresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=[a.dag() @ a])\nprint(result.expects[0, -1].real)  # e^(-kappa t) = 0.368`)">
                 <svg class="copy-icon" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12V1Z"/></svg>
                 <svg class="check-icon" viewBox="0 0 24 24" width="18" height="18" style="display:none"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
                 <span class="copy-tooltip">Copied to clipboard</span>
@@ -180,9 +400,11 @@ a = dq.<span class="fn">destroy</span>(n)
 H = omega * a.<span class="fn">dag</span>() @ a
 jump_ops = [jnp.<span class="fn">sqrt</span>(kappa) * a]
 psi0 = dq.<span class="fn">coherent</span>(n, <span class="num">1.0</span>)
+tsave = jnp.<span class="fn">linspace</span>(<span class="num">0</span>, <span class="num">10</span>, <span class="num">101</span>)
 
-<span class="cmt"># Run simulation</span>
-result = dq.<span class="fn">mesolve</span>(H, jump_ops, psi0, jnp.<span class="fn">linspace</span>(<span class="num">0</span>, <span class="num">10</span>, <span class="num">101</span>))
+<span class="cmt"># Run simulation and track the photon number</span>
+result = dq.<span class="fn">mesolve</span>(H, jump_ops, psi0, tsave, exp_ops=[a.<span class="fn">dag</span>() @ a])
+<span class="fn">print</span>(result.expects[<span class="num">0</span>, <span class="num">-1</span>].real)  <span class="cmt"># e^(-kappa t) = 0.368</span>
 </code></pre>
         </div>
         <div class="quickstart-features">
@@ -192,7 +414,7 @@ result = dq.<span class="fn">mesolve</span>(H, jump_ops, psi0, jnp.<span class="
             </div>
             <div class="quickstart-feature">
                 <span class="feature-check">✓</span>
-                <span>GPU-accelerated by default</span>
+                <span>Runs on CPU, GPU and TPU</span>
             </div>
             <div class="quickstart-feature">
                 <span class="feature-check">✓</span>
@@ -225,8 +447,8 @@ result = dq.<span class="fn">mesolve</span>(H, jump_ops, psi0, jnp.<span class="
                 </div>
                 <h3>GPU accelerated</h3>
                 <p>Run simulations on CPUs, GPUs, or TPUs. Batch thousands of simulations to run concurrently with automatic parallelization.</p>
-                <a href="./documentation/getting_started/examples.html" class="feature-link">
-                    See examples →
+                <a href="./documentation/basics/devices-and-precision.html" class="feature-link">
+                    Devices and precision →
                 </a>
             </div>
             <div class="feature-card">
@@ -235,7 +457,7 @@ result = dq.<span class="fn">mesolve</span>(H, jump_ops, psi0, jnp.<span class="
                 </div>
                 <h3>Built on JAX</h3>
                 <p>Full compatibility with the JAX ecosystem. Use JIT compilation, automatic differentiation, and functional transformations.</p>
-                <a href="https://jax.readthedocs.io/en/latest/" class="feature-link">
+                <a href="https://docs.jax.dev/" class="feature-link">
                     JAX documentation →
                 </a>
             </div>
@@ -244,7 +466,7 @@ result = dq.<span class="fn">mesolve</span>(H, jump_ops, psi0, jnp.<span class="
                     <svg viewBox="0 0 24 24" width="32" height="32"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
                 </div>
                 <h3>Diverse solvers</h3>
-                <p>Schrödinger equation, Lindblad master equation, stochastic master equation. Choose from modern adaptive ODE methods.</p>
+                <p>Schrödinger and Lindblad master equations, propagators, Floquet modes, and jump and diffusive stochastic equations. Choose from adaptive ODE, matrix exponentiation, and positivity-preserving methods.</p>
                 <a href="./python_api/index.html" class="feature-link">
                     View API →
                 </a>
@@ -264,9 +486,9 @@ result = dq.<span class="fn">mesolve</span>(H, jump_ops, psi0, jnp.<span class="
                     <svg viewBox="0 0 24 24" width="32" height="32"><path fill="currentColor" d="M9.4 16.6 4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0 4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
                 </div>
                 <h3>QuTiP compatible</h3>
-                <p>Familiar API for QuTiP users. Use QuTiP objects directly as arguments to any Dynamiqs function.</p>
-                <a href="./documentation/getting_started/whatis.html" class="feature-link">
-                    What is Dynamiqs? →
+                <p>Familiar API for QuTiP users. Pass QuTiP objects anywhere Dynamiqs expects a quantum array, and convert back with <code>dq.to_qutip()</code>.</p>
+                <a href="./documentation/basics/qarrays-and-layouts.html" class="feature-link">
+                    Quantum arrays →
                 </a>
             </div>
             <div class="feature-card">
@@ -279,8 +501,8 @@ result = dq.<span class="fn">mesolve</span>(H, jump_ops, psi0, jnp.<span class="
                 </div>
                 <h3>Sparse arrays</h3>
                 <p>Efficient diagonal sparse format for quantum arrays. Leverage structure in your operators for faster computations and lower memory usage.</p>
-                <a href="./python_api/qarrays/qarray/QArray.html" class="feature-link">
-                    Quantum arrays →
+                <a href="./documentation/basics/qarrays-and-layouts.html" class="feature-link">
+                    Sparse layouts →
                 </a>
             </div>
             <div class="feature-card">
@@ -290,8 +512,8 @@ result = dq.<span class="fn">mesolve</span>(H, jump_ops, psi0, jnp.<span class="
                     </svg>
                 </div>
                 <h3>Stochastic equations</h3>
-                <p>Simulate quantum trajectories with jump and diffusive stochastic master equations. Batch over thousands of trajectories.</p>
-                <a href="./documentation/advanced_examples/continuous-jump-measurement.html" class="feature-link">
+                <p>Simulate quantum trajectories with jump and diffusive stochastic Schrödinger and master equations. Batch over thousands of trajectories.</p>
+                <a href="./documentation/basics/stochastic-simulations.html" class="feature-link">
                     Stochastic solvers →
                 </a>
             </div>
@@ -305,7 +527,7 @@ result = dq.<span class="fn">mesolve</span>(H, jump_ops, psi0, jnp.<span class="
         <div class="cta-box">
             <div class="cta-content">
                 <h2>Ready to simulate quantum systems?</h2>
-                <p>Explore our comprehensive documentation, tutorials, and examples to get started with Dynamiqs. Join our community to ask questions and share your projects.</p>
+                <p>Explore the documentation, from first examples to advanced tutorials, to get started with Dynamiqs. Join our community to ask questions and share your projects. Using Dynamiqs in your research? Please <a href="./community/citing.html">cite it</a>.</p>
             </div>
             <div class="cta-buttons">
                 <a href="{{ page.next_page.url | url }}" class="md-button md-button--primary">

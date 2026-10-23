@@ -1,6 +1,6 @@
 # Batching simulations
 
-Batching allows **running many independent simulations concurrently**. It can dramatically speedup simulations, especially on GPUs. In this tutorial, we explain how to batch quantum simulations in Dynamiqs.
+Batching allows **running many independent simulations concurrently**. It can dramatically speed up simulations, especially on GPUs. In this tutorial, we explain how to batch quantum simulations in Dynamiqs.
 
 ```python
 import dynamiqs as dq
@@ -17,8 +17,8 @@ Batching in Dynamiqs is achieved by **passing a list of Hamiltonians, initial st
 H = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]  # (3, 2, 2)
 
 # define four initial states
-g = dq.basis(2, 0)
-e = dq.basis(2, 1)
+g = dq.ground()
+e = dq.excited()
 plus = (g + e).unit()
 minus = (g - e).unit()
 psi = [g, e, plus, minus]  # (4, 2, 1)
@@ -64,7 +64,7 @@ The simulation runs for all possible combinations of Hamiltonians, jump operator
 === "`dq.mesolve`"
     For `dq.mesolve`, the returned qarray has shape:
     ```
-    result.states.shape = (...H, ...L0, ...L1,  (...), ...rho0, ntsave, n, n)
+    result.states.shape = (...H, ...L0, ...L1, (...), ...rho0, ntsave, n, n)
     ```
     where `...x` indicates the batching shape of `x`, i.e. its shape without the last two dimensions.
 
@@ -87,7 +87,7 @@ The simulation runs for each set of Hamiltonians, jump operators and initial sta
     ```
     result.states.shape = (..., ntsave, n, 1)
     ```
-    where `... = jnp.broadcast_shapes(H, psi0)` is the broadcasted shape of all arguments.
+    where `...` is the broadcasted batching shape of all arguments, i.e. `jnp.broadcast_shapes(H.shape[:-2], psi0.shape[:-2])`.
 
     !!! Example "Example: Flat batching with `dq.sesolve`"
         - `H` has shape _(2, 3, n, n)_,
@@ -100,7 +100,7 @@ The simulation runs for each set of Hamiltonians, jump operators and initial sta
     ```
     result.states.shape = (..., ntsave, n, n)
     ```
-    where `... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)` is the broadcasted shape of all arguments.
+    where `...` is the broadcasted batching shape of all arguments, i.e. `jnp.broadcast_shapes(H.shape[:-2], L0.shape[:-2], L1.shape[:-2], ..., rho0.shape[:-2])`.
 
     !!! Example "Example: Flat batching with `dq.mesolve`"
         - `H` has shape _(2, 3, n, n)_,
@@ -187,7 +187,7 @@ We have seen how to batch over time-independent objects, but how about time-depe
     (11, 2, 2)
     ```
 === "For a `ModulatedTimeQArray`"
-    The batching of the returned timeqarray is specified by the qarray returned by `f`. For example, to define a modulated Hamiltonian $H(t)=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
+    The batching of the returned timeqarray is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H(t)=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
     ```pycon
     >>> omegas = jnp.linspace(0.0, 1.0, 11)  # (11,)
     >>> f = lambda t: jnp.cos(omegas * t)
@@ -207,13 +207,13 @@ We have seen how to batch over time-independent objects, but how about time-depe
 
 ## Why batching?
 
-When batching multiple simulations, the state is not a 2-D qarray that evolves in time but a N-D qarray which holds all independent simulations. This allows running **multiple simulations simultaneously** with great efficiency, especially on GPUs. Moreover, it usually simplifies the simulation code and also the subsequent analysis of the results, because they are all gathered in a single large qarray.
+When batching multiple simulations, the state is not a 2-D qarray that evolves in time but an N-D qarray which holds all independent simulations. This allows running **multiple simulations simultaneously** with great efficiency, especially on GPUs. Moreover, it usually simplifies the simulation code and also the subsequent analysis of the results, because they are all gathered in a single large qarray.
 
 Common use cases for batching include:
 
 - simulating a system with different values of a parameter (e.g. a drive amplitude),
 - simulating a system with different initial states (e.g. for gate tomography),
-- performing an optimisation using multiple starting points with random initial guesses (for parameters fitting or quantum optimal control).
+- performing an optimization using multiple starting points with random initial guesses (for parameters fitting or quantum optimal control).
 
 ### Quick benchmark
 
@@ -221,12 +221,12 @@ To illustrate the performance gain of batching, let us compare the total run tim
 
 ```ipython
 # define 3000 Hamiltonians
-omega = jnp.linspace(0.0, 10.0, 100)[:, None, None]
-epsilon = jnp.linspace(0.0, 1.0, 30)[:, None, None, None]
+omega = jnp.linspace(0.0, 10.0, 100)[:, None, None, None]
+epsilon = jnp.linspace(0.0, 1.0, 30)[:, None, None]
 H = omega * dq.sigmaz() + epsilon * dq.sigmax()  # (100, 30, 2, 2)
 
 # other simulation parameters
-psi0 = dq.basis(2, 0)
+psi0 = dq.ground()
 tsave = jnp.linspace(0.0, 1.0, 50)
 
 # running the simulations successively
@@ -256,4 +256,4 @@ def run_batched():
 44.1 ms ± 2.66 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
 ```
 
-As we can see, the batched simulation is **much faster** than the unbatched one. In this simple example, it is about 60 times faster. The gain in performance will be even more significant for larger simulations, or when using a GPU.
+As we can see, the batched simulation is **much faster** than the unbatched one. In this simple example, it is more than an order of magnitude faster. The gain in performance will be even more significant for larger simulations, or when using a GPU.

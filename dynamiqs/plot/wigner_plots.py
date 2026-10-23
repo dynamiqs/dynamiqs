@@ -23,20 +23,58 @@ def wigner_data(
     ymax: float,
     *,
     ax: Axes | None = None,
-    vmax: float = 2 / jnp.pi,
+    w: float = 7.0,
+    h: float | None = None,
+    vmax: float | None = None,
     cmap: str = 'dq',
     interpolation: str = 'bilinear',
     colorbar: bool = True,
     cross: bool = False,
     clear: bool = False,
+    hbar: float = 0.5,
 ):
     r"""Plot a pre-computed Wigner function.
 
-    Warning:
-        Documentation redaction in progress.
+    Args:
+        wigner (array-like of shape (npixels, npixels)): Wigner function on a regular
+            grid, such that `wigner[i, j]` is its value at `(xvec[i], yvec[j])`, as
+            returned by [`dq.wigner()`][dynamiqs.wigner].
+        xmax: Maximum absolute value of the $x$ coordinate of the grid.
+        ymax: Maximum absolute value of the $y$ coordinate of the grid.
+        ax: Matplotlib `Axes` to plot on. If `None`, a new figure of size `(w, h)`
+            is created.
+        w: Width of the new figure in inches, ignored if `ax` is specified.
+        h: Height of the new figure in inches, ignored if `ax` is specified. If
+            `None`, defaults to `w / 1.6`.
+        vmax: Absolute value mapped to the extremal colors of the colormap, values
+            outside $[-v_\text{max}, v_\text{max}]$ are clipped. If `None`, defaults
+            to $1/(\pi\hbar)$, the maximum absolute value of a Wigner function.
+        cmap: Colormap.
+        interpolation: Interpolation method passed to `plt.imshow()`.
+        colorbar: Whether to add a colorbar.
+        cross: Whether to draw the $x=0$ and $y=0$ axes.
+        clear: Whether to remove the axes and the colorbar.
+        hbar: Value of $\hbar$ used to compute `wigner`, see
+            [`dq.wigner()`][dynamiqs.wigner]. It sets the axis labels and the default
+            `vmax`.
 
     Note:
         Choose a diverging colormap `cmap` for better results.
+
+    Examples:
+        Plotting pre-computed data makes it possible to post-process it, for example
+        to isolate the interference fringes of a cat state by subtracting the Wigner
+        function of the corresponding statistical mixture:
+
+        >>> n, alpha = 32, 2.0
+        >>> cat = (dq.coherent(n, alpha) + dq.coherent(n, -alpha)).unit()
+        >>> mixture = (dq.coherent_dm(n, alpha) + dq.coherent_dm(n, -alpha)) / 2
+        >>> _, _, w_cat = dq.wigner(cat, xmax=4.0, ymax=2.0)
+        >>> _, _, w_mixture = dq.wigner(mixture, xmax=4.0, ymax=2.0)
+        >>> dq.plot.wigner_data(w_cat - w_mixture, 4.0, 2.0)
+        >>> renderfig('plot_wigner_data_fringes')
+
+        ![plot_wigner_data_fringes](../../figs_code/plot_wigner_data_fringes.png){.fig-half}
 
     See also:
         - [`dq.wigner()`][dynamiqs.wigner]: compute the Wigner distribution of a ket or
@@ -46,24 +84,25 @@ def wigner_data(
     """
     assert ax is not None
 
-    w = to_jax(wigner)
-    check_shape(w, 'wigner', '(n, n)')
-    if w.dtype not in (jnp.float32, jnp.float64):
+    wig = to_jax(wigner)
+    check_shape(wig, 'wigner', '(n, n)')
+    if wig.dtype not in (jnp.float32, jnp.float64):
         raise TypeError(
-            f'Wigner data must be of type `float`, not `{w.dtype}`. Consider using'
+            f'Wigner data must be of type `float`, not `{wig.dtype}`. Consider using'
             f' `dq.plot.wigner(x)` to plot the Wigner function of a quantum state `x`.'
         )
 
-    # set plot norm
+    # set plot norm, |W(x, p)| ≤ 1/(πħ)
+    vmax = 1 / (jnp.pi * hbar) if vmax is None else vmax
     vmin = -vmax
     norm = Normalize(vmin=vmin, vmax=vmax, clip=True)
 
     # clip to avoid rounding errors
-    w = w.clip(vmin, vmax)
+    wig = wig.clip(vmin, vmax)
 
     # plot
     ax.imshow(
-        w.T,
+        wig.T,
         cmap=cmap,
         norm=norm,
         origin='lower',
@@ -75,8 +114,11 @@ def wigner_data(
     # remove grid by default
     ax.grid(False)
 
-    # axis label
-    ax.set(xlabel=r'$\mathrm{Re}(\alpha)$', ylabel=r'$\mathrm{Im}(\alpha)$')
+    # axis label, for ħ=0.5 a coherent state |alpha⟩ lies at (Re(alpha), Im(alpha))
+    if hbar == 0.5:
+        ax.set(xlabel=r'$\mathrm{Re}(\alpha)$', ylabel=r'$\mathrm{Im}(\alpha)$')
+    else:
+        ax.set(xlabel=r'$x$', ylabel=r'$p$')
 
     if colorbar and not clear:
         cax = add_colorbar(ax, cmap, norm)
@@ -97,9 +139,11 @@ def wigner(
     state: QArrayLike,
     *,
     ax: Axes | None = None,
+    w: float = 7.0,
+    h: float | None = None,
     xmax: float = 5.0,
     ymax: float | None = None,
-    vmax: float = 2 / jnp.pi,
+    vmax: float | None = None,
     npixels: int = 101,
     cmap: str = 'dq',
     interpolation: str = 'bilinear',
@@ -110,22 +154,38 @@ def wigner(
 ):
     r"""Plot the Wigner function of a state.
 
-    Warning:
-        Documentation redaction in progress.
+    Args:
+        state (qarray-like of shape (n, 1) or (n, n)): Ket or density matrix.
+        ax: Matplotlib `Axes` to plot on. If `None`, a new figure of size `(w, h)`
+            is created.
+        w: Width of the new figure in inches, ignored if `ax` is specified.
+        h: Height of the new figure in inches, ignored if `ax` is specified. If
+            `None`, defaults to `w / 1.6`.
+        xmax: Maximum absolute value of the $x$ coordinate.
+        ymax: Maximum absolute value of the $y$ coordinate. If `None`, defaults to
+            `xmax`.
+        vmax: Absolute value mapped to the extremal colors of the colormap, values
+            outside $[-v_\text{max}, v_\text{max}]$ are clipped. If `None`, defaults
+            to $1/(\pi\hbar)$, the maximum absolute value of a Wigner function.
+        npixels: Number of pixels in each direction.
+        cmap: Colormap.
+        interpolation: Interpolation method passed to `plt.imshow()`.
+        colorbar: Whether to add a colorbar.
+        cross: Whether to draw the $x=0$ and $y=0$ axes.
+        clear: Whether to remove the axes and the colorbar.
+        hbar: Value of $\hbar$ in the commutation relation $[\hat{x}, \hat{p}]
+            = i\hbar$, see [`dq.wigner()`][dynamiqs.wigner].
 
     Note:
         Choose a diverging colormap `cmap` for better results.
 
     Warning:
-        The axis scaling is chosen so that a coherent state $\ket{\alpha}$ lies at the
-        coordinates $(x,y)=(\mathrm{Re}(\alpha),\mathrm{Im}(\alpha))$, which is
-        different from the default behaviour of `qutip.plot_wigner()`.
-
-    See also:
-        - [`dq.wigner()`][dynamiqs.wigner]: compute the Wigner distribution of a ket or
-            density matrix.
-        - [`dq.plot.wigner_data()`][dynamiqs.plot.wigner_data]: plot a pre-computed
-            Wigner function.
+        For the default `hbar=0.5`, the axis scaling is chosen so that a coherent
+        state $\ket{\alpha}$ lies at the coordinates
+        $(x,y)=(\mathrm{Re}(\alpha),\mathrm{Im}(\alpha))$, which is different from the
+        default behaviour of `qutip.plot_wigner()`. For another value of `hbar`, the
+        axes are the quadratures $x$ and $p$, and a coherent state lies at
+        $(x,p)=\sqrt{2\hbar}\,(\mathrm{Re}(\alpha),\mathrm{Im}(\alpha))$.
 
     Examples:
         >>> psi = dq.coherent(16, 2.0)
@@ -151,6 +211,12 @@ def wigner(
         >>> renderfig('plot_wigner_4legged')
 
         ![plot_wigner_4legged](../../figs_code/plot_wigner_4legged.png){.fig-half}
+
+    See also:
+        - [`dq.wigner()`][dynamiqs.wigner]: compute the Wigner distribution of a ket or
+            density matrix.
+        - [`dq.plot.wigner_data()`][dynamiqs.plot.wigner_data]: plot a pre-computed
+            Wigner function.
     """
     assert ax is not None
 
@@ -158,10 +224,10 @@ def wigner(
     check_shape(state, 'state', '(n, 1)', '(n, n)')
 
     ymax = xmax if ymax is None else ymax
-    _, _, w = compute_wigner(state, xmax, ymax, npixels, hbar=hbar)
+    _, _, wig = compute_wigner(state, xmax, ymax, npixels, hbar=hbar)
 
     wigner_data(
-        w,
+        wig,
         xmax,
         ymax,
         ax=ax,
@@ -171,6 +237,7 @@ def wigner(
         colorbar=colorbar,
         cross=cross,
         clear=clear,
+        hbar=hbar,
     )
 
 
@@ -183,7 +250,7 @@ def wigner_mosaic(
     h: float | None = None,
     xmax: float = 5.0,
     ymax: float | None = None,
-    vmax: float = 2 / jnp.pi,
+    vmax: float | None = None,
     npixels: int = 101,
     cmap: str = 'dq',
     interpolation: str = 'bilinear',
@@ -192,10 +259,26 @@ def wigner_mosaic(
 ):
     r"""Plot the Wigner function of multiple states in a mosaic arrangement.
 
-    Warning:
-        Documentation redaction in progress.
-
-    See [`dq.plot.wigner()`][dynamiqs.plot.wigner] for more details.
+    Args:
+        states (qarray-like of shape (N, n, 1) or (N, n, n)): Sequence of _N_ kets or
+            density matrices.
+        n: Number of states to plot, evenly spaced in `states` from the first to
+            the last state. If `n` exceeds _N_, all states are plotted.
+        nrows: Number of rows of the mosaic.
+        w: Width of each subplot in inches.
+        h: Height of each subplot in inches. If `None`, defaults to `w`.
+        xmax: Maximum absolute value of the $x$ coordinate.
+        ymax: Maximum absolute value of the $y$ coordinate. If `None`, defaults to
+            `xmax`.
+        vmax: Absolute value mapped to the extremal colors of the colormap, values
+            outside $[-v_\text{max}, v_\text{max}]$ are clipped. If `None`, defaults
+            to $1/(\pi\hbar)$, the maximum absolute value of a Wigner function.
+        npixels: Number of pixels in each direction.
+        cmap: Colormap.
+        interpolation: Interpolation method passed to `plt.imshow()`.
+        cross: Whether to draw the $x=0$ and $y=0$ axes.
+        hbar: Value of $\hbar$ in the commutation relation $[\hat{x}, \hat{p}]
+            = i\hbar$, see [`dq.wigner()`][dynamiqs.wigner].
 
     Examples:
         >>> psis = [dq.fock(3, i) for i in range(3)]
@@ -226,6 +309,12 @@ def wigner_mosaic(
         >>> renderfig('plot_wigner_mosaic_kerr')
 
         ![plot_wigner_mosaic_kerr](../../figs_code/plot_wigner_mosaic_kerr.png){.fig}
+
+    See also:
+        - [`dq.plot.wigner()`][dynamiqs.plot.wigner]: plot the Wigner function of a
+            state.
+        - [`dq.plot.wigner_gif()`][dynamiqs.plot.wigner_gif]: plot a GIF of the Wigner
+            function of multiple states.
     """
     states = asqarray(states)
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
@@ -245,7 +334,7 @@ def wigner_mosaic(
     )
 
     ymax = xmax if ymax is None else ymax
-    selected_indexes = np.linspace(0, nstates, n, dtype=int)
+    selected_indexes = np.linspace(0, nstates - 1, n, dtype=int)
     _, _, wig = compute_wigner(states[selected_indexes], xmax, ymax, npixels, hbar=hbar)
 
     # plot individual wigner
@@ -261,6 +350,7 @@ def wigner_mosaic(
             colorbar=False,
             cross=cross,
             clear=False,
+            hbar=hbar,
         )
         ax.set(xlabel='', ylabel='', xticks=[], yticks=[])
 
@@ -273,7 +363,7 @@ def wigner_gif(
     w: float = 5.0,
     xmax: float = 5.0,
     ymax: float | None = None,
-    vmax: float = 2 / jnp.pi,
+    vmax: float | None = None,
     npixels: int = 101,
     cmap: str = 'dq',
     interpolation: str = 'bilinear',
@@ -283,11 +373,33 @@ def wigner_gif(
 ) -> Image:
     r"""Plot a GIF of the Wigner function of multiple states.
 
-    Warning:
-        Documentation redaction in progress.
+    If there are more states than GIF frames, the frames show states evenly spaced
+    from the first to the last state.
 
-    See [`dq.plot.wigner()`][dynamiqs.plot.wigner] and
-    [`dq.plot.gifit()`][dynamiqs.plot.gifit] for more details.
+    Args:
+        states (qarray-like of shape (N, n, 1) or (N, n, n)): Sequence of _N_ kets or
+            density matrices.
+        gif_duration: GIF duration in seconds.
+        fps: GIF frames per second.
+        w: Width of the GIF in inches. The height is set to `w * ymax / xmax`.
+        xmax: Maximum absolute value of the $x$ coordinate.
+        ymax: Maximum absolute value of the $y$ coordinate. If `None`, defaults to
+            `xmax`.
+        vmax: Absolute value mapped to the extremal colors of the colormap, values
+            outside $[-v_\text{max}, v_\text{max}]$ are clipped. If `None`, defaults
+            to $1/(\pi\hbar)$, the maximum absolute value of a Wigner function.
+        npixels: Number of pixels in each direction.
+        cmap: Colormap.
+        interpolation: Interpolation method passed to `plt.imshow()`.
+        cross: Whether to draw the $x=0$ and $y=0$ axes.
+        clear: Whether to remove the axes.
+        hbar: Value of $\hbar$ in the commutation relation $[\hat{x}, \hat{p}]
+            = i\hbar$, see [`dq.wigner()`][dynamiqs.wigner].
+
+    Returns:
+        (IPython.display.Image): Animated GIF, displayed automatically when it is the
+            last expression of a Jupyter notebook cell, see
+            [`dq.plot.gifit()`][dynamiqs.plot.gifit] to save it to a file.
 
     Examples:
         >>> n = 16
@@ -314,6 +426,14 @@ def wigner_gif(
         >>> rendergif(gif, 'wigner-kerr')
 
         ![plot_wigner_gif_kerr](../../figs_code/wigner-kerr.gif){.fig-half}
+
+    See also:
+        - [`dq.plot.wigner()`][dynamiqs.plot.wigner]: plot the Wigner function of a
+            state.
+        - [`dq.plot.wigner_mosaic()`][dynamiqs.plot.wigner_mosaic]: plot the Wigner
+            function of multiple states in a mosaic arrangement.
+        - [`dq.plot.gifit()`][dynamiqs.plot.gifit]: transform a plot function into a
+            function that returns an animated GIF.
     """
     states = asqarray(states)
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
@@ -335,6 +455,7 @@ def wigner_gif(
         colorbar=False,
         cross=cross,
         clear=clear,
+        hbar=hbar,
         gif_duration=gif_duration,
         fps=fps,
     )
