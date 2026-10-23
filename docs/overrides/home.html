@@ -39,14 +39,9 @@ function copyToClipboard(button, text) {
     <div class="md-grid md-typeset">
       <div class="tx-hero">
         <div class="tx-hero__image">
-            <!-- Bloch sphere: a batch of driven, damped qubits spiralling from |0⟩ to their steady states, drawn by the script below -->
-            <svg class="quantum-illustration bloch" viewBox="-200 -200 400 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bloch sphere showing a batch of driven, damped qubit trajectories">
+            <!-- Bloch sphere: a batch of driven, damped qubits spiralling to their steady states, drawn by the script below -->
+            <svg class="quantum-illustration bloch" viewBox="-200 -200 400 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bloch sphere showing a batch of driven, damped qubit trajectories. Drag to rotate it, click it to prepare a new initial state.">
                 <defs>
-                    <radialGradient id="bloch-halo">
-                        <stop offset="0%" stop-color="#fff" stop-opacity="0.22"/>
-                        <stop offset="65%" stop-color="#fff" stop-opacity="0.05"/>
-                        <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
-                    </radialGradient>
                     <radialGradient id="bloch-shade" cx="35%" cy="30%" r="80%">
                         <stop offset="0%" stop-color="#fff" stop-opacity="0.2"/>
                         <stop offset="100%" stop-color="#fff" stop-opacity="0.03"/>
@@ -56,14 +51,19 @@ function copyToClipboard(button, text) {
                         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
                     </filter>
                 </defs>
-                <circle r="196" fill="url(#bloch-halo)"/>
-                <circle r="150" fill="url(#bloch-shade)" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+                <circle class="bloch-ball" r="150" fill="url(#bloch-shade)" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
                 <g class="bloch-back" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1" stroke-dasharray="3 5"></g>
                 <line x1="0" y1="-150" x2="0" y2="150" stroke="rgba(255,255,255,0.3)" stroke-width="1" stroke-dasharray="2 4"/>
                 <g class="bloch-trails" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
                 <g class="bloch-front" fill="none" stroke="rgba(255,255,255,0.32)" stroke-width="1.2"></g>
                 <g class="bloch-vectors" stroke-linecap="round"></g>
+                <g class="bloch-effects" fill="none" stroke="#fff"></g>
             </svg>
+            <div class="bloch-readout" aria-hidden="true">
+                <code>dq.mesolve(H, jump_ops, psi0, tsave)</code>
+                <span class="bloch-time">t = 0.0</span>
+            </div>
+            <div class="bloch-hint" aria-hidden="true">Drag to rotate · Click to prepare a state</div>
         </div>
         <div class="tx-hero__content">
           <h1>High-performance quantum systems simulation with JAX</h1>
@@ -96,7 +96,9 @@ function copyToClipboard(button, text) {
     const TRAIL = 220;
     const CHUNKS = 11;
     const COLORS = ['#ffffff', '#ffe1a8', '#ffc9bd', '#fff3e6'];
+    const SPIN = 0.12, HOVER_SPIN = 0.03, TILT = 0.32;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const timeLabel = document.querySelector('.bloch-time');
 
     const layer = (name) => svg.querySelector('.bloch-' + name);
     const create = (tag, parent, attributes = {}) => {
@@ -106,8 +108,7 @@ function copyToClipboard(button, text) {
         return node;
     };
 
-    // view angles, nudged towards the pointer for a parallax effect
-    let azimuth = 0.6, tilt = 0.32, targetAzimuth = 0, targetTilt = 0.32;
+    let azimuth = 0.6, tilt = TILT;
 
     function project([x, y, z]) {
         const ca = Math.cos(azimuth), sa = Math.sin(azimuth);
@@ -116,7 +117,32 @@ function copyToClipboard(button, text) {
         return [R * x1, -R * (z * ct + y1 * st), z * st - y1 * ct];  // screen x, y, depth
     }
 
-    // great circles of the sphere, split into their hidden and visible halves
+    // inverse of `project` for a point of the visible hemisphere, null outside the sphere
+    function unproject(sx, sy) {
+        const u = sx / R, up = -sy / R, depth2 = 1 - u * u - up * up;
+        if (depth2 < 0) return null;
+        const depth = Math.sqrt(depth2);
+        const ca = Math.cos(azimuth), sa = Math.sin(azimuth);
+        const ct = Math.cos(tilt), st = Math.sin(tilt);
+        const y1 = up * st - depth * ct, z = up * ct + depth * st;
+        return [u * ca + y1 * sa, -u * sa + y1 * ca, z];
+    }
+
+    // draw a closed curve on the sphere as its hidden and visible parts
+    function sphereCurve(point, n = 120) {
+        const d = { back: '', front: '' };
+        let previous = null;
+        for (let i = 0; i <= n; i++) {
+            const [sx, sy, depth] = project(point(2 * Math.PI * i / n));
+            const side = depth >= 0 ? 'front' : 'back';
+            const xy = sx.toFixed(1) + ' ' + sy.toFixed(1);
+            if (previous && previous !== side) d[previous] += 'L' + xy;
+            d[side] += (previous === side ? 'L' : 'M') + xy;
+            previous = side;
+        }
+        return d;
+    }
+
     const circles = [
         (s) => [Math.cos(s), Math.sin(s), 0],
         (s) => [Math.cos(s), 0, Math.sin(s)],
@@ -127,23 +153,6 @@ function copyToClipboard(button, text) {
         front: create('path', layer('front')),
     }));
 
-    function drawCircles() {
-        for (const circle of circles) {
-            const d = { back: '', front: '' };
-            let previous = null;
-            for (let i = 0; i <= 120; i++) {
-                const [sx, sy, depth] = project(circle.point(2 * Math.PI * i / 120));
-                const side = depth >= 0 ? 'front' : 'back';
-                const xy = sx.toFixed(1) + ' ' + sy.toFixed(1);
-                if (previous && previous !== side) d[previous] += 'L' + xy;
-                d[side] += (previous === side ? 'L' : 'M') + xy;
-                previous = side;
-            }
-            circle.back.setAttribute('d', d.back);
-            circle.front.setAttribute('d', d.front);
-        }
-    }
-
     const qubits = COLORS.map((color) => ({
         color,
         chunks: Array.from({ length: CHUNKS }, () => create('path', layer('trails'), { stroke: color })),
@@ -151,16 +160,24 @@ function copyToClipboard(button, text) {
         head: create('circle', layer('vectors'), { fill: color, filter: 'url(#bloch-glow)' }),
     }));
 
+    // click feedback: a ring spreading over the sphere from the prepared state, and a
+    // shock wave leaving the sphere into the page
+    const ripple = {
+        age: Infinity,
+        surface: create('path', layer('effects'), { 'stroke-width': 2 }),
+        wave: create('circle', layer('effects'), { 'stroke-width': 1.5, r: R }),
+    };
+
     let time = 0;
 
-    function newBatch() {
+    function newBatch(initial = [0, 0, 1]) {
         // one shared drive, a sweep of detunings and decay rates: a batched simulation
         const spread = 0.5 + 0.7 * Math.random();
         qubits.forEach((qubit, k) => {
             qubit.delta = OMEGA * spread * (k - (qubits.length - 1) / 2) * 0.55;
             qubit.gamma = 0.1 + 0.12 * Math.random();
-            qubit.state = [0, 0, 1];
-            qubit.trail = [[0, 0, 1]];
+            qubit.state = initial.slice();
+            qubit.trail = [initial.slice()];
         });
         time = 0;
     }
@@ -191,9 +208,33 @@ function copyToClipboard(button, text) {
         time += dt;
     }
 
+    function drawRipple() {
+        const progress = ripple.age / 1.1;
+        if (progress >= 1) {
+            ripple.surface.setAttribute('d', '');
+            ripple.wave.setAttribute('stroke-opacity', 0);
+            return;
+        }
+        // circle of angular radius a around the prepared state p, on the sphere
+        const p = ripple.center, a = 1.4 * Math.sqrt(progress);
+        const helper = Math.abs(p[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0];
+        const cross = (u, v) => [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+        const normalize = (u) => { const n = Math.hypot(...u); return u.map((ui) => ui / n); };
+        const e1 = normalize(cross(p, helper)), e2 = cross(p, e1);
+        const curve = sphereCurve((s) => p.map((pi, i) => pi * Math.cos(a) + (e1[i] * Math.cos(s) + e2[i] * Math.sin(s)) * Math.sin(a)), 72);
+        ripple.surface.setAttribute('d', curve.front);
+        ripple.surface.setAttribute('stroke-opacity', (0.9 * (1 - progress)).toFixed(3));
+        ripple.wave.setAttribute('r', (R * (1 + 0.45 * progress)).toFixed(1));
+        ripple.wave.setAttribute('stroke-opacity', (0.5 * (1 - progress) ** 2).toFixed(3));
+    }
+
     function draw() {
         const fade = Math.min(1, time / FADE, Math.max(0, (EPISODE + FADE - time) / FADE));
-        drawCircles();
+        for (const circle of circles) {
+            const d = sphereCurve(circle.point);
+            circle.back.setAttribute('d', d.back);
+            circle.front.setAttribute('d', d.front);
+        }
         for (const qubit of qubits) {
             const points = qubit.trail.map(project);
             const size = Math.ceil(points.length / CHUNKS);
@@ -214,6 +255,8 @@ function copyToClipboard(button, text) {
             qubit.head.setAttribute('r', (4.5 + 1.5 * depth).toFixed(2));
             qubit.head.setAttribute('opacity', (fade * (0.75 + 0.25 * depth)).toFixed(3));
         }
+        if (ripple.center) drawRipple();
+        if (timeLabel) timeLabel.textContent = 't = ' + time.toFixed(1);
     }
 
     newBatch();
@@ -223,31 +266,78 @@ function copyToClipboard(button, text) {
         return draw();
     }
 
-    const hero = document.querySelector('.tx-hero') || svg;
-    hero.addEventListener('pointermove', (event) => {
-        const box = hero.getBoundingClientRect();
-        targetAzimuth = 0.8 * ((event.clientX - box.left) / box.width - 0.5);
-        targetTilt = 0.32 + 0.3 * ((event.clientY - box.top) / box.height - 0.5);
+    // pointer: hovering slows the spin, dragging rotates the sphere (with inertia once
+    // released), and a click prepares the whole batch in the clicked state
+    let spin = SPIN, hovering = false, drag = null;
+    const toSvg = (event) => {
+        const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(svg.getScreenCTM().inverse());
+        return [point.x, point.y];
+    };
+    svg.addEventListener('pointerenter', () => { hovering = true; });
+    svg.addEventListener('pointerleave', () => { hovering = false; });
+    svg.addEventListener('pointerdown', (event) => {
+        const [x, y] = toSvg(event);
+        drag = { x, y, startX: x, startY: y, start: performance.now(), moved: false };
+        svg.setPointerCapture(event.pointerId);
+        svg.classList.add('dragging');
     });
-    hero.addEventListener('pointerleave', () => { targetAzimuth = 0; targetTilt = 0.32; });
+    svg.addEventListener('pointermove', (event) => {
+        if (!drag) return;
+        const [x, y] = toSvg(event);
+        const dAzimuth = (x - drag.x) / R, dTilt = (y - drag.y) / R;
+        azimuth += dAzimuth;
+        tilt = Math.max(-1.2, Math.min(1.2, tilt + dTilt));
+        spin = dAzimuth / Math.max(1e-3, (event.timeStamp - (drag.timeStamp || event.timeStamp - 16)) / 1000);
+        drag.timeStamp = event.timeStamp;
+        drag.x = x;
+        drag.y = y;
+        if (Math.hypot(x - drag.startX, y - drag.startY) > 6) drag.moved = true;
+    });
+    const release = (event) => {
+        if (!drag) return;
+        if (!drag.moved && performance.now() - drag.start < 500) {
+            const initial = unproject(...toSvg(event));
+            if (initial) {
+                newBatch(initial);
+                time = FADE;
+                ripple.center = initial;
+                ripple.age = 0;
+            }
+            spin = hovering ? HOVER_SPIN : SPIN;
+        }
+        drag = null;
+        svg.classList.remove('dragging');
+    };
+    svg.addEventListener('pointerup', release);
+    svg.addEventListener('pointercancel', release);
 
-    let visible = true, last = null, spin = 0.6;
+    let visible = true, running = false, last = null;
     function frame(now) {
         const dt = last === null ? 0 : Math.min(0.05, (now - last) / 1000);
         last = now;
-        spin += 0.12 * dt;
-        azimuth += (spin + targetAzimuth - azimuth) * Math.min(1, 4 * dt);
-        tilt += (targetTilt - tilt) * Math.min(1, 4 * dt);
+        if (!drag) {
+            const target = hovering ? HOVER_SPIN : SPIN;
+            spin += (target - spin) * Math.min(1, 2.5 * dt);
+            spin = Math.max(-6, Math.min(6, spin));
+            azimuth += spin * dt;
+            tilt += (TILT - tilt) * Math.min(1, 0.8 * dt);
+        }
+        ripple.age += dt;
         advance(dt);
         if (time > EPISODE + FADE) newBatch();
         draw();
-        if (visible && !document.hidden) requestAnimationFrame(frame);
+        running = visible && !document.hidden;
+        if (running) requestAnimationFrame(frame);
     }
-    const start = () => { last = null; requestAnimationFrame(frame); };
+    const start = () => {
+        if (running) return;
+        running = true;
+        last = null;
+        requestAnimationFrame(frame);
+    };
     new IntersectionObserver(([entry]) => {
-        const wasRunning = visible;
         visible = entry.isIntersecting;
-        if (visible && !wasRunning) start();
+        if (visible) start();
     }).observe(svg);
     document.addEventListener('visibilitychange', () => { if (!document.hidden && visible) start(); });
     start();
