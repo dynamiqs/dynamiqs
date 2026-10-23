@@ -2,6 +2,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 
+import dynamiqs as dq
 from dynamiqs.method import Tsit5
 
 from ..order import TEST_LONG
@@ -24,3 +25,21 @@ class TestFloquet:
         sorted_modes = floquet_result.modes[:, idxs].to_jax()
         assert jnp.allclose(quasienergies[idxs], true_quasienergies, atol=ysave_atol)
         assert jnp.allclose(true_modes, sorted_modes, atol=ysave_atol)
+
+    def test_degenerate_modes_are_orthonormal(self):
+        # resonant ladder: quasienergies cluster at 0 and at the zone edge π/T
+        n, T = 4, 1.0
+        key_1, key_2 = jax.random.split(jax.random.PRNGKey(42))
+        _, R = jnp.linalg.eigh(dq.random.herm(key_1, (n, n)).to_jax())
+        H0 = R @ jnp.diag(jnp.pi / T * jnp.arange(n)) @ R.mT.conj()
+        V = dq.random.herm(key_2, (n, n))
+        H = dq.constant(H0) + dq.modulated(
+            lambda t: 1e-3 * jnp.cos(2 * jnp.pi * t / T), V
+        )
+
+        result = dq.floquet(H, T, jnp.array([0.0]))
+        modes = result.modes.to_jax()[0, ..., 0].T
+        U = dq.sepropagator(H, [0.0, T]).final_propagator.to_jax()
+        evals = jnp.exp(-1j * result.quasienergies * T)
+        assert jnp.allclose(modes.mT.conj() @ modes, jnp.eye(n), atol=1e-5)
+        assert jnp.allclose(U @ modes, modes * evals, atol=1e-5)
