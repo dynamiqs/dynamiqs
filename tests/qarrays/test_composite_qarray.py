@@ -458,3 +458,348 @@ def test_getitem_matrix_axis_materializes():
 
     assert not isinstance(indexed, CompositeQArray)
     assert jnp.allclose(jnp.asarray(indexed), oracle[key])
+
+
+# === unary algebra ===
+# `_batched_composite` is real and diagonal, which most wrong formulas survive, so
+# the builders below use complex, non-normal and non-Hermitian data
+
+
+def _random(rng: np.random.Generator, *shape: int) -> np.ndarray:
+    return rng.normal(size=shape) + 1j * rng.normal(size=shape)
+
+
+def _general_composite() -> tuple[CompositeQArray, np.ndarray]:
+    # two terms of batch shapes () and (3,), the second with a batched coefficient
+    rng = np.random.default_rng(42)
+    A0, B0, coeff0 = _random(rng, 2, 2), _random(rng, 3, 3), 1.5 - 0.5j
+    A1, B1, coeff1 = _random(rng, 3, 2, 2), _random(rng, 3, 3), _random(rng, 3)
+    term0 = CompositeTerm(
+        (dq.asqarray(A0, dims=(2,)), dq.asqarray(B0, dims=(3,))), coeff0
+    )
+    term1 = CompositeTerm(
+        (dq.asqarray(A1, dims=(2,)), dq.asqarray(B1, dims=(3,))), coeff1
+    )
+    c = CompositeQArray((2, 3), (term0, term1))
+    # np.kron of shapes (3, 2, 2) and (1, 3, 3) is the batched Kronecker product
+    oracle = coeff0 * np.kron(A0, B0) + coeff1[:, None, None] * np.kron(A1, B1[None])
+    return c, oracle
+
+
+def _single_term_composite() -> tuple[CompositeQArray, np.ndarray]:
+    # non-normal factors with distinct eigenvalues, the second one batched only
+    rng = np.random.default_rng(42)
+    A, B, coeff = np.array([[1.0, 2.0], [0.0, 3.0]]), _random(rng, 3, 3, 3), 0.5j
+    term = CompositeTerm((dq.asqarray(A, dims=(2,)), dq.asqarray(B, dims=(3,))), coeff)
+    return CompositeQArray((2, 3), (term,)), coeff * np.kron(A[None], B)
+
+
+def _hermitian_term_composite() -> tuple[CompositeQArray, np.ndarray]:
+    # (iA) ⊗ (iB) = -A ⊗ B with A and B Hermitian: Hermitian, with factors that
+    # are not, like iY ⊗ iY
+    rng = np.random.default_rng(42)
+    A, B = _random(rng, 2, 2), _random(rng, 3, 3)
+    iA, iB = 1j * (A + A.conj().T), 1j * (B + B.conj().T)
+    term = CompositeTerm((dq.asqarray(iA, dims=(2,)), dq.asqarray(iB, dims=(3,))))
+    return CompositeQArray((2, 3), (term,)), np.kron(iA, iB)
+
+
+def _hermitian_sum_composite() -> tuple[CompositeQArray, np.ndarray]:
+    # A ⊗ A† + A† ⊗ A: Hermitian by cancellation between terms
+    rng = np.random.default_rng(42)
+    A = _random(rng, 2, 2)
+    Ad = A.conj().T
+    term0 = CompositeTerm((dq.asqarray(A, dims=(2,)), dq.asqarray(Ad, dims=(2,))))
+    term1 = CompositeTerm((dq.asqarray(Ad, dims=(2,)), dq.asqarray(A, dims=(2,))))
+    c = CompositeQArray((2, 2), (term0, term1))
+    return c, np.kron(A, Ad) + np.kron(Ad, A)
+
+
+def _nearly_hermitian_composite() -> tuple[CompositeQArray, np.ndarray]:
+    # A is Hermitian up to `atol=1e-8` but A ⊗ B is not, since B scales the error
+    eps, scale = 5e-9, 100.0
+    A, B = np.array([[1.0, eps], [0.0, 1.0]]), scale * np.eye(2)
+    term = CompositeTerm((dq.asqarray(A, dims=(2,)), dq.asqarray(B, dims=(2,))))
+    return CompositeQArray((2, 2), (term,)), np.kron(A, B)
+
+
+def _ptrace_composite(layout: Layout) -> tuple[CompositeQArray, np.ndarray]:
+    # dims (2, 3, 2), the second term with an operator spanning subsystems 0 and 1
+    rng = np.random.default_rng(42)
+    A0, B0, C0 = _random(rng, 2, 2), _random(rng, 3, 3), _random(rng, 2, 2)
+    AB1, C1 = _random(rng, 6, 6), _random(rng, 2, 2)
+    term0 = CompositeTerm(
+        (
+            dq.asqarray(A0, dims=(2,), layout=layout),
+            dq.asqarray(B0, dims=(3,), layout=layout),
+            dq.asqarray(C0, dims=(2,), layout=layout),
+        ),
+        1.5,
+    )
+    term1 = CompositeTerm(
+        (
+            dq.asqarray(AB1, dims=(2, 3), layout=layout),
+            dq.asqarray(C1, dims=(2,), layout=layout),
+        ),
+        0.5j,
+    )
+    c = CompositeQArray((2, 3, 2), (term0, term1))
+    oracle = 1.5 * np.kron(np.kron(A0, B0), C0) + 0.5j * np.kron(AB1, C1)
+    return c, oracle
+
+
+def _forbid_materialize(monkeypatch, message: str):
+    def _boom(self):
+        raise AssertionError(message)
+
+    monkeypatch.setattr(CompositeQArray, '_materialize', _boom)
+    monkeypatch.setattr(CompositeTerm, '_materialize', _boom)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_conj_stays_lazy():
+    c, oracle = _general_composite()
+
+    conjugated = c.conj()
+
+    assert type(conjugated) is CompositeQArray
+    assert np.allclose(conjugated.to_jax(), oracle.conj(), atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_trace_stays_lazy(monkeypatch):
+    c, oracle = _general_composite()
+    _forbid_materialize(monkeypatch, '`trace` must not materialize')
+
+    trace = c.trace()
+
+    assert np.allclose(trace, np.trace(oracle, axis1=-2, axis2=-1), atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_mul_by_batched_scalar_stays_lazy(monkeypatch):
+    c, oracle = _general_composite()
+    y = jnp.array([1.0, 2.0j, -1.5])[:, None, None]
+    _forbid_materialize(monkeypatch, '`__mul__` must not materialize')
+
+    product = c * y
+
+    assert type(product) is CompositeQArray
+    monkeypatch.undo()
+    expected = np.asarray(y) * oracle
+    assert product.shape == expected.shape
+    assert np.allclose(product.to_jax(), expected, atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_mul_rejects_non_scalar():
+    c, oracle = _general_composite()
+
+    with pytest.raises(NotImplementedError, match='element-wise multiplication, use'):
+        c * jnp.ones(oracle.shape[-2:])
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize(
+    ('build', 'stays_lazy'),
+    [
+        pytest.param(_single_term_composite, True, id='single-term'),
+        pytest.param(_general_composite, False, id='multi-term'),
+    ],
+)
+def test_powm(build, stays_lazy):
+    c, oracle = build()
+    n = 3
+
+    powered = c.powm(n)
+
+    assert isinstance(powered, CompositeQArray) is stays_lazy
+    expected = np.linalg.matrix_power(oracle, n)
+    assert np.allclose(powered.to_jax(), expected, atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize(
+    ('build', 'stays_lazy'),
+    [
+        pytest.param(_single_term_composite, True, id='single-term'),
+        pytest.param(_general_composite, False, id='multi-term'),
+    ],
+)
+def test_elpow(build, stays_lazy):
+    c, oracle = build()
+    power = 3
+
+    powered = c.elpow(power)
+
+    assert isinstance(powered, CompositeQArray) is stays_lazy
+    assert np.allclose(powered.to_jax(), oracle**power, atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_expm_materializes():
+    c, oracle = _general_composite()
+
+    exponential = c.expm()
+
+    assert type(exponential) is MaterializedQArray
+    expected = jax.scipy.linalg.expm(jnp.asarray(oracle))
+    assert np.allclose(exponential.to_jax(), expected, atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_eig_single_term_stays_lazy(monkeypatch):
+    c, oracle = _single_term_composite()
+    _forbid_materialize(monkeypatch, '`_eig` must not materialize a single term')
+
+    eigvals, V = c._eig()
+
+    # H V = V diag(eigvals), column by column
+    V = np.asarray(V.to_jax())
+    assert np.allclose(oracle @ V, V * eigvals[..., None, :], atol=1e-5)
+    assert np.allclose(c._eigvals(), eigvals)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_eigvalsh_single_term_stays_lazy(monkeypatch):
+    c, oracle = _hermitian_term_composite()
+    _forbid_materialize(monkeypatch, '`_eigvalsh` must not materialize a single term')
+
+    eigvals = c._eigvalsh()
+
+    assert np.allclose(eigvals, np.linalg.eigvalsh(oracle), atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_eigh_returns_orthonormal_eigenvectors():
+    c, oracle = _hermitian_term_composite()
+    n = oracle.shape[-1]
+
+    eigvals, V = c._eigh()
+
+    assert np.allclose(eigvals, np.linalg.eigvalsh(oracle), atol=1e-5)
+    assert np.allclose(V.conj().T @ V, np.eye(n), atol=1e-5)
+    assert np.allclose(V @ np.diag(eigvals) @ V.conj().T, oracle, atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_norm():
+    c, oracle = _hermitian_term_composite()
+
+    # indefinite operator: the trace that `psd=True` returns is not the trace norm
+    assert np.allclose(c.norm(psd=True), np.trace(oracle).real, atol=1e-5)
+    expected = np.abs(np.linalg.eigvalsh(oracle)).sum()
+    assert np.allclose(c.norm(psd=False), expected, atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize(
+    ('build', 'expected'),
+    [
+        pytest.param(lambda: _batched_composite(dq.dense), True, id='factors'),
+        pytest.param(_hermitian_term_composite, True, id='term'),
+        pytest.param(_hermitian_sum_composite, True, id='cancellation'),
+        pytest.param(_nearly_hermitian_composite, False, id='nearly-hermitian'),
+        pytest.param(_general_composite, False, id='not-hermitian'),
+    ],
+)
+def test_isherm(build, expected):
+    c, oracle = build()
+
+    oracle_dag = np.swapaxes(oracle.conj(), -1, -2)
+    assert np.allclose(oracle, oracle_dag, rtol=1e-5, atol=1e-8) is expected
+    assert bool(c.isherm(rtol=1e-5, atol=1e-8)) is expected
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_isherm_with_hermitian_factors_stays_lazy(monkeypatch):
+    c, _ = _batched_composite(dq.dense)
+    _forbid_materialize(monkeypatch, '`isherm` must not materialize')
+
+    assert bool(c.isherm())
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_isherm_under_jit():
+    # the sufficient check gives a tracer, which cannot decide a branch
+    c, _ = _batched_composite(dq.dense)
+
+    assert bool(jax.jit(lambda x: x.isherm())(c))
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+@pytest.mark.parametrize(
+    ('keep', 'stays_lazy'),
+    [
+        pytest.param((0, 1), True, id='whole-operators'),
+        pytest.param((2, 0), True, id='part-of-an-operator'),
+        pytest.param((1,), False, id='single-subsystem'),
+    ],
+)
+def test_ptrace(layout, keep, stays_lazy):
+    c, oracle = _ptrace_composite(layout)
+
+    reduced = c.ptrace(*keep)
+
+    assert isinstance(reduced, CompositeQArray) is stays_lazy
+    # like the partial trace of a materialized qarray, whatever the layout
+    assert reduced.layout is dq.dense
+    expected = dq.ptrace(oracle, keep, dims=c.dims)
+    assert reduced.dims == expected.dims
+    assert np.allclose(reduced.to_jax(), expected.to_jax(), atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize(
+    ('keep', 'match'),
+    [
+        pytest.param((), 'at least one subsystem', id='empty'),
+        pytest.param((0, 0), 'duplicates', id='duplicate'),
+        pytest.param((0, 3), 'Hilbert space structure', id='out-of-range'),
+    ],
+)
+def test_ptrace_rejects_invalid_keep(keep, match):
+    c, _ = _ptrace_composite(dq.dense)
+
+    with pytest.raises(ValueError, match=match):
+        c.ptrace(*keep)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_addscalar_batched_scalar_stays_lazy(monkeypatch):
+    c, oracle = _general_composite()
+    y = jnp.array([1.0, 2.0j, -1.5])[:, None, None]
+    _forbid_materialize(monkeypatch, '`addscalar` must not materialize')
+
+    shifted = c.addscalar(y)
+
+    assert type(shifted) is CompositeQArray
+    monkeypatch.undo()
+    expected = oracle + np.asarray(y)
+    assert shifted.shape == expected.shape
+    assert np.allclose(shifted.to_jax(), expected, atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_addscalar_dia_warns_and_converts_to_dense():
+    c, oracle = _batched_composite(dq.dia)
+    y = 2.0
+
+    with pytest.warns(UserWarning, match='converted to dense layout'):
+        shifted = c.addscalar(y)
+
+    assert type(shifted) is CompositeQArray
+    assert shifted.layout is dq.dense
+    assert np.allclose(shifted.to_jax(), oracle + y)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_addscalar_non_scalar_materializes():
+    c, oracle = _general_composite()
+    y = np.arange(oracle[0].size).reshape(oracle.shape[-2:])
+
+    shifted = c.addscalar(y)
+
+    assert type(shifted) is MaterializedQArray
+    assert np.allclose(shifted.to_jax(), oracle + y, atol=1e-5)

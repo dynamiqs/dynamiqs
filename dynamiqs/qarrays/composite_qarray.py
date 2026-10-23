@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from collections.abc import Sequence
 from dataclasses import replace
 from functools import reduce
@@ -16,10 +17,11 @@ from jax import Array, Device
 from jaxtyping import ArrayLike, PyTree
 from qutip import Qobj
 
+from .._utils import is_batched_scalar
 from .dataarray import IndexType, in_last_two_dims, key_touches_last_two_dims
 from .layout import Layout, dia
 from .materialized_qarray import MaterializedQArray
-from .qarray import QArray, QArrayLike
+from .qarray import QArray, QArrayLike, isqarraylike
 from .sparsedia_dataarray import SparseDIADataArray
 
 __all__ = []
@@ -42,6 +44,12 @@ def _squeezable_batch_axes(shape: tuple[int, ...]) -> tuple[int, ...]:
     # batch-axis positions of size 1, i.e. the axes an unqualified `squeeze()`
     # removes without touching the matrix axes
     return tuple(i for i, n in enumerate(shape[:-2]) if n == 1)
+
+
+def _coeff_from_batched_scalar(y: ArrayLike) -> Array:
+    # a batched scalar has shape (), (1,) or (..., 1, 1), a coefficient shape (...)
+    y = jnp.asarray(y)
+    return y[..., 0, 0] if y.ndim > 1 else y.reshape(())
 
 
 class CompositeTerm(eqx.Module):
@@ -169,8 +177,9 @@ class CompositeTerm(eqx.Module):
     # === Array methods ===
 
     def conj(self) -> CompositeTerm:
-        # conj(c·⊗A_k) = conj(c)·⊗conj(A_k) → each op's .conj() + jnp.conj(coeff).
-        raise NotImplementedError
+        # conj(c A ⊗ B) = conj(c) conj(A) ⊗ conj(B)
+        operators = tuple(op.conj() for op in self.operators)
+        return replace(self, operators=operators, coeff=jnp.conj(self.coeff))
 
     def reshape(self, *shape: int) -> CompositeTerm:
         """Reshapes the term's batch axes."""
@@ -237,8 +246,9 @@ class CompositeTerm(eqx.Module):
         return replace(term, operators=operators, coeff=coeff[..., 0, 0])
 
     def trace(self) -> Array:
-        # tr(c·⊗A_k) = c·Π_k tr(A_k) → each op's .trace().
-        raise NotImplementedError
+        # tr(c A ⊗ B) = c tr(A) tr(B)
+        traces = (op.trace() for op in self.operators)
+        return reduce(jnp.multiply, traces, jnp.asarray(self.coeff))
 
     def sum(
         self, axis: int | tuple[int, ...] | None = None
@@ -295,35 +305,55 @@ class CompositeTerm(eqx.Module):
         return replace(term, operators=operators, coeff=coeff[..., 0, 0])
 
     def powm(self, n: int) -> CompositeTerm:
-        # (c·⊗A_k)^n = c^n·⊗A_k^n → each op's .powm(n).
-        raise NotImplementedError
+        # (c A ⊗ B)^n = c^n A^n ⊗ B^n
+        operators = tuple(cast(MaterializedQArray, op.powm(n)) for op in self.operators)
+        return replace(self, operators=operators, coeff=jnp.asarray(self.coeff) ** n)
+
+    def elpow(self, power: int) -> CompositeTerm:
+        # element-wise: (c A ⊗ B)^p = c^p A^p ⊗ B^p
+        operators = tuple(
+            cast(MaterializedQArray, op.elpow(power)) for op in self.operators
+        )
+        coeff = jnp.asarray(self.coeff) ** power
+        return replace(self, operators=operators, coeff=coeff)
 
     def expm(self, *, max_squarings: int = 16) -> MaterializedQArray:
-        # exp(c·⊗A_k) = (⊗V_k)·diag(exp(c·∏λ_k))·(⊗V_k)^†; returns MaterializedQArray.
-        # → each op's ._eigh().
+        # no caller: `CompositeQArray.expm` always materializes
         raise NotImplementedError
 
     def norm(self, *, psd: bool = False) -> Array:
-        # LAZY if psd=False: ‖c·⊗A_k‖_F = |c|·Π_k‖A_k‖_F.
-        # psd=True: trace shortcut only if known PSD; otherwise materialize.
+        # no caller: `CompositeQArray.norm` is built from `trace` and `_eigvalsh`
         raise NotImplementedError
 
     def _eig(self) -> tuple[Array, MaterializedQArray]:
-        # eigenvalues = c·Cartesian(λ_k), eigenvectors = ⊗V_k (materialized)
-        # → each op's ._eig().
-        raise NotImplementedError
+        # (A ⊗ B)(v ⊗ w) = λμ v ⊗ w. Per-factor `_eig`, not `_eigh`: a Hermitian
+        # term can have non-Hermitian factors (iY ⊗ iY)
+        eigvals, eigvecs = zip(*(op._eig() for op in self.operators), strict=True)
+        eigvals = self._kron_eigvals(eigvals)
+        V = reduce(lambda x, y: x & y, eigvecs)
+        # the coefficient can carry batch axes that the operators do not
+        V = V.broadcast_to(*eigvals.shape[:-1], *V.shape[-2:])
+        return eigvals, cast(MaterializedQArray, V)
 
     def _eigh(self) -> tuple[Array, Array]:
-        # Hermitian variant; returns raw JAX arrays → each op's ._eigh().
+        # no caller: `CompositeQArray._eigh` always materializes
         raise NotImplementedError
 
     def _eigvals(self) -> Array:
-        # c · Cartesian product of per-op eigenvalues → each op's ._eigvals().
-        raise NotImplementedError
+        return self._kron_eigvals([op._eigvals() for op in self.operators])
 
     def _eigvalsh(self) -> Array:
-        # Hermitian variant → each op's ._eigvalsh().
-        raise NotImplementedError
+        # real, even when those of the factors are not (±i for iY ⊗ iY)
+        return jnp.sort(self._eigvals().real, axis=-1)
+
+    def _kron_eigvals(self, eigvals: Sequence[Array]) -> Array:
+        # eigenvalues of A ⊗ B are the products λ_i μ_j, in the row-major order of
+        # the Kronecker product: (3, 2) and (4,) give (3, 8)
+        def kron(x: Array, y: Array) -> Array:
+            xy = x[..., :, None] * y[..., None, :]
+            return xy.reshape(*xy.shape[:-2], -1)
+
+        return jnp.asarray(self.coeff)[..., None] * reduce(kron, eigvals)
 
     def devices(self) -> set[Device]:
         # delegate, so that a term reports the devices its materialized form would
@@ -331,10 +361,12 @@ class CompositeTerm(eqx.Module):
         # that must hold while traced, not for this.
         return set().union(*(op.devices() for op in self.operators))
 
-    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> Array:
-        # Sufficient (not necessary): coeff real AND all ops .isherm().
-        # False here is not conclusive for multi-term CompositeQArray.
-        raise NotImplementedError
+    def _has_hermitian_factors(self) -> Array:
+        # exact, so that the Kronecker product is exactly Hermitian too and the
+        # full check agrees whatever its tolerance
+        hermitian = [op.isherm(rtol=0.0, atol=0.0) for op in self.operators]
+        real = jnp.all(jnp.imag(self.coeff) == 0)
+        return jnp.all(jnp.stack([*hermitian, real]))
 
     def block_until_ready(self) -> CompositeTerm:
         for op in self.operators:
@@ -368,9 +400,22 @@ class CompositeTerm(eqx.Module):
     # === Quantum methods ===
 
     def ptrace(self, keep: tuple[int, ...]) -> CompositeTerm:
-        # ptrace_{∉keep}(c·⊗A_j) = c·(Π_{j∉keep} tr(A_j))·⊗_{k∈keep} A_k
-        # → .trace() on each traced-out op.
-        raise NotImplementedError
+        # tr_1(c A ⊗ B ⊗ C) = c tr(B) A ⊗ C. For operators of dims (2, 3) and (2,),
+        # `keep=(0, 2)` keeps the second one and partial-traces the first
+        coeff = jnp.asarray(self.coeff)
+        operators = []
+        start = 0
+        for op in self.operators:
+            stop = start + len(op.dims)
+            op_keep = tuple(k - start for k in keep if start <= k < stop)
+            if len(op_keep) == 0:
+                coeff = coeff * op.trace()
+            elif len(op_keep) == len(op.dims):
+                operators.append(op)
+            else:
+                operators.append(cast(MaterializedQArray, op.ptrace(*op_keep)))
+            start = stop
+        return replace(self, operators=tuple(operators), coeff=coeff)
 
     # === Indexing ===
 
@@ -390,9 +435,9 @@ class CompositeTerm(eqx.Module):
 
     # === Arithmetic ===
 
-    def __mul__(self, y: QArrayLike) -> CompositeTerm:
-        # y·(c·⊗A_k) = (y·c)·⊗A_k; only touches coeff.
-        raise NotImplementedError
+    def __mul__(self, y: Array) -> CompositeTerm:
+        # `y` is a coefficient of shape (...), see `CompositeQArray.__mul__`
+        return replace(self, coeff=y * self.coeff)
 
     def __matmul__(self, other: CompositeTerm) -> CompositeTerm:
         # is the main mpoint of the feature
@@ -520,8 +565,12 @@ class CompositeQArray(QArray):
     # === Array methods ===
 
     def conj(self) -> QArray:
-        # LAZY → term.conj().
-        raise NotImplementedError
+        """Returns the element-wise complex conjugate of the qarray.
+
+        Returns:
+            New qarray with element-wise complex conjuguated values.
+        """
+        return replace(self, terms=tuple(term.conj() for term in self.terms))
 
     def reshape(self, *shape: int) -> QArray:
         """Returns a reshaped copy of a qarray.
@@ -582,22 +631,24 @@ class CompositeQArray(QArray):
         return replace(self, terms=tuple(term.expand_dims(axis) for term in terms))
 
     def powm(self, n: int) -> QArray:
-        # MATERIALIZE | 1-term (c·⊗A_k)^n=c^n·⊗A_k^n → term.powm(n).
-        raise NotImplementedError
+        # 1-term: (T_0 + T_1)^n expands into 2^n products of terms, so the lazy
+        # route grows exponentially with n
+        if len(self.terms) > 1:
+            return self._materialize().powm(n)
+        return replace(self, terms=(self.terms[0].powm(n),))
 
     def expm(self, *, max_squarings: int = 16) -> QArray:
-        # MATERIALIZE | 1-term per-factor spectral path → term.expm(...).
-        raise NotImplementedError
+        # MATERIALIZE: exp(c A ⊗ B) is not separable
+        return self._materialize().expm(max_squarings=max_squarings)
 
     def norm(self, *, psd: bool = False) -> Array:
-        # LAZY if psd=False: Gram sum over term pairs using local traces.
-        # psd=True: trace shortcut only if known PSD; otherwise materialize.
-        # can be unstable
-        raise NotImplementedError
+        # through `dq.norm`, which only calls `trace`, `isherm` and `_eigvalsh`
+        from ..utils.general import norm  # noqa: PLC0415
+
+        return norm(self, psd=psd)
 
     def trace(self) -> Array:
-        # LAZY tr(c·⊗A_k)=c·Π tr(A_k) → sum(term.trace()).
-        raise NotImplementedError
+        return reduce(jnp.add, (term.trace() for term in self.terms))
 
     def sum(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
         # MIXED: LAZY if every term stays a single term (see `CompositeTerm.sum`),
@@ -644,29 +695,41 @@ class CompositeQArray(QArray):
         return replace(self, terms=cast(tuple[CompositeTerm, ...], terms))
 
     def _eig(self) -> tuple[Array, QArray]:
-        # MATERIALIZE | 1-term eigenvalues=c·Cartesian(λ_k), eigenvecs=⊗V_k
-        # → term._eig().
-        raise NotImplementedError
+        # 1-term: the spectrum of a sum is not given by those of its terms
+        if len(self.terms) > 1:
+            return self._materialize()._eig()
+        return self.terms[0]._eig()
 
     def _eigh(self) -> tuple[Array, Array]:
-        # MATERIALIZE | 1-term Hermitian variant → term._eigh().
-        raise NotImplementedError
+        # MATERIALIZE: per-factor `_eigh` is wrong for non-Hermitian factors, and
+        # per-factor `_eig` is not orthonormal within a degenerate eigenspace
+        return self._materialize()._eigh()
 
     def _eigvals(self) -> Array:
-        # MATERIALIZE | 1-term → term._eigvals().
-        raise NotImplementedError
+        # 1-term, see `_eig`
+        if len(self.terms) > 1:
+            return self._materialize()._eigvals()
+        return self.terms[0]._eigvals()
 
     def _eigvalsh(self) -> Array:
-        # MATERIALIZE | 1-term → term._eigvalsh().
-        raise NotImplementedError
+        # 1-term, see `_eig`
+        if len(self.terms) > 1:
+            return self._materialize()._eigvalsh()
+        return self.terms[0]._eigvalsh()
 
     def devices(self) -> set[Device]:
         # see `CompositeTerm.devices`
         return set().union(*(term.devices() for term in self.terms))
 
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> Array:
-        # MATERIALIZE | 1-term sufficient check → term.isherm(rtol, atol).
-        raise NotImplementedError
+        # SUFFICIENT: Hermitian factors prove it, but a Hermitian sum may have none
+        # (iY ⊗ iY, A ⊗ B + B ⊗ A), so a negative or a tracer checks the matrix
+        sufficient = jnp.all(
+            jnp.stack([term._has_hermitian_factors() for term in self.terms])
+        )
+        if not isinstance(sufficient, jax.core.Tracer) and sufficient:
+            return sufficient
+        return self._materialize().isherm(rtol=rtol, atol=atol)
 
     def block_until_ready(self) -> QArray:
         for term in self.terms:
@@ -676,8 +739,23 @@ class CompositeQArray(QArray):
     # === Quantum methods ===
 
     def ptrace(self, *keep: int) -> QArray:
-        # LAZY → term.ptrace(keep).
-        raise NotImplementedError
+        if len(keep) == 0:
+            raise ValueError('Argument `keep` must contain at least one subsystem.')
+        if len(set(keep)) != len(keep):
+            raise ValueError('Argument `keep` must not contain duplicates.')
+        if any(k < 0 or k > len(self.dims) - 1 for k in keep):
+            raise ValueError(
+                'Argument `keep` must match the Hilbert space structure specified by'
+                ' `dims`.'
+            )
+
+        # the partial trace of a materialized qarray is always dense
+        keep = tuple(sorted(keep))
+        terms = tuple(term.asdense().ptrace(keep) for term in self.terms)
+        dims = tuple(self.dims[k] for k in keep)
+        if len(dims) == 1:
+            return reduce(lambda x, y: x + y, (term._materialize() for term in terms))
+        return replace(self, dims=dims, terms=terms)
 
     # === Conversion ===
 
@@ -763,8 +841,16 @@ class CompositeQArray(QArray):
     # === Arithmetic ===
 
     def __mul__(self, y: QArrayLike) -> QArray:
-        # LAZY y·Σc_j⊗A_{jk}=Σ(y·c_j)⊗A_{jk} → term.__mul__(y).
-        raise NotImplementedError
+        if not is_batched_scalar(y):
+            if not isqarraylike(y):
+                return NotImplemented
+            raise NotImplementedError(
+                'Element-wise multiplication of two qarrays with the `*` operator is '
+                'not supported. For matrix multiplication, use `x @ y`. For '
+                'element-wise multiplication, use `x.elmul(y)`.'
+            )
+        coeff = _coeff_from_batched_scalar(y)
+        return replace(self, terms=tuple(term * coeff for term in self.terms))
 
     def __add__(self, y: QArrayLike) -> QArray:
         # LAZY ★ two composites: self.terms + other.terms.
@@ -798,16 +884,58 @@ class CompositeQArray(QArray):
     # === Element-wise ===
 
     def addscalar(self, y: ArrayLike) -> QArray:
-        # MATERIALIZE → _materialize().addscalar(y).
-        raise NotImplementedError
+        """Adds a scalar.
+
+        Args:
+            y: Scalar to add, whose shape should be broadcastable with the qarray.
+
+        Returns:
+            New qarray resulting from the addition with the scalar.
+        """
+        # MATERIALIZE if `y` broadcasts against the matrix axes, e.g. shape (n, n)
+        if not is_batched_scalar(y):
+            return self._materialize().addscalar(y)
+
+        if self.layout is dia:
+            warnings.warn(
+                'A sparse data array has been converted to dense layout due to '
+                'element-wise addition with a raw array.',
+                # 3, not 2: equinox wraps the method call in a frame of its own
+                stacklevel=3,
+            )
+            return self.asdense().addscalar(y)
+
+        # x + y J, with J the all-ones matrix, added as one more term since
+        # J_a ⊗ J_b = J_ab
+        from .utils import asqarray  # noqa: PLC0415
+
+        devices = _devices(self)
+        operators = []
+        for d in self.dims:
+            J = jnp.ones((d, d), dtype=self.dtype)
+            if len(devices) == 1:
+                J = jax.device_put(J, next(iter(devices)))
+            operators.append(cast(MaterializedQArray, asqarray(J, dims=(d,))))
+        term = CompositeTerm(tuple(operators), _coeff_from_batched_scalar(y))
+        return replace(self, terms=(*self.terms, term))
 
     def elmul(self, y: QArrayLike) -> QArray:
         # MATERIALIZE → _materialize().elmul(y).
         raise NotImplementedError
 
     def elpow(self, power: int) -> QArray:
-        # MATERIALIZE → _materialize().elpow(power).
-        raise NotImplementedError
+        """Computes the element-wise power.
+
+        Args:
+            power: Power to raise to.
+
+        Returns:
+            New qarray with elements raised to the specified power.
+        """
+        # 1-term, see `powm`
+        if len(self.terms) > 1:
+            return self._materialize().elpow(power)
+        return replace(self, terms=(self.terms[0].elpow(power),))
 
     # === Indexing ===
 
