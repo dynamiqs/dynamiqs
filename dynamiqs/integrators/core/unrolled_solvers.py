@@ -75,10 +75,7 @@ def _dot(coefficients: Sequence[float] | np.ndarray, ks: list[PyTree]) -> PyTree
 
 
 def _row_major(x: PyTree) -> PyTree:
-    # x, with each array laid out row-major (JAX >= 0.7; earlier versions named their
-    # layout API differently)
-    if jax.__version_info__ < (0, 7):
-        return x
+    # x, with each array laid out row-major
     return jtu.tree_map(
         lambda a: layout.with_layout_constraint(
             a, layout.Layout(tuple(range(jnp.ndim(a))))
