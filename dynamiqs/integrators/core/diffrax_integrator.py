@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import warnings
 from abc import abstractmethod
 from collections.abc import Callable
@@ -37,6 +38,7 @@ from ...result import MESolveResult, Result, SolveSaved
 from ...utils.general import lindbladian_sparsedia_terms
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
+from .error_norm import error_norm
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .jump_clip_controller import JumpClipController
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
@@ -49,6 +51,17 @@ from .unrolled_solvers import UnrolledDopri5, UnrolledDopri8, UnrolledTsit5
 # transforms each copy again. Older versions, without `jax.Inline`, only have
 # `inline=True`.
 _INLINE = getattr(getattr(jax, 'Inline', None), 'JAX_LATE', True)
+
+# The dimension from which mesolve fuses the DIA Lindbladian on CPU (on GPU, at every
+# dimension): see `MESolveDiffraxIntegrator._are_operators_sparsedia`.
+_MIN_DIMENSION_FUSED_ON_CPU = 160
+
+
+def _cpu_threads() -> int:
+    # the number of threads of XLA's CPU backend, which follows the CPU affinity
+    if hasattr(os, 'sched_getaffinity'):
+        return len(os.sched_getaffinity(0))
+    return os.cpu_count() or 1
 
 
 class FixedStepInfos(eqx.Module):
@@ -138,6 +151,19 @@ def _saveat(ts: Array, save: Callable, y0: PyTree) -> tuple[dx.SaveAt, Callable]
     return dx.SaveAt(subs=[subsaveat_a, subsaveat_b]), restore
 
 
+def pid_controller(method: _DEAdaptiveStep) -> dx.PIDController:
+    return dx.PIDController(
+        rtol=method.rtol,
+        atol=method.atol,
+        safety=method.safety_factor,
+        factormin=method.min_factor,
+        factormax=method.max_factor,
+        # rejects the failed steps on complex states, which Diffrax up to at least
+        # 0.7.2 turns into a NaN step size (see `error_norm`)
+        norm=error_norm,
+    )
+
+
 class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
     """Integrator using the Diffrax library."""
 
@@ -150,15 +176,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             return dx.ConstantStepSize()
 
         else:
-            method = cast(_DEAdaptiveStep, self.method)
-
-            controller = dx.PIDController(
-                rtol=method.rtol,
-                atol=method.atol,
-                safety=method.safety_factor,
-                factormin=method.min_factor,
-                factormax=method.max_factor,
-            )
+            controller = pid_controller(cast(_DEAdaptiveStep, self.method))
 
             # Clip the steps to the discontinuities of the vector field (e.g. the
             # boundaries of a piecewise constant Hamiltonian). Without this, the
@@ -439,21 +457,16 @@ class MESolveDiffraxIntegrator(
 
         # When H and the jump operators are in sparse DIA format, we use (1) in both
         # cases (also holomorphic, for implicit solvers), computed by
-        # `lindbladian_sparsedia_terms` in a single fused pass over rho (each product
-        # of (2), and its transpose, takes a pass over rho), unless its terms read too
-        # many shifted copies of rho: it then returns None.
+        # `lindbladian_sparsedia_terms`. It takes one fused pass over rho, or a few
+        # when its terms read many shifted copies of rho. Each product of (2), and its
+        # transpose, takes its own pass.
 
         def vector_field_unvec_sparsedia(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
             half_LdL = 0.5 * sum([_L.dag() @ _L for _L in L])
-            fused = lindbladian_sparsedia_terms(
+            return lindbladian_sparsedia_terms(
                 -1j * H - half_LdL, 1j * H - half_LdL, L, y
             )
-            if fused is not None:
-                return fused
-            if self.options.assume_hermitian and not implicit:
-                return vector_field_unvec_hermitian(t, y, _)
-            return vector_field_unvec_standard(t, y, _)
 
         def vector_field_unvec_standard(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
@@ -487,10 +500,16 @@ class MESolveDiffraxIntegrator(
     def _are_operators_sparsedia(self) -> bool:
         # whether H(t), the jump operators and the state allow the fused Lindbladian
         # (the layout of a time-qarray's value does not depend on t)
-        # On CPU, inside a solve, the fused Lindbladian is up to 1.9x slower than the
-        # products for small and medium systems (n = 32-96, faster from n ~ 128), and
-        # there is no synchronisation to save. Fuse on GPU only.
-        if jax.default_backend() != 'gpu':
+        # On CPU, the products run on one thread and the fused sum on several. On a
+        # Xeon 8581C, for a driven cavity with one jump operator, the fused sum is
+        # faster from n = 160 in single and double precision, also when other processes
+        # share the cores (x0.80 at n = 192); below, it can be up to 12% slower. With
+        # one thread, it is slower at every n: fuse only with several threads.
+        backend, n = jax.default_backend(), self.y0.shape[-1]
+        fused_on_cpu = (
+            backend == 'cpu' and n >= _MIN_DIMENSION_FUSED_ON_CPU and _cpu_threads() > 1
+        )
+        if not (backend == 'gpu' or fused_on_cpu):
             return False
         t = self.ts[0]
         data = [getattr(x, 'data', None) for x in [self.H(t), *self.L(t)]]

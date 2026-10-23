@@ -19,21 +19,21 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "qutip>=4.7.5",
+    "qutip>=5.0.3",  # for NumPy 2 support
     "scipy",
     "numpy",
-    "matplotlib",
-    # jax>=0.4.36 for GPU eig support,
-    # jax!=0.7.0,!=0.7.1 because of diffrax compatibility issues, see https://github.com/patrick-kidger/diffrax/issues/680
-    "jax>=0.4.36,!=0.7.0,!=0.7.1",
-    "jaxtyping",
+    "matplotlib>=3.8.4",  # for NumPy 2 support
+    # jax>=0.10.2 because older releases compile slower on GPU and run slower on GPU or CPU,
+    # and 0.5.3 and older fail the Hessian test of mesolve on GPU
+    "jax>=0.10.2",
+    "jaxtyping>=0.2.33",  # older releases fail to import
     "diffrax>=0.7.2", # for complex support (0.5.0), progress meter (0.5.1), `ClipStepSizeController` as an adaptive controller (0.7.1), fixed `VeryChord` divergence check for implicit solvers (0.7.2)
-    "equinox",
+    "equinox>=0.13.3",  # for JAX 0.10 support
     "optimistix", # for typing of root-finding in Event method
-    "pillow",
-    "cmap",
-    "ipython",
-    "tqdm",
+    "pillow>=9.3",  # for Python 3.11 wheels
+    "cmap>=0.4.0",  # for the `cmasher:copper` colormap
+    "ipython>=7.6.0",  # for Python 3.11 support
+    "tqdm>=4.30.0",  # for custom fields in the progress meter format
 ]
 
 [project.urls]
@@ -51,10 +51,10 @@ dev = [
     "ruff>=0.8",
     "codespell",
     "pytest>=8.0",
-    "pytest-ordering",
-    "pytest-split",
-    "pytest-sugar",
-    "pytest-xdist",
+    "pytest-ordering>=0.6",  # for pytest 8 support
+    "pytest-split>=0.8.2",  # for pytest 8 support
+    "pytest-sugar>=0.8.0",  # for pytest 8 support
+    "pytest-xdist>=3.0.2",  # for pytest 8 support
     "zensical==0.0.70",
     "mkdocstrings[python]>=1.0.7",  # >=1.0.7 to support recent pymdown-extensions
     "sybil>=6",

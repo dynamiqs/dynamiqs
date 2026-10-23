@@ -14,9 +14,7 @@ from ..qarrays.materialized_qarray import MaterializedQArray
 from ..qarrays.qarray import QArray, QArrayLike, get_dims
 from ..qarrays.sparsedia_dataarray import SparseDIADataArray
 from ..qarrays.sparsedia_primitives import (
-    MAX_FUSED_SHIFTS,
     lindbladian_sparsedia,
-    lindbladian_sparsedia_shifts,
     tracemm_sparsedia_array,
 )
 from ..qarrays.utils import asqarray, init_dims, to_jax
@@ -694,10 +692,9 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
 def lindbladian_sparsedia_terms(
     A: QArray, B: QArray, jump_ops: list[QArray], rho: QArray
 ) -> QArray | None:
-    r"""Returns $A\rho + \rho B + \sum_k L_k \rho L_k^\dag$ computed in a single fused
-    pass over $\rho$ if $A$, $B$ and the $L_k$ are in sparse DIA format, $\rho$ is
-    dense and the terms read at most `MAX_FUSED_SHIFTS` shifted copies of $\rho$, and
-    None otherwise.
+    r"""Returns $A\rho + \rho B + \sum_k L_k \rho L_k^\dag$, computed by
+    `lindbladian_sparsedia`, if $A$, $B$ and the $L_k$ are in sparse DIA format and
+    $\rho$ is dense. Returns None otherwise.
 
     With $A = -iH - \frac12\sum_k L_k^\dag L_k$ and $B = iH - \frac12\sum_k L_k^\dag
     L_k$, this is the Lindbladian.
@@ -711,9 +708,6 @@ def lindbladian_sparsedia_terms(
     ):
         return None
     a, b, *ls = cast(list[SparseDIADataArray], operand_data)
-    shifts = lindbladian_sparsedia_shifts(a.offsets, b.offsets, [l.offsets for l in ls])
-    if shifts > MAX_FUSED_SHIFTS:
-        return None
     out = lindbladian_sparsedia(
         (a.offsets, a.diags),
         (b.offsets, b.diags),
