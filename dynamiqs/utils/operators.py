@@ -413,7 +413,8 @@ def fdestroy(n: int, *, layout: Layout | None = None) -> QArray | tuple[QArray, 
 
     Args:
         n: Number of fermionic modes.
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray or tuple of qarrays, each of shape (2^n, 2^n)): Annihilation
@@ -468,7 +469,8 @@ def fcreate(n: int, *, layout: Layout | None = None) -> QArray | tuple[QArray, .
 
     Args:
         n: Number of fermionic modes.
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray or tuple of qarrays, each of shape (2^n, 2^n)): Creation operator(s).
