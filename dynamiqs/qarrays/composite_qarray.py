@@ -16,7 +16,6 @@ from jax import Array, Device
 from jaxtyping import ArrayLike, PyTree
 from qutip import Qobj
 
-from .._utils import is_batched_scalar
 from .dataarray import IndexType
 from .layout import Layout, dia
 from .materialized_qarray import MaterializedQArray
@@ -39,12 +38,6 @@ def _devices(x: PyTree) -> set[Device]:
     }
 
 
-def _coeff_batch_shape(coeff: ArrayLike) -> tuple[int, ...]:
-    # batch shape of a batched scalar, i.e. `()`, `(1,)` or `(*batch, 1, 1)`
-    coeff = jnp.asarray(coeff)
-    return coeff.shape[:-2] if coeff.ndim >= 2 else ()
-
-
 class CompositeTerm(eqx.Module):
     r"""One separable term $c \, A_0 \otimes \cdots \otimes A_{N-1}$ in a
     :class:`CompositeQArray`.  Holds the bulk of the lazy logic; most ``LAZY``
@@ -53,7 +46,8 @@ class CompositeTerm(eqx.Module):
     Attributes:
         operators: Per-subsystem local operators (one square :class:`MaterializedQArray`
             per subsystem).
-        coeff: Scalar coefficient; may be a JAX array for batched use. Defaults to 1.
+        coeff: Coefficient, a scalar or an array of shape (...) for batched use.
+            Defaults to 1.
     """
 
     operators: tuple[MaterializedQArray, ...]
@@ -90,13 +84,20 @@ class CompositeTerm(eqx.Module):
                 f'but got shapes {tuple(op.shape for op in self.operators)}.'
             )
 
-        # === ensure `coeff` is a scalar or a batched scalar of shape (..., 1, 1),
-        # as assumed by `shape`, `_materialize` and every lazy formula
-        if not is_batched_scalar(self.coeff):
+        # === ensure the batch shapes of the operators and of `coeff` broadcast
+        # together, as assumed by `shape` and every lazy formula
+        batch_shapes = (
+            *(op.shape[:-2] for op in self.operators),
+            jnp.shape(self.coeff),
+        )
+        try:
+            jnp.broadcast_shapes(*batch_shapes)
+        except ValueError as err:
             raise ValueError(
-                'Argument `coeff` of `CompositeTerm` must be a scalar or a batched '
-                f'scalar of shape (..., 1, 1), but got shape {jnp.shape(self.coeff)}.'
-            )
+                'Arguments `operators` and `coeff` of `CompositeTerm` must have '
+                'broadcastable batch shapes, but got operator batch shapes '
+                f'{batch_shapes[:-1]} and `coeff` shape {batch_shapes[-1]}.'
+            ) from err
 
         # === ensure a single layout and device, so that they can be reported
         # without materializing
@@ -117,7 +118,8 @@ class CompositeTerm(eqx.Module):
 
     def _materialize(self) -> MaterializedQArray:
         tensor_product = reduce(lambda x, y: x & y, self.operators)
-        return cast(MaterializedQArray, tensor_product * self.coeff)
+        coeff = jnp.asarray(self.coeff)[..., None, None]
+        return cast(MaterializedQArray, tensor_product * coeff)
 
     def _offsets(self) -> set[int]:
         # offsets of a Kronecker product combine as `o_0 * m_1 + o_1` (see
@@ -137,7 +139,7 @@ class CompositeTerm(eqx.Module):
     @property
     def shape(self) -> tuple[int, ...]:
         batch = jnp.broadcast_shapes(
-            *(op.shape[:-2] for op in self.operators), _coeff_batch_shape(self.coeff)
+            *(op.shape[:-2] for op in self.operators), jnp.shape(self.coeff)
         )
         n = prod(op.shape[-1] for op in self.operators)
         return (*batch, n, n)

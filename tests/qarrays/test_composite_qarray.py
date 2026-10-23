@@ -41,9 +41,11 @@ _VALID_TERM = CompositeTerm(operators=(_OP2, _OP3))
             id='term-operator-not-square',
         ),
         pytest.param(
-            lambda: CompositeTerm(operators=(_OP2, _OP3), coeff=jnp.ones(3)),
+            lambda: CompositeTerm(
+                operators=(_OP2.broadcast_to(2, 2, 2), _OP3), coeff=jnp.ones(3)
+            ),
             ValueError,
-            id='term-coeff-not-a-batched-scalar',
+            id='term-coeff-batch-shape-mismatch',
         ),
         pytest.param(
             lambda: CompositeTerm(operators=(_OP2, _OP3_DIA)),
@@ -94,10 +96,10 @@ def test_qarray_matches_independent_oracle():
 
     A1 = np.stack([np.array([[1.0, k + 1.0], [2.0, -k]]) for k in range(4)])
     B1 = np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]])
-    coeff1 = 0.5 + 0.5j
+    coeff1 = (0.5 + 0.5j) * np.arange(1.0, 5.0)
 
     # independent oracle, computed from the raw arrays with numpy alone
-    oracle = coeff0 * np.kron(A0, B0)[None] + coeff1 * np.stack(
+    oracle = coeff0 * np.kron(A0, B0)[None] + coeff1[:, None, None] * np.stack(
         [np.kron(A1[k], B1) for k in range(4)]
     )
 
