@@ -257,6 +257,10 @@ class MaterializedQArray(QArray):
                 ' To add a scalar, use `x.addscalar(scalar)`.'
             )
 
+        # a composite qarray adds lazily in its `__radd__`
+        if isinstance(y, QArray) and not isinstance(y, MaterializedQArray):
+            return NotImplemented
+
         y_data = _resolve_operand(self.dims, y)
         if y_data is NotImplemented:
             return NotImplemented
@@ -275,6 +279,10 @@ class MaterializedQArray(QArray):
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
         if is_batched_scalar(y):
             raise TypeError('Attempted matrix product between a scalar and a qarray.')
+
+        # a composite qarray multiplies mode by mode in its `__rmatmul__`
+        if isinstance(y, QArray) and not isinstance(y, MaterializedQArray):
+            return NotImplemented
 
         y_data = _resolve_operand(self.dims, y)
         if y_data is NotImplemented:
@@ -363,6 +371,10 @@ class MaterializedQArray(QArray):
         Returns:
             New qarray resulting from the element-wise multiplication.
         """
+        # commutative, and `to_jax` would drop the layout and dims of a composite `y`
+        if isinstance(y, QArray) and not isinstance(y, MaterializedQArray):
+            return y.elmul(self)
+
         y_data = _resolve_operand(self.dims, y)
         if y_data is NotImplemented:
             return NotImplemented
