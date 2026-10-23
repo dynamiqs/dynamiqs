@@ -58,7 +58,8 @@ def eye(*dims: int, layout: Layout | None = None) -> QArray:
 
     Args:
         *dims: Hilbert space dimension of each subsystem.
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray of shape (n, n)): Identity operator, with _n = prod(dims)_.
@@ -107,8 +108,9 @@ def eye_like(
         dims (tuple of ints or None): Hilbert space dimension of each subsystem.
             Defaults to `None` (`x.dims` if available, individual system `dims=(n,)`
             otherwise).
-        layout (dq.dense, dq.dia or None): Overrides the returned matrix layout. If
-            `None`, the layout is the same as `x`.
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the layout
+            of `x` if it is a qarray, and otherwise the default set by
+            [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray of shape (n, n)): Identity operator, with _n = prod(dims)_.
@@ -156,7 +158,8 @@ def zeros(*dims: int, layout: Layout | None = None) -> QArray:
 
     Args:
         *dims: Hilbert space dimension of each subsystem.
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray of shape (n, n)): Null operator, with _n = prod(dims)_.
@@ -205,8 +208,9 @@ def zeros_like(
         dims (tuple of ints or None): Hilbert space dimension of each subsystem.
             Defaults to `None` (`x.dims` if available, individual system `dims=(n,)`
             otherwise).
-        layout (dq.dense, dq.dia or None): Overrides the returned matrix layout. If
-            `None`, the layout is the same as `x`.
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the layout
+            of `x` if it is a qarray, and otherwise the default set by
+            [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray of shape (n, n)): Null operator, with _n = prod(dims)_.
@@ -263,7 +267,8 @@ def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, 
 
     Args:
         *dims: Hilbert space dimension of each mode.
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray or tuple of qarrays, each of shape (n, n)): Annihilation operator(s),
@@ -337,7 +342,8 @@ def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
 
     Args:
         *dims: Hilbert space dimension of each mode.
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray or tuple of qarrays, each of shape (n, n)): Creation operator(s), with
@@ -522,7 +528,8 @@ def number(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
 
     Args:
         *dims: Hilbert space dimension of each mode.
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray or tuple of qarrays, each of shape (n, n)): Number operator(s), with
@@ -584,7 +591,8 @@ def parity(dim: int, *, layout: Layout | None = None) -> QArray:
 
     Args:
         dim: Dimension of the Hilbert space.
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray of shape (dim, dim)): Parity operator.
@@ -619,7 +627,8 @@ def displace(dim: int, alpha: ArrayLike) -> QArray:
         alpha (array-like of shape (...)): Displacement amplitude.
 
     Returns:
-        (qarray of shape (..., dim, dim)): Displacement operator.
+        (qarray of shape (..., dim, dim)): Displacement operator, always in `dq.dense`
+            layout.
 
     Examples:
         >>> dq.displace(4, 0.5)
@@ -651,7 +660,8 @@ def squeeze(dim: int, z: ArrayLike) -> QArray:
         z (array-like of shape (...)): Squeezing amplitude.
 
     Returns:
-        (qarray of shape (..., dim, dim)): Squeezing operator.
+        (qarray of shape (..., dim, dim)): Squeezing operator, always in `dq.dense`
+            layout.
 
     Examples:
         >>> dq.squeeze(4, 0.5)
@@ -681,7 +691,8 @@ def quadrature(
     Args:
         dim: Dimension of the Hilbert space.
         phi: Phase angle.
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
         hbar: Value of $\hbar$ in the commutation relation $[\hat{x}, \hat{p}]
             = i\hbar$. Common choices are `0.5` (default), `1.0`, and `2.0`.
 
@@ -710,7 +721,8 @@ def position(dim: int, *, layout: Layout | None = None, hbar: float = 0.5) -> QA
 
     Args:
         dim: Dimension of the Hilbert space.
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
         hbar: Value of $\hbar$ in the commutation relation $[\hat{x}, \hat{p}]
             = i\hbar$. Common choices are `0.5` (default), `1.0`, and `2.0`.
 
@@ -734,7 +746,8 @@ def momentum(dim: int, *, layout: Layout | None = None, hbar: float = 0.5) -> QA
 
     Args:
         dim: Dimension of the Hilbert space.
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
         hbar: Value of $\hbar$ in the commutation relation $[\hat{x}, \hat{p}]
             = i\hbar$. Common choices are `0.5` (default), `1.0`, and `2.0`.
 
@@ -759,7 +772,8 @@ def sigmax(*, layout: Layout | None = None) -> QArray:
     It is defined by $\sigma_x = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$.
 
     Args:
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray of shape (2, 2)): Pauli $\sigma_x$ operator.
@@ -786,7 +800,8 @@ def sigmay(*, layout: Layout | None = None) -> QArray:
     It is defined by $\sigma_y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}$.
 
     Args:
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray of shape (2, 2)): Pauli $\sigma_y$ operator.
@@ -813,7 +828,8 @@ def sigmaz(*, layout: Layout | None = None) -> QArray:
     It is defined by $\sigma_z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}$.
 
     Args:
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray of shape (2, 2)): Pauli $\sigma_z$ operator.
@@ -838,7 +854,8 @@ def sigmap(*, layout: Layout | None = None) -> QArray:
     It is defined by $\sigma_+ = \begin{pmatrix} 0 & 1 \\ 0 & 0 \end{pmatrix}$.
 
     Args:
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray of shape (2, 2)): Pauli $\sigma_+$ operator.
@@ -864,7 +881,8 @@ def sigmam(*, layout: Layout | None = None) -> QArray:
     It is defined by $\sigma_- = \begin{pmatrix} 0 & 0 \\ 1 & 0 \end{pmatrix}$.
 
     Args:
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray of shape (2, 2)): Pauli $\sigma_-$ operator.
@@ -888,7 +906,8 @@ def xyz(*, layout: Layout | None = None) -> QArray:
     r"""Returns the Pauli $\sigma_x$, $\sigma_y$ and $\sigma_z$ operators.
 
     Args:
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        layout: Matrix layout (`dq.dense` or `dq.dia`). If `None`, uses the default
+            set by [`dq.set_layout()`][dynamiqs.set_layout].
 
     Returns:
         (qarray of shape (3, 2, 2)): Pauli $\sigma_x$, $\sigma_y$ and $\sigma_z$
@@ -928,7 +947,8 @@ def hadamard(n: int = 1) -> QArray:
         n: Number of qubits to act on.
 
     Returns:
-        (qarray of shape (2^n, 2^n)): Hadamard transform operator.
+        (qarray of shape (2^n, 2^n)): Hadamard transform operator, always in `dq.dense`
+            layout.
 
     Examples:
         >>> dq.hadamard()
@@ -962,7 +982,7 @@ def rx(theta: ArrayLike) -> QArray:
         theta (array-like of shape (...)): Rotation angle $\theta$ in radians.
 
     Returns:
-        (qarray of shape (2, 2)): $R_x(\theta)$ gate.
+        (qarray of shape (..., 2, 2)): $R_x(\theta)$ gate, always in `dq.dense` layout.
 
     Examples:
         >>> dq.rx(jnp.pi)
@@ -995,7 +1015,7 @@ def ry(theta: ArrayLike) -> QArray:
         theta (array-like of shape (...)): Rotation angle $\theta$ in radians.
 
     Returns:
-        (qarray of shape (2, 2)): $R_y(\theta)$ gate.
+        (qarray of shape (..., 2, 2)): $R_y(\theta)$ gate, always in `dq.dense` layout.
 
     Examples:
         >>> dq.ry(jnp.pi)
@@ -1028,7 +1048,7 @@ def rz(theta: ArrayLike) -> QArray:
         theta (array-like of shape (...)): Rotation angle $\theta$ in radians.
 
     Returns:
-        (qarray of shape (2, 2)): $R_z(\theta)$ gate.
+        (qarray of shape (..., 2, 2)): $R_z(\theta)$ gate, always in `dq.dense` layout.
 
     Examples:
         >>> dq.rz(jnp.pi)
@@ -1054,7 +1074,7 @@ def sgate() -> QArray:
     It is defined by $\text{S} = \begin{pmatrix} 1 & 0 \\ 0 & i \end{pmatrix}$.
 
     Returns:
-        (qarray of shape (2, 2)): $\text{S}$ gate.
+        (qarray of shape (2, 2)): $\text{S}$ gate, always in `dq.dense` layout.
 
     Examples:
         >>> dq.sgate()
@@ -1073,7 +1093,7 @@ def tgate() -> QArray:
     $\text{T} = \begin{pmatrix} 1 & 0 \\ 0 & e^{i\frac{\pi}{4}} \end{pmatrix}$.
 
     Returns:
-        (qarray of shape (2, 2)): $\text{T}$ gate.
+        (qarray of shape (2, 2)): $\text{T}$ gate, always in `dq.dense` layout.
 
     Examples:
         >>> dq.tgate()
@@ -1099,7 +1119,7 @@ def cnot() -> QArray:
     $$
 
     Returns:
-        (qarray of shape (4, 4)): $\text{CNOT}$ gate.
+        (qarray of shape (4, 4)): $\text{CNOT}$ gate, always in `dq.dense` layout.
 
     Examples:
         >>> dq.cnot()
@@ -1133,7 +1153,7 @@ def toffoli() -> QArray:
     $$
 
     Returns:
-        (qarray of shape (8, 8)): $\text{Toffoli}$ gate.
+        (qarray of shape (8, 8)): $\text{Toffoli}$ gate, always in `dq.dense` layout.
 
     Examples:
         >>> dq.toffoli()

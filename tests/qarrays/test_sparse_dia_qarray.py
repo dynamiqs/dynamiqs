@@ -18,7 +18,7 @@ from dynamiqs.qarrays.sparsedia_primitives import (
     _passes,
 )
 
-from ..order import TEST_SHORT
+from ..order import TEST_INSTANT, TEST_SHORT
 
 # list of all pairs of operations that are legal
 # i.e. all pairs except 'batch-batch'
@@ -398,3 +398,9 @@ class TestSparseDIAQArray:
 
 def _allclose(a, b, rtol=1e-05, atol=1e-08):
     return jnp.allclose(a, b, rtol=rtol, atol=atol)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_repr_keeps_values_starting_with_zero():
+    x = dq.sparsedia_from_dict({0: [1.5, 2.5, 3.5], 1: [10.0, 0.5]})
+    assert '0.5' in repr(x)

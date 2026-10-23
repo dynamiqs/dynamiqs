@@ -94,7 +94,7 @@ surprise a physicist ($\hbar=1$, normalization).
   docstrings.
 
 **See also.** mkdocstrings cross-reference syntax: `[dq.sesolve()][dynamiqs.sesolve]` for a
-function (keep the `()` in the label), `[dq.Options][dynamiqs.Options]` for a class, and
+function (keep the `()` in the label), `[dq.QArray][dynamiqs.QArray]` for a class, and
 `(doc page)(relative/path.md)` for a documentation page.
 
 **Classes.** `merge_init_into_class` is on: document constructor arguments in the class

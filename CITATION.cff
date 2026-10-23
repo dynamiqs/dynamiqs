@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use Dynamiqs in your research, please cite it as below."
+title: "Dynamiqs"
+type: software
+repository-code: "https://github.com/dynamiqs/dynamiqs"
+url: "https://www.dynamiqs.org"
+license: Apache-2.0
+authors:
+  - family-names: Guilmin
+    given-names: Pierre
+  - family-names: Bocquet
+    given-names: Adrien
+  - family-names: Genois
+    given-names: Élie
+  - family-names: Weiss
+    given-names: Daniel
+  - family-names: Gautier
+    given-names: Ronan
+preferred-citation:
+  type: unpublished
+  title: "Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems"
+  year: 2026
+  url: "https://github.com/dynamiqs/dynamiqs"
+  notes: "In preparation."
+  authors:
+    - family-names: Guilmin
+      given-names: Pierre
+    - family-names: Bocquet
+      given-names: Adrien
+    - family-names: Genois
+      given-names: Élie
+    - family-names: Weiss
+      given-names: Daniel
+    - family-names: Gautier
+      given-names: Ronan

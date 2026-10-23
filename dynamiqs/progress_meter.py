@@ -15,8 +15,11 @@ __all__ = ['NoProgressMeter', 'TextProgressMeter', 'TqdmProgressMeter']
 class AbstractProgressMeter(eqx.Module):
     """Abstract base class for progress meters.
 
-    Implement this class to define a custom progress meter. Pass an instance to any
-    solver via the `progress_meter` argument.
+    Implement this class to define a custom progress meter. Pass an instance to a
+    deterministic solver ([`dq.sesolve()`][dynamiqs.sesolve],
+    [`dq.mesolve()`][dynamiqs.mesolve], [`dq.sepropagator()`][dynamiqs.sepropagator],
+    [`dq.mepropagator()`][dynamiqs.mepropagator] or [`dq.floquet()`][dynamiqs.floquet])
+    via the `progress_meter` argument. The stochastic solvers have no progress meter.
     """
 
     @abstractmethod
@@ -27,8 +30,8 @@ class AbstractProgressMeter(eqx.Module):
 class NoProgressMeter(AbstractProgressMeter):
     """Progress meter that produces no output.
 
-    Pass to any solver via `progress_meter=dq.NoProgressMeter()` (or equivalently
-    `progress_meter=False`) to suppress all progress output.
+    Pass to a deterministic solver via `progress_meter=dq.NoProgressMeter()` (or
+    equivalently `progress_meter=False`) to suppress all progress output.
     """
 
     # dummy init to have the signature in the documentation
@@ -107,8 +110,8 @@ class TqdmProgressMeter(AbstractProgressMeter):
     Displays a rich progress bar powered by [tqdm](https://github.com/tqdm/tqdm),
     showing percentage completion, elapsed time, and estimated remaining time.
 
-    This is the default progress meter used by all solvers when `progress_meter=None`
-    (unless overridden globally with
+    This is the default progress meter of all deterministic solvers when
+    `progress_meter=None` (unless overridden globally with
     [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]).
 
     Pass `progress_meter=True` or `progress_meter=dq.TqdmProgressMeter()` explicitly

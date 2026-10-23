@@ -41,6 +41,8 @@ def fock(
     state: QArrayLike,
     *,
     ax: Axes | None = None,
+    w: float = 7.0,
+    h: float | None = None,
     allxticks: bool = False,
     ymax: float | None = 1.0,
     color: str = colors['blue'],
@@ -49,8 +51,20 @@ def fock(
 ):
     """Plot the photon number population of a state.
 
-    Warning:
-        Documentation redaction in progress.
+    Args:
+        state (qarray-like of shape (n, 1) or (n, n)): Ket or density matrix.
+        ax: Matplotlib `Axes` to plot on. If `None`, a new figure of size `(w, h)`
+            is created.
+        w: Width of the new figure in inches, ignored if `ax` is specified.
+        h: Height of the new figure in inches, ignored if `ax` is specified. If
+            `None`, defaults to `w / 1.6`.
+        allxticks: Whether to show a tick for every Fock state, otherwise only a
+            subset of integer ticks is shown.
+        ymax: Upper limit of the y axis. If `None`, it is set automatically.
+        color: Color of the bars.
+        alpha: Opacity of the bars.
+        label: Legend label of the bars. The legend is shown only if `label` is not
+            empty.
 
     Examples:
         >>> psi = dq.coherent(16, 2.0)
@@ -101,6 +115,8 @@ def fock_evolution(
     states: QArrayLike,
     *,
     ax: Axes | None = None,
+    w: float = 7.0,
+    h: float | None = None,
     times: ArrayLike | None = None,
     cmap: str = 'Blues',
     logscale: bool = False,
@@ -108,10 +124,26 @@ def fock_evolution(
     colorbar: bool = True,
     allyticks: bool = False,
 ):
-    """Plot the photon number population of state as a function of time.
+    """Plot the photon number population of a state as a function of time.
 
-    Warning:
-        Documentation redaction in progress.
+    Args:
+        states (qarray-like of shape (N, n, 1) or (N, n, n)): Sequence of _N_ kets or
+            density matrices.
+        ax: Matplotlib `Axes` to plot on. If `None`, a new figure of size `(w, h)`
+            is created.
+        w: Width of the new figure in inches, ignored if `ax` is specified.
+        h: Height of the new figure in inches, ignored if `ax` is specified. If
+            `None`, defaults to `w / 1.6`.
+        times (array-like of shape (N,), optional): Times of the states, used for
+            the x axis. If `None`, the x axis is the index of the state.
+        cmap: Colormap of the populations.
+        logscale: Whether to use a logarithmic color scale, with one color per
+            decade.
+        logvmin: Smallest population shown with the logarithmic color scale, lower
+            populations are clipped to it. Ignored if `logscale` is `False`.
+        colorbar: Whether to add a colorbar.
+        allyticks: Whether to show a tick for every Fock state, otherwise only a
+            subset of integer ticks is shown.
 
     Examples:
         >>> n = 16

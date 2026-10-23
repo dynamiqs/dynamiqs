@@ -51,8 +51,10 @@ jobs:
           git config user.name ci-bot
           git config user.email ci-bot@example.com
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
-            # e.g. tag v0.3.8 is deployed as version 0.3.8 and becomes the stable one
-            uv run mike deploy --push --update-aliases "${GITHUB_REF_NAME#v}" stable
+            # e.g. tag v1.0.2 is deployed as version 1.0, matching the existing 0.2 and
+            # 0.3 entries, and becomes the stable one
+            version="${GITHUB_REF_NAME#v}"
+            uv run mike deploy --push --update-aliases "${version%.*}" stable
           else
             uv run mike deploy --push dev
           fi

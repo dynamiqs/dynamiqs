@@ -257,9 +257,9 @@ class MESolveLowRankIntegrator(
         # check that assume_hermitian is True (required for the low-rank solver)
         if not self.options.assume_hermitian:
             raise ValueError(
-                'The LowRank method requires `dq.Options(assume_hermitian=True, ...)`'
-                '(default value). '
-                'If you initial state is not Hermitian, consider using other methods.'
+                'Argument `assume_hermitian` must be `True` (default value) with the'
+                ' `LowRank` method, but is `False`. If your initial state is not'
+                ' Hermitian, consider using another method.'
             )
 
         # check hermiticity for density matrix inputs

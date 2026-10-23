@@ -50,17 +50,21 @@ def floquet(
     diagonalization of the above propagator, while the $t \geq t_0$ Floquet modes are
     obtained by propagating the $t=t_0$ Floquet modes forward in time, via
     $$
-        \Phi_{m}(t) = \exp(i\epsilon_{m}t)U(t_0, t_0+t)\Phi_{m}(t_0).
+        \Phi_{m}(t) = \exp(i\epsilon_{m}t)U(t_0, t)\Phi_{m}(t_0),
     $$
+    where $U(t_0, t)$ is the propagator from $t_0$ to $t$. The quasienergies are only
+    defined modulo $2\pi/T$, they are returned in the interval $[-\pi/T, \pi/T)$.
 
     Args:
         H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
-        T: Period of the Hamiltonian. If the Hamiltonian is batched, the period should
+        T: Period of the Hamiltonian. If the Hamiltonian is batched, the period must
             be common over all elements in the batch. To batch over different periods,
-            wrap the call to `floquet` in a `jax.vmap`, see above.
-        tsave (array-like of shape (ntsave,)): Times at which to compute floquet
-            modes. The specified times should be ordered, strictly ascending, and such
-            that `tsave[-1] - tsave[0] <= T`.
+            wrap the call to `floquet()` in a
+            [`jax.vmap()`](https://docs.jax.dev/en/latest/_autosummary/jax.vmap.html),
+            see below.
+        tsave (array-like of shape (ntsave,)): Times at which to compute Floquet
+            modes. The specified times must be strictly ascending, and such that
+            `tsave[-1] - tsave[0] <= T`.
         method: Method for the integration. Defaults to
             [`dq.method.Tsit5`][dynamiqs.method.Tsit5] (supported:
             [`Tsit5`][dynamiqs.method.Tsit5],
@@ -69,68 +73,39 @@ def floquet(
             [`Kvaerno3`][dynamiqs.method.Kvaerno3],
             [`Kvaerno5`][dynamiqs.method.Kvaerno5],
             [`Euler`][dynamiqs.method.Euler]).
-        gradient: Algorithm used to compute the gradient.
+        gradient: Algorithm used to compute the gradient. The default is
+            method-dependent, refer to the documentation of the chosen method for more
+            details.
 
     Returns:
-        `dq.FloquetResult` object holding the result of the Floquet computation. Use
-            `result.modes` to access the saved Floquet modes and `result.quasienergies`
-            for the associated quasienergies.
-
-            ??? "Detailed result API"
-                ```python
-                dq.FloquetResult
-                ```
-
-                **Attributes:**
-
-                - **`modes`** _(qarray of shape (..., ntsave, n, n, 1))_ - Saved Floquet
-                    modes.
-                - **`quasienergies`** _(array of shape (..., n))_ - Saved quasienergies
-                - **`T`** _(float)_ - Drive period
-                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
-                    resolution.
-                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
-                    were saved.
-                - **`method`** _(Method)_ - Method used.
-                - **`gradient`** _(Gradient)_ - Gradient used.
-                - **`options`** _(Options)_ - Options used.
+        [`dq.FloquetResult`][dynamiqs.FloquetResult] object holding the result of the
+            Floquet computation. Use `result.modes` to access the saved Floquet modes
+            and `result.quasienergies` for the associated quasienergies.
 
     Other Parameters:
-        progress_meter: Progress
-            meter indicating how far the solve has progressed. Defaults to `None`
-            which uses the global default progress meter (see
+        progress_meter: Progress meter indicating how far the solve has progressed.
+            Defaults to `None` which uses the global default progress meter (see
             [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to `True`
-            for a [tqdm](https://github.com/tqdm/tqdm) progress meter, and `False`
-            for no output. If gradients are computed, the progress meter only
-            displays during the forward pass.
+            for a [`dq.TqdmProgressMeter`][dynamiqs.TqdmProgressMeter], `False` for a
+            [`dq.NoProgressMeter`][dynamiqs.NoProgressMeter], or pass any progress
+            meter such as a [`dq.TextProgressMeter`][dynamiqs.TextProgressMeter]. If
+            gradients are computed, the progress meter only displays during the
+            forward pass.
         t0: Initial time. If `None`, defaults to the first
             time in `tsave`. Defaults to `None`.
 
     Examples:
-        ```python
-        import dynamiqs as dq
-        import jax.numpy as jnp
-
-        n = 16
-        a = dq.destroy(n)
-
-        f = lambda t: jnp.cos(2 * jnp.pi * t)
-        H = dq.modulated(f, dq.sigmax())
-        T = 1.0
-        tsave = jnp.linspace(0, 1.0, 11)
-
-        result = dq.floquet(H, T, tsave)
-        print(result)
-        ```
-
-        ```text title="Output"
-        |██████████| 100.0% ◆ elapsed 0.89ms ◆ remaining 0.00ms
+        >>> f = lambda t: jnp.cos(2 * jnp.pi * t)
+        >>> H = dq.modulated(f, dq.sigmax())
+        >>> T = 1.0
+        >>> tsave = jnp.linspace(0, 1.0, 11)
+        >>> result = dq.floquet(H, T, tsave, progress_meter=False)
+        >>> print(result)
         ==== FloquetResult ====
         Method        : Tsit5
         Infos         : 11 steps (10 accepted, 1 rejected)
         Modes         : QArray complex64 (11, 2, 2, 1) | 0.3 Kb
         Quasienergies : Array float32 (2,) | 0.0 Kb
-        ```
 
     # Advanced use-cases
 
@@ -151,24 +126,21 @@ def floquet(
     The current API does not yet natively support batching over multiple drive
     periods, for instance if you wanted to batch over Hamiltonians with different
     drive frequencies. This however can be achieved straightforwardly with an
-    external call to `jax.vmap`, as follows:
+    external call to
+    [`jax.vmap()`](https://docs.jax.dev/en/latest/_autosummary/jax.vmap.html), as
+    follows:
 
-    ```python
-    import jax
-    import jax.numpy as jnp
-    import dynamiqs as dq
+    ```pycon
+    >>> def single_floquet(omega):
+    ...     H = dq.modulated(lambda t: jnp.cos(omega * t), dq.sigmax())
+    ...     T = 2.0 * jnp.pi / omega
+    ...     tsave = jnp.linspace(0.0, T, 11)
+    ...     return dq.floquet(H, T, tsave, progress_meter=False)
+    >>> omegas = jnp.array([0.9, 1.0, 1.1])
+    >>> result = jax.vmap(single_floquet)(omegas)
+    >>> result.modes.shape
+    (3, 11, 2, 2, 1)
 
-
-    def single_floquet(omega):
-        H = dq.modulated(lambda t: jnp.cos(omega * t), dq.sigmax())
-        T = 2.0 * jnp.pi / omega
-        tsave = jnp.linspace(0.0, T, 11)
-        return dq.floquet(H, T, tsave)
-
-
-    omegas = jnp.array([0.9, 1.0, 1.1])
-    batched_floquet = jax.vmap(single_floquet)
-    result = batched_floquet(omegas)
     ```
     """
     # === convert arguments

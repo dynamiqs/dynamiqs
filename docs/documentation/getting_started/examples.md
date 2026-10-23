@@ -69,7 +69,7 @@ def population(omega, kappa, alpha0):
     return dq.expect(dq.number(n), result.states[-1]).real
 
 
-# compute gradient with respect to omega, kappa and alpha
+# compute gradient with respect to omega, kappa and alpha0
 grad_population = jax.grad(population, argnums=(0, 1, 2))
 grads = grad_population(omega, kappa, alpha0)
 print(f'Gradient w.r.t. omega : {grads[0]:.4f}')

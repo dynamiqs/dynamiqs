@@ -245,8 +245,8 @@ class SparseDIADataArray(DataArray):
             # match '0. +0.j' with any number of spaces
             pattern = r'(?<!\d)0\.(?:0+)?(?:e[+-]0+)?\s*[+-]\s*0\.(?:0+)?(?:e[+-]0+)?j'
         elif jnp.issubdtype(self.dtype, jnp.floating):
-            # match '0.' with any number of spaces
-            pattern = r'(?<!\d)0\.(?:0+)?(?:e[+-]0+)?\s*'
+            # match '0.' with any number of spaces, but not the '0.' of e.g. '0.5'
+            pattern = r'(?<!\d)0\.(?:0+)?(?!\d)(?:e[+-]0+)?\s*'
         elif jnp.issubdtype(self.dtype, jnp.integer):
             # match '0' with any number of spaces
             pattern = r'(?<!\d)0\s*'
