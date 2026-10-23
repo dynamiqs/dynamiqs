@@ -4,8 +4,9 @@ import warnings
 from collections.abc import Sequence
 from dataclasses import replace
 from functools import reduce
+from itertools import accumulate
 from math import prod
-from numbers import Integral
+from numbers import Complex, Integral
 from typing import cast, overload
 
 import equinox as eqx
@@ -19,9 +20,10 @@ from qutip import Qobj
 
 from .._utils import is_batched_scalar
 from .dataarray import IndexType, in_last_two_dims, key_touches_last_two_dims
+from .dense_dataarray import DenseDataArray
 from .layout import Layout, dia
 from .materialized_qarray import MaterializedQArray
-from .qarray import QArray, QArrayLike, isqarraylike
+from .qarray import QArray, QArrayLike, check_compatible_dims, isqarraylike, to_jax
 from .sparsedia_dataarray import SparseDIADataArray
 
 __all__ = []
@@ -44,6 +46,41 @@ def _squeezable_batch_axes(shape: tuple[int, ...]) -> tuple[int, ...]:
     # batch-axis positions of size 1, i.e. the axes an unqualified `squeeze()`
     # removes without touching the matrix axes
     return tuple(i for i, n in enumerate(shape[:-2]) if n == 1)
+
+
+def _batch_broadcastable(x_shape: tuple[int, ...], y_shape: tuple[int, ...]) -> bool:
+    # aligned from the right, two batch sizes are equal or one is 1
+    x_batch, y_batch = x_shape[:-2][::-1], y_shape[:-2][::-1]
+    return all(a == b or 1 in (a, b) for a, b in zip(x_batch, y_batch, strict=False))
+
+
+def _separable_dense_term(operators: tuple[Array, ...], y_tensor: Array) -> Array:
+    # y in tensor form (d_0, ..., d_{N-1}, k): operator i contracts axis i
+    tensor = y_tensor
+    for axis, op in enumerate(operators):
+        tensor = jnp.tensordot(op, tensor, axes=(1, axis))
+        tensor = jnp.moveaxis(tensor, 0, axis)
+    return tensor
+
+
+def _separable_sparse_term(
+    operators: tuple[SparseDIADataArray, ...], y_tensor: Array
+) -> Array:
+    # as `_separable_dense_term`, with the dia kernel on (d_i, rest); the axis order
+    # is tracked, so that the data is transposed back only once
+    tensor = y_tensor
+    axis_order = list(range(y_tensor.ndim))
+    for original_axis, op in enumerate(operators):
+        current_axis = axis_order.index(original_axis)
+        tensor = jnp.moveaxis(tensor, current_axis, 0)
+        axis_order.insert(0, axis_order.pop(current_axis))
+
+        old_shape = tensor.shape
+        tensor = (op @ tensor.reshape(old_shape[0], -1)).to_jax()
+        tensor = tensor.reshape(old_shape)
+
+    inverse_perm = [axis_order.index(i) for i in range(y_tensor.ndim)]
+    return jnp.transpose(tensor, inverse_perm)
 
 
 def _coeff_from_batched_scalar(y: ArrayLike) -> Array:
@@ -428,12 +465,80 @@ class CompositeTerm(eqx.Module):
         return replace(self, coeff=y * self.coeff)
 
     def __matmul__(self, other: CompositeTerm) -> CompositeTerm:
-        # is the main mpoint of the feature
-        raise NotImplementedError
+        # (c A ⊗ B)(d C ⊗ D) = cd AC ⊗ BD, once both terms factorize `dims` alike
+        x, y = self._coarsened_to(other), other._coarsened_to(self)
+        operators = tuple(
+            cast(MaterializedQArray, A @ B)
+            for A, B in zip(x.operators, y.operators, strict=True)
+        )
+        return replace(x, operators=operators, coeff=jnp.asarray(x.coeff) * y.coeff)
+
+    def elmul(self, other: CompositeTerm) -> CompositeTerm:
+        # (c A ⊗ B) ∘ (d C ⊗ D) = cd (A ∘ C) ⊗ (B ∘ D), see `__matmul__`
+        x, y = self._coarsened_to(other), other._coarsened_to(self)
+        operators = tuple(
+            cast(MaterializedQArray, A.elmul(B))
+            for A, B in zip(x.operators, y.operators, strict=True)
+        )
+        return replace(x, operators=operators, coeff=jnp.asarray(x.coeff) * y.coeff)
+
+    def _coarsened_to(self, other: CompositeTerm) -> CompositeTerm:
+        # keeps the boundaries shared with `other`: against dims (2, 3)(4,), operators
+        # of dims (2,)(3,)(4,) become (2, 3)(4,), and (2,)(3, 4) become (2, 3, 4)
+        starts = set(self._operator_starts()) & set(other._operator_starts())
+        groups = []
+        for start, op in zip(self._operator_starts(), self.operators, strict=True):
+            if start in starts:
+                groups.append([op])
+            else:
+                groups[-1].append(op)
+        operators = tuple(reduce(lambda x, y: x & y, group) for group in groups)
+        return replace(self, operators=cast(tuple[MaterializedQArray, ...], operators))
+
+    def _operator_starts(self) -> list[int]:
+        # first subsystem of each operator: dims (2, 3)(4,) give [0, 2]
+        return list(accumulate((len(op.dims) for op in self.operators[:-1]), initial=0))
+
+    def _shares_inner_boundary(self, other: CompositeTerm) -> bool:
+        # dims (2, 3)(4,) and (2,)(3, 4) share only the start 0: both coarsen to one
+        # operator on the full space, whose product costs the materialized one
+        starts = set(self._operator_starts()) & set(other._operator_starts())
+        return len(starts) > 1
 
     def __and__(self, other: CompositeTerm) -> CompositeTerm:
-        # (c·⊗A_k)⊗(d·⊗B_l) = (c·d)·(A_*,B_*); tuple concat + coeff multiply.
-        raise NotImplementedError
+        # (c A ⊗ B) ⊗ (d C) = cd A ⊗ B ⊗ C
+        operators = (*self.operators, *other.operators)
+        coeff = jnp.asarray(self.coeff) * other.coeff
+        return replace(self, operators=operators, coeff=coeff)
+
+    def _matmul_array(self, y: Array) -> Array:
+        # ★ (A ⊗ B) y without A ⊗ B, on y in tensor form (d_A, d_B, k); `vmap` maps
+        # the batch of the operators and y, not of `coeff`, which only scales: shapes
+        # (3, 2, 2) and (5, 5) with y of shape (10, 4) map over 3 copies of y and A
+        batch = jnp.broadcast_shapes(
+            *(op.shape[:-2] for op in self.operators), y.shape[:-2]
+        )
+        batch_size, (n, k) = prod(batch), y.shape[-2:]
+        y = jnp.broadcast_to(y, (*batch, n, k))
+        y_tensor = y.reshape(batch_size, *(op.shape[-1] for op in self.operators), k)
+
+        operators = [
+            op
+            if op.ndim == 2
+            else op.broadcast_to(*batch, *op.shape[-2:]).reshape(-1, *op.shape[-2:])
+            for op in self.operators
+        ]
+        operators = cast(list[MaterializedQArray], operators)
+        in_axes = tuple(None if op.ndim == 2 else 0 for op in operators)
+        if self.layout is dia:
+            sparse_ops = tuple(cast(SparseDIADataArray, op.data) for op in operators)
+            term = jax.vmap(_separable_sparse_term, in_axes=(in_axes, 0))
+            Hy = term(sparse_ops, y_tensor)
+        else:
+            dense_ops = tuple(op.to_jax() for op in operators)
+            term = jax.vmap(_separable_dense_term, in_axes=(in_axes, 0))
+            Hy = term(dense_ops, y_tensor)
+        return self._coeff_with_matrix_axes() * Hy.reshape(*batch, n, k)
 
 
 class CompositeQArray(QArray):
@@ -764,7 +869,7 @@ class CompositeQArray(QArray):
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         return self._materialize().__array__(dtype=dtype, copy=copy)
 
-    def asdense(self) -> QArray:
+    def asdense(self) -> CompositeQArray:
         """Converts to a dense layout.
 
         Returns:
@@ -846,9 +951,45 @@ class CompositeQArray(QArray):
         return replace(self, terms=tuple(term * coeff for term in self.terms))
 
     def __add__(self, y: QArrayLike) -> QArray:
-        # LAZY ★ two composites: self.terms + other.terms.
-        # Non-composite y: wrap as single-operator CompositeTerm first.
-        raise NotImplementedError
+        # no dtype promotion: `x + 0j` keeps a real `x` real
+        if isinstance(y, Complex) and y == 0:
+            return self
+
+        if is_batched_scalar(y):
+            raise NotImplementedError(
+                'Adding a scalar to a qarray with the `+` operator is not supported. '
+                'To add a scaled identity matrix, use `x + scalar * dq.eye_like(x)`.'
+                ' To add a scalar, use `x.addscalar(scalar)`.'
+            )
+
+        if not isqarraylike(y):
+            return NotImplemented
+
+        # MATERIALIZE an array-like, which may broadcast against the matrix axes
+        if not isinstance(y, QArray):
+            return self._materialize() + y
+
+        check_compatible_dims(self.dims, y.dims)
+        if isinstance(y, MaterializedQArray):
+            # a ket or a bra adds element-wise
+            if y.shape[-2:] != self.shape[-2:]:
+                return self._materialize() + y
+            y = replace(self, terms=(CompositeTerm((y,)),))
+        y = cast(CompositeQArray, y)
+        if not _batch_broadcastable(self.shape, y.shape):
+            return self._materialize() + y._materialize()
+
+        x = self
+        if x.layout is not y.layout:
+            warnings.warn(
+                'A sparse data array has been converted to dense layout due to '
+                'element-wise addition with a dense data array.',
+                stacklevel=3,
+            )
+            x, y = x.asdense(), y.asdense()
+
+        # LAZY ★ Σ_j T_j + Σ_l T'_l
+        return replace(x, terms=x.terms + y.terms)
 
     @overload
     def __matmul__(self, y: QArray) -> QArray: ...
@@ -857,8 +998,41 @@ class CompositeQArray(QArray):
     def __matmul__(self, y: ArrayLike) -> Array: ...
 
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
-        # LAZY ★ (Σc_j⊗A_jk)·(Σd_l⊗B_lk)=Σ_{j,l}(c_j·d_l)⊗(A_jk·B_lk) → term_j @ term_l.
-        raise NotImplementedError
+        if is_batched_scalar(y):
+            raise TypeError('Attempted matrix product between a scalar and a qarray.')
+
+        if isinstance(y, CompositeQArray):
+            check_compatible_dims(self.dims, y.dims)
+            # MATERIALIZE if a pair of terms would cost a full product, once per pair
+            if not _batch_broadcastable(self.shape, y.shape) or not all(
+                tj._shares_inner_boundary(tl) for tj in self.terms for tl in y.terms
+            ):
+                return self._materialize() @ y._materialize()
+            # LAZY ★ (Σ_j T_j)(Σ_l T'_l) = Σ_jl T_j T'_l
+            terms = tuple(tj @ tl for tj in self.terms for tl in y.terms)
+            return replace(self, terms=terms)
+
+        if isinstance(y, MaterializedQArray):
+            check_compatible_dims(self.dims, y.dims)
+            # dia @ dia is dia, and the full matrix of a dia composite is sparse
+            if self.layout is dia and y.layout is dia:
+                return self._materialize() @ y
+            y_data = y.to_jax()
+        elif isqarraylike(y):
+            y_data = to_jax(y)
+        else:
+            return NotImplemented
+
+        if (
+            y_data.ndim < 2
+            or y_data.shape[-2] != self.shape[-1]
+            or not _batch_broadcastable(self.shape, y_data.shape)
+        ):
+            return self._materialize() @ y_data
+
+        # ★ mode by mode, dense like the materialized product
+        data = DenseDataArray(self._matmul_array(y_data))
+        return MaterializedQArray(dims=self.dims, vectorized=False, data=data)
 
     @overload
     def __rmatmul__(self, y: QArray) -> QArray: ...
@@ -867,12 +1041,75 @@ class CompositeQArray(QArray):
     def __rmatmul__(self, y: ArrayLike) -> Array: ...
 
     def __rmatmul__(self, y: QArrayLike) -> QArray | Array:
-        # LAZY symmetric to __matmul__ → term_other @ term_self.
-        raise NotImplementedError
+        if is_batched_scalar(y):
+            raise TypeError('Attempted matrix product between a scalar and a qarray.')
+
+        # reached for `y @ x` with a materialized `y`, see `__matmul__`
+        if isinstance(y, MaterializedQArray):
+            check_compatible_dims(y.dims, self.dims)
+            if y.layout is dia and self.layout is dia:
+                return y @ self._materialize()
+            y_data = y.to_jax()
+        elif isqarraylike(y):
+            y_data = to_jax(y)
+        else:
+            return NotImplemented
+
+        if (
+            y_data.ndim < 2
+            or y_data.shape[-1] != self.shape[-2]
+            or not _batch_broadcastable(self.shape, y_data.shape)
+        ):
+            return y_data @ self._materialize()
+
+        # ★ y H = (H^T y^T)^T, and `mT` is lazy
+        H_T = cast(CompositeQArray, self.mT)
+        data = DenseDataArray(H_T._matmul_array(y_data.mT).mT)
+        return MaterializedQArray(dims=self.dims, vectorized=False, data=data)
+
+    def _matmul_array(self, y: Array) -> Array:
+        return reduce(jnp.add, (term._matmul_array(y) for term in self.terms))
 
     def __and__(self, y: QArray) -> QArray:
-        # LAZY ★ (Σc_j⊗A_jk)⊗(Σd_l⊗B_lk)=Σ_{j,l}(c_j·d_l)⊗(A_j*,B_l*) → term_j & term_l.
-        raise NotImplementedError
+        if not isinstance(y, MaterializedQArray | CompositeQArray):
+            return NotImplemented
+
+        # dense ⊗ dia is dense, without a warning
+        if self.layout is not y.layout:
+            return self.asdense() & y.asdense()
+
+        # LAZY ★ (Σ_j T_j) ⊗ (Σ_l T'_l) = Σ_jl T_j ⊗ T'_l
+        if isinstance(y, MaterializedQArray):
+            # a ket or a superoperator cannot be a term operator
+            if (
+                y.vectorized
+                or not y.isop()
+                or not _batch_broadcastable(self.shape, y.shape)
+            ):
+                return self._materialize() & y
+            terms = tuple(term & CompositeTerm((y,)) for term in self.terms)
+        else:
+            if not _batch_broadcastable(self.shape, y.shape):
+                return self._materialize() & y._materialize()
+            terms = tuple(tj & tl for tj in self.terms for tl in y.terms)
+        return replace(self, dims=self.dims + y.dims, terms=terms)
+
+    def __rand__(self, y: QArray) -> QArray:
+        # reached for `y & x` with a materialized `y`, see `__and__`
+        if not isinstance(y, MaterializedQArray):
+            return NotImplemented
+
+        if self.layout is not y.layout:
+            return y.asdense() & self.asdense()
+
+        if (
+            y.vectorized
+            or not y.isop()
+            or not _batch_broadcastable(self.shape, y.shape)
+        ):
+            return y & self._materialize()
+        terms = tuple(CompositeTerm((y,)) & term for term in self.terms)
+        return replace(self, dims=y.dims + self.dims, terms=terms)
 
     # === Element-wise ===
 
@@ -913,8 +1150,28 @@ class CompositeQArray(QArray):
         return replace(self, terms=(*self.terms, term))
 
     def elmul(self, y: QArrayLike) -> QArray:
-        # MATERIALIZE → _materialize().elmul(y).
-        raise NotImplementedError
+        """Computes the element-wise multiplication.
+
+        Args:
+            y: Qarray-like to multiply with element-wise.
+
+        Returns:
+            New qarray resulting from the element-wise multiplication.
+        """
+        # MATERIALIZE unless `y` is composite: (A ⊗ B) ∘ M is not separable
+        if not isinstance(y, CompositeQArray):
+            return self._materialize().elmul(y)
+
+        check_compatible_dims(self.dims, y.dims)
+        # MATERIALIZE if a pair of terms would cost a full product, see `__matmul__`
+        if not _batch_broadcastable(self.shape, y.shape) or not all(
+            tj._shares_inner_boundary(tl) for tj in self.terms for tl in y.terms
+        ):
+            return self._materialize().elmul(y._materialize())
+
+        # LAZY (Σ_j T_j) ∘ (Σ_l T'_l) = Σ_jl T_j ∘ T'_l
+        terms = tuple(tj.elmul(tl) for tj in self.terms for tl in y.terms)
+        return replace(self, terms=terms)
 
     def elpow(self, power: int) -> QArray:
         """Computes the element-wise power.
