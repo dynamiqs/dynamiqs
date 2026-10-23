@@ -97,9 +97,9 @@ def measurements_sse_to_sme(
             I(t_n, t_{n+1})
             = \frac{1}{\Delta t_n}\int_{t_n}^{t_{n+1}} \dd Y(t)
             = \sqrt{\eta}\, \tilde I(t_n, t_{n+1})
-            + \sqrt{1-\eta}\,\frac{\Delta W}{\sqrt{\Delta t_n}},
+            + \sqrt{1-\eta}\,\frac{\xi}{\sqrt{\Delta t_n}},
         $$
-        where $\Delta t_n=t_{n+1}-t_n$ and $\Delta W\sim \mathcal{N}(0, 1)$ is
+        where $\Delta t_n=t_{n+1}-t_n$ and $\xi\sim \mathcal{N}(0, 1)$ is
         a standard Gaussian random variable.
 
     Args:
