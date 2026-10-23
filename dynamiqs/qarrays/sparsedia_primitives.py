@@ -1,6 +1,8 @@
 from collections import defaultdict
 from collections.abc import Sequence
 from functools import partial, reduce
+from itertools import chain
+from math import ceil
 
 import jax
 import jax.numpy as jnp
@@ -483,23 +485,10 @@ def autopad_sparsedia_diags(offsets: tuple[int, ...], diags: Sequence[Array]) ->
     return jnp.moveaxis(stacked_diags, 0, -2)
 
 
-# Most shifts (p, q) for which `lindbladian_sparsedia` is used (see
-# `lindbladian_sparsedia_shifts`). Each shift reads rho once more: on an A100, with 16
-# shifts (n = 1176, batch 16) the fused sum is 5.6x faster than the products, with 71
-# (n = 900, batch 4: rho no longer fits in L2) the products are 1.3x faster.
+# Most shifts (p, q) that `lindbladian_sparsedia` reads in one pass over rho. Each
+# shift reads rho once more, so a pass over many shifts gets slow. On an A100, a solve
+# with 71 shifts was 1.11x faster in three passes than with the operator products.
 MAX_FUSED_SHIFTS = 32
-
-
-def lindbladian_sparsedia_shifts(
-    left_offsets: tuple[int, ...],
-    right_offsets: tuple[int, ...],
-    jump_offsets: Sequence[tuple[int, ...]],
-) -> int:
-    # number of distinct shifted copies of rho that `lindbladian_sparsedia` reads
-    shifts = {(o, 0) for o in left_offsets} | {(0, -o) for o in right_offsets}
-    for offsets in jump_offsets:
-        shifts |= {(a, b) for a in offsets for b in offsets}
-    return len(shifts)
 
 
 def lindbladian_sparsedia(
@@ -516,6 +505,8 @@ def lindbladian_sparsedia(
     $(0, -o)$ for each diagonal of $B$, and $(a, b)$ for each pair of diagonals of an
     $L_k$. The terms are grouped by shift and summed in one elementwise expression,
     which XLA fuses into a single pass over $\rho$, instead of a pass per product.
+    Above `MAX_FUSED_SHIFTS` shifts, the sum takes several passes of at most
+    `MAX_FUSED_SHIFTS` shifts each.
     """
     n = rho.shape[-1]
     operators = [left, right, *jump_ops]
@@ -536,21 +527,51 @@ def lindbladian_sparsedia(
                 weight = weight + column[..., None, :]
         return weight * block
 
-    # Each shift (p, q) is summed with its mirror (q, p). When rho is Hermitian and
-    # B = A^dag, the terms at (j, i) are then the exact complex conjugates of those at
-    # (i, j), added in the same order: the result is exactly Hermitian, as the
-    # Hermitian form tmp + tmp^dag is by construction.
-    out = jnp.zeros_like(rho)
-    done = set()
+    # Each shift (p, q) is summed with its mirror (q, p), in the same pass. When rho is
+    # Hermitian and B = A^dag, the terms at (j, i) are then the exact complex
+    # conjugates of those at (i, j), added in the same order: run eagerly, the result
+    # is exactly Hermitian. Under jit, XLA can rewrite the sum, which leaves it
+    # Hermitian to round-off only, unlike the Hermitian form tmp + tmp^dag.
+    items, done = [], set()
     for p, q in terms:
-        if (p, q) in done:
-            continue
-        done |= {(p, q), (q, p)}
-        if p == q or (q, p) not in terms:
-            out = out + term(p, q)
-        else:
-            out = out + (term(p, q) + term(q, p))
+        if (p, q) not in done:
+            done |= {(p, q), (q, p)}
+            items.append((p, q, p != q and (q, p) in terms))
+    passes = _passes([1 + paired for _, _, paired in items])
+    starts = {indices[0] for indices in passes[1:]}
+    out = jnp.zeros_like(rho)
+    for i in chain(*passes):
+        if i in starts:
+            # keeps XLA from fusing the passes back into one
+            out = jax.lax.optimization_barrier(out)
+        p, q, paired = items[i]
+        out = out + (term(p, q) + term(q, p) if paired else term(p, q))
     return out
+
+
+def _passes(sizes: list[int]) -> list[list[int]]:
+    # The items of each pass, in order. Item i reads sizes[i] shifts: 1, or 2 for a
+    # shift and its mirror, which stay in one pass. Passes read about the same number
+    # of shifts, at most `MAX_FUSED_SHIFTS`.
+    total = sum(sizes)
+    passes = max(ceil(total / MAX_FUSED_SHIFTS), 1)
+    pass_size = ceil(total / passes)
+    # Items fill the last pass, and a pass ends one shift short when a shift and its
+    # mirror do not fit. If that leaves an extra pass, passes read one more shift (at
+    # most `MAX_FUSED_SHIFTS`) and a later lone shift fills a pass that ended short.
+    for limit, first in ((pass_size, -1), (min(pass_size + 1, MAX_FUSED_SHIFTS), 0)):
+        groups, shifts = [], []
+        for i, size in enumerate(sizes):
+            open_passes = range(len(shifts))[first:]
+            k = next((k for k in open_passes if shifts[k] + size <= limit), len(shifts))
+            if k == len(shifts):
+                groups.append([])
+                shifts.append(0)
+            groups[k].append(i)
+            shifts[k] += size
+        if len(groups) <= passes:
+            break
+    return groups
 
 
 def _lindbladian_sparsedia_terms(
