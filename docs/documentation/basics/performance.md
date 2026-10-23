@@ -116,6 +116,16 @@ EQX_ON_ERROR=off python simulation.py
 
 Because of compiler differences, the gain depends on the backend, but it can amount to several tens of percent speedup. This disables the checks entirely, so an invalid input silently produces a wrong result rather than an error. Validate your inputs with a short run first, then turn the checks off for production.
 
+### Run the solver loops on the GPU as CUDA graphs
+
+Solvers run their steps in a `while` loop. On GPUs, XLA copies the loop condition back to the host after each step and launches the next step from there, which costs tens of microseconds per step. On NVIDIA GPUs, XLA can instead record the loops as CUDA graphs, which the GPU runs without the host:
+
+```shell
+XLA_FLAGS="--xla_gpu_enable_command_buffer=+WHILE --xla_gpu_graph_min_graph_size=1" python simulation.py
+```
+
+Set both flags: the second one also records loops of only a few kernels. The GPU runs the same kernels, only without returning to the host between steps, so the results are identical. Simulations with many short steps can run up to about 1.5 times faster, but a few solvers run slower: measure it on your own simulation (see [Measure](#measure)).
+
 ### Simulate larger systems than the GPU memory
 
 On NVIDIA GPUs, XLA can be allowed to spill its allocations out of the device into system memory (unified memory), which makes it possible to simulate systems that do not fit in the GPU memory:
