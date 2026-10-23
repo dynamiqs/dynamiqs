@@ -37,6 +37,7 @@ from ...result import MESolveResult, Result, SolveSaved
 from ...utils.general import lindbladian_sparsedia_terms
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
+from .error_norm import error_norm
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .jump_clip_controller import JumpClipController
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
@@ -138,6 +139,19 @@ def _saveat(ts: Array, save: Callable, y0: PyTree) -> tuple[dx.SaveAt, Callable]
     return dx.SaveAt(subs=[subsaveat_a, subsaveat_b]), restore
 
 
+def pid_controller(method: _DEAdaptiveStep) -> dx.PIDController:
+    return dx.PIDController(
+        rtol=method.rtol,
+        atol=method.atol,
+        safety=method.safety_factor,
+        factormin=method.min_factor,
+        factormax=method.max_factor,
+        # rejects the failed steps on complex states, which Diffrax up to at least
+        # 0.7.2 turns into a NaN step size (see `error_norm`)
+        norm=error_norm,
+    )
+
+
 class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
     """Integrator using the Diffrax library."""
 
@@ -150,15 +164,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             return dx.ConstantStepSize()
 
         else:
-            method = cast(_DEAdaptiveStep, self.method)
-
-            controller = dx.PIDController(
-                rtol=method.rtol,
-                atol=method.atol,
-                safety=method.safety_factor,
-                factormin=method.min_factor,
-                factormax=method.max_factor,
-            )
+            controller = pid_controller(cast(_DEAdaptiveStep, self.method))
 
             # Clip the steps to the discontinuities of the vector field (e.g. the
             # boundaries of a piecewise constant Hamiltonian). Without this, the
