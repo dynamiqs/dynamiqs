@@ -317,14 +317,6 @@ class CompositeTerm(eqx.Module):
         coeff = jnp.asarray(self.coeff) ** power
         return replace(self, operators=operators, coeff=coeff)
 
-    def expm(self, *, max_squarings: int = 16) -> MaterializedQArray:
-        # no caller: `CompositeQArray.expm` always materializes
-        raise NotImplementedError
-
-    def norm(self, *, psd: bool = False) -> Array:
-        # no caller: `CompositeQArray.norm` is built from `trace` and `_eigvalsh`
-        raise NotImplementedError
-
     def _eig(self) -> tuple[Array, MaterializedQArray]:
         # (A ⊗ B)(v ⊗ w) = λμ v ⊗ w. Per-factor `_eig`, not `_eigh`: a Hermitian
         # term can have non-Hermitian factors (iY ⊗ iY)
@@ -334,10 +326,6 @@ class CompositeTerm(eqx.Module):
         # the coefficient can carry batch axes that the operators do not
         V = V.broadcast_to(*eigvals.shape[:-1], *V.shape[-2:])
         return eigvals, cast(MaterializedQArray, V)
-
-    def _eigh(self) -> tuple[Array, Array]:
-        # no caller: `CompositeQArray._eigh` always materializes
-        raise NotImplementedError
 
     def _eigvals(self) -> Array:
         return self._kron_eigvals([op._eigvals() for op in self.operators])
@@ -740,9 +728,14 @@ class CompositeQArray(QArray):
 
     def ptrace(self, *keep: int) -> QArray:
         if len(keep) == 0:
-            raise ValueError('Argument `keep` must contain at least one subsystem.')
+            raise ValueError(
+                'Argument `keep` must contain at least one subsystem, but got'
+                ' `keep=()`.'
+            )
         if len(set(keep)) != len(keep):
-            raise ValueError('Argument `keep` must not contain duplicates.')
+            raise ValueError(
+                f'Argument `keep` must not contain duplicates, but got `keep={keep}`.'
+            )
         if any(k < 0 or k > len(self.dims) - 1 for k in keep):
             raise ValueError(
                 'Argument `keep` must match the Hilbert space structure specified by'
@@ -932,8 +925,9 @@ class CompositeQArray(QArray):
         Returns:
             New qarray with elements raised to the specified power.
         """
-        # 1-term, see `powm`
-        if len(self.terms) > 1:
+        # 1-term, see `powm`, and an integer power >= 0: (ab)^p != a^p b^p for a
+        # fractional p (branch cut), and 0^-1 gives nan in a product instead of inf
+        if len(self.terms) > 1 or not isinstance(power, int) or power < 0:
             return self._materialize().elpow(power)
         return replace(self, terms=(self.terms[0].elpow(power),))
 
