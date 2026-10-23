@@ -96,6 +96,7 @@ def check_options(options: Options, solver_name: str):
             'assume_hermitian',
         ),
         'sepropagator': ('save_propagators', 'progress_meter', 't0', 'save_extra'),
+        'mesteadystate': ('cartesian_batching', 'vectorized', 'assume_hermitian'),
         'mepropagator': (
             'save_propagators',
             'cartesian_batching',
