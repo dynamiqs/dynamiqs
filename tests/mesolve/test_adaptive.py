@@ -35,8 +35,10 @@ class TestMESolveAdaptive(IntegratorTester):
     def test_gradient(self, system, gradient):
         self._test_gradient(system, Tsit5(), gradient)
 
-    def test_correctness_implicit(self):
-        self._test_correctness(dense_ocavity, Kvaerno5())
+    # otdqubit: the time-dependent drive makes Kvaerno5's root find fail on some steps
+    @pytest.mark.parametrize('system', [dense_ocavity, otdqubit])
+    def test_correctness_implicit(self, system):
+        self._test_correctness(system, Kvaerno5())
 
     def test_correctness_no_jump_ops(self):
         self._test_correctness(dense_nojump_cavity, Tsit5())
