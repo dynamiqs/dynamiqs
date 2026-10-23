@@ -39,71 +39,33 @@ function copyToClipboard(button, text) {
     <div class="md-grid md-typeset">
       <div class="tx-hero">
         <div class="tx-hero__image">
-            <!-- Abstract quantum illustration -->
-            <svg class="quantum-illustration" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-                <!-- Outer orbital rings -->
-                <ellipse cx="200" cy="200" rx="180" ry="60" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" transform="rotate(-20 200 200)">
-                    <animateTransform attributeName="transform" type="rotate" from="-20 200 200" to="340 200 200" dur="30s" repeatCount="indefinite"/>
-                </ellipse>
-                <ellipse cx="200" cy="200" rx="150" ry="50" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2.5" transform="rotate(40 200 200)">
-                    <animateTransform attributeName="transform" type="rotate" from="40 200 200" to="-320 200 200" dur="25s" repeatCount="indefinite"/>
-                </ellipse>
-                <ellipse cx="200" cy="200" rx="120" ry="40" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3" transform="rotate(-60 200 200)">
-                    <animateTransform attributeName="transform" type="rotate" from="-60 200 200" to="300 200 200" dur="20s" repeatCount="indefinite"/>
-                </ellipse>
-                
-                <!-- Probability cloud / Wavefunction visualization -->
+            <!-- Bloch sphere: a batch of driven, damped qubits spiralling from |0⟩ to their steady states, drawn by the script below -->
+            <svg class="quantum-illustration bloch" viewBox="-200 -200 400 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bloch sphere showing a batch of driven, damped qubit trajectories">
                 <defs>
-                    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stop-color="rgba(255,255,255,0.4)"/>
-                        <stop offset="50%" stop-color="rgba(255,255,255,0.1)"/>
-                        <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+                    <radialGradient id="bloch-halo">
+                        <stop offset="0%" stop-color="#fff" stop-opacity="0.22"/>
+                        <stop offset="65%" stop-color="#fff" stop-opacity="0.05"/>
+                        <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
                     </radialGradient>
-                    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
-                        <feGaussianBlur in="SourceGraphic" stdDeviation="3"/>
+                    <radialGradient id="bloch-shade" cx="35%" cy="30%" r="80%">
+                        <stop offset="0%" stop-color="#fff" stop-opacity="0.2"/>
+                        <stop offset="100%" stop-color="#fff" stop-opacity="0.03"/>
+                    </radialGradient>
+                    <filter id="bloch-glow" x="-200%" y="-200%" width="500%" height="500%">
+                        <feGaussianBlur stdDeviation="3.5" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
                     </filter>
                 </defs>
-                
-                <!-- Central quantum state -->
-                <circle cx="200" cy="200" r="80" fill="url(#glow)">
-                    <animate attributeName="r" values="75;85;75" dur="4s" repeatCount="indefinite"/>
-                </circle>
-                
-                <!-- Quantum particles on orbits -->
-                <circle r="8" fill="rgba(255,255,255,0.9)" filter="url(#blur)">
-                    <animateMotion dur="30s" repeatCount="indefinite">
-                        <mpath href="#orbit1"/>
-                    </animateMotion>
-                </circle>
-                <circle r="6" fill="rgba(255,255,255,0.8)" filter="url(#blur)">
-                    <animateMotion dur="25s" repeatCount="indefinite">
-                        <mpath href="#orbit2"/>
-                    </animateMotion>
-                </circle>
-                <circle r="5" fill="rgba(255,255,255,0.7)" filter="url(#blur)">
-                    <animateMotion dur="20s" repeatCount="indefinite">
-                        <mpath href="#orbit3"/>
-                    </animateMotion>
-                </circle>
-                
-                <!-- Motion paths -->
-                <path id="orbit1" d="M 20,200 A 180,60 -20 1,1 20,200.01" fill="none" transform="rotate(-20 200 200)"/>
-                <path id="orbit2" d="M 50,200 A 150,50 40 1,0 50,200.01" fill="none" transform="rotate(40 200 200)"/>
-                <path id="orbit3" d="M 80,200 A 120,40 -60 1,1 80,200.01" fill="none" transform="rotate(-60 200 200)"/>
-                
-                <!-- Wavefunction nodes -->
-                <g opacity="0.7">
-                    <circle cx="200" cy="200" r="5" fill="white">
-                        <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/>
-                    </circle>
-                    <circle cx="200" cy="200" r="25" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2">
-                        <animate attributeName="r" values="20;35;20" dur="3s" repeatCount="indefinite"/>
-                        <animate attributeName="opacity" values="0.6;0.15;0.6" dur="3s" repeatCount="indefinite"/>
-                    </circle>
-                    <circle cx="200" cy="200" r="45" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5">
-                        <animate attributeName="r" values="40;55;40" dur="3.5s" repeatCount="indefinite"/>
-                        <animate attributeName="opacity" values="0.4;0.1;0.4" dur="3.5s" repeatCount="indefinite"/>
-                    </circle>
+                <circle r="196" fill="url(#bloch-halo)"/>
+                <circle r="150" fill="url(#bloch-shade)" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+                <g class="bloch-back" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1" stroke-dasharray="3 5"></g>
+                <line x1="0" y1="-150" x2="0" y2="150" stroke="rgba(255,255,255,0.3)" stroke-width="1" stroke-dasharray="2 4"/>
+                <g class="bloch-trails" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
+                <g class="bloch-front" fill="none" stroke="rgba(255,255,255,0.32)" stroke-width="1.2"></g>
+                <g class="bloch-vectors" stroke-linecap="round"></g>
+                <g fill="rgba(255,255,255,0.85)" font-size="20" text-anchor="middle">
+                    <text y="-162">|0⟩</text>
+                    <text y="180">|1⟩</text>
                 </g>
             </svg>
         </div>
@@ -124,6 +86,178 @@ function copyToClipboard(button, text) {
       </div>
     </div>
 </section>
+<script>
+// Hero animation: Bloch vectors of a batch of qubits with H = Δ/2 σz + Ω/2 σx and
+// relaxation at rate γ, i.e. the Bloch equations of the Lindblad master equation
+(function() {
+    const svg = document.querySelector('.bloch');
+    if (!svg) return;
+    const NS = 'http://www.w3.org/2000/svg';
+    const R = 150;
+    const OMEGA = 2.6;
+    const EPISODE = 16;
+    const FADE = 1.2;
+    const TRAIL = 220;
+    const CHUNKS = 11;
+    const COLORS = ['#ffffff', '#ffe1a8', '#ffc9bd', '#fff3e6'];
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const layer = (name) => svg.querySelector('.bloch-' + name);
+    const create = (tag, parent, attributes = {}) => {
+        const node = document.createElementNS(NS, tag);
+        for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, value);
+        parent.appendChild(node);
+        return node;
+    };
+
+    // view angles, nudged towards the pointer for a parallax effect
+    let azimuth = 0.6, tilt = 0.32, targetAzimuth = 0, targetTilt = 0.32;
+
+    function project([x, y, z]) {
+        const ca = Math.cos(azimuth), sa = Math.sin(azimuth);
+        const ct = Math.cos(tilt), st = Math.sin(tilt);
+        const x1 = x * ca - y * sa, y1 = x * sa + y * ca;  // y1 points into the screen
+        return [R * x1, -R * (z * ct + y1 * st), z * st - y1 * ct];  // screen x, y, depth
+    }
+
+    // great circles of the sphere, split into their hidden and visible halves
+    const circles = [
+        (s) => [Math.cos(s), Math.sin(s), 0],
+        (s) => [Math.cos(s), 0, Math.sin(s)],
+        (s) => [0, Math.cos(s), Math.sin(s)],
+    ].map((point) => ({
+        point,
+        back: create('path', layer('back')),
+        front: create('path', layer('front')),
+    }));
+
+    function drawCircles() {
+        for (const circle of circles) {
+            const d = { back: '', front: '' };
+            let previous = null;
+            for (let i = 0; i <= 120; i++) {
+                const [sx, sy, depth] = project(circle.point(2 * Math.PI * i / 120));
+                const side = depth >= 0 ? 'front' : 'back';
+                const xy = sx.toFixed(1) + ' ' + sy.toFixed(1);
+                if (previous && previous !== side) d[previous] += 'L' + xy;
+                d[side] += (previous === side ? 'L' : 'M') + xy;
+                previous = side;
+            }
+            circle.back.setAttribute('d', d.back);
+            circle.front.setAttribute('d', d.front);
+        }
+    }
+
+    const qubits = COLORS.map((color) => ({
+        color,
+        chunks: Array.from({ length: CHUNKS }, () => create('path', layer('trails'), { stroke: color })),
+        arrow: create('line', layer('vectors'), { stroke: color, 'stroke-width': 1.6 }),
+        head: create('circle', layer('vectors'), { fill: color, filter: 'url(#bloch-glow)' }),
+    }));
+
+    let time = 0;
+
+    function newBatch() {
+        // one shared drive, a sweep of detunings and decay rates: a batched simulation
+        const spread = 0.5 + 0.7 * Math.random();
+        qubits.forEach((qubit, k) => {
+            qubit.delta = OMEGA * spread * (k - (qubits.length - 1) / 2) * 0.55;
+            qubit.gamma = 0.1 + 0.12 * Math.random();
+            qubit.state = [0, 0, 1];
+            qubit.trail = [[0, 0, 1]];
+        });
+        time = 0;
+    }
+
+    function derivative([x, y, z], { delta, gamma }) {
+        return [
+            -delta * y - 0.5 * gamma * x,
+            delta * x - OMEGA * z - 0.5 * gamma * y,
+            OMEGA * y - gamma * (z + 1),
+        ];
+    }
+
+    function step(qubit, h) {
+        const add = (a, b, c) => a.map((ai, i) => ai + c * b[i]);
+        const k1 = derivative(qubit.state, qubit);
+        const k2 = derivative(add(qubit.state, k1, h / 2), qubit);
+        const k3 = derivative(add(qubit.state, k2, h / 2), qubit);
+        const k4 = derivative(add(qubit.state, k3, h), qubit);
+        qubit.state = qubit.state.map((s, i) => s + h / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]));
+    }
+
+    function advance(dt) {
+        for (const qubit of qubits) {
+            for (let i = 0; i < 4; i++) step(qubit, dt / 4);
+            qubit.trail.push(qubit.state);
+            if (qubit.trail.length > TRAIL) qubit.trail.shift();
+        }
+        time += dt;
+    }
+
+    function draw() {
+        const fade = Math.min(1, time / FADE, Math.max(0, (EPISODE + FADE - time) / FADE));
+        drawCircles();
+        for (const qubit of qubits) {
+            const points = qubit.trail.map(project);
+            const size = Math.ceil(points.length / CHUNKS);
+            qubit.chunks.forEach((chunk, j) => {
+                const part = points.slice(j * size, (j + 1) * size + 1);
+                if (part.length < 2) return chunk.setAttribute('d', '');
+                const depth = part.reduce((sum, p) => sum + p[2], 0) / part.length;
+                chunk.setAttribute('d', 'M' + part.map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L'));
+                chunk.setAttribute('stroke-opacity', (fade * ((j + 1) / CHUNKS) ** 1.5 * (0.7 + 0.3 * depth)).toFixed(3));
+                chunk.setAttribute('stroke-width', (1 + 1.6 * (j + 1) / CHUNKS).toFixed(2));
+            });
+            const [hx, hy, depth] = project(qubit.state);
+            qubit.arrow.setAttribute('x2', hx.toFixed(1));
+            qubit.arrow.setAttribute('y2', hy.toFixed(1));
+            qubit.arrow.setAttribute('stroke-opacity', (fade * (0.45 + 0.25 * depth)).toFixed(3));
+            qubit.head.setAttribute('cx', hx.toFixed(1));
+            qubit.head.setAttribute('cy', hy.toFixed(1));
+            qubit.head.setAttribute('r', (4.5 + 1.5 * depth).toFixed(2));
+            qubit.head.setAttribute('opacity', (fade * (0.75 + 0.25 * depth)).toFixed(3));
+        }
+    }
+
+    newBatch();
+    if (reduceMotion) {
+        for (let i = 0; i < 300; i++) advance(1 / 60);
+        time = FADE;
+        return draw();
+    }
+
+    const hero = document.querySelector('.tx-hero') || svg;
+    hero.addEventListener('pointermove', (event) => {
+        const box = hero.getBoundingClientRect();
+        targetAzimuth = 0.8 * ((event.clientX - box.left) / box.width - 0.5);
+        targetTilt = 0.32 + 0.3 * ((event.clientY - box.top) / box.height - 0.5);
+    });
+    hero.addEventListener('pointerleave', () => { targetAzimuth = 0; targetTilt = 0.32; });
+
+    let visible = true, last = null, spin = 0.6;
+    function frame(now) {
+        const dt = last === null ? 0 : Math.min(0.05, (now - last) / 1000);
+        last = now;
+        spin += 0.1 * dt;
+        azimuth += (spin + targetAzimuth - azimuth) * Math.min(1, 4 * dt);
+        tilt += (targetTilt - tilt) * Math.min(1, 4 * dt);
+        advance(dt);
+        if (time > EPISODE + FADE) newBatch();
+        draw();
+        if (visible && !document.hidden) requestAnimationFrame(frame);
+    }
+    const start = () => { last = null; requestAnimationFrame(frame); };
+    new IntersectionObserver(([entry]) => {
+        const wasRunning = visible;
+        visible = entry.isIntersecting;
+        if (visible && !wasRunning) start();
+    }).observe(svg);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && visible) start(); });
+    start();
+})();
+</script>
+
 <div class="home-background">
     <svg class="waves waves-back" viewBox="0 0 1440 320" preserveAspectRatio="none">
         <path d="M0,160L34.3,160C68.6,160,137,160,206,154.7C274.3,149,343,139,411,128C480,117,549,107,617,85.3C685.7,64,754,32,823,42.7C891.4,53,960,107,1029,154.7C1097.1,203,1166,245,1234,224C1302.9,203,1371,117,1406,74.7L1440,32L1440,320L1405.7,320C1371.4,320,1303,320,1234,320C1165.7,320,1097,320,1029,320C960,320,891,320,823,320C754.3,320,686,320,617,320C548.6,320,480,320,411,320C342.9,320,274,320,206,320C137.1,320,69,320,34,320L0,320Z"/>
