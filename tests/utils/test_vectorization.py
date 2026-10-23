@@ -20,6 +20,16 @@ def test_vectorize(x, y):
 
 
 @pytest.mark.run(order=TEST_INSTANT)
+def test_vectorize_superoperator(x):
+    superoperator = dq.spre(x)
+    with pytest.raises(ValueError, match='already a vectorized superoperator'):
+        dq.vectorize(superoperator)
+
+    # the matrix of the superoperator can still be vectorized as a plain array
+    assert dq.vectorize(superoperator.to_jax()).shape == (256, 1)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
 def test_unvectorize(x, y):
     # check that no error is raised while tracing the function
     jax.jit(dq.unvectorize)(dq.vectorize(x))
