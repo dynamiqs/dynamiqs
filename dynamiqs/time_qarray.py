@@ -959,6 +959,33 @@ class SummedTimeQArray(TimeQArray):
         timeqarrays = [tqarray * y for tqarray in self.timeqarrays]
         return replace(self, timeqarrays=timeqarrays)
 
+    def __add__(self, y: QArrayLike | TimeQArray) -> TimeQArray:
+        if isqarraylike(y):
+            y = ConstantTimeQArray(asqarray(y))
+
+        if not isinstance(y, TimeQArray):
+            return NotImplemented
+
+        if not _unclipped(self) or len(self.timeqarrays) == 0:
+            return super().__add__(y)
+
+        # the terms of an unclipped sum already share a shape and Hilbert space
+        # dimensions, so only the terms of `y` are checked (checking all of them at
+        # each addition makes building a sum of many terms quadratic)
+        shape = self.timeqarrays[0].shape
+        terms = _terms(y)
+        shapes = [term.shape for term in terms]
+        if jnp.broadcast_shapes(shape, *shapes) != shape or any(
+            term.dims != self.dims for term in terms
+        ):
+            return super().__add__(y)
+
+        terms = [
+            t if s == shape else t.broadcast_to(*shape)
+            for t, s in zip(terms, shapes, strict=True)
+        ]
+        return SummedTimeQArray([*self.timeqarrays, *terms], check=False)
+
 
 def _unclipped(x: TimeQArray) -> bool:
     return x.tstart is None and x.tend is None
