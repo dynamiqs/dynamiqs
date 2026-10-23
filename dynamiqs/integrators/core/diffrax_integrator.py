@@ -207,6 +207,13 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         else:
             raise TypeError(f'Unknown gradient type {obj_type_str(self.gradient)}.')
 
+    @property
+    def solver(self) -> dx.AbstractSolver:
+        # the unrolled solvers adapt to the gradient
+        if isinstance(self.diffrax_solver, _UnrolledERK):
+            return replace(self.diffrax_solver, gradient=self.gradient)
+        return self.diffrax_solver
+
     def diffeqsolve(
         self,
         t0: Scalar,
@@ -246,16 +253,10 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                     jax.jit(terms.vector_field, inline=_INLINE),
                 )
 
-            # === forward-mode solves are never transposed: the unrolled solvers can
-            # write their tangents out as their stages (see `_odd_sized_tangents`)
-            solver = self.diffrax_solver
-            if isinstance(self.gradient, Forward) and isinstance(solver, _UnrolledERK):
-                solver = replace(solver, forward_mode=True)
-
             # === solve differential equation with diffrax
             return dx.diffeqsolve(
                 terms,
-                solver,
+                self.solver,
                 t0=t0,
                 t1=t1,
                 dt0=self.dt0,

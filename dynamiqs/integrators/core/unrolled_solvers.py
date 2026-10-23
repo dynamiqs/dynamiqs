@@ -40,6 +40,8 @@ from diffrax._custom_types import Args, BoolScalarLike, RealScalarLike, Y
 from jax.experimental import layout
 from jaxtyping import Array, ArrayLike, PyTree
 
+from ...gradient import Forward, Gradient
+
 
 def _combine(
     y0: PyTree, coefficients: Sequence[float] | np.ndarray, ks: list[PyTree]
@@ -175,9 +177,9 @@ def _odd_sized_tangents(
 
 
 class _UnrolledERK(dx.AbstractERK):
-    # whether the solve is only differentiated in forward mode (see
-    # `_odd_sized_tangents`)
-    forward_mode: bool = eqx.field(default=False, static=True)
+    # the gradient of the solve: a forward-mode solve writes its tangents out with an
+    # odd size (see `_odd_sized_tangents`)
+    gradient: Gradient | None = eqx.field(default=None, static=True)
 
     def _supported(
         self,
@@ -297,7 +299,7 @@ class _UnrolledERK(dx.AbstractERK):
         odd = all(x.size >= _MIN_SIZE_ODD_STAGES for x in leaves)
         if odd:
             odd_sized = _odd_sized_trees
-        elif self.forward_mode:
+        elif isinstance(self.gradient, Forward):
             odd_sized = _odd_sized_tangents
         else:
             odd_sized = None
