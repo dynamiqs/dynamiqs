@@ -9,7 +9,14 @@ from jaxtyping import PRNGKeyArray
 from optimistix import AbstractRootFinder
 
 from ._utils import tree_str_inline
-from .gradient import BackwardCheckpointed, Direct, Forward, Gradient, HigherOrder
+from .gradient import (
+    BackwardCheckpointed,
+    Direct,
+    Forward,
+    Gradient,
+    HigherOrder,
+    Implicit,
+)
 
 __all__ = [
     'Dopri5',
@@ -20,6 +27,7 @@ __all__ = [
     'Expm',
     'JumpMonteCarlo',
     'DiffusiveMonteCarlo',
+    'DiffraxSteadyState',
     'LinearSolver',
     'LowRank',
     'Kvaerno3',
@@ -761,6 +769,90 @@ class DiffusiveMonteCarlo(_DEMethod):
     def __init__(self, keys: PRNGKeyArray, dsse_method: Method):
         self.keys = keys
         self.dsse_method = dsse_method
+
+
+class DiffraxSteadyState(_DEMethod):
+    r"""Time evolution until the steady state, for the Lindblad master equation.
+
+    This method integrates the Lindblad master equation with
+    [Diffrax](https://docs.kidger.site/diffrax/) from the initial state, and stops at
+    the first step where the Lindbladian of the state is small enough:
+    $$
+        \mathrm{rms}(\mathcal{L}(\rho)) < \mathrm{atol}
+        + \mathrm{rtol}\cdot\mathrm{rms}(\rho),
+    $$
+    where $\mathrm{rms}$ is the root mean square of the matrix elements. This
+    stopping criterion is independent of the step size control of `me_method`.
+
+    Warning:
+        For a fixed step size method, the time integration converges to a fixed
+        point of the discretized scheme, which differs from the steady state by an
+        error of the method order in `dt`. If this error is larger than the stopping
+        tolerances, the steady state is never reached.
+
+    Args:
+        me_method: Method for the time integration. Defaults to
+            [`dq.method.Kvaerno5`][dynamiqs.method.Kvaerno5] (supported:
+            [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8],
+            [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5],
+            [`Euler`][dynamiqs.method.Euler],
+            [`Rouchon1`][dynamiqs.method.Rouchon1],
+            [`Rouchon2`][dynamiqs.method.Rouchon2],
+            [`Rouchon3`][dynamiqs.method.Rouchon3]). Its maximum number of steps
+            bounds the time integration.
+        rtol: Relative tolerance of the stopping criterion. Defaults to `1e-5`.
+        atol: Absolute tolerance of the stopping criterion. Defaults to `1e-5`.
+
+    Note-: Supported gradients
+        This method supports differentiation with
+        [`dq.gradient.Implicit`][dynamiqs.gradient.Implicit] (default), and with the
+        gradients supported by `me_method`, which differentiate through the time
+        integration.
+    """
+
+    me_method: Method = Kvaerno5()
+    rtol: float = 1e-5
+    atol: float = 1e-5
+
+    # dummy variable, the proper check of gradient support will be done by `me_method`
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
+        Implicit,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
+        HigherOrder,
+    )
+
+    # dummy init to have the signature in the documentation
+    def __init__(
+        self,
+        me_method: Method = Kvaerno5(),  # noqa: B008
+        rtol: float = 1e-5,
+        atol: float = 1e-5,
+    ):
+        self.me_method = me_method
+        self.rtol = rtol
+        self.atol = atol
+
+        supported = (
+            Tsit5,
+            Dopri5,
+            Dopri8,
+            Kvaerno3,
+            Kvaerno5,
+            Euler,
+            Rouchon1,
+            Rouchon2,
+            Rouchon3,
+        )
+        if not isinstance(self.me_method, supported):
+            supported_str = ', '.join(f'`{x.__name__}`' for x in supported)
+            raise TypeError(
+                f'Argument `me_method` must be one of {supported_str}, but has '
+                f'type `{type(self.me_method).__name__}`.'
+            )
 
 
 class LinearSolver(Enum):
