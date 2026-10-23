@@ -4,11 +4,11 @@ import pytest
 
 import dynamiqs as dq
 from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
-from dynamiqs.integrators.core.low_rank_integrator import expval_from_m
+from dynamiqs.integrators.core.low_rank_integrator import _cholesky_qr2, expval_from_m
 from dynamiqs.method import Kvaerno5, LinearSolver, LowRank, Tsit5
 
 from ..integrator_tester import IntegratorTester
-from ..order import TEST_LONG
+from ..order import TEST_INSTANT, TEST_LONG
 from ..systems import dense_ocavity, dia_ocavity, mixed_ocavity, otdqubit
 
 # we only test Tsit5 to keep the unit test suite fast, and Kvaerno5 for the real
@@ -131,3 +131,27 @@ def test_expval_from_m_accepts_qarray():
 
     expect = jnp.sum(jnp.conj(m) * (op.to_jax() @ m))
     assert jnp.allclose(expval_from_m(m, op), expect)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('backend', ['cpu', 'gpu'])
+@pytest.mark.parametrize('condition', [1e3, 1e12])
+def test_cholesky_qr2(monkeypatch, backend, condition):
+    # a = u s v, with b = a x0 + a residual orthogonal to the columns of a: the
+    # least-squares solution is x0 while a is well conditioned, and Q R = a stays a
+    # finite factorization when it is not (shifted Cholesky)
+    monkeypatch.setattr(jax, 'default_backend', lambda: backend)
+    n, rank = 300, 8
+    keys = jax.random.split(jax.random.PRNGKey(0), 4)
+    u, _ = jnp.linalg.qr(jax.random.normal(keys[0], (n, rank), dtype=jnp.complex128))
+    v, _ = jnp.linalg.qr(jax.random.normal(keys[1], (rank, rank), dtype=jnp.complex128))
+    a = u @ jnp.diag(jnp.logspace(0, -jnp.log10(condition), rank)) @ v
+    q, r = _cholesky_qr2(a)
+    assert jnp.allclose(q @ r, a, rtol=0, atol=1e-14)
+    if condition < 1e7:
+        assert jnp.allclose(q.conj().T @ q, jnp.eye(rank), rtol=0, atol=1e-14)
+        x0 = jax.random.normal(keys[2], (rank, 2), dtype=jnp.complex128)
+        w = jax.random.normal(keys[3], (n, 2), dtype=jnp.complex128)
+        b = a @ x0 + 1e-3 * (w - u @ (u.conj().T @ w))
+        x = jax.scipy.linalg.solve_triangular(r, q.conj().T @ b)
+        assert jnp.allclose(x, x0, rtol=1e-8, atol=0)
