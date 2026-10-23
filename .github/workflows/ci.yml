@@ -18,10 +18,10 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv and Python
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10.3.0
         with:
           python-version: "3.11"
           enable-cache: true
@@ -44,16 +44,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # lowest-direct installs the lowest versions that pyproject.toml allows for the
+        # direct dependencies, to check that they install and work
+        resolution: [highest, lowest-direct]
         group: [1, 2, 3, 4, 5]
+    env:
+      # for every uv command, as `uv run` would otherwise re-resolve to the highest versions
+      UV_RESOLUTION: ${{ matrix.resolution }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv and Python
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10.3.0
         with:
           python-version: "3.11"
           enable-cache: true
           cache-dependency-glob: "**/pyproject.toml"
+          cache-suffix: ${{ matrix.resolution }}
 
       - name: Install dependencies
         run: uv sync --extra dev
@@ -70,10 +77,10 @@ jobs:
   doctest-code:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv and Python
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10.3.0
         with:
           python-version: "3.11"
           enable-cache: true
@@ -91,10 +98,10 @@ jobs:
   doctest-docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv and Python
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10.3.0
         with:
           python-version: "3.11"
           enable-cache: true

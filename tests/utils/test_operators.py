@@ -144,6 +144,36 @@ def test_create():
 
 
 @pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_fdestroy(layout):
+    # check that no error is raised while tracing the function
+    _jit_static_layout(dq.fdestroy, static_argnums=(0,)).trace(1, layout=layout)
+    _jit_static_layout(dq.fdestroy, static_argnums=(0,)).trace(3, layout=layout)
+
+    # {a_j, a_k} = 0
+    a = dq.fdestroy(3, layout=layout)
+    for j in range(3):
+        for k in range(3):
+            assert jnp.allclose((a[j] @ a[k] + a[k] @ a[j]).to_jax(), 0)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_fcreate(layout):
+    # check that no error is raised while tracing the function
+    _jit_static_layout(dq.fcreate, static_argnums=(0,)).trace(1, layout=layout)
+    _jit_static_layout(dq.fcreate, static_argnums=(0,)).trace(3, layout=layout)
+
+    # {a_j, a_k^†} = δ_jk
+    a = dq.fdestroy(3, layout=layout)
+    adag = dq.fcreate(3, layout=layout)
+    for j in range(3):
+        for k in range(3):
+            anticommutator = (a[j] @ adag[k] + adag[k] @ a[j]).to_jax()
+            assert jnp.allclose(anticommutator, (j == k) * jnp.eye(8))
+
+
+@pytest.mark.run(order=TEST_INSTANT)
 def test_number():
     # prepare inputs
     dim = 4

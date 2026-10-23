@@ -15,8 +15,8 @@ from dynamiqs.qarrays.sparsedia_primitives import (
     _matmul_array_sparsedia,
     _matmul_sparsedia_array,
     _pad_on_gpu,
+    _passes,
 )
-from dynamiqs.utils.general import lindbladian_sparsedia_terms
 
 from ..order import TEST_SHORT
 
@@ -279,16 +279,39 @@ class TestSparseDIAQArray:
 
     def test_lindbladian_many_shifts(self):
         # a jump operator with 6 diagonals reads 36 shifted copies of rho, more than
-        # MAX_FUSED_SHIFTS: lindbladian falls back to the products
+        # MAX_FUSED_SHIFTS, so lindbladian sums its terms in two passes
         a = dq.destroy(10, layout=dq.dia)
         L = a + a @ a + a @ a @ a + 0.5 * (a + a @ a + a @ a @ a).dag()
-        H = self.sparseA['simple']
-        rho = self.denseA['simple'] @ self.denseB['simple'].dag()
-        Hnh = -1j * H - 0.5 * L.dag() @ L
-        assert lindbladian_sparsedia_terms(Hnh, Hnh.dag(), [L], rho) is None
+        H = a.dag() @ a + 0.3 * (a + a.dag())
+        r = self.denseA['batch']
+        rho = r @ r.dag()
         out_dense = dq.lindbladian(H.asdense(), [L.asdense()], rho).to_jax()
+        jaxpr = jax.make_jaxpr(lambda rho: dq.lindbladian(H, [L], rho).to_jax())(rho)
+        assert 'optimization_barrier' in str(jaxpr)
         out_dia = dq.lindbladian(H, [L], rho).to_jax()
         assert _allclose(out_dense, out_dia, atol=1e-6 * jnp.abs(out_dense).max())
+        # a shift and its mirror share a pass: run eagerly, the sum is exactly Hermitian
+        assert jnp.array_equal(out_dia, out_dia.mT.conj())
+
+    @pytest.mark.parametrize(
+        ('sizes', 'expected'),
+        [
+            # 71 shifts: balanced passes, not 32, 32 and 7
+            ([1] + [2] * 35, [23, 24, 24]),
+            # 62 shifts: passes of 31 would end at 30 and need a third pass
+            ([2] * 31, [32, 30]),
+            # 48 shifts: passes of 24 would give 23, 24 and 1
+            ([2] * 11 + [1] + [2] * 12 + [1], [25, 23]),
+            # 64 shifts: passes of 32 would give 31, 32 and 1
+            ([2] * 15 + [1] + [2] * 15 + [1] * 3, [32, 32]),
+            # no shift at all
+            ([], []),
+        ],
+    )
+    def test_lindbladian_passes(self, sizes, expected):
+        # shifts read by each pass; an item of size 2 is a shift and its mirror
+        loads = [sum(sizes[i] for i in indices) for indices in _passes(sizes)]
+        assert loads == expected
 
     def test_kronecker(self):
         dA, sA = self.denseA['simple'], self.sparseA['simple']
