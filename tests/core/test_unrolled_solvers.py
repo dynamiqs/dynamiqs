@@ -188,6 +188,33 @@ def test_odd_sized_stages_match(monkeypatch):
     assert jnp.allclose(values_odd, values, rtol=1e-12)
 
 
+@pytest.mark.run(order=TEST_SHORT)
+def test_odd_sized_stages_count_the_batch(monkeypatch):
+    # small states get odd-sized stages when their whole batch, which XLA's kernels
+    # cover, is large: here a state of 64 elements alone stays below the size, a batch
+    # of 2 x 2 under nested vmaps (as cartesian batching) reaches it
+    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
+    monkeypatch.setattr(unrolled_solvers, '_MIN_BATCH_SIZE_ODD_STAGES', 4 * 8 * 8)
+
+    def odd_sized(fn, *args):
+        jaxpr = str(jax.make_jaxpr(fn)(*args))
+        return 'optimization_barrier' in jaxpr
+
+    assert not odd_sized(_solve(), 1.3)
+    amplitudes = jnp.array([[1.3, 0.4], [0.9, 1.1]])
+    assert odd_sized(jax.vmap(jax.vmap(_solve())), amplitudes)
+    # a batch split across devices keeps its shape (flattened, it would no longer be
+    # split evenly)
+    if jax.__version_info__ >= (0, 6):
+        shd = jax.sharding
+        stage = jax.vmap(lambda x: unrolled_solvers._odd_sized(lambda x: (2 * x,), x))
+        mesh = shd.AbstractMesh((2,), ('batch',), axis_types=(shd.AxisType.Auto,))
+        sharding = shd.NamedSharding(mesh, shd.PartitionSpec('batch'))
+        assert odd_sized(stage, jax.ShapeDtypeStruct((4, 8, 8), jnp.complex128))
+        batch = jax.ShapeDtypeStruct((4, 8, 8), jnp.complex128, sharding=sharding)
+        assert not odd_sized(stage, batch)
+
+
 @pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize(
     ('diffrax_solver', 'solver'),
