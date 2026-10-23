@@ -144,45 +144,33 @@ def test_create():
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_fdestroy():
-    """Test the fermionic annihilation operator function."""
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_fdestroy(layout):
     # check that no error is raised while tracing the function
-    _jit_static_layout(dq.fdestroy, static_argnums=(0,)).trace(1, layout=dq.dense)
-    _jit_static_layout(dq.fdestroy, static_argnums=(0, 1)).trace(2, layout=dq.dense)
-    _jit_static_layout(dq.fdestroy, static_argnums=(0,)).trace(1, layout=dq.dia)
-    _jit_static_layout(dq.fdestroy, static_argnums=(0, 1)).trace(2, layout=dq.dia)
+    _jit_static_layout(dq.fdestroy, static_argnums=(0,)).trace(1, layout=layout)
+    _jit_static_layout(dq.fdestroy, static_argnums=(0,)).trace(3, layout=layout)
 
-    # test operators dispatch
-    assert jnp.allclose(
-        dq.fdestroy(2, layout=dq.dense)[0].to_jax(),
-        dq.fdestroy(2, layout=dq.dia)[0].to_jax(),
-    )
-
-    assert jnp.allclose(
-        dq.fdestroy(2, layout=dq.dense)[1].to_jax(),
-        dq.fdestroy(2, layout=dq.dia)[1].to_jax(),
-    )
+    # {a_j, a_k} = 0
+    a = dq.fdestroy(3, layout=layout)
+    for j in range(3):
+        for k in range(3):
+            assert jnp.allclose((a[j] @ a[k] + a[k] @ a[j]).to_jax(), 0)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
-def test_fcreate():
-    """Test the fermionic creation operator function."""
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_fcreate(layout):
     # check that no error is raised while tracing the function
-    _jit_static_layout(dq.fcreate, static_argnums=(0,)).trace(1, layout=dq.dense)
-    _jit_static_layout(dq.fcreate, static_argnums=(0, 1)).trace(2, layout=dq.dense)
-    _jit_static_layout(dq.fcreate, static_argnums=(0,)).trace(1, layout=dq.dia)
-    _jit_static_layout(dq.fcreate, static_argnums=(0, 1)).trace(2, layout=dq.dia)
+    _jit_static_layout(dq.fcreate, static_argnums=(0,)).trace(1, layout=layout)
+    _jit_static_layout(dq.fcreate, static_argnums=(0,)).trace(3, layout=layout)
 
-    # test operators dispatch
-    assert jnp.allclose(
-        dq.fcreate(2, layout=dq.dense)[0].to_jax(),
-        dq.fcreate(2, layout=dq.dia)[0].to_jax(),
-    )
-
-    assert jnp.allclose(
-        dq.fcreate(2, layout=dq.dense)[1].to_jax(),
-        dq.fcreate(2, layout=dq.dia)[1].to_jax(),
-    )
+    # {a_j, a_k^†} = δ_jk
+    a = dq.fdestroy(3, layout=layout)
+    adag = dq.fcreate(3, layout=layout)
+    for j in range(3):
+        for k in range(3):
+            anticommutator = (a[j] @ adag[k] + adag[k] @ a[j]).to_jax()
+            assert jnp.allclose(anticommutator, (j == k) * jnp.eye(8))
 
 
 @pytest.mark.run(order=TEST_INSTANT)
