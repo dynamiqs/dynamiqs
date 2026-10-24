@@ -10,7 +10,7 @@ from ...qarrays.layout import dense
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import MESteadyStateResult
-from ...time_qarray import TimeQArray
+from ...time_qarray import ConstantTimeQArray, TimeQArray, _unclipped
 from ...utils.operators import eye
 from .._utils import assert_method_supported, astimeqarray
 
@@ -43,21 +43,15 @@ def mesteadystate(
     operators. If the steady state is not unique, the one returned depends on the
     initial state `rho0` of the method.
 
-    Warning:
-        Time-dependent Hamiltonian and jump operators are accepted but not checked
-        for. A time-dependent Lindbladian has no steady state in general: the method
-        then stops at the first time where $\mathcal{L}(t)(\rho)$ is small, and the
-        default gradient [`dq.gradient.Implicit`][dynamiqs.gradient.Implicit] is
-        wrong.
-
     Args:
-        H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
-        jump_ops (list of qarray-like or timeqarray, each of shape (...Lk, n, n)):
+        H (qarray-like or constant timeqarray of shape (...H, n, n)): Hamiltonian.
+        jump_ops (list of qarray-like or constant timeqarray of shape (...Lk, n, n)):
             List of jump operators.
         rho0 (qarray-like of shape (...rho0, n, 1) or (...rho0, n, n), optional):
             Initial state of the method. Defaults to the maximally mixed state
-            $I/n$, which converges to the mixture of all steady states when the
-            steady state is not unique.
+            $I/n$, which converges to a mixture of the steady states, weighted by the
+            conserved quantities of the Lindbladian, when the steady state is not
+            unique.
         exp_ops (list of qarray-like, each of shape (n, n), optional): List of
             operators for which the expectation value is computed.
         method: Method to compute the steady state. Defaults to
@@ -187,7 +181,8 @@ def _mesteadystate(
     me_method = cast(DiffraxSteadyState, method).me_method
 
     # === check gradient is supported
-    if not isinstance(gradient, Implicit | None):
+    method.assert_supports_gradient(gradient)
+    if not isinstance(gradient, Implicit):
         me_method.assert_supports_gradient(gradient)
 
     # todo: evolve rho0 with `me_method` until the stopping criterion of the method
@@ -198,12 +193,14 @@ def _mesteadystate(
 def _check_mesteadystate_args(
     H: TimeQArray, Ls: list[TimeQArray], rho0: QArray, exp_ops: list[QArray] | None
 ):
-    # === check H shape
+    # === check H shape and time dependence
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
+    _check_time_independent(H, 'H')
 
-    # === check Ls shape
+    # === check Ls shape and time dependence
     for i, L in enumerate(Ls):
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
+        _check_time_independent(L, f'jump_ops[{i}]')
 
     # === check rho0 shape and layout
     check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'})
@@ -213,3 +210,13 @@ def _check_mesteadystate_args(
     if exp_ops is not None:
         for i, E in enumerate(exp_ops):
             check_shape(E, f'exp_ops[{i}]', '(n, n)')
+
+
+def _check_time_independent(x: TimeQArray, argname: str):
+    # a time-dependent Lindbladian has no steady state in general, and a clipped
+    # constant vanishes outside its time window
+    if not (isinstance(x, ConstantTimeQArray) and _unclipped(x)):
+        raise TypeError(
+            f'Argument `{argname}` must be time-independent, but is a time-dependent '
+            f'`{type(x).__name__}`.'
+        )
