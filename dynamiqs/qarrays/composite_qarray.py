@@ -18,7 +18,7 @@ from jax import Array, Device
 from jaxtyping import ArrayLike, PyTree
 from qutip import Qobj
 
-from .._utils import is_batched_scalar
+from .._utils import is_batched_scalar, obj_type_str
 from .dataarray import IndexType, in_last_two_dims, key_touches_last_two_dims
 from .dense_dataarray import DenseDataArray
 from .layout import Layout, dia
@@ -46,8 +46,8 @@ def get_composite(composite: bool | None = None) -> bool:
         return composite
     else:
         raise TypeError(
-            f'Argument `composite` must be `True`, `False` or `None`, but is'
-            f' `{composite}`.'
+            'Argument `composite` must be `True`, `False` or `None`, but has type'
+            f' {obj_type_str(composite)}.'
         )
 
 

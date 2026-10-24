@@ -286,13 +286,11 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
     y = asqarray(y)
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
-    # a composite operand is applied mode by mode, without building its full matrix
-    if isinstance(y, CompositeQArray):
-        x, y = y, x  # tr(xy) = tr(yx)
-    if isinstance(x, CompositeQArray):
-        # like the materialized product below, the `dims` of `y` are not checked
-        _y = y if isinstance(y, CompositeQArray) else y.to_jax()
-        return trace(x @ _y)
+    # the product of two composites stays lazy; a composite times a full matrix is
+    # slower than the full matrix of the composite, which also keeps its layout
+    if isinstance(x, CompositeQArray) and isinstance(y, CompositeQArray):
+        return trace(x @ y)
+    x, y = x._materialize(), y._materialize()
     # with one operand in sparse DIA format, only the diagonals of the other that meet
     # its diagonals are read (tr(xy) = tr(yx))
     x_data, y_data = getattr(x, 'data', None), getattr(y, 'data', None)
@@ -457,11 +455,11 @@ def tensor(*args: QArrayLike, composite: bool | None = None) -> QArray:
     """  # noqa: E501
     _args = [asqarray(arg) for arg in args]
     # the factors of a composite qarray are materialized operators
-    operators = all(
+    are_operators = all(
         isinstance(x, MaterializedQArray) and x.isop() and not x.vectorized
         for x in _args
     )
-    if get_composite(composite) and len(_args) > 1 and operators:
+    if get_composite(composite) and len(_args) > 1 and are_operators:
         # dense ⊗ dia is dense
         if len({x.layout for x in _args}) > 1:
             _args = [x.asdense() for x in _args]
@@ -512,6 +510,10 @@ def expect(O: QArrayLike, x: QArrayLike) -> Array:
         return jnp.stack([expect(_O, x) for _O in O])
 
     O = asqarray(O)
+    # `vmap` maps every leaf, so the factors of a composite qarray must carry its full
+    # batch shape
+    if isinstance(O, CompositeQArray):
+        O = O.broadcast_to(*O.shape)
     x = asqarray(x)
     check_shape(O, 'O', '(?, n, n)', subs={'?': 'nO?'})
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')

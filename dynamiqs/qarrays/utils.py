@@ -227,10 +227,7 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
     qarrays = [q._materialize() for q in qarrays]
 
     # stack inputs depending on data type
-    if all(
-        isinstance(q, MaterializedQArray) and isinstance(q.data, DenseDataArray)
-        for q in qarrays
-    ):
+    if all(isinstance(q.data, DenseDataArray) for q in qarrays):
         data = jnp.stack(
             [cast(DenseDataArray, q.data).data for q in qarrays], axis=axis
         )

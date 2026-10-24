@@ -4,6 +4,7 @@ from typing import Literal
 
 import jax
 
+from .._utils import obj_type_str
 from ..progress_meter import AbstractProgressMeter, NoProgressMeter, TqdmProgressMeter
 from ..qarrays.composite_qarray import set_global_composite
 from ..qarrays.layout import dense, dia, set_global_layout
@@ -159,6 +160,13 @@ def set_composite(composite: bool):
     returned by the state functions are always stored as full matrices, and the
     solvers convert a composite initial density matrix to a full matrix.
 
+    Composite qarrays pay off when the operators acting on each subsystem are dense:
+    [`dq.mesolve()`][dynamiqs.mesolve] then runs up to 10 times faster than with the
+    full dense matrix. On sparse operators, such as bosonic modes or qubit chains, the
+    full matrix in the `dq.dia` layout is faster. The full matrix is built anyway with
+    `vectorized=True`, the `Expm` method, [`dq.mepropagator()`][dynamiqs.mepropagator]
+    and the jump solvers.
+
     Note:
         The default upon importing dynamiqs is `False`.
 
@@ -177,7 +185,8 @@ def set_composite(composite: bool):
     """  # noqa: E501
     if not isinstance(composite, bool):
         raise TypeError(
-            f'Argument `composite` must be `True` or `False`, but is `{composite}`.'
+            'Argument `composite` must be `True` or `False`, but has type'
+            f' {obj_type_str(composite)}.'
         )
 
     set_global_composite(composite)

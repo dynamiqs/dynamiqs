@@ -1,5 +1,11 @@
 from ._system import System
-from .closed_system import dense_cavity, dia_cavity, tdqubit
+from .closed_system import (
+    dense_cavity,
+    dense_composite_cavity,
+    dia_cavity,
+    dia_composite_cavity,
+    tdqubit,
+)
 from .floquet_qubit import floquet_qubit
 from .open_system import (
     dense_composite_ocavity,

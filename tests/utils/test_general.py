@@ -153,6 +153,14 @@ def test_expect_composite_list(O, psi):
 
 
 @pytest.mark.run(order=TEST_INSTANT)
+def test_expect_composite_batched(O, psi):
+    # the coefficient is batched, the factors are not
+    omegas = jnp.array([1.0, 2.0])[:, None, None]
+    expected = dq.expect(omegas * O._materialize(), psi)
+    assert jnp.allclose(dq.expect(omegas * O, psi), expected)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
 def test_expect(a, x, y):
     # check that no error is raised while tracing the function
     jax.jit(dq.expect).trace(x, a)
