@@ -16,9 +16,6 @@ from ...method import (
     Kvaerno3,
     Kvaerno5,
     Method,
-    Rouchon1,
-    Rouchon2,
-    Rouchon3,
     Tsit5,
 )
 from ...options import Options, check_options
@@ -43,11 +40,6 @@ from ..core.diffrax_integrator import (
     mesolve_kvaerno3_integrator_constructor,
     mesolve_kvaerno5_integrator_constructor,
     mesolve_tsit5_integrator_constructor,
-)
-from ..core.rouchon_integrator import (
-    mesolve_rouchon1_integrator_constructor,
-    mesolve_rouchon2_integrator_constructor,
-    mesolve_rouchon3_integrator_constructor,
 )
 from ..core.steadystate_integrator import MESteadyStateIntegrator
 
@@ -274,7 +266,8 @@ def _mesteadystate(
 ) -> MESteadyStateResult:
     # === check method is supported
     assert_method_supported(method, [DiffraxSteadyState])
-    me_method = cast(DiffraxSteadyState, method).me_method
+    method = cast(DiffraxSteadyState, method)
+    me_method = method.me_method
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -284,9 +277,6 @@ def _mesteadystate(
     # === select integrator constructor
     integrator_constructors = {
         Euler: mesolve_euler_integrator_constructor,
-        Rouchon1: mesolve_rouchon1_integrator_constructor,
-        Rouchon2: mesolve_rouchon2_integrator_constructor,
-        Rouchon3: mesolve_rouchon3_integrator_constructor,
         Dopri5: mesolve_dopri5_integrator_constructor,
         Dopri8: mesolve_dopri8_integrator_constructor,
         Tsit5: mesolve_tsit5_integrator_constructor,
@@ -310,7 +300,7 @@ def _mesteadystate(
     )
     steadystate_integrator = MESteadyStateIntegrator(
         integrator=integrator,
-        method=cast(DiffraxSteadyState, method),
+        method=method,
         gradient=gradient,
         options=options,
         Es=exp_ops,

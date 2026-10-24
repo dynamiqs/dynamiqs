@@ -26,6 +26,7 @@ TIGHT_METHOD = DiffraxSteadyState(Kvaerno5(max_steps=MAX_STEPS), rtol=1e-6, atol
         (dia_thermal_cavity, Kvaerno5(max_steps=MAX_STEPS)),
         (dense_thermal_cavity, Tsit5(max_steps=MAX_STEPS)),
     ],
+    ids=['dense-kvaerno5', 'dia-kvaerno5', 'dense-tsit5'],
 )
 def test_correctness(system, me_method):
     result = system.run(DiffraxSteadyState(me_method))
@@ -43,6 +44,12 @@ def test_correctness(system, me_method):
         (dia_thermal_cavity, METHOD, Implicit(), jax.jacrev),
         (dense_thermal_cavity, METHOD, Implicit(), jax.jacfwd),
         (dense_thermal_cavity, TIGHT_METHOD, BackwardCheckpointed(), jax.jacrev),
+    ],
+    ids=[
+        'dense-implicit-rev',
+        'dia-implicit-rev',
+        'dense-implicit-fwd',
+        'dense-checkpointed-rev',
     ],
 )
 def test_gradient(system, method, gradient, jax_jac):

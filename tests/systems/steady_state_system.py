@@ -10,7 +10,7 @@ from jaxtyping import PyTree
 import dynamiqs as dq
 from dynamiqs import QArray
 from dynamiqs.gradient import Gradient
-from dynamiqs.method import DiffraxSteadyState, Kvaerno5, Method
+from dynamiqs.method import Method
 from dynamiqs.qarrays.layout import Layout
 from dynamiqs.result import MESteadyStateResult
 
@@ -60,8 +60,7 @@ class DrivenThermalCavity:
 
     def run(
         self,
-        # few steps, so that a stop that never fires fails fast
-        method: Method = DiffraxSteadyState(Kvaerno5(max_steps=1000)),  # noqa: B008
+        method: Method,
         *,
         gradient: Gradient | None = None,
         params: PyTree | None = None,

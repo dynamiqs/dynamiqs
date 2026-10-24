@@ -788,6 +788,12 @@ class DiffraxSteadyState(_DEMethod):
     time: scaling $H$ and all $L_k$ by $s$ leaves the steady state unchanged but
     multiplies $\mathcal{L}(\rho)$ by $s$.
 
+    Warning:
+        The error on the returned state is about the stopping tolerance divided by
+        the slowest relaxation rate of the system. Scale `rtol` and `atol` with this
+        rate: the defaults suit rates of order one, and on a system 1000 times slower
+        they stop on a state whose expectation values are off by tens of percent.
+
     Args:
         me_method: Method for the time integration. Defaults to
             [`dq.method.Kvaerno5`][dynamiqs.method.Kvaerno5] (supported:

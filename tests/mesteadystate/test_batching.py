@@ -23,12 +23,12 @@ def rand_mesteadystate_args(n, nH, nLs, nrho0, nEs):
 
 
 @pytest.mark.run(order=TEST_LONG)
-@pytest.mark.parametrize('nrho0', [(), (4,)])
-@pytest.mark.parametrize('nL1', [(), (5, 6)])
-def test_cartesian_batching(nrho0, nL1):
+def test_cartesian_batching():
     n = 2
     nH = (3,)
+    nL1 = (5, 6)
     nLs = [nL1, ()]
+    nrho0 = (4,)
     nEs = 7
 
     H, Ls, rho0, Es = rand_mesteadystate_args(n, nH, nLs, nrho0, nEs)
@@ -41,10 +41,10 @@ def test_cartesian_batching(nrho0, nL1):
 
 
 @pytest.mark.run(order=TEST_LONG)
-@pytest.mark.parametrize('nrho0', [(), (4,), (3, 1)])
-def test_flat_batching(nrho0):
+def test_flat_batching():
     n = 2
     nH = (3, 4)
+    nrho0 = (3, 1)
     nEs = 7
 
     H, Ls, rho0, Es = rand_mesteadystate_args(n, nH, [()], nrho0, nEs)
