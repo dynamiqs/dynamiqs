@@ -96,3 +96,22 @@ def test_gradient_wrt_discontinuity_time_with_progress_meter(progress_meter):
     assert jnp.allclose(
         jax.jacfwd(lambda tau: population(tau, progress_meter))(0.37), expected
     )
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_discontinuity_at_last_save_time():
+    # the drive jumps to zero at the last save time: the solve saves there, with no
+    # more steps than for a drive that continues past it
+    def solve_tight(times, values):
+        H = dq.pwc(jnp.asarray(times), jnp.asarray(values), dq.sigmax())
+        method = Tsit5(rtol=1e-9, atol=1e-9)
+        return dq.sesolve(H, dq.fock(2, 0), tsave, method=method, progress_meter=False)
+
+    tsave = jnp.linspace(0.0, 3.0, 11)
+    ending = solve_tight([0.0, 1.5, 3.0], [1.6, -1.1])
+    continuing = solve_tight([0.0, 1.5, 3.0, 4.0], [1.6, -1.1, -1.1])
+
+    theta = jnp.where(tsave < 1.5, 1.6 * tsave, 2.4 - 1.1 * (tsave - 1.5))
+    expected = jnp.stack([jnp.cos(theta), -1j * jnp.sin(theta)], axis=-1)[..., None]
+    assert jnp.allclose(ending.states.to_jax(), expected, atol=1e-5)
+    assert ending.infos.nsteps <= continuing.infos.nsteps

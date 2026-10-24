@@ -9,6 +9,7 @@ from typing import cast
 
 import diffrax as dx
 import equinox as eqx
+import equinox.internal as eqxi
 import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
@@ -244,6 +245,21 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                 )
                 stepsize_controller = eqx.tree_at(
                     get_dtmax, stepsize_controller, dtmax, is_leaf=lambda x: x is None
+                )
+
+            # === end the solve just before a jump time at t1
+            # Diffrax ends each step just before a jump time, but moves a step ending
+            # within 100 ULP of t1 to t1, where the vector field takes its value after
+            # the jump. The controller then rejects the last steps until they are a
+            # few ULP long, and in single precision it can step over t1 without saving
+            # there. An event solve is left as is: its caller compares its end with t1.
+            if not self.fixed_step and event is None and self.discontinuity_ts.size > 0:
+                jump_at_t1 = jnp.any(self.discontinuity_ts == t1) & (t1 > t0)
+                t1 = jnp.where(jump_at_t1, eqxi.prevbefore(t1), t1)
+                saveat = eqx.tree_at(
+                    lambda s: [sub.ts for sub in s.subs if sub.ts is not None],
+                    saveat,
+                    replace_fn=lambda ts: jnp.minimum(ts, t1),
                 )
 
             # === jit the vector field: Diffrax and the unrolled solvers evaluate it
