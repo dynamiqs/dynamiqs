@@ -139,9 +139,9 @@ def eye_like(
     """
     xdims = get_dims(x)
     _layout = layout or getattr(x, 'layout', None)
-    # todo: we should rather use a _get_shape util that never converts to a jax array
-    x = to_jax(x)
-    dims = init_dims(xdims, dims, x.shape)
+    # a qarray gives its shape without being converted, which would materialize it
+    shape = x.shape if isinstance(x, QArray) else to_jax(x).shape
+    dims = init_dims(xdims, dims, shape)
     return eye(*dims, layout=_layout)
 
 
@@ -237,9 +237,9 @@ def zeros_like(
     """
     xdims = get_dims(x)
     _layout = layout or getattr(x, 'layout', None)
-    # todo: we should rather use a _get_shape util that never converts to a jax array
-    x = to_jax(x)
-    dims = init_dims(xdims, dims, x.shape)
+    # a qarray gives its shape without being converted, which would materialize it
+    shape = x.shape if isinstance(x, QArray) else to_jax(x).shape
+    dims = init_dims(xdims, dims, shape)
     return zeros(*dims, layout=_layout)
 
 

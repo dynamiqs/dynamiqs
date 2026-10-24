@@ -272,7 +272,8 @@ def mesolve(
     # === convert arguments
     H = astimeqarray(H, 'H')
     Ls = [astimeqarray(L, 'jump_ops') for L in jump_ops]
-    rho0 = asqarray(rho0)
+    # the state fills its full matrix after one step, so it is never kept composite
+    rho0 = asqarray(rho0)._materialize()
     tsave = jnp.asarray(tsave)
 
     _exp_ops = None

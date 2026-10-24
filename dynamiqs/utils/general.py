@@ -9,6 +9,7 @@ import numpy as np
 from jax import Array
 
 from .._checks import check_hermitian, check_shape
+from ..qarrays.composite_qarray import CompositeQArray, CompositeTerm, get_composite
 from ..qarrays.dense_dataarray import DenseDataArray
 from ..qarrays.materialized_qarray import MaterializedQArray
 from ..qarrays.qarray import QArray, QArrayLike, get_dims
@@ -285,6 +286,13 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
     y = asqarray(y)
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
+    # a composite operand is applied mode by mode, without building its full matrix
+    if isinstance(y, CompositeQArray):
+        x, y = y, x  # tr(xy) = tr(yx)
+    if isinstance(x, CompositeQArray):
+        # like the materialized product below, the `dims` of `y` are not checked
+        _y = y if isinstance(y, CompositeQArray) else y.to_jax()
+        return trace(x @ _y)
     # with one operand in sparse DIA format, only the diagonals of the other that meet
     # its diagonals are read (tr(xy) = tr(yx))
     x_data, y_data = getattr(x, 'data', None), getattr(y, 'data', None)
@@ -409,7 +417,7 @@ def ptrace(
     return asqarray(x, dims=new_dims)
 
 
-def tensor(*args: QArrayLike) -> QArray:
+def tensor(*args: QArrayLike, composite: bool | None = None) -> QArray:
     r"""Returns the tensor product of multiple kets, bras, density matrices or
     operators.
 
@@ -422,9 +430,17 @@ def tensor(*args: QArrayLike) -> QArray:
     - $(..., n, n)$ with $n=\prod_k n_k$ if all input qarrays are density matrices or
       operators with shape $(..., n_k, n_k)$.
 
+    If `composite` is `True`, the tensor product of operators is stored as its factors
+    $A_1\otimes\dots\otimes A_N$, and the $n\times n$ matrix is never built. Such a
+    composite qarray behaves exactly like the full matrix, and the solvers apply it to
+    a state mode by mode. Kets and bras are always stored as full vectors.
+
     Args:
         *args (qarray-like of shape (..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k)):
             Variable length argument list of kets, bras, density matrices or operators.
+        composite: Whether to store a tensor product of operators as its factors
+            (`True`, `False` or `None`). If `None`, uses the default set by
+            [`dq.set_composite()`][dynamiqs.set_composite].
 
     Returns:
         (qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Tensor product of
@@ -434,8 +450,24 @@ def tensor(*args: QArrayLike) -> QArray:
         >>> psi = dq.tensor(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
         >>> psi.shape
         (60, 1)
-    """
+        >>> H = dq.tensor(dq.number(3), dq.number(4), composite=True)
+        >>> H
+        CompositeQArray: shape=(12, 12), dims=(3, 4), dtype=complex64, layout=dia, n_terms=1
+          term[0]: coeff=1.0, op_dims=((3,), (4,))
+    """  # noqa: E501
     _args = [asqarray(arg) for arg in args]
+    # the factors of a composite qarray are materialized operators
+    operators = all(
+        isinstance(x, MaterializedQArray) and x.isop() and not x.vectorized
+        for x in _args
+    )
+    if get_composite(composite) and len(_args) > 1 and operators:
+        # dense ⊗ dia is dense
+        if len({x.layout for x in _args}) > 1:
+            _args = [x.asdense() for x in _args]
+        dims = tuple(d for x in _args for d in x.dims)
+        term = CompositeTerm(cast(tuple[MaterializedQArray, ...], tuple(_args)))
+        return CompositeQArray(dims=dims, terms=(term,))
     return reduce(lambda x, y: x & y, _args)  # TODO: (guilmin) use jax.lax.reduce
 
 
@@ -475,6 +507,10 @@ def expect(O: QArrayLike, x: QArrayLike) -> Array:
         >>> dq.expect(Os, psis).shape
         (2, 5)
     """
+    # stacking a list with composite operators would materialize them
+    if isinstance(O, list | tuple) and any(isinstance(_O, CompositeQArray) for _O in O):
+        return jnp.stack([expect(_O, x) for _O in O])
+
     O = asqarray(O)
     x = asqarray(x)
     check_shape(O, 'O', '(?, n, n)', subs={'?': 'nO?'})

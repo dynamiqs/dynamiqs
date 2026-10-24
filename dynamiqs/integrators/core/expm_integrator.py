@@ -160,7 +160,8 @@ class SEExpmIntegrator(ExpmIntegrator, SEInterface):
             )
 
     def generator(self, t: RealScalarLike) -> QArray:
-        return -1j * self.H(t)  # (n, n)
+        # materialized, as its exponential is
+        return (-1j * self.H(t))._materialize()  # (n, n)
 
 
 class SESolveExpmIntegrator(SEExpmIntegrator, SolveSaveMixin, SolveInterface):

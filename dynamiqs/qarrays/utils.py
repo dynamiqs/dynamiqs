@@ -223,26 +223,27 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
     if not all(qarray.shape == qarrays[0].shape for qarray in qarrays):
         raise ValueError('All input qarrays must have the same shape.')
 
+    # composite qarrays are stacked as full matrices, since their terms differ
+    qarrays = [q._materialize() for q in qarrays]
+
     # stack inputs depending on data type
     if all(
         isinstance(q, MaterializedQArray) and isinstance(q.data, DenseDataArray)
         for q in qarrays
     ):
-        _qarrays = cast(list[MaterializedQArray], qarrays)
         data = jnp.stack(
-            [cast(DenseDataArray, q.data).data for q in _qarrays], axis=axis
+            [cast(DenseDataArray, q.data).data for q in qarrays], axis=axis
         )
-        return MaterializedQArray(dims, _qarrays[0].vectorized, DenseDataArray(data))
+        return MaterializedQArray(dims, qarrays[0].vectorized, DenseDataArray(data))
 
     elif all(map(_is_sparsedia, qarrays)):
-        _qarrays = cast(list[MaterializedQArray], qarrays)
         offsets, diags = stack_sparsedia(
-            [cast(SparseDIADataArray, q.data).offsets for q in _qarrays],
-            [cast(SparseDIADataArray, q.data).diags for q in _qarrays],
+            [cast(SparseDIADataArray, q.data).offsets for q in qarrays],
+            [cast(SparseDIADataArray, q.data).diags for q in qarrays],
             axis=axis,
         )
         data = SparseDIADataArray(offsets, diags)
-        return MaterializedQArray(dims, _qarrays[0].vectorized, data)
+        return MaterializedQArray(dims, qarrays[0].vectorized, data)
     else:
         raise NotImplementedError(
             'Stacking qarrays with different data types is not implemented.'

@@ -31,6 +31,25 @@ __all__ = []
 # sparse diagonal offsets of each operator of a term, `None` to find them from data
 _TermOffsets = tuple[tuple[int, ...] | None, ...]
 
+_DEFAULT_COMPOSITE = False
+
+
+def set_global_composite(composite: bool):
+    global _DEFAULT_COMPOSITE  # noqa: PLW0603
+    _DEFAULT_COMPOSITE = composite
+
+
+def get_composite(composite: bool | None = None) -> bool:
+    if composite is None:
+        return _DEFAULT_COMPOSITE
+    elif isinstance(composite, bool):
+        return composite
+    else:
+        raise TypeError(
+            f'Argument `composite` must be `True`, `False` or `None`, but is'
+            f' `{composite}`.'
+        )
+
 
 def _devices(x: PyTree) -> set[Device]:
     # devices of every array leaf; tracers are skipped since they have no device

@@ -42,3 +42,19 @@ class TestSESolveExpm(IntegratorTester):
             jax.scipy.linalg.expm(-1j * phi * H0) @ psi0.to_jax() for phi in phis
         ]
         assert jnp.allclose(result.states.to_jax(), jnp.stack(expected), atol=1e-12)
+
+    def test_composite_hamiltonian(self):
+        # two cavities of detunings delta and 2 delta: psi(t) is the product of the
+        # coherent states of amplitudes alpha0 e^(-i delta t) and alpha0 e^(-2i delta t)
+        n, delta, alpha0, t = 8, 1.0, 0.5, 0.3
+        N, I = dq.number(n), dq.eye(n)
+        H_a = dq.tensor(N, I, composite=True)
+        H_b = dq.tensor(I, 2 * N, composite=True)
+        H = delta * (H_a + H_b)
+        psi0 = dq.tensor(dq.coherent(n, alpha0), dq.coherent(n, alpha0))
+        result = dq.sesolve(H, psi0, [0.0, t], method=Expm())
+
+        alpha_a = alpha0 * jnp.exp(-1j * delta * t)
+        alpha_b = alpha0 * jnp.exp(-2j * delta * t)
+        expected = dq.tensor(dq.coherent(n, alpha_a), dq.coherent(n, alpha_b))
+        assert jnp.allclose(result.states[-1].to_jax(), expected.to_jax(), atol=1e-6)
