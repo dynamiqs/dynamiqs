@@ -252,12 +252,13 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             # within 100 ULP of t1 to t1, past a jump there. The controller then
             # rejects the last steps until they are a few ULP long: the solve can reach
             # `max_steps`, or in single precision step over t1 without saving there.
-            # Ending before the jump leaves out at most 100 ULP of time, and keeps the
-            # derivative with respect to t1. An event solve is left as is: its caller
-            # compares its end with t1.
+            # Ending before the jump leaves out at most about 100 ULP of time, and
+            # keeps the derivative with respect to t1. An event solve is left as is:
+            # its caller compares its end with t1.
             if not self.fixed_step and event is None and self.discontinuity_ts.size > 0:
                 jump_ts, t1_value = self.discontinuity_ts, jax.lax.stop_gradient(t1)
-                window_start = jnp.maximum(t1_value - 100 * jnp.spacing(t1_value), t0)
+                ulp = jnp.abs(jnp.spacing(t1_value))
+                window_start = jnp.maximum(t1_value - 100 * ulp, t0)
                 in_window = (jump_ts > window_start) & (jump_ts <= t1_value)
                 end = eqxi.prevbefore(jnp.min(jnp.where(in_window, jump_ts, t1_value)))
                 t1 = jnp.where(

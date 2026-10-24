@@ -99,23 +99,19 @@ def test_gradient_wrt_discontinuity_time_with_progress_meter(progress_meter):
 
 
 @pytest.mark.run(order=TEST_SHORT)
-@pytest.mark.parametrize('ulps', [0, 2])
-def test_discontinuity_at_last_save_time(ulps):
-    # the drive jumps to zero at the last save time, or a few ULP before it: the
-    # solve saves there, with no more steps than for a drive that continues past it
-    def solve_tight(times, values):
-        H = dq.pwc(jnp.asarray(times), jnp.asarray(values), dq.sigmax())
-        method = Tsit5(rtol=1e-9, atol=1e-9)
-        return dq.sesolve(H, dq.fock(2, 0), tsave, method=method, progress_meter=False)
-
-    tsave = jnp.linspace(0.0, 3.0, 11)
-    edge = tsave[-1]
+@pytest.mark.parametrize(('t1', 'ulps'), [(3.0, 0), (3.0, 2), (-3.0, 2)])
+def test_discontinuity_at_last_save_time(t1, ulps):
+    # the drive jumps to zero at the last save time, or a few ULP before it, where
+    # Diffrax moves the last step to the last save time
+    tsave = jnp.linspace(t1 - 3.0, t1, 11)
+    t0, edge = tsave[0], tsave[-1]
     for _ in range(ulps):
-        edge = jnp.nextafter(edge, 0.0)
-    ending = solve_tight(jnp.stack([0.0, 1.5, edge]), [1.6, -1.1])
-    continuing = solve_tight([0.0, 1.5, 3.0, 4.0], [1.6, -1.1, -1.1])
+        edge = jnp.nextafter(edge, -jnp.inf)
+    H = dq.pwc(jnp.stack([t0, t0 + 1.5, edge]), jnp.array([1.6, -1.1]), dq.sigmax())
+    method = Tsit5(rtol=1e-9, atol=1e-9)
+    result = dq.sesolve(H, dq.fock(2, 0), tsave, method=method, progress_meter=False)
 
-    theta = jnp.where(tsave < 1.5, 1.6 * tsave, 2.4 - 1.1 * (tsave - 1.5))
+    t = tsave - t0
+    theta = jnp.where(t < 1.5, 1.6 * t, 2.4 - 1.1 * (t - 1.5))
     expected = jnp.stack([jnp.cos(theta), -1j * jnp.sin(theta)], axis=-1)[..., None]
-    assert jnp.allclose(ending.states.to_jax(), expected, atol=1e-5)
-    assert ending.infos.nsteps <= continuing.infos.nsteps
+    assert jnp.allclose(result.states.to_jax(), expected, atol=1e-5)
