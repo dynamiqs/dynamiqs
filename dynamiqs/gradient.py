@@ -168,11 +168,11 @@ class Implicit(Gradient):
         supported.
 
     Warning:
-        The gradient is only valid for a unique steady state and constant Hamiltonian
-        and jump operators. The linear system is solved by dense LU decomposition of
-        an $n^2\times n^2$ matrix, which scales as $\mathcal{O}(n^6)$. Otherwise,
-        use a gradient supported by the time integration method instead, e.g.
+        The gradient is only valid for a unique steady state. Otherwise, use a
+        gradient supported by the time integration method, e.g.
         [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed].
+        The linear system is solved by dense LU decomposition of an $n^2\times n^2$
+        matrix, which scales as $\mathcal{O}(n^6)$.
     """
 
     # dummy init to have the signature in the documentation

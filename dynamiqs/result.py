@@ -74,8 +74,7 @@ class PropagatorSaved(Saved):
     pass
 
 
-class SteadyStateSaved(Saved):
-    Esave: Array | None
+class SteadyStateSaved(SolveSaved):
     residual: Array
 
 

@@ -784,12 +784,9 @@ class DiffraxSteadyState(_DEMethod):
     $$
     where $\mathrm{rms}$ is the root mean square of the matrix elements. This
     stopping criterion is independent of the step size control of `me_method`.
-
-    Warning:
-        For a fixed step size method, the time integration converges to a fixed
-        point of the discretized scheme, which differs from the steady state by an
-        error of the method order in `dt`. If this error is larger than the stopping
-        tolerances, the steady state is never reached.
+    $\mathcal{L}(\rho)$ is a rate, so `rtol` and `atol` are in units of inverse
+    time: scaling $H$ and all $L_k$ by $s$ leaves the steady state unchanged but
+    multiplies $\mathcal{L}(\rho)$ by $s$.
 
     Args:
         me_method: Method for the time integration. Defaults to
@@ -797,14 +794,13 @@ class DiffraxSteadyState(_DEMethod):
             [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
             [`Dopri8`][dynamiqs.method.Dopri8],
             [`Kvaerno3`][dynamiqs.method.Kvaerno3],
-            [`Kvaerno5`][dynamiqs.method.Kvaerno5],
-            [`Euler`][dynamiqs.method.Euler],
-            [`Rouchon1`][dynamiqs.method.Rouchon1],
-            [`Rouchon2`][dynamiqs.method.Rouchon2],
-            [`Rouchon3`][dynamiqs.method.Rouchon3]). Its maximum number of steps
-            bounds the time integration.
-        rtol: Relative tolerance of the stopping criterion. Defaults to `1e-5`.
-        atol: Absolute tolerance of the stopping criterion. Defaults to `1e-5`.
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5] and
+            [`Euler`][dynamiqs.method.Euler]). Its maximum number of steps bounds
+            the time integration.
+        rtol: Relative tolerance of the stopping criterion, in units of inverse
+            time. Defaults to `1e-5`.
+        atol: Absolute tolerance of the stopping criterion, in units of inverse
+            time. Defaults to `1e-5`.
 
     Note-: Supported gradients
         This method supports differentiation with
@@ -837,17 +833,9 @@ class DiffraxSteadyState(_DEMethod):
         self.rtol = rtol
         self.atol = atol
 
-        supported = (
-            Tsit5,
-            Dopri5,
-            Dopri8,
-            Kvaerno3,
-            Kvaerno5,
-            Euler,
-            Rouchon1,
-            Rouchon2,
-            Rouchon3,
-        )
+        # the fixed points of the Rouchon schemes differ from the steady state by
+        # O(dt^order), which exceeds the default tolerances even with adaptive steps
+        supported = (Tsit5, Dopri5, Dopri8, Kvaerno3, Kvaerno5, Euler)
         if not isinstance(self.me_method, supported):
             supported_str = ', '.join(f'`{x.__name__}`' for x in supported)
             raise TypeError(
