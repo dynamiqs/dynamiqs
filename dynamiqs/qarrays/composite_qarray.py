@@ -18,7 +18,7 @@ from jax import Array, Device
 from jaxtyping import ArrayLike, PyTree
 from qutip import Qobj
 
-from .._utils import is_batched_scalar
+from .._utils import is_batched_scalar, obj_type_str
 from .dataarray import IndexType, in_last_two_dims, key_touches_last_two_dims
 from .dense_dataarray import DenseDataArray
 from .layout import Layout, dia
@@ -30,6 +30,25 @@ __all__ = []
 
 # sparse diagonal offsets of each operator of a term, `None` to find them from data
 _TermOffsets = tuple[tuple[int, ...] | None, ...]
+
+_DEFAULT_COMPOSITE = False
+
+
+def set_global_composite(composite: bool):
+    global _DEFAULT_COMPOSITE  # noqa: PLW0603
+    _DEFAULT_COMPOSITE = composite
+
+
+def get_composite(composite: bool | None = None) -> bool:
+    if composite is None:
+        return _DEFAULT_COMPOSITE
+    elif isinstance(composite, bool):
+        return composite
+    else:
+        raise TypeError(
+            'Argument `composite` must be `True`, `False` or `None`, but has type'
+            f' {obj_type_str(composite)}.'
+        )
 
 
 def _devices(x: PyTree) -> set[Device]:

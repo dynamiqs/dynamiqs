@@ -16,6 +16,7 @@ from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 from ._checks import check_shape, check_times
 from ._utils import cdtype, concatenate_sort, obj_type_str
+from .qarrays.composite_qarray import CompositeQArray
 from .qarrays.layout import Layout, dia, promote_layouts
 from .qarrays.qarray import QArray, QArrayLike, isqarraylike
 from .qarrays.utils import asqarray
@@ -509,6 +510,10 @@ class ConstantTimeQArray(TimeQArray):
         self, qarray: QArray, *, tstart: float | None = None, tend: float | None = None
     ):
         super().__init__(tstart=tstart, tend=tend)
+        # `in_axes` maps every leaf, so the factors of a composite qarray must carry
+        # its full batch shape
+        if isinstance(qarray, CompositeQArray):
+            qarray = qarray.broadcast_to(*qarray.shape)
         self.qarray = qarray
 
     @property

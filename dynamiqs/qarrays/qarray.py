@@ -4,7 +4,16 @@ from abc import abstractmethod
 from collections.abc import Sequence
 from math import prod
 from numbers import Complex
-from typing import Any, TypeAlias, TypeGuard, Union, cast, get_args, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    TypeAlias,
+    TypeGuard,
+    Union,
+    cast,
+    get_args,
+    overload,
+)
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -17,6 +26,9 @@ from qutip import Qobj
 from .._utils import is_batched_scalar
 from .dataarray import IndexType
 from .layout import Layout
+
+if TYPE_CHECKING:
+    from .materialized_qarray import MaterializedQArray
 
 __all__ = ['QArray']
 
@@ -236,6 +248,13 @@ class QArray(eqx.Module):
             raise TypeError(
                 f'Argument `dims` must be a tuple of ints, but is {self.dims}.'
             )
+
+    # === Materialization ===
+
+    @abstractmethod
+    def _materialize(self) -> MaterializedQArray:
+        # the same qarray stored as one full matrix
+        pass
 
     # === Properties delegated to DataArray ===
 

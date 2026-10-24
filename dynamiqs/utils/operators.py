@@ -11,7 +11,7 @@ from ..qarrays.layout import Layout, dense, get_layout
 from ..qarrays.materialized_qarray import MaterializedQArray
 from ..qarrays.qarray import QArray, QArrayLike, get_dims
 from ..qarrays.sparsedia_dataarray import SparseDIADataArray
-from ..qarrays.utils import asqarray, init_dims, sparsedia_from_dict, stack, to_jax
+from ..qarrays.utils import asqarray, init_dims, sparsedia_from_dict, stack
 from .general import tensor
 
 __all__ = [
@@ -139,9 +139,7 @@ def eye_like(
     """
     xdims = get_dims(x)
     _layout = layout or getattr(x, 'layout', None)
-    # todo: we should rather use a _get_shape util that never converts to a jax array
-    x = to_jax(x)
-    dims = init_dims(xdims, dims, x.shape)
+    dims = init_dims(xdims, dims, asqarray(x).shape)
     return eye(*dims, layout=_layout)
 
 
@@ -237,9 +235,7 @@ def zeros_like(
     """
     xdims = get_dims(x)
     _layout = layout or getattr(x, 'layout', None)
-    # todo: we should rather use a _get_shape util that never converts to a jax array
-    x = to_jax(x)
-    dims = init_dims(xdims, dims, x.shape)
+    dims = init_dims(xdims, dims, asqarray(x).shape)
     return zeros(*dims, layout=_layout)
 
 

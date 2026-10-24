@@ -9,13 +9,14 @@ from dynamiqs.method import Expm
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
-from ..systems import dense_cavity
+from ..systems import dense_cavity, dense_composite_cavity
 
 
 @pytest.mark.run(order=TEST_LONG)
 class TestSESolveExpm(IntegratorTester):
-    def test_correctness(self):
-        self._test_correctness(dense_cavity, Expm())
+    @pytest.mark.parametrize('system', [dense_cavity, dense_composite_cavity])
+    def test_correctness(self, system):
+        self._test_correctness(system, Expm())
 
     def test_gradient(self):
         self._test_gradient(dense_cavity, Expm(), Direct())

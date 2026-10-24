@@ -466,7 +466,7 @@ def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> QArray:
     # compute all density matrices
     def _thermal_dm(nth: Array) -> QArray:
         dms = [_single_thermal_dm(int(d), n) for d, n in zip(_dim, nth, strict=True)]
-        return tensor(*dms)
+        return tensor(*dms, composite=False)
 
     _vectorized_thermal_dm = jnp.vectorize(
         _thermal_dm, signature='(ndim)->(prod_ndim,prod_ndim)'

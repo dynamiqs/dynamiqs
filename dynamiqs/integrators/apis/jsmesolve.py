@@ -281,7 +281,8 @@ def jsmesolve(
     Ls = [astimeqarray(L, 'jump_ops') for L in jump_ops]
     thetas = jnp.asarray(thetas)
     etas = np.asarray(etas)
-    rho0 = asqarray(rho0)
+    # the state fills its full matrix after one step, so it is never kept composite
+    rho0 = asqarray(rho0)._materialize()
     keys = jnp.asarray(keys)
 
     _exp_ops = None
