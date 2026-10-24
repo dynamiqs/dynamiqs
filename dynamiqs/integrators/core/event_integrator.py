@@ -128,10 +128,13 @@ class JSSESolveEventIntegrator(
         assert solution.ts is not None
         new_saved = solution.ys[0]
         psiclick, tclick = solution.ys[1][0], solution.ts[1][0]
-
-        y = replace(y, psi=psiclick, t=tclick)
         click_occurred = solution.event_mask
         assert click_occurred is not None
+
+        # without a click, the trajectory has reached the final time, even if the
+        # solve stopped just before a jump in its last ULPs
+        t = jnp.where(click_occurred, tclick, self.t1)
+        y = replace(y, psi=psiclick, t=t)
 
         # === save intermediate states, expectation values and extras
         save_cond = lambda y: (

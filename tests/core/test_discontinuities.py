@@ -1,9 +1,11 @@
 import jax
 import jax.numpy as jnp
+import jax.tree_util as jtu
+import optimistix as optx
 import pytest
 
 import dynamiqs as dq
-from dynamiqs.method import Tsit5
+from dynamiqs.method import Event, Tsit5
 
 from ..order import TEST_SHORT
 
@@ -100,7 +102,8 @@ def test_gradient_wrt_discontinuity_time_with_progress_meter(progress_meter):
 
 @pytest.mark.run(order=TEST_SHORT)
 @pytest.mark.parametrize(('t1', 'ulps'), [(3.0, 0), (3.0, 2), (-3.0, 2)])
-def test_discontinuity_at_last_save_time(t1, ulps):
+@pytest.mark.parametrize('with_clicks', [False, True])
+def test_discontinuity_at_last_save_time(t1, ulps, with_clicks):
     # the drive drops to zero exactly at the last save time, or 2 ULP before it:
     # the last saved state must still be the exact one
     tsave = jnp.linspace(t1 - 3.0, t1, 11)
@@ -108,8 +111,17 @@ def test_discontinuity_at_last_save_time(t1, ulps):
     for _ in range(ulps):
         edge = jnp.nextafter(edge, -jnp.inf)
     H = dq.pwc(jnp.stack([t0, t0 + 1.5, edge]), jnp.array([1.6, -1.1]), dq.sigmax())
-    method = Tsit5(rtol=1e-9, atol=1e-9)
-    result = dq.sesolve(H, dq.fock(2, 0), tsave, method=method, progress_meter=False)
+    psi0, method = dq.fock(2, 0), Tsit5(rtol=1e-9, atol=1e-9)
+    if with_clicks:
+        # jump trajectories with a jump operator proportional to the identity: the
+        # clicks leave the state unchanged
+        jump_ops = [jnp.sqrt(0.5) * dq.eye(2)]
+        keys = jax.random.split(jax.random.key(42), 4)
+        root_finder = optx.Newton(1e-4, 1e-4, jtu.Partial(optx.rms_norm))
+        method = Event(noclick_method=method, root_finder=root_finder)
+        result = dq.jssesolve(H, jump_ops, psi0, tsave, keys, method=method)
+    else:
+        result = dq.sesolve(H, psi0, tsave, method=method, progress_meter=False)
 
     t = tsave - t0
     theta = jnp.where(t < 1.5, 1.6 * t, 2.4 - 1.1 * (t - 1.5))
