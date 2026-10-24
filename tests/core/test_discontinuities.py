@@ -101,8 +101,8 @@ def test_gradient_wrt_discontinuity_time_with_progress_meter(progress_meter):
 @pytest.mark.run(order=TEST_SHORT)
 @pytest.mark.parametrize(('t1', 'ulps'), [(3.0, 0), (3.0, 2), (-3.0, 2)])
 def test_discontinuity_at_last_save_time(t1, ulps):
-    # the drive jumps to zero at the last save time, or a few ULP before it, where
-    # Diffrax moves the last step to the last save time
+    # the drive drops to zero exactly at the last save time, or 2 ULP before it:
+    # the last saved state must still be the exact one
     tsave = jnp.linspace(t1 - 3.0, t1, 11)
     t0, edge = tsave[0], tsave[-1]
     for _ in range(ulps):

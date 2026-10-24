@@ -247,14 +247,15 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                     get_dtmax, stepsize_controller, dtmax, is_leaf=lambda x: x is None
                 )
 
-            # === end the solve just before a jump time in its last 100 ULP
-            # Diffrax ends each step just before a jump time, but moves a step ending
-            # within 100 ULP of t1 to t1, past a jump there. The controller then
-            # rejects the last steps until they are a few ULP long: the solve can reach
-            # `max_steps`, or in single precision step over t1 without saving there.
-            # Ending before the jump leaves out at most about 100 ULP of time, and
-            # keeps the derivative with respect to t1. An event solve is left as is:
-            # its caller compares its end with t1.
+            # === stop the solve just before a jump in its last 100 ULP
+            # Diffrax moves a step that ends less than 100 ULP (units in the last
+            # place) before t1 onto t1. If an operator jumps in between, that step
+            # crosses the jump and is rejected, and so are the shorter steps that
+            # follow. The solve can then reach `max_steps` or, in single precision,
+            # end without saving at t1. So the solve stops one ULP before the first
+            # such jump, and the save times after it are moved onto the new end. The
+            # derivative with respect to t1 is kept. Event solves are excluded: their
+            # caller compares the end of the solve with t1.
             if not self.fixed_step and event is None and self.discontinuity_ts.size > 0:
                 jump_ts, t1_value = self.discontinuity_ts, jax.lax.stop_gradient(t1)
                 ulp = jnp.abs(jnp.spacing(t1_value))
