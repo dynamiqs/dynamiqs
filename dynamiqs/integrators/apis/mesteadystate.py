@@ -1,10 +1,23 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import cast
+
+import jax
+import jax.numpy as jnp
 
 from ..._checks import check_qarray_is_dense, check_shape
 from ...gradient import Gradient, Implicit
-from ...method import DiffraxSteadyState, Method
+from ...method import (
+    DiffraxSteadyState,
+    Dopri5,
+    Dopri8,
+    Euler,
+    Kvaerno3,
+    Kvaerno5,
+    Method,
+    Tsit5,
+)
 from ...options import Options, check_options
 from ...qarrays.layout import dense
 from ...qarrays.qarray import QArray, QArrayLike
@@ -12,7 +25,23 @@ from ...qarrays.utils import asqarray
 from ...result import MESteadyStateResult
 from ...time_qarray import ConstantTimeQArray, TimeQArray, _unclipped
 from ...utils.operators import eye
-from .._utils import assert_method_supported, astimeqarray
+from .._utils import (
+    assert_method_supported,
+    astimeqarray,
+    broadcast_batched,
+    cartesian_vmap,
+    catch_xla_runtime_error,
+    multi_vmap,
+)
+from ..core.diffrax_integrator import (
+    mesolve_dopri5_integrator_constructor,
+    mesolve_dopri8_integrator_constructor,
+    mesolve_euler_integrator_constructor,
+    mesolve_kvaerno3_integrator_constructor,
+    mesolve_kvaerno5_integrator_constructor,
+    mesolve_tsit5_integrator_constructor,
+)
+from ..core.steadystate_integrator import MESteadyStateIntegrator
 
 
 def mesteadystate(
@@ -100,6 +129,29 @@ def mesteadystate(
             `rho0` is assumed to be Hermitian, see
             [`dq.mesolve()`][dynamiqs.mesolve]. Defaults to `True`.
 
+    Examples:
+        ```python
+        import dynamiqs as dq
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a + 0.5 * (a + a.dag())
+        jump_ops = [a]
+
+        result = dq.mesteadystate(H, jump_ops, exp_ops=[a.dag() @ a])
+        print(result)
+        ```
+
+        ```text title="Output"
+        ==== MESteadyStateResult ====
+        Method   : DiffraxSteadyState
+        Infos    : converged at t=18.5 | 32 steps (32 accepted, 0 rejected)
+        State    : QArray complex64 (16, 16) | 2.0 Kb
+        Expects  : Array complex64 (1,) | 0.0 Kb
+        Residual : Array float32 () | 0.0 Kb
+        ```
+
     # Advanced use-cases
 
     ## Running multiple steady state computations concurrently
@@ -162,9 +214,45 @@ def mesteadystate(
     # === check arguments
     _check_mesteadystate_args(H, Ls, rho0, _exp_ops)
     check_options(options, 'mesteadystate')
-    options = options.initialise()
+    # no progress meter: it shows the fraction of [t0, t1], with t1 = inf
+    options = replace(options, progress_meter=False).initialise()
 
-    return _mesteadystate(H, Ls, rho0, _exp_ops, method, gradient, options)
+    # we implement the jitted vectorization in another function to pre-convert QuTiP
+    # objects (which are not JIT-compatible) to qarrays
+    f = jax.jit(_vectorized_mesteadystate, static_argnames=('gradient', 'options'))
+    return f(H, Ls, rho0, _exp_ops, method, gradient, options)
+
+
+@catch_xla_runtime_error
+def _vectorized_mesteadystate(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    rho0: QArray,
+    exp_ops: list[QArray] | None,
+    method: Method,
+    gradient: Gradient | None,
+    options: Options,
+) -> MESteadyStateResult:
+    # vectorize input over H, Ls and rho0
+    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, None, None, None, None)
+    out_axes = MESteadyStateResult.out_axes()
+
+    if options.cartesian_batching:
+        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0.ndim - 2, 0, 0, 0, 0)
+        f = cartesian_vmap(_mesteadystate, in_axes, out_axes, nvmap)
+    else:
+        bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, rho0]])
+        nvmap = len(bshape)
+        # broadcast batched inputs to the same shape, keep unbatched inputs unbatched
+        H, H_axes = broadcast_batched(H, H.in_axes, bshape)
+        Ls_and_axes = [broadcast_batched(L, L.in_axes, bshape) for L in Ls]
+        Ls = [L for L, _ in Ls_and_axes]
+        rho0, rho0_axes = broadcast_batched(rho0, 0, bshape)
+        in_axes = (H_axes, [axes for _, axes in Ls_and_axes], rho0_axes, *in_axes[3:])
+        # vectorize the function
+        f = multi_vmap(_mesteadystate, in_axes, out_axes, nvmap)
+
+    return f(H, Ls, rho0, exp_ops, method, gradient, options)
 
 
 def _mesteadystate(
@@ -178,16 +266,48 @@ def _mesteadystate(
 ) -> MESteadyStateResult:
     # === check method is supported
     assert_method_supported(method, [DiffraxSteadyState])
-    me_method = cast(DiffraxSteadyState, method).me_method
+    method = cast(DiffraxSteadyState, method)
+    me_method = method.me_method
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
     if not isinstance(gradient, Implicit):
         me_method.assert_supports_gradient(gradient)
 
-    # todo: evolve rho0 with `me_method` until the stopping criterion of the method
-    # is met, and differentiate the steady state implicitly by default
-    raise NotImplementedError('`dq.mesteadystate()` is not implemented yet.')
+    # === select integrator constructor
+    integrator_constructors = {
+        Euler: mesolve_euler_integrator_constructor,
+        Dopri5: mesolve_dopri5_integrator_constructor,
+        Dopri8: mesolve_dopri8_integrator_constructor,
+        Tsit5: mesolve_tsit5_integrator_constructor,
+        Kvaerno3: mesolve_kvaerno3_integrator_constructor,
+        Kvaerno5: mesolve_kvaerno5_integrator_constructor,
+    }
+    integrator_constructor = integrator_constructors[type(me_method)]  # ty: ignore
+
+    # === init integrator
+    # `Implicit` differentiates the steady state, not the time integration
+    me_gradient = None if isinstance(gradient, Implicit | None) else gradient
+    integrator = integrator_constructor(
+        ts=jnp.array([0.0, jnp.inf]),
+        y0=rho0,
+        method=me_method,
+        gradient=me_gradient,
+        options=options,
+        H=H,
+        Ls=Ls,
+        Es=None,
+    )
+    steadystate_integrator = MESteadyStateIntegrator(
+        integrator=integrator,
+        method=method,
+        gradient=gradient,
+        options=options,
+        Es=exp_ops,
+    )
+
+    # === run integrator
+    return steadystate_integrator.run()
 
 
 def _check_mesteadystate_args(

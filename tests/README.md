@@ -183,3 +183,37 @@ $$
     \end{pmatrix}
 \end{aligned}
 $$
+
+## `DrivenThermalCavity`
+
+Solved by `mesteadystate`: only the steady state is known.
+
+**Problem**
+
+- Hamiltonian: $H = \Delta a^\dagger a + \varepsilon (a + a^\dagger)$
+- Jump operators: $L_1 = \sqrt{\kappa(1+n_\mathrm{th})} a$, $L_2 = \sqrt{\kappa n_\mathrm{th}} a^\dagger$
+- Expectation operators:
+  - $O_1 = (a+a^\dagger)/2$
+  - $O_2 = i(a^\dagger-a)/2$
+  - $O_3 = a^\dagger a$
+- Gradient parameters: $\theta=(\Delta, \varepsilon, \kappa, n_\mathrm{th})$
+
+**Steady state**
+
+The displacement $a = \alpha + b$ with $\alpha = -i\varepsilon / (i\Delta + \kappa/2)$ cancels the drive, and leaves $b$ in the steady state of a thermal bath. The steady state is unique and mixed, with a purity that depends on $n_\mathrm{th}$:
+
+$$
+\rho_\infty = D(\alpha) \rho_\mathrm{th}(n_\mathrm{th}) D(\alpha)^\dagger
+$$
+
+- Expectation values:
+
+$$
+\begin{aligned}
+    \braket{O_1} &= \mathrm{Re}[\alpha] \\
+    \braket{O_2} &= \mathrm{Im}[\alpha] \\
+    \braket{O_3} &= |\alpha|^2 + n_\mathrm{th}
+\end{aligned}
+$$
+
+- Gradients of the expectation values: derivatives of the expressions above, for example $\partial \braket{O_3} / \partial n_\mathrm{th} = 1$.
