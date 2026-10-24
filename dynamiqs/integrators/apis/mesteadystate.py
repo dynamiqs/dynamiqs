@@ -15,6 +15,7 @@ from ...method import (
     Euler,
     Kvaerno3,
     Kvaerno5,
+    LyapunovGMRES,
     Method,
     Tsit5,
 )
@@ -41,7 +42,10 @@ from ..core.diffrax_integrator import (
     mesolve_kvaerno5_integrator_constructor,
     mesolve_tsit5_integrator_constructor,
 )
-from ..core.steadystate_integrator import MESteadyStateIntegrator
+from ..core.steadystate_integrator import (
+    MESteadyStateGMRESIntegrator,
+    MESteadyStateIntegrator,
+)
 
 
 def mesteadystate(
@@ -85,7 +89,8 @@ def mesteadystate(
             operators for which the expectation value is computed.
         method: Method to compute the steady state. Defaults to
             [`dq.method.DiffraxSteadyState`][dynamiqs.method.DiffraxSteadyState]
-            (supported: [`DiffraxSteadyState`][dynamiqs.method.DiffraxSteadyState]).
+            (supported: [`DiffraxSteadyState`][dynamiqs.method.DiffraxSteadyState],
+            [`LyapunovGMRES`][dynamiqs.method.LyapunovGMRES]).
         gradient: Algorithm used to compute the gradient. Defaults to
             [`dq.gradient.Implicit`][dynamiqs.gradient.Implicit], refer to the
             documentation of the chosen method for the other supported gradients.
@@ -265,16 +270,45 @@ def _mesteadystate(
     options: Options,
 ) -> MESteadyStateResult:
     # === check method is supported
-    assert_method_supported(method, [DiffraxSteadyState])
-    method = cast(DiffraxSteadyState, method)
-    me_method = method.me_method
+    assert_method_supported(method, [DiffraxSteadyState, LyapunovGMRES])
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
+
+    # === init integrator
+    if isinstance(method, LyapunovGMRES):
+        integrator = MESteadyStateGMRESIntegrator(
+            H=cast(ConstantTimeQArray, H).qarray,
+            Ls=[cast(ConstantTimeQArray, L).qarray for L in Ls],
+            rho0=rho0.todm(),
+            method=method,
+            gradient=gradient,
+            options=options,
+            Es=exp_ops,
+        )
+    else:
+        method = cast(DiffraxSteadyState, method)
+        integrator = _diffrax_steadystate_integrator(
+            H, Ls, rho0, exp_ops, method, gradient, options
+        )
+
+    # === run integrator
+    return integrator.run()
+
+
+def _diffrax_steadystate_integrator(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    rho0: QArray,
+    exp_ops: list[QArray] | None,
+    method: DiffraxSteadyState,
+    gradient: Gradient | None,
+    options: Options,
+) -> MESteadyStateIntegrator:
+    me_method = method.me_method
     if not isinstance(gradient, Implicit):
         me_method.assert_supports_gradient(gradient)
 
-    # === select integrator constructor
     integrator_constructors = {
         Euler: mesolve_euler_integrator_constructor,
         Dopri5: mesolve_dopri5_integrator_constructor,
@@ -285,7 +319,6 @@ def _mesteadystate(
     }
     integrator_constructor = integrator_constructors[type(me_method)]  # ty: ignore
 
-    # === init integrator
     # `Implicit` differentiates the steady state, not the time integration
     me_gradient = None if isinstance(gradient, Implicit | None) else gradient
     integrator = integrator_constructor(
@@ -298,16 +331,13 @@ def _mesteadystate(
         Ls=Ls,
         Es=None,
     )
-    steadystate_integrator = MESteadyStateIntegrator(
+    return MESteadyStateIntegrator(
         integrator=integrator,
         method=method,
         gradient=gradient,
         options=options,
         Es=exp_ops,
     )
-
-    # === run integrator
-    return steadystate_integrator.run()
 
 
 def _check_mesteadystate_args(
