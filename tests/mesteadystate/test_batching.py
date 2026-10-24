@@ -23,7 +23,10 @@ def rand_mesteadystate_args(n, nH, nLs, nrho0, nEs):
 
 
 @pytest.mark.run(order=TEST_LONG)
-def test_cartesian_batching():
+@pytest.mark.parametrize(
+    'method', [METHOD, dq.method.LyapunovGMRES()], ids=['diffrax', 'gmres']
+)
+def test_cartesian_batching(method):
     n = 2
     nH = (3,)
     nL1 = (5, 6)
@@ -32,7 +35,7 @@ def test_cartesian_batching():
     nEs = 7
 
     H, Ls, rho0, Es = rand_mesteadystate_args(n, nH, nLs, nrho0, nEs)
-    result = dq.mesteadystate(H, Ls, rho0=rho0, exp_ops=Es, method=METHOD)
+    result = dq.mesteadystate(H, Ls, rho0=rho0, exp_ops=Es, method=method)
 
     assert result.state.shape == (*nH, *nL1, *nrho0, n, n)
     assert result.expects.shape == (*nH, *nL1, *nrho0, nEs)

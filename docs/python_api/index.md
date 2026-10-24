@@ -78,6 +78,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - DiffusiveMonteCarlo
         - LowRank
         - DiffraxSteadyState
+        - LyapunovGMRES
 
 ### Gradients (dq.gradient)
 
