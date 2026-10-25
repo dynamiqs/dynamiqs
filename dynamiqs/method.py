@@ -28,6 +28,7 @@ __all__ = [
     'JumpMonteCarlo',
     'DiffusiveMonteCarlo',
     'DiffraxSteadyState',
+    'LyapunovGMRES',
     'LinearSolver',
     'LowRank',
     'Kvaerno3',
@@ -848,6 +849,93 @@ class DiffraxSteadyState(_DEMethod):
                 f'Argument `me_method` must be one of {supported_str}, but has '
                 f'type `{type(self.me_method).__name__}`.'
             )
+
+
+class LyapunovGMRES(Method):
+    r"""Preconditioned GMRES for the steady state of the Lindblad master equation.
+
+    This method solves the linear system satisfied by the steady state with restarted
+    GMRES. The Lindbladian $\mathcal{L}$ is singular, so the method solves the deflated
+    system
+    $$
+        \mathcal{L}(\rho) - \tr{\rho}\, I = -I,
+    $$
+    whose unique solution is the unit-trace steady state when the steady state is
+    unique. GMRES is right-preconditioned by the inverse of the no-jump part
+    $\mathcal{S}(X) = H_\mathrm{nh} X + X H_\mathrm{nh}^\dag$ of the Lindbladian, with
+    $H_\mathrm{nh} = -iH - \frac12 \sum_k L_k^\dag L_k$. This Lyapunov equation is
+    solved in the eigenbasis of $H_\mathrm{nh}$, diagonalized once, so each
+    application of the preconditioner costs a few $n\times n$ matrix products.
+
+    The method stops when
+    $$
+        \mathrm{rms}(\mathcal{L}(\rho) - (\tr{\rho} - 1) I) < \mathrm{atol}
+        + \mathrm{rtol}\cdot\mathrm{rms}(\rho),
+    $$
+    the stopping criterion of
+    [`dq.method.DiffraxSteadyState`][dynamiqs.method.DiffraxSteadyState] up to the
+    trace term, so `rtol` and `atol` are in units of inverse time.
+
+    Warning:
+        The preconditioner requires $\mathcal{S}$ to be invertible, i.e. no
+        eigenvalue of $H_\mathrm{nh}$ is purely imaginary. Such an eigenvalue is a
+        dark state of $H_\mathrm{nh}$, as the vacuum for $H\propto a^\dag a$ and
+        $L\propto a$, and the method then returns NaN with `result.infos.converged`
+        set to `False`. This happens whenever a state annihilated by every $L_k$ is
+        an eigenstate of $H$, as for an undriven lossy cavity or a decaying qubit.
+
+    Args:
+        rtol: Relative tolerance of the stopping criterion, in units of inverse
+            time. Defaults to `1e-5`.
+        atol: Absolute tolerance of the stopping criterion, in units of inverse
+            time. Defaults to `1e-5`.
+        krylov_size: Size of the Krylov space built at each GMRES cycle. Defaults to
+            `32`.
+        recycling: Number of vectors of the Krylov space passed to the next cycle.
+            Defaults to `8`.
+        max_iter: Maximum number of GMRES cycles. Defaults to `100`.
+
+    Note-: Supported gradients
+        This method supports differentiation with
+        [`dq.gradient.Implicit`][dynamiqs.gradient.Implicit] (default). The tangent and
+        cotangent linear systems are solved with the same preconditioned GMRES.
+    """
+
+    rtol: float = 1e-5
+    atol: float = 1e-5
+    krylov_size: int = eqx.field(static=True, default=32)
+    recycling: int = eqx.field(static=True, default=8)
+    max_iter: int = eqx.field(static=True, default=100)
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Implicit,)
+
+    # dummy init to have the signature in the documentation
+    def __init__(
+        self,
+        rtol: float = 1e-5,
+        atol: float = 1e-5,
+        krylov_size: int = 32,
+        recycling: int = 8,
+        max_iter: int = 100,
+    ):
+        if krylov_size < 2:
+            raise ValueError(
+                f'Argument `krylov_size` must be an integer >= 2, but is {krylov_size}.'
+            )
+        if recycling < 0:
+            raise ValueError(
+                f'Argument `recycling` must be an integer >= 0, but is {recycling}.'
+            )
+        if max_iter < 1:
+            raise ValueError(
+                f'Argument `max_iter` must be an integer >= 1, but is {max_iter}.'
+            )
+
+        self.rtol = rtol
+        self.atol = atol
+        self.krylov_size = krylov_size
+        self.recycling = recycling
+        self.max_iter = max_iter
 
 
 class LinearSolver(Enum):

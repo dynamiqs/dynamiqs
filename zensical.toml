@@ -95,6 +95,7 @@ nav = [
         { "DiffusiveMonteCarlo" = "python_api/method/DiffusiveMonteCarlo.md" },
         { "LowRank" = "python_api/method/LowRank.md" },
         { "DiffraxSteadyState" = "python_api/method/DiffraxSteadyState.md" },
+        { "LyapunovGMRES" = "python_api/method/LyapunovGMRES.md" },
       ] },
       { "Gradients (dq.gradient)" = [
         { "Direct" = "python_api/gradient/Direct.md" },
