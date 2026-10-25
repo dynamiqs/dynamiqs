@@ -183,7 +183,9 @@ def set_composite(composite: bool):
     full dense matrix. On sparse operators, such as bosonic modes or qubit chains, the
     full matrix in the `dq.dia` layout is faster. The full matrix is built anyway with
     `vectorized=True`, the `Expm` method, [`dq.mepropagator()`][dynamiqs.mepropagator]
-    and the jump solvers.
+    and the jump solvers. See the
+    [Composite qarrays](../../../documentation/basics/composite-qarrays.md) tutorial for
+    more details.
 
     Note:
         The default upon importing dynamiqs is `False`.

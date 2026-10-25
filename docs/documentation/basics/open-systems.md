@@ -161,3 +161,5 @@ Array(0.347, dtype=float32)
 ```
 
 The diffusive unraveling is available in the same way with [`dq.method.DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo]. To access the individual trajectories and the measurement records, for instance to model a continuously measured system, use the stochastic solvers [`dq.jssesolve()`][dynamiqs.jssesolve] and [`dq.dssesolve()`][dynamiqs.dssesolve], or [`dq.jsmesolve()`][dynamiqs.jsmesolve] and [`dq.dsmesolve()`][dynamiqs.dsmesolve] for detectors with finite efficiency. See the [Stochastic simulations](stochastic-simulations.md) tutorial, and the [continuous jump measurement](../advanced_examples/continuous-jump-measurement.md) and [continuous diffusive measurement](../advanced_examples/continuous-diffusive-measurement.md) examples.
+
+To compute the state reached at long times directly, without choosing a final time, use [`dq.mesteadystate()`][dynamiqs.mesteadystate], see the [Steady states](steady-states.md) tutorial.

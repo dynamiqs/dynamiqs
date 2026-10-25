@@ -2,7 +2,7 @@
 
 ## In a nutshell
 
-**Dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger and Lindblad master equations, their propagators, Floquet modes and quasienergies, and quantum trajectories of the jump and diffusive stochastic Schrödinger and master equations. The library is built with [JAX](https://docs.jax.dev/) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
+**Dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger and Lindblad master equations, their propagators and steady states, Floquet modes and quasienergies, and quantum trajectories of the jump and diffusive stochastic Schrödinger and master equations. The library is built with [JAX](https://docs.jax.dev/) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
 
 See the [Python API](../../python_api/index.md) for a list of available functions and classes.
 
@@ -40,6 +40,7 @@ Below are some cool features of **Dynamiqs**.
 - Choose between a variety of methods for each solver, from **modern** explicit and implicit ODE methods (e.g. Tsit5 and PID controllers for adaptive step-sizing) to **quantum-tailored** methods that preserve the physicality of the evolution (the state trace and positivity are preserved).
 - Simulate **time-varying problems** (both Hamiltonian and jump operators) with support for various formats (piecewise constant operator, constant operator modulated by a time-dependent factor, etc.).
 - Define a **custom save function** during the evolution (e.g. to register only the state purity, to track a subsystem by taking the partial trace of the full system, or to compute the population in the last Fock states to regularize your QOC problem).
+- Compute the **steady state** of the Lindblad master equation directly with [`dq.mesteadystate()`][dynamiqs.mesteadystate], with a preconditioned iterative solver for large systems and implicit differentiation of the result.
 - Simulate **quantum trajectories** of the jump and diffusive stochastic Schrödinger and master equations ([`dq.jssesolve()`][dynamiqs.jssesolve], [`dq.dssesolve()`][dynamiqs.dssesolve], [`dq.jsmesolve()`][dynamiqs.jsmesolve], [`dq.dsmesolve()`][dynamiqs.dsmesolve]) **orders of magnitude faster** by batching the simulation over the trajectories.
 
 ### Gradients
@@ -53,6 +54,7 @@ Below are some cool features of **Dynamiqs**.
 
 - Balance **accuracy and speed** by choosing between single precision (`float32` and `complex64`) or double precision (`float64` and `complex128`).
 - Discover a custom **sparse data format** designed for matrices with only a few dense diagonals, offering substantial speedups for large systems.
+- Store the operators of systems made of several subsystems as their **tensor product factors**, without building the full matrix.
 - Plot beautiful figures by using our **handcrafted plotting function**.
 - Apply any functions to **batched arrays** (e.g. `dq.wigner(states)` to compute the Wigner functions of many states at once).
 - Use **QuTiP objects as arguments** to any functions (e.g. if you have existing code to define your Hamiltonian in QuTiP, or if you want to use our nice plotting functions on a list of QuTiP states).

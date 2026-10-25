@@ -87,7 +87,7 @@ Higher-order derivatives such as the Hessian computed by [`jax.hessian()`](https
 
 ## Choosing a gradient algorithm
 
-All solvers take a `gradient` argument that selects the algorithm used to differentiate through the integration. There are four options, defined in `dq.gradient`:
+All solvers take a `gradient` argument that selects the algorithm used to differentiate through the integration. There are four options for the time integration solvers, defined in `dq.gradient`:
 
 | Gradient | Differentiation mode | When to use it |
 | --- | --- | --- |
@@ -110,6 +110,8 @@ When `gradient` is not specified, a method-dependent default is used. The follow
 | [`Rouchon1`][dynamiqs.method.Rouchon1], [`Rouchon2`][dynamiqs.method.Rouchon2], [`Rouchon3`][dynamiqs.method.Rouchon3] | :material-check: | **default** | :material-check: | |
 | [`LowRank`][dynamiqs.method.LowRank] | :material-check: | **default** | :material-check: | |
 | [`Expm`][dynamiqs.method.Expm] | **default** | | | |
+
+[`dq.mesteadystate()`][dynamiqs.mesteadystate] uses a fifth option by default, [`dq.gradient.Implicit`][dynamiqs.gradient.Implicit], which differentiates the equation satisfied by the steady state instead of the iterations that reached it, see the [Steady states](steady-states.md#computing-gradients) tutorial.
 
 Passing an unsupported option raises an error that lists the supported ones. The Monte Carlo methods [`JumpMonteCarlo`][dynamiqs.method.JumpMonteCarlo] and [`DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo] support the options of the method they use to sample trajectories. For the methods of the stochastic solvers, refer to the "Supported gradients" section of each method's documentation.
 

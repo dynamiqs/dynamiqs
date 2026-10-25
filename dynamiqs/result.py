@@ -304,6 +304,32 @@ class MESolveLowRankResult(MESolveResult):
 
 
 class MESteadyStateResult(Result):
+    r"""Result of the Lindblad master equation steady state computation.
+
+    Returned by [`dq.mesteadystate()`][dynamiqs.mesteadystate].
+
+    Attributes:
+        state (qarray of shape (..., n, n)): Steady state, or last state of the
+            method if it did not converge.
+        expects (array of shape (..., len(exp_ops)) or None): Expectation values of
+            the steady state, if specified by `exp_ops`.
+        residual (array of shape (...)): Root mean square of the matrix elements of
+            $\mathcal{L}(\rho)$ for the returned state.
+        infos (PyTree): Method-dependent information on the resolution.
+            `infos.converged` _(array of shape (...))_ is `True` if the stopping
+            criterion of the method was met. With
+            [`DiffraxSteadyState`][dynamiqs.method.DiffraxSteadyState], `infos.time`
+            is the time at which the integration stopped and `infos.steps` its
+            number of steps. With [`LyapunovGMRES`][dynamiqs.method.LyapunovGMRES],
+            `infos.niter` is the number of GMRES cycles.
+        method (Method): Method used.
+        gradient (Gradient or None): Gradient used.
+
+    Methods:
+        block_until_ready(): Waits until the result is computed, then returns it, see
+            [`jax.block_until_ready()`](https://docs.jax.dev/en/latest/_autosummary/jax.block_until_ready.html).
+    """
+
     _saved: SteadyStateSaved
 
     @property

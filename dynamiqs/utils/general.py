@@ -433,7 +433,9 @@ def tensor(*args: QArrayLike, composite: bool | None = None) -> QArray:
     If `composite` is `True`, the tensor product of operators is stored as its factors
     $A_1\otimes\dots\otimes A_N$, and the $n\times n$ matrix is never built. Such a
     composite qarray behaves exactly like the full matrix, and the solvers apply it to
-    a state mode by mode. Kets and bras are always stored as full vectors.
+    a state mode by mode. Kets and bras are always stored as full vectors. See the
+    [Composite qarrays](../../../documentation/basics/composite-qarrays.md) tutorial for
+    more details.
 
     Args:
         *args (qarray-like of shape (..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k)):

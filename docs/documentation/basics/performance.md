@@ -46,6 +46,21 @@ The integration method, passed with the `method` argument of each solver, often 
 
 Each solver lists the methods it supports in its API documentation. For adaptive methods, loosening the tolerances `rtol` and `atol` reduces the number of steps, at the cost of accuracy.
 
+## Compute steady states with `LyapunovGMRES`
+
+For large systems, compute steady states with [`LyapunovGMRES`][dynamiqs.method.LyapunovGMRES] rather than the default [`DiffraxSteadyState`][dynamiqs.method.DiffraxSteadyState]. The default integrates with the implicit method [`Kvaerno5`][dynamiqs.method.Kvaerno5], whose steps solve $n^2\times n^2$ linear systems with a dense solver, as does the default gradient [`Implicit`][dynamiqs.gradient.Implicit]. This costs $O(n^4)$ in memory and $O(n^6)$ in time: on a 40 GB GPU, it runs out of memory from $n=200$. `LyapunovGMRES` uses an iterative solver whose memory grows as $O(n^2)$, for the steady state and its gradient:
+
+```python
+a = dq.destroy(16)
+H = a.dag() @ a + 0.5 * (a + a.dag())
+method = dq.method.LyapunovGMRES()
+result = dq.mesteadystate(H, [a], method=method)
+```
+
+In our benchmarks on an NVIDIA A100 GPU, in double precision and excluding compilation, `LyapunovGMRES` was 24 times faster than `DiffraxSteadyState` on a cat qubit of dimension 40, and 550 times faster at dimension 160. At dimension 160, it used 0.06 GB of memory instead of 31.5 GB.
+
+`LyapunovGMRES` requires a unique steady state and fails on some systems (see the [Steady states](steady-states.md#choosing-a-method) tutorial). For these, `DiffraxSteadyState(me_method=dq.method.Tsit5())` avoids the dense linear systems, but takes many steps when the Liouvillian gap is small. Below a gap of about $10^{-5}$, both methods can be inaccurate in single precision: use double precision (see [Devices and precision](devices-and-precision.md)).
+
 ## Store operators in the `dia` layout
 
 Many operators of interest in quantum physics are banded: $a$, $a^\dagger$, $a^\dagger a$, the Pauli matrices, and any tensor product thereof only have a few non-zero diagonals. Dynamiqs stores such operators in a sparse diagonal layout (`dia`), which is the default, and only falls back to a dense layout when needed. See [`dq.set_layout()`][dynamiqs.set_layout] to change the default layout.
@@ -69,6 +84,15 @@ QArray: shape=(8, 8), dims=(8,), dtype=complex64, layout=dia, ndiags=1
  [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅    6.+0.j   ⋅   ]
  [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅      ⋅    7.+0.j]]
 ```
+
+## Store the operators of several subsystems as composite qarrays
+
+A [composite qarray](composite-qarrays.md) stores an operator as tensor products of small factors, one per subsystem. Whether it beats the full matrix depends on the factors. In our benchmarks of [`dq.mesolve()`][dynamiqs.mesolve] on an NVIDIA A100 GPU:
+
+- **Dense factors**: with dense local Hamiltonians, couplings and jump operators on two subsystems, composite qarrays were 2.8 times faster than the full dense matrix at dimension 1024, and 10 times faster at dimension 4096. They compiled as fast or faster.
+- **Sparse factors**: on coupled cavities and qubit chains, the full matrix in the `dia` layout was 3 to 4 times faster than composite qarrays, and compiled up to 10 times faster on qubit chains. Composite qarrays were still 6 to 7 times faster than the full dense matrix.
+
+Qubit chains are slow in composite form because identity factors are stored and applied like any other: each term of a chain of $N$ qubits carries about $N$ of them. Peak memory was the same within 25% in all cases, since the state and the ODE stages dominate it. Some solvers and methods build the full matrix anyway (see the [Composite qarrays](composite-qarrays.md#simulating-with-composite-qarrays) tutorial).
 
 ## Declare the discontinuities of time-dependent operators
 

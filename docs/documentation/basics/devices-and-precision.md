@@ -127,7 +127,7 @@ This setting only affects single-precision matrices on GPUs and TPUs: it has no 
 
 ## Global settings
 
-Dynamiqs has five global settings, which all apply to the rest of the program:
+Dynamiqs has six global settings, which all apply to the rest of the program:
 
 | Function | Default | Effect |
 | --- | --- | --- |
@@ -135,9 +135,10 @@ Dynamiqs has five global settings, which all apply to the rest of the program:
 | [`dq.set_precision()`][dynamiqs.set_precision] | `'single'` | Floating-point precision of new arrays. |
 | [`dq.set_matmul_precision()`][dynamiqs.set_matmul_precision] | `'highest'` | Internal precision of matrix multiplications on GPUs and TPUs. |
 | [`dq.set_layout()`][dynamiqs.set_layout] | `'dia'` | Default layout of operators, see [Quantum arrays and layouts](qarrays-and-layouts.md#dense-and-sparse-diagonal-layouts). |
+| [`dq.set_composite()`][dynamiqs.set_composite] | `False` | Whether operators of several subsystems are stored as their factors, see [Composite qarrays](composite-qarrays.md). |
 | [`dq.set_progress_meter()`][dynamiqs.set_progress_meter] | `True` | Progress meter displayed by solvers. |
 
-The last two do not depend on the hardware. [`dq.set_layout()`][dynamiqs.set_layout] chooses whether operators such as [`dq.destroy()`][dynamiqs.destroy] are stored in the sparse diagonal layout or as dense arrays. [`dq.set_progress_meter()`][dynamiqs.set_progress_meter] takes `True` for a [tqdm](https://github.com/tqdm/tqdm) progress bar, `False` to disable it, or a progress meter such as [`dq.TextProgressMeter()`][dynamiqs.TextProgressMeter], which prints plain text instead:
+The last three do not depend on the hardware. [`dq.set_layout()`][dynamiqs.set_layout] chooses whether operators such as [`dq.destroy()`][dynamiqs.destroy] are stored in the sparse diagonal layout or as dense arrays, and [`dq.set_composite()`][dynamiqs.set_composite] whether `dq.destroy(*dims)` and [`dq.tensor()`][dynamiqs.tensor] store the operators of several subsystems as their factors. [`dq.set_progress_meter()`][dynamiqs.set_progress_meter] takes `True` for a [tqdm](https://github.com/tqdm/tqdm) progress bar, `False` to disable it, or a progress meter such as [`dq.TextProgressMeter()`][dynamiqs.TextProgressMeter], which prints plain text instead:
 
 ```python
 dq.set_progress_meter(dq.TextProgressMeter())

@@ -87,6 +87,8 @@ Operator functions also build the operators of a composite system directly when 
 ((6, 6), (3, 2))
 ```
 
+These operators store the full $6\times6$ matrix. They can instead be stored as their factors on each subsystem, see the [Composite qarrays](composite-qarrays.md) tutorial.
+
 Thanks to `dims`, you do not need to repeat the system structure when taking a partial trace with [`dq.ptrace()`][dynamiqs.ptrace] or the `.ptrace()` method. Here, we keep subsystem `1` (the qubit) and trace out the oscillator:
 
 ```pycon

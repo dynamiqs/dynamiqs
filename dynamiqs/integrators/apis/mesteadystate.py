@@ -76,7 +76,9 @@ def mesteadystate(
     $$
     where $H$ is the system's Hamiltonian and $\{L_k\}$ is a collection of jump
     operators. If the steady state is not unique, the one returned depends on the
-    initial state `rho0` of the method.
+    initial state `rho0` of the method. See the
+    [Steady states](../../documentation/basics/steady-states.md) tutorial to choose a
+    method and check its convergence.
 
     Args:
         H (qarray-like or constant timeqarray of shape (...H, n, n)): Hamiltonian.
@@ -98,34 +100,10 @@ def mesteadystate(
             documentation of the chosen method for the other supported gradients.
 
     Returns:
-        `dq.MESteadyStateResult` object holding the steady state. Use `result.state`
-            to access the steady state and `result.expects` to access its expectation
-            values.
-
-            ??? "Detailed result API"
-                ```python
-                dq.MESteadyStateResult
-                ```
-
-                **Attributes:**
-
-                - **`state`** _(qarray of shape (..., n, n))_ - Steady state, or last
-                    state of the method if it did not converge.
-                - **`expects`** _(array of shape (..., len(exp_ops)) or None)_ -
-                    Expectation values of the steady state, if specified by
-                    `exp_ops`.
-                - **`residual`** _(array of shape (...))_ - Root mean square of the
-                    matrix elements of $\mathcal{L}(\rho)$ for the returned state.
-                - **`infos`** _(PyTree)_ - Information on the resolution, which
-                    depends on the method. `infos.converged` _(array of shape (...))_
-                    is `True` if the steady state was reached. With
-                    `DiffraxSteadyState`, `infos.time` _(array of shape (...))_ is the
-                    time at which the method stopped, and `infos.steps` holds the
-                    number of steps. With `LyapunovGMRES`, `infos.niter` _(array of
-                    shape (...))_ is the number of GMRES cycles.
-                - **`method`** _(Method)_ - Method used.
-                - **`gradient`** _(Gradient)_ - Gradient used.
-                - **`options`** _(Options)_ - Options used.
+        [`dq.MESteadyStateResult`][dynamiqs.MESteadyStateResult] object holding the
+            steady state. Use `result.state` to access the steady state,
+            `result.expects` to access its expectation values and
+            `result.infos.converged` to check that the method converged.
 
     Other Parameters:
         cartesian_batching: If `True`, batched arguments are treated
@@ -139,27 +117,18 @@ def mesteadystate(
             [`dq.mesolve()`][dynamiqs.mesolve]. Defaults to `True`.
 
     Examples:
-        ```python
-        import dynamiqs as dq
-
-        n = 16
-        a = dq.destroy(n)
-
-        H = a.dag() @ a + 0.5 * (a + a.dag())
-        jump_ops = [a]
-
-        result = dq.mesteadystate(H, jump_ops, exp_ops=[a.dag() @ a])
-        print(result)
-        ```
-
-        ```text title="Output"
+        >>> n = 16
+        >>> a = dq.destroy(n)
+        >>> H = a.dag() @ a + 0.5 * (a + a.dag())
+        >>> jump_ops = [a]
+        >>> result = dq.mesteadystate(H, jump_ops, exp_ops=[a.dag() @ a])
+        >>> print(result)
         ==== MESteadyStateResult ====
         Method   : DiffraxSteadyState
         Infos    : converged at t=18.5 | 32 steps (32 accepted, 0 rejected)
         State    : QArray complex64 (16, 16) | 2.0 Kb
         Expects  : Array complex64 (1,) | 0.0 Kb
         Residual : Array float32 () | 0.0 Kb
-        ```
 
     # Advanced use-cases
 
