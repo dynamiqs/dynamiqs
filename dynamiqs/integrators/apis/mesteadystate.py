@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import replace
 from typing import cast
 
@@ -45,6 +46,7 @@ from ..core.diffrax_integrator import (
 from ..core.steadystate_integrator import (
     MESteadyStateGMRESIntegrator,
     MESteadyStateIntegrator,
+    SteadyStateIntegrator,
 )
 
 
@@ -114,11 +116,13 @@ def mesteadystate(
                     `exp_ops`.
                 - **`residual`** _(array of shape (...))_ - Root mean square of the
                     matrix elements of $\mathcal{L}(\rho)$ for the returned state.
-                - **`infos`** _(PyTree)_ - Information on the resolution:
-                    `infos.converged` _(array of shape (...))_ is `True` if the
-                    steady state was reached, `infos.time` _(array of shape (...))_
-                    is the time at which the method stopped, and `infos.steps` holds
-                    the number of steps.
+                - **`infos`** _(PyTree)_ - Information on the resolution, which
+                    depends on the method. `infos.converged` _(array of shape (...))_
+                    is `True` if the steady state was reached. With
+                    `DiffraxSteadyState`, `infos.time` _(array of shape (...))_ is the
+                    time at which the method stopped, and `infos.steps` holds the
+                    number of steps. With `LyapunovGMRES`, `infos.niter` _(array of
+                    shape (...))_ is the number of GMRES cycles.
                 - **`method`** _(Method)_ - Method used.
                 - **`gradient`** _(Gradient)_ - Gradient used.
                 - **`options`** _(Options)_ - Options used.
@@ -276,21 +280,13 @@ def _mesteadystate(
     method.assert_supports_gradient(gradient)
 
     # === init integrator
-    if isinstance(method, LyapunovGMRES):
-        integrator = MESteadyStateGMRESIntegrator(
-            H=cast(ConstantTimeQArray, H).qarray,
-            Ls=[cast(ConstantTimeQArray, L).qarray for L in Ls],
-            rho0=rho0.todm(),
-            method=method,
-            gradient=gradient,
-            options=options,
-            Es=exp_ops,
-        )
-    else:
-        method = cast(DiffraxSteadyState, method)
-        integrator = _diffrax_steadystate_integrator(
-            H, Ls, rho0, exp_ops, method, gradient, options
-        )
+    integrator_constructors: dict[type[Method], Callable[..., SteadyStateIntegrator]]
+    integrator_constructors = {
+        DiffraxSteadyState: _diffrax_steadystate_integrator,
+        LyapunovGMRES: _gmres_steadystate_integrator,
+    }
+    integrator_constructor = integrator_constructors[type(method)]
+    integrator = integrator_constructor(H, Ls, rho0, exp_ops, method, gradient, options)
 
     # === run integrator
     return integrator.run()
@@ -333,6 +329,26 @@ def _diffrax_steadystate_integrator(
     )
     return MESteadyStateIntegrator(
         integrator=integrator,
+        method=method,
+        gradient=gradient,
+        options=options,
+        Es=exp_ops,
+    )
+
+
+def _gmres_steadystate_integrator(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    rho0: QArray,
+    exp_ops: list[QArray] | None,
+    method: LyapunovGMRES,
+    gradient: Gradient | None,
+    options: Options,
+) -> MESteadyStateGMRESIntegrator:
+    return MESteadyStateGMRESIntegrator(
+        H=cast(ConstantTimeQArray, H).qarray,
+        Ls=[cast(ConstantTimeQArray, L).qarray for L in Ls],
+        rho0=rho0.todm(),
         method=method,
         gradient=gradient,
         options=options,

@@ -21,8 +21,8 @@ def gmres(
     recycling: int,
     max_iter: int,
 ) -> tuple[Array, Array, Array]:
-    # restarted GMRES for A x = b, right-preconditioned by M ~ A^-1, with harmonic Ritz
-    # vectors recycled across cycles as in GCRO-DR (Parks et al. 2006)
+    # restarted GMRES for A x = b, right-preconditioned by M ~ A^-1, recycling a
+    # subspace across cycles as in GCRO-DR (Parks et al. 2006)
 
     # recycled space smaller than the first Krylov space, and than the full space
     recycling = min(recycling, krylov_size - 1, b.shape[0] - 1)
@@ -121,8 +121,8 @@ def _normalize(w: Array) -> tuple[Array, Array]:
 
 
 def _recycle(Hbar: Array, U: Array, C: Array, V: Array, k: int) -> tuple[Array, Array]:
-    # harmonic Ritz vectors of the k smallest singular values of Hbar, as (U, C) with
-    # A M U = C and orthonormal C
+    # k smallest right singular vectors of Hbar, as (U, C) with A M U = C and
+    # orthonormal C
     if k == 0:
         return U, C
     _, _, Vh = jnp.linalg.svd(Hbar)

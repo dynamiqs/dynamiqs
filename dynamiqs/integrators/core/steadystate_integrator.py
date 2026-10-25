@@ -9,10 +9,11 @@ import jax
 import jax.numpy as jnp
 import optimistix as optx
 from jax import Array
+from jaxtyping import PyTree
 
 from ..._utils import cdtype
 from ...gradient import Gradient, Implicit
-from ...method import DiffraxSteadyState, LyapunovGMRES
+from ...method import DiffraxSteadyState, LyapunovGMRES, Method
 from ...options import Options
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import asqarray
@@ -41,14 +42,37 @@ class SteadyStateInfos(eqx.Module):
         return f'{status} at t={self.time:.3g} | {self.steps}'
 
 
-class MESteadyStateIntegrator(AbstractIntegrator):
+class SteadyStateIntegrator(AbstractIntegrator):
+    """Integrator computing the steady state of the Lindblad master equation."""
+
+    method: Method
+    gradient: Gradient | None
+    options: Options
+    Es: list[QArray] | None
+
+    def _result(
+        self, H: QArray, Ls: list[QArray], rho: QArray, infos: PyTree
+    ) -> MESteadyStateResult:
+        residual = _rms(lindbladian(H, Ls, rho))
+        Esave = None
+        if self.Es is not None:
+            Esave = jnp.stack([expect(E, rho) for E in self.Es])
+        saved = SteadyStateSaved(rho, None, Esave, residual)
+        return MESteadyStateResult(
+            None,  # ty: ignore[invalid-argument-type]
+            self.method,
+            self.gradient,
+            self.options,
+            saved,
+            infos,
+        )
+
+
+class MESteadyStateIntegrator(SteadyStateIntegrator):
     """Integrator evolving the Lindblad master equation until its steady state."""
 
     integrator: MESolveDiffraxIntegrator  # time integration from rho0
     method: DiffraxSteadyState
-    gradient: Gradient | None
-    options: Options
-    Es: list[QArray] | None
 
     def run(self) -> MESteadyStateResult:
         if isinstance(self.gradient, Implicit | None):
@@ -64,21 +88,8 @@ class MESteadyStateIntegrator(AbstractIntegrator):
         else:
             rho, t, converged, stats = self._evolve(self.integrator)
 
-        residual = _rms(lindbladian(self.integrator.H(t), self.integrator.L(t), rho))
-        Esave = None
-        if self.Es is not None:
-            Esave = jnp.stack([expect(E, rho) for E in self.Es])
-        saved = SteadyStateSaved(rho, None, Esave, residual)
-
         infos = SteadyStateInfos(converged, t, self.integrator.infos(stats))
-        return MESteadyStateResult(
-            None,  # ty: ignore[invalid-argument-type]
-            self.method,
-            self.gradient,
-            self.options,
-            saved,
-            infos,
-        )
+        return self._result(self.integrator.H(t), self.integrator.L(t), rho, infos)
 
     def _evolve(
         self, integrator: MESolveDiffraxIntegrator
@@ -127,29 +138,27 @@ class GMRESInfos(eqx.Module):
         return f'{status} after {self.niter} GMRES cycles'
 
 
-class MESteadyStateGMRESIntegrator(AbstractIntegrator):
+class MESteadyStateGMRESIntegrator(SteadyStateIntegrator):
     """Integrator solving the steady-state equation with preconditioned GMRES."""
 
     H: QArray
     Ls: list[QArray]
     rho0: QArray
     method: LyapunovGMRES
-    gradient: Gradient | None
-    options: Options
-    Es: list[QArray] | None
 
     def run(self) -> MESteadyStateResult:
         n = self.H.shape[-1]
         I = jnp.eye(n, dtype=cdtype()).reshape(-1)  # vec(I)
-        rho0 = self.rho0.to_jax().reshape(-1).astype(I.dtype)
+        # the initial guess does not change the solution
+        rho0 = jax.lax.stop_gradient(self.rho0.to_jax()).reshape(-1).astype(I.dtype)
         M = self._preconditioner(I)
 
-        # L + |I><I| is invertible for a unique steady state, unlike L, and
-        # (L + |I><I|)(rho) = I at the unit-trace steady state
+        # L - |I><I| is invertible for a unique steady state, unlike L, and
+        # (L - |I><I|)(rho) = -I at the unit-trace steady state
         def A(x: Array) -> Array:
             rho = asqarray(x.reshape(n, n), dims=self.H.dims)
             Lrho = lindbladian(self.H, self.Ls, rho).to_jax().reshape(-1)
-            return Lrho + (I @ x) * I
+            return Lrho - (I @ x) * I
 
         def solve(A, b, M, x0):  # noqa: ANN001, ANN202
             # a zero b, e.g. a cotangent without sensitivity, would divide by zero
@@ -172,8 +181,8 @@ class MESteadyStateGMRESIntegrator(AbstractIntegrator):
             return jnp.where(is_zero, 0, x), (niter, converged)
 
         def forward_solve(A, b):  # noqa: ANN001, ANN202
-            # the solution has trace Tr[b]/n: 1 for the steady state, 0 for a tangent
-            return solve(A, b, M, rho0 * (I @ b) / n)
+            # the solution has trace -Tr[b]/n: 1 for the steady state
+            return solve(A, b, M, -rho0 * (I @ b) / n)
 
         def transpose_solve(AT, b):  # noqa: ANN001, ANN202
             MT = jax.linear_transpose(M, b)
@@ -181,30 +190,17 @@ class MESteadyStateGMRESIntegrator(AbstractIntegrator):
 
         # implicit differentiation, with GMRES solves of A and A^T for the gradient
         x, (niter, converged) = jax.lax.custom_linear_solve(
-            A, I, forward_solve, transpose_solve, has_aux=True
+            A, -I, forward_solve, transpose_solve, has_aux=True
         )
         X = x.reshape(n, n)
         rho = 0.5 * (X + X.conj().mT)
         rho = asqarray(rho / jnp.trace(rho), dims=self.H.dims)
 
-        residual = _rms(lindbladian(self.H, self.Ls, rho))
-        Esave = None
-        if self.Es is not None:
-            Esave = jnp.stack([expect(E, rho) for E in self.Es])
-        saved = SteadyStateSaved(rho, None, Esave, residual)
-
         infos = GMRESInfos(converged, niter)
-        return MESteadyStateResult(
-            None,  # ty: ignore[invalid-argument-type]
-            self.method,
-            self.gradient,
-            self.options,
-            saved,
-            infos,
-        )
+        return self._result(self.H, self.Ls, rho, infos)
 
     def _preconditioner(self, I: Array) -> Callable[[Array], Array]:
-        # M ~ (L + |I><I|)^-1 from the no-jump part S(X) = Hnh X + X Hnh^† of
+        # M ~ (L - |I><I|)^-1 from the no-jump part S(X) = Hnh X + X Hnh^† of
         # L(X) = S(X) + sum_k L_k X L_k^†, with S^-1 in the eigenbasis of Hnh and
         # Sherman-Morrison for |I><I|
         n = self.H.shape[-1]
@@ -222,9 +218,10 @@ class MESteadyStateGMRESIntegrator(AbstractIntegrator):
 
         Sinv_I = Sinv(I)
 
+        # S^-1(I) < 0 for a stable Hnh, so the denominator is > 1
         def M(x: Array) -> Array:
             Sinv_x = Sinv(x)
-            return Sinv_x - (I @ Sinv_x) / (1 + I @ Sinv_I) * Sinv_I
+            return Sinv_x + (I @ Sinv_x) / (1 - I @ Sinv_I) * Sinv_I
 
         return M
 
