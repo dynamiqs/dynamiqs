@@ -73,6 +73,22 @@ def test_lowrank_batching(cartesian_batching, nH, nL, npsi0):
     assert result.expects.shape == (*bshape, nEs, ntsave)
 
 
+@pytest.mark.run(order=TEST_LONG)
+def test_composite_batching():
+    # only the coefficient of the composite H is batched, not its factors
+    a, I = dq.destroy(2), dq.eye(2)
+    omegas = jnp.linspace(0.0, 1.0, 3)[:, None, None]
+    H = omegas * dq.tensor(a.dag() @ a, I, composite=True)
+    L = dq.tensor(I, a, composite=True)
+    psi0 = dq.tensor(dq.fock(2, 1), dq.fock(2, 1))
+    ntsave = 11
+
+    tsave = jnp.linspace(0, 0.01, ntsave)
+    result = dq.mesolve(H, [L], psi0, tsave)
+
+    assert result.states.shape == (3, ntsave, 4, 4)
+
+
 # H has fixed shape (3, 4, n, n) for the next test case, we test a broad ensemble of
 # compatible broadcastable shape
 @pytest.mark.run(order=TEST_LONG)

@@ -54,6 +54,14 @@ def complex(  # noqa: A001
     Each element of the returned array is sampled uniformly in the disk of radius
     $\text{rmax}$.
 
+    Args:
+        key: A PRNG key used as the random key.
+        shape (int or tuple of ints): Shape of the returned array.
+        rmax: Maximum magnitude.
+
+    Returns:
+        (array of shape (*shape)): Random complex number array.
+
     Note-: Uniform sampling in the complex plane
         Here are three common options to generate random complex numbers,
         `dq.random.complex()` returns the last one:
@@ -80,14 +88,6 @@ def complex(  # noqa: A001
         ```
 
         ![rand_complex](../../figs_code/random_complex.png){.fig}
-
-    Args:
-        key: A PRNG key used as the random key.
-        shape (int or tuple of ints): Shape of the returned array.
-        rmax: Maximum magnitude.
-
-    Returns:
-        (array of shape (*shape)): Random complex number array.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
@@ -155,7 +155,7 @@ def psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
 def dm(
     key: PRNGKeyArray, dims: int | tuple[int, ...], *, batch: int | tuple[int, ...] = ()
 ) -> QArray:
-    """Returns a random density matrix (hermitian, positive semi-definite, and unit
+    """Returns a random density matrix (Hermitian, positive semi-definite, and unit
     trace).
 
     Args:
@@ -189,7 +189,7 @@ def dm(
 
         Random density matrix for a composite system:
         >>> dq.random.dm(key, (2, 3))
-        QArray: shape=(6, 6), dims=(6,), dtype=complex64, layout=dense
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dense
         [[ 0.178+0.j     0.012+0.021j -0.047+0.057j -0.007+0.072j -0.092-0.033j
            0.033+0.002j]
          [ 0.012-0.021j  0.16 +0.j    -0.019-0.036j  0.013-0.089j -0.003+0.031j
@@ -210,7 +210,7 @@ def dm(
     dims = (dims,) if isinstance(dims, int) else dims
     batch = (batch,) if isinstance(batch, int) else batch
     shape = (*batch, prod(dims), prod(dims))
-    x = asqarray(psd(key, shape), dims=dims)
+    x = asqarray(psd(key, shape).to_jax(), dims=dims)
     return x.unit()
 
 
@@ -261,7 +261,7 @@ def operator(
 
         Random Hermitian operator for a composite system:
         >>> dq.random.operator(key, (2, 3))
-        QArray: shape=(6, 6), dims=(6,), dtype=complex64, layout=dense
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dense
         [[ 0.323+0.j    -0.008+0.661j -0.254+0.501j  0.004+0.093j -0.581+0.114j
           -0.359+0.114j]
          [-0.008-0.661j  0.703+0.j    -0.381+0.178j -0.167-0.305j  0.245-0.401j
@@ -282,7 +282,7 @@ def operator(
     dims = (dims,) if isinstance(dims, int) else dims
     batch = (batch,) if isinstance(batch, int) else batch
     shape = (*batch, prod(dims), prod(dims))
-    x = herm(key, shape) if hermitian else complex(key, shape)
+    x = herm(key, shape).to_jax() if hermitian else complex(key, shape)
     return asqarray(x, dims=dims)
 
 

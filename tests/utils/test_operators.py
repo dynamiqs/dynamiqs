@@ -4,6 +4,7 @@ import pytest
 
 import dynamiqs as dq
 from dynamiqs._utils import cdtype
+from dynamiqs.qarrays.composite_qarray import CompositeQArray
 
 from ..order import TEST_INSTANT
 
@@ -190,6 +191,29 @@ def test_number():
     assert jnp.allclose(
         dq.number(dim, layout=dq.dense).to_jax(), dq.number(dim, layout=dq.dia).to_jax()
     )
+
+
+# the last operator of each multi-mode constructor, the one with the most
+# non-identity factors for the fermionic modes
+MULTI_MODE_OPERATORS = {
+    'destroy': lambda composite: dq.destroy(3, 4, composite=composite)[-1],
+    'create': lambda composite: dq.create(3, 4, composite=composite)[-1],
+    'number': lambda composite: dq.number(3, 4, composite=composite)[-1],
+    'fdestroy': lambda composite: dq.fdestroy(3, composite=composite)[-1],
+    'fcreate': lambda composite: dq.fcreate(3, composite=composite)[-1],
+    'hadamard': lambda composite: dq.hadamard(2, composite=composite),
+}
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize(
+    'build', MULTI_MODE_OPERATORS.values(), ids=MULTI_MODE_OPERATORS.keys()
+)
+def test_multi_mode_composite(build):
+    x = build(composite=True)
+    expected = build(composite=False)
+    assert type(x) is CompositeQArray
+    assert jnp.allclose(x.to_jax(), expected.to_jax())
 
 
 @pytest.mark.run(order=TEST_INSTANT)

@@ -10,6 +10,7 @@ from dynamiqs.integrators.core.diffrax_integrator import (
     call_diffeqsolve,
 )
 from dynamiqs.integrators.core.unrolled_solvers import _UnrolledERK
+from dynamiqs.options import Options
 
 from ..order import TEST_SHORT
 
@@ -132,7 +133,7 @@ def test_real_saves_after_event(monkeypatch):
         terms,
         dq.method.Tsit5(),
         None,
-        dq.Options(progress_meter=False).initialise(),
+        Options(progress_meter=False).initialise(),
         jnp.array([]),
         event=event,
     )

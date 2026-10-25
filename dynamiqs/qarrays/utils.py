@@ -59,22 +59,20 @@ def asqarray(
         x: Object to convert.
         dims (tuple of ints or None): Hilbert space dimension of each subsystem.
             Defaults to `None` (`x.dims` if available, individual system `dims=(n,)`
-            otherwise).
-        layout (dq.dense, dq.dia or None): Matrix layout. If `None`, the default
-            layout is `dq.dense`, except for qarrays that are directly returned,
-            and for sequences of `dq.dia` qarrays with identical `dims` and shape,
-            which are stacked in `dq.dia` if `offsets` is `None`.
+            otherwise). If `x` already has dims (a qarray or a QuTiP Qobj), they take
+            precedence, and a different `dims` is ignored with a warning.
+        layout (dq.dense, dq.dia or None): Matrix layout. If `None`, the layout is
+            `dq.dense`, regardless of the default set by
+            [`dq.set_layout()`][dynamiqs.set_layout], except that a qarray keeps its
+            own layout, and a sequence of `dq.dia` qarrays with identical `dims` and
+            shape is stacked in `dq.dia` if `offsets` is `None`.
         offsets: Offsets of the stored diagonals if `layout==dq.dia`. If `None`, offsets
             are determined automatically from the matrix structure. This argument can
             also be explicitly specified to ensure compatibility with JAX
             transformations, which require static offset values.
 
     Returns:
-        Qarray representation of the input.
-
-    See also:
-        - [`dq.isqarraylike()`][dynamiqs.isqarraylike]: returns True if the input is
-            a qarray-like.
+        (qarray of shape (..., n, m)): Qarray representation of the input.
 
     Examples:
         >>> dq.asqarray([[1, 0], [0, -1]])
@@ -102,6 +100,10 @@ def asqarray(
         <BLANKLINE>
          [[ 1.+0.j    ⋅   ]
           [   ⋅    -1.+0.j]]]
+
+    See also:
+        - [`dq.isqarraylike()`][dynamiqs.isqarraylike]: returns True if the input is
+            a qarray-like.
     """
     # stack a sequence of sparse qarrays without converting them to dense first,
     # unless it cannot be stacked or `dims`/`offsets` ask for a different result
@@ -114,6 +116,11 @@ def asqarray(
             and offsets is None
         ):
             x = stack(qarrays)
+
+    if isinstance(x, QArray):
+        if dims is not None and tuple(dims) != x.dims:
+            _warn_ignored_dims(x.dims, dims)
+        dims = x.dims
 
     if layout is None and isinstance(x, QArray):
         return x
@@ -169,33 +176,37 @@ def init_dims(
     if dims is None:
         dims = (shape[-2] if shape[-2] != 1 else shape[-1],) if xdims is None else xdims
     elif xdims is not None and xdims != dims:
-        # warn if `dims` argument is specified but unused
-        warnings.warn(
-            f'Argument `x` is already an object with `x.dims={xdims}`, but'
-            f' different `dims={dims}` were specified as input. Ignoring the '
-            f'provided `dims` and proceeding with the object `x.dims`.',
-            stacklevel=2,
-        )
+        _warn_ignored_dims(xdims, dims)
 
     _assert_dims_match_shape(dims, shape)
 
     return dims
 
 
+def _warn_ignored_dims(xdims: tuple[int, ...], dims: tuple[int, ...]):
+    warnings.warn(
+        f'Argument `x` is already an object with `x.dims={xdims}`, but'
+        f' different `dims={dims}` were specified as input. Ignoring the '
+        f'provided `dims` and proceeding with the object `x.dims`.',
+        stacklevel=3,
+    )
+
+
 def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
     """Join a sequence of qarrays along a new axis.
-
-    Warning:
-        All elements of the sequence `qarrays` must have identical types, shapes and
-        `dims` attributes. Additionally, when stacking qarrays with sparse diagonal
-        data, all elements must have identical `offsets` attributes.
 
     Args:
         qarrays: Qarrays to stack.
         axis: Axis in the result along which the input qarrays are stacked.
 
     Returns:
-        Stacked qarray.
+        (qarray of shape (..., n, m)): Stacked qarray, with a new batch axis of size
+            `len(qarrays)` at position `axis`.
+
+    Warning:
+        All elements of the sequence `qarrays` must have identical types, shapes and
+        `dims` attributes. Additionally, when stacking qarrays with sparse diagonal
+        data, all elements must have identical `offsets` attributes.
 
     Examples:
         >>> dq.stack([dq.fock(3, 0), dq.fock(3, 1)])
@@ -207,6 +218,10 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
          [[0.+0.j]
           [1.+0.j]
           [0.+0.j]]]
+
+    See also:
+        - [dq.concatenate()][dynamiqs.concatenate]: join a sequence of qarrays along
+            an existing batch axis.
     """
     # check validity of input
     if len(qarrays) == 0:
@@ -223,26 +238,24 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
     if not all(qarray.shape == qarrays[0].shape for qarray in qarrays):
         raise ValueError('All input qarrays must have the same shape.')
 
+    # composite qarrays are stacked as full matrices, since their terms differ
+    qarrays = [q._materialize() for q in qarrays]
+
     # stack inputs depending on data type
-    if all(
-        isinstance(q, MaterializedQArray) and isinstance(q.data, DenseDataArray)
-        for q in qarrays
-    ):
-        _qarrays = cast(list[MaterializedQArray], qarrays)
+    if all(isinstance(q.data, DenseDataArray) for q in qarrays):
         data = jnp.stack(
-            [cast(DenseDataArray, q.data).data for q in _qarrays], axis=axis
+            [cast(DenseDataArray, q.data).data for q in qarrays], axis=axis
         )
-        return MaterializedQArray(dims, _qarrays[0].vectorized, DenseDataArray(data))
+        return MaterializedQArray(dims, qarrays[0].vectorized, DenseDataArray(data))
 
     elif all(map(_is_sparsedia, qarrays)):
-        _qarrays = cast(list[MaterializedQArray], qarrays)
         offsets, diags = stack_sparsedia(
-            [cast(SparseDIADataArray, q.data).offsets for q in _qarrays],
-            [cast(SparseDIADataArray, q.data).diags for q in _qarrays],
+            [cast(SparseDIADataArray, q.data).offsets for q in qarrays],
+            [cast(SparseDIADataArray, q.data).diags for q in qarrays],
             axis=axis,
         )
         data = SparseDIADataArray(offsets, diags)
-        return MaterializedQArray(dims, _qarrays[0].vectorized, data)
+        return MaterializedQArray(dims, qarrays[0].vectorized, data)
     else:
         raise NotImplementedError(
             'Stacking qarrays with different data types is not implemented.'
@@ -251,10 +264,6 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
 
 def swapaxes(x: QArrayLike, axis1: int, axis2: int) -> QArray:
     r"""Interchange two batch axes of a qarray.
-
-    Warning:
-        Only batch axes can be swapped. The final two axes are the matrix dimensions,
-        use `x.mT` to transpose those.
 
     Args:
         x (qarray-like of shape (..., n, m)): Qarray-like object.
@@ -265,8 +274,9 @@ def swapaxes(x: QArrayLike, axis1: int, axis2: int) -> QArray:
         (qarray of shape (..., n, m)): Qarray with axes `axis1` and `axis2`
             interchanged.
 
-    See also:
-        - [dq.moveaxis()][dynamiqs.moveaxis]: move axes of a qarray to new positions.
+    Warning:
+        Only batch axes can be swapped. The final two axes are the matrix dimensions,
+        use `x.mT` to transpose those.
 
     Examples:
         >>> psis = dq.stack([dq.fock(3, 0), dq.fock(3, 1), dq.fock(3, 2)])
@@ -275,6 +285,9 @@ def swapaxes(x: QArrayLike, axis1: int, axis2: int) -> QArray:
         (2, 3, 3, 1)
         >>> dq.swapaxes(x, 0, 1).shape
         (3, 2, 3, 1)
+
+    See also:
+        - [dq.moveaxis()][dynamiqs.moveaxis]: move axes of a qarray to new positions.
     """
     return asqarray(x).swapaxes(axis1, axis2)
 
@@ -284,10 +297,6 @@ def moveaxis(
 ) -> QArray:
     r"""Move batch axes of a qarray to new positions.
 
-    Warning:
-        Only batch axes can be moved. The final two axes are the matrix dimensions,
-        use `x.mT` to transpose those.
-
     Args:
         x (qarray-like of shape (..., n, m)): Qarray-like object.
         source: Original positions of the axes to move.
@@ -296,8 +305,9 @@ def moveaxis(
     Returns:
         (qarray of shape (..., n, m)): Qarray with moved axes.
 
-    See also:
-        - [dq.swapaxes()][dynamiqs.swapaxes]: interchange two axes of a qarray.
+    Warning:
+        Only batch axes can be moved. The final two axes are the matrix dimensions,
+        use `x.mT` to transpose those.
 
     Examples:
         >>> psis = dq.stack([dq.fock(3, 0), dq.fock(3, 1), dq.fock(3, 2)])
@@ -306,6 +316,9 @@ def moveaxis(
         (2, 3, 3, 1)
         >>> dq.moveaxis(x, 0, 1).shape
         (3, 2, 3, 1)
+
+    See also:
+        - [dq.swapaxes()][dynamiqs.swapaxes]: interchange two axes of a qarray.
     """
     return asqarray(x).moveaxis(source, destination)
 
@@ -313,16 +326,16 @@ def moveaxis(
 def expand_dims(x: QArrayLike, axis: int | Sequence[int]) -> QArray:
     r"""Expand the shape of a qarray by inserting new batch axes.
 
-    Warning:
-        New axes can only be inserted among the batch axes, not among the final two
-        matrix dimensions.
-
     Args:
         x (qarray-like of shape (..., n, m)): Qarray-like object.
         axis: Axis or axes where new dimensions are inserted.
 
     Returns:
         (qarray of shape (..., n, m)): Qarray with additional dimensions.
+
+    Warning:
+        New axes can only be inserted among the batch axes, not among the final two
+        matrix dimensions.
 
     Examples:
         >>> psis = dq.stack([dq.fock(3, 0), dq.fock(3, 1), dq.fock(3, 2)])
@@ -402,19 +415,16 @@ def where(condition: ArrayLike, x: QArrayLike, y: QArrayLike) -> QArray:
 def concatenate(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
     r"""Join a sequence of qarrays along an existing batch axis.
 
-    Warning:
-        All elements of the sequence `qarrays` must have identical `dims` attributes,
-        identical final two dimensions, and identical shapes except along `axis`.
-
     Args:
         qarrays: Qarrays to concatenate.
         axis: Batch axis in the result along which the input qarrays are concatenated.
 
     Returns:
-        Concatenated qarray.
+        (qarray of shape (..., n, m)): Concatenated qarray.
 
-    See also:
-        - [dq.stack()][dynamiqs.stack]: join a sequence of qarrays along a new axis.
+    Warning:
+        All elements of the sequence `qarrays` must have identical `dims` attributes,
+        identical final two dimensions, and identical shapes except along `axis`.
 
     Examples:
         >>> dq.concatenate([dq.stack([dq.fock(3, 0)]), dq.stack([dq.fock(3, 1)])])
@@ -426,6 +436,9 @@ def concatenate(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
          [[0.+0.j]
           [1.+0.j]
           [0.+0.j]]]
+
+    See also:
+        - [dq.stack()][dynamiqs.stack]: join a sequence of qarrays along a new axis.
     """
     qarrays, dims, vectorized, axis = _check_concatenate_input(qarrays, axis)
 
@@ -504,7 +517,8 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
             otherwise).
 
     Returns:
-        QuTiP Qobj or list of QuTiP Qobj.
+        (Qobj or list of Qobj): QuTiP Qobj, or nested list of Qobjs with the batch
+            shape of `x` for a batched input.
 
     Examples:
         >>> dq.fock(3, 1)
@@ -563,13 +577,13 @@ def sparsedia_from_dict(
         offsets_diags: Dictionary where keys are offsets and values are diagonals of
             shapes _(..., n-|offset|)_ with a common batch shape between all diagonals.
         dims (tuple of ints or None): Hilbert space dimension of each subsystem.
-            Defaults to `None` (`x.dims` if available, individual system `dims=(n,)`
-            otherwise).
+            Defaults to `None`, meaning a single system `dims=(n,)`.
         dtype: Data type of the qarray. If `None`, the data type is inferred from the
             diagonals.
 
     Returns:
-        A sparse diagonal qarray with non-zero diagonals at the specified offsets.
+        (qarray of shape (..., n, n)): Qarray in `dq.dia` layout with non-zero
+            diagonals at the specified offsets.
 
     Examples:
         >>> dq.sparsedia_from_dict({0: [1, 2, 3], 1: [4, 5], -1: [6, 7]})

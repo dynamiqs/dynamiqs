@@ -16,6 +16,7 @@ from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 from ._checks import check_shape, check_times
 from ._utils import cdtype, concatenate_sort, obj_type_str
+from .qarrays.composite_qarray import CompositeQArray
 from .qarrays.layout import Layout, dia, promote_layouts
 from .qarrays.qarray import QArray, QArrayLike, isqarraylike
 from .qarrays.utils import asqarray
@@ -111,9 +112,9 @@ def pwc(times: ArrayLike, values: ArrayLike, qarray: QArrayLike) -> PWCTimeQArra
     # values
     values = jnp.asarray(values, dtype=cdtype())
     if values.shape[-1] != len(times) - 1:
-        raise TypeError(
-            'Argument `values` must have shape `(..., len(times)-1)`, but has shape'
-            f' `{values.shape}.'
+        raise ValueError(
+            'Argument `values` must have shape (..., len(times)-1), but has shape'
+            f' values.shape={values.shape}.'
         )
 
     # qarray
@@ -124,7 +125,7 @@ def pwc(times: ArrayLike, values: ArrayLike, qarray: QArrayLike) -> PWCTimeQArra
 
 
 def modulated(
-    f: Callable[[RealScalarLike], Array | QArray],
+    f: Callable[[RealScalarLike], ArrayLike],
     qarray: QArrayLike,
     *,
     discontinuity_ts: ArrayLike | None = None,
@@ -184,9 +185,7 @@ def modulated(
 
 
 def timecallable(
-    f: Callable[[RealScalarLike], Array | QArray],
-    *,
-    discontinuity_ts: ArrayLike | None = None,
+    f: Callable[[RealScalarLike], QArray], *, discontinuity_ts: ArrayLike | None = None
 ) -> CallableTimeQArray:
     r"""Instantiate a callable timeqarray.
 
@@ -196,13 +195,14 @@ def timecallable(
     for any time $t$.
 
     Warning: The function `f` must return a qarray (not a qarray-like!)
-        An error is raised if the function `f` does not return a qarray. This error
-        concerns any other qarray-likes. This is enforced to avoid costly
-        conversions at every time step of the numerical integration.
+        Other qarray-likes are not supported: they are converted to a qarray at every
+        call, which is costly during the numerical integration, and some operations
+        on the returned timeqarray fail (e.g. adding it to another timeqarray). Wrap
+        the output with [`dq.asqarray()`][dynamiqs.asqarray] if needed.
 
     Args:
         f (function returning qarray of shape (..., n, n)): Function with
-            signature `(t: float) -> QArray` that returns the qarray $f(t)$.
+            signature `f(t: float) -> QArray` that returns the qarray $f(t)$.
         discontinuity_ts (array-like, optional): Times at which there is a
             discontinuous jump in the function values.
 
@@ -266,8 +266,11 @@ class TimeQArray(eqx.Module):
             necessarily contain unique values).
 
     Note: Arithmetic operation support
-        Timeqarrays support basic arithmetic operations `-, +, *` with other
-        qarray-likes or timeqarrays.
+        Timeqarrays support the following arithmetic operations:
+
+        - `+` and `-` with other timeqarrays, or with qarray-likes of compatible shape,
+        - `*` with scalars or batched scalars (arrays of shape _(..., 1, 1)_), but
+          not with qarrays or other timeqarrays.
     """
 
     # Subclasses should implement:
@@ -391,7 +394,7 @@ class TimeQArray(eqx.Module):
         """Returns the element-wise complex conjugate of the timeqarray.
 
         Returns:
-            New timeqarray with element-wise complex conjuguated values.
+            New timeqarray with element-wise complex conjugated values.
         """
 
     def dag(self) -> TimeQArray:
@@ -509,6 +512,10 @@ class ConstantTimeQArray(TimeQArray):
         self, qarray: QArray, *, tstart: float | None = None, tend: float | None = None
     ):
         super().__init__(tstart=tstart, tend=tend)
+        # `in_axes` maps every leaf, so the factors of a composite qarray must carry
+        # its full batch shape
+        if isinstance(qarray, CompositeQArray):
+            qarray = qarray.broadcast_to(*qarray.shape)
         self.qarray = qarray
 
     @property

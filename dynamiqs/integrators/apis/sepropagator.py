@@ -52,15 +52,16 @@ def sepropagator(
     This function computes the propagator $U(t)$ at time $t$ of the Schrödinger
     equation (with $\hbar=1$)
     $$
-        U(t) = \mathscr{T}\exp\left(-i\int_0^tH(t')\dt'\right),
+        U(t) = \mathscr{T}\exp\left(-i\int_{t_0}^tH(t')\dt'\right),
     $$
-    where $\mathscr{T}$ is the time-ordering symbol and $H$ is the system's
-    Hamiltonian. The formula simplifies to $U(t)=e^{-iHt}$ if the Hamiltonian
-    does not depend on time.
+    where $\mathscr{T}$ is the time-ordering symbol, $H$ is the system's Hamiltonian
+    and $t_0$ is the initial time. The formula simplifies to $U(t)=e^{-iH(t-t_0)}$ if
+    the Hamiltonian does not depend on time.
 
-    If the Hamiltonian is constant or piecewise constant, the propagator is
-    computed by directly exponentiating the Hamiltonian. Otherwise, the
-    propagator is computed by solving the Schrödinger equation with an ODE method.
+    With the default `method=None`, if the Hamiltonian is constant or piecewise
+    constant, the propagator is computed by directly exponentiating the Hamiltonian.
+    Otherwise, the propagator is computed by solving the Schrödinger equation with an
+    ODE method.
 
     Args:
         H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
@@ -83,71 +84,41 @@ def sepropagator(
             details.
 
     Returns:
-        `dq.SEPropagatorResult` object holding the result of the propagator computation.
-            Use `result.propagators` to access the saved propagators.
-
-            ??? "Detailed result API"
-                ```python
-                dq.SEPropagatorResult
-                ```
-
-                **Attributes:**
-
-                - **`propagators`** _(qarray of shape (..., nsave, n, n))_ - Saved
-                    propagators with `nsave = ntsave`, or `nsave = 1` if
-                    `save_propagators=False`.
-                - **`final_propagator`** _(qarray of shape (..., n, n))_ - Saved final
-                    propagator.
-                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
-                    if specified.
-                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
-                    resolution.
-                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
-                    were saved.
-                - **`method`** _(Method)_ - Method used.
-                - **`gradient`** _(Gradient)_ - Gradient used.
-                - **`options`** _(Options)_ - Options used.
+        [`dq.SEPropagatorResult`][dynamiqs.SEPropagatorResult] object holding the
+            result of the propagator computation. Use `result.propagators` to access
+            the saved propagators.
 
     Other Parameters:
         save_propagators: If `True`, the propagator is saved at every
             time in `tsave`, otherwise only the final propagator is returned. Defaults
             to `True`.
-        progress_meter: Progress
-            meter indicating how far the solve has progressed. Defaults to `None`
-            which uses the global default progress meter (see
+        progress_meter: Progress meter indicating how far the solve has progressed.
+            Defaults to `None` which uses the global default progress meter (see
             [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to `True`
-            for a [tqdm](https://github.com/tqdm/tqdm) progress meter, and `False`
-            for no output. If gradients are computed, the progress meter only
-            displays during the forward pass.
+            for a [`dq.TqdmProgressMeter`][dynamiqs.TqdmProgressMeter], `False` for a
+            [`dq.NoProgressMeter`][dynamiqs.NoProgressMeter], or pass any progress
+            meter such as a [`dq.TextProgressMeter`][dynamiqs.TextProgressMeter]. If
+            gradients are computed, the progress meter only displays during the
+            forward pass.
         t0: Initial time. If `None`, defaults to the first
             time in `tsave`. Defaults to `None`.
-        save_extra: A function with signature
+        save_extra: Function with signature
             `f(Scalar, QArray) -> PyTree` that takes the current time and propagator as
             input and returns a PyTree. This can be used to save additional
             arbitrary data during the integration, accessible in `result.extra`.
             Defaults to `None`.
 
     Examples:
-        ```python
-        import dynamiqs as dq
-        import jax.numpy as jnp
-
-        n = 16
-        a = dq.destroy(n)
-
-        H = a.dag() @ a
-        tsave = jnp.linspace(0, 1.0, 11)
-
-        result = dq.sepropagator(H, tsave)
-        print(result)
-        ```
-
-        ```text title="Output"
+        >>> n = 16
+        >>> a = dq.destroy(n)
+        >>> H = a.dag() @ a
+        >>> tsave = jnp.linspace(0, 1.0, 11)
+        >>> result = dq.sepropagator(H, tsave, progress_meter=False)
+        >>> print(result)
         ==== SEPropagatorResult ====
         Method      : Expm
         Infos       : 10 steps
         Propagators : QArray complex64 (11, 16, 16) | 22.0 Kb
-        ```
 
     # Advanced use-cases
 

@@ -106,16 +106,16 @@ plt.ylabel(r'$|\langle a(t) \rangle|$')
 ```
 
 <!-- invisible-code-block: python
-renderfig('photon-number-kerr-oscillator')
+renderfig('cavity-field-kerr-oscillator')
 -->
 
-![plot_photon_number_kerr](../../figs_docs/photon-number-kerr-oscillator.png){.fig}
+![plot_cavity_field_kerr](../../figs_docs/cavity-field-kerr-oscillator.png){.fig}
 
 We indeed observe a periodic revival of the coherent state, with a period of $\pi / K$. These revivals have a reduced amplitude due to the presence of photon loss.
 
 ### Study of revivals
 
-We can further investigate these periodic revivals by plotting the amplitude of the first revival as a function of the photon loss $\kappa$, and as a function of the initial coherent state amplitude. To do so, we make use of a powerful feature of Dynamiqs: the ability to **batch simulations concurrently**. Here, we can batch over both a jump operator and the initial state.
+We can further investigate these periodic revivals by plotting the amplitude of the first revival as a function of the photon loss $\kappa$, and as a function of the initial photon number $\bar{n}_0 = |\alpha_0|^2$. To do so, we make use of a powerful feature of Dynamiqs: the ability to **batch simulations concurrently**. Here, we can batch over both a jump operator and the initial state.
 
 ```python
 # parameters to sweep
@@ -138,7 +138,7 @@ amp_revivals = jnp.abs(result.expects[:, :, 0, -1] / result.expects[:, :, 0, 0])
 # plot a 2D map of the normalized amplitude revivals
 contour = plt.pcolormesh(nbar0s, kappas / K, amp_revivals)
 cbar = plt.colorbar(contour, label=r'$|\langle a(T) \rangle / \langle a(0) \rangle |$')
-plt.xlabel(r'Initial coherent state amplitude, $\bar{n}_0 = |\alpha_0|^2$')
+plt.xlabel(r'Initial photon number, $\bar{n}_0 = |\alpha_0|^2$')
 plt.ylabel(r'Loss rate, $\kappa / K$')
 plt.grid(False)
 ```
@@ -149,15 +149,15 @@ renderfig('amplitude-revivals-kerr-oscillator')
 
 ![plot_amplitude_revivals_kerr](../../figs_docs/amplitude-revivals-kerr-oscillator.png){.fig}
 
-We observe that the amplitude of the first revival decreases monotically with the photon loss rate $\kappa$, and with the initial coherent state amplitude $\bar{n}$. This behavior is consistent with the expected behavior of the Kerr oscillator. Remarkably, thanks to batching, such a set of hundreds of simulations can be run in a few seconds.
+We observe that the amplitude of the first revival decreases monotonically with the photon loss rate $\kappa$, and with the initial photon number $\bar{n}_0$, while the revival is complete for all $\bar{n}_0$ in the absence of loss. This behavior is consistent with the expected behavior of the Kerr oscillator. Remarkably, thanks to batching, such a set of over a hundred simulations can be run in a few seconds.
 
 ## The transmon regime
 
-In this section, we investigate the driven-dissipative Kerr oscillator in the transmon regime, where the Kerr non-linearity is much larger than the driving field and the dissipation rate, $K \gg |\epsilon| \gg \kappa$. In this regime, the two lowest-energy Fock states are frequency-detuned and thus decoupled from the rest of the system, allowing for quantum information processing.
+In this section, we investigate the driven-dissipative Kerr oscillator in the transmon regime, where the Kerr non-linearity is much larger than the driving field and the dissipation rate, $K \gg |\epsilon| \gg \kappa$. In this regime, the drive is resonant with the transition between the Fock states $|0\rangle$ and $|1\rangle$, which have the same energy, while the transition from $|1\rangle$ to $|2\rangle$ is detuned by $2K$. The two Fock states $|0\rangle$ and $|1\rangle$ are thus effectively decoupled from the rest of the system, allowing for quantum information processing.
 
 ### Rabi oscillations
 
-Because this regime describes an **effective two-level system**, we can observe Rabi oscillations. These can be simulated by constant driving the system initialized in vacuum.
+Because this regime describes an **effective two-level system**, we can observe Rabi oscillations. These can be simulated by constantly driving the system initialized in vacuum.
 
 ```python
 # simulation parameters
@@ -211,17 +211,17 @@ renderfig('rabi-oscillations-kerr-oscillator')
 
 We indeed find Rabi oscillations between Fock states $|0\rangle$ and $|1\rangle$, with a period of $\pi / \epsilon$. However, these oscillations are **damped** due to the presence of photon loss. In addition, we observe that a small fraction of the total population is periodically **leaked** to higher Fock states. This is because the Kerr oscillator is not a perfect two-level system, and the driving field is too large compared to the Kerr non-linearity.
 
-### A gaussian pi-pulse
+### A Gaussian pi-pulse
 
-We now study the optimization of a single-qubit gate for this effective two-level system, a crucial step in quantum information processing. More precisely, we aim to **find the best parameters to maximize the fidelity of a $\pi$-pulse**, i.e., a pulse that swaps the populations of the two lowest-energy Fock states. To do so, we need to balance the amplitude damping due to photon loss with the leakage to higher excited states due to finite pulse duration.
+We now study the optimization of a single-qubit gate for this effective two-level system, a crucial step in quantum information processing. More precisely, we aim to **find the best parameters to maximize the fidelity of a $\pi$-pulse**, i.e., a pulse that swaps the populations of the Fock states $|0\rangle$ and $|1\rangle$. To do so, we need to balance the amplitude damping due to photon loss with the leakage to higher excited states due to finite pulse duration.
 
-We define a pulse ansatz and optimize the $\pi$-pulse fidelity by sweeping the parameters of this ansatz. The ansatz we study is that of a **truncated gaussian**, of the form
+We define a pulse ansatz and optimize the $\pi$-pulse fidelity by sweeping the parameters of this ansatz. The ansatz we study is that of a **truncated Gaussian**, of the form
 
 $$
     \epsilon_{T, \sigma}(t) = \frac{\pi}{2}\frac{1}{\sqrt{2\pi}\sigma T \mathrm{erf}\left(\frac{1}{2\sqrt{2} \sigma}\right)} \exp\left(-\frac{1}{2}\frac{(t - T/2)^2}{\sigma^2 T^2}\right),
 $$
 
-where $T$ the gate duration, and $\sigma$ the normalized pulse width. One can easily check that the pulse area condition is satisfied, i.e.,
+where $T$ is the gate duration, and $\sigma$ the normalized pulse width. One can easily check that the pulse area condition is satisfied, i.e.,
 
 $$
     2\int_0^T \epsilon(t) \dd t = \pi.
@@ -240,7 +240,7 @@ def pulse(t, T, sigma):
     return angle * gaussian / norm
 ```
 
-Then, we can define our sweeping parameters, and run the simulation by combining batching over `dq.modulated` to batch over the pulse width, and a `jax.vmap` to batch over the gate duration.
+Then, we can define our sweeping parameters, and run the simulation by combining batching over [`dq.modulated()`][dynamiqs.modulated] to batch over the pulse width, and a `jax.vmap` to batch over the gate duration.
 ```python
 from functools import partial
 
@@ -298,13 +298,13 @@ renderfig('pipulse-kerr-oscillator')
 
 ![plot_pipulse_kerr_oscillator](../../figs_docs/pipulse-kerr-oscillator.png){.fig}
 
-We observe that the fidelity of the $\pi$-pulse is maximized over a band of pulse widths and gate durations. In practice, one wants to reduce the gate duration as much as possible, but this corresponds to large pulse widths. However, such large-width truncated gaussians are not physical because they do not verify $\epsilon(0) = \epsilon(T) = 0$, and similarly for higher derivatives. This is a limitation of our gaussian ansatz, and one would need to consider more complex pulse shapes to optimize this $\pi$-pulse in a realistic setting.
+We observe that the fidelity of the $\pi$-pulse is maximized over a band of pulse widths and gate durations. In practice, one wants to reduce the gate duration as much as possible, but this corresponds to large pulse widths. However, such large-width truncated Gaussians are not physical because they do not verify $\epsilon(0) = \epsilon(T) = 0$, and similarly for higher derivatives. This is a limitation of our Gaussian ansatz, and one would need to consider more complex pulse shapes to optimize this $\pi$-pulse in a realistic setting.
 
 ### Optimization with GRAPE
 
 In this section, we turn to the numerical optimization of the $\pi$-pulse using gradient ascent pulse engineering (GRAPE). This method consists of **parametrizing the input pulse** through a piece-wise constant function, and optimizing each parameter through **gradient descent**.
 
-To do so, we use the [`optax`](https://optax.readthedocs.io/en/latest/) library for optimization, which provides a simple interface to various gradient descent algorithms. We define a loss function to minimize, which is the negative fidelity of the $\pi$-pulse, and a smoothness loss to penalize sharp variations in the pulse. We then run the optimization loop.
+To do so, we use the [`optax`](https://optax.readthedocs.io/en/latest/) library for optimization, which provides a simple interface to various gradient descent algorithms. We define a loss function to minimize, which is the infidelity $1 - F$ of the $\pi$-pulse, and a smoothness loss to penalize sharp variations in the pulse. We then run the optimization loop.
 
 ```python
 import optax
@@ -328,7 +328,7 @@ jump_ops = [jnp.sqrt(kappa) * a]
 psi0 = dq.basis(n, 0)
 exp_ops = [dq.proj(dq.basis(n, 0)), dq.proj(dq.basis(n, 1))]
 
-# save times and pulse times (not necessarely the same)
+# save times and pulse times (not necessarily the same)
 tsave = jnp.linspace(0.0, T, ntsave)
 tpulse = jnp.linspace(0.0, T, ntpulse)
 
@@ -413,6 +413,6 @@ renderfig('losses-kerr-oscillator')
 
 ![plot_losses_kerr](../../figs_docs/losses-kerr-oscillator.png){.fig}
 
-We find that the overall loss decreases monotonically, with a smoothness loss kept relatively low compared to the fidelity loss. We also find convergence of the loss function, indicating that the optimization process is successful. Of course, the hyper parameters such as the relative weight of each loss, the number of pulse time steps, the learning rate, or the number of epochs, could be further tuned.
+We find that the overall loss decreases monotonically, with a smoothness loss kept relatively low compared to the fidelity loss. We also find convergence of the loss function, indicating that the optimization process is successful. Of course, the hyperparameters such as the relative weight of each loss, the number of pulse time steps, the learning rate, or the number of epochs, could be further tuned.
 
-For optimal control applications, we also recommend checking out [`qontrol`](https://dkweiss.net/qontrol/) which is build on top of Dynamiqs, and provides a more advanced interface for pulse optimization.
+For optimal control applications, we also recommend checking out [`qontrol`](https://dkweiss.net/qontrol/) which is built on top of Dynamiqs, and provides a more advanced interface for pulse optimization.

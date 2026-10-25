@@ -128,6 +128,8 @@ def hinton(
     x: QArrayLike,
     *,
     ax: Axes | None = None,
+    w: float = 7.0,
+    h: float | None = None,
     cmap: str | None = None,
     vmin: float | None = None,
     vmax: float | None = None,
@@ -140,8 +142,36 @@ def hinton(
 ):
     """Plot a Hinton diagram.
 
-    Warning:
-        Documentation redaction in progress.
+    Each matrix element is represented by a square whose area is proportional to its
+    absolute value, with a full square for `max(|vmin|, |vmax|)` for a real matrix and
+    for `vmax` for a complex matrix. For a real matrix, the color encodes the value of
+    the element; for a complex matrix, it encodes its phase.
+
+    Args:
+        x (qarray-like of shape (n, n)): Real or complex matrix.
+        ax: Matplotlib `Axes` to plot on. If `None`, a new figure of size `(w, h)`
+            is created.
+        w: Width of the new figure in inches, ignored if `ax` is specified.
+        h: Height of the new figure in inches, ignored if `ax` is specified. If
+            `None`, defaults to `w / 1.6`.
+        cmap: Colormap of the squares. If `None`, defaults to `'Blues'` for a real
+            matrix with non-negative elements, `'dq'` for a real matrix with negative
+            elements, and the cyclic `'cmasher:copper'` for a complex matrix.
+        vmin: For a real matrix, value mapped to the lowest color. If `None`,
+            defaults to `0` for non-negative elements and to the minimum of `x`
+            otherwise. Ignored for a complex matrix.
+        vmax: For a real matrix, value mapped to the highest color. For a complex
+            matrix, magnitude drawn as a full square. If `None`, defaults to the
+            maximum of `x` for a real matrix, and to the maximum magnitude of `x` for
+            a complex matrix.
+        colorbar: Whether to add a colorbar.
+        allticks: Whether to show a tick for every row and column, otherwise only a
+            subset of integer ticks is shown.
+        ticklabels: Labels of the rows and columns, shown as bras for the rows and
+            kets for the columns. Setting it implies `allticks=True`.
+        ecolor: Edge color of the squares.
+        ewidth: Edge width of the squares.
+        clear: Whether to remove the axes and the colorbar.
 
     Examples:
         >>> rho = dq.coherent_dm(16, 2.0)

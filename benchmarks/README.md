@@ -83,7 +83,7 @@ The comparison table aligns cases by name and parameters and reports the change 
 
 ## Benchmarking on GPU
 
-Install a CUDA-enabled JAX build (e.g. `uv pip install -U "jax[cuda12]"`), then run as usual — JAX picks up the GPU automatically and the device is recorded in the results. For stable numbers, run on an idle machine; timings are synchronized with `jax.block_until_ready()`, so asynchronous dispatch does not skew them. Only compare runs made on the same device and precision.
+Install a CUDA-enabled JAX build (e.g. `uv pip install -U "jax[cuda13]"`), then run as usual — JAX picks up the GPU automatically and the device is recorded in the results. For stable numbers, run on an idle machine; timings are synchronized with `jax.block_until_ready()`, so asynchronous dispatch does not skew them. Only compare runs made on the same device and precision.
 
 ## Adding a case
 

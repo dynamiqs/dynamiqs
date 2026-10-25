@@ -118,11 +118,29 @@ def test_asqarray_keeps_sparse_sequences_sparse():
 
 
 @pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', [None, dq.dense, dq.dia])
+def test_asqarray_warns_on_ignored_dims(layout):
+    x = dq.eye(6, layout=dq.dense)
+    with pytest.warns(UserWarning, match='Ignoring the provided `dims`'):
+        y = dq.asqarray(x, dims=(2, 3), layout=layout)
+    assert y.dims == (6,)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
 @pytest.mark.parametrize('layout', [dq.dense, dq.dia])
 def test_stack_keeps_vectorized(layout):
     a = dq.destroy(3, layout=layout)
     L = dq.slindbladian(a, [a])
     assert dq.stack([L, L]).vectorized
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_stack_composite():
+    # composite qarrays with different numbers of terms stack as their full matrices
+    A = dq.tensor(dq.destroy(3), dq.number(4), composite=True)
+    B = A + dq.tensor(dq.number(3), dq.destroy(4), composite=True)
+    x = dq.stack([A, B])
+    assert jnp.allclose(x.to_jax(), jnp.stack([A.to_jax(), B.to_jax()]))
 
 
 @pytest.mark.run(order=TEST_INSTANT)

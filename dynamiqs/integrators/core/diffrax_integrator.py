@@ -227,6 +227,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         saveat: dx.SaveAt,
         event: dx.Event | None = None,
         dtmax: float | None = None,
+        throw: bool = True,
     ) -> dx.Solution:
         with warnings.catch_warnings():
             # TODO: remove once complex support is stabilized in diffrax
@@ -271,6 +272,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                 adjoint=self.adjoint,
                 event=event,
                 max_steps=self.max_steps,
+                throw=throw,
                 progress_meter=progress_meter_to_diffrax(
                     cast(AbstractProgressMeter, self.options.progress_meter)
                 ),

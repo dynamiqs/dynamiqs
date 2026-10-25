@@ -1,6 +1,6 @@
 # The sharp bits 🔪
 
-This page highlight common pitfalls that users may encounter when learning to use Dynamiqs.
+This page highlights common pitfalls that users may encounter when learning to use Dynamiqs.
 
 ```python
 import dynamiqs as dq
@@ -8,7 +8,7 @@ import dynamiqs as dq
 
 ## Main differences with QuTiP
 
-The syntax in Dynamiqs is similar to [QuTiP](http://qutip.org/), a popular Python library for quantum simulation. However, there are some important differences that you should be aware of.
+The syntax in Dynamiqs is similar to [QuTiP](https://qutip.org/), a popular Python library for quantum simulation. However, there are some important differences that you should be aware of.
 
 ### Floating-point precision
 
@@ -24,7 +24,7 @@ When using single-precision, there are certain limitations to be aware of:
 - **Tolerances**: If you require very precise simulation results (e.g. if you set lower `rtol` and `atol` than the default values), the simulation time may increase significantly, and simulations may even get stuck. In such cases, it is recommended to switch to double-precision.
 
 !!! Warning
-    Most GPUs do not have native support for double-precision, and only perform well in single-precision. However, note that some recent NVIDIA GPUs (e.g. V100, A100, H100) do provide efficient support for double-precision.
+    Consumer GPUs have a much lower double-precision throughput than single-precision, so double-precision simulations can be considerably slower on them. Data-center GPUs (e.g. NVIDIA V100, A100, H100) support double-precision efficiently.
 
 <!-- set precision back to default
 ```python
@@ -76,7 +76,7 @@ In QuTiP, the `*` symbol is used to multiply two operators. This convention also
     NotImplementedError: Element-wise multiplication of two qarrays with the `*` operator is not supported. For matrix multiplication, use `x @ y`. For element-wise multiplication, use `x.elmul(y)`.
     ```
 
-If you *actually* want to multiply two operators element-wise,you can use `x.elmul(y)`.
+If you *actually* want to multiply two operators element-wise, you can use `x.elmul(y)`.
 
 Likewise, you should use `x.powm()` instead of `**` (element-wise power) to compute the power of a matrix:
 
@@ -103,19 +103,25 @@ If you want to simulate multiple Hamiltonians or initial states, you should use 
 
 ## Computing the gradient with respect to complex parameters
 
-To optimize a real-valued function of complex parameters $f:\mathbb{C}^p\to\mathbb{R}$, you should take a step in the direction of the **conjugate** of the gradient given by JAX. For example, if you use the SciPy optimizers with `scipy.minimize()`, you need to conjuguate the gradient before providing it to the optimiser:
+To optimize a real-valued function of complex parameters $f:\mathbb{C}^p\to\mathbb{R}$, you should take a step in the direction of the **conjugate** of the gradient given by JAX. For example, if you use the SciPy optimizers with `scipy.optimize.minimize()`, you need to conjugate the gradient before providing it to the optimizer:
 
 <!-- skip: start -->
 === ":material-check: Correct"
     ```python
+    import jax
+    import scipy.optimize
+
     grad = lambda x: jax.grad(f)(x).conj()
-    scipy.minimize(f, ..., jac=grad)
+    scipy.optimize.minimize(f, ..., jac=grad)
     ```
 === ":material-close: Incorrect"
     ```python
+    import jax
+    import scipy.optimize
+
     grad = lambda x: jax.grad(f)(x)
-    scipy.minimize(f, ..., jac=grad)
+    scipy.optimize.minimize(f, ..., jac=grad)
     ```
 <!-- skip: end -->
 
-See the [JAX documentation](https://jax.readthedocs.io/en/latest/notebooks/autodiff_cookbook.html#complex-numbers-and-differentiation) and the [PyTorch documentation](https://pytorch.org/docs/stable/notes/autograd.html#autograd-for-complex-numbers) for detailed discussions on complex numbers and differentiation.
+See the [JAX documentation](https://docs.jax.dev/en/latest/notebooks/autodiff_cookbook.html#complex-numbers-and-differentiation) and the [PyTorch documentation](https://pytorch.org/docs/stable/notes/autograd.html#autograd-for-complex-numbers) for detailed discussions on complex numbers and differentiation.

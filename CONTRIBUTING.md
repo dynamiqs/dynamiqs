@@ -10,10 +10,10 @@ The project was written using Python 3.11+, you must have a compatible version o
 
 ## 2. Setup
 
-Clone the repository and dive in:
+[Fork the repository](https://github.com/dynamiqs/dynamiqs/fork) on GitHub, then clone your fork and dive in:
 
 ```shell
-git clone git@github.com:dynamiqs/dynamiqs.git
+git clone https://github.com/<your-username>/dynamiqs.git
 cd dynamiqs
 ```
 
@@ -30,13 +30,13 @@ To install the library with all its dependencies, as well as the developer depen
 
 ## 3. Workflow
 
-### Github flow
+### GitHub flow
 
 We use the GitHub flow branch-based workflow to collaborate on the library. If you're unfamiliar with open-source development, you can follow the [GitHub flow tutorial](https://docs.github.com/en/get-started/using-github/github-flow). Briefly, to add a change you should: fork the repository, create a branch, make and commit your changes, create a pull request (PR), address review comments, and merge the PR.
 
 ### Planning your change
 
-If you are planning a large change (more than one hundred lines of code), it is usually more efficient to discuss it with us beforehand. This way, we can agree on the API and the main logic. For structural or significant changes, we typically write and iterate on small RFCs (Requests for Comments). For large change, please separate the logical building blocks of your change into distinct pull requests as much as possible. Long PRs are harder to review, and breaking them down will make everyone's life easier.
+If you are planning a large change (more than one hundred lines of code), it is usually more efficient to discuss it with us beforehand. This way, we can agree on the API and the main logic. For structural or significant changes, we typically write and iterate on small RFCs (Requests for Comments). For large changes, please separate the logical building blocks of your change into distinct pull requests as much as possible. Long PRs are harder to review, and breaking them down will make everyone's life easier.
 
 If the proposed change is necessary for your work and has not been reviewed within reasonable time (a few working days), don’t hesitate to ping the main developers directly on the PR.
 
@@ -59,7 +59,10 @@ format       auto-format the code (ruff)
 codespell    check for misspellings (codespell)
 type         check types (ty)
 clean        clean the code (ruff + codespell + ty)
+check        run the static checks (ruff + codespell + ty)
 test         run the unit tests suite (pytest)
+bench        run the timing benchmarks (see benchmarks/README.md)
+durations    regenerate .test_durations for CI test sharding (pytest-split)
 doctest-code check code docstrings examples (doctest)
 doctest-docs check documentation examples (doctest)
 doctest      check all examples (doctest)
@@ -98,7 +101,7 @@ task docbuild
 
 This will create a `site/` directory with the contents of the documentation website. You can then simply open `site/index.html` in your web browser to view the documentation website.
 
-The published website is versioned with [mike](https://zensical.org/docs/compatibility/mkdocs/mike/): each push to `main` deploys the `dev` version, and each release tag `vX.Y.Z` deploys the version `X.Y.Z` and makes it the `stable` one (see `.github/workflows/publish-doc.yml`).
+The published website is versioned with [mike](https://zensical.org/docs/compatibility/mkdocs/mike/): each push to `main` deploys the `dev` version, and each release tag `vX.Y.Z` deploys the version `X.Y` and makes it the `stable` one (see `.github/workflows/publish-doc.yml`).
 
 ## 4. Style guide
 
@@ -119,7 +122,7 @@ The main goal to keep in mind is that if someone reads a past PR, they should qu
 When writing your function:
 
 - Type all arguments of your function, and its return type.
-- When typing a public function, use `QArrayLike` for qarray inputs, `asqarray()` to convert to a proper qarray, and `QArray` for qarray outputs. Use `ArrayLike` for array inputs, `jnp.asarray()` to convert to a proper array, and `Array` for array outputs. See related [JAX typing best practices](https://jax.readthedocs.io/en/latest/jax.typing.html#jax-typing-best-practices).
+- When typing a public function, use `QArrayLike` for qarray inputs, `asqarray()` to convert to a proper qarray, and `QArray` for qarray outputs. Use `ArrayLike` for array inputs, `jnp.asarray()` to convert to a proper array, and `Array` for array outputs. See related [JAX typing best practices](https://docs.jax.dev/en/latest/jax.typing.html#jax-typing-best-practices).
 - Ensure you run `task docserve` to verify how the documentation for your function appears, and correct any issues with rendering.
 - To type a qarray or an array shape, use `...` to denote possible batch dimensions, use `n` for the Hilbert space dimension.
 - To add an axis to a qarray or an array, favor `[None, ...]` over `unsqueeze`.
@@ -128,8 +131,8 @@ When writing your function:
 Make sure to add your function:
 
 1. to the `__all__` variable at the top of the file (this is how we control namespaces to have everything available under `dq.*`),
-2. to the `nav` of the `dynamiqs/zensical.toml` file (so it appears in the documentation and navigation),
-3. to the `dynamiqs/docs/python_api/index.md` file (so it appears on the Python API page, which lists all the functions of the library).
+2. to the `nav` of the `zensical.toml` file at the root of the repository (so it appears in the documentation and navigation),
+3. to the `docs/python_api/index.md` file (so it appears on the Python API page, which lists all the functions of the library).
 
 ### Writing a docstring
 
@@ -142,10 +145,10 @@ We use [Google-style docstrings](https://google.github.io/styleguide/pyguide.htm
 
 ### Documentation
 
-- For internal links, use `[dq.Options][dynamiqs.Options]` for a class, `[dq.sesolve()][dynamiqs.sesolve]` for a function (explicitely include `()` in the function name), and `(doc page)(relative/path/to/file.md)` for another documentation page (note the parentheses instead of brackets).
+- For internal links, use `[dq.QArray][dynamiqs.QArray]` for a class, `[dq.sesolve()][dynamiqs.sesolve]` for a function (explicitly include `()` in the function name), and `(doc page)(relative/path/to/file.md)` for another documentation page (note the parentheses instead of brackets).
 - If you want to add an icon somewhere, use one of the `:material-*` (search the list [here](https://pictogrammers.com/library/mdi/), see also the [Zensical documentation](https://zensical.org/docs/authoring/icons-emojis/)).
 
-### Exceptions message
+### Exception messages
 
 - Use one or multiple sentences starting with a capital letter and ending with a period.
 - Use backticks ``` ` ``` to refer to a variable name or a function. Use `'` to refer to a string.

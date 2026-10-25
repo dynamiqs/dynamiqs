@@ -15,6 +15,8 @@ __all__ = ['Options']
 
 
 class Options(eqx.Module):
+    """Solver options, built internally from the solver keyword arguments."""
+
     save_states: bool = True
     save_propagators: bool = True
     cartesian_batching: bool = True
@@ -96,6 +98,7 @@ def check_options(options: Options, solver_name: str):
             'assume_hermitian',
         ),
         'sepropagator': ('save_propagators', 'progress_meter', 't0', 'save_extra'),
+        'mesteadystate': ('cartesian_batching', 'vectorized', 'assume_hermitian'),
         'mepropagator': (
             'save_propagators',
             'cartesian_batching',

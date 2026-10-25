@@ -4,7 +4,16 @@ from abc import abstractmethod
 from collections.abc import Sequence
 from math import prod
 from numbers import Complex
-from typing import Any, TypeAlias, TypeGuard, Union, cast, get_args, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    TypeAlias,
+    TypeGuard,
+    Union,
+    cast,
+    get_args,
+    overload,
+)
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -17,6 +26,9 @@ from qutip import Qobj
 from .._utils import is_batched_scalar
 from .dataarray import IndexType
 from .layout import Layout
+
+if TYPE_CHECKING:
+    from .materialized_qarray import MaterializedQArray
 
 __all__ = ['QArray']
 
@@ -145,7 +157,7 @@ class QArray(eqx.Module):
     - Dense: wrapper around JAX arrays, dense representation of the array.
     - SparseDIA: Dynamiqs sparse diagonal format, storing only the non-zero diagonals.
 
-    Note: Constructing a new qarray from an other array type
+    Note: Constructing a new qarray from another array type
         Use the function [`dq.asqarray()`][dynamiqs.asqarray] to create a qarray from a
         qarray-like. Objects that can be converted to a `QArray` are of type
         `dq.QArrayLike`. This includes all numeric types (`bool`, `int`, `float`,
@@ -158,16 +170,34 @@ class QArray(eqx.Module):
         ndim (int): Number of dimensions in the shape.
         layout (Layout): Data layout, either `dq.dense` or `dq.dia`.
         dims (tuple of ints): Hilbert space dimension of each subsystem.
-        mT (qarray): Returns the qarray transposed over its last two dimensions.
+        ndiags (int): Number of stored diagonals, only defined for the `dq.dia`
+            layout.
+        mT (qarray): Qarray transposed over its last two dimensions.
         vectorized (bool): Whether the underlying object is non-vectorized (ket, bra
             or operator) or vectorized (operator in vector form or superoperator in
             matrix form).
 
     Note: Arithmetic operation support
-        Qarrays support basic arithmetic operations `-, +, *, /, @` with other
-        qarray-likes.
+        Qarrays support the following arithmetic operations:
 
-    Note: Shortcuts methods to use quantum utilities
+        - `+` and `-` with qarray-likes of broadcastable shape. Adding a scalar raises
+          an error: use `x + y * dq.eye_like(x)` to add a scaled identity, or
+          [`x.addscalar(y)`][dynamiqs.qarrays.qarray.QArray.addscalar] to add `y` to
+          every element.
+        - `*` and `/` with scalars or batched scalars (arrays of shape
+          _(..., 1, 1)_). Multiplying two qarrays raises an error: use `x @ y` for
+          the matrix product, or
+          [`x.elmul(y)`][dynamiqs.qarrays.qarray.QArray.elmul] for the element-wise
+          product.
+        - `@` with qarray-likes, for the matrix product.
+        - `&` with qarrays, for the tensor product (see
+          [`dq.tensor()`][dynamiqs.tensor]).
+
+        The `**` operator raises an error: use `x.powm(n)` for the matrix power, or
+        [`x.elpow(n)`][dynamiqs.qarrays.qarray.QArray.elpow] for the element-wise
+        power.
+
+    Note: Shortcut methods to use quantum utilities
         Many functions of the library can be called directly on a qarray rather than
         through the functional API. For example, you can use `x.dag()` instead of
         `dq.dag(x)`.
@@ -198,13 +228,18 @@ class QArray(eqx.Module):
     | `x.proj()`                                               | Alias of [`dq.proj(x)`][dynamiqs.proj].                        |
     | [`x.reshape(*shape)`][dynamiqs.qarrays.qarray.QArray.reshape] | Returns a reshaped copy of a qarray.                           |
     | [`x.broadcast_to(*shape)`][dynamiqs.qarrays.qarray.QArray.broadcast_to] | Broadcasts a qarray to a new shape.                            |
-    | [`x.swapaxes(axis1, axis2)`][dynamiqs.qarrays.qarray.QArray.swapaxes] | Interchanges two axes of a qarray.                            |
-    | [`x.moveaxis(source, destination)`][dynamiqs.qarrays.qarray.QArray.moveaxis] | Moves axes of a qarray to new positions.                      |
+    | [`x.swapaxes(axis1, axis2)`][dynamiqs.qarrays.qarray.QArray.swapaxes] | Interchanges two axes of a qarray.                             |
+    | [`x.moveaxis(source, destination)`][dynamiqs.qarrays.qarray.QArray.moveaxis] | Moves axes of a qarray to new positions.                       |
     | [`x.expand_dims(axis)`][dynamiqs.qarrays.qarray.QArray.expand_dims] | Expands the shape of a qarray by inserting new axes.           |
+    | `x.squeeze(axis)`                                        | Removes axes of length one.                                    |
+    | `x.sum(axis)`                                            | Sums over the given axes.                                      |
+    | `x.mean(axis)`                                           | Averages over the given axes.                                  |
     | `x.where(condition, y)`                                  | Alias of [`dq.where(condition, x, y)`][dynamiqs.where].        |
     | [`x.addscalar(y)`][dynamiqs.qarrays.qarray.QArray.addscalar] | Adds a scalar.                                                 |
     | [`x.elmul(y)`][dynamiqs.qarrays.qarray.QArray.elmul]     | Computes the element-wise multiplication.                      |
     | [`x.elpow(power)`][dynamiqs.qarrays.qarray.QArray.elpow] | Computes the element-wise power.                               |
+    | `x.devices()`                                            | Returns the devices on which the qarray is stored.             |
+    | `x.block_until_ready()`                                  | Waits until the qarray is computed, then returns it.           |
 
     There are also several conversion methods available:
 
@@ -236,6 +271,13 @@ class QArray(eqx.Module):
             raise TypeError(
                 f'Argument `dims` must be a tuple of ints, but is {self.dims}.'
             )
+
+    # === Materialization ===
+
+    @abstractmethod
+    def _materialize(self) -> MaterializedQArray:
+        # the same qarray stored as one full matrix
+        pass
 
     # === Properties delegated to DataArray ===
 
@@ -277,7 +319,7 @@ class QArray(eqx.Module):
         """Returns the element-wise complex conjugate of the qarray.
 
         Returns:
-            New qarray with element-wise complex conjuguated values.
+            New qarray with element-wise complex conjugated values.
         """
 
     def dag(self) -> QArray:
@@ -311,7 +353,7 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def swapaxes(self, axis1: int, axis2: int) -> QArray:
-        """Interchange two axes of a qarray.
+        """Interchanges two axes of a qarray.
 
         Args:
             axis1: First axis.
@@ -325,7 +367,7 @@ class QArray(eqx.Module):
     def moveaxis(
         self, source: int | Sequence[int], destination: int | Sequence[int]
     ) -> QArray:
-        """Move axes of a qarray to new positions.
+        """Moves axes of a qarray to new positions.
 
         Args:
             source: Original positions of the axes to move.
@@ -337,7 +379,7 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def expand_dims(self, axis: int | Sequence[int]) -> QArray:
-        """Expand the shape of a qarray by inserting new axes.
+        """Expands the shape of a qarray by inserting new axes.
 
         Args:
             axis: Axis or axes where new dimensions are inserted.
@@ -347,7 +389,7 @@ class QArray(eqx.Module):
         """
 
     def where(self, condition: ArrayLike, y: QArrayLike) -> QArray:
-        """Select values from this qarray or another operand depending on a condition.
+        """Selects values from this qarray or another operand depending on a condition.
 
         Args:
             condition: Boolean array-like condition.
@@ -660,7 +702,7 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def __getitem__(self, key: IndexType) -> QArray | Array:
-        """Get item from the qarray.
+        """Indexes the qarray.
 
         Note:
             If the indexing operation modifies the last two dimensions of the qarray,

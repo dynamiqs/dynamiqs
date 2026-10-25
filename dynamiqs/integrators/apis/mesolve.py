@@ -106,7 +106,8 @@ def mesolve(
         H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
         jump_ops (list of qarray-like or timeqarray, each of shape (...Lk, n, n)):
             List of jump operators.
-        rho0 (qarray-like of shape (...rho0, n, 1) or (...rho0, n, n)): Initial state.
+        rho0 (qarray-like of shape (...rho0, n, 1) or (...rho0, n, n)): Initial state,
+            must have the dense layout.
         tsave (array-like of shape (ntsave,)): Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified.
@@ -131,34 +132,12 @@ def mesolve(
             details.
 
     Returns:
-        `dq.MESolveResult` object holding the result of the
-            Lindblad master equation integration. Use `result.states` to access the
-            saved states and `result.expects` to access the saved expectation values.
-
-            ??? "Detailed result API"
-                ```python
-                dq.MESolveResult
-                ```
-
-                **Attributes:**
-
-                - **`states`** _(qarray of shape (..., nsave, n, n))_ - Saved states
-                    with `nsave = ntsave`, or `nsave = 1` if `save_states=False`.
-                - **`final_state`** _(qarray of shape (..., n, n))_ - Saved final state.
-                - **`expects`** _(array of shape (..., len(exp_ops), ntsave) or None)_ -
-                    Saved expectation values, if specified by `exp_ops`.
-                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
-                    if specified.
-                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
-                    resolution.
-                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
-                    were saved.
-                - **`method`** _(Method)_ - Method used.
-                - **`gradient`** _(Gradient)_ - Gradient used.
-                - **`options`** _(Options)_ - Options used.
-                - **`lowrank_states`** _(qarray of shape (..., nsave, n, rank))_ - Only
-                    available when using [`LowRank`][dynamiqs.method.LowRank], stores
-                    the low-rank factors `m(t)`.
+        [`dq.MESolveResult`][dynamiqs.MESolveResult] object holding the result of the
+            Lindblad master equation integration, or
+            [`dq.MESolveLowRankResult`][dynamiqs.MESolveLowRankResult] object with the
+            [`LowRank`][dynamiqs.method.LowRank] method. Use `result.states` to access
+            the saved states and `result.expects` to access the saved expectation
+            values.
 
     Other Parameters:
         save_states: If `True`, the state is saved at every time in
@@ -166,16 +145,17 @@ def mesolve(
         cartesian_batching: If `True`, batched arguments are treated
             as separated batch dimensions, otherwise the batching is performed over a
             single shared batch dimension. Defaults to `True`.
-        progress_meter: Progress
-            meter indicating how far the solve has progressed. Defaults to `None`
-            which uses the global default progress meter (see
+        progress_meter: Progress meter indicating how far the solve has progressed.
+            Defaults to `None` which uses the global default progress meter (see
             [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to `True`
-            for a [tqdm](https://github.com/tqdm/tqdm) progress meter, and `False`
-            for no output. If gradients are computed, the progress meter only
-            displays during the forward pass.
+            for a [`dq.TqdmProgressMeter`][dynamiqs.TqdmProgressMeter], `False` for a
+            [`dq.NoProgressMeter`][dynamiqs.NoProgressMeter], or pass any progress
+            meter such as a [`dq.TextProgressMeter`][dynamiqs.TextProgressMeter]. If
+            gradients are computed, the progress meter only displays during the
+            forward pass.
         t0: Initial time. If `None`, defaults to the first
             time in `tsave`. Defaults to `None`.
-        save_extra: A function with signature
+        save_extra: Function with signature
             `f(Scalar, QArray) -> PyTree` that takes the current time and state as
             input and returns a PyTree. This can be used to save additional
             arbitrary data during the integration, accessible in `result.extra`.
@@ -187,7 +167,7 @@ def mesolve(
             efficient for small Hilbert spaces but less efficient for large Hilbert
             spaces. Only supported for Diffrax-based ODE methods. Defaults to `False`.
         assume_hermitian: If `True`, the initial density matrix
-            `rho0` is assumed to be Hermitian. This allows to halve the number of
+            `rho0` is assumed to be Hermitian. This halves the number of
             matrix multiplications during vector field evaluation since only the
             Hermitian part of `rho` is evolved. Only compatible with explicit
             Diffrax-based ODE methods (not `Kvaerno3` or `Kvaerno5`) and
@@ -195,29 +175,18 @@ def mesolve(
             hermiticity of `rho0`. Defaults to `True`.
 
     Examples:
-        ```python
-        import dynamiqs as dq
-        import jax.numpy as jnp
-
-        n = 16
-        a = dq.destroy(n)
-
-        H = a.dag() @ a
-        jump_ops = [a]
-        psi0 = dq.coherent(n, 1.0)
-        tsave = jnp.linspace(0, 1.0, 11)
-
-        result = dq.mesolve(H, jump_ops, psi0, tsave)
-        print(result)
-        ```
-
-        ```text title="Output"
-        |██████████| 100.0% ◆ elapsed 1.13ms ◆ remaining 0.00ms
+        >>> n = 16
+        >>> a = dq.destroy(n)
+        >>> H = a.dag() @ a
+        >>> jump_ops = [a]
+        >>> psi0 = dq.coherent(n, 1.0)
+        >>> tsave = jnp.linspace(0, 1.0, 11)
+        >>> result = dq.mesolve(H, jump_ops, psi0, tsave, progress_meter=False)
+        >>> print(result)
         ==== MESolveResult ====
         Method : Tsit5
         Infos  : 9 steps (9 accepted, 0 rejected)
         States : QArray complex64 (11, 16, 16) | 22.0 Kb
-        ```
 
     # Advanced use-cases
 
@@ -254,7 +223,7 @@ def mesolve(
     === "If `cartesian_batching = False`"
         The results leading dimensions are
         ```
-        ... = ...H = ...L0 = ...L1 = (...) = ...rho0  # (once broadcasted)
+        ... = ...H = ...L0 = ...L1 = (...) = ...rho0  # (once broadcast)
         ```
 
         For example if:
@@ -272,7 +241,8 @@ def mesolve(
     # === convert arguments
     H = astimeqarray(H, 'H')
     Ls = [astimeqarray(L, 'jump_ops') for L in jump_ops]
-    rho0 = asqarray(rho0)
+    # the state fills its full matrix after one step, so it is never kept composite
+    rho0 = asqarray(rho0)._materialize()
     tsave = jnp.asarray(tsave)
 
     _exp_ops = None

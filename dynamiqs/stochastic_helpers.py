@@ -27,10 +27,23 @@ def clicktimes_sse_to_sme(
         key: PRNG key used to sample the added noise for the post-processing.
 
     Returns:
-        (array of shape (...)): SME click times. The shape is the same as
-            `clicktimes`, except that the dimension corresponding to the number of
-            jump operators measured may be smaller, if the corresponding efficiency is
-            null.
+        (array of shape (..., ntrajs, nLm, nmaxclick)): SME click times, where _nLm_
+            is the number of jump operators with non-zero efficiency. Jump operators
+            whose efficiency is zero are removed.
+
+    Examples:
+        For two jump operators, keep all clicks of the first one and drop the second
+        one:
+        >>> clicktimes = jnp.array([[[0.1, 0.5, jnp.nan], [0.3, jnp.nan, jnp.nan]]])
+        >>> tsave = jnp.linspace(0.0, 1.0, 11)
+        >>> key = jax.random.PRNGKey(42)
+        >>> dq.clicktimes_sse_to_sme(clicktimes, tsave, [0.0, 0.0], [1.0, 0.0], key)
+        Array([[[0.1, 0.5, nan]]], dtype=float32)
+
+        With false clicks and imperfect efficiency for the first jump operator:
+        >>> dq.clicktimes_sse_to_sme(clicktimes, tsave, [2.0, 0.0], [0.5, 1.0], key)
+        Array([[[0.5  , 0.667,   nan],
+                [0.3  ,   nan,   nan]]], dtype=float32)
     """
     clicktimes = jnp.asarray(clicktimes)
     tsave = jnp.asarray(tsave)
@@ -82,6 +95,17 @@ def measurements_sse_to_sme(
     The SME measurements are obtained from the SSE measurements by adding additional
     Gaussian noise.
 
+    Args:
+        measurements: See result of [`dq.dssesolve()`][dynamiqs.dssesolve].
+        tsave: See [`dq.dssesolve()`][dynamiqs.dssesolve].
+        etas: See [`dq.dsmesolve()`][dynamiqs.dsmesolve].
+        key: PRNG key used to sample the added noise for the post-processing.
+
+    Returns:
+        (array of shape (..., ntrajs, nLm, ntsave-1)): SME measurements, where _nLm_ is
+            the number of jump operators with non-zero efficiency. Jump operators whose
+            efficiency is zero are removed.
+
     Note:
         More precisely, the SME measurement record $\dd Y$ for a specific jump operator
         is defined as follows from the SSE measurement record $\dd \tilde Y$:
@@ -102,17 +126,19 @@ def measurements_sse_to_sme(
         where $\Delta t_n=t_{n+1}-t_n$ and $\xi\sim \mathcal{N}(0, 1)$ is
         a standard Gaussian random variable.
 
-    Args:
-        measurements: See result of [`dq.dssesolve()`][dynamiqs.dssesolve].
-        tsave: See [`dq.dssesolve()`][dynamiqs.dssesolve].
-        etas: See [`dq.dsmesolve()`][dynamiqs.dsmesolve].
-        key: PRNG key used to sample the added noise for the post-processing.
+    Examples:
+        For two jump operators, keep the measurements of the first one and drop the
+        second one:
+        >>> measurements = jnp.array([[[0.2, -0.1, 0.4], [1.0, 0.5, 0.0]]])
+        >>> tsave = jnp.linspace(0.0, 1.0, 4)
+        >>> key = jax.random.PRNGKey(42)
+        >>> dq.measurements_sse_to_sme(measurements, tsave, [1.0, 0.0], key)
+        Array([[[ 0.2, -0.1,  0.4]]], dtype=float32)
 
-    Returns:
-        (array of shape (...)): SME measurements. The shape is the same as
-            `measurements`, except that the dimension corresponding to the number of
-            jump operators measured may be smaller, if the corresponding efficiency is
-            null.
+        With imperfect efficiency for the first jump operator:
+        >>> dq.measurements_sse_to_sme(measurements, tsave, [0.5, 1.0], key)
+        Array([[[0.107, 0.501, 0.645],
+                [1.   , 0.5  , 0.   ]]], dtype=float32)
     """
     measurements = jnp.asarray(measurements)
     tsave = jnp.asarray(tsave)
