@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from functools import partial, reduce
 from typing import cast
 
@@ -658,7 +659,9 @@ def dissipator(L: QArrayLike, rho: QArrayLike) -> QArray:
     return asqarray(L @ rho @ Ldag - 0.5 * LdagL @ rho - 0.5 * rho @ LdagL)
 
 
-def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> QArray:
+def lindbladian(
+    H: QArrayLike, jump_ops: Sequence[QArrayLike], rho: QArrayLike
+) -> QArray:
     r"""Applies the Lindbladian superoperator to a density matrix.
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:

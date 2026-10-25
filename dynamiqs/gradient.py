@@ -4,7 +4,14 @@ import equinox as eqx
 
 from ._utils import tree_str_inline
 
-__all__ = ['Direct', 'BackwardCheckpointed', 'Forward', 'HigherOrder', 'Gradient']
+__all__ = [
+    'Direct',
+    'BackwardCheckpointed',
+    'Forward',
+    'HigherOrder',
+    'Implicit',
+    'Gradient',
+]
 
 
 class Gradient(eqx.Module):
@@ -141,6 +148,41 @@ class HigherOrder(Gradient):
         which already configures the solver for higher-order differentiation. Use this
         option to make the higher-order differentiation requirement explicit and to
         restrict to the methods on which it is supported.
+    """
+
+    # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
+
+
+class Implicit(Gradient):
+    r"""Implicit differentiation of the steady state.
+
+    With this option, the gradient is computed from the equation satisfied by the
+    steady state $\rho_\infty$, without differentiating through the time integration
+    that reached it. By the implicit function theorem, the derivative of
+    $\rho_\infty$ with respect to a parameter $\theta$ of $H$ or $L_k$ solves the
+    linear system
+    $$
+        \tilde{\mathcal{L}}\left(\frac{\partial\rho_\infty}{\partial\theta}\right)
+        = -\frac{\partial\mathcal{L}}{\partial\theta}(\rho_\infty),
+    $$
+    where $\tilde{\mathcal{L}}(X) = \mathcal{L}(X) - \tr{X} I/n$ is the Lindbladian
+    deflated along the trace, which is invertible when the steady state is unique
+    (the Lindbladian $\mathcal{L}$ itself is singular).
+
+    Note:
+        This is the most accurate and the cheapest option for
+        [`dq.mesteadystate()`][dynamiqs.mesteadystate]: the cost does not depend on
+        the number of integration steps, and both forward and reverse modes are
+        supported.
+
+    Warning:
+        The gradient is only valid for a unique steady state. Otherwise, use a
+        gradient supported by the time integration method, e.g.
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed].
+        The linear system is solved by dense LU decomposition of an $n^2\times n^2$
+        matrix, which scales as $\mathcal{O}(n^6)$.
     """
 
     # dummy init to have the signature in the documentation
