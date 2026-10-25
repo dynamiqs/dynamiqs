@@ -160,7 +160,9 @@ class SEExpmIntegrator(ExpmIntegrator, SEInterface):
             )
 
     def generator(self, t: RealScalarLike) -> QArray:
-        return -1j * self.H(t)  # (n, n)
+        # the `lax.switch` branches must return the same pytree, and `expm` materializes
+        # the generator anyway
+        return (-1j * self.H(t))._materialize()  # (n, n)
 
 
 class SESolveExpmIntegrator(SEExpmIntegrator, SolveSaveMixin, SolveInterface):

@@ -4,10 +4,13 @@ from typing import Literal
 
 import jax
 
+from .._utils import obj_type_str
 from ..progress_meter import AbstractProgressMeter, NoProgressMeter, TqdmProgressMeter
+from ..qarrays.composite_qarray import set_global_composite
 from ..qarrays.layout import dense, dia, set_global_layout
 
 __all__ = [
+    'set_composite',
     'set_device',
     'set_layout',
     'set_matmul_precision',
@@ -162,6 +165,49 @@ def set_layout(layout: Literal['dense', 'dia']):
         )
 
     set_global_layout(layouts[layout])
+
+
+def set_composite(composite: bool):
+    r"""Configure whether tensor products of operators are stored as their factors.
+
+    If `True`, [`dq.tensor()`][dynamiqs.tensor] stores a tensor product of operators
+    $A_1\otimes\dots\otimes A_N$ as its factors, without building the $n\times n$
+    matrix, and so do the multi-mode operators built from it, such as
+    `dq.destroy(*dims)`. Such a composite qarray behaves exactly like the full matrix,
+    and the solvers apply it to the state mode by mode. Kets, bras and the states
+    returned by the state functions are always stored as full matrices, and the
+    solvers convert a composite initial density matrix to a full matrix.
+
+    Composite qarrays pay off when the operators acting on each subsystem are dense:
+    [`dq.mesolve()`][dynamiqs.mesolve] then runs up to 10 times faster than with the
+    full dense matrix. On sparse operators, such as bosonic modes or qubit chains, the
+    full matrix in the `dq.dia` layout is faster. The full matrix is built anyway with
+    `vectorized=True`, the `Expm` method, [`dq.mepropagator()`][dynamiqs.mepropagator]
+    and the jump solvers.
+
+    Note:
+        The default upon importing dynamiqs is `False`.
+
+    Args:
+        composite: Whether to store tensor products of operators as their factors.
+
+    Examples:
+        >>> dq.set_composite(True)
+        >>> a, b = dq.destroy(3, 4)
+        >>> H = a.dag() @ a + b.dag() @ b
+        >>> H
+        CompositeQArray: shape=(12, 12), dims=(3, 4), dtype=complex64, layout=dia, n_terms=2
+          term[0]: coeff=1.0, op_dims=((3,), (4,))
+          term[1]: coeff=1.0, op_dims=((3,), (4,))
+        >>> dq.set_composite(False)  # back to default
+    """  # noqa: E501
+    if not isinstance(composite, bool):
+        raise TypeError(
+            'Argument `composite` must be `True` or `False`, but has type'
+            f' {obj_type_str(composite)}.'
+        )
+
+    set_global_composite(composite)
 
 
 def set_progress_meter(progress_meter: AbstractProgressMeter | bool):

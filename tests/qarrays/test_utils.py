@@ -135,6 +135,15 @@ def test_stack_keeps_vectorized(layout):
 
 
 @pytest.mark.run(order=TEST_INSTANT)
+def test_stack_composite():
+    # composite qarrays with different numbers of terms stack as their full matrices
+    A = dq.tensor(dq.destroy(3), dq.number(4), composite=True)
+    B = A + dq.tensor(dq.number(3), dq.destroy(4), composite=True)
+    x = dq.stack([A, B])
+    assert jnp.allclose(x.to_jax(), jnp.stack([A.to_jax(), B.to_jax()]))
+
+
+@pytest.mark.run(order=TEST_INSTANT)
 def test_qutip_tensor_compatibility():
     """Test compatibility with qutip v5.2.0 auto_tidyup_dims.
 

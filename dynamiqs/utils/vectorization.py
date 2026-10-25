@@ -124,7 +124,8 @@ def spre(x: QArrayLike) -> QArray:
         >>> dq.spre(dq.destroy(3)).shape
         (9, 9)
     """
-    x = asqarray(x)
+    # a composite qarray cannot be vectorized
+    x = asqarray(x)._materialize()
     check_shape(x, 'x', '(..., n, n)')
     n = x.shape[-1]
     xpre = eye(n) & x
@@ -150,7 +151,7 @@ def spost(x: QArrayLike) -> QArray:
         >>> dq.spost(dq.destroy(3)).shape
         (9, 9)
     """
-    x = asqarray(x)
+    x = asqarray(x)._materialize()
     check_shape(x, 'x', '(..., n, n)')
     n = x.shape[-1]
     xpost = x.mT & eye(n)
@@ -177,8 +178,8 @@ def sprepost(x: QArrayLike, y: QArrayLike) -> QArray:
         >>> dq.sprepost(dq.destroy(3), dq.create(3)).shape
         (9, 9)
     """
-    x = asqarray(x)
-    y = asqarray(y)
+    x = asqarray(x)._materialize()
+    y = asqarray(y)._materialize()
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
     xyprepost = y.mT & x

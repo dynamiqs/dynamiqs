@@ -24,12 +24,14 @@ __all__ = []
 def _resolve_operand(dims: tuple[int, ...], y: QArrayLike) -> DataArray | Array:
     """Resolves `y` into raw data compatible with a qarray of Hilbert dims `dims`.
 
-    Checks Hilbert space dimension compatibility if `y` is itself a materialized
-    qarray. Returns `NotImplemented` if `y` is not a recognized qarray-like.
+    Checks Hilbert space dimension compatibility if `y` is itself a qarray. Returns
+    `NotImplemented` if `y` is a non-materialized qarray or not a recognized
+    qarray-like.
     """
-    if isinstance(y, MaterializedQArray):
+    if isinstance(y, QArray):
         check_compatible_dims(dims, y.dims)
-        return y.data
+        # a composite qarray handles the operation in its reflected method
+        return y.data if isinstance(y, MaterializedQArray) else NotImplemented
     if isqarraylike(y):
         return to_jax(y)
     return NotImplemented
@@ -83,6 +85,9 @@ class MaterializedQArray(QArray):
                 f'got layout {self.layout!r}.'
             )
         return cast(int, self.data.ndiags)
+
+    def _materialize(self) -> MaterializedQArray:
+        return self
 
     # === Array methods delegated to DataArray ===
 
@@ -363,6 +368,11 @@ class MaterializedQArray(QArray):
         Returns:
             New qarray resulting from the element-wise multiplication.
         """
+        # commutative, and `to_jax` would drop the layout and dims of a composite `y`
+        if isinstance(y, QArray) and not isinstance(y, MaterializedQArray):
+            check_compatible_dims(self.dims, y.dims)
+            return y.elmul(self)
+
         y_data = _resolve_operand(self.dims, y)
         if y_data is NotImplemented:
             return NotImplemented

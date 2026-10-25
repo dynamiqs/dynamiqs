@@ -161,6 +161,48 @@ class MixedOCavity(OCavity):
         return self._mixture(super()._expect, params, t)
 
 
+class CompositeOCavity(OCavity):
+    # `OCavity` next to a second cavity, of detuning 2 delta and starting from
+    # i alpha0, with every operator a composite qarray: the state stays the product of
+    # the two coherent states
+    def H(self, params: PyTree) -> QArray | TimeQArray:
+        N_a, N_b = dq.number(self.n, self.n, layout=self.layout, composite=True)
+        return params.delta * (N_a + 2 * N_b)
+
+    def Ls(self, params: PyTree) -> list[QArray | TimeQArray]:
+        a, b = dq.destroy(self.n, self.n, layout=self.layout, composite=True)
+        return [jnp.sqrt(params.kappa) * a, jnp.sqrt(params.kappa) * b]
+
+    def y0(self, params: PyTree) -> QArray:
+        alpha0 = params.alpha0
+        return dq.tensor(dq.coherent(self.n, alpha0), dq.coherent(self.n, 1j * alpha0))
+
+    def Es(self, params: PyTree) -> list[QArray]:  # noqa: ARG002
+        x = dq.position(self.n, layout=self.layout)
+        p = dq.momentum(self.n, layout=self.layout)
+        I = dq.eye(self.n, layout=self.layout)
+        return [dq.tensor(x, I, composite=True), dq.tensor(I, p, composite=True)]
+
+    def _beta(self, params: PyTree, t: float) -> Array:
+        decay = jnp.exp(-2j * params.delta * t - 0.5 * params.kappa * t)
+        return 1j * params.alpha0 * decay
+
+    def _state(self, params: PyTree, t: float) -> QArray:
+        rho_a = dq.coherent_dm(self.n, self._alpha(params, t))
+        rho_b = dq.coherent_dm(self.n, self._beta(params, t))
+        return dq.tensor(rho_a, rho_b)
+
+    def _expect(self, params: PyTree, t: float) -> Array:
+        # analytical expectation values (<x_a>, <p_b>) as a function of the parameters
+        alpha_t, beta_t = self._alpha(params, t), self._beta(params, t)
+        return jnp.array([alpha_t.real, beta_t.imag])
+
+    def loss_state(self, state: QArray) -> Array:
+        N = dq.number(self.n, layout=self.layout)
+        I = dq.eye(self.n, layout=self.layout)
+        return dq.expect(dq.tensor(N, I) + dq.tensor(I, N), state).real
+
+
 class OTDQubit(OpenSystem):
     class Params(NamedTuple):
         eps: float
@@ -261,6 +303,12 @@ dense_nojump_cavity = NoJumpCavity(
 )
 dia_nojump_cavity = NoJumpCavity(
     n=8, delta=1.0 * Hz, alpha0=0.5, tsave=tsave, layout=dq.dia
+)
+dense_composite_ocavity = CompositeOCavity(
+    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dense
+)
+dia_composite_ocavity = CompositeOCavity(
+    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dq.dia
 )
 mixed_ocavity = MixedOCavity(
     p=0.7, n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dense
