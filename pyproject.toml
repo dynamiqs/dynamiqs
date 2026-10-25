@@ -3,10 +3,10 @@ name = "dynamiqs"
 description = "High-performance quantum systems simulation with JAX (GPU-accelerated & differentiable solvers)."
 authors = [
   { name = "Pierre Guilmin", email = "pierreguilmin@gmail.com" },
-  { name = "Ronan Gautier", email = "ron.gautier@gmail.com" },
   { name = "Adrien Bocquet", email = "adrienbocquet38@gmail.com" },
   { name = "Elie Genois", email = "elie.genois@usherbrooke.ca" },
   { name = "Daniel Weiss", email = "daniel.kamrath.weiss@gmail.com" },
+  { name = "Ronan Gautier", email = "ron.gautier@gmail.com" },
 ]
 dynamic = ["version"]
 license = { file = "LICENSE" }

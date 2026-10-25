@@ -171,7 +171,7 @@ def sprepost(x: QArrayLike, y: QArrayLike) -> QArray:
         y (qarray-like of shape (..., n, n)): Operator for post-multiplication.
 
     Returns:
-        (Qarray of shape (..., n^2, n^2)): Pre- and post-multiplication superoperator.
+        (qarray of shape (..., n^2, n^2)): Pre- and post-multiplication superoperator.
 
     Examples:
         >>> dq.sprepost(dq.destroy(3), dq.create(3)).shape
@@ -207,10 +207,18 @@ def sdissipator(L: QArrayLike) -> QArray:
     Returns:
         (qarray of shape (..., n^2, n^2)): Dissipation superoperator.
 
+    Examples:
+        >>> dq.sdissipator(dq.destroy(2))
+        QArray: shape=(4, 4), dims=(2,), dtype=complex64, layout=dia, vectorized=True, ndiags=2
+        [[    ⋅        ⋅        ⋅     1. +0.j]
+         [    ⋅    -0.5+0.j     ⋅        ⋅   ]
+         [    ⋅        ⋅    -0.5+0.j     ⋅   ]
+         [    ⋅        ⋅        ⋅    -1. +0.j]]
+
     See also:
         - [`dq.dissipator()`][dynamiqs.dissipator]: applies the dissipation
             superoperator to a state using only $n\times n$ matrix multiplications.
-    """
+    """  # noqa: E501
     L = asqarray(L)
     check_shape(L, 'L', '(..., n, n)')
     Ldag = dag(L)
@@ -239,9 +247,6 @@ def slindbladian(H: QArrayLike, jump_ops: Sequence[QArrayLike]) -> QArray:
         \right).
     $$
 
-    Note:
-        This superoperator is also sometimes called *Liouvillian*.
-
     Args:
         H (qarray-like of shape (..., n, n)): Hamiltonian.
         jump_ops (list of qarray-like, each of shape (..., n, n)): List of jump
@@ -250,10 +255,22 @@ def slindbladian(H: QArrayLike, jump_ops: Sequence[QArrayLike]) -> QArray:
     Returns:
         (qarray of shape (..., n^2, n^2)): Lindbladian superoperator.
 
+    Note:
+        This superoperator is also sometimes called *Liouvillian*.
+
+    Examples:
+        >>> a = dq.destroy(2)
+        >>> dq.slindbladian(a.dag() @ a, [a])
+        QArray: shape=(4, 4), dims=(2,), dtype=complex64, layout=dia, vectorized=True, ndiags=2
+        [[    ⋅        ⋅        ⋅     1. +0.j]
+         [    ⋅    -0.5-1.j     ⋅        ⋅   ]
+         [    ⋅        ⋅    -0.5+1.j     ⋅   ]
+         [    ⋅        ⋅        ⋅    -1. +0.j]]
+
     See also:
         - [`dq.lindbladian()`][dynamiqs.lindbladian]: applies the Lindbladian
             superoperator to a state using only $n\times n$ matrix multiplications.
-    """
+    """  # noqa: E501
     H = asqarray(H)
     _jump_ops = [asqarray(L) for L in jump_ops]
 

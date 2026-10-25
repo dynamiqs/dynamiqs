@@ -38,6 +38,12 @@ _TupleGradient = tuple[type[Gradient], ...]
 
 # === generic methods options
 class Method(eqx.Module):
+    """Base class of all methods.
+
+    Every method of `dq.method` is an instance of this class, which is useful for type
+    annotations.
+    """
+
     # should be eqx.AbstractClassVar, but this conflicts with the __future__ imports
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient]
 
@@ -146,11 +152,11 @@ class Euler(_DEFixedStep):
     This method is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Euler`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Euler).
 
-    Warning:
-        This method is not recommended for general use.
-
     Args:
         dt: Fixed time step.
+
+    Warning:
+        This method is not recommended for general use.
 
     Note-: Supported gradients
         This method supports differentiation with
@@ -192,8 +198,8 @@ class EulerJump(_DEFixedStep):
 class EulerMaruyama(_DEFixedStep):
     r"""Euler-Maruyama method (fixed step size SDE method).
 
-    For a fixed step size $\dt$, it has weak order of convergence $\dt$ and strong order
-    of convergence $\sqrt{\dt}$.
+    It has weak order of convergence 1 and strong order of convergence 1/2 in the
+    fixed step size $\dt$.
 
     Args:
         dt: Fixed time step.
@@ -245,12 +251,6 @@ class Rouchon1(_DEFixedStep):
 class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
     r"""Second-order Rouchon method (fixed or adaptive step size ODE method).
 
-    Note:
-        By default the scheme is using adaptive step size. The error is estimated
-        using the difference between the first-order and second-order. To use a fixed
-        step size second-order method (without evaluating the first-order), set the `dt`
-        argument.
-
     Args:
         rtol: Relative tolerance.
         atol: Absolute tolerance.
@@ -264,6 +264,12 @@ class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
         normalize: If True, the scheme is trace-preserving to machine precision, which
             is the recommended option because it is much more stable. Otherwise, it is
             only trace-preserving to the scheme order in the numerical step size.
+
+    Note:
+        By default the scheme is using adaptive step size. The error is estimated
+        using the difference between the first-order and second-order. To use a fixed
+        step size second-order method (without evaluating the first-order), set the `dt`
+        argument.
 
     Note-: Supported gradients
         This method supports differentiation with
@@ -302,12 +308,6 @@ class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
 class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
     r"""Third-order Rouchon method (fixed or adaptive step size ODE method).
 
-    Note:
-        By default the scheme is using adaptive step size. The error is estimated
-        using the difference between the second-order and third-order. To use a fixed
-        step size third-order method (without evaluating the second-order), set the `dt`
-        argument.
-
     Args:
         rtol: Relative tolerance.
         atol: Absolute tolerance.
@@ -321,6 +321,12 @@ class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
         normalize: If True, the scheme is trace-preserving to machine precision, which
             is the recommended option because it is much more stable. Otherwise, it is
             only trace-preserving to the scheme order in the numerical step size.
+
+    Note:
+        By default the scheme is using adaptive step size. The error is estimated
+        using the difference between the second-order and third-order. To use a fixed
+        step size third-order method (without evaluating the second-order), set the `dt`
+        argument.
 
     Note-: Supported gradients
         This method supports differentiation with
@@ -481,12 +487,6 @@ class Kvaerno3(_DEAdaptiveStep):
     This method is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Kvaerno3`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Kvaerno3).
 
-    Warning:
-        If you find that your simulation is slow or that the progress bar gets stuck,
-        consider switching to double-precision with
-        [`dq.set_precision('double')`][dynamiqs.set_precision]. See more details in
-        [The sharp bits 🔪](../../documentation/getting_started/sharp-bits.md) tutorial.
-
     Args:
         rtol: Relative tolerance.
         atol: Absolute tolerance.
@@ -494,6 +494,12 @@ class Kvaerno3(_DEAdaptiveStep):
         min_factor: Minimum factor for adaptive step sizing.
         max_factor: Maximum factor for adaptive step sizing.
         max_steps: Maximum number of steps.
+
+    Warning:
+        If you find that your simulation is slow or that the progress bar gets stuck,
+        consider switching to double-precision with
+        [`dq.set_precision('double')`][dynamiqs.set_precision]. See more details in
+        [The sharp bits 🔪](../../documentation/getting_started/sharp-bits.md) tutorial.
 
     Note-: Supported gradients
         This method supports differentiation with
@@ -529,12 +535,6 @@ class Kvaerno5(_DEAdaptiveStep):
     This method is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Kvaerno5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Kvaerno5).
 
-    Warning:
-        If you find that your simulation is slow or that the progress bar gets stuck,
-        consider switching to double-precision with
-        [`dq.set_precision('double')`][dynamiqs.set_precision]. See more details in
-        [The sharp bits 🔪](../../documentation/getting_started/sharp-bits.md) tutorial.
-
     Args:
         rtol: Relative tolerance.
         atol: Absolute tolerance.
@@ -542,6 +542,12 @@ class Kvaerno5(_DEAdaptiveStep):
         min_factor: Minimum factor for adaptive step sizing.
         max_factor: Maximum factor for adaptive step sizing.
         max_steps: Maximum number of steps.
+
+    Warning:
+        If you find that your simulation is slow or that the progress bar gets stuck,
+        consider switching to double-precision with
+        [`dq.set_precision('double')`][dynamiqs.set_precision]. See more details in
+        [The sharp bits 🔪](../../documentation/getting_started/sharp-bits.md) tutorial.
 
     Note-: Supported gradients
         This method supports differentiation with
@@ -574,6 +580,29 @@ class Event(_DEMethod):
     apply the corresponding measurement backaction to the state, and continue the
     no-click integration until the subsequent sampled click time.
 
+    Args:
+        noclick_method: Method for the no-click evolution. Defaults to
+            [`dq.method.Tsit5`][dynamiqs.method.Tsit5] (supported:
+            [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8],
+            [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5],
+            [`Euler`][dynamiqs.method.Euler]).
+        dtmax: Maximum step size for the no-click evolution, defaults to `None`.
+        root_finder: Root finder to refine the click times, defaults to `None`
+            (precision determined by the integration step size).
+        smart_sampling: If `True`, the no-click trajectory is sampled only once, and
+            `result.states` contains only trajectories with one or more clicks.
+            Information about the no-click trajectory are stored in `result.infos`:
+
+            - `result.infos.noclick_states` _(qarray of shape (..., nsave, n, 1))_ -
+                No-click trajectory.
+            - `result.infos.noclick_prob` _(array of shape (...))_ - Probability of
+                the no-click trajectory.
+            - `result.infos.noclick_expects` _(array of shape
+                (..., len(exp_ops), ntsave) or None)_ - No-click trajectory expectation
+                values.
+
     Warning: Click times precision
         When using adaptive step size solvers for the no-click integration, you must
         specify either `dtmax` or `root_finder` to control the precision of the click
@@ -599,33 +628,20 @@ class Event(_DEMethod):
         no-click trajectory (for instance $f_0 = 0$ for the number of clicks) and
         $\bar f$ is the average of $f$ over the saved trajectories.
 
-    Args:
-        noclick_method: Method for the no-click evolution. Defaults to
-            [`dq.method.Tsit5`][dynamiqs.method.Tsit5] (supported:
-            [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
-            [`Dopri8`][dynamiqs.method.Dopri8],
-            [`Kvaerno3`][dynamiqs.method.Kvaerno3],
-            [`Kvaerno5`][dynamiqs.method.Kvaerno5],
-            [`Euler`][dynamiqs.method.Euler]).
-        dtmax: Maximum step size for the no-click evolution, defaults to `None`.
-        root_finder: Root finder to refine the click times, defaults to `None`
-            (precision determined by the integration step size).
-        smart_sampling: If `True`, the no-click trajectory is sampled only once, and
-            `result.states` contains only trajectories with one or more clicks.
-            Information about the no-click trajectory are stored in `result.infos`:
-
-            - `result.infos.noclick_states` _(qarray of shape (..., nsave, n, 1))_ -
-                No-click trajectory.
-            - `result.infos.noclick_prob` _(array of shape (...))_ - Probability of
-                the no-click trajectory.
-            - `result.infos.noclick_expects` _(array of shape
-                (..., len(exp_ops), ntsave) or None)_ - No-click trajectory expectation
-                values.
-
     Note-: Supported gradients
         This method supports differentiation with
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct] and
         [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
-        (default).
+        (default), in reverse mode only.
+
+    Examples:
+        Limit the no-click step size to control the precision of the click times, and
+        sample the no-click trajectory only once:
+
+        >>> method = dq.method.Event(dtmax=1e-2, smart_sampling=True)
+
+        Then pass it to [`dq.jssesolve()`][dynamiqs.jssesolve] with
+        `method=method`.
     """
 
     noclick_method: Method = Tsit5()
@@ -688,11 +704,6 @@ class JumpMonteCarlo(_DEMethod):
     (ME). These trajectories are then averaged to obtain an approximation of the ME
     solution.
 
-    Note:
-        This method is solely a wrapper around [`dq.jssesolve()`][dynamiqs.jssesolve].
-        If you are looking for direct access to individual trajectories, use
-        [`dq.jssesolve()`][dynamiqs.jssesolve] instead.
-
     Args:
         keys (list of PRNG keys): PRNG keys used for the jump SSE solver. See
             [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
@@ -701,8 +712,22 @@ class JumpMonteCarlo(_DEMethod):
         jsse_nmaxclick: Maximum buffer size for `result.clicktimes`. See
             [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
 
+    Note:
+        This method is solely a wrapper around [`dq.jssesolve()`][dynamiqs.jssesolve].
+        If you are looking for direct access to individual trajectories, use
+        [`dq.jssesolve()`][dynamiqs.jssesolve] instead.
+
     Note-: Supported gradients
         See the documentation of the chosen `jsse_method`.
+
+    Examples:
+        Average 100 trajectories, each solved with a fixed step size:
+
+        >>> keys = jax.random.split(jax.random.key(42), 100)
+        >>> sse_method = dq.method.EulerJump(dt=1e-2)
+        >>> method = dq.method.JumpMonteCarlo(keys, sse_method)
+
+        Then pass it to [`dq.mesolve()`][dynamiqs.mesolve] with `method=method`.
     """
 
     keys: PRNGKeyArray
@@ -733,19 +758,28 @@ class DiffusiveMonteCarlo(_DEMethod):
     equation (ME). These trajectories are then averaged to obtain an approximation of
     the ME solution.
 
-    Note:
-        This method is solely a wrapper around [`dq.dssesolve()`][dynamiqs.dssesolve].
-        If you are looking for direct access to individual trajectories, use
-        [`dq.dssesolve()`][dynamiqs.dssesolve] instead.
-
     Args:
         keys (list of PRNG keys): PRNG keys used for the diffusive SSE solver. See
             [`dq.dssesolve()`][dynamiqs.dssesolve] for more details.
         dsse_method: Method used for the diffusive SSE solver. See
             [`dq.dssesolve()`][dynamiqs.dssesolve] for more details.
 
+    Note:
+        This method is solely a wrapper around [`dq.dssesolve()`][dynamiqs.dssesolve].
+        If you are looking for direct access to individual trajectories, use
+        [`dq.dssesolve()`][dynamiqs.dssesolve] instead.
+
     Note-: Supported gradients
         See the documentation of the chosen `dsse_method`.
+
+    Examples:
+        Average 100 trajectories, each solved with a fixed step size:
+
+        >>> keys = jax.random.split(jax.random.key(42), 100)
+        >>> sse_method = dq.method.EulerMaruyama(dt=1e-2)
+        >>> method = dq.method.DiffusiveMonteCarlo(keys, sse_method)
+
+        Then pass it to [`dq.mesolve()`][dynamiqs.mesolve] with `method=method`.
     """
 
     keys: PRNGKeyArray
@@ -765,7 +799,18 @@ class DiffusiveMonteCarlo(_DEMethod):
 
 
 class LinearSolver(Enum):
-    """Enum for linear solvers used in the low-rank method."""
+    r"""Linear solver of the [`LowRank`][dynamiqs.method.LowRank] method.
+
+    At each evaluation of the vector field, the low-rank method solves least-squares
+    systems involving the factor $m(t)$. Two solvers are available, accessed as
+    `dq.method.LowRank.qr` and `dq.method.LowRank.cholesky`:
+
+    - `qr`: QR factorization of $m(t)$ (CholeskyQR2 in double precision). Stable, this
+      is the default.
+    - `cholesky`: Cholesky factorization of the normal equations $m^\dag m$. Usually
+      faster, but it squares the condition number of $m(t)$ and may be unstable in
+      single precision.
+    """
 
     QR = 'qr'
     CHOLESKY = 'cholesky'
@@ -781,17 +826,19 @@ class LowRank(Method):
     r"""Low-rank method for the Lindblad master equation.
 
     This method solves the low-rank Lindblad master equation by evolving factors
-    `m(t)` such that `$rho(t) = m(t) m(t)^\dagger$`, following Goutte, Savona (2025)
-    arxiv:2508.18114. The low-rank method is available via
-    [`dq.mesolve()`][dynamiqs.mesolve] by passing `method=dq.method.LowRank(...)`.
+    $m(t)$ such that $\rho(t) = m(t) m(t)^\dag$, following Goutte, Savona (2025)
+    [arXiv:2508.18114](https://arxiv.org/abs/2508.18114). The low-rank method is
+    available via [`dq.mesolve()`][dynamiqs.mesolve] by passing
+    `method=dq.method.LowRank(...)`.
 
     Args:
-        rank: Rank of the low-rank approximation (number of columns of `m(t)`).
+        rank: Rank of the low-rank approximation (number of columns of $m(t)$).
         ode_method: ODE solver used for the low-rank evolution (supported:
             [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
             [`Dopri8`][dynamiqs.method.Dopri8], [`Kvaerno3`][dynamiqs.method.Kvaerno3],
             [`Kvaerno5`][dynamiqs.method.Kvaerno5], [`Euler`][dynamiqs.method.Euler]).
-        linear_solver: Linear solver used for the low-rank evolution. Supported values
+        linear_solver: Linear solver used for the low-rank evolution, see
+            [`dq.method.LinearSolver`][dynamiqs.method.LinearSolver]. Supported values
             are `LowRank.qr` and `LowRank.cholesky`. Defaults to `LowRank.qr`.
             `LowRank.cholesky` is usually faster but may lead to instabilities.
         perturbation_scale: Regularization parameter for the initialization of
@@ -799,23 +846,15 @@ class LowRank(Method):
             norm `perturbation_scale` to avoid $m^\dag m$ being singular. Defaults
             to `1e-5`.
         key: PRNG key used for random initialization of the low-rank factors.
-        is_save_extra_low_rank: If `True`, `dq.Options(save_extra=...)` receives the
-            low-rank factor `m(t)` as second argument directly instead of the
-            full-rank density matrix `rho(t)`, avoiding its reconstruction. Defaults
-            to `False`.
+        is_save_extra_low_rank: If `True`, the `save_extra` function passed to
+            [`dq.mesolve()`][dynamiqs.mesolve] receives the low-rank factor $m(t)$ as
+            second argument directly instead of the full-rank density matrix
+            $\rho(t)$, avoiding its reconstruction. Defaults to `False`.
 
     Note:
         The low-rank factors can be accessed from
         `result.lowrank_states`.
         `result.states` computes and returns the full-rank density matrices.
-
-    Note: Supported gradients
-        This method supports
-        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
-        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
-        (default)
-        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward]. These are supported
-        for all `ode_method` choices accepted by `LowRank`.
 
     Warning:
         Differentiation may be unstable and return wrong results or overflow: verify
@@ -829,6 +868,21 @@ class LowRank(Method):
         The low-rank method is more sensitive to time-step error. If the accuracy does
         not improve when increasing the `rank`, consider tightening the tolerances of
         the chosen `ode_method`.
+
+    Note-: Supported gradients
+        This method supports differentiation with
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
+        (default)
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward], for all supported
+        `ode_method`.
+
+    Examples:
+        Approximate the density matrix by a rank-4 factor:
+
+        >>> method = dq.method.LowRank(rank=4, key=jax.random.key(0))
+
+        Then pass it to [`dq.mesolve()`][dynamiqs.mesolve] with `method=method`.
     """
 
     qr: ClassVar[LinearSolver] = LinearSolver.QR

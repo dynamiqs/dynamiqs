@@ -16,9 +16,11 @@ from pathlib import Path
 doc_sections = {
     'integrators': (['dynamiqs/integrators/'], 'dq'),
     'qarrays/qarray': (['dynamiqs/qarrays/qarray.py'], 'dq'),
+    'qarrays/layout': (['dynamiqs/qarrays/layout.py'], 'dq'),
     'time_qarray': (['dynamiqs/time_qarray.py'], 'dq'),
     'method': (['dynamiqs/method.py'], 'dq.method'),
     'gradient': (['dynamiqs/gradient.py'], 'dq.gradient'),
+    'result': (['dynamiqs/result.py'], 'dq'),
     'helpers': (['dynamiqs/helpers.py'], 'dq'),
     'utils/operators': (['dynamiqs/utils/operators.py'], 'dq'),
     'utils/states': (['dynamiqs/utils/states.py'], 'dq'),

@@ -19,21 +19,34 @@ def xyz(
     states: QArrayLike,
     *,
     ax: Axes | None = None,
+    w: float = 7.0,
+    h: float | None = None,
     times: ArrayLike | None = None,
     hlines: bool = True,
 ):
-    r"""Plot the expectation value of the Pauli operators of a qubit $\sigma_x$,
-    $\sigma_y$ and $\sigma_z$ as a function of time.
+    r"""Plot the expectation values of the Pauli operators of a qubit over time.
 
-    Warning:
-        Documentation redaction in progress.
+    The expectation values $\langle\sigma_x\rangle$, $\langle\sigma_y\rangle$ and
+    $\langle\sigma_z\rangle$ are plotted for each state.
+
+    Args:
+        states (qarray-like of shape (N, 2, 1) or (N, 2, 2)): Sequence of _N_ qubit
+            kets or density matrices.
+        ax: Matplotlib `Axes` to plot on. If `None`, a new figure of size `(w, h)`
+            is created.
+        w: Width of the new figure in inches, ignored if `ax` is specified.
+        h: Height of the new figure in inches, ignored if `ax` is specified. If
+            `None`, defaults to `w / 1.6`.
+        times (array-like of shape (N,), optional): Times of the states, used for
+            the x axis. If `None`, the x axis is the index of the state.
+        hlines: Whether to draw dashed horizontal lines at $\pm1$.
 
     Examples:
         >>> H = dq.sigmax() + dq.sigmay()
         >>> jump_ops = [jnp.sqrt(0.2) * dq.sigmam()]
         >>> psi0 = dq.excited()
         >>> tsave = jnp.linspace(0, 10.0, 1001)
-        >>> result = states = dq.mesolve(H, jump_ops, psi0, tsave)
+        >>> result = dq.mesolve(H, jump_ops, psi0, tsave)
         >>> dq.plot.xyz(result.states, times=tsave)
         >>> renderfig('plot_xyz')
 

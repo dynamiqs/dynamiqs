@@ -16,14 +16,28 @@ def pwc_pulse(
     values: ArrayLike,
     *,
     ax: Axes | None = None,
+    w: float = 7.0,
+    h: float | None = None,
     ycenter: bool = True,
     real_color: str = colors['blue'],
     imag_color: str = colors['purple'],
 ):
     """Plot a piecewise constant pulse.
 
-    Warning:
-        Documentation redaction in progress.
+    The real and imaginary parts of the pulse are plotted separately.
+
+    Args:
+        times (array-like of shape (N+1,)): Time points between which the pulse takes
+            constant values, defining _N_ time intervals.
+        values (array-like of shape (N,)): Pulse value on each time interval.
+        ax: Matplotlib `Axes` to plot on. If `None`, a new figure of size `(w, h)`
+            is created.
+        w: Width of the new figure in inches, ignored if `ax` is specified.
+        h: Height of the new figure in inches, ignored if `ax` is specified. If
+            `None`, defaults to `w / 1.6`.
+        ycenter: Whether to center the y axis on zero.
+        real_color: Color of the real part.
+        imag_color: Color of the imaginary part.
 
     Examples:
         >>> n = 20

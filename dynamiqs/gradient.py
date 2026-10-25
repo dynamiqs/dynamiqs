@@ -8,6 +8,12 @@ __all__ = ['Direct', 'BackwardCheckpointed', 'Forward', 'HigherOrder', 'Gradient
 
 
 class Gradient(eqx.Module):
+    """Base class of all gradients.
+
+    Every gradient of `dq.gradient` is an instance of this class, which is useful for
+    type annotations.
+    """
+
     def __str__(self) -> str:
         return tree_str_inline(self)
 
@@ -45,21 +51,6 @@ class BackwardCheckpointed(Gradient):
     that a checkpointing scheme is used to reduce the memory usage of the
     backpropagation.
 
-    Note:
-        For most problems this is the preferred technique for backpropagating
-        through the solvers.
-
-    Warning:
-        This cannot be forward-mode autodifferentiated (e.g. using
-        [`jax.jvp`](https://jax.readthedocs.io/en/latest/_autosummary/jax.jvp.html)
-        ). Try using [`dq.gradient.Direct`][dynamiqs.gradient.Direct] if that
-        is something you need.
-
-    Note:
-        For Diffrax-based methods, this falls back to the
-        [`diffrax.RecursiveCheckpointAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.RecursiveCheckpointAdjoint)
-        option.
-
     Args:
         ncheckpoints: Number of checkpoints to use. The amount of memory used by
             the differential equation solve will be roughly equal to the number of
@@ -70,6 +61,21 @@ class BackwardCheckpointed(Gradient):
             for which a theoretical result is available guaranteeing that
             backpropagation will take `O(n_steps log(n_steps))` time in the number
             of steps `n_steps <= max_steps`.
+
+    Note:
+        For most problems this is the preferred technique for backpropagating
+        through the solvers.
+
+    Warning:
+        This cannot be forward-mode autodifferentiated (e.g. using
+        [`jax.jvp`](https://docs.jax.dev/en/latest/_autosummary/jax.jvp.html)).
+        Try using [`dq.gradient.Direct`][dynamiqs.gradient.Direct] if that is
+        something you need.
+
+    Note:
+        For Diffrax-based methods, this falls back to the
+        [`diffrax.RecursiveCheckpointAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.RecursiveCheckpointAdjoint)
+        option.
     """
 
     ncheckpoints: int | None = None
@@ -84,7 +90,7 @@ class Forward(Gradient):
 
     Enables support for forward-mode automatic differentiation
     (like [`jax.jvp`](https://docs.jax.dev/en/latest/_autosummary/jax.jvp.html)
-      or [`jax.jacfwd`](https://docs.jax.dev/en/latest/_autosummary/jax.jacfwd.html)).
+    or [`jax.jacfwd`](https://docs.jax.dev/en/latest/_autosummary/jax.jacfwd.html)).
 
     Note:
         This is the most efficient when the function has more outputs than inputs. For
@@ -102,8 +108,9 @@ class Forward(Gradient):
 
     Warning:
         By default
-         [`jax.grad`](https://jax.readthedocs.io/en/latest/_autosummary/jax.grad.html)
-        uses reverse mode. Use [`jax.jacfwd`](https://jax.readthedocs.io/en/latest/_autosummary/jax.jacfwd.html)
+        [`jax.grad`](https://docs.jax.dev/en/latest/_autosummary/jax.grad.html)
+        uses reverse mode. Use
+        [`jax.jacfwd`](https://docs.jax.dev/en/latest/_autosummary/jax.jacfwd.html)
         to compute the gradient in forward mode.
 
     Note:
@@ -124,12 +131,15 @@ class HigherOrder(Gradient):
     [`jax.hessian`](https://docs.jax.dev/en/latest/_autosummary/jax.hessian.html).
 
     Note:
-        For supported explicit Diffrax ODE methods, this is the documented
-        Hessian-compatible mode. Like
+        This option is supported by the explicit Diffrax ODE methods
+        [`dq.method.Euler`][dynamiqs.method.Euler],
+        [`dq.method.Dopri5`][dynamiqs.method.Dopri5],
+        [`dq.method.Dopri8`][dynamiqs.method.Dopri8] and
+        [`dq.method.Tsit5`][dynamiqs.method.Tsit5]. Like
         [`dq.gradient.Direct`][dynamiqs.gradient.Direct], it uses
         [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint),
         which already configures the solver for higher-order differentiation. Use this
-        mode to make the higher-order differentiation requirement explicit and to
+        option to make the higher-order differentiation requirement explicit and to
         restrict to the methods on which it is supported.
     """
 

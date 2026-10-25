@@ -81,14 +81,14 @@ def dag(x: QArrayLike) -> QArray:
 
 
 def powm(x: QArrayLike, n: int) -> QArray:
-    """Returns the $n$-th matrix power of a qarray.
+    """Returns a qarray raised to an integer matrix power.
 
     Args:
         x (qarray-like of shape (..., n, n)): Square matrix.
         n: Integer exponent.
 
     Returns:
-        (qarray of shape (..., n, n)): Matrix power of `x`.
+        (qarray of shape (..., n, n)): Matrix power of `x` with exponent `n`.
 
     Examples:
         >>> dq.powm(dq.sigmax(), 2)
@@ -108,14 +108,14 @@ def expm(x: QArrayLike, *, max_squarings: int = 16) -> QArray:
 
     Args:
         x (qarray-like of shape (..., n, n)): Square matrix.
-        max_squarings: Number of squarings.
+        max_squarings: Maximum number of squarings.
 
     Returns:
         (qarray of shape (..., n, n)): Matrix exponential of `x`.
 
     Note-: Equivalent JAX syntax
         This function is equivalent to
-        `jnp.scipy.linalg.expm(x, max_squarings=max_squarings)`.
+        `jax.scipy.linalg.expm(x, max_squarings=max_squarings)`.
 
     Examples:
         >>> dq.expm(dq.sigmaz())
@@ -264,16 +264,16 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
                 = \sum_{i,j} (x * y^\intercal)_{ij}
     $$
 
-    Note:
-        The resulting time complexity for $n\times n$ matrices is $\mathcal{O}(n^2)$
-        instead of $\mathcal{O}(n^3)$ with the naive formula.
-
     Args:
         x (qarray-like of shape (..., n, n)): Qarray-like.
         y (qarray-like of shape (..., n, n)): Qarray-like.
 
     Returns:
         (array of shape (...)): Trace of `x @ y`.
+
+    Note:
+        The resulting time complexity for $n\times n$ matrices is $\mathcal{O}(n^2)$
+        instead of $\mathcal{O}(n^3)$ with the naive formula.
 
     Examples:
         >>> x = jnp.ones((3, 3))
@@ -312,7 +312,8 @@ def ptrace(
     Args:
         x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Ket, bra
             or density matrix of a composite system.
-        keep (int or tuple of ints): Dimensions to keep after partial trace.
+        keep (int or tuple of ints): Indices of the subsystems to keep after the
+            partial trace.
         dims (tuple of ints or None): Hilbert space dimension of each subsystem.
             Defaults to `None` (`x.dims` if available, individual system `dims=(n,)`
             otherwise).
@@ -448,12 +449,6 @@ def expect(O: QArrayLike, x: QArrayLike) -> Array:
     - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a ket $\ket\psi$ or bra $\bra\psi$,
     - as $\braket{O}=\tr{O\rho}$ if `x` is a density matrix $\rho$.
 
-    Warning:
-        The returned array is complex-valued. If the operator $O$ corresponds to a
-        physical observable, it is Hermitian: $O^\dag=O$, and the expectation value
-        is real. One can then keep only the real values of the returned array using
-        `dq.expect(O, x).real`.
-
     Args:
         O (qarray-like of shape (nO?, n, n)): Arbitrary operator or list of _nO_
             operators.
@@ -462,6 +457,12 @@ def expect(O: QArrayLike, x: QArrayLike) -> Array:
 
     Returns:
         (array of shape (nO?, ...)): Complex-valued expectation value.
+
+    Warning:
+        The returned array is complex-valued. If the operator $O$ corresponds to a
+        physical observable, it is Hermitian: $O^\dag=O$, and the expectation value
+        is real. One can then keep only the real values of the returned array using
+        `dq.expect(O, x).real`.
 
     Examples:
         >>> O = dq.number(16)
@@ -518,10 +519,6 @@ def norm(x: QArrayLike, *, psd: bool = False) -> Array:
     Returns:
         (array of shape (...)): Real-valued norm of `x`.
 
-    See also:
-        - [`dq.unit()`][dynamiqs.unit]: normalize a ket, bra, density matrix, or
-            Hermitian matrix to unit norm.
-
     Examples:
         For a ket:
         >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
@@ -532,6 +529,10 @@ def norm(x: QArrayLike, *, psd: bool = False) -> Array:
         >>> rho = dq.fock_dm(4, 0) + dq.fock_dm(4, 1) + dq.fock_dm(4, 2)
         >>> dq.norm(rho)
         Array(3., dtype=float32)
+
+    See also:
+        - [`dq.unit()`][dynamiqs.unit]: normalize a ket, bra, density matrix, or
+            Hermitian matrix to unit norm.
     """
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
@@ -562,10 +563,6 @@ def unit(x: QArrayLike, *, psd: bool = False) -> QArray:
         (qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Normalized ket,
             bra or density matrix.
 
-    See also:
-        - [`dq.norm()`][dynamiqs.norm]: returns the norm of a ket, bra, density matrix,
-            or Hermitian matrix.
-
     Examples:
         >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
         >>> psi.norm()
@@ -573,6 +570,10 @@ def unit(x: QArrayLike, *, psd: bool = False) -> QArray:
         >>> psi = dq.unit(psi)
         >>> psi.norm()
         Array(1., dtype=float32)
+
+    See also:
+        - [`dq.norm()`][dynamiqs.norm]: returns the norm of a ket, bra, density matrix,
+            or Hermitian matrix.
     """
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
@@ -595,10 +596,6 @@ def dissipator(L: QArrayLike, rho: QArrayLike) -> QArray:
     Returns:
         (qarray of shape (..., n, n)): Resulting operator (it is not a density matrix).
 
-    See also:
-        - [`dq.sdissipator()`][dynamiqs.sdissipator]: returns the dissipation
-            superoperator in matrix form (vectorized).
-
     Examples:
         >>> L = dq.destroy(4)
         >>> rho = dq.fock_dm(4, 2)
@@ -608,6 +605,10 @@ def dissipator(L: QArrayLike, rho: QArrayLike) -> QArray:
          [ 0.+0.j  2.+0.j  0.+0.j  0.+0.j]
          [ 0.+0.j  0.+0.j -2.+0.j  0.+0.j]
          [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]]
+
+    See also:
+        - [`dq.sdissipator()`][dynamiqs.sdissipator]: returns the dissipation
+            superoperator in matrix form (vectorized).
     """
     L = asqarray(L)
     rho = asqarray(rho)
@@ -631,21 +632,17 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
     (arbitrary operators) and $\mathcal{D}[L]$ is the Lindblad dissipation superoperator
     (see [`dq.dissipator()`][dynamiqs.dissipator]).
 
-    Note:
-        This superoperator is also sometimes called *Liouvillian*.
-
     Args:
         H (qarray-like of shape (..., n, n)): Hamiltonian.
-        jump_ops (list of qarray-like, each of shape (, ..., n, n)): List of jump
+        jump_ops (list of qarray-like, each of shape (..., n, n)): List of jump
             operators.
         rho (qarray-like of shape (..., n, n)): Density matrix.
 
     Returns:
         (qarray of shape (..., n, n)): Resulting operator (it is not a density matrix).
 
-    See also:
-        - [`dq.slindbladian()`][dynamiqs.slindbladian]: returns the Lindbladian
-            superoperator in matrix form (vectorized).
+    Note:
+        This superoperator is also sometimes called *Liouvillian*.
 
     Examples:
         >>> a = dq.destroy(4)
@@ -658,6 +655,10 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
          [ 0.+0.j -1.+0.j  0.+0.j  0.+0.j]
          [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]
          [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]]
+
+    See also:
+        - [`dq.slindbladian()`][dynamiqs.slindbladian]: returns the Lindbladian
+            superoperator in matrix form (vectorized).
     """
     H = asqarray(H)
     _jump_ops = [asqarray(L) for L in jump_ops]
@@ -724,7 +725,7 @@ def isket(x: QArrayLike) -> bool:
         x (qarray-like of shape (...)): Qarray-like.
 
     Returns:
-        True if the last dimension of `x` is 1, False otherwise.
+        (bool): True if the last dimension of `x` is 1, False otherwise.
 
     Examples:
         >>> dq.isket(jnp.ones((3, 1)))
@@ -745,7 +746,7 @@ def isbra(x: QArrayLike) -> bool:
         x (qarray-like of shape (...)): Qarray-like.
 
     Returns:
-        True if the second to last dimension of `x` is 1, False otherwise.
+        (bool): True if the second to last dimension of `x` is 1, False otherwise.
 
     Examples:
         >>> dq.isbra(jnp.ones((1, 3)))
@@ -766,7 +767,7 @@ def isdm(x: QArrayLike) -> bool:
         x (qarray-like of shape (...)): Qarray-like.
 
     Returns:
-        True if the last two dimensions of `x` are equal, False otherwise.
+        (bool): True if the last two dimensions of `x` are equal, False otherwise.
 
     Examples:
         >>> dq.isdm(jnp.ones((3, 3)))
@@ -787,7 +788,7 @@ def isop(x: QArrayLike) -> bool:
         x (qarray-like of shape (...)): Qarray-like.
 
     Returns:
-        True if the last two dimensions of `x` are equal, False otherwise.
+        (bool): True if the last two dimensions of `x` are equal, False otherwise.
 
     Examples:
         >>> dq.isop(jnp.ones((3, 3)))
@@ -810,12 +811,18 @@ def isherm(x: QArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> Array:
         atol: Absolute tolerance of the check.
 
     Returns:
-        True if `x` is Hermitian, False otherwise.
+        (array of shape ()): True if `x` is Hermitian, False otherwise. For a batched
+            `x`, a single boolean is returned, which is True only if every matrix of
+            the batch is Hermitian.
 
     Examples:
         >>> dq.isherm(jnp.eye(3))
         Array(True, dtype=bool)
         >>> dq.isherm([[0, 1j], [1j, 0]])
+        Array(False, dtype=bool)
+
+        For a batched input, a single boolean is returned:
+        >>> dq.isherm([dq.sigmax(), dq.sigmay(), dq.sigmap()])
         Array(False, dtype=bool)
     """
     x = asqarray(x)
@@ -859,7 +866,7 @@ def tobra(x: QArrayLike) -> QArray:
         x (qarray-like of shape (..., n, 1) or (..., 1, n)): Ket or bra.
 
     Returns:
-        (qarray of shape (..., 1, n)): Qarray.
+        (qarray of shape (..., 1, n)): Bra.
 
     Examples:
         >>> psi = dq.fock(3, 0)  # shape: (3, 1)
@@ -884,16 +891,16 @@ def tobra(x: QArrayLike) -> QArray:
 def todm(x: QArrayLike) -> QArray:
     r"""Returns the density matrix representation of a quantum state.
 
-    Note:
-        This function is an alias of [`dq.proj()`][dynamiqs.proj]. If `x` is already a
-        density matrix, it is returned directly.
-
     Args:
         x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Ket, bra
             or density matrix.
 
     Returns:
         (qarray of shape (..., n, n)): Density matrix.
+
+    Note:
+        This function is an alias of [`dq.proj()`][dynamiqs.proj]. If `x` is already a
+        density matrix, it is returned directly.
 
     Examples:
         >>> psi = dq.fock(3, 0)  # shape: (3, 1)
@@ -1019,14 +1026,10 @@ def fidelity(x: QArrayLike, y: QArrayLike) -> Array:
 
     - as $F(\ket\psi,\ket\varphi)=\left|\braket{\psi|\varphi}\right|^2$ if both
       arguments are kets,
-    - as $F(\ket\psi,\rho)=\lvert\braket{\psi|\rho|\psi}\rvert$ if one arguments is a
+    - as $F(\ket\psi,\rho)=\lvert\braket{\psi|\rho|\psi}\rvert$ if one argument is a
       ket and the other is a density matrix,
     - as $F(\rho,\sigma)=\tr{\sqrt{\sqrt\rho\sigma\sqrt\rho}}^2$ if both arguments are
       density matrices.
-
-    Warning:
-        This definition is different from `qutip.fidelity()` which uses the square root
-        fidelity $F_\text{qutip} = \sqrt{F}$.
 
     Args:
         x (qarray-like of shape (..., n, 1) or (..., n, n)): Ket or density matrix.
@@ -1034,6 +1037,10 @@ def fidelity(x: QArrayLike, y: QArrayLike) -> Array:
 
     Returns:
         (array of shape (...)): Real-valued fidelity.
+
+    Warning:
+        This definition is different from `qutip.fidelity()` which uses the square root
+        fidelity $F_\text{qutip} = \sqrt{F}$.
 
     Examples:
         >>> fock0 = dq.fock(3, 0)
@@ -1100,7 +1107,7 @@ def purity(x: QArrayLike) -> Array:
 
 
 def entropy_vn(x: QArrayLike) -> Array:
-    r"""Returns the Von Neumann entropy of a ket or density matrix.
+    r"""Returns the von Neumann entropy of a ket or density matrix.
 
     It is defined by $S(\rho) = -\tr{\rho \ln \rho}$.
 
@@ -1108,7 +1115,7 @@ def entropy_vn(x: QArrayLike) -> Array:
         x (qarray-like of shape (..., n, 1) or (..., n, n)): Ket or density matrix.
 
     Returns:
-        (array of shape (...)): Real-valued Von Neumann entropy.
+        (array of shape (...)): Real-valued von Neumann entropy.
 
     Examples:
         >>> rho = (dq.fock_dm(2, 0) + dq.fock_dm(2, 1)).unit()
@@ -1136,9 +1143,6 @@ def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
 
     It is defined by $S_{KL}(\rho || \sigma) = \tr{\rho (\ln \rho - \ln \sigma)}$.
 
-    Note:
-        The relative entropy is not symmetric.
-
     Args:
         rho (qarray-like of shape (..., n, 1) or (..., n, n)): Ket or density matrix.
         sigma (qarray-like of shape (..., n, 1) or (..., n, n)): Ket or density
@@ -1146,6 +1150,9 @@ def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
 
     Returns:
         (array of shape (...)): Real-valued quantum relative entropy.
+
+    Note:
+        The relative entropy is not symmetric.
 
     Examples:
         State with respect to itself:
@@ -1179,8 +1186,8 @@ def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
     # convert inputs to internal array type and validate shapes
     rho = asqarray(rho)
     sigma = asqarray(sigma)
-    check_shape(rho, 'x', '(..., n, 1)', '(..., n, n)')
-    check_shape(sigma, 'x', '(..., n, 1)', '(..., n, n)')
+    check_shape(rho, 'rho', '(..., n, 1)', '(..., n, n)')
+    check_shape(sigma, 'sigma', '(..., n, 1)', '(..., n, n)')
 
     # promote kets to density operators
     rho = todm(rho)

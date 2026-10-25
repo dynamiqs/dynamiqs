@@ -258,7 +258,15 @@ renderfig('tqarray_plot_modulated')
 ??? Note "Discontinuous function"
     If there is a discontinuous jump in the function values, you should use the optional
     argument `discontinuity_ts` to enforce adaptive step size methods to stop at these
-    times (i.e., right before, and right after the jump).
+    times (i.e., right before, and right after the jump). For example, for a square
+    pulse that flips sign at $t=0.5$:
+    ```pycon
+    >>> f = lambda t: jnp.where(t < 0.5, 1.0, -1.0)
+    >>> H = dq.modulated(f, dq.sigmax(), discontinuity_ts=[0.5])
+    ```
+    The discontinuities of PWC operators defined with [`dq.pwc()`][dynamiqs.pwc], and
+    the time bounds set by [`.clip()`](#clipping-a-timeqarray), are declared
+    automatically.
 
 ### Arbitrary time-dependent operators
 
@@ -297,7 +305,7 @@ The returned object can be called at different times:
     ```
 
 !!! Warning "The function `f` must return a qarray (not a qarray-like!)"
-    An error is raised if the function `f` does not return a qarray. This error concerns any other qarray-likes. This is enforced to avoid costly conversions at every time step of the numerical integration.
+    Other qarray-likes, such as JAX arrays or nested lists, are not supported: wrap the returned operator with [`dq.asqarray()`][dynamiqs.asqarray] inside `f`, as in the example above. This is not checked when the timeqarray is created, and returning another type leads to errors later on, for example when accessing `H.dims`.
 
 ??? Note "Batching arbitrary time-dependent operators"
     The batching of the returned timeqarray is specified by the qarray returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:
@@ -315,7 +323,7 @@ The returned object can be called at different times:
     >>> import functools
     >>> def func(t, a, amplitude=1.0):
     ...     return amplitude * dq.asqarray([[t, a], [a, 1 - t]])
-    >>> # create function with correct signature (t: float) -> Array
+    >>> # create function with correct signature (t: float) -> QArray
     >>> f = functools.partial(func, a=1.0, amplitude=5.0)
     >>> H = dq.timecallable(f)
     ```
@@ -323,7 +331,16 @@ The returned object can be called at different times:
 ??? Note "Discontinuous function"
     If there is a discontinuous jump in the function values, you should use the optional
     argument `discontinuity_ts` to enforce adaptive step size methods to stop at these
-    times (i.e., right before, and right after the jump).
+    times (i.e., right before, and right after the jump). For example, to flip the sign
+    of the previous operator at $t=0.5$:
+    ```pycon
+    >>> sign = lambda t: jnp.where(t < 0.5, 1.0, -1.0)
+    >>> f = lambda t: sign(t) * dq.asqarray([[t, 0], [0, 1 - t]])
+    >>> H = dq.timecallable(f, discontinuity_ts=[0.5])
+    ```
+    The discontinuities of PWC operators defined with [`dq.pwc()`][dynamiqs.pwc], and
+    the time bounds set by [`.clip()`](#clipping-a-timeqarray), are declared
+    automatically.
 
 ## Clipping a timeqarray
 

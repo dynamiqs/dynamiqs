@@ -40,6 +40,16 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         members:
         - QArray
 
+### Layouts
+
+::: dynamiqs.qarrays.layout
+    options:
+        extra:
+            table: true
+        members:
+        - dense
+        - dia
+
 ### Time-dependent qarrays
 
 ::: dynamiqs.time_qarray
@@ -76,6 +86,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - JumpMonteCarlo
         - DiffusiveMonteCarlo
         - LowRank
+        - LinearSolver
+        - Method
 
 ### Gradients (dq.gradient)
 
@@ -88,6 +100,25 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - BackwardCheckpointed
         - Forward
         - HigherOrder
+        - Gradient
+
+### Results
+
+::: dynamiqs.result
+    options:
+        extra:
+            table: true
+        members:
+        - SESolveResult
+        - MESolveResult
+        - MESolveLowRankResult
+        - SEPropagatorResult
+        - MEPropagatorResult
+        - FloquetResult
+        - JSSESolveResult
+        - JSMESolveResult
+        - DSSESolveResult
+        - DSMESolveResult
 
 ### Progress meters
 
