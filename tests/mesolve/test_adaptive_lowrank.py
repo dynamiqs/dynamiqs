@@ -178,10 +178,12 @@ def test_eigh_with_fallback(monkeypatch):
     rho0 = a[0] @ a[0].conj().T
     rho0 = rho0 / jnp.trace(rho0)
     m0 = initialize_m0_from_dm(rho0, 2, 1e-3, jax.random.PRNGKey(0))
+    # complex64 values of order 1: round-off of a few 1e-8 between code paths
+    close = partial(jnp.allclose, atol=1e-6)
 
     # a batch without vmap has the same derivatives, and the GPU branch lowers
     tangents = [tuple(jax.jvp(f, (a,), (da,))[1]) for f in [_eigh_with_fallback, eigh]]
-    assert all(jax.tree.leaves(jax.tree.map(jnp.allclose, *tangents)))
+    assert all(jax.tree.leaves(jax.tree.map(close, *tangents)))
     jax.export.export(jax.jit(_eigh_with_fallback), platforms=['cuda'])(a[0])
 
     def nan_eigh(a):
@@ -218,7 +220,7 @@ def test_eigh_with_fallback(monkeypatch):
     for i in range(2):
         alone = f(a[i], da[i])
         for x, x_batched, x_expected in zip(alone, batched, expected, strict=True):
-            assert jnp.allclose(x, x_expected[i])
-            assert jnp.allclose(x_batched[i], x_expected[i])
+            assert close(x, x_expected[i])
+            assert close(x_batched[i], x_expected[i])
     m0_fallback = initialize_m0_from_dm(rho0, 2, 1e-3, jax.random.PRNGKey(0))
-    assert jnp.allclose(m0_fallback, m0)
+    assert close(m0_fallback, m0)
