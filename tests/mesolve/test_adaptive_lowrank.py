@@ -1,10 +1,15 @@
 import jax
 import jax.numpy as jnp
 import pytest
+from equinox import EquinoxRuntimeError
 
 import dynamiqs as dq
 from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
-from dynamiqs.integrators.core.low_rank_integrator import _cholesky_qr2, expval_from_m
+from dynamiqs.integrators.core.low_rank_integrator import (
+    _cholesky_qr2,
+    expval_from_m,
+    initialize_m0_from_dm,
+)
 from dynamiqs.method import Kvaerno5, LinearSolver, LowRank, Tsit5
 
 from ..integrator_tester import IntegratorTester
@@ -155,3 +160,17 @@ def test_cholesky_qr2(monkeypatch, backend, condition):
         b = a @ x0 + 1e-3 * (w - u @ (u.conj().T @ w))
         x = jax.scipy.linalg.solve_triangular(r, q.conj().T @ b)
         assert jnp.allclose(x, x0, rtol=1e-8, atol=0)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_nan_eigh_raises(monkeypatch):
+    # on GPU in single precision, eigh can return NaN (jax-ml/jax#32641): the initial
+    # factor from a density matrix then raises an error, alone and under jit
+    eigh = jnp.linalg.eigh
+    monkeypatch.setattr(jnp.linalg, 'eigh', lambda a: [x * jnp.nan for x in eigh(a)])
+    rho0 = dq.fock_dm(4, 0).to_jax()
+    key = jax.random.PRNGKey(0)
+    with pytest.raises(EquinoxRuntimeError, match='jax-ml/jax#32641'):
+        initialize_m0_from_dm(rho0, 2, 1e-3, key)
+    with pytest.raises(jax.errors.JaxRuntimeError, match='jax-ml/jax#32641'):
+        jax.jit(initialize_m0_from_dm, static_argnums=1)(rho0, 2, 1e-3, key)

@@ -214,6 +214,15 @@ def initialize_m0_from_dm(
     """
     # eigendecompose rho0 and keep the `rank` largest eigenvalues/vectors.
     evals, evecs = jnp.linalg.eigh(rho0)
+    # without this check, a NaN factor makes the solve reject every step until
+    # `max_steps`
+    evals = eqx.error_if(
+        evals,
+        ~jnp.all(jnp.isfinite(evals)),
+        'The eigendecomposition of `rho0` returned NaN or infinite values. This is a'
+        ' known bug of `eigh` on GPU in single precision (jax-ml/jax#32641). Switch'
+        " to double precision with `dq.set_precision('double')`.",
+    )
     evals = jnp.maximum(evals, 0.0)
     evals_rank = evals[-rank:][::-1]
     cols = evecs[:, -rank:][:, ::-1] * jnp.sqrt(evals_rank)[None, :]

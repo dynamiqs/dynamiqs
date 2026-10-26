@@ -826,6 +826,13 @@ class LowRank(Method):
         progress bar getting stuck when using single precision.
 
     Warning:
+        On GPU in single precision, the eigendecomposition of some initial density
+        matrices returns NaN
+        ([jax-ml/jax#32641](https://github.com/jax-ml/jax/issues/32641)), and the
+        solver then raises an error. Use double precision with
+        `dq.set_precision('double')`.
+
+    Warning:
         The low-rank method is more sensitive to time-step error. If the accuracy does
         not improve when increasing the `rank`, consider tightening the tolerances of
         the chosen `ode_method`.
