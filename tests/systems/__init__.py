@@ -2,6 +2,7 @@ from ._system import System
 from .closed_system import dense_cavity, dia_cavity, tdqubit
 from .floquet_qubit import floquet_qubit
 from .open_system import (
+    dense_driven_ocavity,
     dense_nojump_cavity,
     dense_ocavity,
     dia_nojump_cavity,

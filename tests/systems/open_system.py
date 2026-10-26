@@ -161,6 +161,23 @@ class MixedOCavity(OCavity):
         return self._mixture(super()._expect, params, t)
 
 
+class DrivenOCavity(OCavity):
+    # `OCavity` with a drive eps (a + a^dag): a coherent state stays coherent, and its
+    # amplitude relaxes to alpha_ss = -i eps / (i delta + kappa / 2)
+    def __init__(self, *, eps: float, **kwargs):
+        super().__init__(**kwargs)
+        self.eps = eps
+
+    def H(self, params: PyTree) -> QArray | TimeQArray:
+        a = dq.destroy(self.n, layout=self.layout)
+        return super().H(params) + self.eps * (a + a.dag())
+
+    def _alpha(self, params: PyTree, t: float) -> Array:
+        s = 1j * params.delta + 0.5 * params.kappa
+        alpha_ss = -1j * self.eps / s
+        return alpha_ss + (params.alpha0 - alpha_ss) * jnp.exp(-s * t)
+
+
 class OTDQubit(OpenSystem):
     class Params(NamedTuple):
         eps: float
@@ -261,6 +278,15 @@ dense_nojump_cavity = NoJumpCavity(
 )
 dia_nojump_cavity = NoJumpCavity(
     n=8, delta=1.0 * Hz, alpha0=0.5, tsave=tsave, layout=dq.dia
+)
+dense_driven_ocavity = DrivenOCavity(
+    eps=3.0 * Hz,
+    n=32,
+    delta=1.0 * Hz,
+    alpha0=0.0,
+    kappa=1.0 * Hz,
+    tsave=tsave,
+    layout=dense,
 )
 mixed_ocavity = MixedOCavity(
     p=0.7, n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dense
