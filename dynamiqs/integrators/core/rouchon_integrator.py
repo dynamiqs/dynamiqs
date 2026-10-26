@@ -554,14 +554,13 @@ class MESolveAdaptiveRouchonIntegrator(
             dt = t1 - t0
             propagator_low, propagator_high = self.make_nojump_propagators(t0, dt)
 
-            # low order
+            # low order, without normalization: the normalization can make the low
+            # order solution as accurate as the high order one, and then their
+            # difference underestimates the error
             kraus_low = self._fixed_cls_low.build_kraus_map(
                 propagator_low, self.H, self.L, t0, dt
             )
-            rho_low = (
-                cholesky_normalize(kraus_low.S(), rho) if self.method.normalize else rho
-            )
-            rho_low = kraus_low(rho_low)
+            rho_low = kraus_low(rho)
 
             # high order
             kraus_high = self._fixed_cls_high.build_kraus_map(
