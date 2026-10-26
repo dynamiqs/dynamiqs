@@ -158,9 +158,10 @@ def _cholesky_solve_cached_jvp(
 
 @jax.custom_batching.custom_vmap
 def _any_in_batch(x: Array) -> Array:
-    # x itself. Under vmap, whether x is true for at least one element of the batch.
-    # A `lax.cond` on it keeps an unbatched condition, so it stays a conditional
-    # instead of becoming a select that computes both branches.
+    # Return x. Under vmap, return whether x is true for at least one matrix of the
+    # batch, without a batch axis. A `lax.cond` on a batched condition becomes a
+    # select that runs both branches. On this unbatched condition, it stays a
+    # conditional.
     return x
 
 
@@ -169,19 +170,19 @@ def _any_in_batch_vmap(
     axis_size: int, in_batched: list[bool], x: Array
 ) -> tuple[Array, bool]:
     del axis_size, in_batched
-    # an enclosing vmap reduces its own batch in the same way
+    # an outer vmap, if any, reduces its own batch in the same way
     return _any_in_batch(jnp.any(x)), False
 
 
 @jax.custom_jvp
-def _eigh(a: Array) -> tuple[Array, Array]:
-    # On GPU, the default eigh (cuSOLVER) returns NaN for some Hermitian matrices in
-    # single precision (jax-ml/jax#32641). When the eigenvalues are not finite, this
-    # function computes the eigendecomposition again with the Jacobi algorithm. Under
-    # vmap, this happens only if a matrix of the batch failed, and only the failed
-    # results are replaced. Jacobi exists only on GPU. Other platforms run the
-    # default eigh again: it does not fail there, and CPU tests still cover this code.
-    # Remove this function once JAX fixes the issue.
+def _eigh_with_fallback(a: Array) -> tuple[Array, Array]:
+    # On GPU in single precision, cuSOLVER's eigh returns NaN for some Hermitian
+    # matrices (jax-ml/jax#32641). JAX then fills both outputs with NaN, so checking
+    # the eigenvalues is enough. If they are not finite, the Jacobi algorithm (another
+    # eigensolver, GPU only) computes the eigendecomposition of the failed matrices
+    # again. Under vmap, it runs only if at least one matrix failed. Other platforms
+    # call the default eigh again: it does not fail there, and CPU tests run this
+    # code. Remove this function once JAX fixes the issue.
     evals, evecs = jnp.linalg.eigh(a)
     failed = ~jnp.all(jnp.isfinite(evals))
 
@@ -198,15 +199,15 @@ def _eigh(a: Array) -> tuple[Array, Array]:
     return jax.lax.cond(_any_in_batch(failed), fallback, lambda _: (evals, evecs), a)
 
 
-@_eigh.defjvp
-def _eigh_jvp(
+@_eigh_with_fallback.defjvp
+def _eigh_with_fallback_jvp(
     primals: tuple[Array], tangents: tuple[Array]
 ) -> tuple[tuple[Array, Array], tuple[Array, Array]]:
-    # The derivatives of JAX's rule for `jnp.linalg.eigh` (first-order perturbation
-    # theory). They use only the returned eigendecomposition, so a failed default
-    # result does not make the gradient NaN.
+    # JAX's formula for the derivatives of `jnp.linalg.eigh` (first-order
+    # perturbation theory), from the returned eigendecomposition. JAX's own rule
+    # starts from the default result, which is NaN after a failure.
     (a,), (a_dot,) = primals, tangents
-    evals, evecs = _eigh(a)
+    evals, evecs = _eigh_with_fallback(a)
     matmul = partial(jnp.matmul, precision=jax.lax.Precision.HIGHEST)
     a_dot = (a_dot + a_dot.conj().mT) / 2  # eigh uses the Hermitian part of a
     eye = jnp.eye(a.shape[-1], dtype=evals.dtype)
@@ -274,7 +275,7 @@ def initialize_m0_from_dm(
     perturbations scaled by `eps`, ensuring that the rank is at least `rank`.
     """
     # eigendecompose rho0 and keep the `rank` largest eigenvalues/vectors.
-    evals, evecs = _eigh(rho0)
+    evals, evecs = _eigh_with_fallback(rho0)
     evals = jnp.maximum(evals, 0.0)
     evals_rank = evals[-rank:][::-1]
     cols = evecs[:, -rank:][:, ::-1] * jnp.sqrt(evals_rank)[None, :]

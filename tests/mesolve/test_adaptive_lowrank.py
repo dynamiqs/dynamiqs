@@ -8,7 +8,7 @@ import dynamiqs as dq
 from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
 from dynamiqs.integrators.core.low_rank_integrator import (
     _cholesky_qr2,
-    _eigh,
+    _eigh_with_fallback,
     expval_from_m,
     initialize_m0_from_dm,
 )
@@ -165,13 +165,24 @@ def test_cholesky_qr2(monkeypatch, backend, condition):
 
 
 @pytest.mark.run(order=TEST_SHORT)
-def test_eigh_fallback(monkeypatch):
+def test_eigh_with_fallback(monkeypatch):
     # the default eigh returns NaN for the first matrix and works for the second.
-    # `_eigh` returns the eigendecomposition of both, and its derivatives in reverse
-    # and forward mode, alone and under vmap. Under nested vmaps (as in cartesian
-    # batching), it keeps the conditional, so the fallback runs only when needed.
-    # LowRank's initial factor from a density matrix is then finite.
-    eigh = jnp.linalg.eigh
+    # The fallback gives the eigendecomposition of both, and its derivatives in
+    # reverse and forward mode, alone and under vmap. Under nested vmaps (as in
+    # cartesian batching), it runs only if a matrix failed. LowRank's initial factor
+    # from a density matrix is the one of the default eigh.
+    eigh, lax_eigh = jnp.linalg.eigh, jax.lax.linalg.eigh
+    a = jax.random.normal(jax.random.PRNGKey(0), (2, 4, 4), dtype=jnp.complex64)
+    a = (a + a.conj().mT).at[:, 0, 0].set(jnp.array([1, -1], a.dtype))
+    da = jnp.flip(a, 0)
+    rho0 = a[0] @ a[0].conj().T
+    rho0 = rho0 / jnp.trace(rho0)
+    m0 = initialize_m0_from_dm(rho0, 2, 1e-3, jax.random.PRNGKey(0))
+
+    # a batch without vmap has the same derivatives, and the GPU branch lowers
+    tangents = [tuple(jax.jvp(f, (a,), (da,))[1]) for f in [_eigh_with_fallback, eigh]]
+    assert all(jax.tree.leaves(jax.tree.map(jnp.allclose, *tangents)))
+    jax.export.export(jax.jit(_eigh_with_fallback), platforms=['cuda'])(a[0])
 
     def nan_eigh(a):
         # NaN values and derivatives, as a failed cuSOLVER eigh
@@ -179,10 +190,19 @@ def test_eigh_fallback(monkeypatch):
         evals, evecs = eigh(a)
         return evals * nan_if_failed, evecs * nan_if_failed
 
+    fallback_calls = []
+
+    def counted_eigh(a, **kwargs):
+        jax.debug.callback(lambda: fallback_calls.append(a.shape))
+        return lax_eigh(a, **kwargs)
+
     monkeypatch.setattr(jnp.linalg, 'eigh', nan_eigh)
-    a = jax.random.normal(jax.random.PRNGKey(0), (2, 4, 4), dtype=jnp.complex64)
-    a = (a + a.conj().mT).at[:, 0, 0].set(jnp.array([1, -1], a.dtype))
-    da = jnp.flip(a, 0)
+    monkeypatch.setattr(jax.lax.linalg, 'eigh', counted_eigh)
+    nested_vmap = jax.vmap(jax.vmap(_eigh_with_fallback))
+    for batch, runs in [(a[None, 1:], False), (a[None], True)]:
+        jax.block_until_ready(nested_vmap(batch))
+        jax.effects_barrier()
+        assert bool(fallback_calls) == runs
 
     def loss_and_derivatives(eigh, a, da):
         # |v_0j|^2 does not depend on the phase of the eigenvectors
@@ -193,14 +213,12 @@ def test_eigh_fallback(monkeypatch):
         return loss(a), jax.grad(loss)(a), jax.jvp(loss, (a,), (da,))[1]
 
     expected = jax.vmap(partial(loss_and_derivatives, eigh))(a, da)
-    f = jax.jit(partial(loss_and_derivatives, _eigh))
+    f = jax.jit(partial(loss_and_derivatives, _eigh_with_fallback))
     batched = jax.vmap(f)(a, da)
     for i in range(2):
         alone = f(a[i], da[i])
         for x, x_batched, x_expected in zip(alone, batched, expected, strict=True):
             assert jnp.allclose(x, x_expected[i])
             assert jnp.allclose(x_batched[i], x_expected[i])
-    assert 'cond' in str(jax.make_jaxpr(jax.vmap(jax.vmap(_eigh)))(a[None]))
-    rho0 = a[0] @ a[0].conj().T
-    m0 = initialize_m0_from_dm(rho0 / jnp.trace(rho0), 2, 1e-3, jax.random.PRNGKey(0))
-    assert jnp.all(jnp.isfinite(m0))
+    m0_fallback = initialize_m0_from_dm(rho0, 2, 1e-3, jax.random.PRNGKey(0))
+    assert jnp.allclose(m0_fallback, m0)
