@@ -46,8 +46,9 @@ class TestFloquet:
         assert jnp.allclose(modes.mT.conj() @ modes, jnp.eye(n), atol=1e-5)
         assert jnp.allclose(U @ modes, modes * evals, atol=1e-5)
 
-    def test_eigenvalue_at_minus_one(self):
-        # sigmax has the exact eigenvalues ±1, the other block a near-degenerate cluster
+    def test_exact_plus_minus_one_eigenvalues(self):
+        # dq.floquet cannot build exact eigenvalues, so the diagonalization is called
+        # directly: sigmax has the eigenvalues ±1, the other block a tight cluster
         _, R = jnp.linalg.eigh(dq.random.herm(jax.random.PRNGKey(42), (3, 3)).to_jax())
         cluster = jnp.exp(1j * jnp.array([2.0, 2.0 + 1e-4, 2.0 + 2e-4]))
         U = block_diag(dq.sigmax().to_jax(), (R * cluster) @ R.mT.conj())

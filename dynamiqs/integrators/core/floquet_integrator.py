@@ -80,15 +80,15 @@ def _diagonalize_unitary(U: Array) -> tuple[Array, Array]:
         return 0.5 * (K + K.mT.conj())
 
     # Rough eigenphases of W = e^{i}U are enough to find the widest gap. They are the
-    # eigenvalues of the transform of W or of -W, whichever has the smaller norm: its
-    # pole is farther from the spectrum. The factor e^{i} moves both poles away from
-    # ±1 and ±i, which are eigenvalues of many structured unitaries.
+    # eigenvalues of the transform of W or of -W, whichever has the smaller largest
+    # entry: its pole is farther from the spectrum. The factor e^{i} moves both poles
+    # away from ±1 and ±i, which are eigenvalues of many structured unitaries.
     W = jnp.exp(1j) * U
     V = jax.lax.stop_gradient(W)
     K, K_opposite = cayley(V), cayley(-V)
     opposite = jnp.abs(K_opposite).max((-2, -1)) < jnp.abs(K).max((-2, -1))
     K = jnp.where(opposite[..., None, None], K_opposite, K)
-    phases = 2 * jnp.arctan(jnp.linalg.eigvalsh(K))  # of V, or of -V
+    phases = 2 * jnp.arctan(jnp.linalg.eigvalsh(K))  # of V, or of -V minus π
     phases = jnp.sort(jnp.where(opposite[..., None], phases + jnp.pi, phases))
     gaps = jnp.diff(phases, append=phases[..., :1] + 2 * jnp.pi)
     widest = jnp.argmax(gaps, axis=-1, keepdims=True)
