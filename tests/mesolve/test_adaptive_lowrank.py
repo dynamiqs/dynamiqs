@@ -1,14 +1,21 @@
+from functools import partial
+
 import jax
 import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
 from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
-from dynamiqs.integrators.core.low_rank_integrator import _cholesky_qr2, expval_from_m
+from dynamiqs.integrators.core.low_rank_integrator import (
+    _cholesky_qr2,
+    _eigh,
+    expval_from_m,
+    initialize_m0_from_dm,
+)
 from dynamiqs.method import Kvaerno5, LinearSolver, LowRank, Tsit5
 
 from ..integrator_tester import IntegratorTester
-from ..order import TEST_INSTANT, TEST_LONG
+from ..order import TEST_INSTANT, TEST_LONG, TEST_SHORT
 from ..systems import dense_ocavity, dia_ocavity, mixed_ocavity, otdqubit
 
 # we only test Tsit5 to keep the unit test suite fast, and Kvaerno5 for the real
@@ -155,3 +162,45 @@ def test_cholesky_qr2(monkeypatch, backend, condition):
         b = a @ x0 + 1e-3 * (w - u @ (u.conj().T @ w))
         x = jax.scipy.linalg.solve_triangular(r, q.conj().T @ b)
         assert jnp.allclose(x, x0, rtol=1e-8, atol=0)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_eigh_fallback(monkeypatch):
+    # the default eigh returns NaN for the first matrix and works for the second.
+    # `_eigh` returns the eigendecomposition of both, and its derivatives in reverse
+    # and forward mode, alone and under vmap. Under nested vmaps (as in cartesian
+    # batching), it keeps the conditional, so the fallback runs only when needed.
+    # LowRank's initial factor from a density matrix is then finite.
+    eigh = jnp.linalg.eigh
+
+    def nan_eigh(a):
+        # NaN values and derivatives, as a failed cuSOLVER eigh
+        nan_if_failed = jnp.where(a[0, 0].real > 0, jnp.nan, 1.0)
+        evals, evecs = eigh(a)
+        return evals * nan_if_failed, evecs * nan_if_failed
+
+    monkeypatch.setattr(jnp.linalg, 'eigh', nan_eigh)
+    a = jax.random.normal(jax.random.PRNGKey(0), (2, 4, 4), dtype=jnp.complex64)
+    a = (a + a.conj().mT).at[:, 0, 0].set(jnp.array([1, -1], a.dtype))
+    da = jnp.flip(a, 0)
+
+    def loss_and_derivatives(eigh, a, da):
+        # |v_0j|^2 does not depend on the phase of the eigenvectors
+        def loss(a):
+            evals, evecs = eigh(a)
+            return jnp.sum(evals * jnp.abs(evecs[0]) ** 2)
+
+        return loss(a), jax.grad(loss)(a), jax.jvp(loss, (a,), (da,))[1]
+
+    expected = jax.vmap(partial(loss_and_derivatives, eigh))(a, da)
+    f = jax.jit(partial(loss_and_derivatives, _eigh))
+    batched = jax.vmap(f)(a, da)
+    for i in range(2):
+        alone = f(a[i], da[i])
+        for x, x_batched, x_expected in zip(alone, batched, expected, strict=True):
+            assert jnp.allclose(x, x_expected[i])
+            assert jnp.allclose(x_batched[i], x_expected[i])
+    assert 'cond' in str(jax.make_jaxpr(jax.vmap(jax.vmap(_eigh)))(a[None]))
+    rho0 = a[0] @ a[0].conj().T
+    m0 = initialize_m0_from_dm(rho0 / jnp.trace(rho0), 2, 1e-3, jax.random.PRNGKey(0))
+    assert jnp.all(jnp.isfinite(m0))
