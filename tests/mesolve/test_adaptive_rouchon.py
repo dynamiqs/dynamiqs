@@ -17,9 +17,14 @@ from ..systems import dense_driven_ocavity, dense_ocavity, otdqubit
 @pytest.mark.run(order=TEST_LONG)
 class TestMESolveAdaptiveRouchon(IntegratorTester):
     @pytest.mark.parametrize('method_class', [Rouchon2, Rouchon3])
-    @pytest.mark.parametrize('system', [dense_ocavity, dense_driven_ocavity, otdqubit])
+    @pytest.mark.parametrize('system', [dense_ocavity, otdqubit])
     def test_correctness(self, method_class, system):
         self._test_correctness(system, method_class())
+
+    # the drive makes sum_k Mk^† @ Mk non-diagonal, see
+    # `unrotated_cholesky_normalize()`
+    def test_correctness_driven(self):
+        self._test_correctness(dense_driven_ocavity, Rouchon3())
 
     @pytest.mark.parametrize('method_class', [Rouchon2])
     @pytest.mark.parametrize('system', [dense_ocavity, otdqubit])

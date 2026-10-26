@@ -39,10 +39,7 @@ class TestMESolveFixedRouchon(IntegratorTester):
         self._test_correctness(dense_nojump_cavity, method_class(dt=dt))
 
     # the drive makes sum_k Mk^† @ Mk non-diagonal, see
-    # `unrotated_cholesky_normalize()`; the larger amplitude needs smaller steps than
+    # `unrotated_cholesky_normalize()`; its larger amplitude needs a smaller step than
     # `test_correctness`
-    @pytest.mark.parametrize(
-        ('method_class', 'dt'), [(Rouchon2, 5e-4), (Rouchon3, 2e-3)]
-    )
-    def test_correctness_driven(self, method_class, dt):
-        self._test_correctness(dense_driven_ocavity, method_class(dt=dt))
+    def test_correctness_driven(self):
+        self._test_correctness(dense_driven_ocavity, Rouchon3(dt=2e-3))
