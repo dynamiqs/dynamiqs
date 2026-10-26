@@ -131,9 +131,9 @@ class JSSESolveEventIntegrator(
         click_occurred = solution.event_mask
         assert click_occurred is not None
 
-        # A solve without a click can end up to 100 ULP before the final time, just
-        # before a jump (see `DiffraxIntegrator.diffeqsolve`). The trajectory has
-        # still reached the final time.
+        # Without a click, the solve can stop up to 100 ULP before the final time,
+        # just before an operator jumps (see `DiffraxIntegrator.diffeqsolve`). The
+        # trajectory has still reached the final time, so its time is set to it.
         t = jnp.where(click_occurred, tclick, self.t1)
         y = replace(y, psi=psiclick, t=t)
 

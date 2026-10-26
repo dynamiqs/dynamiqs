@@ -102,19 +102,19 @@ def test_gradient_wrt_discontinuity_time_with_progress_meter(progress_meter):
 
 @pytest.mark.run(order=TEST_SHORT)
 @pytest.mark.parametrize(('t1', 'ulps'), [(3.0, 0), (3.0, 2), (-3.0, 2)])
-@pytest.mark.parametrize('with_clicks', [False, True])
-def test_discontinuity_at_last_save_time(t1, ulps, with_clicks):
+@pytest.mark.parametrize('jump_trajectories', [False, True])
+def test_discontinuity_at_last_save_time(t1, ulps, jump_trajectories):
     # the drive drops to zero exactly at the last save time, or 2 ULP before it:
-    # the last saved state must still be the exact one
+    # every saved state must still be the exact one
     tsave = jnp.linspace(t1 - 3.0, t1, 11)
     t0, edge = tsave[0], tsave[-1]
     for _ in range(ulps):
         edge = jnp.nextafter(edge, -jnp.inf)
     H = dq.pwc(jnp.stack([t0, t0 + 1.5, edge]), jnp.array([1.6, -1.1]), dq.sigmax())
     psi0, method = dq.fock(2, 0), Tsit5(rtol=1e-9, atol=1e-9)
-    if with_clicks:
-        # jump trajectories. The jump operator is proportional to the identity, so
-        # the clicks do not change the state: each trajectory must be exact.
+    if jump_trajectories:
+        # The jump operator is proportional to the identity, so a click does not
+        # change the state. Every trajectory must be exact, whatever its clicks.
         jump_ops = [jnp.sqrt(0.5) * dq.eye(2)]
         keys = jax.random.split(jax.random.key(42), 4)
         root_finder = optx.Newton(1e-4, 1e-4, jtu.Partial(optx.rms_norm))
