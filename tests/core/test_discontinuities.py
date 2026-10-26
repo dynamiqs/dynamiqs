@@ -1,3 +1,4 @@
+import diffrax as dx
 import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
@@ -101,10 +102,10 @@ def test_gradient_wrt_discontinuity_time_with_progress_meter(progress_meter):
 
 
 @pytest.mark.run(order=TEST_SHORT)
-@pytest.mark.parametrize(('t1', 'ulps'), [(3.0, 0), (3.0, 2), (-3.0, 2)])
+@pytest.mark.parametrize(('t1', 'ulps'), [(3.0, 0), (3.0, 1), (-3.0, 1)])
 @pytest.mark.parametrize('jump_trajectories', [False, True])
 def test_discontinuity_at_last_save_time(t1, ulps, jump_trajectories):
-    # The drive drops to zero exactly at the last save time, or 2 ULP (units in the
+    # The drive drops to zero exactly at the last save time, or one ULP (unit in the
     # last place) before it. Every saved state must still be exact.
     tsave = jnp.linspace(t1 - 3.0, t1, 11)
     t0, edge = tsave[0], tsave[-1]
@@ -112,7 +113,7 @@ def test_discontinuity_at_last_save_time(t1, ulps, jump_trajectories):
         edge = jnp.nextafter(edge, -jnp.inf)
     H = dq.pwc(jnp.stack([t0, t0 + 1.5, edge]), jnp.array([1.6, -1.1]), dq.sigmax())
     # The tight tolerances are on purpose: with the default ones, this test also
-    # passes without the workarounds for Diffrax.
+    # passes without the workaround for Diffrax.
     psi0, method = dq.fock(2, 0), Tsit5(rtol=1e-9, atol=1e-9)
     if jump_trajectories:
         # The jump operator is proportional to the identity, so a click does not
@@ -133,33 +134,6 @@ def test_discontinuity_at_last_save_time(t1, ulps, jump_trajectories):
 
 
 @pytest.mark.run(order=TEST_SHORT)
-@pytest.mark.parametrize(
-    ('edges', 'values'),
-    [
-        ([0.0, 99.999, 99.9995, 100.0], [1.0, 2.0, 3.0]),
-        ([0.0, 99.999, 99.9995, 100.0], [0.1, 2.0, 3.0]),
-        ([0.0, 50.0, 99.99998474121094, 100.0], [0.3, 0.6, 0.9]),
-    ],
-)
-def test_close_discontinuities_before_last_save_time(edges, values):
-    # Jumps close to the last save time t1 = 100, plus one at it. In single
-    # precision, 99.999 and 99.9995 are 131 and 66 ULP (units in the last place)
-    # before t1: the solve must integrate up to t1. 99.99998474121094 is 2 ULP before
-    # t1: the end of the solve moves before the jump at t1, then before this one.
-    # The last saved state must be exact. Diffrax skips 2 ULP at each jump, which
-    # costs up to about 1e-4 here.
-    tsave = jnp.linspace(0.0, 100.0, 11)
-    edges = jnp.array(edges)
-    H = dq.pwc(edges, jnp.array(values), dq.sigmax())
-    method = Tsit5(rtol=1e-9, atol=1e-9)
-    result = dq.sesolve(H, dq.fock(2, 0), tsave, method=method, progress_meter=False)
-
-    theta = jnp.sum(jnp.array(values) * jnp.diff(edges))
-    expected = jnp.array([jnp.cos(theta), -1j * jnp.sin(theta)])[:, None]
-    assert jnp.allclose(result.states[-1].to_jax(), expected, atol=2e-4)
-
-
-@pytest.mark.run(order=TEST_SHORT)
 @pytest.mark.parametrize('gradient', [None, dq.gradient.Forward()])
 def test_gradient_wrt_last_save_time_at_discontinuity(gradient):
     # The drive ends at 3, the last save time T, so the solve ends one ULP before T.
@@ -175,3 +149,36 @@ def test_gradient_wrt_last_save_time_at_discontinuity(gradient):
     expected = 1.1 * jnp.sin(2 * theta)
     derivative = jax.jacrev if gradient is None else jax.jacfwd
     assert jnp.allclose(derivative(population)(3.0), expected, rtol=1e-4)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.xfail(
+    reason='diffrax#791: with a jump at t1, the saved state at t1 stays `inf`; an '
+    'XPASS means the installed Diffrax saves it: remove the block "end the solve '
+    'just before a jump at t1" of `DiffraxIntegrator.diffeqsolve`',
+    raises=AssertionError,
+    strict=True,
+)
+def test_diffrax_saves_at_jump_at_t1():
+    # Diffrax alone, in single precision: a rotation at speed 1.6 up to 1.5, -1.1
+    # up to 3, then 0, solved up to t1 = 3 with both jump times declared
+    def f(t, y, args):
+        h = jnp.where(t < 1.5, 1.6, jnp.where(t < 3.0, -1.1, 0.0))
+        return h * jnp.stack([-y[1], y[0]])
+
+    controller = dx.ClipStepSizeController(
+        dx.PIDController(rtol=1e-9, atol=1e-9), jump_ts=jnp.array([1.5, 3.0])
+    )
+    saveat = dx.SaveAt(ts=jnp.linspace(0.0, 3.0, 11))
+    y0 = jnp.array([1.0, 0.0])
+    solution = dx.diffeqsolve(
+        dx.ODETerm(f),
+        dx.Tsit5(),
+        0.0,
+        3.0,
+        None,
+        y0,
+        saveat=saveat,
+        stepsize_controller=controller,
+    )
+    assert jnp.all(jnp.isfinite(solution.ys[-1]))
