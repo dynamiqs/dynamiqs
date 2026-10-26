@@ -113,8 +113,8 @@ def test_discontinuity_at_last_save_time(t1, ulps, with_clicks):
     H = dq.pwc(jnp.stack([t0, t0 + 1.5, edge]), jnp.array([1.6, -1.1]), dq.sigmax())
     psi0, method = dq.fock(2, 0), Tsit5(rtol=1e-9, atol=1e-9)
     if with_clicks:
-        # jump trajectories with a jump operator proportional to the identity: the
-        # clicks leave the state unchanged
+        # jump trajectories. The jump operator is proportional to the identity, so
+        # the clicks do not change the state: each trajectory must be exact.
         jump_ops = [jnp.sqrt(0.5) * dq.eye(2)]
         keys = jax.random.split(jax.random.key(42), 4)
         root_finder = optx.Newton(1e-4, 1e-4, jtu.Partial(optx.rms_norm))
