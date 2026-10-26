@@ -5,6 +5,7 @@ from .open_system import (
     dense_driven_ocavity,
     dense_nojump_cavity,
     dense_ocavity,
+    dense_weakly_driven_ocavity,
     dia_nojump_cavity,
     dia_ocavity,
     mixed_ocavity,

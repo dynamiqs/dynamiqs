@@ -288,6 +288,15 @@ dense_driven_ocavity = DrivenOCavity(
     tsave=tsave,
     layout=dense,
 )
+dense_weakly_driven_ocavity = DrivenOCavity(
+    eps=1.0 * Hz,
+    n=16,
+    delta=1.0 * Hz,
+    alpha0=0.0,
+    kappa=1.0 * Hz,
+    tsave=tsave,
+    layout=dense,
+)
 mixed_ocavity = MixedOCavity(
     p=0.7, n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dense
 )

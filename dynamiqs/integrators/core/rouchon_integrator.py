@@ -384,7 +384,7 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
     fixed step Rouchon method.
 
     Subclasses must set ``_kraus_map_cls`` and define ``nojump_diffrax_solver``, and
-    may override ``normalize``.
+    may override ``normalize_state``.
     """
 
     _kraus_map_cls: ClassVar[type[KrausMapRK]]
@@ -429,7 +429,7 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
         def rouchon_step(t0, t1, y0):  # noqa: ANN001, ANN202
             # The Rouchon update for a single loss channel is:
             #   rho_{k+1} = sum_k Mk @ rho_k @ Mk^†
-            # See `normalize()` for the normalization.
+            # See `normalize_state()` for the normalization.
 
             rho = y0
             dt = t1 - t0
@@ -437,7 +437,7 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
             kraus_map = self.build_kraus_map(nojump_propagator, self.H, self.L, t0, dt)
 
             if self.method.normalize:
-                rho = self.normalize(kraus_map.S(), rho)
+                rho = self.normalize_state(kraus_map.S(), rho)
 
             return kraus_map(rho), None
 
@@ -457,10 +457,9 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
         )
 
     @staticmethod
-    def normalize(S: QArray, rho: QArray) -> QArray:
-        # normalization of the state before the Kraus map, for Rouchon1 and Rouchon3
-        # (see `unrotated_cholesky_normalize()`), and for the propagated solution of
-        # the adaptive methods
+    def normalize_state(S: QArray, rho: QArray) -> QArray:
+        # normalizes rho before the Kraus map, see `unrotated_cholesky_normalize()`;
+        # subclasses may choose another normalization
         return unrotated_cholesky_normalize(S, rho)
 
 
@@ -484,10 +483,11 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
         return Midpoint()
 
     @staticmethod
-    def normalize(S: QArray, rho: QArray) -> QArray:
-        # Rouchon2's own error is usually larger than the rotation that
-        # `unrotated_cholesky_normalize()` removes, so its extra linear solve does not
-        # pay off here
+    def normalize_state(S: QArray, rho: QArray) -> QArray:
+        # Rouchon2 keeps the rotation of `cholesky_normalize()` (see
+        # `unrotated_cholesky_normalize()`): removing it costs one more linear solve
+        # per step, and gains accuracy only when the drive is strong compared with
+        # Rouchon2's own error
         return cholesky_normalize(S, rho)
 
 
@@ -570,9 +570,9 @@ class MESolveAdaptiveRouchonIntegrator(
             dt = t1 - t0
             propagator_low, propagator_high = self.make_nojump_propagators(t0, dt)
 
-            # low order, without normalization: the normalization can make the low
-            # order solution as accurate as the high order one, and then their
-            # difference underestimates the error
+            # low order, without normalization: the normalization changes both
+            # solutions by nearly the same amount, so the difference below would miss
+            # its error
             kraus_low = self._fixed_cls_low.build_kraus_map(
                 propagator_low, self.H, self.L, t0, dt
             )
@@ -583,7 +583,7 @@ class MESolveAdaptiveRouchonIntegrator(
                 propagator_high, self.H, self.L, t0, dt
             )
             rho_high = (
-                self._fixed_cls_high.normalize(kraus_high.S(), rho)
+                self._fixed_cls_high.normalize_state(kraus_high.S(), rho)
                 if self.method.normalize
                 else rho
             )
