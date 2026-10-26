@@ -1,21 +1,19 @@
-from functools import partial
-
 import jax
 import jax.numpy as jnp
 import pytest
+from equinox import EquinoxRuntimeError
 
 import dynamiqs as dq
 from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
 from dynamiqs.integrators.core.low_rank_integrator import (
     _cholesky_qr2,
-    _eigh_with_fallback,
     expval_from_m,
     initialize_m0_from_dm,
 )
 from dynamiqs.method import Kvaerno5, LinearSolver, LowRank, Tsit5
 
 from ..integrator_tester import IntegratorTester
-from ..order import TEST_INSTANT, TEST_LONG, TEST_SHORT
+from ..order import TEST_INSTANT, TEST_LONG
 from ..systems import dense_ocavity, dia_ocavity, mixed_ocavity, otdqubit
 
 # we only test Tsit5 to keep the unit test suite fast, and Kvaerno5 for the real
@@ -164,63 +162,15 @@ def test_cholesky_qr2(monkeypatch, backend, condition):
         assert jnp.allclose(x, x0, rtol=1e-8, atol=0)
 
 
-@pytest.mark.run(order=TEST_SHORT)
-def test_eigh_with_fallback(monkeypatch):
-    # the default eigh returns NaN for the first matrix and works for the second.
-    # The fallback gives the eigendecomposition of both, and its derivatives in
-    # reverse and forward mode, alone and under vmap. Under nested vmaps (as in
-    # cartesian batching), it runs only if a matrix failed. LowRank's initial factor
-    # from a density matrix is the one of the default eigh.
-    eigh, lax_eigh = jnp.linalg.eigh, jax.lax.linalg.eigh
-    a = jax.random.normal(jax.random.PRNGKey(0), (2, 4, 4), dtype=jnp.complex64)
-    a = (a + a.conj().mT).at[:, 0, 0].set(jnp.array([1, -1], a.dtype))
-    da = jnp.flip(a, 0)
-    rho0 = a[0] @ a[0].conj().T
-    rho0 = rho0 / jnp.trace(rho0)
-    m0 = initialize_m0_from_dm(rho0, 2, 1e-3, jax.random.PRNGKey(0))
-    # complex64 values of order 1: round-off of a few 1e-8 between code paths
-    close = partial(jnp.allclose, atol=1e-6)
-
-    # a batch without vmap has the same derivatives, and the GPU branch lowers
-    tangents = [tuple(jax.jvp(f, (a,), (da,))[1]) for f in [_eigh_with_fallback, eigh]]
-    assert all(jax.tree.leaves(jax.tree.map(close, *tangents)))
-    jax.export.export(jax.jit(_eigh_with_fallback), platforms=['cuda'])(a[0])
-
-    def nan_eigh(a):
-        # NaN values and derivatives, as a failed cuSOLVER eigh
-        nan_if_failed = jnp.where(a[0, 0].real > 0, jnp.nan, 1.0)
-        evals, evecs = eigh(a)
-        return evals * nan_if_failed, evecs * nan_if_failed
-
-    fallback_calls = []
-
-    def counted_eigh(a, **kwargs):
-        jax.debug.callback(lambda: fallback_calls.append(a.shape))
-        return lax_eigh(a, **kwargs)
-
-    monkeypatch.setattr(jnp.linalg, 'eigh', nan_eigh)
-    monkeypatch.setattr(jax.lax.linalg, 'eigh', counted_eigh)
-    nested_vmap = jax.vmap(jax.vmap(_eigh_with_fallback))
-    for batch, runs in [(a[None, 1:], False), (a[None], True)]:
-        jax.block_until_ready(nested_vmap(batch))
-        jax.effects_barrier()
-        assert bool(fallback_calls) == runs
-
-    def loss_and_derivatives(eigh, a, da):
-        # |v_0j|^2 does not depend on the phase of the eigenvectors
-        def loss(a):
-            evals, evecs = eigh(a)
-            return jnp.sum(evals * jnp.abs(evecs[0]) ** 2)
-
-        return loss(a), jax.grad(loss)(a), jax.jvp(loss, (a,), (da,))[1]
-
-    expected = jax.vmap(partial(loss_and_derivatives, eigh))(a, da)
-    f = jax.jit(partial(loss_and_derivatives, _eigh_with_fallback))
-    batched = jax.vmap(f)(a, da)
-    for i in range(2):
-        alone = f(a[i], da[i])
-        for x, x_batched, x_expected in zip(alone, batched, expected, strict=True):
-            assert close(x, x_expected[i])
-            assert close(x_batched[i], x_expected[i])
-    m0_fallback = initialize_m0_from_dm(rho0, 2, 1e-3, jax.random.PRNGKey(0))
-    assert close(m0_fallback, m0)
+@pytest.mark.run(order=TEST_INSTANT)
+def test_nan_eigh_raises(monkeypatch):
+    # on GPU in single precision, eigh can return NaN (jax-ml/jax#32641): the initial
+    # factor from a density matrix then raises an error, alone and under jit
+    eigh = jnp.linalg.eigh
+    monkeypatch.setattr(jnp.linalg, 'eigh', lambda a: [x * jnp.nan for x in eigh(a)])
+    rho0 = dq.fock_dm(4, 0).to_jax()
+    key = jax.random.PRNGKey(0)
+    with pytest.raises(EquinoxRuntimeError, match='jax-ml/jax#32641'):
+        initialize_m0_from_dm(rho0, 2, 1e-3, key)
+    with pytest.raises(jax.errors.JaxRuntimeError, match='jax-ml/jax#32641'):
+        jax.jit(initialize_m0_from_dm, static_argnums=1)(rho0, 2, 1e-3, key)
