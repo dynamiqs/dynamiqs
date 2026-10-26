@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from functools import wraps
 from io import BytesIO
 from math import ceil
-from typing import TypeVar
+from typing import Concatenate, ParamSpec, TypeVar, cast
 
 import matplotlib
 import matplotlib as mpl
@@ -14,7 +14,8 @@ from IPython.display import Image
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
-from matplotlib.colors import Normalize
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.colors import Colormap, Normalize
 from matplotlib.figure import Figure
 from matplotlib.ticker import FixedLocator, MaxNLocator, MultipleLocator, NullLocator
 from PIL import Image as PILImage
@@ -48,7 +49,7 @@ def figax(w: float = 7.0, h: float | None = None, **kwargs) -> tuple[Figure, Axe
     return plt.subplots(1, 1, figsize=(w, h), constrained_layout=True, **kwargs)
 
 
-def optional_ax(func: callable) -> callable:
+def optional_ax(func: Callable) -> Callable:
     """Decorator to build an `Axes` object to pass as an argument to a plot
     function if it wasn't passed by the user.
 
@@ -144,12 +145,12 @@ colors = {
     'blue': '#0c5dA5',
     'red': '#ff6b6b',
     'turquoise': '#2ec4b6',
-    'yellow': '#ffc463',
-    'grey': '#9e9e9e',
-    'purple': '#845b97',
-    'brown': '#c0675c',
-    'darkgreen': '#20817d',
-    'darkgrey': '#666666',
+    'violet': '#8E6DB0',
+    'purple': '#AB3A62',
+    'yellow': '#f2c46f',
+    'lightblue': '#64aee3',
+    'green': '#1C875C',
+    'brown': '#A17E33',
 }
 
 
@@ -196,29 +197,35 @@ def mplstyle(*, usetex: bool = False, dpi: int = 72):
             'xtick.major.size': 4.5,
             'xtick.minor.size': 2.5,
             'xtick.major.width': 1.0,
-            'xtick.labelsize': 12,
+            'xtick.labelsize': 10,
             'xtick.minor.visible': True,
             # ytick
             'ytick.direction': 'in',
             'ytick.major.size': 4.5,
             'ytick.minor.size': 2.5,
             'ytick.major.width': 1.0,
-            'ytick.labelsize': 12,
+            'ytick.labelsize': 10,
             'ytick.minor.visible': True,
             # axes
             'axes.facecolor': 'white',
-            'axes.grid': False,
+            'axes.grid': True,
             'axes.titlesize': 12,
             'axes.labelsize': 12,
             'axes.linewidth': 1.0,
             'axes.prop_cycle': cycler('color', colors.values()),
+            'axes.xmargin': 0.03,
             # grid
             'grid.color': 'gray',
-            'grid.linestyle': '--',
+            'grid.linestyle': ':',
             'grid.alpha': 0.3,
             # legend
             'legend.frameon': False,
-            'legend.fontsize': 12,
+            'legend.fontsize': 10,
+            'legend.title_fontsize': 10,
+            'legend.labelspacing': 0.4,
+            'legend.handlelength': 1.5,
+            'legend.columnspacing': 1.5,
+            'legend.borderpad': 0.8,
             # figure
             'figure.facecolor': 'white',
             'figure.dpi': dpi,
@@ -249,10 +256,14 @@ def integer_ticks(axis: Axis, n: int, all: bool = True):  # noqa: A002
     # format major ticks as integer
     axis.set_major_formatter(lambda x, _: f'{int(x)}')
 
+    # if grid is on for this axis, set it to minor ticks to align with integer ticks
+    if any(line.get_visible() for line in axis.get_gridlines()):
+        axis.grid(which='minor', visible=True)
+
 
 def ket_ticks(axis: Axis):
     # fix ticks location
-    axis.set_major_locator(FixedLocator(axis.get_ticklocs()))
+    axis.set_major_locator(FixedLocator(axis.get_ticklocs().tolist()))
 
     # format ticks as ket
     new_labels = [rf'$| {label.get_text()} \rangle$' for label in axis.get_ticklabels()]
@@ -261,7 +272,7 @@ def ket_ticks(axis: Axis):
 
 def bra_ticks(axis: Axis):
     # fix ticks location
-    axis.set_major_locator(FixedLocator(axis.get_ticklocs()))
+    axis.set_major_locator(FixedLocator(axis.get_ticklocs().tolist()))
 
     # format ticks as ket
     new_labels = [rf'$\langle {label.get_text()} |$' for label in axis.get_ticklabels()]
@@ -279,17 +290,19 @@ def minorticks_off(axis: Axis):
 
 
 def add_colorbar(
-    ax: Axes, cmap: str, norm: Normalize, *, size: float = 0.05, pad: float = 0.05
+    ax: Axes,
+    cmap: str | Colormap,
+    norm: Normalize,
+    *,
+    size: float = 0.05,
+    pad: float = 0.05,
 ) -> Axes:
     # insert a new axes on the right with the same height
-    cax = ax.inset_axes([1 + size, 0, pad, 1])
+    cax = ax.inset_axes((1 + size, 0, pad, 1))
     mappable = mpl.cm.ScalarMappable(norm=norm, cmap=cmap)
     plt.colorbar(mappable=mappable, cax=cax)
     cax.grid(False)
     return cax
-
-
-T = TypeVar('T')
 
 
 def gif_indices(nitems: int, nframes: int) -> np.ndarray:
@@ -300,9 +313,13 @@ def gif_indices(nitems: int, nframes: int) -> np.ndarray:
         return np.arange(nitems)
 
 
+T = TypeVar('T')
+P = ParamSpec('P')
+
+
 def gifit(
-    plot_function: callable[[T, ...], None],
-) -> callable[[Sequence[T], ...], Image]:
+    plot_function: Callable[Concatenate[T, P], None],
+) -> Callable[Concatenate[Sequence[T], P], Image]:
     """Transform a plot function into a new function that returns an animated GIF.
 
     This function takes a plot function that normally operates on a single input and
@@ -367,7 +384,7 @@ def gifit(
         for idx in tqdm(indices):
             plt.close()
             plot_function(items[idx], *args, **kwargs)  # plot frame
-            canvas = plt.gcf().canvas
+            canvas = cast(FigureCanvasAgg, plt.gcf().canvas)
             canvas.draw()  # ensure the figure is drawn
             frame = np.array(canvas.buffer_rgba())  # capture the RGBA buffer
             frames.append(frame)

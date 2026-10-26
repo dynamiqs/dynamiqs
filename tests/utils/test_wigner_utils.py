@@ -67,3 +67,10 @@ def test_wigner_tracing():
     jax.jit(dq.wigner).trace(state, xvec=xvec)
     jax.jit(dq.wigner).trace(state, yvec=yvec)
     jax.jit(dq.wigner).trace(state, xvec=xvec, yvec=yvec)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+def test_wigner_hbar():
+    psi = dq.coherent(10, 2.0)
+    _, _, w = dq.wigner(psi, hbar=1.0)
+    assert w.shape == (201, 201)

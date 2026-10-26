@@ -1,7 +1,7 @@
 import warnings
 
 import matplotlib
-from cmasher import copper
+from cmap import Colormap
 from matplotlib.colors import LinearSegmentedColormap
 
 __all__ = []
@@ -32,6 +32,5 @@ matplotlib.colormaps.register(cmap)
 
 warnings.filterwarnings(action='ignore', category=DeprecationWarning, module='cmasher')
 
-cmap = copper
-cmap.name = 'cmr_copper'
+cmap = Colormap('cmasher:copper').to_mpl()
 matplotlib.colormaps.register(cmap)

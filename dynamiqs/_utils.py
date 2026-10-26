@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, get_args
+from typing import Any, TypeGuard, get_args
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -45,7 +45,7 @@ def concatenate_sort(*args: Array) -> Array:
     return jnp.sort(jnp.concatenate(args))
 
 
-def is_batched_scalar(y: ArrayLike) -> bool:
+def is_batched_scalar(y: Any) -> TypeGuard[ArrayLike]:
     # check if a qarray-like is a scalar or a set of scalars of shape (..., 1, 1)
     return isinstance(y, get_args(ScalarLike)) or (
         isinstance(y, get_args(ArrayLike))

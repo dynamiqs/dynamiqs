@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import partial, reduce
+from typing import cast
 
 import jax
 import jax.numpy as jnp
@@ -8,7 +9,14 @@ import numpy as np
 from jax import Array
 
 from .._checks import check_hermitian, check_shape
+from ..qarrays.dense_dataarray import DenseDataArray
+from ..qarrays.materialized_qarray import MaterializedQArray
 from ..qarrays.qarray import QArray, QArrayLike, get_dims
+from ..qarrays.sparsedia_dataarray import SparseDIADataArray
+from ..qarrays.sparsedia_primitives import (
+    lindbladian_sparsedia,
+    tracemm_sparsedia_array,
+)
 from ..qarrays.utils import asqarray, init_dims, to_jax
 
 __all__ = [
@@ -18,6 +26,7 @@ __all__ = [
     'dag',
     'dissipator',
     'entropy_vn',
+    'entropy_relative',
     'expect',
     'expm',
     'fidelity',
@@ -49,10 +58,10 @@ def dag(x: QArrayLike) -> QArray:
     r"""Returns the adjoint (complex conjugate transpose) of a matrix.
 
     Args:
-        x _(qarray-like of shape (..., m, n))_: Matrix.
+        x (qarray-like of shape (..., m, n)): Matrix.
 
     Returns:
-       _(qarray of shape (..., n, m))_ Adjoint of `x`.
+       (qarray of shape (..., n, m)): Adjoint of `x`.
 
     Note-: Equivalent syntax
         This function is equivalent to `x.mT.conj()`.
@@ -75,11 +84,11 @@ def powm(x: QArrayLike, n: int) -> QArray:
     """Returns the $n$-th matrix power of a qarray.
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Square matrix.
+        x (qarray-like of shape (..., n, n)): Square matrix.
         n: Integer exponent.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Matrix power of `x`.
+        (qarray of shape (..., n, n)): Matrix power of `x`.
 
     Examples:
         >>> dq.powm(dq.sigmax(), 2)
@@ -98,11 +107,11 @@ def expm(x: QArrayLike, *, max_squarings: int = 16) -> QArray:
     The exponential is computed using the scaling-and-squaring approximation method.
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Square matrix.
+        x (qarray-like of shape (..., n, n)): Square matrix.
         max_squarings: Number of squarings.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Matrix exponential of `x`.
+        (qarray of shape (..., n, n)): Matrix exponential of `x`.
 
     Note-: Equivalent JAX syntax
         This function is equivalent to
@@ -110,9 +119,14 @@ def expm(x: QArrayLike, *, max_squarings: int = 16) -> QArray:
 
     Examples:
         >>> dq.expm(dq.sigmaz())
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[2.718+0.j     ⋅    ]
+         [    ⋅     0.368+0.j]]
+
+        >>> dq.expm(dq.sigmax())
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
-        [[2.718+0.j 0.   +0.j]
-         [0.   +0.j 0.368+0.j]]
+        [[1.543+0.j 1.175+0.j]
+         [1.175+0.j 1.543+0.j]]
     """
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
@@ -123,10 +137,10 @@ def cosm(x: QArrayLike) -> QArray:
     r"""Returns the cosine of a qarray.
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Square matrix.
+        x (qarray-like of shape (..., n, n)): Square matrix.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Cosine of `x`.
+        (qarray of shape (..., n, n)): Cosine of `x`.
 
     Note:
         This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
@@ -150,10 +164,10 @@ def sinm(x: QArrayLike) -> QArray:
     r"""Returns the sine of a qarray.
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Square matrix.
+        x (qarray-like of shape (..., n, n)): Square matrix.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Sine of `x`.
+        (qarray of shape (..., n, n)): Sine of `x`.
 
     Note:
         This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
@@ -185,10 +199,10 @@ def signm(x: QArrayLike) -> QArray:
     where $\mathrm{sign}(x)$ is the sign of $x\in\R$.
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Square Hermitian matrix.
+        x (qarray-like of shape (..., n, n)): Square Hermitian matrix.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Operator sign function of `x`.
+        (qarray of shape (..., n, n)): Operator sign function of `x`.
 
     Note:
         The operator sign is generally dense, and is different from the element-wise
@@ -222,10 +236,10 @@ def trace(x: QArrayLike) -> Array:
     r"""Returns the trace of a qarray along its last two dimensions.
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Qarray-like.
+        x (qarray-like of shape (..., n, n)): Qarray-like.
 
     Returns:
-        _(array of shape (...))_ Trace of `x`.
+        (array of shape (...)): Trace of `x`.
 
     Examples:
         >>> x = jnp.ones((3, 3))
@@ -255,11 +269,11 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
         instead of $\mathcal{O}(n^3)$ with the naive formula.
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Qarray-like.
-        y _(qarray-like of shape (..., n, n))_: Qarray-like.
+        x (qarray-like of shape (..., n, n)): Qarray-like.
+        y (qarray-like of shape (..., n, n)): Qarray-like.
 
     Returns:
-        _(array of shape (...))_ Trace of `x @ y`.
+        (array of shape (...)): Trace of `x @ y`.
 
     Examples:
         >>> x = jnp.ones((3, 3))
@@ -271,6 +285,15 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
     y = asqarray(y)
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
+    # with one operand in sparse DIA format, only the diagonals of the other that meet
+    # its diagonals are read (tr(xy) = tr(yx))
+    x_data, y_data = getattr(x, 'data', None), getattr(y, 'data', None)
+    x_dia = isinstance(x_data, SparseDIADataArray)
+    y_dia = isinstance(y_data, SparseDIADataArray)
+    if x_dia and not y_dia:
+        return tracemm_sparsedia_array(x_data.offsets, x_data.diags, y.to_jax())
+    if y_dia and not x_dia:
+        return tracemm_sparsedia_array(y_data.offsets, y_data.diags, x.to_jax())
     # todo: fix perf
     return (x.to_jax() * y.to_jax().mT).sum((-2, -1))
 
@@ -287,15 +310,15 @@ def ptrace(
     r"""Returns the partial trace of a ket, bra or density matrix.
 
     Args:
-        x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
+        x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Ket, bra
             or density matrix of a composite system.
-        keep _(int or tuple of ints)_: Dimensions to keep after partial trace.
-        dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
-            system Hilbert space tensor product. Defaults to `None` (`x.dims` if
-            available, single Hilbert space `dims=(n,)` otherwise).
+        keep (int or tuple of ints): Dimensions to keep after partial trace.
+        dims (tuple of ints or None): Hilbert space dimension of each subsystem.
+            Defaults to `None` (`x.dims` if available, individual system `dims=(n,)`
+            otherwise).
 
     Returns:
-        _(qarray of shape (..., m, m))_ Density matrix (with `m <= n`).
+        (qarray of shape (..., m, m)): Density matrix (with `m <= n`).
 
     Note:
         The returned object is always a density matrix, even if the input is a ket or a
@@ -335,27 +358,27 @@ def ptrace(
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     # convert keep and dims to numpy arrays
-    keep = np.asarray([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]
-    dims = np.asarray(dims)  # e.g. [20, 2, 5]
-    ndims = len(dims)  # e.g. 3
+    _keep = np.asarray([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]
+    _dims = np.asarray(dims)  # e.g. [20, 2, 5]
+    ndims = len(_dims)  # e.g. 3
 
     # check that input dimensions match
     hdim = _hdim(x)
-    prod_dims = np.prod(dims)
+    prod_dims = np.prod(_dims)
     if prod_dims != hdim:
-        dims_prod_str = '*'.join(str(d) for d in dims) + f'={prod_dims}'
+        dims_prod_str = '*'.join(str(d) for d in _dims) + f'={prod_dims}'
         raise ValueError(
             'Argument `dims` must match the Hilbert space dimension of `x` of'
             f' {hdim}, but the product of its values is {dims_prod_str}.'
         )
-    if np.any(keep < 0) or np.any(keep > len(dims) - 1):
+    if np.any(_keep < 0) or np.any(_keep > len(_dims) - 1):
         raise ValueError(
             'Argument `keep` must match the Hilbert space structure specified by'
             ' `dims`.'
         )
 
     # sort keep
-    keep.sort()
+    _keep.sort()
 
     # create einsum alphabet
     alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -364,22 +387,22 @@ def ptrace(
     eq1 = alphabet[:ndims]  # e.g. 'abc'
     unused = iter(alphabet[ndims:])
     eq2 = ''.join(
-        [next(unused) if i in keep else eq1[i] for i in range(ndims)]
+        [next(unused) if i in _keep else eq1[i] for i in range(ndims)]
     )  # e.g. 'ade'
 
     bshape = x.shape[:-2]
 
     # trace out x over unkept dimensions
     if isket(x) or isbra(x):
-        x = x.reshape(*bshape, *dims)  # e.g. (..., 20, 2, 5)
+        x = x.reshape(*bshape, *_dims)  # e.g. (..., 20, 2, 5)
         eq = f'...{eq1},...{eq2}'  # e.g. '...abc,...ade'
         x = jnp.einsum(eq, x, x.conj())  # e.g. (..., 2, 5, 2, 5)
     else:
-        x = x.reshape(*bshape, *dims, *dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
+        x = x.reshape(*bshape, *_dims, *_dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
         eq = f'...{eq1}{eq2}'  # e.g. '...abcade'
         x = jnp.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
 
-    new_dims = tuple(dims[keep].tolist())
+    new_dims = tuple(_dims[_keep].tolist())
     prod_new_dims = np.prod(new_dims)  # e.g. 10
     x = x.reshape(*bshape, prod_new_dims, prod_new_dims)  # e.g. (..., 10, 10)
 
@@ -400,20 +423,20 @@ def tensor(*args: QArrayLike) -> QArray:
       operators with shape $(..., n_k, n_k)$.
 
     Args:
-        *args _(qarray-like of shape (..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k))_:
+        *args (qarray-like of shape (..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k)):
             Variable length argument list of kets, bras, density matrices or operators.
 
     Returns:
-        _(qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n))_ Tensor product of
+        (qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Tensor product of
             the input qarrays.
 
     Examples:
         >>> psi = dq.tensor(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
         >>> psi.shape
         (60, 1)
-    """  # noqa: E501
-    args = [asqarray(arg) for arg in args]
-    return reduce(lambda x, y: x & y, args)  # TODO: (guilmin) use jax.lax.reduce
+    """
+    _args = [asqarray(arg) for arg in args]
+    return reduce(lambda x, y: x & y, _args)  # TODO: (guilmin) use jax.lax.reduce
 
 
 def expect(O: QArrayLike, x: QArrayLike) -> Array:
@@ -432,13 +455,13 @@ def expect(O: QArrayLike, x: QArrayLike) -> Array:
         `dq.expect(O, x).real`.
 
     Args:
-        O _(qarray-like of shape (nO?, n, n))_: Arbitrary operator or list of _nO_
+        O (qarray-like of shape (nO?, n, n)): Arbitrary operator or list of _nO_
             operators.
-        x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket,
+        x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Ket,
             bra or density matrix.
 
     Returns:
-        _(array of shape (nO?, ...))_ Complex-valued expectation value.
+        (array of shape (nO?, ...)): Complex-valued expectation value.
 
     Examples:
         >>> O = dq.number(16)
@@ -466,14 +489,14 @@ def expect(O: QArrayLike, x: QArrayLike) -> Array:
 def _expect_single(O: QArray, x: QArray) -> Array:
     # O: (n, n), x: (..., n, m)
     if isket(x):
-        return (dag(x) @ O @ x).squeeze((-1, -2))  # <x|O|x>
+        return to_jax(dag(x) @ O @ x).squeeze((-1, -2))  # <x|O|x>
     elif isbra(x):
-        return (x @ O @ dag(x)).squeeze((-1, -2))
+        return to_jax(x @ O @ dag(x)).squeeze((-1, -2))
     else:
         return tracemm(O, x)  # tr(Ox)
 
 
-def norm(x: QArrayLike, *, psd: bool = True) -> Array:
+def norm(x: QArrayLike, *, psd: bool = False) -> Array:
     r"""Returns the norm of a ket, bra, density matrix, or Hermitian matrix.
 
     For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a
@@ -486,14 +509,14 @@ def norm(x: QArrayLike, *, psd: bool = True) -> Array:
     $\|A\|_1 =\tr{A}$.
 
     Args:
-        x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
+        x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Ket, bra,
             density matrix, or Hermitian matrix.
         psd: Whether `x` is a positive semi-definite matrix. If `True`, returns the
             trace of `x`, otherwise computes the eigenvalues of `x` to evaluate the
             norm.
 
     Returns:
-        _(array of shape (...))_ Real-valued norm of `x`.
+        (array of shape (...)): Real-valued norm of `x`.
 
     See also:
         - [`dq.unit()`][dynamiqs.unit]: normalize a ket, bra, density matrix, or
@@ -524,19 +547,19 @@ def norm(x: QArrayLike, *, psd: bool = True) -> Array:
     return jnp.abs(eigvals).sum(-1)
 
 
-def unit(x: QArrayLike, *, psd: bool = True) -> QArray:
+def unit(x: QArrayLike, *, psd: bool = False) -> QArray:
     r"""Normalize a ket, bra, density matrix or Hermitian matrix to unit norm.
 
     The returned object is divided by its norm (see [`dq.norm()`][dynamiqs.norm]).
 
     Args:
-        x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
+        x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Ket, bra
             or density matrix.
         psd: Whether `x` is a positive semi-definite matrix (see
             [`dq.norm()`][dynamiqs.norm]).
 
     Returns:
-        _(qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n))_ Normalized ket,
+        (qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Normalized ket,
             bra or density matrix.
 
     See also:
@@ -566,11 +589,11 @@ def dissipator(L: QArrayLike, rho: QArrayLike) -> QArray:
     $$
 
     Args:
-        L _(qarray-like of shape (..., n, n))_: Jump operator.
-        rho _(qarray-like of shape (..., n, n))_: Density matrix.
+        L (qarray-like of shape (..., n, n)): Jump operator.
+        rho (qarray-like of shape (..., n, n)): Density matrix.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Resulting operator (it is not a density matrix).
+        (qarray of shape (..., n, n)): Resulting operator (it is not a density matrix).
 
     See also:
         - [`dq.sdissipator()`][dynamiqs.sdissipator]: returns the dissipation
@@ -593,7 +616,7 @@ def dissipator(L: QArrayLike, rho: QArrayLike) -> QArray:
 
     Ldag = dag(L)
     LdagL = Ldag @ L
-    return L @ rho @ Ldag - 0.5 * LdagL @ rho - 0.5 * rho @ LdagL
+    return asqarray(L @ rho @ Ldag - 0.5 * LdagL @ rho - 0.5 * rho @ LdagL)
 
 
 def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> QArray:
@@ -612,13 +635,13 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
         This superoperator is also sometimes called *Liouvillian*.
 
     Args:
-        H _(qarray-like of shape (..., n, n))_: Hamiltonian.
-        jump_ops _(list of qarray-like, each of shape (, ..., n, n))_: List of jump
+        H (qarray-like of shape (..., n, n)): Hamiltonian.
+        jump_ops (list of qarray-like, each of shape (, ..., n, n)): List of jump
             operators.
-        rho _(qarray-like of shape (..., n, n))_: Density matrix.
+        rho (qarray-like of shape (..., n, n)): Density matrix.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Resulting operator (it is not a density matrix).
+        (qarray of shape (..., n, n)): Resulting operator (it is not a density matrix).
 
     See also:
         - [`dq.slindbladian()`][dynamiqs.slindbladian]: returns the Lindbladian
@@ -637,27 +660,68 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
          [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]]
     """
     H = asqarray(H)
-    jump_ops = [asqarray(L) for L in jump_ops]
+    _jump_ops = [asqarray(L) for L in jump_ops]
     rho = asqarray(rho)
 
     # === check H shape
     check_shape(H, 'H', '(..., n, n)')
 
     # === check jump_ops shape
-    for i, L in enumerate(jump_ops):
+    for i, L in enumerate(_jump_ops):
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
 
     # === check rho shape
     check_shape(rho, 'rho', '(..., n, n)')
 
-    return -1j * H @ rho + 1j * rho @ H + sum([dissipator(L, rho) for L in jump_ops])
+    if all(
+        isinstance(getattr(x, 'data', None), SparseDIADataArray)
+        for x in [H, *_jump_ops]
+    ):
+        half_LdL = 0.5 * sum([L.dag() @ L for L in _jump_ops])
+        fused = lindbladian_sparsedia_terms(
+            -1j * H - half_LdL, 1j * H - half_LdL, _jump_ops, rho
+        )
+        if fused is not None:
+            return fused
+
+    return asqarray(
+        -1j * H @ rho + 1j * rho @ H + sum([dissipator(L, rho) for L in _jump_ops])
+    )
+
+
+def lindbladian_sparsedia_terms(
+    A: QArray, B: QArray, jump_ops: list[QArray], rho: QArray
+) -> QArray | None:
+    r"""Returns $A\rho + \rho B + \sum_k L_k \rho L_k^\dag$, computed by
+    `lindbladian_sparsedia`, if $A$, $B$ and the $L_k$ are in sparse DIA format and
+    $\rho$ is dense. Returns None otherwise.
+
+    With $A = -iH - \frac12\sum_k L_k^\dag L_k$ and $B = iH - \frac12\sum_k L_k^\dag
+    L_k$, this is the Lindbladian.
+    """
+    operand_data = [getattr(x, 'data', None) for x in [A, B, *jump_ops]]
+    rho_data = getattr(rho, 'data', None)
+    if not (
+        all(isinstance(d, SparseDIADataArray) for d in operand_data)
+        and isinstance(rho_data, DenseDataArray)
+        and rho.shape[-1] == rho.shape[-2]
+    ):
+        return None
+    a, b, *ls = cast(list[SparseDIADataArray], operand_data)
+    out = lindbladian_sparsedia(
+        (a.offsets, a.diags),
+        (b.offsets, b.diags),
+        [(l.offsets, l.diags) for l in ls],
+        rho_data.data,
+    )
+    return MaterializedQArray(rho.dims, False, DenseDataArray(out))
 
 
 def isket(x: QArrayLike) -> bool:
     r"""Returns True if the qarray is in the format of a ket.
 
     Args:
-        x _(qarray-like of shape (...))_: Qarray-like.
+        x (qarray-like of shape (...)): Qarray-like.
 
     Returns:
         True if the last dimension of `x` is 1, False otherwise.
@@ -678,7 +742,7 @@ def isbra(x: QArrayLike) -> bool:
     r"""Returns True if the qarray is in the format of a bra.
 
     Args:
-        x _(qarray-like of shape (...))_: Qarray-like.
+        x (qarray-like of shape (...)): Qarray-like.
 
     Returns:
         True if the second to last dimension of `x` is 1, False otherwise.
@@ -699,7 +763,7 @@ def isdm(x: QArrayLike) -> bool:
     r"""Returns True if the qarray is in the format of a density matrix.
 
     Args:
-        x _(qarray-like of shape (...))_: Qarray-like.
+        x (qarray-like of shape (...)): Qarray-like.
 
     Returns:
         True if the last two dimensions of `x` are equal, False otherwise.
@@ -720,7 +784,7 @@ def isop(x: QArrayLike) -> bool:
     r"""Returns True if the qarray is in the format of an operator.
 
     Args:
-        x _(qarray-like of shape (...))_: Qarray-like.
+        x (qarray-like of shape (...)): Qarray-like.
 
     Returns:
         True if the last two dimensions of `x` are equal, False otherwise.
@@ -737,11 +801,11 @@ def isop(x: QArrayLike) -> bool:
     return x.shape[-1] == x.shape[-2]
 
 
-def isherm(x: QArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+def isherm(x: QArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> Array:
     r"""Returns True if the qarray is Hermitian.
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Qarray-like.
+        x (qarray-like of shape (..., n, n)): Qarray-like.
         rtol: Relative tolerance of the check.
         atol: Absolute tolerance of the check.
 
@@ -763,10 +827,10 @@ def toket(x: QArrayLike) -> QArray:
     r"""Returns the ket representation of a pure quantum state.
 
     Args:
-        x _(qarray-like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
+        x (qarray-like of shape (..., n, 1) or (..., 1, n)): Ket or bra.
 
     Returns:
-        _(qarray of shape (..., n, 1))_ Ket.
+        (qarray of shape (..., n, 1)): Ket.
 
     Examples:
         >>> psi = dq.fock(3, 0).tobra()  # shape: (1, 3)
@@ -792,10 +856,10 @@ def tobra(x: QArrayLike) -> QArray:
     r"""Returns the bra representation of a pure quantum state.
 
     Args:
-        x _(qarray-like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
+        x (qarray-like of shape (..., n, 1) or (..., 1, n)): Ket or bra.
 
     Returns:
-        _(qarray of shape (..., 1, n))_ Qarray.
+        (qarray of shape (..., 1, n)): Qarray.
 
     Examples:
         >>> psi = dq.fock(3, 0)  # shape: (3, 1)
@@ -825,11 +889,11 @@ def todm(x: QArrayLike) -> QArray:
         density matrix, it is returned directly.
 
     Args:
-        x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
+        x (qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n)): Ket, bra
             or density matrix.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Density matrix.
+        (qarray of shape (..., n, n)): Density matrix.
 
     Examples:
         >>> psi = dq.fock(3, 0)  # shape: (3, 1)
@@ -860,10 +924,10 @@ def proj(x: QArrayLike) -> QArray:
     $P_{\ket\psi} = \ket\psi\bra\psi$.
 
     Args:
-        x _(qarray-like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
+        x (qarray-like of shape (..., n, 1) or (..., 1, n)): Ket or bra.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Projection operator.
+        (qarray of shape (..., n, n)): Projection operator.
 
     Examples:
         >>> psi = dq.fock(3, 0)
@@ -877,20 +941,20 @@ def proj(x: QArrayLike) -> QArray:
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)')
 
     if isbra(x):
-        return dag(x) @ x
+        return asqarray(dag(x) @ x)
     else:
-        return x @ dag(x)
+        return asqarray(x @ dag(x))
 
 
 def braket(x: QArrayLike, y: QArrayLike) -> Array:
     r"""Returns the inner product $\braket{\psi|\varphi}$ between two kets.
 
     Args:
-        x (qarray-like of shape _(..., n, 1))_: Left-side ket.
-        y (qarray-like of shape _(..., n, 1))_: Right-side ket.
+        x (qarray-like of shape (..., n, 1)): Left-side ket.
+        y (qarray-like of shape (..., n, 1)): Right-side ket.
 
     Returns:
-        _(array of shape (...))_ Complex-valued inner product.
+        (array of shape (...)): Complex-valued inner product.
 
     Examples:
         >>> fock0 = dq.fock(3, 0)
@@ -903,7 +967,7 @@ def braket(x: QArrayLike, y: QArrayLike) -> Array:
     check_shape(x, 'x', '(..., n, 1)')
     check_shape(y, 'y', '(..., n, 1)')
 
-    return (dag(x) @ y).squeeze((-1, -2))
+    return to_jax(dag(x) @ y).squeeze((-1, -2))
 
 
 def overlap(x: QArrayLike, y: QArrayLike) -> Array:
@@ -919,11 +983,11 @@ def overlap(x: QArrayLike, y: QArrayLike) -> Array:
       $\sigma$.
 
     Args:
-        x _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
-        y _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        x (qarray-like of shape (..., n, 1) or (..., n, n)): Ket or density matrix.
+        y (qarray-like of shape (..., n, 1) or (..., n, n)): Ket or density matrix.
 
     Returns:
-        _(array of shape (...))_ Real-valued overlap.
+        (array of shape (...)): Real-valued overlap.
 
     Examples:
         >>> fock0 = dq.fock(3, 0)
@@ -939,11 +1003,11 @@ def overlap(x: QArrayLike, y: QArrayLike) -> Array:
     check_shape(y, 'y', '(..., n, 1)', '(..., n, n)')
 
     if isket(x) and isket(y):
-        return jnp.abs((dag(x) @ y).squeeze((-1, -2))) ** 2
+        return jnp.abs(to_jax(dag(x) @ y).squeeze((-1, -2))) ** 2
     elif isket(x):
-        return jnp.abs((dag(x) @ y @ x).squeeze((-1, -2)))
+        return jnp.abs(to_jax(dag(x) @ y @ x).squeeze((-1, -2)))
     elif isket(y):
-        return jnp.abs((dag(y) @ x @ y).squeeze((-1, -2)))
+        return jnp.abs(to_jax(dag(y) @ x @ y).squeeze((-1, -2)))
     else:
         return tracemm(dag(x), y).real
 
@@ -965,11 +1029,11 @@ def fidelity(x: QArrayLike, y: QArrayLike) -> Array:
         fidelity $F_\text{qutip} = \sqrt{F}$.
 
     Args:
-        x _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
-        y _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        x (qarray-like of shape (..., n, 1) or (..., n, n)): Ket or density matrix.
+        y (qarray-like of shape (..., n, 1) or (..., n, n)): Ket or density matrix.
 
     Returns:
-        _(array of shape (...))_ Real-valued fidelity.
+        (array of shape (...)): Real-valued fidelity.
 
     Examples:
         >>> fock0 = dq.fock(3, 0)
@@ -1002,7 +1066,7 @@ def _dm_fidelity(x: QArray, y: QArray) -> Array:
     # F = (\sum_i \sqrt{w_i})^2.
 
     # note that we can't use `eigvalsh` here because x @ y is not necessarily Hermitian
-    w = (x @ y)._eigvals().real
+    w = asqarray(x @ y)._eigvals().real
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
     w = jnp.where(w < 0, 0, w)
     return jnp.sqrt(w).sum(-1) ** 2
@@ -1015,10 +1079,10 @@ def purity(x: QArrayLike) -> Array:
     defined by $\tr{\rho^2}$.
 
     Args:
-        x _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        x (qarray-like of shape (..., n, 1) or (..., n, n)): Ket or density matrix.
 
     Returns:
-        _(array of shape (...))_ Real-valued purity.
+        (array of shape (...)): Real-valued purity.
 
     Examples:
         >>> psi = dq.fock(2, 0)
@@ -1041,10 +1105,10 @@ def entropy_vn(x: QArrayLike) -> Array:
     It is defined by $S(\rho) = -\tr{\rho \ln \rho}$.
 
     Args:
-        x _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        x (qarray-like of shape (..., n, 1) or (..., n, n)): Ket or density matrix.
 
     Returns:
-        _(array of shape (...))_ Real-valued Von Neumann entropy.
+        (array of shape (...)): Real-valued Von Neumann entropy.
 
     Examples:
         >>> rho = (dq.fock_dm(2, 0) + dq.fock_dm(2, 1)).unit()
@@ -1067,6 +1131,93 @@ def entropy_vn(x: QArrayLike) -> Array:
     return -(w * jnp.log(w)).sum(-1)
 
 
+def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
+    r"""Returns the quantum relative entropy between two kets or density matrices.
+
+    It is defined by $S_{KL}(\rho || \sigma) = \tr{\rho (\ln \rho - \ln \sigma)}$.
+
+    Note:
+        The relative entropy is not symmetric.
+
+    Args:
+        rho (qarray-like of shape (..., n, 1) or (..., n, n)): Ket or density matrix.
+        sigma (qarray-like of shape (..., n, 1) or (..., n, n)): Ket or density
+            matrix.
+
+    Returns:
+        (array of shape (...)): Real-valued quantum relative entropy.
+
+    Examples:
+        State with respect to itself:
+        >>> rho = dq.fock_dm(2, 0)  # |0><0|
+        >>> dq.entropy_relative(rho, rho)
+        Array(0., dtype=float32)
+
+        Pure state with respect to a maximally mixed state, and vice versa:
+        >>> pure = dq.fock_dm(2, 0)  # |0><0|
+        >>> maximally_mixed = (dq.fock_dm(2, 0) + dq.fock_dm(2, 1)).unit()  # I/2
+        >>> dq.entropy_relative(pure, maximally_mixed)  # ln 2 ~= 0.693
+        Array(0.693, dtype=float32)
+        >>> dq.entropy_relative(maximally_mixed, pure)  # support mismatch -> +∞
+        Array(inf, dtype=float32)
+
+        Pure state with respect to diagonal state in same basis:
+        >>> rho = dq.fock_dm(2, 0)  # |0><0|
+        >>> w = 0.3
+        >>> sigma = w * dq.fock_dm(2, 0) + (1 - w) * dq.fock_dm(2, 1)
+        >>> dq.entropy_relative(rho, sigma)
+        Array(1.204, dtype=float32)
+        >>> -jnp.log(w)
+        Array(1.204, dtype=float32, weak_type=True)
+
+        Orthogonal pure states:
+        >>> rho = dq.fock_dm(2, 1)  # |1><1|
+        >>> sigma = dq.fock_dm(2, 0)  # |0><0|
+        >>> dq.entropy_relative(rho, sigma)
+        Array(inf, dtype=float32)
+    """
+    # convert inputs to internal array type and validate shapes
+    rho = asqarray(rho)
+    sigma = asqarray(sigma)
+    check_shape(rho, 'x', '(..., n, 1)', '(..., n, n)')
+    check_shape(sigma, 'x', '(..., n, 1)', '(..., n, n)')
+
+    # promote kets to density operators
+    rho = todm(rho)
+    sigma = todm(sigma)
+
+    # spectral decompositions:
+    #   rho  = Σ_i r_i |r_i⟩⟨r_i|
+    #   sigma= Σ_j s_j |s_j⟩⟨s_j|
+    # rvals/svals: eigenvalues r_i, s_j  (last axis)
+    # rvecs/svecs: eigenvectors |r_i⟩, |s_j⟩ as columns (last two axes form matrices)
+    svals, svecs = sigma._eigh()
+    rvals, rvecs = rho._eigh()
+
+    # overlap probabilities between eigenbases: P_{ij} = |⟨r_i|s_j⟩|^2
+    # we form the matrix of overlaps ⟨r_i|s_j⟩ as rvecs† svecs.
+    # using .mT (matrix transpose) with a conjugate on svecs is equivalent
+    # up to a global conjugation, and taking |·|^2 removes that phase anyway.
+    P = jnp.abs(rvecs.mT @ svecs.conj()) ** 2  # shape (..., n, n)
+
+    # clip tiny negative eigenvalues (from Hermitian eigensolvers) to 0.
+    # this preserves positivity and prevents spurious log of negative numbers.
+    nrvals = jnp.where(rvals < 0, 0, rvals)
+    nsvals = jnp.where(svals < 0, 0, svals)
+
+    # compute the inner expectation term E_i = Σ_j P_{ij} log s_j
+    # by broadcasting log(nsvals) over the last axis of P and summing over j.
+    E = (P * jnp.expand_dims(jnp.log(nsvals), (-2))).sum(-1)  # shape (..., n)
+
+    # implement the formula: S_i = r_i [ log r_i  -  E_i].
+    terms = nrvals * (jnp.log(nrvals) - E)  # shape (..., n)
+
+    # sum and replace NaNs from 0*inf with 0, keep ±inf for support mismatches.
+    return jnp.nan_to_num(terms, posinf=jnp.inf, neginf=-jnp.inf).sum(
+        -1
+    )  # shape (...,)
+
+
 def bloch_coordinates(x: QArrayLike) -> Array:
     r"""Returns the spherical coordinates $(r, \theta, \phi)$ of a ket or density matrix
     on the Bloch sphere.
@@ -1083,10 +1234,10 @@ def bloch_coordinates(x: QArrayLike) -> Array:
     By convention, we choose $\phi=0$ if $\theta=0$, and $\theta=\phi=0$ if $r=0$.
 
     Args:
-        x _(qarray-like of shape (2, 1) or (2, 2))_: Ket or density matrix.
+        x (qarray-like of shape (2, 1) or (2, 2)): Ket or density matrix.
 
     Returns:
-        _(array of shape (3,))_ Spherical coordinates $(r, \theta, \phi)$.
+        (array of shape (3,)): Spherical coordinates $(r, \theta, \phi)$.
 
     Examples:
         The state $\ket0$ is on the north pole at coordinates
@@ -1141,7 +1292,8 @@ def bloch_coordinates(x: QArrayLike) -> Array:
         r = 1  # for a pure state
         theta = 2 * jnp.acos(ra)
         phi = jax.lax.select(rb != 0, tb - ta, 0.0)
-    elif isdm(x):
+
+    else:
         # cartesian coordinates
         # see https://en.wikipedia.org/wiki/Bloch_sphere#u,_v,_w_representation
         rx = 2 * x[0, 1].real

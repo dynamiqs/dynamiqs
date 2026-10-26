@@ -1,11 +1,22 @@
 import warnings
 
+import jax
 import jax.numpy as jnp
 import jax.random as jr
+import numpy as np
 import pytest
 from equinox import EquinoxRuntimeError
 
 import dynamiqs as dq
+from dynamiqs.qarrays.dense_dataarray import DenseDataArray
+from dynamiqs.qarrays.materialized_qarray import MaterializedQArray
+from dynamiqs.qarrays.sparsedia_dataarray import SparseDIADataArray
+from dynamiqs.qarrays.sparsedia_primitives import (
+    _matmul_array_sparsedia,
+    _matmul_sparsedia_array,
+    _pad_on_gpu,
+    _passes,
+)
 
 from ..order import TEST_SHORT
 
@@ -51,7 +62,7 @@ class TestSparseDIAQArray:
             batch_broadcast=dq.stack([x, 2 * x]).reshape(2, 1, N, N),
         )
 
-        sparseA = dq.SparseDIAQArray((N,), False, offsetsA, diagsA)
+        sparseA = MaterializedQArray((N,), False, SparseDIADataArray(offsetsA, diagsA))
         denseA = sparseA.asdense()
 
         self.denseA = make_dictA(denseA)
@@ -64,11 +75,18 @@ class TestSparseDIAQArray:
             batch_broadcast=dq.stack([x, 2 * x, 3 * x]).reshape(1, 3, N, N),
         )
 
-        sparseB = dq.SparseDIAQArray((N,), False, offsetsB, diagsB)
+        sparseB = MaterializedQArray((N,), False, SparseDIADataArray(offsetsB, diagsB))
         denseB = sparseB.asdense()
 
         self.denseB = make_dictB(denseB)
         self.sparseB = make_dictB(sparseB)
+
+        # matrix C, with a single diagonal of offset 0
+        sparseC = MaterializedQArray(
+            (N,), False, SparseDIADataArray((0,), diagsA[1][None, :])
+        )
+        self.denseC = make_dictA(sparseC.asdense())
+        self.sparseC = make_dictA(sparseC)
 
         # scalar
         self.scalar = 2 + 2j
@@ -80,7 +98,7 @@ class TestSparseDIAQArray:
         assert _allclose(d.to_jax(), d.assparsedia().to_jax())
 
     @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
-    def test_add(self, kA, kB):
+    def test_add(self, monkeypatch, kA, kB):
         dA, sA = self.denseA[kA], self.sparseA[kA]
         dB, sB = self.denseB[kB], self.sparseB[kB]
         out_dense_dense = (dA + dB).to_jax()
@@ -88,6 +106,12 @@ class TestSparseDIAQArray:
 
         # check dia + dia
         assert _allclose(out_dense_dense, out_dia_dia)
+
+        # check the GPU stacked dia + dia exactly (CI, on CPU, runs it only in solves)
+        with monkeypatch.context() as m:
+            m.setattr(jax, 'default_backend', lambda: 'gpu')
+            stacked = (sA + sB).data.diags
+        assert jnp.array_equal(stacked, (sA + sB).data.diags)
 
         # check dia + dense
         with warnings.catch_warnings():
@@ -144,6 +168,16 @@ class TestSparseDIAQArray:
         with pytest.raises(NotImplementedError):
             sA - self.bscalar
 
+    def test_sub_zero(self):
+        # subtracting zero from the data returns it (sparse), like adding it
+        d, s = self.denseA['simple'].data, self.sparseA['simple'].data
+        assert (d - 0) is d
+        assert (s - 0) is s
+        assert (d - 0j) is d
+        assert (s - 0j) is s
+        assert (d - np.float32(0)) is d
+        assert (s - np.float32(0)) is s
+
     @pytest.mark.parametrize('kA', ['simple', 'batch', 'batch_broadcast'])
     def test_mul(self, kA):
         d, s = self.denseA[kA], self.sparseA[kA]
@@ -193,6 +227,92 @@ class TestSparseDIAQArray:
         out_dense_dia = (dA @ sB).to_jax()
         assert _allclose(out_dense_dense, out_dense_dia)
 
+    @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
+    def test_matmul_padded(self, kA, kB):
+        # DIA x dense products are padded on GPU only (`_MIN_DIAGONALS_TO_PAD`), so CI,
+        # on CPU, would otherwise never run that code
+        dA, sA = self.denseA[kA], self.sparseA[kA]
+        dB, sB = self.denseB[kB], self.sparseB[kB]
+        out_dense_dense = (dA @ dB).to_jax()
+
+        out_dia_dense = _matmul_sparsedia_array(
+            sA.data.offsets, sA.data.diags, dB.to_jax(), pad=True
+        )
+        assert _allclose(out_dense_dense, out_dia_dense)
+
+        out_dense_dia = _matmul_array_sparsedia(
+            dA.to_jax(), sB.data.offsets, sB.data.diags, pad=True
+        )
+        assert _allclose(out_dense_dense, out_dense_dia)
+
+    def test_pad_on_gpu(self):
+        # the GPU pads the products of operators with many diagonals or of large dense
+        # arrays; CI, on CPU, never selects the padded branch itself
+        small, large = jnp.zeros((64, 64)), jnp.zeros((512, 512))
+        assert not _pad_on_gpu((-1, 0, 1), small)
+        assert _pad_on_gpu((-2, -1, 0, 1), small)
+        assert _pad_on_gpu((-1, 0, 1), large)
+
+    @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
+    def test_tracemm(self, kA, kB):
+        # a DIA operand only reads the diagonals of the other that it meets
+        dA, sA = self.denseA[kA], self.sparseA[kA]
+        dB, sB = self.denseB[kB], self.sparseB[kB]
+        out_dense = dq.tracemm(dA, dB)
+        assert _allclose(out_dense, dq.tracemm(sA, dB))
+        assert _allclose(out_dense, dq.tracemm(dA, sB))
+
+    @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
+    def test_lindbladian_fused(self, kA, kB):
+        # DIA operators take the fused `lindbladian_sparsedia` path, dense ones the
+        # products; A is not Hermitian, which the two must treat alike
+        rho = self.denseA['simple'] @ self.denseB['simple'].dag()
+        H_dense, H_dia = self.denseA[kA], self.sparseA[kA]
+        L_dense = [self.denseB[kB], 0.5 * self.denseA['simple']]
+        L_dia = [self.sparseB[kB], 0.5 * self.sparseA['simple']]
+        out_dense = dq.lindbladian(H_dense, L_dense, rho).to_jax()
+        out_dia = dq.lindbladian(H_dia, L_dia, rho)
+        assert isinstance(out_dia.data, DenseDataArray)
+        # the terms are summed in another order: compare at the output's scale
+        atol = 1e-6 * jnp.abs(out_dense).max()
+        assert _allclose(out_dense, out_dia.to_jax(), atol=atol)
+
+    def test_lindbladian_many_shifts(self):
+        # a jump operator with 6 diagonals reads 36 shifted copies of rho, more than
+        # MAX_FUSED_SHIFTS, so lindbladian sums its terms in two passes
+        a = dq.destroy(10, layout=dq.dia)
+        L = a + a @ a + a @ a @ a + 0.5 * (a + a @ a + a @ a @ a).dag()
+        H = a.dag() @ a + 0.3 * (a + a.dag())
+        r = self.denseA['batch']
+        rho = r @ r.dag()
+        out_dense = dq.lindbladian(H.asdense(), [L.asdense()], rho).to_jax()
+        jaxpr = jax.make_jaxpr(lambda rho: dq.lindbladian(H, [L], rho).to_jax())(rho)
+        assert 'optimization_barrier' in str(jaxpr)
+        out_dia = dq.lindbladian(H, [L], rho).to_jax()
+        assert _allclose(out_dense, out_dia, atol=1e-6 * jnp.abs(out_dense).max())
+        # a shift and its mirror share a pass: run eagerly, the sum is exactly Hermitian
+        assert jnp.array_equal(out_dia, out_dia.mT.conj())
+
+    @pytest.mark.parametrize(
+        ('sizes', 'expected'),
+        [
+            # 71 shifts: balanced passes, not 32, 32 and 7
+            ([1] + [2] * 35, [23, 24, 24]),
+            # 62 shifts: passes of 31 would end at 30 and need a third pass
+            ([2] * 31, [32, 30]),
+            # 48 shifts: passes of 24 would give 23, 24 and 1
+            ([2] * 11 + [1] + [2] * 12 + [1], [25, 23]),
+            # 64 shifts: passes of 32 would give 31, 32 and 1
+            ([2] * 15 + [1] + [2] * 15 + [1] * 3, [32, 32]),
+            # no shift at all
+            ([], []),
+        ],
+    )
+    def test_lindbladian_passes(self, sizes, expected):
+        # shifts read by each pass; an item of size 2 is a shift and its mirror
+        loads = [sum(sizes[i] for i in indices) for indices in _passes(sizes)]
+        assert loads == expected
+
     def test_kronecker(self):
         dA, sA = self.denseA['simple'], self.sparseA['simple']
         dB, sB = self.denseB['simple'], self.sparseB['simple']
@@ -205,16 +325,38 @@ class TestSparseDIAQArray:
         out_dia_dense = (sA & dB).to_jax()
         assert _allclose(out_dense_dense, out_dia_dense)
 
-    def test_outofbounds(self):
-        # set up matrix
-        N = 10
-        diags = jr.normal(jr.key(42), (4, N))
-        offsets = (-2, -1, 1, 3)
+    def test_kronecker_batch_batch(self):
+        # Kronecker product of two operands sharing the same non-1 batch size,
+        # a case `valid_operation_keys` never exercises.
+        sA = dq.stack([self.sparseA['simple'], 2 * self.sparseA['simple']])
+        sB = dq.stack([self.sparseB['simple'], 3 * self.sparseB['simple']])
+        dA, dB = sA.asdense(), sB.asdense()
 
-        # assert an error is raised
+        out_dense_dense = (dA & dB).to_jax()
+        assert out_dense_dense.shape[0] == 2
+
+        out_dia_dia = (sA & sB).to_jax()
+        assert _allclose(out_dense_dense, out_dia_dia)
+
+    def test_devices(self):
+        d, s = self.denseA['simple'], self.sparseA['simple']
+        assert s.devices() == d.devices() == set(jax.devices())
+
+    def test_outofbounds(self):
+        # every element outside the matrix bounds is checked, and only those: the
+        # last 2 of offset -2, none of offset 0, the first 3 of offset 3
+        N = 5
+        offsets = (-2, 0, 3)
+        outside = [(0, 3), (0, 4), (2, 0), (2, 1), (2, 2)]
+        diags = jnp.ones((2, len(offsets), N))
+        for i, j in outside:
+            diags = diags.at[:, i, j].set(0)
+        SparseDIADataArray(offsets, diags)
+
         error_str = 'must contain zeros outside the matrix bounds'
-        with pytest.raises(EquinoxRuntimeError, match=error_str):
-            dq.SparseDIAQArray((N,), False, offsets, diags)
+        for i, j in outside:
+            with pytest.raises(EquinoxRuntimeError, match=error_str):
+                SparseDIADataArray(offsets, diags.at[1, i, j].set(1))
 
     @pytest.mark.parametrize('k', ['simple', 'batch', 'batch_broadcast'])
     def test_elpow(self, k):
@@ -233,6 +375,25 @@ class TestSparseDIAQArray:
         out_dia = s.powm(3).to_jax()
 
         assert _allclose(out_dia, out_dense)
+
+    @pytest.mark.parametrize('k', ['simple', 'batch', 'batch_broadcast'])
+    def test_expm(self, k):
+        # matrix A has several diagonals, it is converted to the dense layout
+        dA, sA = self.denseA[k], self.sparseA[k]
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=UserWarning)
+            out_dia = sA.expm()
+        assert out_dia.layout is dq.dense
+        assert _allclose(out_dia.to_jax(), dA.expm().to_jax(), rtol=1e-4)
+
+        # matrix C has a single diagonal of offset 0, it stays in the dia layout and
+        # does not warn
+        dC, sC = self.denseC[k], self.sparseC[k]
+        with warnings.catch_warnings():
+            warnings.simplefilter('error', category=UserWarning)
+            out_dia = sC.expm()
+        assert out_dia.layout is dq.dia
+        assert _allclose(out_dia.to_jax(), dC.expm().to_jax(), rtol=1e-4)
 
 
 def _allclose(a, b, rtol=1e-05, atol=1e-08):

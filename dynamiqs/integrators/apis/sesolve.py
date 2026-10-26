@@ -1,16 +1,19 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import partial
+from typing import cast
 
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike
+from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...method import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options, check_options
+from ...progress_meter import AbstractProgressMeter
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import SESolveResult
@@ -18,6 +21,7 @@ from ...time_qarray import TimeQArray
 from .._utils import (
     assert_method_supported,
     astimeqarray,
+    broadcast_batched,
     cartesian_vmap,
     catch_xla_runtime_error,
     multi_vmap,
@@ -41,7 +45,11 @@ def sesolve(
     exp_ops: list[QArrayLike] | None = None,
     method: Method = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    save_states: bool = True,
+    cartesian_batching: bool = True,
+    progress_meter: AbstractProgressMeter | bool | None = None,
+    t0: ScalarLike | None = None,
+    save_extra: Callable[[Scalar, QArray], PyTree] | None = None,
 ) -> SESolveResult:
     r"""Solve the Schrödinger equation.
 
@@ -59,12 +67,12 @@ def sesolve(
         - $H\to H(t)$
 
     Args:
-        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
-        psi0 _(qarray-like of shape (...psi0, n, 1))_: Initial state.
-        tsave _(array-like of shape (ntsave,))_: Times at which the states and
+        H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
+        psi0 (qarray-like of shape (...psi0, n, 1)): Initial state.
+        tsave (array-like of shape (ntsave,)): Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
-            `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        exp_ops _(list of qarray-like, each of shape (n, n), optional)_: List of
+            `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified.
+        exp_ops (list of qarray-like, each of shape (n, n), optional): List of
             operators for which the expectation value is computed.
         method: Method for the integration. Defaults to
             [`dq.method.Tsit5`][dynamiqs.method.Tsit5] (supported:
@@ -77,45 +85,10 @@ def sesolve(
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
-        options: Generic options (supported: `save_states`, `cartesian_batching`,
-            `progress_meter`, `t0`, `save_extra`).
-            ??? "Detailed options API"
-                ```
-                dq.Options(
-                    save_states: bool = True,
-                    cartesian_batching: bool = True,
-                    progress_meter: AbstractProgressMeter | bool | None = None,
-                    t0: ScalarLike | None = None,
-                    save_extra: callable[[Array], PyTree] | None = None,
-                )
-                ```
-
-                **Parameters**
-
-                - **save_states** - If `True`, the state is saved at every time in
-                    `tsave`, otherwise only the final state is returned.
-                - **cartesian_batching** - If `True`, batched arguments are treated as
-                    separated batch dimensions, otherwise the batching is performed over
-                    a single shared batched dimension.
-                - **progress_meter** - Progress meter indicating how far the solve has
-                    progressed. Defaults to `None` which uses the global default
-                    progress meter (see
-                    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
-                    `True` for a [tqdm](https://github.com/tqdm/tqdm) progress meter,
-                    and `False` for no output. See other options in
-                    [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
-                    If gradients are computed, the progress meter only displays during
-                    the forward pass.
-                - **t0** - Initial time. If `None`, defaults to the first time in
-                    `tsave`.
-                - **save_extra** _(function, optional)_ - A function with signature
-                    `f(QArray) -> PyTree` that takes a state as input and returns a
-                    PyTree. This can be used to save additional arbitrary data
-                    during the integration, accessible in `result.extra`.
 
     Returns:
         `dq.SESolveResult` object holding the result of the Schrödinger equation
-            integration.  Use `result.states` to access the saved states and
+            integration. Use `result.states` to access the saved states and
             `result.expects` to access the saved expectation values.
 
             ??? "Detailed result API"
@@ -123,28 +96,73 @@ def sesolve(
                 dq.SESolveResult
                 ```
 
-                **Attributes**
+                **Attributes:**
 
-                - **states** _(qarray of shape (..., nsave, n, 1))_ - Saved states with
-                    `nsave = ntsave`, or `nsave = 1` if `options.save_states=False`.
-                - **final_state** _(qarray of shape (..., n, 1))_ - Saved final state.
-                - **expects** _(array of shape (..., len(exp_ops), ntsave) or None)_ - Saved
-                    expectation values, if specified by `exp_ops`.
-                - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
-                    specified in `options`.
-                - **infos** _(PyTree or None)_ - Method-dependent information on the
+                - **`states`** _(qarray of shape (..., nsave, n, 1))_ - Saved states
+                    with `nsave = ntsave`, or `nsave = 1` if `save_states=False`.
+                - **`final_state`** _(qarray of shape (..., n, 1))_ - Saved final state.
+                - **`expects`** _(array of shape (..., len(exp_ops), ntsave) or None)_ -
+                    Saved expectation values, if specified by `exp_ops`.
+                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
+                    if specified.
+                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
-                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
-                    saved.
-                - **method** _(Method)_ - Method used.
-                - **gradient** _(Gradient)_ - Gradient used.
-                - **options** _(Options)_ - Options used.
+                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
+                    were saved.
+                - **`method`** _(Method)_ - Method used.
+                - **`gradient`** _(Gradient)_ - Gradient used.
+                - **`options`** _(Options)_ - Options used.
+
+    Other Parameters:
+        save_states: If `True`, the state is saved at every time in
+            `tsave`, otherwise only the final state is returned. Defaults to `True`.
+        cartesian_batching: If `True`, batched arguments are treated
+            as separated batch dimensions, otherwise the batching is performed over a
+            single shared batch dimension. Defaults to `True`.
+        progress_meter: Progress
+            meter indicating how far the solve has progressed. Defaults to `None`
+            which uses the global default progress meter (see
+            [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to `True`
+            for a [tqdm](https://github.com/tqdm/tqdm) progress meter, and `False`
+            for no output. If gradients are computed, the progress meter only
+            displays during the forward pass.
+        t0: Initial time. If `None`, defaults to the first
+            time in `tsave`. Defaults to `None`.
+        save_extra: A function with signature
+            `f(Scalar, QArray) -> PyTree` that takes the current time and state as
+            input and returns a PyTree. This can be used to save additional
+            arbitrary data during the integration, accessible in `result.extra`.
+            Defaults to `None`.
+
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a
+        psi0 = dq.coherent(n, 1.0)
+        tsave = jnp.linspace(0, 1.0, 11)
+
+        result = dq.sesolve(H, psi0, tsave)
+        print(result)
+        ```
+
+        ```text title="Output"
+        |██████████| 100.0% ◆ elapsed 1.50ms ◆ remaining 0.00ms
+        ==== SESolveResult ====
+        Method : Tsit5
+        Infos  : 11 steps (11 accepted, 0 rejected)
+        States : QArray complex64 (11, 16, 1) | 1.4 Kb
+        ```
 
     # Advanced use-cases
 
     ## Defining a time-dependent Hamiltonian
 
-    If the Hamiltonian depends on time, it can be converted to a time-qarray using
+    If the Hamiltonian depends on time, it can be converted to a timeqarray using
     [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
     [`dq.timecallable()`][dynamiqs.timecallable]. See the
     [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
@@ -185,23 +203,34 @@ def sesolve(
     See the
     [Batching simulations](../../documentation/basics/batching-simulations.md)
     tutorial for more details.
-    """  # noqa: E501
+    """
     # === convert arguments
-    H = astimeqarray(H)
+    H = astimeqarray(H, 'H')
     psi0 = asqarray(psi0)
     tsave = jnp.asarray(tsave)
+
+    _exp_ops = None
     if exp_ops is not None:
-        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+        _exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+
+    # === build options
+    options = Options(
+        save_states=save_states,
+        cartesian_batching=cartesian_batching,
+        progress_meter=progress_meter,
+        t0=t0,
+        save_extra=save_extra,
+    )
 
     # === check arguments
-    _check_sesolve_args(H, psi0, exp_ops)
+    _check_sesolve_args(H, psi0, _exp_ops)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'sesolve')
     options = options.initialise()
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
-    return _vectorized_sesolve(H, psi0, tsave, exp_ops, method, gradient, options)
+    return _vectorized_sesolve(H, psi0, tsave, _exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error
@@ -223,12 +252,12 @@ def _vectorized_sesolve(
         nvmap = (H.ndim - 2, psi0.ndim - 2, 0, 0, 0, 0, 0)
         f = cartesian_vmap(_sesolve, in_axes, out_axes, nvmap)
     else:
-        n = H.shape[-1]
         bshape = jnp.broadcast_shapes(H.shape[:-2], psi0.shape[:-2])
         nvmap = len(bshape)
-        # broadcast all vectorized input to same shape
-        H = H.broadcast_to(*bshape, n, n)
-        psi0 = psi0.broadcast_to(*bshape, n, 1)
+        # broadcast batched inputs to the same shape, keep unbatched inputs unbatched
+        H, H_axes = broadcast_batched(H, H.in_axes, bshape)
+        psi0, psi0_axes = broadcast_batched(psi0, 0, bshape)
+        in_axes = (H_axes, psi0_axes, *in_axes[2:])
         # vectorize the function
         f = multi_vmap(_sesolve, in_axes, out_axes, nvmap)
 
@@ -255,7 +284,7 @@ def _sesolve(
         Expm: sesolve_expm_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    integrator_constructor = integrator_constructors[type(method)]  # ty: ignore
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -273,10 +302,7 @@ def _sesolve(
     )
 
     # === run integrator
-    result = integrator.run()
-
-    # === return result
-    return result  # noqa: RET504
+    return cast(SESolveResult, integrator.run())
 
 
 def _check_sesolve_args(H: TimeQArray, psi0: QArray, exp_ops: list[QArray] | None):

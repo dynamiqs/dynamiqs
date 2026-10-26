@@ -1,10 +1,13 @@
 import warnings
 from abc import abstractmethod
 from dataclasses import replace
+from functools import partial
 
+import jax
 import jax.numpy as jnp
 
-from ...result import Result, SolveSaved, StochasticSolveResult
+from ...method import DiffusiveMonteCarlo, JumpMonteCarlo
+from ...result import MESolveResult, Result, SolveSaved, StochasticSolveResult
 from ..apis.dssesolve import _vectorized_dssesolve
 from ..apis.jssesolve import _vectorized_jssesolve
 from .abstract_integrator import BaseIntegrator
@@ -31,7 +34,10 @@ class MESolveMonteCarloIntegrator(BaseIntegrator, MEInterface, SolveInterface):
         extra = None
         if self.options.save_extra:
             if self.options.save_states:
-                extra = self.options.save_extra(ysave)
+                # apply the hook per save point on the mean states, as in the other
+                # integrators
+                ts = jnp.asarray(self.ts)  # todo: fix static tsave
+                extra = jax.vmap(self.options.save_extra)(ts, ysave)
             else:
                 # this is enforced because `save_extra` is not necessarily a linear
                 # function of the states, and thus save_extra(mean(states)) may not
@@ -53,6 +59,8 @@ class MESolveMonteCarloIntegrator(BaseIntegrator, MEInterface, SolveInterface):
 
 
 class MESolveJumpMonteCarloIntegrator(MESolveMonteCarloIntegrator):
+    method: JumpMonteCarlo
+
     def _run_stochastic(self) -> StochasticSolveResult:
         # modify nmaxclick in the options passed to jssesolve
         jsse_options = replace(
@@ -75,10 +83,14 @@ class MESolveJumpMonteCarloIntegrator(MESolveMonteCarloIntegrator):
         )
 
 
-mesolve_jumpmontecarlo_integrator_constructor = MESolveJumpMonteCarloIntegrator
+mesolve_jumpmontecarlo_integrator_constructor = partial(
+    MESolveJumpMonteCarloIntegrator, result_class=MESolveResult
+)
 
 
 class MESolveDiffusiveMonteCarloIntegrator(MESolveMonteCarloIntegrator):
+    method: DiffusiveMonteCarlo
+
     def _run_stochastic(self) -> StochasticSolveResult:
         keys = jnp.asarray(self.method.keys)
 
@@ -96,6 +108,6 @@ class MESolveDiffusiveMonteCarloIntegrator(MESolveMonteCarloIntegrator):
         )
 
 
-mesolve_diffusivemontecarlo_integrator_constructor = (
-    MESolveDiffusiveMonteCarloIntegrator
+mesolve_diffusivemontecarlo_integrator_constructor = partial(
+    MESolveDiffusiveMonteCarloIntegrator, result_class=MESolveResult
 )

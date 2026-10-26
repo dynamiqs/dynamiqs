@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+from typing import cast
+
 import equinox as eqx
+import jax
 import jax.numpy as jnp
+from jax import Array
 from jaxtyping import PyTree
 
 from dynamiqs.result import FloquetSaved
 
-from ...result import Result, Saved
+from ...qarrays.qarray import QArray
+from ...qarrays.utils import asqarray
+from ...result import FloquetResult, Result
 from ..apis.sepropagator import _sepropagator
 from .abstract_integrator import BaseIntegrator
 from .interfaces import SEInterface
@@ -15,8 +21,8 @@ from .interfaces import SEInterface
 class FloquetIntegrator(BaseIntegrator):
     T: float
 
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return self.result_class(
+    def result(self, saved: FloquetSaved, infos: PyTree | None = None) -> Result:
+        return FloquetResult(
             self.ts, self.method, self.gradient, self.options, saved, infos, self.T
         )
 
@@ -33,20 +39,22 @@ class SEFloquetIntegrator(FloquetIntegrator, SEInterface):
         )
 
         # diagonalize the final propagator to get the Floquet modes at t=t0
-        evals, evecs = seprop_result.final_propagator._eig()
+        U = seprop_result.final_propagator.to_jax()
+        evals, evecs = _diagonalize_unitary(U)
 
         # extract quasienergies
         # minus sign and divide by T to account for e^{-i\epsilon T}
-        quasienergies = jnp.angle(-evals) / self.T
+        quasienergies = -jnp.angle(evals) / self.T
         # quasienergies are only defined modulo 2pi / T. Usual convention is to
         # normalize quasienergies to the region -pi/T, pi/T
         omega = 2.0 * jnp.pi / self.T
         quasienergies = jnp.mod(quasienergies + 0.5 * omega, omega) - 0.5 * omega
 
         # propagate the Floquet modes to all times in tsave
-        propagators = seprop_result.propagators[:-1, :, :]
+        propagators = cast(QArray, seprop_result.propagators[:-1, :, :])
         modes = propagators @ evecs  # (ntsave, n, n) @ (n, m) = (ntsave, n, m)
-        modes = modes.mT[..., None]  # (ntsave, m, n, 1)
+        # convert each mode to a ket of shape (n, 1)
+        modes = asqarray(modes.mT[..., None], dims=propagators.dims)
         modes = modes * jnp.exp(
             1j * quasienergies[:, None, None] * self.ts[:, None, None, None]
         )
@@ -54,6 +62,34 @@ class SEFloquetIntegrator(FloquetIntegrator, SEInterface):
         # save the Floquet modes and quasienergies
         saved = FloquetSaved(ysave=modes, extra=None, quasienergies=quasienergies)
         return self.result(saved, infos=seprop_result.infos)
+
+
+def _diagonalize_unitary(U: Array) -> tuple[Array, Array]:
+    # A general eigensolver applied to the numerically non-unitary U returns
+    # eigenvectors whose overlaps grow as (integration error)/(quasienergy gap), so
+    # they are far from orthonormal in near-degenerate clusters. Instead, `eigh`
+    # diagonalizes the Hermitian Cayley transform K = i(1 - W)(1 + W)⁻¹ of W = e^{iθ}U,
+    # whose eigenvalues tan(φ/2) are injective in the eigenphases φ of W. The global
+    # phase θ moves the pole φ = π to the middle of the widest gap in the spectrum of
+    # U. A Schur decomposition would also work, but JAX implements it on CPU only and
+    # without a differentiation rule.
+    phases = jnp.sort(jnp.angle(jnp.linalg.eigvals(jax.lax.stop_gradient(U))))
+    gaps = jnp.diff(phases, append=phases[..., :1] + 2 * jnp.pi)
+    widest = jnp.argmax(gaps, axis=-1, keepdims=True)
+    middle = jnp.take_along_axis(phases + 0.5 * gaps, widest, axis=-1)
+    W = jnp.exp(1j * (jnp.pi - middle))[..., None] * U
+
+    I = jnp.eye(U.shape[-1], dtype=U.dtype)
+    K = 1j * jnp.linalg.solve(I + W, I - W)
+    _, evecs = jnp.linalg.eigh(0.5 * (K + K.mT.conj()))
+
+    # fix the arbitrary phase of each mode by making its largest component positive
+    largest = jnp.argmax(jnp.abs(evecs), axis=-2, keepdims=True)
+    pivots = jnp.take_along_axis(evecs, largest, axis=-2)
+    evecs = evecs * pivots.conj() / jnp.abs(pivots)
+
+    evals = (evecs.conj() * (U @ evecs)).sum(-2)
+    return evals, evecs
 
 
 floquet_integrator_constructor = SEFloquetIntegrator

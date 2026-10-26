@@ -6,7 +6,7 @@ To contribute efficiently, a few guidelines are compiled below.
 
 ## 1. Requirements
 
-The project was written using Python 3.10+, you must have a compatible version of Python (i.e. >= 3.10) installed on your computer.
+The project was written using Python 3.11+, you must have a compatible version of Python (i.e. >= 3.11) installed on your computer.
 
 ## 2. Setup
 
@@ -57,20 +57,21 @@ Here is a list of available tasks:
 lint         lint the code (ruff)
 format       auto-format the code (ruff)
 codespell    check for misspellings (codespell)
-clean        clean the code (ruff + codespell)
+type         check types (ty)
+clean        clean the code (ruff + codespell + ty)
 test         run the unit tests suite (pytest)
 doctest-code check code docstrings examples (doctest)
 doctest-docs check documentation examples (doctest)
 doctest      check all examples (doctest)
 docbuild     build the documentation website
 docserve     preview documentation website with hot-reloading
-all          run all tasks before a commit (ruff + codespell + pytest + doctest)
+all          run all tasks before a commit (ruff + codespell + ty + pytest + doctest)
 ci           run all the CI checks
 ```
 
 ### Run tasks automatically before each commit
 
-Alternatively, you can use `pre-commit` to automatically run the cleaning tasks (ruff + codespell) before each commit:
+Alternatively, you can use `pre-commit` to automatically run the cleaning tasks (ruff + codespell + ty) before each commit:
 
 ```shell
 pip install pre-commit
@@ -79,7 +80,7 @@ pre-commit install
 
 ### Build the documentation
 
-The documentation is built using [MkDocs](https://www.mkdocs.org/) and the [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) theme. MkDocs generates a static website based on the markdown files in the `docs/` directory.
+The documentation is built using [Zensical](https://zensical.org/), with [mkdocstrings](https://mkdocstrings.github.io/) for the Python API reference. Zensical generates a static website based on the markdown files in the `docs/` directory and on the `zensical.toml` configuration file. The Python API pages (one per function) are generated from the `__all__` variables by `docs/generate_python_api.py`, which the tasks below run before each build.
 
 To preview the changes to the documentation as you edit the docstrings or the markdown files in `docs/`, we recommend starting a live preview server, which will automatically rebuild the website upon modifications:
 
@@ -96,6 +97,8 @@ task docbuild
 ```
 
 This will create a `site/` directory with the contents of the documentation website. You can then simply open `site/index.html` in your web browser to view the documentation website.
+
+The published website is versioned with [mike](https://zensical.org/docs/compatibility/mkdocs/mike/): each push to `main` deploys the `dev` version, and each release tag `vX.Y.Z` deploys the version `X.Y.Z` and makes it the `stable` one (see `.github/workflows/publish-doc.yml`).
 
 ## 4. Style guide
 
@@ -125,7 +128,7 @@ When writing your function:
 Make sure to add your function:
 
 1. to the `__all__` variable at the top of the file (this is how we control namespaces to have everything available under `dq.*`),
-2. to the `dynamiqs/mkdocs.yml` file (so it appears in the documentation and navigation),
+2. to the `nav` of the `dynamiqs/zensical.toml` file (so it appears in the documentation and navigation),
 3. to the `dynamiqs/docs/python_api/index.md` file (so it appears on the Python API page, which lists all the functions of the library).
 
 ### Writing a docstring
@@ -135,12 +138,12 @@ We use [Google-style docstrings](https://google.github.io/styleguide/pyguide.htm
 - Headers can include (in this order and with these names): `Args`, `Returns`, `Raises`, `Examples`, `See also`.
 - You can use the admonitions (colored blocks in the documentation) `Note` and `Warning` if relevant.
 - Avoid using `The` in arguments description, for example change `x: The quantum state.` to `x: Quantum state.`.
-- Specify arguments type in `_(...)_` after the argument name and _only if it is necessary_. Adding a type can for example be useful to add a shape information for a qarray or an array, or because the argument typing in the function signature is opaque.
+- Specify arguments type in `(...)` after the argument name and _only if it is necessary_. Adding a type can for example be useful to add a shape information for a qarray or an array, or because the argument typing in the function signature is opaque.
 
 ### Documentation
 
 - For internal links, use `[dq.Options][dynamiqs.Options]` for a class, `[dq.sesolve()][dynamiqs.sesolve]` for a function (explicitely include `()` in the function name), and `(doc page)(relative/path/to/file.md)` for another documentation page (note the parentheses instead of brackets).
-- If you want to add an icon somewhere, use one of the `:material-*` (search the list [here](https://squidfunk.github.io/mkdocs-material/reference/icons-emojis/)).
+- If you want to add an icon somewhere, use one of the `:material-*` (search the list [here](https://pictogrammers.com/library/mdi/), see also the [Zensical documentation](https://zensical.org/docs/authoring/icons-emojis/)).
 
 ### Exceptions message
 
@@ -151,7 +154,9 @@ We use [Google-style docstrings](https://google.github.io/styleguide/pyguide.htm
 Examples:
 
 ```python
-raise ValueError(f'Argument `H` must have shape (n, n), but has shape H.shape={H.shape}.')
+raise ValueError(
+    f'Argument `H` must have shape (n, n), but has shape H.shape={H.shape}.'
+)
 raise ValueError(
     "Argument `matmul_precision` should be a string 'low', 'high', or"
     f" 'highest', but is '{matmul_precision}'."

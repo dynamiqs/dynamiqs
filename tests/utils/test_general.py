@@ -2,6 +2,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 import qutip as qt
+from jax import Array
 
 import dynamiqs as dq
 
@@ -10,11 +11,11 @@ from ..order import TEST_INSTANT, TEST_SHORT
 # prepare inputs
 key = jax.random.PRNGKey(42)
 k1, k2, k3, k4, k5 = jax.random.split(key, 5)
-a = pytest.fixture(lambda: dq.random.ket(k1, (4, 1)))
-b = pytest.fixture(lambda: dq.random.ket(k2, (4, 1)))
-x = pytest.fixture(lambda: dq.random.dm(k3, (4, 4)))
-y = pytest.fixture(lambda: dq.random.dm(k4, (4, 4)))
-z = pytest.fixture(lambda: dq.random.dm(k5, (4, 4)))
+a = pytest.fixture(lambda: dq.random.ket(k1, 4))
+b = pytest.fixture(lambda: dq.random.ket(k2, 4))
+x = pytest.fixture(lambda: dq.random.dm(k3, 4))
+y = pytest.fixture(lambda: dq.random.dm(k4, 4))
+z = pytest.fixture(lambda: dq.random.dm(k5, 4))
 
 
 @pytest.mark.run(order=TEST_INSTANT)
@@ -71,10 +72,10 @@ def test_ptrace():
     key = jax.random.PRNGKey(42)
     k1, k2, k3, k4 = jax.random.split(key, 4)
 
-    a = dq.random.ket(k1, (5, 1))
-    b = dq.random.ket(k2, (8, 1))
-    x = dq.random.dm(k3, (5, 5))
-    y = dq.random.dm(k4, (8, 8))
+    a = dq.random.ket(k1, 5)
+    b = dq.random.ket(k2, 8)
+    x = dq.random.dm(k3, 5)
+    y = dq.random.dm(k4, 8)
 
     # check that no error is raised while tracing the function
     jax.jit(dq.ptrace, static_argnums=(1,)).trace(a & b, 0)
@@ -240,12 +241,79 @@ def test_entropy_vn(a, x):
     jax.jit(dq.entropy_vn).trace(x)
 
 
+def qobj_to_array(x: qt.Qobj) -> Array:
+    # todo: support QuTiP >= 5.0, remove once https://github.com/qutip/qutip/pull/2533
+    # is merged, and use `jnp.asarray` instead
+    if isinstance(x, list):
+        return jnp.asarray([qobj_to_array(y) for y in x])
+    return jnp.asarray(x.full())
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_entropy_relative(a, b, x, y):
+    # === check that no error is raised while tracing the function
+    jax.jit(dq.entropy_relative).trace(a, b)  # ket vs ket
+    jax.jit(dq.entropy_relative).trace(x, y)  # dm vs dm
+    jax.jit(dq.entropy_relative).trace(a, x)  # ket vs dm
+    jax.jit(dq.entropy_relative).trace(x, b)  # dm vs ket
+
+    # === check correctness against qutip
+    n = 8
+
+    # --- ket vs ket
+    psi_qt = qt.rand_ket(n, seed=42)
+    phi_qt = qt.rand_ket(n, seed=43)
+    qt_val = qt.entropy_relative(psi_qt, phi_qt)
+
+    psi = qobj_to_array(psi_qt)
+    phi = qobj_to_array(phi_qt)
+    dq_val = dq.entropy_relative(psi, phi).item()
+    assert qt_val == pytest.approx(dq_val, rel=1e-6, abs=1e-6)
+
+    # --- dm vs dm
+    rho_qt = qt.rand_dm(n, n, seed=44)
+    sigma_qt = qt.rand_dm(n, n, seed=45)
+    qt_val = qt.entropy_relative(rho_qt, sigma_qt)
+
+    rho = qobj_to_array(rho_qt)
+    sigma = qobj_to_array(sigma_qt)
+    dq_val = dq.entropy_relative(rho, sigma).item()
+    assert qt_val == pytest.approx(dq_val, rel=1e-5, abs=1e-5)
+
+    # --- ket vs dm and dm vs ket
+    psi_qt = qt.rand_ket(n, seed=46)
+    rho_qt = qt.rand_dm(n, n, seed=47)
+    qt_ket_dm = qt.entropy_relative(psi_qt, rho_qt)
+    qt_dm_ket = qt.entropy_relative(rho_qt, psi_qt)
+
+    psi = qobj_to_array(psi_qt)
+    rho = qobj_to_array(rho_qt)
+    dq_ket_dm = dq.entropy_relative(psi, rho).item()
+    dq_dm_ket = dq.entropy_relative(rho, psi).item()
+
+    # both are promoted to density matrices: the tolerance of dm vs dm
+    assert qt_ket_dm == pytest.approx(dq_ket_dm, rel=1e-5, abs=1e-5)
+    assert qt_dm_ket == pytest.approx(dq_dm_ket, rel=1e-5, abs=1e-5)
+
+    # === check batching
+    b1, b2 = 3, 5
+
+    # same batching trick used for fidelity
+    batch = lambda X: dq.asqarray(jnp.tile(X.to_jax(), (b1, b2, 1, 1)))
+
+    # ket vs ket, dm vs dm, ket vs dm, dm vs ket
+    assert dq.entropy_relative(batch(a), batch(b)).shape == (b1, b2)
+    assert dq.entropy_relative(batch(x), batch(y)).shape == (b1, b2)
+    assert dq.entropy_relative(batch(a), batch(x)).shape == (b1, b2)
+    assert dq.entropy_relative(batch(x), batch(b)).shape == (b1, b2)
+
+
 @pytest.mark.run(order=TEST_INSTANT)
 def test_bloch_coordinates():
     # prepare inputs
     k1, k2 = jax.random.split(jax.random.PRNGKey(42), 2)
-    a = dq.random.ket(k1, (2, 1))
-    x = dq.random.dm(k2, (2, 2))
+    a = dq.random.ket(k1, 2)
+    x = dq.random.dm(k2, 2)
 
     # check that no error is raised while tracing the function
     jax.jit(dq.bloch_coordinates).trace(a)

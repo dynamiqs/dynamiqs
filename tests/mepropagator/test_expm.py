@@ -2,20 +2,11 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs import (
-    Options,
-    dag,
-    eye,
-    mepropagator,
-    pwc,
-    slindbladian,
-    unvectorize,
-    vectorize,
-)
+from dynamiqs import dag, eye, mepropagator, pwc, slindbladian, unvectorize, vectorize
 
 from ..integrator_tester import IntegratorTester
-from ..mesolve.open_system import dense_ocavity
 from ..order import TEST_LONG
+from ..systems import dense_ocavity
 from .mepropagator_utils import rand_mepropagator_args
 
 
@@ -42,8 +33,7 @@ class TestMEPropagator(IntegratorTester):
         _H, Ls = rand_mepropagator_args(2, (), [(), ()])
         H = pwc(times, values, _H)
         tsave = jnp.asarray([0.5, 1.0, 2.0])
-        options = Options(save_propagators=save_propagators)
-        propresult = mepropagator(H, Ls, tsave, options=options)
+        propresult = mepropagator(H, Ls, tsave, save_propagators=save_propagators)
         propagators = propresult.propagators.to_jax()
         U0 = eye(H.shape[-1] ** 2).to_jax()
         lindbladian_1 = slindbladian(3.0 * H.qarray, Ls)

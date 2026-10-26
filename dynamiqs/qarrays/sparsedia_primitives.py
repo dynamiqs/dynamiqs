@@ -1,9 +1,13 @@
 from collections import defaultdict
 from collections.abc import Sequence
 from functools import partial, reduce
+from itertools import chain
+from math import ceil
 
+import jax
 import jax.numpy as jnp
 import numpy as np
+from jax import lax
 from jax._src.core import concrete_or_error
 from jaxtyping import Array
 
@@ -120,6 +124,23 @@ def mul_sparsedia_array(
     return offsets, out_diags
 
 
+def tracemm_sparsedia_array(
+    offsets: tuple[int, ...], diags: Array, array: Array
+) -> Array:
+    # tr(A @ x) = sum_o sum_j A[j - o, j] x[j, j - o]: only the diagonals of x at the
+    # opposite offsets are read
+    out = None
+    for i, offset in enumerate(offsets):
+        x_diag = jnp.diagonal(array, offset=-offset, axis1=-2, axis2=-1)
+        term = (diags[..., i, _sparsedia_slice(offset)] * x_diag).sum(-1)
+        out = term if out is None else out + term
+    if out is None:
+        batch_shape = jnp.broadcast_shapes(diags.shape[:-2], array.shape[:-2])
+        dtype = jnp.promote_types(diags.dtype, array.dtype)
+        return jnp.zeros(batch_shape, dtype=dtype)
+    return out
+
+
 def sparsedia_to_array(offsets: tuple[int, ...], diags: Array) -> Array:
     out = jnp.zeros(shape_sparsedia(diags), dtype=diags.dtype)
     for i, offset in enumerate(offsets):
@@ -175,25 +196,54 @@ def add_sparsedia_sparsedia(
     right_offsets: tuple[int, ...],
     right_diags: Array,
 ) -> tuple[tuple[int, ...], Array]:
-    # compute the output offsets
     out_offsets = np.union1d(left_offsets, right_offsets).astype(int)
-
-    # initialize the output diagonals
     batch_shape = jnp.broadcast_shapes(left_diags.shape[:-2], right_diags.shape[:-2])
-    diags_shape = (*batch_shape, len(out_offsets), left_diags.shape[-1])
+    out_shape = (*batch_shape, len(out_offsets), left_diags.shape[-1])
     dtype = jnp.promote_types(left_diags.dtype, right_diags.dtype)
-    out_diags = jnp.zeros(diags_shape, dtype=dtype)
+    # the diagonals of the two operands that add up to each output diagonal
+    operands = ((left_offsets, left_diags), (right_offsets, right_diags))
+    terms = [
+        [
+            diags[..., offsets.index(offset), :]
+            for offsets, diags in operands
+            if offset in offsets
+        ]
+        for offset in out_offsets
+    ]
 
-    # loop over each offset and fill the output
-    for i, offset in enumerate(out_offsets):
-        if offset in left_offsets:
-            left_diag = left_diags[..., left_offsets.index(offset), :]
-            out_diags = out_diags.at[..., i, :].add(left_diag)
-        if offset in right_offsets:
-            right_diag = right_diags[..., right_offsets.index(offset), :]
-            out_diags = out_diags.at[..., i, :].add(right_diag)
-
+    # Chosen when tracing, with the default backend rather than the device a solve
+    # runs on (as for the real-array saves of `_saveat`). With `lax.platform_dependent`
+    # instead, a batched `mesolve` on an A100 was 1.24x slower.
+    if jax.default_backend() == 'gpu':
+        out_diags = _add_sparsedia_sparsedia_by_stacking(terms, out_shape, dtype)
+    else:
+        out_diags = _add_sparsedia_sparsedia_by_scattering(terms, out_shape, dtype)
     return _numpy_to_tuple(out_offsets), out_diags
+
+
+def _add_sparsedia_sparsedia_by_stacking(
+    terms: list[list[Array]], shape: tuple[int, ...], dtype: jnp.dtype
+) -> Array:
+    # Each output diagonal built, then stacked: on GPU, XLA fuses this into one
+    # kernel, while filling a zero array with `.at[i].add` is one kernel per diagonal.
+    if len(terms) == 0:
+        return jnp.zeros(shape, dtype)
+    zero = jnp.zeros((*shape[:-2], shape[-1]), dtype)
+    diags = [sum(diag_terms, zero)[..., None, :] for diag_terms in terms]
+    return jnp.concatenate(diags, axis=-2)
+
+
+def _add_sparsedia_sparsedia_by_scattering(
+    terms: list[list[Array]], shape: tuple[int, ...], dtype: jnp.dtype
+) -> Array:
+    # A zero array filled with one `.at[i].add` per term: on CPU, twice as fast as
+    # stacking on a `sesolve` with a modulated DIA Hamiltonian, whose terms are summed
+    # at every stage.
+    out_diags = jnp.zeros(shape, dtype)
+    for i, diag_terms in enumerate(terms):
+        for term in diag_terms:
+            out_diags = out_diags.at[..., i, :].add(term)
+    return out_diags
 
 
 def matmul_sparsedia_sparsedia(
@@ -229,8 +279,35 @@ def matmul_sparsedia_sparsedia(
     return out_offsets, out_diags
 
 
+# The DIA x dense products add each diagonal's contribution into the output with
+# `.at[slice].add`, one scatter-add kernel per diagonal. On GPU, for operators with at
+# least this many diagonals, or applied to a dense array of at least this many
+# elements, they instead zero-pad each contribution back to full size and sum them,
+# which XLA fuses into one kernel. Otherwise, or on CPU, the scatter-adds were as fast
+# or faster in the dynamiqs benchmarks (`python -m benchmarks`).
+_MIN_DIAGONALS_TO_PAD = 4
+_MIN_SIZE_TO_PAD = 2**18
+
+
+def _pad_on_gpu(offsets: tuple[int, ...], array: Array) -> bool:
+    return len(offsets) >= _MIN_DIAGONALS_TO_PAD or array.size >= _MIN_SIZE_TO_PAD
+
+
 def matmul_sparsedia_array(
     offsets: tuple[int, ...], diags: Array, array: Array
+) -> Array:
+    if not _pad_on_gpu(offsets, array):
+        return _matmul_sparsedia_array(offsets, diags, array, pad=False)
+    return lax.platform_dependent(
+        diags,
+        array,
+        cuda=partial(_matmul_sparsedia_array, offsets, pad=True),
+        default=partial(_matmul_sparsedia_array, offsets, pad=False),
+    )
+
+
+def _matmul_sparsedia_array(
+    offsets: tuple[int, ...], diags: Array, array: Array, *, pad: bool
 ) -> Array:
     batch_shape = jnp.broadcast_shapes(diags.shape[:-2], array.shape[:-2])
     out_shape = (*batch_shape, diags.shape[-1], array.shape[-1])
@@ -240,13 +317,33 @@ def matmul_sparsedia_array(
         slice_in = _sparsedia_slice(offset)
         slice_out = _sparsedia_slice(-offset)
         tmp = diags[..., i, slice_in, None] * array[..., slice_in, :]
-        out = out.at[..., slice_out, :].add(tmp)
+        if pad:
+            out = out + _pad_rows(tmp, offset)
+        else:
+            out = out.at[..., slice_out, :].add(tmp)
 
     return out
 
 
 def matmul_array_sparsedia(
     array: Array, offsets: tuple[int, ...], diags: Array
+) -> Array:
+    if not _pad_on_gpu(offsets, array):
+        return _matmul_array_sparsedia(array, offsets, diags, pad=False)
+    return lax.platform_dependent(
+        array,
+        diags,
+        cuda=lambda array, diags: _matmul_array_sparsedia(
+            array, offsets, diags, pad=True
+        ),
+        default=lambda array, diags: _matmul_array_sparsedia(
+            array, offsets, diags, pad=False
+        ),
+    )
+
+
+def _matmul_array_sparsedia(
+    array: Array, offsets: tuple[int, ...], diags: Array, *, pad: bool
 ) -> Array:
     batch_shape = jnp.broadcast_shapes(array.shape[:-2], diags.shape[:-2])
     out_shape = (*batch_shape, array.shape[-2], diags.shape[-1])
@@ -256,9 +353,28 @@ def matmul_array_sparsedia(
         slice_in = _sparsedia_slice(offset)
         slice_out = _sparsedia_slice(-offset)
         tmp = array[..., :, slice_out] * diags[..., i, None, slice_in]
-        out = out.at[..., :, slice_in].add(tmp)
+        if pad:
+            out = out + _pad_columns(tmp, offset)
+        else:
+            out = out.at[..., :, slice_in].add(tmp)
 
     return out
+
+
+def _pad_rows(x: Array, offset: int) -> Array:
+    # Zero-pad the second-to-last axis of `x` back to full size: the rows selected by
+    # `_sparsedia_slice(-offset)`.
+    pad_width = [(0, 0)] * x.ndim
+    pad_width[-2] = (0, offset) if offset >= 0 else (-offset, 0)
+    return jnp.pad(x, pad_width)
+
+
+def _pad_columns(x: Array, offset: int) -> Array:
+    # Zero-pad the last axis of `x` back to full size: the columns selected by
+    # `_sparsedia_slice(offset)`.
+    pad_width = [(0, 0)] * x.ndim
+    pad_width[-1] = (offset, 0) if offset >= 0 else (0, -offset)
+    return jnp.pad(x, pad_width)
 
 
 def and_sparsedia_sparsedia(
@@ -269,16 +385,23 @@ def and_sparsedia_sparsedia(
 ) -> tuple[tuple[int, ...], Array]:
     # compute new offsets
     n = right_diags.shape[-1]
-    left_offsets = np.asarray(left_offsets)
-    right_offsets = np.asarray(right_offsets)
-    out_offsets = _numpy_to_tuple(np.ravel(left_offsets[:, None] * n + right_offsets))
+    left_offsets_np = np.asarray(left_offsets)
+    right_offsets_np = np.asarray(right_offsets)
+    out_offsets = _numpy_to_tuple(
+        np.ravel(left_offsets_np[:, None] * n + right_offsets_np)
+    )
 
-    # compute new diagonals
-    out_diags = jnp.kron(left_diags, right_diags)
+    # compute new diagonals with broadcasted batch axes
+    out_diags = _bkron(left_diags, right_diags)
 
     # merge duplicate offsets and return
     out_offsets, out_diags = _compress_sparsedia(out_offsets, out_diags)
     return out_offsets, out_diags
+
+
+@partial(jnp.vectorize, signature='(a,b),(c,d)->(ac,bd)')
+def _bkron(a: Array, b: Array) -> Array:
+    return jnp.kron(a, b)
 
 
 def _compress_sparsedia(
@@ -306,7 +429,7 @@ def stack_sparsedia(
     axis: int,
 ) -> tuple[tuple[int, ...], Array]:
     # compute unique offsets of the output
-    out_offsets = np.asarray(reduce(np.union1d, offsets_sequence))
+    out_offsets = np.unique(np.concatenate(offsets_sequence))
     offset_to_index = {offset: idx for idx, offset in enumerate(out_offsets)}
 
     # prepare output diagonals with the correct shape and dtype
@@ -326,9 +449,31 @@ def stack_sparsedia(
     return _numpy_to_tuple(out_offsets), out_diags
 
 
-def autopad_sparsedia_diags(
-    offsets: tuple[int, ...], diags: Sequence[Array]
-) -> tuple[Array]:
+def concatenate_sparsedia(
+    offsets_sequence: Sequence[tuple[int, ...]],
+    diags_sequence: Sequence[Array],
+    axis: int,
+) -> tuple[tuple[int, ...], Array]:
+    # compute unique offsets of the output
+    out_offsets = np.asarray(sorted(reduce(set.union, map(set, offsets_sequence))))
+    offset_to_index = {offset: idx for idx, offset in enumerate(out_offsets)}
+
+    # prepare input diagonals with matching offsets before concatenating
+    dtype = reduce(jnp.promote_types, [diags.dtype for diags in diags_sequence])
+    expanded_diags = []
+    for offsets, diags in zip(offsets_sequence, diags_sequence, strict=True):
+        out_shape = (*diags.shape[:-2], len(out_offsets), diags.shape[-1])
+        out_diags = jnp.zeros(out_shape, dtype=dtype)
+        for i, offset in enumerate(offsets):
+            idx = offset_to_index[offset]
+            out_diags = out_diags.at[..., idx, :].add(diags[..., i, :])
+        expanded_diags.append(out_diags)
+
+    diags = jnp.concatenate(expanded_diags, axis=axis)
+    return _numpy_to_tuple(out_offsets), diags
+
+
+def autopad_sparsedia_diags(offsets: tuple[int, ...], diags: Sequence[Array]) -> Array:
     # stack diags in a square matrix by padding each according to its offset
     pads_width = [(abs(k), 0) if k >= 0 else (0, abs(k)) for k in offsets]
     diags = [
@@ -336,5 +481,123 @@ def autopad_sparsedia_diags(
         for pad_width, diag in zip(pads_width, diags, strict=True)
     ]
     dtype = reduce(jnp.promote_types, [diag.dtype for diag in diags])
-    diags = jnp.stack(diags, dtype=dtype)
-    return jnp.moveaxis(diags, 0, -2)
+    stacked_diags = jnp.stack(diags, dtype=dtype)
+    return jnp.moveaxis(stacked_diags, 0, -2)
+
+
+# Most shifts (p, q) that `lindbladian_sparsedia` reads in one pass over rho. Each
+# shift reads rho once more, so a pass over many shifts gets slow. On an A100, a solve
+# with 71 shifts was 1.11x faster in three passes than with the operator products.
+MAX_FUSED_SHIFTS = 32
+
+
+def lindbladian_sparsedia(
+    left: tuple[tuple[int, ...], Array],
+    right: tuple[tuple[int, ...], Array],
+    jump_ops: Sequence[tuple[tuple[int, ...], Array]],
+    rho: Array,
+) -> Array:
+    r"""Return $A\rho + \rho B + \sum_k L_k \rho L_k^\dag$ for a dense $\rho$ and
+    operators $A$, $B$ and $L_k$ in DIA format, each given as (offsets, diags).
+
+    Every term is a shifted copy of $\rho$ weighted by row and column coefficients,
+    $R[i]\,\rho[i+p, j+q]\,C[j]$, with $(p, q) = (o, 0)$ for each diagonal $o$ of $A$,
+    $(0, -o)$ for each diagonal of $B$, and $(a, b)$ for each pair of diagonals of an
+    $L_k$. The terms are grouped by shift and summed in one elementwise expression,
+    which XLA fuses into a single pass over $\rho$, instead of a pass per product.
+    Above `MAX_FUSED_SHIFTS` shifts, the sum takes several passes of at most
+    `MAX_FUSED_SHIFTS` shifts each.
+    """
+    n = rho.shape[-1]
+    operators = [left, right, *jump_ops]
+    pad = max((abs(o) for offsets, _ in operators for o in offsets), default=0)
+    terms = _lindbladian_sparsedia_terms(left, right, jump_ops, n, pad)
+    widths = [(0, 0)] * (rho.ndim - 2) + [(pad, pad), (pad, pad)]
+    rho_padded = jnp.pad(rho, widths)
+
+    def term(p: int, q: int) -> Array:
+        block = rho_padded[..., pad + p : pad + p + n, pad + q : pad + q + n]
+        weight = 0
+        for row, column in terms[p, q]:
+            if row is not None and column is not None:
+                weight = weight + row[..., :, None] * column[..., None, :]
+            elif row is not None:
+                weight = weight + row[..., :, None]
+            elif column is not None:
+                weight = weight + column[..., None, :]
+        return weight * block
+
+    # Each shift (p, q) is summed with its mirror (q, p), in the same pass. When rho is
+    # Hermitian and B = A^dag, the terms at (j, i) are then the exact complex
+    # conjugates of those at (i, j), added in the same order: run eagerly, the result
+    # is exactly Hermitian. Under jit, XLA can rewrite the sum, which leaves it
+    # Hermitian to round-off only, unlike the Hermitian form tmp + tmp^dag.
+    items, done = [], set()
+    for p, q in terms:
+        if (p, q) not in done:
+            done |= {(p, q), (q, p)}
+            items.append((p, q, p != q and (q, p) in terms))
+    passes = _passes([1 + paired for _, _, paired in items])
+    starts = {indices[0] for indices in passes[1:]}
+    out = jnp.zeros_like(rho)
+    for i in chain(*passes):
+        if i in starts:
+            # keeps XLA from fusing the passes back into one
+            out = jax.lax.optimization_barrier(out)
+        p, q, paired = items[i]
+        out = out + (term(p, q) + term(q, p) if paired else term(p, q))
+    return out
+
+
+def _passes(sizes: list[int]) -> list[list[int]]:
+    # The items of each pass, in order. Item i reads sizes[i] shifts: 1, or 2 for a
+    # shift and its mirror, which stay in one pass. Passes read about the same number
+    # of shifts, at most `MAX_FUSED_SHIFTS`.
+    total = sum(sizes)
+    passes = max(ceil(total / MAX_FUSED_SHIFTS), 1)
+    pass_size = ceil(total / passes)
+    # Items fill the last pass, and a pass ends one shift short when a shift and its
+    # mirror do not fit. If that leaves an extra pass, passes read one more shift (at
+    # most `MAX_FUSED_SHIFTS`) and a later lone shift fills a pass that ended short.
+    for limit, first in ((pass_size, -1), (min(pass_size + 1, MAX_FUSED_SHIFTS), 0)):
+        groups, shifts = [], []
+        for i, size in enumerate(sizes):
+            open_passes = range(len(shifts))[first:]
+            k = next((k for k in open_passes if shifts[k] + size <= limit), len(shifts))
+            if k == len(shifts):
+                groups.append([])
+                shifts.append(0)
+            groups[k].append(i)
+            shifts[k] += size
+        if len(groups) <= passes:
+            break
+    return groups
+
+
+def _lindbladian_sparsedia_terms(
+    left: tuple[tuple[int, ...], Array],
+    right: tuple[tuple[int, ...], Array],
+    jump_ops: Sequence[tuple[tuple[int, ...], Array]],
+    n: int,
+    pad: int,
+) -> dict[tuple[int, int], list[tuple[Array | None, Array | None]]]:
+    # the terms of `lindbladian_sparsedia`, grouped by shift (p, q): a list of (row
+    # coefficients or None, column coefficients or None)
+    def shifted(diag: Array, offset: int) -> Array:
+        # v[i] = diag[i + offset], 0 outside [0, n)
+        widths = [(0, 0)] * (diag.ndim - 1) + [(pad, pad)]
+        return jnp.pad(diag, widths)[..., pad + offset : pad + offset + n]
+
+    terms = defaultdict(list)
+    offsets, diags = left
+    for k, offset in enumerate(offsets):  # A[i, i+o] rho[i+o, j]
+        terms[offset, 0].append((shifted(diags[..., k, :], offset), None))
+    offsets, diags = right
+    for k, offset in enumerate(offsets):  # rho[i, j-o] B[j-o, j]
+        terms[0, -offset].append((None, diags[..., k, :]))
+    for offsets, diags in jump_ops:  # L[i, i+a] rho[i+a, j+b] conj(L[j, j+b])
+        rows = [shifted(diags[..., k, :], o) for k, o in enumerate(offsets)]
+        for a, row in zip(offsets, rows, strict=True):
+            for b, column in zip(offsets, rows, strict=True):
+                terms[a, b].append((row, column.conj()))
+    return terms

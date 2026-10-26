@@ -1,24 +1,70 @@
+import jax
 import pytest
 
-from dynamiqs.gradient import Autograd, CheckpointAutograd, ForwardAutograd
-from dynamiqs.method import Tsit5
+from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
+from dynamiqs.method import Kvaerno5, Tsit5
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
-from .open_system import dense_ocavity, dia_ocavity, otdqubit
+from ..systems import (
+    dense_nojump_cavity,
+    dense_ocavity,
+    dia_nojump_cavity,
+    dia_ocavity,
+    otdqubit,
+)
 
-# we only test Tsit5 to keep the unit test suite fast
+# we only test Tsit5 to keep the unit test suite fast, and Kvaerno5 for the vector
+# field used by implicit methods
 
 
 @pytest.mark.run(order=TEST_LONG)
 class TestMESolveAdaptive(IntegratorTester):
     @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
+    @pytest.mark.parametrize(
+        ('vectorized', 'assume_hermitian'),
+        [(True, True), (False, True), (False, False)],
+    )
+    def test_correctness(self, system, vectorized, assume_hermitian):
+        self._test_correctness(
+            system, Tsit5(), vectorized=vectorized, assume_hermitian=assume_hermitian
+        )
+
+    @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
+    @pytest.mark.parametrize('gradient', [Direct(), BackwardCheckpointed(), Forward()])
+    def test_gradient(self, system, gradient):
+        self._test_gradient(system, Tsit5(), gradient)
+
+    # otdqubit: the time-dependent drive makes Kvaerno5's root find fail on some steps
+    @pytest.mark.parametrize('system', [dense_ocavity, otdqubit])
+    def test_correctness_implicit(self, system):
+        self._test_correctness(system, Kvaerno5())
+
+    def test_correctness_no_jump_ops(self):
+        self._test_correctness(dense_nojump_cavity, Tsit5())
+
+
+@pytest.mark.run(order=TEST_LONG)
+class TestMESolveAdaptiveGPUPaths(IntegratorTester):
+    # on GPU, the Runge-Kutta stages are unrolled and the DIA Lindbladian is fused:
+    # CI runs on CPU, so these tests force both
+    @pytest.fixture(autouse=True)
+    def gpu_paths(self, monkeypatch):
+        monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
+        jax.clear_caches()
+        yield
+        jax.clear_caches()
+
+    @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity])
     def test_correctness(self, system):
         self._test_correctness(system, Tsit5())
 
-    @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
-    @pytest.mark.parametrize(
-        'gradient', [Autograd(), CheckpointAutograd(), ForwardAutograd()]
-    )
-    def test_gradient(self, system, gradient):
-        self._test_gradient(system, Tsit5(), gradient)
+    def test_gradient(self):
+        # forward mode is covered by tests/core/test_unrolled_solvers.py
+        self._test_gradient(dia_ocavity, Tsit5(), BackwardCheckpointed())
+
+    def test_correctness_implicit(self):
+        self._test_correctness(dia_ocavity, Kvaerno5())
+
+    def test_correctness_no_jump_ops(self):
+        self._test_correctness(dia_nojump_cavity, Tsit5())

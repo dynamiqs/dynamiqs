@@ -1,4 +1,4 @@
-files: (dynamiqs|tests)
+files: (dynamiqs|tests|benchmarks)
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0

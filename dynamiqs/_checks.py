@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import equinox as eqx
 import jax.numpy as jnp
+import numpy as np
 from jax import Array
 
 from .qarrays.layout import dense
 from .qarrays.qarray import QArray
+
+if TYPE_CHECKING:
+    from .time_qarray import TimeQArray
 
 _is_perfect_square = lambda n: int(n**0.5) ** 2 == n
 
@@ -28,13 +34,13 @@ _cases = {
     '(N, n, n)': lambda x: x.ndim == 3 and x.shape[-2] == x.shape[-1],
     '(?, n, 1)': lambda x: 2 <= x.ndim <= 3 and x.shape[-1] == 1,
     '(?, n, n)': lambda x: 2 <= x.ndim <= 3 and x.shape[-2] == x.shape[-1],
-    '(..., n^2, 1)': lambda x: x.ndim >= 2
-    and _is_perfect_square(x.shape[-2])
-    and x.shape[-1] == 1,
+    '(..., n^2, 1)': lambda x: (
+        x.ndim >= 2 and _is_perfect_square(x.shape[-2]) and x.shape[-1] == 1
+    ),
 }
 
 
-def _has_shape(x: Array | QArray, shape: str) -> bool:
+def _has_shape(x: Array | np.ndarray | QArray | TimeQArray, shape: str) -> bool:
     if shape in _cases:
         return _cases[shape](x)
     else:
@@ -42,8 +48,11 @@ def _has_shape(x: Array | QArray, shape: str) -> bool:
 
 
 def check_shape(
-    x: Array | QArray, argname: str, *shapes: str, subs: dict[str, str] | None = None
-):
+    x: Array | np.ndarray | QArray | TimeQArray,
+    argname: str,
+    *shapes: str,
+    subs: dict[str, str] | None = None,
+) -> None:
     # subs is used to replace symbols in the error message, this can be used to e.g.
     # specify a shape (?, n, n) but print an error message with (nH?, n, n), by passing
     # subs={'?': 'nH?'} to replace the '?' by 'nH?' in the shape specification
@@ -78,23 +87,23 @@ def check_times(x: Array, argname: str, allow_empty: bool = False) -> Array:
 
     if x.ndim != 1:
         raise ValueError(
-            f'Argument {argname} must be a 1D array, but is a {x.ndim}D array.'
+            f'Argument `{argname}` must be a 1D array, but is a {x.ndim}D array.'
         )
     if not allow_empty and len(x) == 0:
-        raise ValueError(f'Argument {argname} must contain at least one element.')
+        raise ValueError(f'Argument `{argname}` must contain at least one element.')
 
     # this check is written to be JIT-compatible
     return eqx.error_if(
         x,
         x[1:] < x[:-1],
-        f'Argument {argname} must be sorted in strictly ascending order.',
+        f'Argument `{argname}` must be sorted in strictly ascending order.',
     )
 
 
-def check_type_int(x: Array | QArray, argname: str):
+def check_type_int(x: Array | np.ndarray | QArray, argname: str) -> None:
     if not jnp.issubdtype(x.dtype, jnp.integer):
         raise ValueError(
-            f'Argument {argname} must be of type integer, but is of type'
+            f'Argument `{argname}` must be of type integer, but is of type'
             f' {argname}.dtype={x.dtype}.'
         )
 
@@ -104,14 +113,13 @@ def check_hermitian(x: QArray, argname: str) -> QArray:
     return eqx.error_if(
         x,
         jnp.logical_not(x.isherm(rtol=rtol, atol=atol)),
-        f'Argument {argname} is not hermitian.',
+        f'Argument `{argname}` is not hermitian.',
     )
 
 
-def check_qarray_is_dense(x: QArray, argname: str):
-    # check if the layout of x is dense
+def check_qarray_is_dense(x: QArray, argname: str) -> None:
     if x.layout != dense:
         raise ValueError(
-            f'Argument {argname} must have layout `dense` but has layout '
+            f'Argument `{argname}` must have layout `dense`, but has layout '
             f'{argname}.layout={x.layout}.'
         )

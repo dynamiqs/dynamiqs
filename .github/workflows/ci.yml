@@ -15,16 +15,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  checks:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv and Python
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10.3.0
         with:
-          python-version: "3.10"
+          python-version: "3.11"
           enable-cache: true
           cache-dependency-glob: "**/pyproject.toml"
 
@@ -34,5 +33,95 @@ jobs:
       - name: List installed dependencies
         run: uv pip list
 
-      - name: Run CI checks
-        run: uv run task ci
+      - name: Run static checks
+        run: uv run task check
+
+      - name: Build documentation
+        run: uv run task docbuild
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # lowest-direct installs the lowest versions that pyproject.toml allows for the
+        # direct dependencies, to check that they install and work
+        resolution: [highest, lowest-direct]
+        group: [1, 2, 3, 4, 5]
+    env:
+      # for every uv command, as `uv run` would otherwise re-resolve to the highest versions
+      UV_RESOLUTION: ${{ matrix.resolution }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v10.3.0
+        with:
+          python-version: "3.11"
+          enable-cache: true
+          cache-dependency-glob: "**/pyproject.toml"
+          cache-suffix: ${{ matrix.resolution }}
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: List installed dependencies
+        run: uv pip list
+
+      - name: Generate test durations
+        run: uv run task durations
+
+      - name: Run tests (shard ${{ matrix.group }}/5)
+        run: uv run task test --splits 5 --group ${{ matrix.group }} --splitting-algorithm least_duration
+
+  doctest-code:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v10.3.0
+        with:
+          python-version: "3.11"
+          enable-cache: true
+          cache-dependency-glob: "**/pyproject.toml"
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: List installed dependencies
+        run: uv pip list
+
+      - name: Run doctest on code docstrings
+        run: uv run task doctest-code
+
+  doctest-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v10.3.0
+        with:
+          python-version: "3.11"
+          enable-cache: true
+          cache-dependency-glob: "**/pyproject.toml"
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: List installed dependencies
+        run: uv pip list
+
+      - name: Run doctest on documentation examples
+        run: uv run task doctest-docs
+
+  # TODO: rename this job to something more explicit once we get back admin rights
+  build:
+    if: always()
+    needs: [checks, test, doctest-code, doctest-docs]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check that all jobs succeeded
+        run: |
+          [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}" == "false" ]]

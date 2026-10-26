@@ -17,22 +17,23 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Physics",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
-    "qutip>=4.7.5",
+    "qutip>=5.0.3",  # for NumPy 2 support
     "scipy",
     "numpy",
-    "matplotlib",
-    "tqdm",
-    "jax>=0.4.36", # >=0.4.36 for GPU eig support
-    "jaxtyping",
-    "diffrax>=0.6.1",  # for complex support (0.5.0), progress meter (0.5.1), compatibility with jax 0.4.36 (0.6.1)
-    "equinox",
-    "optimistix",  # for typing of root-finding in Event method
-    "pillow",
-    "cmasher>=1.8.0",  # avoid matplotlib colormaps deprecation warning
-    "ipython",
-    "tqdm",
+    "matplotlib>=3.8.4",  # for NumPy 2 support
+    # jax>=0.10.2 because older releases compile slower on GPU and run slower on GPU or CPU,
+    # and 0.5.3 and older fail the Hessian test of mesolve on GPU
+    "jax>=0.10.2",
+    "jaxtyping>=0.2.33",  # older releases fail to import
+    "diffrax>=0.7.2", # for complex support (0.5.0), progress meter (0.5.1), `ClipStepSizeController` as an adaptive controller (0.7.1), fixed `VeryChord` divergence check for implicit solvers (0.7.2)
+    "equinox>=0.13.3",  # for JAX 0.10 support
+    "optimistix", # for typing of root-finding in Event method
+    "pillow>=9.3",  # for Python 3.11 wheels
+    "cmap>=0.4.0",  # for the `cmasher:copper` colormap
+    "ipython>=7.6.0",  # for Python 3.11 support
+    "tqdm>=4.30.0",  # for custom fields in the progress meter format
 ]
 
 [project.urls]
@@ -46,26 +47,21 @@ build-backend = "flit_core.buildapi"
 
 [project.optional-dependencies]
 dev = [
-    "taskipy",
+    "taskipy>=1.14.1",
     "ruff>=0.8",
     "codespell",
     "pytest>=8.0",
-    "pytest-ordering",
-    "pytest-sugar",
-    "pytest-xdist",
-    "mkdocs-material",
-    "mkdocstrings[python]!=1.12.0", # bug with parsing strings in signatures, see https://github.com/mkdocstrings/python/issues/191
-    "mkdocs-gen-files",
-    "mkdocs-literate-nav",
-    "mkdocs-section-index",
-    "mkdocs-simple-hooks",
-    "mkdocs-glightbox",
-    "mkdocs-exclude",
+    "pytest-ordering>=0.6",  # for pytest 8 support
+    "pytest-split>=0.8.2",  # for pytest 8 support
+    "pytest-sugar>=0.8.0",  # for pytest 8 support
+    "pytest-xdist>=3.0.2",  # for pytest 8 support
+    "zensical==0.0.70",
+    "mkdocstrings[python]>=1.0.7",  # >=1.0.7 to support recent pymdown-extensions
     "sybil>=6",
     "black",  # needed by mkdocstrings to format function signatures
     "flit",
-    "mike",
     "optax",  # for gradient descent tutorials
+    "ty",
 ]
 
 [tool.ruff]
@@ -91,7 +87,7 @@ ignore = [
     "ARG001",
     "RET505", "RUF022",
     "TRY003",
-    "PLR0913", "PLR2004",
+    "PLR0913", "PLR0917", "PLR2004",
     "PT028",
     "SLF001",
 ]
@@ -110,6 +106,7 @@ allow-dict-calls-with-keyword-arguments = true
 "docs/**.py" = ["INP001", "ARG001", "ANN"]
 "conftest.py" = ["ANN"]
 "tests/**.py" = ["ANN"]
+"benchmarks/**.py" = ["T20"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -117,6 +114,13 @@ convention = "google"
 [tool.codespell]
 skip = ".git,*.ipynb"
 ignore-words-list = "ket, braket, SME"
+
+[tool.ty.rules]
+division-by-zero = "error"
+possibly-unresolved-reference = "error"
+unused-ignore-comment = "error"
+# equinox modules are frozen, so narrowing a field type in a subclass is sound
+invalid-mutable-override = "ignore"
 
 # === taskipy tasks definition ===
 
@@ -129,16 +133,35 @@ cmd = 'echo "\n>>> ruff format" && ruff format'
 help = "auto-format the code (ruff)"
 
 [tool.taskipy.tasks.codespell]
-cmd = 'echo "\n>>> codespell" && codespell tests dynamiqs'
+cmd = 'echo "\n>>> codespell" && codespell tests dynamiqs benchmarks'
 help = "check for misspellings (codespell)"
 
+[tool.taskipy.tasks.type]
+cmd = 'echo "\n>>> ty check dynamiqs" && ty check dynamiqs'
+help = "check types (ty)"
+
 [tool.taskipy.tasks.clean]
-cmd = 'task lint && task format && task codespell'
-help = "clean the code (ruff + codespell)"
+cmd = 'task lint && task format && task codespell && task type'
+help = "clean the code (ruff + codespell + ty)"
+
+[tool.taskipy.tasks.check]
+cmd = '''echo "\n>>> ruff check" && ruff check &&
+         echo "\n>>> ruff format --check" && ruff format --check &&
+         task codespell &&
+         task type'''
+help = "run the static checks (ruff + codespell + ty)"
 
 [tool.taskipy.tasks.test]
 cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
 help = "run the unit tests suite (pytest)"
+
+[tool.taskipy.tasks.bench]
+cmd = 'python -m benchmarks'
+help = "run the timing benchmarks (see benchmarks/README.md)"
+
+[tool.taskipy.tasks.durations]
+cmd = 'echo "\n>>> generate .test_durations" && pytest tests --collect-only -q -p tests.generate_test_durations'
+help = "regenerate .test_durations for CI test sharding (pytest-split)"
 
 [tool.taskipy.tasks.doctest-code]
 cmd = 'echo "\n>>> pytest dynamiqs" && python docs/remove_figs.py docs/figs_code && pytest dynamiqs'
@@ -153,21 +176,22 @@ cmd = 'task doctest-code && task doctest-docs'
 help = "check all examples (doctest)"
 
 [tool.taskipy.tasks.docbuild]
-cmd = 'mkdocs build'
+cmd = 'python docs/generate_python_api.py && zensical build --clean'
 help = "build the documentation website"
 
 [tool.taskipy.tasks.docserve]
-cmd = 'mkdocs serve'
+cmd = 'python docs/generate_python_api.py && zensical serve'
 help = "preview documentation website with hot-reloading"
 
 [tool.taskipy.tasks.all]
 cmd = 'task clean && task test && task doctest'
-help = "run all tasks before a commit (ruff + codespell + pytest + doctest)"
+help = "run all tasks before a commit (ruff + codespell + ty + pytest + doctest)"
 
 [tool.taskipy.tasks.ci]
 cmd = '''echo "\n>>> ruff check" && ruff check &&
          echo "\n>>> ruff format --check" && ruff format --check &&
          task codespell &&
+         task type &&
          task test &&
          task doctest &&
          task docbuild'''

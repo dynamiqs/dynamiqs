@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+from enum import Enum
 from typing import ClassVar
 
 import equinox as eqx
+import jax.numpy as jnp
 from jaxtyping import PRNGKeyArray
 from optimistix import AbstractRootFinder
 
 from ._utils import tree_str_inline
-from .gradient import Autograd, CheckpointAutograd, ForwardAutograd, Gradient
+from .gradient import BackwardCheckpointed, Direct, Forward, Gradient, HigherOrder
 
 __all__ = [
     'Dopri5',
@@ -18,6 +20,8 @@ __all__ = [
     'Expm',
     'JumpMonteCarlo',
     'DiffusiveMonteCarlo',
+    'LinearSolver',
+    'LowRank',
     'Kvaerno3',
     'Kvaerno5',
     'Rouchon1',
@@ -25,6 +29,7 @@ __all__ = [
     'Rouchon3',
     'Tsit5',
     'Event',
+    'Method',
 ]
 
 
@@ -58,8 +63,11 @@ class Method(eqx.Module):
 class Expm(Method):
     r"""Explicit matrix exponentiation to compute propagators.
 
-    Explicitly batch-compute the propagators for all time intervals in `tsave`. These
-    propagators are then iteratively applied:
+    Explicitly compute the propagators for all time intervals in `tsave`, then apply
+    them iteratively. On GPU, all propagators are computed in one batch. On CPU, a
+    propagator is computed only when it changes, at a discontinuity of the Hamiltonian
+    or jump operators or for an interval of a different length, and is otherwise
+    reused. The propagators are applied:
 
     - starting from the initial state for [`dq.sesolve()`][dynamiqs.sesolve] and
       [`dq.mesolve()`][dynamiqs.mesolve], to compute states for all times in `tsave`,
@@ -94,10 +102,10 @@ class Expm(Method):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] (default).
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct] (default).
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Direct,)
 
     # dummy init to have the signature in the documentation
     def __init__(self):
@@ -122,6 +130,15 @@ class _DEAdaptiveStep(_DEMethod):
     max_steps: int = eqx.field(static=True, default=100_000)
 
 
+_DIFFRAX_ODE_GRADIENTS = (Direct, BackwardCheckpointed, Forward)
+# TODO: `HigherOrder` is currently restricted to the explicit adaptive ODE methods whose
+# higher-order AD path is tested. Validate implicit solvers (e.g. `Kvaerno3`/`Kvaerno5`)
+# and `LowRank` before broadening this; if all `Direct`-compatible methods turn out
+# compatible with higher-order differentiation, it could fold back into `Direct`.
+_DIFFRAX_EXPLICIT_ODE_GRADIENTS = (*_DIFFRAX_ODE_GRADIENTS, HigherOrder)
+_ROUCHON_GRADIENTS = (Direct, BackwardCheckpointed, Forward)
+
+
 # === public methods options
 class Euler(_DEFixedStep):
     """Euler method (fixed step size ODE method).
@@ -137,17 +154,14 @@ class Euler(_DEFixedStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
-        (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
+        (default),
+        [`dq.gradient.Forward`][dynamiqs.gradient.Forward]
+        and [`dq.gradient.HigherOrder`][dynamiqs.gradient.HigherOrder].
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
-    )
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_EXPLICIT_ODE_GRADIENTS
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
@@ -162,10 +176,13 @@ class EulerJump(_DEFixedStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] (default).
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct] (default).
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Direct,)
+
+    # todo: fix static dt (similar issue as static tsave in dssesolve)
+    dt: float = eqx.field(static=True)
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
@@ -183,10 +200,13 @@ class EulerMaruyama(_DEFixedStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] (default).
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct] (default).
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Direct,)
+
+    # todo: fix static dt (similar issue as static tsave in dssesolve)
+    dt: float = eqx.field(static=True)
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
@@ -201,32 +221,25 @@ class Rouchon1(_DEFixedStep):
         normalize: If True, the scheme is trace-preserving to machine precision, which
             is the recommended option because it is much more stable. Otherwise, it is
             only trace-preserving to the scheme order in $\dt$.
-        exact_expm: If True, the scheme uses the exact matrix exponential internally (at
-            the cost of losing sparsity), otherwise it uses a Taylor expansion up to
-            the scheme order.
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
-    )
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _ROUCHON_GRADIENTS
 
+    # todo: fix static dt (similar issue as static tsave in dssesolve)
+    dt: float = eqx.field(static=True)
     normalize: bool = eqx.field(static=True, default=True)
-    exact_expm: bool = eqx.field(static=True, default=False)
 
     # dummy init to have the signature in the documentation
-    def __init__(self, dt: float, normalize: bool = True, exact_expm: bool = False):
+    def __init__(self, dt: float, normalize: bool = True):
         super().__init__(dt)
         self.normalize = normalize
-        self.exact_expm = exact_expm
 
 
 class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
@@ -251,26 +264,20 @@ class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
         normalize: If True, the scheme is trace-preserving to machine precision, which
             is the recommended option because it is much more stable. Otherwise, it is
             only trace-preserving to the scheme order in the numerical step size.
-        exact_expm: If True, the scheme uses the exact matrix exponential internally (at
-            the cost of losing sparsity), otherwise it uses a Taylor expansion up to
-            the scheme order.
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
-    )
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _ROUCHON_GRADIENTS
 
+    # `dt=None` selects the adaptive step size
+    dt: float | None = eqx.field(static=True, default=None)  # ty: ignore[invalid-attribute-override]
     normalize: bool = eqx.field(static=True, default=True)
-    exact_expm: bool = eqx.field(static=True, default=False)
 
     # dummy init to have the signature in the documentation
     def __init__(
@@ -283,14 +290,13 @@ class Rouchon2(_DEFixedStep, _DEAdaptiveStep):
         max_steps: int = 100_000,
         dt: float | None = None,
         normalize: bool = True,
-        exact_expm: bool = False,
     ):
-        _DEFixedStep.__init__(self, dt)
+        self.dt = dt
+
         _DEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
         self.normalize = normalize
-        self.exact_expm = exact_expm
 
 
 class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
@@ -315,26 +321,20 @@ class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
         normalize: If True, the scheme is trace-preserving to machine precision, which
             is the recommended option because it is much more stable. Otherwise, it is
             only trace-preserving to the scheme order in the numerical step size.
-        exact_expm: If True, the scheme uses the exact matrix exponential internally (at
-            the cost of losing sparsity), otherwise it uses a Taylor expansion up to
-            the scheme order.
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
-    )
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _ROUCHON_GRADIENTS
 
+    # `dt=None` selects the adaptive step size
+    dt: float | None = eqx.field(static=True, default=None)  # ty: ignore[invalid-attribute-override]
     normalize: bool = eqx.field(static=True, default=True)
-    exact_expm: bool = eqx.field(static=True, default=False)
 
     # dummy init to have the signature in the documentation
     def __init__(
@@ -347,14 +347,13 @@ class Rouchon3(_DEFixedStep, _DEAdaptiveStep):
         max_steps: int = 100_000,
         dt: float | None = None,
         normalize: bool = True,
-        exact_expm: bool = False,
     ):
-        _DEFixedStep.__init__(self, dt)
+        self.dt = dt
+
         _DEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
         self.normalize = normalize
-        self.exact_expm = exact_expm
 
 
 class Dopri5(_DEAdaptiveStep):
@@ -373,17 +372,14 @@ class Dopri5(_DEAdaptiveStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
-        (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
+        (default),
+        [`dq.gradient.Forward`][dynamiqs.gradient.Forward]
+        and [`dq.gradient.HigherOrder`][dynamiqs.gradient.HigherOrder].
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
-    )
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_EXPLICIT_ODE_GRADIENTS
 
     # dummy init to have the signature in the documentation
     def __init__(
@@ -414,17 +410,14 @@ class Dopri8(_DEAdaptiveStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
-        (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
+        (default),
+        [`dq.gradient.Forward`][dynamiqs.gradient.Forward]
+        and [`dq.gradient.HigherOrder`][dynamiqs.gradient.HigherOrder].
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
-    )
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_EXPLICIT_ODE_GRADIENTS
 
     # dummy init to have the signature in the documentation
     def __init__(
@@ -455,17 +448,14 @@ class Tsit5(_DEAdaptiveStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
-        (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
+        (default),
+        [`dq.gradient.Forward`][dynamiqs.gradient.Forward]
+        and [`dq.gradient.HigherOrder`][dynamiqs.gradient.HigherOrder].
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
-    )
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_EXPLICIT_ODE_GRADIENTS
 
     # dummy init to have the signature in the documentation
     def __init__(
@@ -507,17 +497,13 @@ class Kvaerno3(_DEAdaptiveStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
-    )
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_ODE_GRADIENTS
 
     # dummy init to have the signature in the documentation
     def __init__(
@@ -559,17 +545,13 @@ class Kvaerno5(_DEAdaptiveStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
-    )
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_ODE_GRADIENTS
 
     # dummy init to have the signature in the documentation
     def __init__(
@@ -585,7 +567,7 @@ class Kvaerno5(_DEAdaptiveStep):
 
 
 class Event(_DEMethod):
-    """Event method for the jump SSE.
+    r"""Event method for the jump SSE.
 
     This method uses the [Diffrax](https://docs.kidger.site/diffrax/) library event
     handling to interrupt the no-click integration at the next sampled click time,
@@ -602,6 +584,20 @@ class Event(_DEMethod):
         - or use the `root_finder` argument to refine the exact click times to a chosen
           precision, see for example the
           [optimistix library Newton root finder](https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton).
+
+    Warning: Click statistics with smart sampling
+        With `smart_sampling=True`, every saved trajectory has at least one click, so
+        the statistics of `result.states`, `result.expects`, `result.clicktimes` and
+        `result.nclicks` are conditional on a click having occurred. For example, the
+        mean of `result.nclicks` is larger than the mean number of clicks.
+        `result.mean_states()` and `result.mean_expects()` already account for this. For
+        any other per-trajectory quantity $f$, recover its unconditional mean with
+        $$
+            \mathbb{E}[f] = p_0 f_0 + (1 - p_0)\,\bar f,
+        $$
+        where $p_0$ is `result.infos.noclick_prob`, $f_0$ is the value of $f$ on the
+        no-click trajectory (for instance $f_0 = 0$ for the number of clicks) and
+        $\bar f$ is the average of $f$ over the saved trajectories.
 
     Args:
         noclick_method: Method for the no-click evolution. Defaults to
@@ -628,7 +624,7 @@ class Event(_DEMethod):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
         (default).
     """
 
@@ -638,9 +634,9 @@ class Event(_DEMethod):
     smart_sampling: bool = eqx.field(static=True, default=False)
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
     )
 
     # dummy init to have the signature in the documentation
@@ -655,6 +651,15 @@ class Event(_DEMethod):
         self.dtmax = dtmax
         self.root_finder = root_finder
         self.smart_sampling = smart_sampling
+
+        # `Rouchon2` and `Rouchon3` are both `_DEFixedStep` and `_DEAdaptiveStep`
+        supported = (Tsit5, Dopri5, Dopri8, Kvaerno3, Kvaerno5, Euler)
+        if not isinstance(self.noclick_method, supported):
+            supported_str = ', '.join(f'`{x.__name__}`' for x in supported)
+            raise TypeError(
+                f'Argument `noclick_method` must be one of {supported_str}, but has '
+                f'type `{type(self.noclick_method).__name__}`.'
+            )
 
         if self.dtmax is not None and isinstance(self.noclick_method, _DEFixedStep):
             raise ValueError(
@@ -689,7 +694,7 @@ class JumpMonteCarlo(_DEMethod):
         [`dq.jssesolve()`][dynamiqs.jssesolve] instead.
 
     Args:
-        keys _(list of PRNG keys)_: PRNG keys used for the jump SSE solver. See
+        keys (list of PRNG keys): PRNG keys used for the jump SSE solver. See
             [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
         jsse_method: Method used for the jump SSE solver. See
             [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
@@ -706,9 +711,9 @@ class JumpMonteCarlo(_DEMethod):
 
     # dummy variable, the proper check of gradient support will be done by `jsse_method`
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
     )
 
     # dummy init to have the signature in the documentation
@@ -734,7 +739,7 @@ class DiffusiveMonteCarlo(_DEMethod):
         [`dq.dssesolve()`][dynamiqs.dssesolve] instead.
 
     Args:
-        keys _(list of PRNG keys)_: PRNG keys used for the diffusive SSE solver. See
+        keys (list of PRNG keys): PRNG keys used for the diffusive SSE solver. See
             [`dq.dssesolve()`][dynamiqs.dssesolve] for more details.
         dsse_method: Method used for the diffusive SSE solver. See
             [`dq.dssesolve()`][dynamiqs.dssesolve] for more details.
@@ -748,12 +753,135 @@ class DiffusiveMonteCarlo(_DEMethod):
 
     # dummy variable, the proper check of gradient support will be done by `dsse_method`
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Autograd,
-        CheckpointAutograd,
-        ForwardAutograd,
+        Direct,
+        BackwardCheckpointed,
+        Forward,
     )
 
     # dummy init to have the signature in the documentation
     def __init__(self, keys: PRNGKeyArray, dsse_method: Method):
         self.keys = keys
         self.dsse_method = dsse_method
+
+
+class LinearSolver(Enum):
+    """Enum for linear solvers used in the low-rank method."""
+
+    QR = 'qr'
+    CHOLESKY = 'cholesky'
+
+    def __repr__(self) -> str:
+        return self.value
+
+    def __str__(self) -> str:
+        return repr(self)
+
+
+class LowRank(Method):
+    r"""Low-rank method for the Lindblad master equation.
+
+    This method solves the low-rank Lindblad master equation by evolving factors
+    `m(t)` such that `$rho(t) = m(t) m(t)^\dagger$`, following Goutte, Savona (2025)
+    arxiv:2508.18114. The low-rank method is available via
+    [`dq.mesolve()`][dynamiqs.mesolve] by passing `method=dq.method.LowRank(...)`.
+
+    Args:
+        rank: Rank of the low-rank approximation (number of columns of `m(t)`).
+        ode_method: ODE solver used for the low-rank evolution (supported:
+            [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8], [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5], [`Euler`][dynamiqs.method.Euler]).
+        linear_solver: Linear solver used for the low-rank evolution. Supported values
+            are `LowRank.qr` and `LowRank.cholesky`. Defaults to `LowRank.qr`.
+            `LowRank.cholesky` is usually faster but may lead to instabilities.
+        perturbation_scale: Regularization parameter for the initialization of
+            the low-rank factors. This appends random orthonormalized states of
+            norm `perturbation_scale` to avoid $m^\dag m$ being singular. Defaults
+            to `1e-5`.
+        key: PRNG key used for random initialization of the low-rank factors.
+        is_save_extra_low_rank: If `True`, `dq.Options(save_extra=...)` receives the
+            low-rank factor `m(t)` as second argument directly instead of the
+            full-rank density matrix `rho(t)`, avoiding its reconstruction. Defaults
+            to `False`.
+
+    Note:
+        The low-rank factors can be accessed from
+        `result.lowrank_states`.
+        `result.states` computes and returns the full-rank density matrices.
+
+    Note: Supported gradients
+        This method supports
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
+        (default)
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward]. These are supported
+        for all `ode_method` choices accepted by `LowRank`.
+
+    Warning:
+        Differentiation may be unstable and return wrong results or overflow: verify
+        stability before using in production.
+
+    Warning:
+        The `LowRank.cholesky` linear solver may lead to instabilities and the
+        progress bar getting stuck when using single precision.
+
+    Warning:
+        The low-rank method is more sensitive to time-step error. If the accuracy does
+        not improve when increasing the `rank`, consider tightening the tolerances of
+        the chosen `ode_method`.
+    """
+
+    qr: ClassVar[LinearSolver] = LinearSolver.QR
+    cholesky: ClassVar[LinearSolver] = LinearSolver.CHOLESKY
+
+    ode_method: Method
+    rank: int = eqx.field(static=True)
+    key: PRNGKeyArray
+    linear_solver: LinearSolver = eqx.field(static=True, default=LinearSolver.QR)
+    perturbation_scale: float = eqx.field(static=True, default=1e-5)
+    is_save_extra_low_rank: bool = eqx.field(static=True, default=False)
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_ODE_GRADIENTS
+
+    # dummy init to have the signature in the documentation
+    def __init__(
+        self,
+        rank: int,
+        ode_method: Method = Tsit5(),  # noqa: B008
+        linear_solver: LinearSolver = LinearSolver.QR,
+        perturbation_scale: float = 1e-5,
+        *,
+        key: PRNGKeyArray,
+        is_save_extra_low_rank: bool = False,
+    ):
+        self.ode_method = ode_method
+
+        if not jnp.issubdtype(type(rank), jnp.integer):
+            raise TypeError('Argument `rank` must be an int.')
+        rank = int(rank)
+        if rank <= 0:
+            raise ValueError(
+                f'Argument `rank` must be a positive integer, but is {rank}.'
+            )
+        self.rank = rank
+
+        if not isinstance(linear_solver, LinearSolver):
+            raise TypeError(
+                'Argument `linear_solver` must be `LowRank.qr` or'
+                f' `LowRank.cholesky`, but is `{linear_solver!r}`.'
+            )
+        self.linear_solver = linear_solver
+
+        try:
+            perturbation_scale = float(perturbation_scale)
+        except (TypeError, ValueError) as exc:
+            raise TypeError('Argument `perturbation_scale` must be a float.') from exc
+        if perturbation_scale < 0.0:
+            raise ValueError(
+                'Argument `perturbation_scale` must be non-negative, but is '
+                f'{perturbation_scale}.'
+            )
+        self.perturbation_scale = perturbation_scale
+
+        self.key = jnp.asarray(key)
+        self.is_save_extra_low_rank = is_save_extra_low_rank

@@ -1,17 +1,20 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import partial
+from typing import cast
 
 import jax
 import jax.numpy as jnp
-from jaxtyping import Array, ArrayLike
+from jaxtyping import Array, ArrayLike, PyTree, Scalar, ScalarLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...method import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options, check_options
+from ...progress_meter import AbstractProgressMeter
 from ...qarrays.layout import dense
-from ...qarrays.qarray import QArrayLike
+from ...qarrays.qarray import QArray, QArrayLike
 from ...result import SEPropagatorResult
 from ...time_qarray import TimeQArray
 from ...utils.operators import eye
@@ -39,7 +42,10 @@ def sepropagator(
     *,
     method: Method | None = None,
     gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    save_propagators: bool = True,
+    progress_meter: AbstractProgressMeter | bool | None = None,
+    t0: ScalarLike | None = None,
+    save_extra: Callable[[Scalar, QArray], PyTree] | None = None,
 ) -> SEPropagatorResult:
     r"""Compute the propagator of the Schrödinger equation.
 
@@ -57,10 +63,10 @@ def sepropagator(
     propagator is computed by solving the Schrödinger equation with an ODE method.
 
     Args:
-        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
-        tsave _(array-like of shape (ntsave,))_: Times at which the propagators
+        H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
+        tsave (array-like of shape (ntsave,)): Times at which the propagators
             are saved. The equation is solved from `tsave[0]` to `tsave[-1]`,
-            or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
+            or from `t0` to `tsave[-1]` if `t0` is specified.
         method: Method for the integration. Defaults to `None` which redirects
             to [`dq.method.Expm`][dynamiqs.method.Expm] (explicit matrix
             exponentiation) or [`dq.method.Tsit5`][dynamiqs.method.Tsit5]
@@ -75,38 +81,6 @@ def sepropagator(
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
-        options: Generic options (supported: `save_propagators`, `progress_meter`, `t0`,
-            `save_extra`).
-            ??? "Detailed options API"
-                ```
-                dq.Options(
-                    save_propagators: bool = True,
-                    progress_meter: AbstractProgressMeter | bool | None = None,
-                    t0: ScalarLike | None = None,
-                    save_extra: callable[[Array], PyTree] | None = None,
-                )
-                ```
-
-                **Parameters**
-
-                - **save_propagators** - If `True`, the propagator is saved at every
-                    time in `tsave`, otherwise only the final propagator is returned.
-                - **progress_meter** - Progress meter indicating how far the solve has
-                    progressed. Defaults to `None` which uses the global default
-                    progress meter (see
-                    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
-                    `True` for a [tqdm](https://github.com/tqdm/tqdm) progress meter,
-                    and `False` for no output. See other options in
-                    [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
-                    If gradients are computed, the progress meter only displays during
-                    the forward pass.
-                - **t0** - Initial time. If `None`, defaults to the first time in
-                    `tsave`.
-                - **save_extra** _(function, optional)_ - A function with signature
-                    `f(QArray) -> PyTree` that takes a propagator as input and returns
-                    a PyTree. This can be used to save additional arbitrary data
-                    during the integration, accessible in `result.extra`.
-
 
     Returns:
         `dq.SEPropagatorResult` object holding the result of the propagator computation.
@@ -117,28 +91,69 @@ def sepropagator(
                 dq.SEPropagatorResult
                 ```
 
-                **Attributes**
+                **Attributes:**
 
-                - **propagators** _(qarray of shape (..., nsave, n, n))_ - Saved
+                - **`propagators`** _(qarray of shape (..., nsave, n, n))_ - Saved
                     propagators with `nsave = ntsave`, or `nsave = 1` if
-                    `options.save_propagators=False`.
-                - **final_propagator** _(qarray of shape (..., n, n))_ - Saved final
+                    `save_propagators=False`.
+                - **`final_propagator`** _(qarray of shape (..., n, n))_ - Saved final
                     propagator.
-                - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
-                    specified in `options`.
-                - **infos** _(PyTree or None)_ - Method-dependent information on the
+                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
+                    if specified.
+                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
-                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
-                    saved.
-                - **method** _(Method)_ - Method used.
-                - **gradient** _(Gradient)_ - Gradient used.
-                - **options** _(Options)_ - Options used.
+                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
+                    were saved.
+                - **`method`** _(Method)_ - Method used.
+                - **`gradient`** _(Gradient)_ - Gradient used.
+                - **`options`** _(Options)_ - Options used.
+
+    Other Parameters:
+        save_propagators: If `True`, the propagator is saved at every
+            time in `tsave`, otherwise only the final propagator is returned. Defaults
+            to `True`.
+        progress_meter: Progress
+            meter indicating how far the solve has progressed. Defaults to `None`
+            which uses the global default progress meter (see
+            [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to `True`
+            for a [tqdm](https://github.com/tqdm/tqdm) progress meter, and `False`
+            for no output. If gradients are computed, the progress meter only
+            displays during the forward pass.
+        t0: Initial time. If `None`, defaults to the first
+            time in `tsave`. Defaults to `None`.
+        save_extra: A function with signature
+            `f(Scalar, QArray) -> PyTree` that takes the current time and propagator as
+            input and returns a PyTree. This can be used to save additional
+            arbitrary data during the integration, accessible in `result.extra`.
+            Defaults to `None`.
+
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a
+        tsave = jnp.linspace(0, 1.0, 11)
+
+        result = dq.sepropagator(H, tsave)
+        print(result)
+        ```
+
+        ```text title="Output"
+        ==== SEPropagatorResult ====
+        Method      : Expm
+        Infos       : 10 steps
+        Propagators : QArray complex64 (11, 16, 16) | 22.0 Kb
+        ```
 
     # Advanced use-cases
 
     ## Defining a time-dependent Hamiltonian
 
-    If the Hamiltonian depends on time, it can be converted to a time-qarray using
+    If the Hamiltonian depends on time, it can be converted to a timeqarray using
     [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
     [`dq.timecallable()`][dynamiqs.timecallable]. See the
     [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
@@ -157,8 +172,16 @@ def sepropagator(
     tutorial for more details.
     """
     # === convert arguments
-    H = astimeqarray(H)
+    H = astimeqarray(H, 'H')
     tsave = jnp.asarray(tsave)
+
+    # === build options
+    options = Options(
+        save_propagators=save_propagators,
+        progress_meter=progress_meter,
+        t0=t0,
+        save_extra=save_extra,
+    )
 
     # === check arguments
     _check_sepropagator_args(H)
@@ -212,7 +235,7 @@ def _sepropagator(
         Kvaerno5: sepropagator_kvaerno5_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    integrator_constructor = integrator_constructors[type(method)]  # ty: ignore
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -230,10 +253,7 @@ def _sepropagator(
     )
 
     # === run integrator
-    result = integrator.run()
-
-    # === return result
-    return result  # noqa: RET504
+    return cast(SEPropagatorResult, integrator.run())
 
 
 def _check_sepropagator_args(H: TimeQArray):

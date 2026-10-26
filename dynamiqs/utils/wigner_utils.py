@@ -22,39 +22,46 @@ def wigner(
     npixels: int = 201,
     xvec: ArrayLike | None = None,
     yvec: ArrayLike | None = None,
-    g: float = 2.0,
+    hbar: float = 0.5,
 ) -> tuple[Array, Array, Array]:
     r"""Compute the Wigner distribution of a ket or density matrix.
 
     The Wigner distribution is computed on a grid of coordinates $(x, y)$.
 
     Args:
-        state _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density
+        state (qarray-like of shape (..., n, 1) or (..., n, n)): Ket or density
             matrix.
         xmax: Maximum absolute value of the $x$ coordinate.
         ymax: Maximum absolute value of the $y$ coordinate.
         npixels: Number of pixels in each direction.
-        xvec _(array-like of shape (nxvec,), optional)_: $x$ coordinates. If `None`,
+        xvec (array-like of shape (nxvec,), optional): $x$ coordinates. If `None`,
             defaults to `xvec = jnp.linspace(-xmax, xmax, npixels)`.
-        yvec _(array-like of shape (nyvec,), optional)_: $y$ coordinates. If `None`,
+        yvec (array-like of shape (nyvec,), optional): $y$ coordinates. If `None`,
             defaults to `yvec = jnp.linspace(-ymax, ymax, npixels)`.
-        g: Scaling factor of Wigner quadratures, such that $a = g(x + iy)/2$.
+        hbar: Value of $\hbar$ in the commutation relation $[\hat{x}, \hat{p}]
+            = i\hbar$. Common choices are `0.5` (default, coherent state
+            $\ket{\alpha}$ centered at $(\mathrm{Re}(\alpha),
+            \mathrm{Im}(\alpha))$), `1.0`, and `2.0`.
 
     Returns:
-        A tuple `(xvec, yvec, w)` where
-
-            - **xvec** _(array of shape (npixels,) or (nxvec,))_ -- $x$ coordinates, or
-                `xvec` if specified.
-            - **yvec** _(array of shape (npixels,) or (nyvec,))_ -- $y$ coordinates, or
-                `yvec` if specified.
-            - **w** _(array of shape (..., npixels, npixels) or (..., nyvec, nxvec))_ -- Wigner distribution.
+        xvec (array of shape (npixels,) or (nxvec,)): $x$ coordinates, or
+            `xvec` if specified.
+        yvec (array of shape (npixels,) or (nyvec,)): $y$ coordinates, or
+            `yvec` if specified.
+        w (array of shape (..., npixels, npixels) or (..., nxvec, nyvec)): Wigner
+            distribution, such that `w[..., i, j]` is the Wigner function value at
+            `(xvec[i], yvec[j])`. Note that this is the transpose of what
+            `matplotlib.pyplot.imshow()` or `matplotlib.pyplot.pcolormesh()` expect,
+            so `w.T` should be passed to these functions instead of `w` (this is done
+            automatically by [`dq.plot.wigner()`][dynamiqs.plot.wigner] and
+            [`dq.plot.wigner_data()`][dynamiqs.plot.wigner_data]).
 
     See also:
         - [`dq.plot.wigner()`][dynamiqs.plot.wigner]: plot the Wigner function of a
             state.
         - [`dq.plot.wigner_data()`][dynamiqs.plot.wigner_data]: plot a pre-computed
             Wigner function.
-    """  # noqa: E501
+    """
     state = to_jax(state)
     check_shape(state, 'state', '(..., n, 1)', '(..., n, n)')
 
@@ -66,6 +73,8 @@ def wigner(
     check_shape(xvec, 'xvec', '(n,)', subs={'n': 'nxvec'})
     yvec = jnp.linspace(-ymax, ymax, npixels) if yvec is None else jnp.asarray(yvec)
     check_shape(yvec, 'yvec', '(n,)', subs={'n': 'nyvec'})
+
+    g = jnp.sqrt(2.0 / hbar)
 
     return xvec, yvec, _wigner(state, xvec, yvec, g)
 
@@ -95,14 +104,16 @@ def _wigner(state: Array, xvec: Array, yvec: Array, g: float = 2.0) -> Array:
     return w.real * jnp.exp(-2 * a2) * 0.5 * g**2 / jnp.pi
 
 
-def _diag_element(mat: jnp.array, diag: int, element: int) -> float:
+def _diag_element(mat: Array, diag: int, element: int) -> Array:
     r"""Return the element of a matrix `mat` at `jnp.diag(mat, diag)[element]`.
     This function is jittable for `diag` while it is not for the `jnp.diag` version.
     """
     assert mat.shape[0] == mat.shape[1], 'Matrix must be square.'
     n = mat.shape[0]
-    element = jax.lax.select(element < 0, n - jnp.abs(diag) - jnp.abs(element), element)
-    return mat[jnp.maximum(-diag, 0) + element, jnp.maximum(diag, 0) + element]
+    _element = jax.lax.select(
+        element < 0, n - jnp.abs(diag) - jnp.abs(element), element
+    )
+    return mat[jnp.maximum(-diag, 0) + _element, jnp.maximum(diag, 0) + _element]
 
 
 def _laguerre_series(i: int, x: Array, rho: Array, n: int) -> Array:

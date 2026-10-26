@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import equinox as eqx
 import jax.tree_util as jtu
-from jaxtyping import PyTree, ScalarLike
+from jaxtyping import PyTree, Scalar, ScalarLike
 
 from ._utils import tree_str_inline
 from .progress_meter import AbstractProgressMeter
@@ -18,8 +20,10 @@ class Options(eqx.Module):
     cartesian_batching: bool = True
     progress_meter: AbstractProgressMeter | bool | None = None
     t0: ScalarLike | None = None
-    save_extra: callable[[QArray], PyTree] | None = None
+    save_extra: Callable[[Scalar, QArray], PyTree] | None = None
     nmaxclick: int = 10_000
+    vectorized: bool = False
+    assume_hermitian: bool = True
 
     def __init__(
         self,
@@ -28,8 +32,10 @@ class Options(eqx.Module):
         cartesian_batching: bool = True,
         progress_meter: AbstractProgressMeter | bool | None = None,
         t0: ScalarLike | None = None,
-        save_extra: callable[[QArray], PyTree] | None = None,
+        save_extra: Callable[[Scalar, QArray], PyTree] | None = None,
         nmaxclick: int = 10_000,
+        vectorized: bool = False,
+        assume_hermitian: bool = True,
     ):
         self.save_states = save_states
         self.save_propagators = save_propagators
@@ -37,6 +43,8 @@ class Options(eqx.Module):
         self.progress_meter = progress_meter
         self.t0 = t0
         self.nmaxclick = nmaxclick
+        self.vectorized = vectorized
+        self.assume_hermitian = assume_hermitian
 
         # make `save_extra` a valid Pytree with `Partial`
         self.save_extra = jtu.Partial(save_extra) if save_extra is not None else None
@@ -64,6 +72,8 @@ class Options(eqx.Module):
             t0=self.t0,
             save_extra=self.save_extra,
             nmaxclick=self.nmaxclick,
+            vectorized=self.vectorized,
+            assume_hermitian=self.assume_hermitian,
         )
 
 
@@ -82,9 +92,17 @@ def check_options(options: Options, solver_name: str):
             'progress_meter',
             't0',
             'save_extra',
+            'vectorized',
+            'assume_hermitian',
         ),
         'sepropagator': ('save_propagators', 'progress_meter', 't0', 'save_extra'),
-        'mepropagator': ('save_propagators', 'cartesian_batching', 't0', 'save_extra'),
+        'mepropagator': (
+            'save_propagators',
+            'cartesian_batching',
+            'progress_meter',
+            't0',
+            'save_extra',
+        ),
         'floquet': ('progress_meter', 't0'),
         'jssesolve': (
             'save_states',

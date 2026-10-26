@@ -2,7 +2,10 @@
 
 We test our solvers on systems with an analytical solution.
 
-## `Cavity` and `OCavity`
+## `Cavity`, `OCavity` and `NoJumpCavity`
+
+`NoJumpCavity` is `Cavity` solved by `mesolve` with no jump operators: the solution
+below with $\kappa = 0$.
 
 **Problem**
 
@@ -82,6 +85,10 @@ $$
     \end{pmatrix}
 \end{aligned}
 $$
+
+## `MixedOCavity`
+
+`OCavity` from the mixed state $\rho_0 = p \ket{\alpha_0}\bra{\alpha_0} + (1-p) \ket{i\alpha_0}\bra{i\alpha_0}$. The evolution is linear and maps each coherent state as above, so the state and the expectation values at time $t$ are the same mixture of those of `OCavity` with $\alpha_0$ and with $i\alpha_0$; the gradients are their derivatives.
 
 ## `TDQubit` and `OTDQubit`
 

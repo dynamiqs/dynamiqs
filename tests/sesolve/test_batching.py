@@ -1,20 +1,18 @@
 import jax
 import jax.numpy as jnp
+import numpy as np
 import pytest
 
 import dynamiqs as dq
-from dynamiqs import asqarray
 
 from ..order import TEST_LONG
 
 
-@pytest.mark.run(order=TEST_LONG)
 def rand_sesolve_args(n, nH, npsi0, nEs):
     kH, kpsi0, kEs = jax.random.split(jax.random.PRNGKey(42), 3)
-    H = dq.random.herm(kH, (*nH, n, n))
-    psi0 = dq.random.ket(kpsi0, (*npsi0, n, 1))
-    Es = dq.random.complex(kEs, (nEs, n, n))
-    Es = [asqarray(E) for E in Es]
+    H = dq.random.operator(kH, n, batch=nH)
+    psi0 = dq.random.ket(kpsi0, n, batch=npsi0)
+    Es = dq.random.operator(kEs, n, hermitian=False, batch=nEs)
     return H, psi0, Es
 
 
@@ -49,13 +47,39 @@ def test_flat_batching(npsi0):
     # run sesolve
     H, psi0, Es = rand_sesolve_args(n, nH, npsi0, nEs)
     tsave = jnp.linspace(0, 0.01, ntsave)
-    options = dq.Options(cartesian_batching=False)
-    result = dq.sesolve(H, psi0, tsave, exp_ops=Es, options=options)
+    result = dq.sesolve(H, psi0, tsave, exp_ops=Es, cartesian_batching=False)
 
     # check result shape
     broadcast_shape = jnp.broadcast_shapes(nH, npsi0)
     assert result.states.shape == (*broadcast_shape, ntsave, n, 1)
     assert result.expects.shape == (*broadcast_shape, nEs, ntsave)
+
+
+@pytest.mark.run(order=TEST_LONG)
+@pytest.mark.parametrize(('nH', 'npsi0'), [((), (3,)), ((3,), ()), ((2, 1), (3,))])
+def test_flat_batching_values(nH, npsi0):
+    # flat batching, with unbatched or partially batched inputs, gives the same
+    # results as solving each batch element on its own
+    H, psi0, Es = rand_sesolve_args(4, nH, npsi0, 2)
+    tsave = jnp.linspace(0, 0.1, 5)
+    result = dq.sesolve(H, psi0, tsave, exp_ops=Es, cartesian_batching=False)
+    for index in np.ndindex(jnp.broadcast_shapes(nH, npsi0)):
+        expected = dq.sesolve(
+            _element(H, nH, index), _element(psi0, npsi0, index), tsave, exp_ops=Es
+        )
+        assert jnp.allclose(result.states[index].to_jax(), expected.states.to_jax())
+        assert jnp.allclose(result.expects[index], expected.expects)
+
+
+def _element(x, shape, index):
+    # the inputs of batch element `index` of a flat batch, with broadcasting
+    if len(shape) == 0:
+        return x
+    return x[
+        tuple(
+            i if d > 1 else 0 for i, d in zip(index[-len(shape) :], shape, strict=True)
+        )
+    ]
 
 
 @pytest.mark.run(order=TEST_LONG)
@@ -66,7 +90,7 @@ def test_timeqarray_batching():
     psi0 = dq.basis(4, 0)
     times = jnp.linspace(0.0, 1.0, 11)
 
-    # == constant time-qarray
+    # == constant timeqarray
     H_cte = dq.stack([H0, 2 * H0])
 
     result = dq.sesolve(H_cte, psi0, times)
@@ -74,7 +98,7 @@ def test_timeqarray_batching():
     result = dq.sesolve(H0 + H_cte, psi0, times)
     assert result.states.shape == (2, 11, 4, 1)
 
-    # == pwc time-qarray
+    # == pwc timeqarray
     values = jnp.arange(3 * 10).reshape(3, 10)
     H_pwc = dq.pwc(times, values, H0)
 
@@ -83,7 +107,7 @@ def test_timeqarray_batching():
     result = dq.sesolve(H0 + H_pwc, psi0, times)
     assert result.states.shape == (3, 11, 4, 1)
 
-    # == modulated time-qarray
+    # == modulated timeqarray
     deltas = jnp.linspace(0.0, 1.0, 4)
     H_mod = dq.modulated(lambda t: jnp.cos(t * deltas), H0)
 
@@ -92,7 +116,7 @@ def test_timeqarray_batching():
     result = dq.sesolve(H0 + H_mod, psi0, times)
     assert result.states.shape == (4, 11, 4, 1)
 
-    # == callable time-qarray
+    # == callable timeqarray
     omegas = jnp.linspace(0.0, 1.0, 5)
     H_cal = dq.timecallable(lambda t: jnp.cos(t * omegas[..., None, None]) * H0)
 

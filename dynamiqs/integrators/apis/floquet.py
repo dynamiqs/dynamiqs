@@ -5,12 +5,13 @@ from functools import partial
 import equinox as eqx
 import jax
 import jax.numpy as jnp
-from jaxtyping import Array, ArrayLike
+from jaxtyping import Array, ArrayLike, ScalarLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options, check_options
+from ...progress_meter import AbstractProgressMeter
 from ...qarrays.qarray import QArrayLike
 from ...result import FloquetResult
 from ...time_qarray import TimeQArray
@@ -32,7 +33,8 @@ def floquet(
     *,
     method: Method = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    progress_meter: AbstractProgressMeter | bool | None = None,
+    t0: ScalarLike | None = None,
 ) -> FloquetResult:
     r"""Compute Floquet modes and quasienergies of a periodic closed system.
 
@@ -52,11 +54,11 @@ def floquet(
     $$
 
     Args:
-        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
+        H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
         T: Period of the Hamiltonian. If the Hamiltonian is batched, the period should
             be common over all elements in the batch. To batch over different periods,
             wrap the call to `floquet` in a `jax.vmap`, see above.
-        tsave _(array-like of shape (ntsave,))_: Times at which to compute floquet
+        tsave (array-like of shape (ntsave,)): Times at which to compute floquet
             modes. The specified times should be ordered, strictly ascending, and such
             that `tsave[-1] - tsave[0] <= T`.
         method: Method for the integration. Defaults to
@@ -68,28 +70,6 @@ def floquet(
             [`Kvaerno5`][dynamiqs.method.Kvaerno5],
             [`Euler`][dynamiqs.method.Euler]).
         gradient: Algorithm used to compute the gradient.
-        options: Generic options (supported: `progress_meter`, `t0`).
-            ??? "Detailed options API"
-                ```
-                dq.Options(
-                    progress_meter: AbstractProgressMeter | bool | None = None,
-                    t0: ScalarLike | None = None,
-                )
-                ```
-
-                **Parameters**
-
-                - **progress_meter** - Progress meter indicating how far the solve has
-                    progressed. Defaults to `None` which uses the global default
-                    progress meter (see
-                    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
-                    `True` for a [tqdm](https://github.com/tqdm/tqdm) progress meter,
-                    and `False` for no output. See other options in
-                    [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
-                    If gradients are computed, the progress meter only displays during
-                    the forward pass.
-                - **t0** - Initial time. If `None`, defaults to the first time in
-                    `tsave`.
 
     Returns:
         `dq.FloquetResult` object holding the result of the Floquet computation. Use
@@ -101,19 +81,56 @@ def floquet(
                 dq.FloquetResult
                 ```
 
-                **Attributes**
+                **Attributes:**
 
-                - **modes** _(qarray of shape (..., ntsave, n, n, 1))_ - Saved Floquet
+                - **`modes`** _(qarray of shape (..., ntsave, n, n, 1))_ - Saved Floquet
                     modes.
-                - **quasienergies** _(array of shape (..., n))_ - Saved quasienergies
-                - **T** _(float)_ - Drive period
-                - **infos** _(PyTree or None)_ - Method-dependent information on the
+                - **`quasienergies`** _(array of shape (..., n))_ - Saved quasienergies
+                - **`T`** _(float)_ - Drive period
+                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
-                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
-                    saved.
-                - **method** _(Method)_ - Method used.
-                - **gradient** _(Gradient)_ - Gradient used.
-                - **options** _(Options)_ - Options used.
+                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
+                    were saved.
+                - **`method`** _(Method)_ - Method used.
+                - **`gradient`** _(Gradient)_ - Gradient used.
+                - **`options`** _(Options)_ - Options used.
+
+    Other Parameters:
+        progress_meter: Progress
+            meter indicating how far the solve has progressed. Defaults to `None`
+            which uses the global default progress meter (see
+            [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to `True`
+            for a [tqdm](https://github.com/tqdm/tqdm) progress meter, and `False`
+            for no output. If gradients are computed, the progress meter only
+            displays during the forward pass.
+        t0: Initial time. If `None`, defaults to the first
+            time in `tsave`. Defaults to `None`.
+
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+
+        n = 16
+        a = dq.destroy(n)
+
+        f = lambda t: jnp.cos(2 * jnp.pi * t)
+        H = dq.modulated(f, dq.sigmax())
+        T = 1.0
+        tsave = jnp.linspace(0, 1.0, 11)
+
+        result = dq.floquet(H, T, tsave)
+        print(result)
+        ```
+
+        ```text title="Output"
+        |██████████| 100.0% ◆ elapsed 0.89ms ◆ remaining 0.00ms
+        ==== FloquetResult ====
+        Method        : Tsit5
+        Infos         : 11 steps (10 accepted, 1 rejected)
+        Modes         : QArray complex64 (11, 2, 2, 1) | 0.3 Kb
+        Quasienergies : Array float32 (2,) | 0.0 Kb
+        ```
 
     # Advanced use-cases
 
@@ -155,8 +172,11 @@ def floquet(
     ```
     """
     # === convert arguments
-    H = astimeqarray(H)
+    H = astimeqarray(H, 'H')
     tsave = jnp.asarray(tsave)
+
+    # === build options
+    options = Options(progress_meter=progress_meter, t0=t0)
 
     # === check arguments
     tsave = check_times(tsave, 'tsave')
@@ -235,7 +255,7 @@ def _check_floquet_args(
     T, tsave = eqx.error_if(
         (T, tsave),
         tsave[-1] - tsave[0] > T,
-        'The time interval spanned by tsave should be less than a single period T, '
+        'The time interval spanned by `tsave` must be less than a single period `T`, '
         'i.e. `tsave[-1] - tsave[0] <= T`.',
     )
 

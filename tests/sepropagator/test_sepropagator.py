@@ -2,12 +2,12 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs import Options, constant, eye, pwc, random, sepropagator, sigmax, sigmay
+from dynamiqs import constant, eye, pwc, random, sepropagator, sigmax, sigmay
 from dynamiqs.method import Tsit5
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
-from ..sesolve.closed_system import dense_cavity, tdqubit
+from ..systems import dense_cavity, tdqubit
 
 
 @pytest.mark.run(order=TEST_LONG)
@@ -30,8 +30,9 @@ class TestSEPropagator(IntegratorTester):
     ):
         H = constant(random.herm(jax.random.PRNGKey(42), (*nH, 2, 2)))
         tsave = jnp.linspace(1.0, 10.0, 3)
-        options = Options(save_propagators=save_propagators, t0=0.0)
-        propresult = sepropagator(H, tsave, method=method, options=options)
+        propresult = sepropagator(
+            H, tsave, method=method, save_propagators=save_propagators, t0=0.0
+        )
         propagators = propresult.propagators.to_jax()
         ts = tsave if save_propagators else jnp.asarray([10.0])
         Hts = jnp.einsum('...ij,t->...tij', H.qarray.to_jax(), ts)
@@ -46,8 +47,9 @@ class TestSEPropagator(IntegratorTester):
         qarray = sigmay()
         H = pwc(times, values, qarray)
         tsave = jnp.asarray([0.5, 1.0, 2.0])
-        options = Options(save_propagators=save_propagators)
-        propresult = sepropagator(H, tsave, method=method, options=options)
+        propresult = sepropagator(
+            H, tsave, method=method, save_propagators=save_propagators
+        )
         propagators = propresult.propagators.to_jax()
         U0 = eye(H.shape[-1]).to_jax()
         U1 = jax.scipy.linalg.expm(-1j * H.qarray.to_jax() * 3.0 * 0.5)
@@ -71,8 +73,9 @@ class TestSEPropagator(IntegratorTester):
         H2 = pwc(times_2, values_2, sigmax())
         H = H1 + H2
         tsave = jnp.asarray([0.5, 1.0, 2.5])
-        options = Options(save_propagators=save_propagators)
-        propresult = sepropagator(H, tsave, method=method, options=options)
+        propresult = sepropagator(
+            H, tsave, method=method, save_propagators=save_propagators
+        )
         propagators = propresult.propagators.to_jax()
         H1_array = H1.qarray.to_jax()
         H2_array = H2.qarray.to_jax()

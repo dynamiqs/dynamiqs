@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*"
   workflow_dispatch:
 
 permissions:
@@ -19,17 +21,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv and Python
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10.3.0
         with:
-          python-version: "3.10"
+          python-version: "3.11"
           enable-cache: true
           cache-dependency-glob: "**/pyproject.toml"
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        # mike only supports Zensical through this fork, which is not on PyPI
+        run: |
+          uv sync --extra dev
+          uv pip install "mike @ git+https://github.com/squidfunk/mike.git@2d4ad799442f4592db8ad53b179bfb33db8c69ac"
 
       - name: List installed dependencies
         run: uv pip list
@@ -37,9 +42,17 @@ jobs:
       - name: Run doctest
         run: uv run task doctest
 
+      - name: Generate Python API pages
+        run: uv run python docs/generate_python_api.py
+
       - name: Publish website
         run: |
           git fetch origin gh-pages --depth=1
           git config user.name ci-bot
           git config user.email ci-bot@example.com
-          uv run mike deploy --push dev
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            # e.g. tag v0.3.8 is deployed as version 0.3.8 and becomes the stable one
+            uv run mike deploy --push --update-aliases "${GITHUB_REF_NAME#v}" stable
+          else
+            uv run mike deploy --push dev
+          fi

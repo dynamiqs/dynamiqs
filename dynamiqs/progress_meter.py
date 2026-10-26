@@ -2,28 +2,54 @@ from abc import abstractmethod
 
 import diffrax as dx
 import equinox as eqx
+import jax
+import jax.numpy as jnp
+import numpy as np
+from jax import Array
+from jaxtyping import PyTree
 from tqdm import tqdm
 
-__all__ = [
-    'AbstractProgressMeter',
-    'NoProgressMeter',
-    'TextProgressMeter',
-    'TqdmProgressMeter',
-]
+__all__ = ['NoProgressMeter', 'TextProgressMeter', 'TqdmProgressMeter']
 
 
 class AbstractProgressMeter(eqx.Module):
+    """Abstract base class for progress meters.
+
+    Implement this class to define a custom progress meter. Pass an instance to any
+    solver via the `progress_meter` argument.
+    """
+
     @abstractmethod
     def to_diffrax(self) -> dx.AbstractProgressMeter:
         pass
 
 
 class NoProgressMeter(AbstractProgressMeter):
+    """Progress meter that produces no output.
+
+    Pass to any solver via `progress_meter=dq.NoProgressMeter()` (or equivalently
+    `progress_meter=False`) to suppress all progress output.
+    """
+
+    # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
+
     def to_diffrax(self) -> dx.AbstractProgressMeter:
         return dx.NoProgressMeter()
 
 
 class TextProgressMeter(AbstractProgressMeter):
+    """Plain-text progress meter that prints to standard output.
+
+    Prints a simple text line updated in place during the integration. Useful in
+    environments where tqdm is not available or not desired.
+    """
+
+    # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
+
     def to_diffrax(self) -> dx.AbstractProgressMeter:
         return dx.TextProgressMeter()
 
@@ -76,5 +102,49 @@ class _DiffraxTqdmProgressMeter(dx.TqdmProgressMeter):
 
 
 class TqdmProgressMeter(AbstractProgressMeter):
+    """tqdm progress bar (default progress meter).
+
+    Displays a rich progress bar powered by [tqdm](https://github.com/tqdm/tqdm),
+    showing percentage completion, elapsed time, and estimated remaining time.
+
+    This is the default progress meter used by all solvers when `progress_meter=None`
+    (unless overridden globally with
+    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]).
+
+    Pass `progress_meter=True` or `progress_meter=dq.TqdmProgressMeter()` explicitly
+    to force it.
+    """
+
+    # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
+
     def to_diffrax(self) -> dx.AbstractProgressMeter:
         return _DiffraxTqdmProgressMeter()
+
+
+class _StopGradientProgressMeter(dx.AbstractProgressMeter):
+    """Wraps a Diffrax progress meter: the progress it displays carries no tangent.
+
+    Diffrax computes the progress from the solver's times, which depend on traced
+    jump times (e.g. a pulse edge passed as `discontinuity_ts`). Its meters then
+    reduce the progress over the batch with `unvmap` primitives that have no
+    differentiation rule, so forward-mode derivatives with respect to those times
+    raise `NotImplementedError`. The progress is only displayed: drop its tangent.
+    """
+
+    meter: dx.AbstractProgressMeter
+
+    def init(self) -> PyTree:
+        return self.meter.init()
+
+    def step(self, state: PyTree, progress: float | Array | np.ndarray) -> PyTree:
+        return self.meter.step(state, jax.lax.stop_gradient(jnp.asarray(progress)))
+
+    def close(self, state: PyTree) -> None:
+        self.meter.close(state)
+
+
+def to_diffrax(progress_meter: AbstractProgressMeter) -> dx.AbstractProgressMeter:
+    """The Diffrax progress meter of a dynamiqs one, safe to differentiate through."""
+    return _StopGradientProgressMeter(progress_meter.to_diffrax())

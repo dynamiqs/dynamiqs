@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import partial
+from typing import cast
 
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray
+from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
@@ -18,8 +20,10 @@ from ...time_qarray import TimeQArray
 from .._utils import (
     assert_method_supported,
     astimeqarray,
+    attach_batch_indices,
     cartesian_vmap,
     catch_xla_runtime_error,
+    fold_keys_with_batch_indices,
     multi_vmap,
 )
 from ..core.fixed_step_stochastic_integrator import (
@@ -38,7 +42,9 @@ def dssesolve(
     exp_ops: list[QArrayLike] | None = None,
     method: Method | None = None,
     gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    save_states: bool = True,
+    cartesian_batching: bool = True,
+    save_extra: Callable[[Scalar, QArray], PyTree] | None = None,
 ) -> DSSESolveResult:
     r"""Solve the diffusive stochastic Schrödinger equation (SSE).
 
@@ -88,8 +94,9 @@ def dssesolve(
     returned measurement values for each detector is `len(tsave)-1`.
 
     Warning:
-        For now, `dssesolve()` only supports `tsave` with values that
-        are exact multiples of the method fixed step size `dt`.
+        For now, `dssesolve()` only supports linearly spaced `tsave` with values that
+        are exact multiples of the method fixed step size `dt`. Moreover, to JIT-compile
+        code using `dssesolve()`, `tsave` must be passed as tuple.
 
     Note:
         If you are only interested in simulating trajectories to solve the Lindblad
@@ -97,18 +104,18 @@ def dssesolve(
         [`dq.method.DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo] method.
 
     Args:
-        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
+        H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
+        jump_ops (list of qarray-like or timeqarray, each of shape (...Lk, n, n)):
             List of jump operators.
-        psi0 _(qarray-like of shape (...psi0, n, 1))_: Initial state.
-        tsave _(array-like of shape (ntsave,))_: Times at which the states and
+        psi0 (qarray-like of shape (...psi0, n, 1)): Initial state.
+        tsave (array-like of shape (ntsave,)): Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`. Measurements are time-averaged and saved over each interval
             defined by `tsave`.
-        keys _(list of PRNG keys)_: PRNG keys used to sample the Wiener processes.
+        keys (list of PRNG keys): PRNG keys used to sample the Wiener processes.
             The number of elements defines the number of sampled stochastic
             trajectories.
-        exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
+        exp_ops (list of array-like, each of shape (n, n), optional): List of
             operators for which the expectation value is computed.
         method: Method for the integration. No defaults for now, you have to specify a
             method (supported: [`EulerMaruyama`][dynamiqs.method.EulerMaruyama],
@@ -116,28 +123,6 @@ def dssesolve(
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
-        options: Generic options (supported: `save_states`, `cartesian_batching`,
-            `save_extra`).
-            ??? "Detailed options API"
-                ```
-                dq.Options(
-                    save_states: bool = True,
-                    cartesian_batching: bool = True,
-                    save_extra: callable[[Array], PyTree] | None = None,
-                )
-                ```
-
-                **Parameters**
-
-                - **save_states** - If `True`, the state is saved at every time in
-                    `tsave`, otherwise only the final state is returned.
-                - **cartesian_batching** - If `True`, batched arguments are treated as
-                    separated batch dimensions, otherwise the batching is performed over
-                    a single shared batched dimension.
-                - **save_extra** _(function, optional)_ - A function with signature
-                    `f(QArray) -> PyTree` that takes a state as input and returns a
-                    PyTree. This can be used to save additional arbitrary data
-                    during the integration, accessible in `result.extra`.
 
     Returns:
         `dq.DSSESolveResult` object holding the result of the diffusive SSE integration.
@@ -153,28 +138,68 @@ def dssesolve(
                 For the shape indications we define `ntrajs` as the number of trajectories
                 (`ntrajs = len(keys)`).
 
-                **Attributes**
+                **Attributes:**
 
-                - **states** _(qarray of shape (..., ntrajs, nsave, n, 1))_ - Saved
+                - **`states`** _(qarray of shape (..., ntrajs, nsave, n, 1))_ - Saved
                     states with `nsave = ntsave`, or `nsave = 1` if
-                    `options.save_states=False`.
-                - **final_state** _(qarray of shape (..., ntrajs, n, 1))_ - Saved final
-                    state.
-                - **expects** _(array of shape (..., ntrajs, len(exp_ops), ntsave) or None)_ - Saved
-                    expectation values, if specified by `exp_ops`.
-                - **measurements** _(array of shape (..., ntrajs, len(jump_ops), nsave-1))_ - Saved
-                    measurements.
-                - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
-                    specified in `options`.
-                - **keys** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
+                    `save_states=False`.
+                - **`final_state`** _(qarray of shape (..., ntrajs, n, 1))_ - Saved
+                    final state.
+                - **`expects`** _(array of shape (..., ntrajs, len(exp_ops), ntsave)
+                    or None)_ - Saved expectation values, if specified by `exp_ops`.
+                - **`measurements`** _(array of shape
+                    (..., ntrajs, len(jump_ops), nsave-1))_ - Saved measurements.
+                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
+                    if specified.
+                - **`keys`** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
                     sample the Wiener processes.
-                - **infos** _(PyTree or None)_ - Method-dependent information on the
+                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
-                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
-                    saved.
-                - **method** _(Method)_ - Method used.
-                - **gradient** _(Gradient)_ - Gradient used.
-                - **options** _(Options)_ - Options used.
+                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
+                    were saved.
+                - **`method`** _(Method)_ - Method used.
+                - **`gradient`** _(Gradient)_ - Gradient used.
+                - **`options`** _(Options)_ - Options used.
+
+    Other Parameters:
+        save_states: If `True`, the state is saved at every time in
+            `tsave`, otherwise only the final state is returned. Defaults to `True`.
+        cartesian_batching: If `True`, batched arguments are treated
+            as separated batch dimensions, otherwise the batching is performed over a
+            single shared batch dimension. Defaults to `True`.
+        save_extra: A function with signature
+            `f(Scalar, QArray) -> PyTree` that takes the current time and state as
+            input and returns a PyTree. This can be used to save additional
+            arbitrary data during the integration, accessible in `result.extra`.
+            Defaults to `None`.
+
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+        import jax
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a
+        jump_ops = [a]
+        psi0 = dq.coherent(n, 1.0)
+        tsave = jnp.linspace(0, 1.0, 11)
+        keys = jax.random.split(jax.random.key(42), 100)
+
+        method = dq.method.EulerMaruyama(dt=1e-3)
+        result = dq.dssesolve(H, jump_ops, psi0, tsave, keys, method=method)
+        print(result)
+        ```
+
+        ```text title="Output"
+        ==== DSSESolveResult ====
+        Method       : EulerMaruyama
+        Infos        : 1000 steps | infos shape (100,)
+        States       : QArray complex64 (100, 11, 16, 1) | 137.5 Kb
+        Measurements : Array float32 (100, 1, 10) | 3.9 Kb
+        ```
 
     # Advanced use-cases
 
@@ -190,8 +215,9 @@ def dssesolve(
     ## Running multiple simulations concurrently
 
     The Hamiltonian `H`, the jump operators `jump_ops` and the initial state `psi0` can
-    be batched to solve multiple SSEs concurrently. All other arguments (including the
-    PRNG key) are common to every batch. The resulting states, measurements and
+    be batched to solve multiple SSEs concurrently. Other arguments are common to every
+    batch. The `keys` argument is automatically broadcasted to ensure different
+    trajectories between batch elements. The resulting states, measurements and
     expectation values are batched according to the leading dimensions of `H`,
     `jump_ops` and `psi0`. The behaviour depends on the value of the
     `cartesian_batching` option.
@@ -227,19 +253,35 @@ def dssesolve(
     tutorial for more details.
     """  # noqa: E501
     # === convert arguments
-    H = astimeqarray(H)
-    Ls = [astimeqarray(L) for L in jump_ops]
+    H = astimeqarray(H, 'H')
+    Ls = [astimeqarray(L, 'jump_ops') for L in jump_ops]
     psi0 = asqarray(psi0)
-    tsave = jnp.asarray(tsave)
     keys = jnp.asarray(keys)
+
+    _exp_ops = None
     if exp_ops is not None:
-        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+        _exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+
+    # === build options
+    options = Options(
+        save_states=save_states,
+        cartesian_batching=cartesian_batching,
+        save_extra=save_extra,
+    )
 
     # === check arguments
-    _check_dssesolve_args(H, Ls, psi0, exp_ops)
-    tsave = check_times(tsave, 'tsave')
+    _check_dssesolve_args(H, Ls, psi0, _exp_ops)
     check_options(options, 'dssesolve')
     options = options.initialise()
+
+    # todo: fix static tsave
+    # this condition allows the user to pass a tuple for tsave to bypass this bit of
+    # code (e.g., to JIT-compile this function)
+    _tsave = tsave
+    if not isinstance(tsave, tuple):
+        _tsave = jnp.asarray(tsave)
+        _tsave = check_times(_tsave, 'tsave')
+        _tsave = tuple(_tsave.tolist())
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
@@ -247,12 +289,12 @@ def dssesolve(
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
     return _vectorized_dssesolve(
-        H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options
+        H, Ls, psi0, _tsave, keys, _exp_ops, method, gradient, options
     )
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('gradient', 'options'))
+@partial(jax.jit, static_argnames=('tsave', 'gradient', 'options'))
 def _vectorized_dssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
@@ -264,31 +306,52 @@ def _vectorized_dssesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSSESolveResult:
-    # vectorize input over H, Ls and rho0
-    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, *(None,) * 6)
+    in_axes = ((H.in_axes, 0), [(L.in_axes, 0) for L in Ls], (0, 0), *(None,) * 6)
     out_axes = DSSESolveResult.out_axes()
 
     if options.cartesian_batching:
-        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, 0, 0, 0, 0, 0, 0)
+        # attach batch indices to vmap over independent keys
+        H_with_batch_indices = attach_batch_indices(H)
+        Ls_with_batch_indices = [attach_batch_indices(L) for L in Ls]
+        psi0_with_batch_indices = attach_batch_indices(psi0)
+
+        # compute vmap transformation
+        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, *(0,) * 6)
         f = cartesian_vmap(_dssesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
+        # broadcast H, Ls and rho0 to the same leading shape
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
-        nvmap = len(bshape)
-        # broadcast all vectorized input to same shape
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
         psi0 = psi0.broadcast_to(*bshape, n, 1)
-        # vectorize the function
+
+        # attach batch indices to vmap over independent keys
+        H_with_batch_indices = attach_batch_indices(H)
+        Ls_with_batch_indices = [attach_batch_indices(L) for L in Ls]
+        psi0_with_batch_indices = attach_batch_indices(psi0)
+
+        # compute vmap transformation
+        nvmap = len(bshape)
         f = multi_vmap(_dssesolve_many_trajectories, in_axes, out_axes, nvmap)
 
-    return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
+    return f(
+        H_with_batch_indices,
+        Ls_with_batch_indices,
+        psi0_with_batch_indices,
+        tsave,
+        keys,
+        exp_ops,
+        method,
+        gradient,
+        options,
+    )
 
 
 def _dssesolve_many_trajectories(
-    H: TimeQArray,
-    Ls: list[TimeQArray],
-    psi0: QArray,
+    H_with_batch_index: tuple[TimeQArray, Array],
+    Ls_with_batch_index: list[tuple[TimeQArray, Array]],
+    psi0_with_batch_index: tuple[QArray, Array],
     tsave: Array,
     keys: PRNGKeyArray,
     exp_ops: list[QArray] | None,
@@ -296,9 +359,19 @@ def _dssesolve_many_trajectories(
     gradient: Gradient | None,
     options: Options,
 ) -> DSSESolveResult:
+    # extract arrays and indices
+    H, H_batch_index = H_with_batch_index
+    Ls, L_batch_index = zip(*Ls_with_batch_index, strict=True)
+    Ls = list(Ls)
+    psi0, psi0_batch_index = psi0_with_batch_index
+
+    # fold indices into keys to ensure different trajectories between batch elements
+    batch_indices = (H_batch_index, *L_batch_index, psi0_batch_index)
+    keys = fold_keys_with_batch_indices(keys, batch_indices)
+
     # vectorize input over keys
     in_axes = (None, None, None, None, 0, None, None, None, None)
-    out_axes = DSSESolveResult(None, None, None, None, 0, 0, 0)
+    out_axes = DSSESolveResult(None, None, None, None, 0, 0, 0)  # ty: ignore[invalid-argument-type]
     f = jax.vmap(_dssesolve_single_trajectory, in_axes, out_axes)
     return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
@@ -320,7 +393,7 @@ def _dssesolve_single_trajectory(
         Rouchon1: dssesolve_rouchon1_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    integrator_constructor = integrator_constructors[type(method)]  # ty: ignore
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -340,10 +413,7 @@ def _dssesolve_single_trajectory(
     )
 
     # === run solver
-    result = integrator.run()
-
-    # === return result
-    return result  # noqa: RET504
+    return cast(DSSESolveResult, integrator.run())
 
 
 def _check_dssesolve_args(

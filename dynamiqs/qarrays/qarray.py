@@ -3,7 +3,8 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Sequence
 from math import prod
-from typing import TYPE_CHECKING, Any, get_args
+from numbers import Complex
+from typing import Any, TypeAlias, TypeGuard, Union, cast, get_args, overload
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -14,16 +15,13 @@ from jaxtyping import ArrayLike
 from qutip import Qobj
 
 from .._utils import is_batched_scalar
-
-if TYPE_CHECKING:
-    from .dense_qarray import DenseQArray
-    from .sparsedia_qarray import SparseDIAQArray
+from .dataarray import IndexType
 from .layout import Layout
 
 __all__ = ['QArray']
 
 
-def isqarraylike(x: Any) -> bool:
+def isqarraylike(x: Any) -> TypeGuard[QArrayLike]:
     r"""Returns True if the input is a qarray-like.
 
     Args:
@@ -47,7 +45,8 @@ def isqarraylike(x: Any) -> bool:
     """
     if isinstance(x, get_args(_QArrayLike)):
         return True
-    elif isinstance(x, Sequence):
+    elif isinstance(x, Sequence) and not isinstance(x, str):
+        # strings yield infinite recursion, so we exclude them from the sequence check
         return all(isqarraylike(sub_x) for sub_x in x)
     return False
 
@@ -80,21 +79,22 @@ def to_jax(x: QArrayLike) -> Array:
         return x.to_jax()
     elif isinstance(x, Qobj):
         return jnp.asarray(x.full())
-    elif isinstance(x, Sequence):
-        return jnp.asarray([to_jax(sub_x) for sub_x in x])
+    elif isinstance(x, Sequence) and not isinstance(x, str):
+        return jnp.asarray([to_jax(cast(QArrayLike, sub_x)) for sub_x in x])
     else:
         return jnp.asarray(x)
 
 
 def get_dims(x: QArrayLike) -> tuple[int, ...] | None:
-    if isinstance(x, Sequence):
-        sub_dims = [get_dims(sub_x) for sub_x in x]
+    if isinstance(x, Sequence) and not isinstance(x, str):
+        sub_dims = [get_dims(cast(QArrayLike, sub_x)) for sub_x in x]
         return sub_dims[0] if all(sd == sub_dims[0] for sd in sub_dims) else None
     if isinstance(x, QArray):
         return x.dims
     elif isinstance(x, Qobj):
-        dims = np.max(x.dims, axis=0)
-        return tuple(dims.tolist())
+        # handle [[3, 2], [1, 1]] or [[1, 1], [3, 2]] when `auto_tidyup_dims=False`
+        # or [[3, 2], [1]] or [[1], [3, 2]] when `auto_tidyup_dims=True`
+        return tuple(cast(list[int], next(dims for dims in x.dims if set(dims) != {1})))
     else:
         return None
 
@@ -127,8 +127,8 @@ def to_numpy(x: QArrayLike) -> np.ndarray:
         return x.to_numpy()
     elif isinstance(x, Qobj):
         return np.asarray(x.full())
-    elif isinstance(x, Sequence):
-        return np.asarray([to_numpy(sub_x) for sub_x in x])
+    elif isinstance(x, Sequence) and not isinstance(x, str):
+        return np.asarray([to_numpy(cast(QArrayLike, sub_x)) for sub_x in x])
     else:
         return np.asarray(x)
 
@@ -140,11 +140,10 @@ class QArray(eqx.Module):
     ket, a density matrix, an operator, a superoperator, etc.) that offers convenience
     methods.
 
-    There are two types of qarrays:
+    The underlying data can be in two formats:
 
-    - `DenseQArray`: wrapper around JAX arrays, dense representation of the array.
-    - `SparseDIAQArray`: Dynamiqs sparse diagonal format, storing only the non-zero
-        diagonals.
+    - Dense: wrapper around JAX arrays, dense representation of the array.
+    - SparseDIA: Dynamiqs sparse diagonal format, storing only the non-zero diagonals.
 
     Note: Constructing a new qarray from an other array type
         Use the function [`dq.asqarray()`][dynamiqs.asqarray] to create a qarray from a
@@ -154,13 +153,13 @@ class QArray(eqx.Module):
         sequence of these types. See also [`dq.isqarraylike()`][dynamiqs.isqarraylike].
 
     Attributes:
-        dtype _(numpy dtype)_: Data type.
-        shape _(tuple of ints)_: Shape.
-        ndim _(int)_: Number of dimensions in the shape.
-        layout _(Layout)_: Data layout, either `dq.dense` or `dq.dia`.
-        dims _(tuple of ints)_: Hilbert space dimension of each subsystem.
-        mT _(qarray)_: Returns the qarray transposed over its last two dimensions.
-        vectorized _(bool)_: Whether the underlying object is non-vectorized (ket, bra
+        dtype (numpy.dtype): Data type.
+        shape (tuple of ints): Shape.
+        ndim (int): Number of dimensions in the shape.
+        layout (Layout): Data layout, either `dq.dense` or `dq.dia`.
+        dims (tuple of ints): Hilbert space dimension of each subsystem.
+        mT (qarray): Returns the qarray transposed over its last two dimensions.
+        vectorized (bool): Whether the underlying object is non-vectorized (ket, bra
             or operator) or vectorized (operator in vector form or superoperator in
             matrix form).
 
@@ -177,7 +176,7 @@ class QArray(eqx.Module):
 
     | Method                                                   | Description                                                    |
     |----------------------------------------------------------|----------------------------------------------------------------|
-    | [`x.conj()`][dynamiqs.QArray.conj]                       | Returns the element-wise complex conjugate of the qarray.      |
+    | [`x.conj()`][dynamiqs.qarrays.qarray.QArray.conj]        | Returns the element-wise complex conjugate of the qarray.      |
     | `x.dag()`                                                | Alias of [`dq.dag(x)`][dynamiqs.dag].                          |
     | `x.powm()`                                               | Alias of [`dq.powm(x)`][dynamiqs.powm].                        |
     | `x.expm()`                                               | Alias of [`dq.expm(x)`][dynamiqs.expm].                        |
@@ -197,11 +196,15 @@ class QArray(eqx.Module):
     | `x.tobra()`                                              | Alias of [`dq.tobra(x)`][dynamiqs.tobra].                      |
     | `x.todm()`                                               | Alias of [`dq.todm(x)`][dynamiqs.todm].                        |
     | `x.proj()`                                               | Alias of [`dq.proj(x)`][dynamiqs.proj].                        |
-    | [`x.reshape(*shape)`][dynamiqs.QArray.reshape]           | Returns a reshaped copy of a qarray.                           |
-    | [`x.broadcast_to(*shape)`][dynamiqs.QArray.broadcast_to] | Broadcasts a qarray to a new shape.                            |
-    | [`x.addscalar(y)`][dynamiqs.QArray.addscalar]            | Adds a scalar.                                                 |
-    | [`x.elmul(y)`][dynamiqs.QArray.elmul]                    | Computes the element-wise multiplication.                      |
-    | [`x.elpow(power)`][dynamiqs.QArray.elpow]                | Computes the element-wise power.                               |
+    | [`x.reshape(*shape)`][dynamiqs.qarrays.qarray.QArray.reshape] | Returns a reshaped copy of a qarray.                           |
+    | [`x.broadcast_to(*shape)`][dynamiqs.qarrays.qarray.QArray.broadcast_to] | Broadcasts a qarray to a new shape.                            |
+    | [`x.swapaxes(axis1, axis2)`][dynamiqs.qarrays.qarray.QArray.swapaxes] | Interchanges two axes of a qarray.                            |
+    | [`x.moveaxis(source, destination)`][dynamiqs.qarrays.qarray.QArray.moveaxis] | Moves axes of a qarray to new positions.                      |
+    | [`x.expand_dims(axis)`][dynamiqs.qarrays.qarray.QArray.expand_dims] | Expands the shape of a qarray by inserting new axes.           |
+    | `x.where(condition, y)`                                  | Alias of [`dq.where(condition, x, y)`][dynamiqs.where].        |
+    | [`x.addscalar(y)`][dynamiqs.qarrays.qarray.QArray.addscalar] | Adds a scalar.                                                 |
+    | [`x.elmul(y)`][dynamiqs.qarrays.qarray.QArray.elmul]     | Computes the element-wise multiplication.                      |
+    | [`x.elpow(power)`][dynamiqs.qarrays.qarray.QArray.elpow] | Computes the element-wise power.                               |
 
     There are also several conversion methods available:
 
@@ -210,31 +213,20 @@ class QArray(eqx.Module):
     | `x.to_qutip()`                                           | Alias of [`dq.to_qutip(x, dims=x.dims)`][dynamiqs.to_qutip].   |
     | `x.to_jax()`                                             | Alias of [`dq.to_jax(x)`][dynamiqs.to_jax].                    |
     | `x.to_numpy()`                                           | Alias of [`dq.to_numpy(x)`][dynamiqs.to_numpy].                |
-    | [`x.asdense()`][dynamiqs.QArray.asdense]                 | Converts to a dense layout.                                    |
-    | [`x.assparsedia()`][dynamiqs.QArray.assparsedia]         | Converts to a sparse diagonal layout.                          |
+    | [`x.asdense()`][dynamiqs.qarrays.qarray.QArray.asdense]  | Converts to a dense layout.                                    |
+    | [`x.assparsedia()`][dynamiqs.qarrays.qarray.QArray.assparsedia] | Converts to a sparse diagonal layout.                          |
     """  # noqa: E501
 
-    # Subclasses should implement:
-    # - the properties: dtype, layout, shape, mT
-    # - the methods:
-    #   - qarray methods: conj, dag, _reshape_unchecked, broadcast_to, ptrace, powm,
-    #                     expm, block_until_ready
-    #   - returning a JAX array or other: norm, trace, sum, squeeze, _eig, _eigh,
-    #                                     _eigvals, _eigvalsh, devices, isherm
-    #   - conversion/utils methods: to_qutip, to_jax, __array__, block_until_ready
-    #   - special methods: __mul__, __add__, __matmul__, __rmatmul__, __and__,
-    #                      addscalar, elmul, elpow, __getitem__
-
     dims: tuple[int, ...] = eqx.field(static=True)
-    vectorized: bool = eqx.field(static=True)
+    # TODO: make `vectorized` compatible with `CompositeQArray`. For now, the two
+    # are mutually exclusive (a composite qarray cannot be vectorized), so this
+    # attribute lives only on `MaterializedQArray`. Supporting both together will
+    # require careful handling of shapes and indexing across subsystems.
 
     # Increase __array_priority__ to ensure that a qarray is always returned during an
     # arithmetic operation with a NumPy array. In JAX, it is set to 100 for arrays, and
     # in NumPy it is set to 0.
     __array_priority__ = 200
-
-    # similar behaviour to __array_priority__ but for qarray matmul
-    __qarray_matmul_priority__ = 0
 
     def __check_init__(self):
         # === ensure dims is a tuple of ints
@@ -245,15 +237,7 @@ class QArray(eqx.Module):
                 f'Argument `dims` must be a tuple of ints, but is {self.dims}.'
             )
 
-        # === ensure dims is compatible with the shape
-        # for vectorized superoperators, we allow that the shape is the square
-        # of the product of all dims
-        allowed_shapes = (prod(self.dims), prod(self.dims) ** 2)
-        if not (self.shape[-1] in allowed_shapes or self.shape[-2] in allowed_shapes):
-            raise ValueError(
-                'Argument `dims` must be compatible with the shape of the qarray, but '
-                f'got dims {self.dims} and shape {self.shape}.'
-            )
+    # === Properties delegated to DataArray ===
 
     @property
     @abstractmethod
@@ -276,8 +260,17 @@ class QArray(eqx.Module):
         pass
 
     @property
+    @abstractmethod
     def ndim(self) -> int:
-        return len(self.shape)
+        pass
+
+    @property
+    @abstractmethod
+    def ndiags(self) -> int:
+        """Number of stored diagonals (only for sparse diagonal layout)."""
+        ...
+
+    # === Array methods delegated to DataArray ===
 
     @abstractmethod
     def conj(self) -> QArray:
@@ -290,6 +283,7 @@ class QArray(eqx.Module):
     def dag(self) -> QArray:
         return self.mT.conj()
 
+    @abstractmethod
     def reshape(self, *shape: int) -> QArray:
         """Returns a reshaped copy of a qarray.
 
@@ -299,18 +293,9 @@ class QArray(eqx.Module):
         Returns:
             New qarray with the given shape.
         """
-        if shape[-2:] != self.shape[-2:]:
-            raise ValueError(
-                f'Cannot reshape to shape {shape} because the last two dimensions do '
-                f'not match current shape dimensions, {self.shape}.'
-            )
-        return self._reshape_unchecked(*shape)
 
     @abstractmethod
     def _reshape_unchecked(self, *shape: int) -> QArray:
-        # Does the heavy-lifting for `reshape` but skips all checks.
-        # This private method allows for more powerful reshapes that
-        # are useful for vectorization.
         pass
 
     @abstractmethod
@@ -325,8 +310,55 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def ptrace(self, *keep: int) -> QArray:
-        pass
+    def swapaxes(self, axis1: int, axis2: int) -> QArray:
+        """Interchange two axes of a qarray.
+
+        Args:
+            axis1: First axis.
+            axis2: Second axis.
+
+        Returns:
+            Qarray with axes `axis1` and `axis2` interchanged.
+        """
+
+    @abstractmethod
+    def moveaxis(
+        self, source: int | Sequence[int], destination: int | Sequence[int]
+    ) -> QArray:
+        """Move axes of a qarray to new positions.
+
+        Args:
+            source: Original positions of the axes to move.
+            destination: Destination positions for each moved axis.
+
+        Returns:
+            Qarray with moved axes.
+        """
+
+    @abstractmethod
+    def expand_dims(self, axis: int | Sequence[int]) -> QArray:
+        """Expand the shape of a qarray by inserting new axes.
+
+        Args:
+            axis: Axis or axes where new dimensions are inserted.
+
+        Returns:
+            Qarray with additional dimensions.
+        """
+
+    def where(self, condition: ArrayLike, y: QArrayLike) -> QArray:
+        """Select values from this qarray or another operand depending on a condition.
+
+        Args:
+            condition: Boolean array-like condition.
+            y: Values selected when `condition` is false.
+
+        Returns:
+            Qarray with values chosen from `self` and `y`.
+        """
+        from .utils import where  # noqa: PLC0415
+
+        return where(condition, self, y)
 
     @abstractmethod
     def powm(self, n: int) -> QArray:
@@ -336,26 +368,8 @@ class QArray(eqx.Module):
     def expm(self, *, max_squarings: int = 16) -> QArray:
         pass
 
-    def cosm(self) -> QArray:
-        from ..utils import cosm  # noqa: PLC0415
-
-        return cosm(self)
-
-    def sinm(self) -> QArray:
-        from ..utils import sinm  # noqa: PLC0415
-
-        return sinm(self)
-
-    def signm(self) -> QArray:
-        from ..utils import signm  # noqa: PLC0415
-
-        return signm(self)
-
-    def unit(self, *, psd: bool = True) -> QArray:
-        return self / self.norm(psd=psd)[..., None, None]
-
     @abstractmethod
-    def norm(self, *, psd: bool = True) -> Array:
+    def norm(self, *, psd: bool = False) -> Array:
         pass
 
     @abstractmethod
@@ -364,7 +378,6 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def sum(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
-        # todo
         pass
 
     def mean(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
@@ -379,7 +392,6 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
-        # todo
         pass
 
     @abstractmethod
@@ -400,8 +412,39 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def devices(self) -> set[Device]:
-        # todo
         pass
+
+    @abstractmethod
+    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> Array:
+        pass
+
+    @abstractmethod
+    def block_until_ready(self) -> QArray:
+        pass
+
+    # === Quantum methods ===
+
+    @abstractmethod
+    def ptrace(self, *keep: int) -> QArray:
+        pass
+
+    def cosm(self) -> QArray:
+        from ..utils import cosm  # noqa: PLC0415
+
+        return cosm(self)
+
+    def sinm(self) -> QArray:
+        from ..utils import sinm  # noqa: PLC0415
+
+        return sinm(self)
+
+    def signm(self) -> QArray:
+        from ..utils import signm  # noqa: PLC0415
+
+        return signm(self)
+
+    def unit(self, *, psd: bool = False) -> QArray:
+        return self / self.norm(psd=psd)[..., None, None]
 
     def isket(self) -> bool:
         from ..utils import isket  # noqa: PLC0415
@@ -423,10 +466,6 @@ class QArray(eqx.Module):
 
         return isop(self)
 
-    @abstractmethod
-    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
-        pass
-
     def toket(self) -> QArray:
         from ..utils import toket  # noqa: PLC0415
 
@@ -447,6 +486,8 @@ class QArray(eqx.Module):
 
         return proj(self)
 
+    # === Conversion methods ===
+
     @abstractmethod
     def to_qutip(self) -> Qobj | list[Qobj]:
         pass
@@ -455,29 +496,24 @@ class QArray(eqx.Module):
     def to_jax(self) -> Array:
         pass
 
-    def __len__(self) -> int:
-        try:
-            return self.shape[0]
-        except IndexError as err:
-            raise TypeError('len() of unsized object') from err
+    @abstractmethod
+    def to_numpy(self) -> np.ndarray:
+        pass
 
     @abstractmethod
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         pass
 
-    def to_numpy(self) -> np.ndarray:
-        return np.asarray(self)
-
     @abstractmethod
-    def asdense(self) -> DenseQArray:
+    def asdense(self) -> QArray:
         """Converts to a dense layout.
 
         Returns:
-            A `DenseQArray`.
+            A qarray with dense data layout.
         """
 
     @abstractmethod
-    def assparsedia(self, offsets: tuple[int, ...] | None = None) -> SparseDIAQArray:
+    def assparsedia(self, offsets: tuple[int, ...] | None = None) -> QArray:
         """Converts to a sparse diagonal layout.
 
         Args:
@@ -487,38 +523,41 @@ class QArray(eqx.Module):
                 which require static offset values.
 
         Returns:
-            A `SparseDIAQArray`.
+            A qarray with sparse diagonal data layout.
         """
 
+    def __len__(self) -> int:
+        try:
+            return self.shape[0]
+        except IndexError as err:
+            raise TypeError('len() of unsized object') from err
+
+    # === Repr ===
+
     @abstractmethod
-    def block_until_ready(self) -> QArray:
+    def __repr__(self) -> str:
         pass
 
-    def __repr__(self) -> str:
-        res = (
-            f'QArray: shape={self.shape}, dims={self.dims}, dtype={self.dtype}, '
-            f'layout={self.layout}'
-        )
-        if self.vectorized:
-            res += f', vectorized={self.vectorized}'
-        return res
+    # === Arithmetic operations ===
 
     def __neg__(self) -> QArray:
         return self * (-1)
 
     @abstractmethod
-    def __mul__(self, y: ArrayLike) -> QArray:
-        if not is_batched_scalar(y):
-            raise NotImplementedError(
-                'Element-wise multiplication of two qarrays with the `*` operator is '
-                'not supported. For matrix multiplication, use `x @ y`. For '
-                'element-wise multiplication, use `x.elmul(y)`.'
-            )
+    def __mul__(self, y: QArrayLike) -> QArray:
+        pass
 
     def __rmul__(self, y: QArrayLike) -> QArray:
         return self * y
 
-    def __truediv__(self, y: ArrayLike) -> QArray:
+    def __truediv__(self, y: QArrayLike) -> QArray:
+        if not is_batched_scalar(y):
+            if not isqarraylike(y):
+                return NotImplemented
+            raise NotImplementedError(
+                'Division of a qarray by a non-scalar with the `/` operator is not '
+                'supported.'
+            )
         return self * (1 / y)
 
     def __rtruediv__(self, y: QArrayLike) -> QArray:
@@ -532,48 +571,41 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def __add__(self, y: QArrayLike) -> QArray:
-        if is_batched_scalar(y):
-            raise NotImplementedError(
-                'Adding a scalar to a qarray with the `+` operator is not supported. '
-                'To add a scaled identity matrix, use `x + scalar * dq.eye_like(x)`.'
-                ' To add a scalar, use `x.addscalar(scalar)`.'
-            )
-
-        if isinstance(y, QArray):
-            check_compatible_dims(self.dims, y.dims)
+        pass
 
     def __radd__(self, y: QArrayLike) -> QArray:
         return self.__add__(y)
 
     def __sub__(self, y: QArrayLike) -> QArray:
-        return self + (-y)
+        if not isqarraylike(y):
+            return NotImplemented
+        # keep Python scalars: `x - 0` returns `x`, like `x + 0` (e.g. `H - sum([])`)
+        if not isinstance(y, QArray | Complex):
+            y = to_jax(y)
+        return self + cast(QArrayLike, -y)
 
     def __rsub__(self, y: QArrayLike) -> QArray:
         return -self + y
 
+    @overload
+    def __matmul__(self, y: QArray) -> QArray: ...
+
+    @overload
+    def __matmul__(self, y: ArrayLike) -> Array: ...
+
     @abstractmethod
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
-        if (
-            hasattr(y, '__qarray_matmul_priority__')
-            and self.__qarray_matmul_priority__ < y.__qarray_matmul_priority__
-        ):
-            return NotImplemented
+        pass
 
-        if isinstance(y, QArray):
-            check_compatible_dims(self.dims, y.dims)
+    @overload
+    def __rmatmul__(self, y: QArray) -> QArray: ...
 
-        if is_batched_scalar(y):
-            raise TypeError('Attempted matrix product between a scalar and a qarray.')
-
-        return None
+    @overload
+    def __rmatmul__(self, y: ArrayLike) -> Array: ...
 
     @abstractmethod
-    def __rmatmul__(self, y: QArrayLike) -> QArray:
-        if isinstance(y, QArray):
-            check_compatible_dims(self.dims, y.dims)
-
-        if is_batched_scalar(y):
-            raise TypeError('Attempted matrix product between a scalar and a qarray.')
+    def __rmatmul__(self, y: QArrayLike) -> QArray | Array:
+        pass
 
     @abstractmethod
     def __and__(self, y: QArray) -> QArray:
@@ -584,9 +616,12 @@ class QArray(eqx.Module):
         if isinstance(power, _Metaω):
             return _Metaω.__rpow__(power, self)
 
+        if not isqarraylike(power):
+            return NotImplemented
+
         raise NotImplementedError(
             'Computing the element-wise power of a qarray with the `**` operator is '
-            'not supported. For the matrix power, use `x.pomw(power)`. For the '
+            'not supported. For the matrix power, use `x.powm(power)`. For the '
             'element-wise power, use `x.elpow(power)`.'
         )
 
@@ -611,8 +646,6 @@ class QArray(eqx.Module):
         Returns:
             New qarray resulting from the element-wise multiplication.
         """
-        if isinstance(y, QArray):
-            check_compatible_dims(self.dims, y.dims)
 
     @abstractmethod
     def elpow(self, power: int) -> QArray:
@@ -626,8 +659,20 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def __getitem__(self, key: int | slice) -> QArray:
-        pass
+    def __getitem__(self, key: IndexType) -> QArray | Array:
+        """Get item from the qarray.
+
+        Note:
+            If the indexing operation modifies the last two dimensions of the qarray,
+            an array is returned instead of a qarray.
+
+        Args:
+            key: Indexing key, which can be an int, slice, array-like, ellipsis, None,
+                or a tuple of these.
+
+        Returns:
+            New qarray or array resulting from the indexing operation.
+        """
 
 
 def check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
@@ -636,18 +681,6 @@ def check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
             f'Qarrays have incompatible Hilbert space dimensions. '
             f'Got {dims1} and {dims2}.'
         )
-
-
-def in_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> bool:
-    axis = (axis,) if isinstance(axis, int) else axis
-    return axis is None or any(a % ndim in [ndim - 1, ndim - 2] for a in axis)
-
-
-def include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> bool:
-    axis = (axis,) if isinstance(axis, int) else axis
-    return axis is None or (
-        ndim - 1 in [a % ndim for a in axis] and ndim - 2 in [a % ndim for a in axis]
-    )
 
 
 # In this file we define an extended array type named `QArrayLike`. Most
@@ -663,7 +696,12 @@ def include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> bool
 
 # extended array-like type
 _QArrayLike = ArrayLike | QArray | Qobj
+
 # a type alias for nested sequence of `_QArrayLike`
-_NestedQArrayLikeSequence = Sequence[_QArrayLike | '_NestedQArrayLikeSequence']
+# note: `Union` is required instead of `|` because `_QArrayLike` may be a
+# `types.UnionType` (e.g. with jax>=0.11.1), which does not support the `|` operator
+# with a string forward reference
+_NestedQArrayLikeSequence = Sequence[Union[_QArrayLike, '_NestedQArrayLikeSequence']]
+
 # a type alias for any type compatible with asqarray
-QArrayLike = _QArrayLike | _NestedQArrayLikeSequence
+QArrayLike: TypeAlias = _QArrayLike | _NestedQArrayLikeSequence

@@ -7,11 +7,10 @@ import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
 
-from dynamiqs.gradient import ForwardAutograd, Gradient
+from dynamiqs.gradient import Forward, Gradient, HigherOrder
 from dynamiqs.method import Method
-from dynamiqs.options import Options
 
-from .system import System
+from .systems import System
 
 
 class IntegratorTester:
@@ -20,12 +19,12 @@ class IntegratorTester:
         system: System,
         method: Method,
         *,
-        options: Options = Options(),  # noqa: B008
         ysave_atol: float = 1e-3,
         esave_rtol: float = 1e-3,
         esave_atol: float = 1e-4,
+        **solver_kwargs,
     ):
-        result = system.run(method, options=options)
+        result = system.run(method, **solver_kwargs)
 
         # === test ysave
         true_ysave = system.states(system.tsave)
@@ -53,9 +52,9 @@ class IntegratorTester:
         method: Method,
         gradient: Gradient,
         *,
-        options: Options = Options(),  # noqa: B008
         rtol: float = 1e-3,
         atol: float = 1e-4,
+        **solver_kwargs,
     ):
         def assert_allclose(pytree1, pytree2):
             # assert two pytrees are equal
@@ -67,11 +66,11 @@ class IntegratorTester:
 
         # === test gradients depending on final ysave
         def loss_ysave(params):
-            res = system.run(method, gradient=gradient, options=options, params=params)
+            res = system.run(method, gradient=gradient, params=params, **solver_kwargs)
             return system.loss_state(res.states[-1])
 
         # jax.grad uses reverse mode by default
-        if isinstance(gradient, ForwardAutograd):
+        if isinstance(gradient, Forward):
             jax_grad, jax_jac = jax.jacfwd, jax.jacfwd
         else:
             jax_grad, jax_jac = jax.grad, jax.jacrev
@@ -86,7 +85,7 @@ class IntegratorTester:
 
         # === test gradients depending on final Esave
         def loss_Esave(params):
-            res = system.run(method, gradient=gradient, options=options, params=params)
+            res = system.run(method, gradient=gradient, params=params, **solver_kwargs)
             return system.loss_expect(res.expects[:, -1])
 
         true_grads_Esave = system.grads_expect(system.tsave[-1])
@@ -95,4 +94,35 @@ class IntegratorTester:
         logging.warning(f'true_grads_Esave = {true_grads_Esave}')
         logging.warning(f'grads_Esave      = {grads_Esave}')
 
-        assert_allclose(true_grads_ysave, grads_ysave)
+        assert_allclose(true_grads_Esave, grads_Esave)
+
+    def _test_hessian(
+        self,
+        system: System,
+        method: Method,
+        gradient: HigherOrder,
+        *,
+        rtol: float = 1e-3,
+        atol: float = 1e-4,
+        **solver_kwargs,
+    ):
+        def assert_allclose(pytree1, pytree2):
+            # assert two pytrees are equal
+            f = partial(jnp.allclose, rtol=rtol, atol=atol)
+            allclose_tree = jtu.tree_map(f, pytree1, pytree2)
+            # reduce the tree to a single boolean value
+            all_true = jtu.tree_reduce(lambda x, y: x and y, allclose_tree, True)
+            assert all_true, f'Pytrees are not close enough: \n{pytree1}\n{pytree2}'
+
+        # === test Hessian of the final Esave-based loss
+        def loss_Esave(params):
+            res = system.run(method, gradient=gradient, params=params, **solver_kwargs)
+            return system.loss_expect(res.expects[:, -1])
+
+        true_hessian_Esave = system.hessian_expect(system.tsave[-1])
+        hessian_Esave = jax.hessian(loss_Esave)(system.params_default)
+
+        logging.warning(f'true_hessian_Esave = {true_hessian_Esave}')
+        logging.warning(f'hessian_Esave      = {hessian_Esave}')
+
+        assert_allclose(true_hessian_Esave, hessian_Esave)

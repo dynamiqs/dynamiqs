@@ -1,8 +1,10 @@
 import jax.numpy as jnp
 import jax.random as jr
 import pytest
+import qutip as qt
 
 import dynamiqs as dq
+from dynamiqs.qarrays.qarray import get_dims, to_jax, to_numpy
 
 from ..order import TEST_INSTANT
 
@@ -92,3 +94,79 @@ def test_conversions(layout):
         ),
         jnp.asarray([sx.to_qutip().full(), sy.to_qutip().full()]),
     )
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_asqarray_keeps_sparse_sequences_sparse():
+    a, adag = dq.destroy(5, layout=dq.dia), dq.create(5, layout=dq.dia)
+    x = dq.asqarray([a, adag])
+    assert x.layout is dq.dia
+    assert jnp.array_equal(x.to_jax(), jnp.stack([a.to_jax(), adag.to_jax()]))
+    assert dq.asqarray((a, a)).layout is dq.dia
+    assert dq.asqarray([a, adag], layout=dq.dense).layout is dq.dense
+
+    # a sequence mixing layouts still converts to dense
+    assert dq.asqarray([a, adag.asdense()]).layout is dq.dense
+
+    # explicit offsets are honored rather than taken from the stacked qarrays
+    x = dq.asqarray([a, adag], layout=dq.dia, offsets=(-1, 0, 1))
+    assert x.data.offsets == (-1, 0, 1)
+
+    # a sequence with mismatched dims is not stacked, so it converts as before
+    a_composite = dq.destroy(5, 1)[0]
+    assert dq.asqarray([a, a_composite]).dims == (5,)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_stack_keeps_vectorized(layout):
+    a = dq.destroy(3, layout=layout)
+    L = dq.slindbladian(a, [a])
+    assert dq.stack([L, L]).vectorized
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_qutip_tensor_compatibility():
+    """Test compatibility with qutip v5.2.0 auto_tidyup_dims.
+
+    In qutip v5.2.0, tensor products with trivial dimensions are automatically
+    simplified, e.g., [[3, 2], [1, 1]] -> [[3, 2], [1]]. This test ensures
+    that asqarray handles such cases correctly.
+    """
+    # Test single basis state (should work in all versions)
+    basis_state = qt.basis(3, 1)
+    result = dq.asqarray(basis_state)
+    assert result.shape == (3, 1)
+    assert result.dims == (3,)
+
+    # Test tensor product (the problematic case)
+    tensor_state = qt.tensor(qt.basis(3, 0), qt.basis(2, 1))
+    result = dq.asqarray(tensor_state)
+    assert result.shape == (6, 1)
+    assert result.dims == (3, 2)
+
+    # Test more complex tensor product
+    complex_tensor = qt.tensor(qt.basis(2, 0), qt.basis(3, 1), qt.basis(2, 0))
+    result = dq.asqarray(complex_tensor)
+    assert result.shape == (12, 1)
+    assert result.dims == (2, 3, 2)
+
+    # Test that the tensor product has correct values
+    tensor_result = dq.asqarray(qt.tensor(qt.basis(3, 0), qt.basis(2, 1)))
+    expected_tensor = jnp.zeros((6, 1), dtype=complex)
+    expected_tensor = expected_tensor.at[1].set(1.0)  # |01⟩ state
+    assert jnp.allclose(tensor_result.to_jax(), expected_tensor)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_string_does_not_recurse():
+    # strings are `Sequence`s of single-character strings, so a naive recursive
+    # walk over `Sequence` elements never bottoms out; these helpers must special
+    # case `str` to avoid a `RecursionError`
+    assert dq.isqarraylike('not a qarray') is False
+    with pytest.raises(TypeError):
+        to_jax('not a qarray')
+    assert to_numpy('not a qarray').item() == 'not a qarray'
+    assert get_dims('not a qarray') is None
+    with pytest.raises(TypeError):
+        dq.asqarray('not a qarray')

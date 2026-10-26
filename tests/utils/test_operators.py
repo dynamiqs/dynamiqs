@@ -13,16 +13,16 @@ def test_global_dispatch():
     dim = 4
 
     # default: sparse DIA
-    assert isinstance(dq.eye(dim), dq.SparseDIAQArray)
-    assert isinstance(dq.eye(dim, layout=dq.dense), dq.DenseQArray)
+    assert dq.eye(dim).layout == dq.dia
+    assert dq.eye(dim, layout=dq.dense).layout == dq.dense
 
     dq.set_layout('dense')
-    assert isinstance(dq.eye(dim), dq.DenseQArray)
-    assert isinstance(dq.eye(dim, layout=dq.dia), dq.SparseDIAQArray)
+    assert dq.eye(dim).layout == dq.dense
+    assert dq.eye(dim, layout=dq.dia).layout == dq.dia
 
     dq.set_layout('dia')
-    assert isinstance(dq.eye(dim), dq.SparseDIAQArray)
-    assert isinstance(dq.eye(dim, layout=dq.dense), dq.DenseQArray)
+    assert dq.eye(dim).layout == dq.dia
+    assert dq.eye(dim, layout=dq.dense).layout == dq.dense
 
 
 @pytest.mark.run(order=TEST_INSTANT)
@@ -48,7 +48,7 @@ def test_eye():
 def test_eye_like():
     # prepare inputs
     key = jax.random.PRNGKey(0)
-    x = dq.random.dm(key, (2, 2))
+    x = dq.random.dm(key, 2)
 
     # check that no error is raised while tracing the function
     _jit_static_layout(dq.eye_like).trace(x, layout=dq.dense)
@@ -82,7 +82,7 @@ def test_zeros():
 def test_zeros_like():
     # prepare inputs
     key = jax.random.PRNGKey(0)
-    x = dq.random.dm(key, (2, 2))
+    x = dq.random.dm(key, 2)
 
     # check that no error is raised while tracing the function
     _jit_static_layout(dq.zeros_like).trace(x, layout=dq.dense)
@@ -141,6 +141,36 @@ def test_create():
         dq.create(*dims_2, layout=dq.dense)[1].to_jax(),
         dq.create(*dims_2, layout=dq.dia)[1].to_jax(),
     )
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_fdestroy(layout):
+    # check that no error is raised while tracing the function
+    _jit_static_layout(dq.fdestroy, static_argnums=(0,)).trace(1, layout=layout)
+    _jit_static_layout(dq.fdestroy, static_argnums=(0,)).trace(3, layout=layout)
+
+    # {a_j, a_k} = 0
+    a = dq.fdestroy(3, layout=layout)
+    for j in range(3):
+        for k in range(3):
+            assert jnp.allclose((a[j] @ a[k] + a[k] @ a[j]).to_jax(), 0)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_fcreate(layout):
+    # check that no error is raised while tracing the function
+    _jit_static_layout(dq.fcreate, static_argnums=(0,)).trace(1, layout=layout)
+    _jit_static_layout(dq.fcreate, static_argnums=(0,)).trace(3, layout=layout)
+
+    # {a_j, a_k^†} = δ_jk
+    a = dq.fdestroy(3, layout=layout)
+    adag = dq.fcreate(3, layout=layout)
+    for j in range(3):
+        for k in range(3):
+            anticommutator = (a[j] @ adag[k] + adag[k] @ a[j]).to_jax()
+            assert jnp.allclose(anticommutator, (j == k) * jnp.eye(8))
 
 
 @pytest.mark.run(order=TEST_INSTANT)
@@ -245,6 +275,62 @@ def test_momentum():
         dq.momentum(dim, layout=dq.dense).to_jax(),
         dq.momentum(dim, layout=dq.dia).to_jax(),
     )
+
+
+# helper
+LAYOUTS = [dq.dense, dq.dia]
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', LAYOUTS)
+def test_position_hbar_scaling(layout):
+    dim = 4
+    # operators scale as sqrt(hbar / 2)
+    x1 = dq.position(dim, layout=layout, hbar=0.5).to_jax()
+    x2 = dq.position(dim, layout=layout, hbar=2.0).to_jax()
+    assert jnp.allclose(x2, 2.0 * x1)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', LAYOUTS)
+def test_momentum_hbar_scaling(layout):
+    dim = 4
+    p1 = dq.momentum(dim, layout=layout, hbar=0.5).to_jax()
+    p2 = dq.momentum(dim, layout=layout, hbar=2.0).to_jax()
+    assert jnp.allclose(p2, 2.0 * p1)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', LAYOUTS)
+def test_quadrature_hbar_scaling(layout):
+    dim = 4
+    phi = 0.37
+    q1 = dq.quadrature(dim, phi, layout=layout, hbar=0.5).to_jax()
+    q2 = dq.quadrature(dim, phi, layout=layout, hbar=2.0).to_jax()
+    assert jnp.allclose(q2, 2.0 * q1)
+
+
+HBAR_VALUES = [0.5, 1.0, 2.0]
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', LAYOUTS)
+@pytest.mark.parametrize('hbar', HBAR_VALUES)
+def test_quadrature_zero_equals_position(layout, hbar):
+    dim = 4
+    q0 = dq.quadrature(dim, 0.0, layout=layout, hbar=hbar).to_jax()
+    x = dq.position(dim, layout=layout, hbar=hbar).to_jax()
+    assert jnp.allclose(q0, x)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', LAYOUTS)
+@pytest.mark.parametrize('hbar', HBAR_VALUES)
+def test_quadrature_pi_over_2_equals_momentum(layout, hbar):
+    dim = 4
+    q90 = dq.quadrature(dim, jnp.pi / 2, layout=layout, hbar=hbar).to_jax()
+    p = dq.momentum(dim, layout=layout, hbar=hbar).to_jax()
+    assert jnp.allclose(q90, p)
 
 
 @pytest.mark.run(order=TEST_INSTANT)

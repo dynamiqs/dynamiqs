@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from math import prod
+from typing import cast
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -12,7 +14,7 @@ from .._checks import check_type_int
 from .._utils import cdtype
 from ..qarrays.qarray import QArray
 from ..qarrays.utils import asqarray
-from .general import tensor
+from .general import tensor, unit
 from .operators import displace
 
 __all__ = [
@@ -27,6 +29,10 @@ __all__ = [
     'ground',
     'ground_dm',
     'thermal_dm',
+    'vacuum',
+    'vacuum_dm',
+    'cat',
+    'cat_dm',
 ]
 
 
@@ -35,12 +41,12 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
 
     Args:
         dim: Hilbert space dimension of each mode.
-        number _(array-like of shape (...) or (..., len(dim)))_: Fock state number
+        number (array-like of shape (...) or (..., len(dim))): Fock state number
             for each mode, of integer type. If `dim` is a tuple, the last dimension of
             `number` should match the length of `dim`.
 
     Returns:
-        _(qarray of shape (..., n, 1))_ Ket of the Fock state or tensor product of Fock
+        (qarray of shape (..., n, 1)): Ket of the Fock state or tensor product of Fock
             states, with _n = prod(dims)_.
 
     Examples:
@@ -82,22 +88,22 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
         >>> dq.fock((3, 2), number).shape
         (4, 6, 1)
     """
-    dim = np.asarray(dim)
+    _dim = np.asarray(dim)
     number = jnp.asarray(number)
-    check_type_int(dim, 'dim')
+    check_type_int(_dim, 'dim')
     check_type_int(number, 'number')
 
     # check if dim is a single value or a tuple
-    if dim.ndim > 1:
+    if _dim.ndim > 1:
         raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
 
     # if dim is an integer, convert shapes dim: () -> (1,) and number: (...) -> (..., 1)
-    if dim.ndim == 0:
-        dim = dim[None]
+    if _dim.ndim == 0:
+        _dim = _dim[None]
         number = number[..., None]
 
     # check if number has shape (..., len(ndim))
-    if number.shape[-1] != dim.shape[-1]:
+    if number.shape[-1] != _dim.shape[-1]:
         raise ValueError(
             'Argument `number` must have shape `(...)` or `(..., len(dim))`, but'
             f' has shape number.shape={number.shape}.'
@@ -106,7 +112,7 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
     # check if 0 <= number[..., i] < dim[i] for all i
     number = eqx.error_if(
         number,
-        dim - number <= 0,
+        _dim - number <= 0,
         'Argument `number` must be in the range [0, dim[i]) for each mode i:'
         ' 0 <= number[..., i] < dim[i].',
     )
@@ -117,11 +123,11 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
         # has shape (ndim,), number has shape (ndim,) and number = [n0, n1,..., nf]
         # this is the unbatched version of fock()
         idx = 0
-        for d, n in zip(dim, number, strict=True):
+        for d, n in zip(_dim, number, strict=True):
             idx = d * idx + n
-        ket = jnp.zeros((prod(dim), 1), dtype=cdtype())
+        ket = jnp.zeros((prod(_dim), 1), dtype=cdtype())
         array = ket.at[idx].set(1.0)
-        return asqarray(array, dims=tuple(dim.tolist()))
+        return asqarray(array, dims=tuple(_dim.tolist()))
 
     _vectorized_fock = jnp.vectorize(_fock, signature='(ndim)->(prod_ndim,1)')
     return _vectorized_fock(number)
@@ -132,12 +138,12 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
 
     Args:
         dim: Hilbert space dimension of each mode.
-        number _(array-like of shape (...) or (..., len(dim)))_: Fock state number
+        number (array-like of shape (...) or (..., len(dim))): Fock state number
             for each mode, of integer type. If `dim` is a tuple, the last dimension of
             `number` should match the length of `dim`.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Density matrix of the Fock state or tensor
+        (qarray of shape (..., n, n)): Density matrix of the Fock state or tensor
             product of Fock states, with _n = prod(dims)_.
 
     Examples:
@@ -198,7 +204,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
 
     Args:
         dim: Hilbert space dimension of each mode.
-        alpha _(array-like of shape (...) or (len(dim), ...))_: Coherent state
+        alpha (array-like of shape (...) or (len(dim), ...)): Coherent state
             amplitude for each mode. If `dim` is a tuple, the first dimension of
             `alpha` should match the length of `dim`.
 
@@ -206,7 +212,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
         If you provide argument `alpha` as a list, all elements must be broadcastable.
 
     Returns:
-        _(qarray of shape (..., n, 1))_ Ket of the coherent state or tensor product of
+        (qarray of shape (..., n, 1)): Ket of the coherent state or tensor product of
             coherent states, with _n = prod(dims)_.
 
     Examples:
@@ -249,19 +255,21 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
         >>> dq.coherent((8, 8), (alpha1[None, :], alpha2[:, None])).shape
         (7, 5, 64, 1)
     """
-    dim = np.asarray(dim)
-    check_type_int(dim, 'dim')
+    _dim = np.asarray(dim)
+    check_type_int(_dim, 'dim')
 
     # check if dim is a single value or a tuple
-    if dim.ndim > 1:
+    if _dim.ndim > 1:
         raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
 
     # tackle multi-modes
-    if dim.ndim == 1:
-        return tensor(*[coherent(d, a) for d, a in zip(dim, alpha, strict=True)])
+    if _dim.ndim == 1:
+        return tensor(
+            *[coherent(d, a) for d, a in zip(_dim, cast(Iterable, alpha), strict=True)]
+        )
 
     # fact: dim is now an integer
-    return displace(int(dim), alpha) @ fock(int(dim), 0)
+    return asqarray(displace(int(_dim), jnp.asarray(alpha)) @ fock(int(_dim), 0))
 
 
 def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
@@ -270,12 +278,12 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
 
     Args:
         dim: Hilbert space dimension of each mode.
-        alpha _(array-like of shape (...) or (..., len(dim)))_: Coherent state
+        alpha (array-like of shape (...) or (..., len(dim))): Coherent state
             amplitude for each mode. If `dim` is a tuple, the last dimension of
             `alpha` should match the length of `dim`.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Density matrix of the coherent state or tensor
+        (qarray of shape (..., n, n)): Density matrix of the coherent state or tensor
             product of coherent states, with _n = prod(dims)_.
 
     Examples:
@@ -317,7 +325,7 @@ def ground() -> QArray:
         a two-level system with Hamiltonian $H=\omega \sigma_z$.
 
     Returns:
-        _(qarray of shape (2, 1))_ Ket $\ket{g}$.
+        (qarray of shape (2, 1)): Ket $\ket{g}$.
 
     Examples:
         >>> dq.ground()
@@ -339,7 +347,7 @@ def ground_dm() -> QArray:
         of a two-level system with Hamiltonian $H=\omega \sigma_z$.
 
     Returns:
-        _(qarray of shape (2, 2))_ Density matrix $\ket{g}\bra{g}$.
+        (qarray of shape (2, 2)): Density matrix $\ket{g}\bra{g}$.
 
     Examples:
         >>> dq.ground_dm()
@@ -360,7 +368,7 @@ def excited() -> QArray:
         a two-level-system with Hamiltonian $H=\omega \sigma_z$.
 
     Returns:
-        _(qarray of shape (2, 1))_ Ket $\ket{e}$.
+        (qarray of shape (2, 1)): Ket $\ket{e}$.
 
     Examples:
         >>> dq.excited()
@@ -382,7 +390,7 @@ def excited_dm() -> QArray:
         of a two-level-system with Hamiltonian $H=\omega \sigma_z$.
 
     Returns:
-        _(qarray of shape (2, 2))_ Density matrix $\ket{e}\bra{e}$.
+        (qarray of shape (2, 2)): Density matrix $\ket{e}\bra{e}$.
 
     Examples:
         >>> dq.excited_dm()
@@ -405,12 +413,12 @@ def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> QArray:
 
     Args:
         dim: Hilbert space dimension of each mode.
-        nth _(array-like of shape (...) or (..., len(dim)))_: Thermal photon number for
+        nth (array-like of shape (...) or (..., len(dim))): Thermal photon number for
             each mode. If `dim` is a tuple, the last dimension of `nth` should match the
             length of `dim`.
 
     Returns:
-        _(qarray of shape (..., n, n))_ Density matrix of the thermal state or tensor
+        (qarray of shape (..., n, n)): Density matrix of the thermal state or tensor
             product of thermal states, with _n = prod(dims)_.
 
     Examples:
@@ -435,21 +443,21 @@ def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> QArray:
         >>> dq.thermal_dm((4, 3), nth).shape
         (3, 12, 12)
     """
-    dim = np.asarray(dim)
+    _dim = np.asarray(dim)
     nth = jnp.asarray(nth)
-    check_type_int(dim, 'dim')
+    check_type_int(_dim, 'dim')
 
     # check if dim is a single value or a tuple
-    if dim.ndim > 1:
+    if _dim.ndim > 1:
         raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
 
     # if dim is an integer, convert shapes dim: () -> (1,) and nth: (...) -> (..., 1)
-    if dim.ndim == 0:
-        dim = dim[None]
+    if _dim.ndim == 0:
+        _dim = _dim[None]
         nth = nth[..., None]
 
     # check if nth has shape (..., len(ndim))
-    if nth.shape[-1] != dim.shape[-1]:
+    if nth.shape[-1] != _dim.shape[-1]:
         raise ValueError(
             'Argument `nth` must have shape `(...)` or `(..., len(dim))`, but'
             f' has shape nth.shape={nth.shape}.'
@@ -457,7 +465,7 @@ def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> QArray:
 
     # compute all density matrices
     def _thermal_dm(nth: Array) -> QArray:
-        dms = [_single_thermal_dm(d, n) for d, n in zip(dim, nth, strict=True)]
+        dms = [_single_thermal_dm(int(d), n) for d, n in zip(_dim, nth, strict=True)]
         return tensor(*dms)
 
     _vectorized_thermal_dm = jnp.vectorize(
@@ -477,7 +485,181 @@ def _single_thermal_dm(dim: int, nth: Array) -> QArray:
 
     # construct the density matrix
     bdiag = jnp.vectorize(jnp.diag, signature='(a)->(a,a)')
-    rho = asqarray(bdiag(rho_diag), dims=(dim.item(),))
+    rho = asqarray(bdiag(rho_diag), dims=(dim,))
 
     # normalize the density matrix
-    return rho.unit()
+    return rho / rho.trace()
+
+
+def vacuum(dim: int) -> QArray:
+    r"""Returns the ket of the vacuum state.
+
+    It is the Fock state with zero photon, defined by
+    $\ket{0} = \begin{pmatrix}1\\0\\\vdots\end{pmatrix}$.
+
+    Args:
+        dim: Hilbert space dimension of the mode.
+
+    Returns:
+        (qarray of shape (dim, 1)): Ket $\ket{0}$.
+
+    Examples:
+        >>> dq.vacuum(4)
+        QArray: shape=(4, 1), dims=(4,), dtype=complex64, layout=dense
+        [[1.+0.j]
+         [0.+0.j]
+         [0.+0.j]
+         [0.+0.j]]
+    """
+    return fock(dim, 0)
+
+
+def vacuum_dm(dim: int) -> QArray:
+    r"""Returns the density matrix of the vacuum state.
+
+    It is the Fock state with zero photon, defined by $\ket{0}\bra{0} =
+    \begin{pmatrix}1 & 0 & \cdots\\0 & 0 & \cdots\\\vdots & \vdots & \ddots
+    \end{pmatrix}$.
+
+    Args:
+        dim: Hilbert space dimension of the mode.
+
+    Returns:
+        (qarray of shape (dim, dim)): Density matrix $\ket{0}\bra{0}$.
+
+    Examples:
+        >>> dq.vacuum_dm(4)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        [[1.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]]
+    """
+    return vacuum(dim).todm()
+
+
+def cat(dim: int, alpha: ArrayLike, theta: ArrayLike = 0.0) -> QArray:
+    r"""Returns the ket of a Schrödinger cat state.
+
+    A cat state is the superposition of two coherent states of opposite amplitudes,
+    $$
+        \ket{\mathrm{cat}(\alpha, \theta)} \propto
+            \ket{\alpha} + e^{i\theta} \ket{-\alpha},
+    $$
+    where $\theta=0$ gives the even cat state and $\theta=\pi$ the odd cat state.
+
+    Args:
+        dim: Hilbert space dimension of the mode.
+        alpha (array-like of shape (...)): Coherent state amplitude.
+        theta (array-like of shape (...)): Relative phase between the two coherent
+            states.
+
+    Note:
+        Arguments `alpha` and `theta` are broadcast together following NumPy
+        broadcasting rules, allowing batching over either or both.
+
+    Note:
+        In the vanishing-amplitude limit $\alpha\to 0$ the two coherent states
+        collapse onto the vacuum. The returned state is then the vacuum
+        $\ket{0}$ for the even cat, and the single-photon Fock state $\ket{1}$
+        for the odd cat ($\theta=\pi$), where the vacuum contributions cancel.
+
+    Returns:
+        (qarray of shape (..., dim, 1)): Ket of the cat state.
+
+    Examples:
+        Even cat state $\ket{\mathrm{cat}(2, 0)}$:
+        >>> dq.cat(4, 2.0)
+        QArray: shape=(4, 1), dims=(4,), dtype=complex64, layout=dense
+        [[0.893+0.j]
+         [0.   +0.j]
+         [0.449+0.j]
+         [0.   +0.j]]
+
+        Batched over the amplitude $\{\ket{\mathrm{cat}(1, 0)}\!,
+        \ket{\mathrm{cat}(2, 0)}\}$:
+        >>> dq.cat(4, [1.0, 2.0]).shape
+        (2, 4, 1)
+
+        Batched over the amplitude and phase, broadcast to a common shape:
+        >>> alpha = [1.0, 2.0, 3.0]
+        >>> theta = [[0.0], [3.14]]
+        >>> dq.cat(8, alpha, theta).shape
+        (2, 3, 8, 1)
+
+        Vanishing-amplitude odd cat $\ket{\mathrm{cat}(0, \pi)} = \ket{1}$:
+        >>> dq.cat(4, 0.0, np.pi)
+        QArray: shape=(4, 1), dims=(4,), dtype=complex64, layout=dense
+        [[0.+0.j]
+         [1.+0.j]
+         [0.+0.j]
+         [0.+0.j]]
+    """
+    alpha = jnp.asarray(alpha, dtype=cdtype())
+    theta = jnp.asarray(theta)
+
+    # broadcast alpha and theta to a common batch shape
+    bshape = jnp.broadcast_shapes(alpha.shape, theta.shape)
+    alpha = jnp.broadcast_to(alpha, bshape)
+    theta = jnp.broadcast_to(theta, bshape)
+
+    # compute the two coherent components, each of shape (..., dim, 1)
+    plus_alpha = coherent(dim, alpha)
+    minus_alpha = coherent(dim, -alpha)
+
+    # reshape the phase as a batched scalar of shape (..., 1, 1)
+    phase = jnp.exp(1j * theta)[..., None, None]
+
+    psi = unit(plus_alpha + minus_alpha * phase)
+
+    # edge case: as alpha -> 0 both coherent states collapse onto the vacuum and
+    # their superposition becomes ill-defined to normalize. The limit is the vacuum
+    # |0> in general, except for the odd cat (theta = pi) where the vacuum
+    # contributions cancel exactly and the limit is the single-photon Fock state
+    # |1>. We substitute these limits explicitly to avoid normalizing numerical
+    # noise for vanishingly small amplitudes.
+    is_odd = jnp.isclose(jnp.cos(theta), -1.0)[..., None, None]
+    limit = fock(dim, 1) * is_odd + fock(dim, 0) * ~is_odd
+    small_alpha = jnp.isclose(alpha, 0.0)[..., None, None]
+    return limit * small_alpha + psi * ~small_alpha
+
+
+def cat_dm(dim: int, alpha: ArrayLike, theta: ArrayLike = 0.0) -> QArray:
+    r"""Returns the density matrix of a Schrödinger cat state.
+
+    A cat state is the superposition of two coherent states of opposite amplitudes,
+    $$
+        \ket{\mathrm{cat}(\alpha, \theta)} \propto
+            \ket{\alpha} + e^{i\theta} \ket{-\alpha},
+    $$
+    where $\theta=0$ gives the even cat state and $\theta=\pi$ the odd cat state.
+
+    Args:
+        dim: Hilbert space dimension of the mode.
+        alpha (array-like of shape (...)): Coherent state amplitude.
+        theta (array-like of shape (...)): Relative phase between the two coherent
+            states.
+
+    Note:
+        Arguments `alpha` and `theta` are broadcast together following NumPy
+        broadcasting rules, allowing batching over either or both.
+
+    Returns:
+        (qarray of shape (..., dim, dim)): Density matrix of the cat state.
+
+    Examples:
+        Even cat state $\ket{\mathrm{cat}(2, 0)}\bra{\mathrm{cat}(2, 0)}$:
+        >>> dq.cat_dm(4, 2.0)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        [[0.798+0.j 0.   +0.j 0.401+0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
+         [0.401+0.j 0.   +0.j 0.202+0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]]
+
+        Batched over the phase $\{\ket{\mathrm{cat}(2, 0)}\bra{\mathrm{cat}(2, 0)}\!,
+        \ket{\mathrm{cat}(2, \pi)}\bra{\mathrm{cat}(2, \pi)}\}$:
+        >>> import numpy as np
+        >>> dq.cat_dm(4, 2.0, [0.0, np.pi]).shape
+        (2, 4, 4)
+    """
+    return cat(dim, alpha, theta).todm()

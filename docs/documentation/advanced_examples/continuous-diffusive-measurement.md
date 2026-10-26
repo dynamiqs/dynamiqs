@@ -74,9 +74,11 @@ plt.gca().set(
     xlabel=r'$t$',
     ylabel=r'$I^{[t,t+\Delta t)}$',
 )
-
-renderfig('diffusive-monitored-qubit-trajs')
 ```
+
+<!-- invisible-code-block: python
+renderfig('diffusive-monitored-qubit-trajs')
+-->
 
 ![plot_diffusive_monitored_qubit_trajs](../../figs_docs/diffusive-monitored-qubit-trajs.png){.fig}
 
@@ -93,9 +95,11 @@ plt.gca().set(
     xlabel=r'$t$',
     ylabel=r'$Y_t=\int_0^t \mathrm{d}Y_s$',
 )
-
-renderfig('monitored-qubit-cumsum-trajs')
 ```
+
+<!-- invisible-code-block: python
+renderfig('monitored-qubit-cumsum-trajs')
+-->
 
 ![plot_monitored_qubit_cumsum_trajs](../../figs_docs/monitored-qubit-cumsum-trajs.png){.fig}
 
@@ -115,9 +119,11 @@ plt.gca().set(
     ylabel=r'$\langle \sigma_z \rangle_t=\langle \psi_t | \sigma_z | \psi_t \rangle$',
     ylim=(-1.1, 1.1),
 )
-
-renderfig('monitored-qubit-sigmaz')
 ```
+
+<!-- invisible-code-block: python
+renderfig('monitored-qubit-sigmaz')
+-->
 
 ![plot_monitored_qubit_sigmaz](../../figs_docs/monitored-qubit-sigmaz.png){.fig}
 
@@ -163,9 +169,11 @@ plt.gca().set(
     ylabel=r'$\langle \sigma_z \rangle_t = \mathrm{Tr}[\sigma_z\rho_t]$',
     ylim=(-1.1, 1.1),
 )
-
-renderfig('monitored-qubit-sigmaz-eta')
 ```
+
+<!-- invisible-code-block: python
+renderfig('monitored-qubit-sigmaz-eta')
+-->
 
 ![plot_monitored_qubit_sigmaz_eta](../../figs_docs/monitored-qubit-sigmaz-eta.png){.fig}
 
@@ -183,7 +191,7 @@ kappa = 1.0
 omega = 10.0
 alpha0 = 2.0
 H = omega * a.dag() @ a
-jump_ops = [jnp.sqrt(kappa/2) * a, jnp.sqrt(kappa/2) * (-1j * a)]
+jump_ops = [jnp.sqrt(kappa / 2) * a, jnp.sqrt(kappa / 2) * (-1j * a)]
 etas = [1.0, 1.0]
 psi0 = dq.coherent(n, alpha0)
 
@@ -198,8 +206,9 @@ keys = jax.random.split(key, ntrajs)
 
 # simulate trajectories
 method = dq.method.EulerMaruyama(dt=1e-3)
-options = dq.Options(save_states=False)
-result = dq.dsmesolve(H, jump_ops, etas, psi0, tsave, keys, method=method, options=options)
+result = dq.dsmesolve(
+    H, jump_ops, etas, psi0, tsave, keys, method=method, save_states=False
+)
 print(result)
 ```
 
@@ -238,13 +247,12 @@ ax0.set(
 for Ik_p in Iks_p[:3]:
     ax1.plot(tsave[:-1], Ik_p / np.sqrt(2), lw=1.5)
 
-ax1.set(
-    xlabel=r'$t$',
-    ylabel=r'$I_P^{[t,t+\Delta t)}/\sqrt{2}$',
-)
-
-renderfig('monitored-oscillator-IxIp')
+ax1.set(xlabel=r'$t$', ylabel=r'$I_P^{[t,t+\Delta t)}/\sqrt{2}$')
 ```
+
+<!-- invisible-code-block: python
+renderfig('monitored-oscillator-IxIp')
+-->
 
 ![plot_monitored_oscillator_IxIp](../../figs_docs/monitored-oscillator-IxIp.png){.fig}
 
@@ -253,8 +261,16 @@ renderfig('monitored-oscillator-IxIp')
 
 ```python
 plt.figure()
-plt.plot(tsave[:-1], jnp.mean(Iks_x / np.sqrt(2), axis=0), label=r'$\mathbb{E}[I_X/\sqrt{2}]$')
-plt.plot(tsave[:-1], jnp.mean(Iks_p / np.sqrt(2), axis=0), label=r'$\mathbb{E}[I_P/\sqrt{2}]$')
+plt.plot(
+    tsave[:-1],
+    jnp.mean(Iks_x / np.sqrt(2), axis=0),
+    label=r'$\mathbb{E}[I_X/\sqrt{2}]$',
+)
+plt.plot(
+    tsave[:-1],
+    jnp.mean(Iks_p / np.sqrt(2), axis=0),
+    label=r'$\mathbb{E}[I_P/\sqrt{2}]$',
+)
 
 alpha = alpha0 * jnp.exp(-kappa / 2 * tsave) * jnp.exp(-1j * omega * tsave)
 plt.plot(tsave, alpha.real, label=rf'$\mathrm{{Tr}}[X\rho_t]$', ls='--', color='gray')
@@ -266,7 +282,10 @@ plt.gca().set(
     ylim=(-2.5, 2.5),
 )
 plt.legend()
-renderfig('monitored-oscillator-mean')
 ```
+
+<!-- invisible-code-block: python
+renderfig('monitored-oscillator-mean')
+-->
 
 ![plot_monitored_oscillator_mean](../../figs_docs/monitored-oscillator-mean.png){.fig}

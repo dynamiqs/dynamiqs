@@ -1,5 +1,4 @@
-from .dense_qarray import *
+from .materialized_qarray import *  # registers MaterializedQArray (not exported)
 from .qarray import *
 from .qarray import QArrayLike  # excluded from documentation
-from .sparsedia_qarray import *
 from .utils import *

@@ -10,7 +10,7 @@ __all__ = ['hc']
 class HermitianConjugate:
     def __add__(self, _):  # noqa
         raise TypeError(
-            'The symbol `dq.hq` can only be right-added to a qarray or a time-qarray.'
+            'The symbol `dq.hq` can only be right-added to a qarray or a timeqarray.'
         )
 
     def __radd__(self, y: QArray | TimeQArray) -> QArray | TimeQArray:
@@ -19,12 +19,12 @@ class HermitianConjugate:
         else:
             raise TypeError(
                 f'The symbol `dq.hq` can only be right-added to a qarray or a '
-                f'time-qarray, but it was added to a {obj_type_str(y)}.'
+                f'timeqarray, but it was added to a {obj_type_str(y)}.'
             )
 
 
 hc = HermitianConjugate()
-"""This symbol can be used as a shortcut to sum a qarray or a time-qarray with its
+"""This symbol can be used as a shortcut to sum a qarray or a timeqarray with its
 Hermitian conjugate.
 
 Examples:
@@ -50,7 +50,7 @@ Examples:
 
 Warning:
     The only valid operation with this symbol is right-addition to a qarray or a
-    time-qarray. Any other operation will raise a `TypeError`.
+    timeqarray. Any other operation will raise a `TypeError`.
 
 Warning:
     The symbol applies on all terms present in the left-hand side of the addition. If

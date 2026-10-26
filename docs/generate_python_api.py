@@ -1,11 +1,14 @@
-"""Automatically generate the Python API documentation pages by parsing the public
-functions from `__all__`.
+"""Generate the Python API documentation pages by parsing the public functions from
+`__all__`.
+
+Zensical has no build-time page generation, so this script must run before each build:
+`task docbuild` and `task docserve` call it, and so does CI before `mike deploy`. The
+pages are written to `docs/python_api/<section>/` (git-ignored).
 """
 
 import re
+import shutil
 from pathlib import Path
-
-import mkdocs_gen_files
 
 # dictionary structure
 # key: python_api directory path
@@ -16,7 +19,7 @@ doc_sections = {
     'time_qarray': (['dynamiqs/time_qarray.py'], 'dq'),
     'method': (['dynamiqs/method.py'], 'dq.method'),
     'gradient': (['dynamiqs/gradient.py'], 'dq.gradient'),
-    'hermitian_conjugate': (['dynamiqs/hermitian_conjugate.py'], 'dq'),
+    'helpers': (['dynamiqs/helpers.py'], 'dq'),
     'utils/operators': (['dynamiqs/utils/operators.py'], 'dq'),
     'utils/states': (['dynamiqs/utils/states.py'], 'dq'),
     'utils/general': (
@@ -29,6 +32,7 @@ doc_sections = {
     'utils/optimal_control': (['dynamiqs/utils/optimal_control.py'], 'dq'),
     'random': (['dynamiqs/random/'], 'dq.random'),
     'plot': (['dynamiqs/plot/'], 'dq.plot'),
+    'progress_meter': (['dynamiqs/progress_meter.py'], 'dq'),
 }
 
 
@@ -54,8 +58,11 @@ def get_elements_from_all(file_path):
 
 # generate a documentation file for each function of each file/directory
 for section, (paths, namespace) in doc_sections.items():
-    # e.g 'python_api/operators' or 'python_api/plot'
-    doc_path = Path('python_api', section)
+    # e.g 'docs/python_api/operators' or 'docs/python_api/plot'
+    doc_path = Path('docs', 'python_api', section)
+    # remove stale pages of functions that were removed from `__all__`
+    shutil.rmtree(doc_path, ignore_errors=True)
+    doc_path.mkdir(parents=True)
 
     for path in paths:
         # start with e.g. 'dynamiqs/utils/operators.py' or 'dynamiqs/plot'
@@ -69,14 +76,16 @@ for section, (paths, namespace) in doc_sections.items():
 
         # loop over all functions in file
         for function in get_elements_from_all(src_path):
-            # convert to e.g 'python_api/utils/operators/eye.md'
+            # convert to e.g 'docs/python_api/utils/operators/eye.md'
             doc_path_function = Path(doc_path, function).with_suffix('.md')
 
             # create the function page
-            with mkdocs_gen_files.open(doc_path_function, 'w') as f:
+            with doc_path_function.open('w') as f:
                 module = identifier.split('.')[0]
+                print('---', file=f)
+                print(f'title: {namespace}.{function}', file=f)
+                print('---', file=f)
                 print(f'::: {identifier}.{function}', file=f)
                 print('    options:', file=f)
-                print(f'        namespace: {namespace}', file=f)
-
-            mkdocs_gen_files.set_edit_path(doc_path_function, Path('..') / src_path)
+                print('        extra:', file=f)
+                print(f'            namespace: {namespace}', file=f)

@@ -1,9 +1,9 @@
 import jax
 import jax.numpy as jnp
+import numpy as np
 import pytest
 
 import dynamiqs as dq
-from dynamiqs import asqarray
 
 from ..order import TEST_LONG
 
@@ -11,11 +11,10 @@ from ..order import TEST_LONG
 def rand_mesolve_args(n, nH, nLs, npsi0, nEs):
     nkeys = len(nLs) + 3
     kH, *kLs, kpsi0, kEs = jax.random.split(jax.random.PRNGKey(42), nkeys)
-    H = dq.random.herm(kH, (*nH, n, n))
-    Ls = [dq.random.herm(kL, (*nL, n, n)) for kL, nL in zip(kLs, nLs, strict=True)]
-    psi0 = dq.random.ket(kpsi0, (*npsi0, n, 1))
-    Es = dq.random.complex(kEs, (nEs, n, n))
-    Es = [asqarray(E) for E in Es]
+    H = dq.random.operator(kH, n, batch=nH)
+    Ls = [dq.random.operator(kL, n, batch=nL) for kL, nL in zip(kLs, nLs, strict=True)]
+    psi0 = dq.random.ket(kpsi0, n, batch=npsi0)
+    Es = dq.random.operator(kEs, n, hermitian=False, batch=nEs)
     return H, Ls, psi0, Es
 
 
@@ -40,6 +39,40 @@ def test_cartesian_batching(nH, npsi0, nL1, nL2):
     assert result.expects.shape == (*nH, *nL1, *nL2, *npsi0, nEs, ntsave)
 
 
+@pytest.mark.run(order=TEST_LONG)
+@pytest.mark.parametrize(
+    ('cartesian_batching', 'nH', 'nL', 'npsi0'),
+    [(True, (2,), (3,), (4,)), (False, (3, 1), (), (4,))],
+)
+def test_lowrank_batching(cartesian_batching, nH, nL, npsi0):
+    n, rank = 4, 2
+    nEs = 2
+    ntsave = 11
+
+    # run mesolve
+    H, Ls, psi0, Es = rand_mesolve_args(n, nH, [nL], npsi0, nEs)
+    tsave = jnp.linspace(0, 0.01, ntsave)
+    method = dq.method.LowRank(rank=rank, key=jax.random.PRNGKey(0))
+    result = dq.mesolve(
+        H,
+        Ls,
+        psi0,
+        tsave,
+        exp_ops=Es,
+        method=method,
+        cartesian_batching=cartesian_batching,
+    )
+
+    # check result shape
+    if cartesian_batching:
+        bshape = (*nH, *nL, *npsi0)
+    else:
+        bshape = jnp.broadcast_shapes(nH, nL, npsi0)
+    assert result.lowrank_states.shape == (*bshape, ntsave, n, rank)
+    assert result.states.shape == (*bshape, ntsave, n, n)
+    assert result.expects.shape == (*bshape, nEs, ntsave)
+
+
 # H has fixed shape (3, 4, n, n) for the next test case, we test a broad ensemble of
 # compatible broadcastable shape
 @pytest.mark.run(order=TEST_LONG)
@@ -55,13 +88,46 @@ def test_flat_batching(nL1, npsi0):
     # run mesolve
     H, Ls, psi0, Es = rand_mesolve_args(n, nH, nLs, npsi0, nEs)
     tsave = jnp.linspace(0, 0.01, ntsave)
-    options = dq.Options(cartesian_batching=False)
-    result = dq.mesolve(H, Ls, psi0, tsave, exp_ops=Es, options=options)
+    result = dq.mesolve(H, Ls, psi0, tsave, exp_ops=Es, cartesian_batching=False)
 
     # check result shape
     broadcast_shape = jnp.broadcast_shapes(nH, nL1, npsi0)
     assert result.states.shape == (*broadcast_shape, ntsave, n, n)
     assert result.expects.shape == (*broadcast_shape, nEs, ntsave)
+
+
+@pytest.mark.run(order=TEST_LONG)
+@pytest.mark.parametrize(
+    ('nH', 'nL2', 'npsi0'), [((3,), (3,), (3,)), ((), (3,), ()), ((2, 1), (), (3,))]
+)
+def test_flat_batching_values(nH, nL2, npsi0):
+    # flat batching, with unbatched or partially batched inputs (the first jump
+    # operator always unbatched), gives the same results as solving each batch element
+    # on its own
+    H, (L1, L2), psi0, Es = rand_mesolve_args(4, nH, [(), nL2], npsi0, 2)
+    tsave = jnp.linspace(0, 0.1, 5)
+    result = dq.mesolve(H, [L1, L2], psi0, tsave, exp_ops=Es, cartesian_batching=False)
+    for index in np.ndindex(jnp.broadcast_shapes(nH, nL2, npsi0)):
+        expected = dq.mesolve(
+            _element(H, nH, index),
+            [L1, _element(L2, nL2, index)],
+            _element(psi0, npsi0, index),
+            tsave,
+            exp_ops=Es,
+        )
+        assert jnp.allclose(result.states[index].to_jax(), expected.states.to_jax())
+        assert jnp.allclose(result.expects[index], expected.expects)
+
+
+def _element(x, shape, index):
+    # the inputs of batch element `index` of a flat batch, with broadcasting
+    if len(shape) == 0:
+        return x
+    return x[
+        tuple(
+            i if d > 1 else 0 for i, d in zip(index[-len(shape) :], shape, strict=True)
+        )
+    ]
 
 
 @pytest.mark.run(order=TEST_LONG)

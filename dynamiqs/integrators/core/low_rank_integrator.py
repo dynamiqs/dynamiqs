@@ -1,0 +1,418 @@
+from __future__ import annotations
+
+import warnings
+from functools import partial
+from typing import cast
+
+import diffrax as dx
+import equinox as eqx
+import jax
+import jax.numpy as jnp
+import jax.scipy.linalg as jsp_linalg
+from jax import Array
+from jaxtyping import PyTree, Scalar
+
+from ..._checks import check_hermitian
+from ...method import (
+    Dopri5,
+    Dopri8,
+    Euler,
+    Kvaerno3,
+    Kvaerno5,
+    LinearSolver,
+    LowRank,
+    Tsit5,
+    _DEFixedStep,
+)
+from ...qarrays.qarray import QArray
+from ...qarrays.utils import asqarray
+from ...result import MESolveLowRankResult, Result, SolveSaved
+from ...time_qarray import ConstantTimeQArray
+from .._utils import assert_method_supported
+from .abstract_integrator import BaseIntegrator
+from .diffrax_integrator import AdaptiveStepInfos, FixedStepInfos, call_diffeqsolve
+from .interfaces import MEInterface, SolveInterface
+from .save_mixin import SolveSaveMixin
+
+
+def _cholesky_qr2(A: Array) -> tuple[Array, Array]:
+    # Reduced QR factorization of a tall A (n x r) by CholeskyQR2 (Yamamoto et al.,
+    # ETNA 44, 306, 2015): R from the Cholesky factorization of A^dag A and Q = A R^-1,
+    # repeated once on Q to make it orthonormal to round-off. As accurate as the
+    # Householder QR for cond(A) up to ~1e7, and made of matrix products instead of
+    # column-by-column reflections. Where a Cholesky factorization fails (cond(A)
+    # above ~1e8, e.g. trial stages of a rejected step), the Gram matrix is shifted
+    # as in shifted CholeskyQR (Fukaya et al., SIAM J. Sci. Comput. 42, A477, 2020),
+    # so that Q R = A still holds and no NaN reaches the step-size controller.
+    n, rank = A.shape
+    eye = jnp.eye(rank, dtype=A.dtype)
+    unit_roundoff = jnp.finfo(A.dtype).eps / 2
+
+    def cholesky_r(gram: Array) -> tuple[Array, Array]:
+        # upper-triangular R with R^dag R = gram, and R^-1
+        shift = 11 * rank * (n + rank + 1) * unit_roundoff * jnp.trace(gram).real
+        lower, shifted = jnp.linalg.cholesky(jnp.stack([gram, gram + shift * eye]))
+        lower = jnp.where(jnp.all(jnp.isfinite(lower)), lower, shifted)
+        lower_inv = jsp_linalg.solve_triangular(lower, eye, lower=True)
+        return lower.conj().T, lower_inv.conj().T
+
+    r1, r1_inv = cholesky_r(_gram(A))
+    q1 = A @ r1_inv
+    r2, r2_inv = cholesky_r(_gram(q1))
+    return q1 @ r2_inv, r2 @ r1
+
+
+def _gram(A: Array) -> Array:
+    # A^dag A. On GPU, a single product sums the n terms of an entry with a rounding
+    # error that grows with n (CholeskyQR2's least-squares solves ~1.4x less accurate
+    # than Householder's at n = 21952), and XLA merges it with the other products of
+    # A by concatenating their operands, dense n x n operators included, at every
+    # evaluation. Summing the Gram matrices of blocks of 128 rows avoids both.
+    if jax.default_backend() != 'gpu':
+        return A.conj().T @ A
+    n, rank = A.shape
+    blocks = jnp.pad(A, ((0, -n % 128), (0, 0))).reshape(-1, 128, rank)
+    return (blocks.conj().mT @ blocks).sum(0)
+
+
+def _qr_cache(A: Array) -> tuple[Array, Array]:
+    # Cache the QR factorization once per vector-field evaluation.
+    # We do this explicitly so that AD uses the JVP rule below instead of
+    # differentiating through the QR decomposition.
+    # CholeskyQR2 needs cond(A) below ~1e8 in double precision, but ~3e3 in single
+    # precision, less than the factors' (1/perturbation_scale = 1e5 at t0 by default)
+    if A.dtype == jnp.complex128:
+        q, r = _cholesky_qr2(A)
+    else:
+        q, r = jnp.linalg.qr(A, mode='reduced')
+    q = jax.lax.stop_gradient(q)
+    r = jax.lax.stop_gradient(r)
+    return q, r
+
+
+def _cholesky_cache(A: Array) -> Array:
+    # Precompute A^+ = (A^H A)^-1 A^H once per vector-field evaluation.
+    a_pseudoinverse = jsp_linalg.solve(A.conj().T @ A, A.conj().T, assume_a='pos')
+    return jax.lax.stop_gradient(a_pseudoinverse)
+
+
+def _qr_pseudoinverse_apply(cache: tuple[Array, Array], rhs: Array) -> Array:
+    q, r = cache
+    return jsp_linalg.solve_triangular(r, q.conj().T @ rhs, lower=False)
+
+
+def _qr_pseudoinverse_adjoint_apply(cache: tuple[Array, Array], rhs: Array) -> Array:
+    q, r = cache
+    # (A^+)^H rhs = Q (R^{-H} rhs), where A = Q R.
+    return q @ jsp_linalg.solve_triangular(r, rhs, trans='C', lower=False)
+
+
+# TODO: Extend these cached custom JVP rules to higher-order AD
+@jax.custom_jvp
+def _qr_solve_cached(A: Array, cache: tuple[Array, Array], B: Array) -> Array:
+    del A
+    return _qr_pseudoinverse_apply(cache, B)
+
+
+@_qr_solve_cached.defjvp
+def _qr_solve_cached_jvp(
+    primals: tuple[Array, tuple[Array, Array], Array],
+    tangents: tuple[Array, tuple[Array, Array], Array],
+) -> tuple[Array, Array]:
+    A, cache, B = primals
+    dA, _cache_tangent, dB = tangents
+    solution = _qr_solve_cached(A, cache, B)
+    # Pseudoinverse JVP formula (independent columns):
+    # dX = A^+ (dB - dA X + (A^+)^H (dA^H (B - A X))).
+    residual = B - A @ solution
+    tangent_rhs = (
+        dB
+        - dA @ solution
+        + _qr_pseudoinverse_adjoint_apply(cache, dA.conj().T @ residual)
+    )
+    solution_tangent = _qr_pseudoinverse_apply(cache, tangent_rhs)
+    return solution, solution_tangent
+
+
+@jax.custom_jvp
+def _cholesky_solve_cached(A: Array, a_pseudoinverse: Array, B: Array) -> Array:
+    del A
+    return a_pseudoinverse @ B
+
+
+@_cholesky_solve_cached.defjvp
+def _cholesky_solve_cached_jvp(
+    primals: tuple[Array, Array, Array], tangents: tuple[Array, Array, Array]
+) -> tuple[Array, Array]:
+    A, a_pseudoinverse, B = primals
+    dA, _pseudoinverse_tangent, dB = tangents
+    solution = _cholesky_solve_cached(A, a_pseudoinverse, B)
+    # Same pseudoinverse formula as the QR path, but using cached A^+.
+    residual = B - A @ solution
+    tangent_rhs = (
+        dB - dA @ solution + a_pseudoinverse.conj().T @ (dA.conj().T @ residual)
+    )
+    solution_tangent = a_pseudoinverse @ tangent_rhs
+    return solution, solution_tangent
+
+
+def normalize_m(m: Array) -> Array:
+    norm = jnp.sqrt(jnp.sum(jnp.abs(m) ** 2, axis=(-2, -1), keepdims=True))
+    return m / norm
+
+
+def rho_from_m(m: Array) -> Array:
+    rho = m @ m.conj().swapaxes(-2, -1)
+    tr = jnp.trace(rho, axis1=-2, axis2=-1)
+    return rho / tr[..., None, None]
+
+
+def initialize_m0_from_ket(psi0: Array, rank: int, eps: float, key: Array) -> Array:
+    """Initialize the low-rank d.m. m0 from a pure state |psi0>.
+
+    The first column of m0 is (a rescaled) psi0, and the remaining rank-1 columns
+    are small random vectors orthogonal to psi0, scaled by `eps`.
+    This ensures the initial density matrix rho0 = m0 @ m0† ≈ |psi0><psi0|
+    while making the target rank for numerical stability.
+    """
+    # psi0 has shape (n, 1)
+    n = psi0.shape[0]
+    psi0 = psi0 / jnp.linalg.norm(psi0)
+    psi0_unit = psi0
+
+    # rescale the leading column so that its weight plus the rank-1 perturbation
+    # columns (each with norm eps) sum to 1 in the trace of rho.
+    if rank > 1:
+        psi0 = psi0_unit * jnp.sqrt(jnp.maximum(1.0 - (rank - 1) * (eps**2), 0.0))
+
+    if rank == 1:
+        return normalize_m(psi0)
+
+    # generate random complex vectors for the remaining rank-1 columns.
+    key_r, key_i = jax.random.split(key)
+    rand_r = jax.random.normal(key_r, (n, rank - 1), dtype=psi0.real.dtype)
+    rand_i = jax.random.normal(key_i, (n, rank - 1), dtype=psi0.real.dtype)
+    rand = (rand_r + 1j * rand_i) / jnp.sqrt(2.0)
+
+    # project out the psi0 component to make perturbations orthogonal to psi0,
+    # then QR-orthonormalize them before scaling by eps.
+    rand = rand - psi0_unit @ (psi0_unit.conj().T @ rand)
+    q, _ = jnp.linalg.qr(rand, mode='reduced')
+    m0 = jnp.concatenate([psi0, q * eps], axis=1)
+    return normalize_m(m0)
+
+
+def initialize_m0_from_dm(
+    rho0: Array, rank: int, eps: float, key: Array, eigval_tol: float = 1e-12
+) -> Array:
+    """Initialize the low-rank d.m. m0 from a density matrix rho0.
+
+    The largest `rank` eigenvectors of rho0 are used as columns of m0, scaled by
+    the square root of their eigenvalues. Columns corresponding to
+    near-zero eigenvalues (below `eigval_tol`) are replaced by small random
+    perturbations scaled by `eps`, ensuring that the rank is at least `rank`.
+    """
+    # eigendecompose rho0 and keep the `rank` largest eigenvalues/vectors.
+    evals, evecs = jnp.linalg.eigh(rho0)
+    evals = jnp.maximum(evals, 0.0)
+    evals_rank = evals[-rank:][::-1]
+    cols = evecs[:, -rank:][:, ::-1] * jnp.sqrt(evals_rank)[None, :]
+
+    # for columns with near-zero eigenvalues, add small random perturbations
+    # scaled by eps to avoid degeneracies during solve.
+    key_r, key_i = jax.random.split(key)
+    rand_r = jax.random.normal(key_r, (rho0.shape[0], rank), dtype=cols.real.dtype)
+    rand_i = jax.random.normal(key_i, (rho0.shape[0], rank), dtype=cols.real.dtype)
+    rand = (rand_r + 1j * rand_i) / jnp.sqrt(2.0)
+
+    # Only perturb columns whose eigenvalue is below the tolerance.
+    tol = eigval_tol * jnp.maximum(jnp.max(evals_rank), 1.0)
+    mask = (evals_rank <= tol).astype(cols.real.dtype)
+    cols = cols + rand * (eps * mask)[None, :]
+
+    return normalize_m(cols)
+
+
+def expval_from_m(m: Array, op: QArray) -> Array:
+    op_m = cast(QArray, op @ m).to_jax()
+    return jnp.sum(jnp.conj(m) * op_m)
+
+
+class MESolveLowRankIntegrator(
+    BaseIntegrator, MEInterface, SolveSaveMixin, SolveInterface
+):
+    """Implementation of low-rank method from Goutte, Savona (2025) arxiv:2508.18114.
+
+    Original implementation in Julia:
+    https://github.com/leogoutte/low_rank/blob/main/src/low_rank.jl
+    """
+
+    method: LowRank
+
+    @property
+    def dims(self) -> tuple[int, ...]:
+        return self.H.dims
+
+    def __post_init__(self):
+        # check that assume_hermitian is True (required for the low-rank solver)
+        if not self.options.assume_hermitian:
+            raise ValueError(
+                'The LowRank method requires `dq.Options(assume_hermitian=True, ...)`'
+                '(default value). '
+                'If you initial state is not Hermitian, consider using other methods.'
+            )
+
+        # check hermiticity for density matrix inputs
+        if self.y0.isdm():
+            self.y0 = check_hermitian(self.y0, 'rho0')
+
+        # check that the rank is smaller than the initial state size
+        n = self.y0.shape[-2]
+        if n < self.method.rank:
+            raise ValueError(
+                'Argument `rank` must be smaller than the initial state size `n`,'
+                f'but got rank={self.method.rank} and n={n}.'
+            )
+
+        # warn if using Cholesky solver with single precision
+        if self.method.linear_solver is LinearSolver.CHOLESKY and not jax.config.read(
+            'jax_enable_x64'
+        ):
+            warnings.warn(
+                'Using the Cholesky linear solver with single-precision dtypes can be '
+                'numerically unstable; consider enabling double precision with '
+                "`dq.set_precision('double')`.",
+                stacklevel=2,
+            )
+
+        # check internal ODE solver
+        supported_ode_methods = (Euler, Dopri5, Dopri8, Tsit5, Kvaerno3, Kvaerno5)
+        assert_method_supported(self.method.ode_method, supported_ode_methods)
+        self.method.ode_method.assert_supports_gradient(self.gradient)
+
+    def run(self) -> Result:
+        # initialize low-rank representation from ket or density matrix input
+        eps = self.method.perturbation_scale
+        if self.y0.isket():
+            psi0 = self.y0.to_jax()
+            m0 = initialize_m0_from_ket(psi0, self.method.rank, eps, self.method.key)
+        else:
+            rho0 = self.y0.todm().to_jax()
+            m0 = initialize_m0_from_dm(rho0, self.method.rank, eps, self.method.key)
+
+        linear_solvers = {
+            LinearSolver.CHOLESKY: (_cholesky_cache, _cholesky_solve_cached),
+            LinearSolver.QR: (_qr_cache, _qr_solve_cached),
+        }
+        # Keep solver selection outside the ODE RHS loop while carrying both pieces
+        # required by the cached solve: (cache_builder, linsolve_with_cache).
+        solver_cache_builder, linsolve = linear_solvers[self.method.linear_solver]
+
+        # With constant operators (not clipped in time), the non-Hermitian Hamiltonian
+        # -iH - 1/2 sum L^dag L is computed once, before the solve: a vector-field
+        # evaluation then applies one operator instead of H and each L^dag (for dense
+        # operators, a product with an n x n matrix each).
+        constant = all(
+            isinstance(x, ConstantTimeQArray) and x.tstart is None and x.tend is None
+            for x in [self.H, *self.Ls]
+        )
+        if constant:
+            Hnh = -1j * self.H(self.t0)
+            for L in self.Ls:
+                L0 = L(self.t0)
+                Hnh = Hnh - 0.5 * L0.dag() @ L0
+
+        def vector_field(t, m, _):  # noqa: ANN001, ANN202
+            Ls = [L(t) for L in self.Ls]
+            dm = (Hnh @ m).to_jax() if constant else (-1j) * (self.H(t) @ m).to_jax()
+            # `m` is fixed for this vector-field evaluation, so we compute and reuse
+            # the decomposition/pseudoinverse across all jump operators.
+            solve_cache = solver_cache_builder(m)
+
+            for L in Ls:
+                jump_action = (L @ m).to_jax()
+                projected_jump_action = linsolve(m, solve_cache, jump_action)
+                dm += 0.5 * (jump_action @ projected_jump_action.conj().T)
+                if not constant:
+                    dm -= 0.5 * (L.dag() @ jump_action).to_jax()
+
+            return dm
+
+        term = dx.ODETerm(vector_field)
+        y0, save, to_m = m0, self.save, lambda y: y
+        if isinstance(self.method.ode_method, Kvaerno3 | Kvaerno5):
+            # The vector field is not holomorphic in m (it contains m†), so the
+            # complex Jacobian used by implicit solvers would be wrong. We solve for
+            # (Re m, Im m) instead, whose real Jacobian is exact.
+            to_m = lambda y: y[0] + 1j * y[1]
+            split = lambda m: (m.real, m.imag)
+            term = dx.ODETerm(lambda t, y, args: split(vector_field(t, to_m(y), args)))
+            y0 = split(m0)
+            save = lambda t, y: self.save(t, to_m(y))
+
+        # call diffrax to solve the ODE and save the results
+        solution = call_diffeqsolve(
+            self.ts,
+            y0,
+            term,
+            self.method.ode_method,
+            self.gradient,
+            self.options,
+            self.discontinuity_ts,
+            save=save,
+        )
+
+        ys = cast(tuple, solution.ys)
+        saved = self.postprocess_saved(ys[0], to_m(ys[1]))
+        return self.result(saved, infos=self.infos(solution.stats))
+
+    def save(self, t: Scalar, y: PyTree) -> SolveSaved:
+        m = y
+        m = normalize_m(m)
+
+        msave = None
+        if self.options.save_states:
+            msave = asqarray(m, dims=self.dims)
+
+        extra = None
+        if self.options.save_extra:
+            if self.method.is_save_extra_low_rank:
+                extra = self.options.save_extra(t, cast(QArray, m))
+            else:
+                rho = asqarray(rho_from_m(m), dims=self.dims)
+                extra = self.options.save_extra(t, rho)
+
+        if self.Es is not None:
+            Esave = jnp.stack([expval_from_m(m, E) for E in self.Es])
+        else:
+            Esave = None
+
+        return SolveSaved(ysave=msave, extra=extra, Esave=Esave)
+
+    def postprocess_saved(self, saved: SolveSaved, ylast: PyTree) -> SolveSaved:
+        mlast = ylast
+
+        if not self.options.save_states:
+            mlast_save = asqarray(normalize_m(mlast), dims=self.dims)
+            saved = eqx.tree_at(
+                lambda x: x.ysave, saved, mlast_save, is_leaf=lambda x: x is None
+            )
+
+        return self.reorder_Esave(saved)
+
+    def infos(self, stats: dict[str, Array]) -> PyTree:
+        fixed_step = isinstance(self.method.ode_method, _DEFixedStep)
+
+        if fixed_step:
+            return FixedStepInfos(stats['num_steps'])
+        else:
+            return AdaptiveStepInfos(
+                stats['num_steps'],
+                stats['num_accepted_steps'],
+                stats['num_rejected_steps'],
+            )
+
+
+mesolve_lowrank_integrator_constructor = partial(
+    MESolveLowRankIntegrator, result_class=MESolveLowRankResult
+)

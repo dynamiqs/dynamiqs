@@ -1,23 +1,28 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Callable
 from functools import partial
+from typing import cast
 
 import jax
 import jax.numpy as jnp
-from jaxtyping import Array, ArrayLike
+from jaxtyping import Array, ArrayLike, PyTree, Scalar, ScalarLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...method import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options, check_options
-from ...qarrays.dense_qarray import DenseQArray
-from ...qarrays.qarray import QArrayLike
+from ...progress_meter import AbstractProgressMeter
+from ...qarrays.dense_dataarray import DenseDataArray
+from ...qarrays.materialized_qarray import MaterializedQArray
+from ...qarrays.qarray import QArray, QArrayLike
 from ...result import MEPropagatorResult
 from ...time_qarray import TimeQArray
 from .._utils import (
     assert_method_supported,
     astimeqarray,
+    broadcast_batched,
     cartesian_vmap,
     catch_xla_runtime_error,
     ispwc,
@@ -41,7 +46,11 @@ def mepropagator(
     *,
     method: Method | None = None,
     gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    save_propagators: bool = True,
+    cartesian_batching: bool = True,
+    progress_meter: AbstractProgressMeter | bool | None = None,
+    t0: ScalarLike | None = None,
+    save_extra: Callable[[Scalar, QArray], PyTree] | None = None,
 ) -> MEPropagatorResult:
     r"""Compute the propagator of the Lindblad master equation.
 
@@ -60,12 +69,12 @@ def mepropagator(
     method.
 
     Args:
-        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
+        H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
+        jump_ops (list of qarray-like or timeqarray, each of shape (...Lk, n, n)):
             List of jump operators.
-        tsave _(array-like of shape (ntsave,))_: Times at which the propagators are
+        tsave (array-like of shape (ntsave,)): Times at which the propagators are
             saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or from `t0`
-            to `tsave[-1]` if `t0` is specified in `options`.
+            to `tsave[-1]` if `t0` is specified.
         method: Method for the integration. Defaults to `None` which redirects
             to [`dq.method.Expm`][dynamiqs.method.Expm] (explicit matrix
             exponentiation) or [`dq.method.Tsit5`][dynamiqs.method.Tsit5]
@@ -80,41 +89,6 @@ def mepropagator(
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
-        options: Generic options (supported: `save_propagators`, `cartesian_batching`,
-            `progress_meter`, `t0`, `save_extra`).
-            ??? "Detailed options API"
-                ```
-                dq.Options(
-                    save_propagators: bool = True,
-                    cartesian_batching: bool = True,
-                    progress_meter: AbstractProgressMeter | bool | None = None,
-                    t0: ScalarLike | None = None,
-                    save_extra: callable[[Array], PyTree] | None = None,
-                )
-                ```
-
-                **Parameters**
-
-                - **save_propagators** - If `True`, the propagator is saved at every
-                    time in `tsave`, otherwise only the final propagator is returned.
-                - **cartesian_batching** - If `True`, batched arguments are treated as
-                    separated batch dimensions, otherwise the batching is performed over
-                    a single shared batched dimension.
-                - **progress_meter** - Progress meter indicating how far the solve has
-                    progressed. Defaults to `None` which uses the global default
-                    progress meter (see
-                    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
-                    `True` for a [tqdm](https://github.com/tqdm/tqdm) progress meter,
-                    and `False` for no output. See other options in
-                    [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
-                    If gradients are computed, the progress meter only displays during
-                    the forward pass.
-                - **t0** - Initial time. If `None`, defaults to the first time in
-                    `tsave`.
-                - **save_extra** _(function, optional)_ - A function with signature
-                    `f(QArray) -> PyTree` that takes a propagator as input and returns
-                    a PyTree. This can be used to save additional arbitrary data
-                    during the integration, accessible in `result.extra`.
 
     Returns:
         `dq.MEPropagatorResult` object holding the result of the propagator computation.
@@ -125,29 +99,74 @@ def mepropagator(
                 dq.MEPropagatorResult
                 ```
 
-                **Attributes**
+                **Attributes:**
 
-                - **propagators** _(qarray of shape (..., nsave, n^2, n^2))_ - Saved
+                - **`propagators`** _(qarray of shape (..., nsave, n^2, n^2))_ - Saved
                     propagators with `nsave = ntsave`, or `nsave = 1` if
-                    `options.save_propagators=False`.
-                - **final_propagator** _(qarray of shape (..., n^2, n^2))_ - Saved final
-                    propagator.
-                - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
-                    specified in `options`.
-                - **infos** _(PyTree or None)_ - Method-dependent information on the
+                    `save_propagators=False`.
+                - **`final_propagator`** _(qarray of shape (..., n^2, n^2))_ - Saved
+                    final propagator.
+                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
+                    if specified.
+                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
-                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
-                    saved.
-                - **method** _(Method)_ - Method used.
-                - **gradient** _(Gradient)_ - Gradient used.
-                - **options** _(Options)_ - Options used.
+                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
+                    were saved.
+                - **`method`** _(Method)_ - Method used.
+                - **`gradient`** _(Gradient)_ - Gradient used.
+                - **`options`** _(Options)_ - Options used.
+
+    Other Parameters:
+        save_propagators: If `True`, the propagator is saved at every
+            time in `tsave`, otherwise only the final propagator is returned. Defaults
+            to `True`.
+        cartesian_batching: If `True`, batched arguments are treated
+            as separated batch dimensions, otherwise the batching is performed over a
+            single shared batch dimension. Defaults to `True`.
+        progress_meter: Progress
+            meter indicating how far the solve has progressed. Defaults to `None`
+            which uses the global default progress meter (see
+            [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to `True`
+            for a [tqdm](https://github.com/tqdm/tqdm) progress meter, and `False`
+            for no output. If gradients are computed, the progress meter only
+            displays during the forward pass.
+        t0: Initial time. If `None`, defaults to the first
+            time in `tsave`. Defaults to `None`.
+        save_extra: A function with signature
+            `f(Scalar, QArray) -> PyTree` that takes the current time and propagator as
+            input and returns a PyTree. This can be used to save additional
+            arbitrary data during the integration, accessible in `result.extra`.
+            Defaults to `None`.
+
+    Examples:
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a
+        jump_ops = [a]
+        tsave = jnp.linspace(0, 1.0, 11)
+
+        result = dq.mepropagator(H, jump_ops, tsave)
+        print(result)
+        ```
+
+        ```text title="Output"
+        ==== MEPropagatorResult ====
+        Method      : Expm
+        Infos       : 10 steps
+        Propagators : QArray complex64 (11, 256, 256) | 5.5 Mb
+        ```
 
     # Advanced use-cases
 
     ## Defining a time-dependent Hamiltonian or jump operator
 
     If the Hamiltonian or the jump operators depend on time, they can be converted
-    to time-qarrays using [`dq.pwc()`][dynamiqs.pwc],
+    to timeqarrays using [`dq.pwc()`][dynamiqs.pwc],
     [`dq.modulated()`][dynamiqs.modulated], or
     [`dq.timecallable()`][dynamiqs.timecallable]. See the
     [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
@@ -189,9 +208,18 @@ def mepropagator(
     tutorial for more details.
     """
     # === convert arguments
-    H = astimeqarray(H)
-    Ls = [astimeqarray(L) for L in jump_ops]
+    H = astimeqarray(H, 'H')
+    Ls = [astimeqarray(L, 'jump_ops') for L in jump_ops]
     tsave = jnp.asarray(tsave)
+
+    # === build options
+    options = Options(
+        save_propagators=save_propagators,
+        cartesian_batching=cartesian_batching,
+        progress_meter=progress_meter,
+        t0=t0,
+        save_extra=save_extra,
+    )
 
     # === check arguments
     _check_mepropagator_args(H, Ls)
@@ -224,10 +252,11 @@ def _vectorized_mepropagator(
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls]])
         nvmap = len(bshape)
-        # broadcast all vectorized input to same shape
-        n = H.shape[-1]
-        H = H.broadcast_to(*bshape, n, n)
-        Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
+        # broadcast batched inputs to the same shape, keep unbatched inputs unbatched
+        H, H_axes = broadcast_batched(H, H.in_axes, bshape)
+        Ls_and_axes = [broadcast_batched(L, L.in_axes, bshape) for L in Ls]
+        Ls = [L for L, _ in Ls_and_axes]
+        in_axes = (H_axes, [axes for _, axes in Ls_and_axes], *in_axes[2:])
         # vectorize the function
         f = multi_vmap(_mepropagator, in_axes, out_axes, nvmap)
 
@@ -256,7 +285,7 @@ def _mepropagator(
         Kvaerno5: mepropagator_kvaerno5_integrator_constructor,
     }
     assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    integrator_constructor = integrator_constructors[type(method)]  # ty: ignore
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -264,7 +293,7 @@ def _mepropagator(
     # === init integrator
     # todo: replace with vectorized utils constructor for eye
     data = jnp.eye(H.shape[-1] ** 2, dtype=H.dtype)
-    y0 = DenseQArray(H.dims, True, data)
+    y0 = MaterializedQArray(H.dims, True, DenseDataArray(data))
     integrator = integrator_constructor(
         ts=tsave,
         y0=y0,
@@ -277,10 +306,7 @@ def _mepropagator(
     )
 
     # === run integrator
-    result = integrator.run()
-
-    # === return result
-    return result  # noqa: RET504
+    return cast(MEPropagatorResult, integrator.run())
 
 
 def _check_mepropagator_args(H: TimeQArray, Ls: list[TimeQArray]):

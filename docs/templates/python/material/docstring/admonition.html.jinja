@@ -1,6 +1,8 @@
-{{ log.debug("Rendering admonition") }}
-<details class="{{ section.value.kind.rstrip("-") }}"
-         {% if section.value.kind.endswith('-') %} {% else %} open {% endif %}>
-  <summary>{{ section.title|convert_markdown(heading_level, html_id, strip_paragraph=True) }}</summary>
-  {{ section.value.contents|convert_markdown(heading_level, html_id) }}
+{% block logs scoped %}
+  {{ log.debug("Rendering admonition") }}
+{% endblock logs %}
+
+<details class="{{ section.value.kind.rstrip("-") }}" {% if section.value.kind.endswith('-') %} {% else %} open {% endif %}>
+  <summary>{{ section.title|convert_markdown(heading_level, html_id, strip_paragraph=True, autoref_hook=autoref_hook) }}</summary>
+  {{ section.value.contents|convert_markdown(heading_level, html_id, autoref_hook=autoref_hook) }}
 </details>
