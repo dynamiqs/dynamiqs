@@ -4,7 +4,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs import QArray, asqarray
+from dynamiqs import QArray, asqarray, destroy, dia
 from dynamiqs.time_qarray import (
     CallableTimeQArray,
     ConstantTimeQArray,
@@ -615,6 +615,25 @@ class TestSummedQArray:
         assert jnp.allclose(y(1.0).to_jax(), expected)
         with pytest.raises(ValueError, match='Hilbert space dimensions'):
             x + constant(asqarray(jnp.eye(2), dims=(1, 2)))
+
+    def test_call_sparsedia(self):
+        # a sum of sparse DIA terms has the offsets and diagonals of its values added
+        # one after the other, also with a batched prefactor and mixed dtypes
+        a = destroy(5)
+        terms = [
+            constant(asqarray(jnp.diag(jnp.arange(5.0)), layout=dia)),
+            modulated(lambda t: jnp.cos(jnp.arange(3.0) * t), a),
+            modulated(lambda t: 1j * t, a.dag() @ a.dag()),
+            constant(a @ a + a.dag()),
+        ]
+        value = SummedTimeQArray(terms)(0.7)
+        expected = terms[0](0.7)
+        for term in terms[1:]:
+            expected = expected + term(0.7)
+        assert value.layout is dia
+        assert value.dtype == expected.dtype
+        assert value.data.offsets == expected.data.offsets
+        assert_equal(value, expected)
 
     def test_clip(self):
         # create a modulated and pwc TimeQArray to sum

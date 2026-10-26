@@ -547,7 +547,7 @@ class CompositeQArray(QArray):
                 f'got layout {self.layout!r}.'
             )
         # the offsets of a sum are the union of the offsets of its terms (see
-        # `add_sparsedia_sparsedia`), and no diagonal is ever dropped
+        # `sum_sparsedia`), and no diagonal is ever dropped
         return len(set().union(*(term._offsets() for term in self.terms)))
 
     # === Array methods ===
