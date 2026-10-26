@@ -383,8 +383,7 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
     """Integrator computing the time evolution of the Lindblad master equation using a
     fixed step Rouchon method.
 
-    Subclasses must set ``_kraus_map_cls`` and define ``nojump_diffrax_solver``, and
-    may override ``normalize_state``.
+    Subclasses must set ``_kraus_map_cls`` and define ``nojump_diffrax_solver``.
     """
 
     _kraus_map_cls: ClassVar[type[KrausMapRK]]
@@ -429,7 +428,7 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
         def rouchon_step(t0, t1, y0):  # noqa: ANN001, ANN202
             # The Rouchon update for a single loss channel is:
             #   rho_{k+1} = sum_k Mk @ rho_k @ Mk^†
-            # See `normalize_state()` for the normalization.
+            # See comment of `unrotated_cholesky_normalize()` for the normalization.
 
             rho = y0
             dt = t1 - t0
@@ -437,7 +436,7 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
             kraus_map = self.build_kraus_map(nojump_propagator, self.H, self.L, t0, dt)
 
             if self.method.normalize:
-                rho = self.normalize_state(kraus_map.S(), rho)
+                rho = unrotated_cholesky_normalize(kraus_map.S(), rho)
 
             return kraus_map(rho), None
 
@@ -455,12 +454,6 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
         return cls._kraus_map_cls(
             nojump_propagator=nojump_propagator, L=L, H=H, t=t, dt=dt
         )
-
-    @staticmethod
-    def normalize_state(S: QArray, rho: QArray) -> QArray:
-        # normalizes rho before the Kraus map, see `unrotated_cholesky_normalize()`;
-        # subclasses may choose another normalization
-        return unrotated_cholesky_normalize(S, rho)
 
 
 class MESolveFixedRouchon1Integrator(MESolveFixedRouchonIntegrator):
@@ -481,14 +474,6 @@ class MESolveFixedRouchon2Integrator(MESolveFixedRouchonIntegrator):
     @property
     def nojump_diffrax_solver(self) -> dx.AbstractSolver:
         return Midpoint()
-
-    @staticmethod
-    def normalize_state(S: QArray, rho: QArray) -> QArray:
-        # Rouchon2 keeps the rotation of `cholesky_normalize()` (see
-        # `unrotated_cholesky_normalize()`): removing it costs one more linear solve
-        # per step, and gains accuracy only when the drive is strong compared with
-        # Rouchon2's own error
-        return cholesky_normalize(S, rho)
 
 
 class MESolveFixedRouchon3Integrator(MESolveFixedRouchonIntegrator):
@@ -583,7 +568,7 @@ class MESolveAdaptiveRouchonIntegrator(
                 propagator_high, self.H, self.L, t0, dt
             )
             rho_high = (
-                self._fixed_cls_high.normalize_state(kraus_high.S(), rho)
+                unrotated_cholesky_normalize(kraus_high.S(), rho)
                 if self.method.normalize
                 else rho
             )

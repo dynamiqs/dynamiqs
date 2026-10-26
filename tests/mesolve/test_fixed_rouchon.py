@@ -51,6 +51,7 @@ class TestMESolveFixedRouchon(IntegratorTester):
         ('method_class', 'dt', 'system'),
         [
             (Rouchon1, 1e-4, dense_weakly_driven_ocavity),
+            (Rouchon2, 5e-4, dense_driven_ocavity),
             (Rouchon3, 2e-3, dense_driven_ocavity),
         ],
     )
