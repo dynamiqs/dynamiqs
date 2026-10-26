@@ -3,9 +3,10 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
+from dynamiqs.integrators.core.floquet_integrator import _solve_by_blocks
 from dynamiqs.method import Tsit5
 
-from ..order import TEST_LONG
+from ..order import TEST_LONG, TEST_SHORT
 from ..systems import floquet_qubit
 
 
@@ -43,3 +44,28 @@ class TestFloquet:
         evals = jnp.exp(-1j * result.quasienergies * T)
         assert jnp.allclose(modes.mT.conj() @ modes, jnp.eye(n), atol=1e-5)
         assert jnp.allclose(U @ modes, modes * evals, atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize('ncols', [1, 8, 13, 32])
+def test_solve_by_blocks(ncols):
+    # a batch of two systems, with a number of columns that may not fill the last block
+    def normal(key, ncols):
+        return jax.random.normal(key, (2, 16, ncols), dtype=complex)
+
+    keys = jax.random.split(jax.random.PRNGKey(42), 5)
+    A = jnp.eye(16) + 0.1 * normal(keys[0], 16)
+    dA = normal(keys[1], 16)
+    B, dB, dX_bar = (normal(key, ncols) for key in keys[2:])
+
+    # forward mode: X = A⁻¹B and dX = A⁻¹(dB - dA X)
+    X, dX = jax.jvp(_solve_by_blocks, (A, B), (dA, dB))
+    assert jnp.allclose(A @ X, B, atol=1e-5)
+    assert jnp.allclose(A @ dX, dB - dA @ X, atol=1e-5)
+
+    # reverse mode: the transpose of the forward derivative
+    _, vjp = jax.vjp(_solve_by_blocks, A, B)
+    dA_bar, dB_bar = vjp(dX_bar)
+    lhs = jnp.sum(dX_bar * dX)
+    rhs = jnp.sum(dA_bar * dA) + jnp.sum(dB_bar * dB)
+    assert jnp.allclose(lhs, rhs, rtol=1e-4)

@@ -79,8 +79,17 @@ def _diagonalize_unitary(U: Array) -> tuple[Array, Array]:
     middle = jnp.take_along_axis(phases + 0.5 * gaps, widest, axis=-1)
     W = jnp.exp(1j * (jnp.pi - middle))[..., None] * U
 
-    I = jnp.eye(U.shape[-1], dtype=U.dtype)
-    K = 1j * jnp.linalg.solve(I + W, I - W)
+    n = U.shape[-1]
+    I = jnp.eye(n, dtype=U.dtype)
+    # On CPU, OpenBLAS solves with many right-hand sides on several threads. These
+    # threads keep spinning after the solve and slow down the next computation. For
+    # n < 64, solving 8 columns at a time keeps OpenBLAS on one thread (measured with
+    # OpenBLAS 0.3.30 on x86). For larger n, `eigvals` and `eigh` start the threads
+    # anyway.
+    solve_on_cpu = _solve_by_blocks if n < 64 else jnp.linalg.solve
+    K = 1j * jax.lax.platform_dependent(
+        I + W, I - W, cpu=solve_on_cpu, default=jnp.linalg.solve
+    )
     _, evecs = jnp.linalg.eigh(0.5 * (K + K.mT.conj()))
 
     # fix the arbitrary phase of each mode by making its largest component positive
@@ -90,6 +99,16 @@ def _diagonalize_unitary(U: Array) -> tuple[Array, Array]:
 
     evals = (evecs.conj() * (U @ evecs)).sum(-2)
     return evals, evecs
+
+
+def _solve_by_blocks(A: Array, B: Array, size: int = 8) -> Array:
+    # solve AX = B for `size` columns of B at a time, with one LU factorization of A
+    lu_and_piv = jax.scipy.linalg.lu_factor(A)
+    n = B.shape[-1]
+    B = jnp.pad(B, [(0, 0)] * (B.ndim - 1) + [(0, -n % size)])
+    blocks = jnp.moveaxis(B.reshape(*B.shape[:-1], -1, size), -2, 0)
+    X = jax.lax.map(lambda b: jax.scipy.linalg.lu_solve(lu_and_piv, b), blocks)
+    return jnp.moveaxis(X, 0, -2).reshape(B.shape)[..., :n]
 
 
 floquet_integrator_constructor = SEFloquetIntegrator
