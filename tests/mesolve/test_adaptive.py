@@ -1,6 +1,8 @@
 import jax
+import jax.numpy as jnp
 import pytest
 
+import dynamiqs as dq
 from dynamiqs.gradient import BackwardCheckpointed, Direct, Forward
 from dynamiqs.method import Kvaerno5, Tsit5
 
@@ -68,3 +70,23 @@ class TestMESolveAdaptiveGPUPaths(IntegratorTester):
 
     def test_correctness_no_jump_ops(self):
         self._test_correctness(dia_nojump_cavity, Tsit5())
+
+    @pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+    def test_correctness_time_dependent_jump_ops(self, layout):
+        # jump operators made of constant, modulated and pwc terms, clipped or summed,
+        # give the same states as the same operators given as callables
+        n = 8
+        a, eye = dq.destroy(n, layout=layout), dq.eye(n, layout=layout)
+        Ls = [
+            0.7 * (a @ a - dq.modulated(lambda t: 0.5 * jnp.exp(1j * t), eye)),
+            dq.pwc([0.0, 0.5, 1.2], [0.3, 1.0j], a),
+            dq.constant(0.2 * a.dag() @ a).clip(0.3, 1.5),
+            (0.5 * a.dag() - dq.modulated(jnp.sin, a)).clip(0.4, 1.7),
+        ]
+        Ls_callable = [
+            dq.timecallable(L.__call__, discontinuity_ts=L.discontinuity_ts) for L in Ls
+        ]
+        H, rho0, tsave = a.dag() @ a, dq.coherent_dm(n, 1.0), jnp.linspace(0, 2, 3)
+        states = dq.mesolve(H, Ls, rho0, tsave).states.to_jax()
+        expected = dq.mesolve(H, Ls_callable, rho0, tsave).states.to_jax()
+        assert jnp.allclose(states, expected, atol=1e-6)

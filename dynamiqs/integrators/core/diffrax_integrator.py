@@ -33,8 +33,17 @@ from ...options import Options
 from ...progress_meter import AbstractProgressMeter
 from ...progress_meter import to_diffrax as progress_meter_to_diffrax
 from ...qarrays.dense_dataarray import DenseDataArray
+from ...qarrays.layout import dia
+from ...qarrays.qarray import QArray
 from ...qarrays.sparsedia_dataarray import SparseDIADataArray
 from ...result import MESolveResult, Result, SolveSaved
+from ...time_qarray import (
+    ConstantTimeQArray,
+    ModulatedTimeQArray,
+    PWCTimeQArray,
+    SummedTimeQArray,
+    TimeQArray,
+)
 from ...utils.general import lindbladian_sparsedia_terms
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
@@ -422,6 +431,58 @@ sesolve_kvaerno5_integrator_constructor = partial(
 )
 
 
+def _linear_parts(x: TimeQArray) -> list[tuple[Callable, QArray]] | None:
+    # the functions c_k and constant qarrays A_k such that x(t) = sum_k c_k(t) A_k,
+    # or None if a qarray of x depends on t
+    if isinstance(x, ConstantTimeQArray | ModulatedTimeQArray | PWCTimeQArray):
+        return [(x._prefactor, x.qarray)]
+    if isinstance(x, SummedTimeQArray):
+        parts = [_linear_parts(y) for y in x.timeqarrays]
+        if any(p is None for p in parts):
+            return None
+        return [
+            (lambda t, c=c: x._prefactor(t) * c(t), A)
+            for p in cast(list, parts)
+            for c, A in p
+        ]
+    return None
+
+
+def _half_LdL(Ls: list[TimeQArray]) -> Callable[[float, list[QArray]], QArray]:
+    # Returns a function of t and the L_k(t) giving 0.5 * sum_k L_k(t)^dag L_k(t).
+    # For L(t) = sum_j c_j(t) A_j with constant A_j, L(t)^dag L(t) is
+    # sum_jj' c_j(t)^* c_j'(t) A_j^dag A_j': the products A_j^dag A_j' are computed
+    # here, once per solve: XLA on GPU keeps them in the solver loop. On CPU, DIA
+    # operators keep the products in the vector field: they are cheap there, and
+    # XLA:CPU (jax 0.12) miscompiles the Hessian of tests/mesolve/test_hessian.py when
+    # they are computed here (correct without LLVM's loop strength reduction).
+    on_cpu = jax.default_backend() == 'cpu'
+    parts = [None if on_cpu and _L.layout is dia else _linear_parts(_L) for _L in Ls]
+    grams = [
+        None
+        if p is None
+        else ([c for c, _ in p], [[Aj.dag() @ Ak for _, Ak in p] for _, Aj in p])
+        for p in parts
+    ]
+
+    def half_LdL(t, L):  # noqa: ANN001, ANN202
+        terms = []
+        for gram, _L in zip(grams, L, strict=True):
+            if gram is None:
+                terms.append(_L.dag() @ _L)
+                continue
+            fs, products = gram
+            c = [f(t) for f in fs]
+            terms += [
+                (cj.conj() * ck)[..., None, None] * products[j][k]
+                for j, cj in enumerate(c)
+                for k, ck in enumerate(c)
+            ]
+        return 0.5 * sum(terms)
+
+    return half_LdL
+
+
 class MESolveDiffraxIntegrator(
     DiffraxIntegrator, MEInterface, SolveSaveMixin, SolveInterface
 ):
@@ -461,23 +522,25 @@ class MESolveDiffraxIntegrator(
         # when its terms read many shifted copies of rho. Each product of (2), and its
         # transpose, takes its own pass.
 
+        half_LdL_at = _half_LdL(self.Ls)
+
         def vector_field_unvec_sparsedia(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
-            half_LdL = 0.5 * sum([_L.dag() @ _L for _L in L])
+            half_LdL = half_LdL_at(t, L)
             return lindbladian_sparsedia_terms(
                 -1j * H - half_LdL, 1j * H - half_LdL, L, y
             )
 
         def vector_field_unvec_standard(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
-            half_LdL = 0.5 * sum([_L.dag() @ _L for _L in L])
+            half_LdL = half_LdL_at(t, L)
             nojump_term = (-1j * H - half_LdL) @ y + y @ (1j * H - half_LdL)
             jump_term = sum([_L @ y @ _L.dag() for _L in L])
             return nojump_term + jump_term
 
         def vector_field_unvec_hermitian(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
-            Hnh = -1j * H - 0.5 * sum([_L.dag() @ _L for _L in L])
+            Hnh = -1j * H - half_LdL_at(t, L)
             tmp = Hnh @ y + 0.5 * sum([_L @ y @ _L.dag() for _L in L])
             return tmp + tmp.dag()
 
