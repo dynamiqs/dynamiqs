@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Callable
+from functools import partial
 from typing import cast
 
 import jax
@@ -9,7 +10,12 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
 
-from ..._checks import check_qarray_is_dense, check_shape, check_times
+from ..._checks import (
+    check_qarray_is_dense,
+    check_shape,
+    check_times,
+    check_times_multiple_of,
+)
 from ...gradient import Gradient
 from ...method import (
     DiffusiveMonteCarlo,
@@ -17,6 +23,7 @@ from ...method import (
     Dopri8,
     Euler,
     EulerJump,
+    EulerMaruyama,
     Expm,
     JumpMonteCarlo,
     Kvaerno3,
@@ -296,22 +303,22 @@ def mesolve(
     check_options(options, 'mesolve')
     options = options.initialise()
 
+    # the fixed step SSE methods of the Monte Carlo methods only save at multiples of dt
+    sse_method = None
+    if isinstance(method, JumpMonteCarlo):
+        sse_method = method.jsse_method
+    elif isinstance(method, DiffusiveMonteCarlo):
+        sse_method = method.dsse_method
+    if isinstance(sse_method, EulerJump | EulerMaruyama | Rouchon1):
+        tsave = check_times_multiple_of(tsave, sse_method.dt, 'tsave')
+
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
-    f = _vectorized_mesolve
-    _tsave = tsave
-    if isinstance(method, DiffusiveMonteCarlo) or (
-        isinstance(method, JumpMonteCarlo) and isinstance(method.jsse_method, EulerJump)
-    ):
-        _tsave = tuple(tsave.tolist())  # todo: fix static tsave
-        f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
-    else:
-        f = jax.jit(f, static_argnames=('gradient', 'options'))
-
-    return f(H, Ls, rho0, _tsave, _exp_ops, method, gradient, options)
+    return _vectorized_mesolve(H, Ls, rho0, tsave, _exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error
+@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_mesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],

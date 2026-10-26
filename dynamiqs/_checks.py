@@ -6,6 +6,7 @@ import equinox as eqx
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
+from jaxtyping import ArrayLike
 
 from .qarrays.layout import dense
 from .qarrays.qarray import QArray
@@ -96,6 +97,26 @@ def check_times(x: Array, argname: str, allow_empty: bool = False) -> Array:
     return eqx.error_if(
         x,
         x[1:] < x[:-1],
+        f'Argument `{argname}` must be sorted in strictly ascending order.',
+    )
+
+
+def check_times_multiple_of(x: Array, dt: ArrayLike, argname: str) -> Array:
+    # check that an array of times is valid for a fixed step method (its values must be
+    # exact multiples of `dt`, without repeated values)
+
+    # this function should be used as e.g. `x = check_times_multiple_of(x, dt, 'x')`,
+    # see `check_times()`
+    x_rounded = jnp.round(x / dt) * dt
+    x = eqx.error_if(
+        x,
+        ~jnp.allclose(x, x_rounded, rtol=1e-5, atol=1e-5),
+        f'Argument `{argname}` must only contain exact multiples of the method fixed'
+        ' step size `dt`.',
+    )
+    return eqx.error_if(
+        x,
+        x[1:] <= x[:-1],
         f'Argument `{argname}` must be sorted in strictly ascending order.',
     )
 

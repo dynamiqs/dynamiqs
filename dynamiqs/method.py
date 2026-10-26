@@ -137,6 +137,7 @@ _DIFFRAX_ODE_GRADIENTS = (Direct, BackwardCheckpointed, Forward)
 # compatible with higher-order differentiation, it could fold back into `Direct`.
 _DIFFRAX_EXPLICIT_ODE_GRADIENTS = (*_DIFFRAX_ODE_GRADIENTS, HigherOrder)
 _ROUCHON_GRADIENTS = (Direct, BackwardCheckpointed, Forward)
+_FIXED_STEP_SDE_GRADIENTS = (Direct, BackwardCheckpointed, Forward)
 
 
 # === public methods options
@@ -176,13 +177,13 @@ class EulerJump(_DEFixedStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Direct`][dynamiqs.gradient.Direct] (default).
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
+        (default)
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Direct,)
-
-    # todo: fix static dt (similar issue as static tsave in dssesolve)
-    dt: float = eqx.field(static=True)
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _FIXED_STEP_SDE_GRADIENTS
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
@@ -200,13 +201,13 @@ class EulerMaruyama(_DEFixedStep):
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Direct`][dynamiqs.gradient.Direct] (default).
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
+        (default)
+        and [`dq.gradient.Forward`][dynamiqs.gradient.Forward].
     """
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Direct,)
-
-    # todo: fix static dt (similar issue as static tsave in dssesolve)
-    dt: float = eqx.field(static=True)
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _FIXED_STEP_SDE_GRADIENTS
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
@@ -232,8 +233,6 @@ class Rouchon1(_DEFixedStep):
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _ROUCHON_GRADIENTS
 
-    # todo: fix static dt (similar issue as static tsave in dssesolve)
-    dt: float = eqx.field(static=True)
     normalize: bool = eqx.field(static=True, default=True)
 
     # dummy init to have the signature in the documentation

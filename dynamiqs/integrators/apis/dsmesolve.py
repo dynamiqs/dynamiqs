@@ -10,7 +10,13 @@ import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
 
-from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
+from ..._checks import (
+    check_hermitian,
+    check_qarray_is_dense,
+    check_shape,
+    check_times,
+    check_times_multiple_of,
+)
 from ...gradient import Gradient
 from ...method import EulerMaruyama, Method, Rouchon1
 from ...options import Options, check_options
@@ -96,11 +102,9 @@ def dsmesolve(
     returned measurement values for each detector is `len(tsave)-1`.
 
     Warning:
-        For now, `dsmesolve()` only supports linearly spaced `tsave` with values that
-        are exact multiples of the method fixed step size `dt`. Moreover, to JIT-compile
-        code using `dsmesolve()`, `tsave` must be passed as tuple. The values of `etas`
-        must also be known at compile time, because they determine which loss channels
-        are measured.
+        For now, `dsmesolve()` only supports `tsave` with values that are exact
+        multiples of the method fixed step size `dt`. The values of `etas` must also be
+        known at compile time, because they determine which loss channels are measured.
 
     Note: Simulating the measurement record only
         If you are only interested in the measurement record and not the state, you
@@ -297,17 +301,13 @@ def dsmesolve(
     check_options(options, 'dsmesolve')
     options = options.initialise()
 
-    # todo: fix static tsave
-    # this condition allows the user to pass a tuple for tsave to bypass this bit of
-    # code (e.g., to JIT-compile this function)
-    _tsave = tsave
-    if not isinstance(tsave, tuple):
-        _tsave = jnp.asarray(tsave)
-        _tsave = check_times(_tsave, 'tsave')
-        _tsave = tuple(_tsave.tolist())
+    tsave = jnp.asarray(tsave)
+    tsave = check_times(tsave, 'tsave')
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
+    if isinstance(method, EulerMaruyama | Rouchon1):
+        tsave = check_times_multiple_of(tsave, method.dt, 'tsave')
 
     # === convert rho0 to density matrix
     rho0 = rho0.todm()
@@ -322,12 +322,12 @@ def dsmesolve(
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
     return _vectorized_dsmesolve(
-        H, Lcs, Lms, etas, rho0, _tsave, keys, _exp_ops, method, gradient, options
+        H, Lcs, Lms, etas, rho0, tsave, keys, _exp_ops, method, gradient, options
     )
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('tsave', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_dsmesolve(
     H: TimeQArray,
     Lcs: list[TimeQArray],

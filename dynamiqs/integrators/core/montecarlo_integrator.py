@@ -36,8 +36,7 @@ class MESolveMonteCarloIntegrator(BaseIntegrator, MEInterface, SolveInterface):
             if self.options.save_states:
                 # apply the hook per save point on the mean states, as in the other
                 # integrators
-                ts = jnp.asarray(self.ts)  # todo: fix static tsave
-                extra = jax.vmap(self.options.save_extra)(ts, ysave)
+                extra = jax.vmap(self.options.save_extra)(self.ts, ysave)
             else:
                 # this is enforced because `save_extra` is not necessarily a linear
                 # function of the states, and thus save_extra(mean(states)) may not
