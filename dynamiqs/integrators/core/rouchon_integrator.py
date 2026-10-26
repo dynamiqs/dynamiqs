@@ -428,7 +428,8 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
         def rouchon_step(t0, t1, y0):  # noqa: ANN001, ANN202
             # The Rouchon update for a single loss channel is:
             #   rho_{k+1} = sum_k Mk @ rho_k @ Mk^†
-            # See comment of `unrotated_cholesky_normalize()` for the normalization.
+            # See comments of `cholesky_normalize()` and
+            # `unrotated_cholesky_normalize()` for the normalization.
 
             rho = y0
             dt = t1 - t0
@@ -555,9 +556,8 @@ class MESolveAdaptiveRouchonIntegrator(
             dt = t1 - t0
             propagator_low, propagator_high = self.make_nojump_propagators(t0, dt)
 
-            # low order, without normalization: the normalization changes both
-            # solutions by nearly the same amount, so the difference below would miss
-            # its error
+            # low order, without normalization, so that the error estimate below
+            # includes the error of the normalization of the high order solution
             kraus_low = self._fixed_cls_low.build_kraus_map(
                 propagator_low, self.H, self.L, t0, dt
             )
@@ -614,6 +614,8 @@ def cholesky_normalize(S: QArray, rho: QArray) -> QArray:
     #                       = I
     # In practice we directly replace rho_k by T^{†(-1)} @ rho_k @ T^{-1} instead of
     # computing all ~Mks.
+    # The stochastic solvers use this normalization. The Rouchon methods of mesolve
+    # use `unrotated_cholesky_normalize()`, which removes the rotation it adds.
 
     T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
     rho_jax = _inverse_cholesky_sandwich(T, rho.to_jax())
