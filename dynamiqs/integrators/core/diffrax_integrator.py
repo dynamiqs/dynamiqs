@@ -41,7 +41,7 @@ from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
 from .error_norm import error_norm
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
-from .jump_clip_controller import JumpClipController
+from .jump_clip_controller import JumpClipController, keep_rejected_steps
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
 from .unrolled_solvers import UnrolledDopri5, UnrolledDopri8, UnrolledTsit5
 
@@ -247,23 +247,35 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                     get_dtmax, stepsize_controller, dtmax, is_leaf=lambda x: x is None
                 )
 
-            # === stop the solve just before a jump in its last 100 ULP
-            # Diffrax moves a step that ends less than 100 ULP (units in the last
-            # place) before t1 onto t1. If an operator jumps in between, that step
-            # crosses the jump and is rejected, and so are the shorter steps that
-            # follow. The solve can then reach `max_steps` or, in single precision,
-            # end without saving at t1. So the solve stops one ULP before the first
-            # such jump, and the save times after it are moved onto the new end. The
-            # derivative with respect to t1 is kept.
-            if not self.fixed_step and self.discontinuity_ts.size > 0:
-                jump_ts, t1_value = self.discontinuity_ts, jax.lax.stop_gradient(t1)
-                ulp = jnp.abs(jnp.spacing(t1_value))
-                window_start = jnp.maximum(t1_value - 100 * ulp, t0)
-                in_window = (jump_ts > window_start) & (jump_ts <= t1_value)
-                end = eqxi.prevbefore(jnp.min(jnp.where(in_window, jump_ts, t1_value)))
-                t1 = jnp.where(
-                    jnp.any(in_window), t1 + jax.lax.stop_gradient(end - t1), t1
-                )
+            # === end the solve just before a jump at t1
+            # Diffrax ends a step one ULP (unit in the last place) before a jump time,
+            # and starts the next step one ULP after it. For a jump at t1, or one ULP
+            # before t1, that next step starts at or after t1. The solve then stops
+            # without saving at t1, and the saved state there stays `inf`
+            # (diffrax#791).
+            # So the solve ends one ULP before such a jump. A jump at or one ULP
+            # before this new end moves it again, and so on: the end moves before a
+            # run of jumps, each at most 2 ULP below the previous one. Save times later
+            # than the end move onto it. This drops at most 2 ULP of evolution per jump
+            # moved.
+            # The derivative with respect to t1 is kept.
+            # To remove: when Diffrax fixes #791, the strict xfail
+            # `test_diffrax_saves_at_jump_at_t1` passes and fails the test suite.
+            has_jumps = not self.fixed_step and self.discontinuity_ts.size > 0
+            if has_jumps:
+                t1_value = jax.lax.stop_gradient(t1)
+                after_t1 = eqxi.nextafter(t1_value)
+                # the jump times from the last to the first (they are sorted, as
+                # Diffrax requires), those after t1 at one ULP after it
+                ts = jnp.minimum(self.discontinuity_ts[::-1], after_t1)
+                ts = jnp.concatenate([after_t1[None], ts])
+                # the run of jumps from one ULP after t1, each at most 2 ULP below the
+                # previous one; it stops at t0
+                in_run = ts[1:] >= eqxi.prevbefore(eqxi.prevbefore(ts[:-1]))
+                in_run = jnp.cumprod(in_run & (ts[1:] > t0)).astype(bool)
+                moves = in_run & (ts[1:] <= t1_value)
+                end = jnp.min(jnp.where(moves, eqxi.prevbefore(ts[1:]), t1_value))
+                t1 = t1 + jax.lax.stop_gradient(end - t1)
                 saveat = eqx.tree_at(
                     lambda s: [sub.ts for sub in s.subs if sub.ts is not None],
                     saveat,
@@ -282,23 +294,26 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                     jax.jit(terms.vector_field, inline=_INLINE),
                 )
 
-            # === solve differential equation with diffrax
-            return dx.diffeqsolve(
-                terms,
-                self.diffrax_solver,
-                t0=t0,
-                t1=t1,
-                dt0=self.dt0,
-                y0=y0,
-                saveat=saveat,
-                stepsize_controller=stepsize_controller,
-                adjoint=self.adjoint,
-                event=event,
-                max_steps=self.max_steps,
-                progress_meter=progress_meter_to_diffrax(
-                    cast(AbstractProgressMeter, self.options.progress_meter)
-                ),
-            )
+            # === solve differential equation with diffrax; with jump times, it keeps
+            # the shorter step of the controller after a rejected step near t1 (see
+            # `keep_rejected_steps`)
+            with keep_rejected_steps(has_jumps):
+                return dx.diffeqsolve(
+                    terms,
+                    self.diffrax_solver,
+                    t0=t0,
+                    t1=t1,
+                    dt0=self.dt0,
+                    y0=y0,
+                    saveat=saveat,
+                    stepsize_controller=stepsize_controller,
+                    adjoint=self.adjoint,
+                    event=event,
+                    max_steps=self.max_steps,
+                    progress_meter=progress_meter_to_diffrax(
+                        cast(AbstractProgressMeter, self.options.progress_meter)
+                    ),
+                )
 
     def run(self) -> Result:
         # === prepare diffrax arguments: save the solution regularly, and the last state

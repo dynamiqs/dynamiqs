@@ -1,4 +1,4 @@
-"""Diffrax's `ClipStepSizeController`, with two workarounds for Diffrax 0.7.2.
+"""Diffrax's `ClipStepSizeController`, and three workarounds for Diffrax 0.7.2.
 
 1. **Steps after a jump time move with it** (diffrax issue #772, fixed by diffrax pull
    request #773). Without this, derivatives with respect to close jump times are wrong
@@ -18,16 +18,40 @@
    `diffrax` lower bound, then remove the swap (`_clip`, `_find_idx_by_counting`,
    `private_search_available` and their tests).
 
-Once both are removed, use `dx.ClipStepSizeController` in `diffrax_integrator.py` and
-delete this module and its tests.
+3. **After a rejected step near t1, keep the controller's shorter step** (diffrax
+   issue #756, fixed by diffrax pull request #758, not released yet). Diffrax moves
+   a step that ends less than 100 ULP (units in the last place) before t1 onto t1.
+   When an operator jumps in these
+   last 100 ULP, that step crosses the jump and is rejected. The controller then
+   proposes a shorter step, but Diffrax replaces it with a step that ends halfway to
+   t1. That step crosses the jump too, so it is rejected again, and so on until
+   `max_steps`. `keep_rejected_steps` swaps Diffrax's private `_clip_to_end` for the
+   one of #758 while a solve with jump times is traced: only accepted steps move onto
+   t1. Solves without jump times keep Diffrax's own: on an A100, the swap makes small
+   solves up to 7% slower.
+   To remove: once Diffrax releases #758, the strict xfail
+   `test_diffrax_keeps_rejected_steps` passes and fails the test suite. Raise the
+   `diffrax` lower bound, then remove `keep_rejected_steps`, its helpers and its use.
+
+Once 1 and 2 are removed, use `dx.ClipStepSizeController` in `diffrax_integrator.py`.
+Once all three are removed, delete this module and its tests.
 
 This module reads private parts of Diffrax. If a release changes them, a test fails as
 a reminder: `test_private_search_exists` for `_find_idx_with_hint` (the controller then
 falls back to Diffrax's own search), `test_private_clip_state` for the state of
-`ClipStepSizeController` (`step_info`, `jump_info`, `reject_info`).
+`ClipStepSizeController` (`step_info`, `jump_info`, `reject_info`). If `_clip_to_end`
+moves or changes its parameters, the solves keep Diffrax's own, and the cases with a
+jump 2 ULP before t1 of `test_discontinuity_at_last_save_time` fail.
+
+The swaps change module attributes of Diffrax while a solve is traced: tracing solves
+from several threads at once is not supported.
 """
 
 from __future__ import annotations
+
+import contextlib
+import inspect
+from collections.abc import Generator
 
 import diffrax as dx
 import equinox.internal as eqxi
@@ -40,6 +64,12 @@ try:
     import diffrax._step_size_controller.clip as dx_clip
 except ImportError:  # moved in a newer Diffrax: fall back to its search
     dx_clip = None
+
+# private, as `_find_idx_with_hint`: Diffrax has no public way to change `_clip_to_end`
+try:
+    import diffrax._integrate as dx_integrate
+except ImportError:  # moved in a newer Diffrax: keep its own `_clip_to_end`
+    dx_integrate = None
 
 
 def private_search_available() -> bool:
@@ -136,3 +166,41 @@ class JumpClipController(dx.ClipStepSizeController):
             return super().adapt_step_size(*args, **kwargs)
         finally:
             clip._find_idx_with_hint = find_idx
+
+
+# the parameters of `_clip_to_end` in Diffrax 0.7.2; #758 removes `tprev`
+_CLIP_TO_END_PARAMETERS = ('tprev', 'tnext', 't1', 't1_clip_floor', 'keep_step')
+_diffrax_clip_to_end = getattr(dx_integrate, '_clip_to_end', None)
+
+
+def does_diffrax_move_rejected_steps() -> bool:
+    """Whether Diffrax's private `_clip_to_end` has the parameters of Diffrax 0.7.2.
+    That version moves rejected steps onto t1 too.
+    """
+    if not callable(_diffrax_clip_to_end):
+        return False
+    parameters = tuple(inspect.signature(_diffrax_clip_to_end).parameters)
+    return parameters == _CLIP_TO_END_PARAMETERS
+
+
+def _clip_to_end_accepted_only(
+    tprev: Array, tnext: Array, t1: Array, t1_clip_floor: Array, keep_step: Array
+) -> Array:
+    # the `_clip_to_end` of diffrax#758, with the parameters of Diffrax 0.7.2
+    del tprev
+    return jnp.where(keep_step & (tnext > t1_clip_floor), t1, tnext)
+
+
+@contextlib.contextmanager
+def keep_rejected_steps(enabled: bool) -> Generator[None]:
+    """If `enabled`, use the `_clip_to_end` of diffrax#758 in the solves traced in
+    this context.
+    """
+    if not enabled or not does_diffrax_move_rejected_steps():
+        yield
+        return
+    dx_integrate._clip_to_end = _clip_to_end_accepted_only  # ty: ignore[invalid-assignment]
+    try:
+        yield
+    finally:
+        dx_integrate._clip_to_end = _diffrax_clip_to_end  # ty: ignore[invalid-assignment]

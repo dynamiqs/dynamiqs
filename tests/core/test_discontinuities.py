@@ -104,17 +104,20 @@ def test_gradient_wrt_discontinuity_time_with_progress_meter(progress_meter):
 @pytest.mark.parametrize(('t1', 'ulps'), [(3.0, 0), (3.0, 2), (-3.0, 2)])
 @pytest.mark.parametrize('jump_trajectories', [False, True])
 def test_discontinuity_at_last_save_time(t1, ulps, jump_trajectories):
-    # the drive drops to zero exactly at the last save time, or 2 ULP before it:
-    # every saved state must still be the exact one
+    # The drive drops to zero exactly at the last save time, or 2 ULP (units in the
+    # last place) before it. Every saved state must still be exact.
     tsave = jnp.linspace(t1 - 3.0, t1, 11)
     t0, edge = tsave[0], tsave[-1]
     for _ in range(ulps):
         edge = jnp.nextafter(edge, -jnp.inf)
     H = dq.pwc(jnp.stack([t0, t0 + 1.5, edge]), jnp.array([1.6, -1.1]), dq.sigmax())
+    # The tight tolerances are on purpose: with the default ones, this test also
+    # passes without the workarounds for Diffrax.
     psi0, method = dq.fock(2, 0), Tsit5(rtol=1e-9, atol=1e-9)
     if jump_trajectories:
         # The jump operator is proportional to the identity, so a click does not
         # change the state. Every trajectory must be exact, whatever its clicks.
+        # The root finder places the clicks, as in the other jssesolve tests.
         jump_ops = [jnp.sqrt(0.5) * dq.eye(2)]
         keys = jax.random.split(jax.random.key(42), 4)
         root_finder = optx.Newton(1e-4, 1e-4, jtu.Partial(optx.rms_norm))
@@ -127,3 +130,48 @@ def test_discontinuity_at_last_save_time(t1, ulps, jump_trajectories):
     theta = jnp.where(t < 1.5, 1.6 * t, 2.4 - 1.1 * (t - 1.5))
     expected = jnp.stack([jnp.cos(theta), -1j * jnp.sin(theta)], axis=-1)[..., None]
     assert jnp.allclose(result.states.to_jax(), expected, atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize(
+    ('edges', 'values'),
+    [
+        ([0.0, 99.999, 99.9995, 100.0], [1.0, 2.0, 3.0]),
+        ([0.0, 99.999, 99.9995, 100.0], [0.1, 2.0, 3.0]),
+        ([0.0, 50.0, 99.99998474121094, 100.0], [0.3, 0.6, 0.9]),
+    ],
+)
+def test_close_discontinuities_before_last_save_time(edges, values):
+    # Jumps close to the last save time t1 = 100, plus one at it. In single
+    # precision, 99.999 and 99.9995 are 131 and 66 ULP (units in the last place)
+    # before t1: the solve must integrate up to t1. 99.99998474121094 is 2 ULP before
+    # t1: the end of the solve moves before the jump at t1, then before this one.
+    # The last saved state must be exact. Diffrax skips 2 ULP at each jump, which
+    # costs up to about 1e-4 here.
+    tsave = jnp.linspace(0.0, 100.0, 11)
+    edges = jnp.array(edges)
+    H = dq.pwc(edges, jnp.array(values), dq.sigmax())
+    method = Tsit5(rtol=1e-9, atol=1e-9)
+    result = dq.sesolve(H, dq.fock(2, 0), tsave, method=method, progress_meter=False)
+
+    theta = jnp.sum(jnp.array(values) * jnp.diff(edges))
+    expected = jnp.array([jnp.cos(theta), -1j * jnp.sin(theta)])[:, None]
+    assert jnp.allclose(result.states[-1].to_jax(), expected, atol=2e-4)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize('gradient', [None, dq.gradient.Forward()])
+def test_gradient_wrt_last_save_time_at_discontinuity(gradient):
+    # The drive ends at 3, the last save time T, so the solve ends one ULP before T.
+    # The derivative with respect to T must still be that of the state at T.
+    H = dq.pwc(jnp.array([0.0, 1.5, 3.0]), jnp.array([1.6, -1.1]), dq.sigmax())
+
+    def population(T):
+        result = solve(H, jnp.stack([0.0, 1.0, T]), gradient=gradient)
+        return jnp.abs(result.states[-1].to_jax()[0, 0]) ** 2
+
+    # |⟨0|psi(T)⟩|² = cos²(theta) with theta = 1.6 * 1.5 - 1.1 (T - 1.5)
+    theta = 2.4 - 1.1 * 1.5
+    expected = 1.1 * jnp.sin(2 * theta)
+    derivative = jax.jacrev if gradient is None else jax.jacfwd
+    assert jnp.allclose(derivative(population)(3.0), expected, rtol=1e-4)

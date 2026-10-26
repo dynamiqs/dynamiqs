@@ -12,7 +12,7 @@ from dynamiqs.integrators.core.jump_clip_controller import (
     private_search_available,
 )
 
-from ..order import TEST_INSTANT, TEST_LONG
+from ..order import TEST_INSTANT, TEST_LONG, TEST_SHORT
 
 
 @pytest.mark.run(order=TEST_INSTANT)
@@ -75,6 +75,61 @@ def test_diffrax_search_is_loop_free():
     ts = jnp.linspace(0.0, 1.0, 10)
     search = jax.jit(lambda t: dx_clip._find_idx_with_hint(t, ts, 0))
     assert 'stablehlo.while' not in search.lower(0.5).as_text()
+
+
+def rotation(t, y, jump_t):
+    # a rotation at speed 1.6 up to 1.5, -1.1 up to `jump_t`, then 0
+    h = jnp.where(t < 1.5, 1.6, jnp.where(t < jump_t, -1.1, 0.0))
+    return h * jnp.stack([-y[1], y[0]])
+
+
+def solve_rotation_with_diffrax(jump_t):
+    # Diffrax alone, up to t1 = 3 with `jump_t` declared, in single precision
+    controller = dx.ClipStepSizeController(
+        dx.PIDController(rtol=1e-9, atol=1e-9), jump_ts=jnp.stack([1.5, jump_t])
+    )
+    return dx.diffeqsolve(
+        dx.ODETerm(rotation),
+        dx.Tsit5(),
+        0.0,
+        3.0,
+        None,
+        jnp.array([1.0, 0.0]),
+        args=jump_t,
+        saveat=dx.SaveAt(ts=jnp.linspace(0.0, 3.0, 11)),
+        stepsize_controller=controller,
+        throw=False,
+    )
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.xfail(
+    reason='diffrax#791: with a jump at t1, the saved state at t1 stays `inf`; an '
+    'XPASS means the installed Diffrax saves it: remove the block "end the solve '
+    'just before a jump at t1" of `DiffraxIntegrator.diffeqsolve`',
+    raises=AssertionError,
+    strict=True,
+)
+def test_diffrax_saves_at_jump_at_t1():
+    solution = solve_rotation_with_diffrax(jnp.float32(3.0))
+    assert jnp.all(jnp.isfinite(solution.ys[-1]))
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.xfail(
+    reason='diffrax#756: a jump in the last 100 ULP of the solve makes Diffrax reject '
+    'the same step until `max_steps`; an XPASS means the installed Diffrax has '
+    '#758: see the docstring of `jump_clip_controller.py` for what to remove',
+    raises=AssertionError,
+    strict=True,
+)
+def test_diffrax_keeps_rejected_steps():
+    # a jump 2 to 9 ULP before t1
+    jump_t = jnp.nextafter(jnp.float32(3.0), -jnp.inf)
+    for _ in range(8):
+        jump_t = jnp.nextafter(jump_t, -jnp.inf)
+        solution = solve_rotation_with_diffrax(jump_t)
+        assert solution.result == dx.RESULTS.successful
 
 
 diffrax_tangent_blowup = pytest.mark.xfail(
