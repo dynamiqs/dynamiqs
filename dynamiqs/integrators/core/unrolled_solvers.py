@@ -241,9 +241,10 @@ class _UnrolledERK(dx.AbstractERK):
 
         # === first stage
         t_first = t0 if tableau.c1 is None or tableau.c1 == 0 else t0 + tableau.c1 * dt
+        splits_fsal = fsal and self._splits_fsal(y0)
         if fsal:
             first_step, f_previous = solver_state
-            if self._splits_fsal(y0):
+            if splits_fsal:
                 f_previous = _join_rows(f_previous)
             if made_jump is False:
                 f_first = f_previous
@@ -263,9 +264,8 @@ class _UnrolledERK(dx.AbstractERK):
         y1, y_error, dense_info, solver_state, result = stages(
             f, t0, t1, y0, k_first, f_first, control, terms, fsal
         )
-        if fsal and self._splits_fsal(y0):
-            first_step, f_last = solver_state
-            solver_state = (first_step, _split_rows(f_last))
+        if splits_fsal:
+            solver_state = (solver_state[0], _split_rows(solver_state[1]))
         return y1, y_error, dense_info, solver_state, result
 
     def _unrolled_stages(
