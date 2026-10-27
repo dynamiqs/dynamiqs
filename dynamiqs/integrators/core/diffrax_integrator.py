@@ -455,9 +455,12 @@ def _half_LdL(Ls: list[TimeQArray]) -> Callable[[float, list[QArray]], QArray]:
     # here, once per solve: XLA on GPU keeps them in the solver loop. On CPU, DIA
     # operators keep the products in the vector field: they are cheap there, and
     # XLA:CPU (jax 0.12) miscompiles the Hessian of tests/mesolve/test_hessian.py when
-    # they are computed here (correct without LLVM's loop strength reduction).
+    # they are computed here (correct without LLVM's loop strength reduction). A jump
+    # operator with more than two terms also keeps them: its K^2 weighted products
+    # cost more at each step than forming L(t) and one product.
     on_cpu = jax.default_backend() == 'cpu'
     parts = [None if on_cpu and _L.layout is dia else _linear_parts(_L) for _L in Ls]
+    parts = [p if p is not None and len(p) <= 2 else None for p in parts]
     grams = [
         None
         if p is None
