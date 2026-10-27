@@ -62,6 +62,27 @@ def _stage_time(
     return t1 if c == 1 else t0 + float(c) * dt
 
 
+# Diffrax selects each array of its state after a step (to keep or reject the step,
+# and under vmap to freeze the batch elements that have finished), and XLA fuses the
+# selects of arrays of one shape into one GPU kernel. For large complex arrays, XLA
+# unrolls that kernel (see `_odd_sized`) and, with the state y and the stored vector
+# field f, it ran at less than half the memory bandwidth of two separate selects on an
+# A100 (a step of a batched mesolve of dimension 1,176 was 5% slower). Stored as two
+# blocks of rows, f has other shapes than y, and XLA selects it in kernels of its own.
+
+
+def _split_rows(f: PyTree) -> tuple[PyTree, PyTree]:
+    # f as two blocks: all its rows but the last, and its last row
+    return jtu.tree_map(lambda x: x[..., :-1, :], f), jtu.tree_map(
+        lambda x: x[..., -1:, :], f
+    )
+
+
+def _join_rows(blocks: tuple[PyTree, PyTree]) -> PyTree:
+    # the inverse of `_split_rows`
+    return jtu.tree_map(lambda a, b: jnp.concatenate([a, b], axis=-2), *blocks)
+
+
 def _dot(coefficients: Sequence[float] | np.ndarray, ks: list[PyTree]) -> PyTree:
     # sum_j coefficients[j] * ks[j], skipping the zero coefficients
     def leaf(*k: ArrayLike) -> ArrayLike:
@@ -165,6 +186,13 @@ class _UnrolledERK(dx.AbstractERK):
             and not tableau.implicit
         )
 
+    def _splits_fsal(self, y0: Y) -> bool:
+        # whether the stored vector field is split in two blocks of rows (see
+        # `_split_rows`): for unrolled steps of large matrices
+        leaves = jtu.tree_leaves(y0)
+        large = all(x.ndim >= 2 and x.size >= _MIN_SIZE_ODD_STAGES for x in leaves)
+        return self._unrolled() and large
+
     @staticmethod
     def _unrolled() -> bool:
         # On CPU, XLA fuses each stage's output into the later stages that read it and
@@ -187,7 +215,8 @@ class _UnrolledERK(dx.AbstractERK):
         if not fsal:
             return None
         # first_step=False: the stored f0 is the vector field at (t0, y0)
-        return jnp.array(False), terms.vf(t0, y0, args)
+        f0 = terms.vf(t0, y0, args)
+        return jnp.array(False), _split_rows(f0) if self._splits_fsal(y0) else f0
 
     def step(
         self,
@@ -214,6 +243,8 @@ class _UnrolledERK(dx.AbstractERK):
         t_first = t0 if tableau.c1 is None or tableau.c1 == 0 else t0 + tableau.c1 * dt
         if fsal:
             first_step, f_previous = solver_state
+            if self._splits_fsal(y0):
+                f_previous = _join_rows(f_previous)
             if made_jump is False:
                 f_first = f_previous
             else:
@@ -229,7 +260,13 @@ class _UnrolledERK(dx.AbstractERK):
 
         # === other stages, solution, error estimate and dense output
         stages = self._unrolled_stages if self._unrolled() else self._looped_stages
-        return stages(f, t0, t1, y0, k_first, f_first, control, terms, fsal)
+        y1, y_error, dense_info, solver_state, result = stages(
+            f, t0, t1, y0, k_first, f_first, control, terms, fsal
+        )
+        if fsal and self._splits_fsal(y0):
+            first_step, f_last = solver_state
+            solver_state = (first_step, _split_rows(f_last))
+        return y1, y_error, dense_info, solver_state, result
 
     def _unrolled_stages(
         self,
