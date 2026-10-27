@@ -55,6 +55,10 @@ _INLINE = getattr(getattr(jax, 'Inline', None), 'JAX_LATE', True)
 # The dimension from which mesolve fuses the DIA Lindbladian on CPU (on GPU, at every
 # dimension): see `MESolveDiffraxIntegrator._are_operators_sparsedia`.
 _MIN_DIMENSION_FUSED_ON_CPU = 160
+# The dimension from which the Hermitian mesolve vector field keeps its products with
+# dense jump operators apart on GPU (on CPU, at every dimension): see
+# `MESolveDiffraxIntegrator.terms`.
+_MIN_DIMENSION_SEPARATE_PRODUCTS_ON_GPU = 640
 
 
 def _cpu_threads() -> int:
@@ -475,10 +479,30 @@ class MESolveDiffraxIntegrator(
             jump_term = sum([_L @ y @ _L.dag() for _L in L])
             return nojump_term + jump_term
 
+        # With dense jump operators, XLA merges the products of (2) with rho on the
+        # right into one product with the stacked operators, then copies each block of
+        # its result out. A separate copy of rho for each product, behind an
+        # optimization barrier, keeps the products apart. That is faster on CPU (x0.87
+        # for a solve with n = 128 and one jump operator), and on GPU for large n only:
+        # on an A100, x0.92-0.98 for the vector field from n = 640 (x0.97 for a solve
+        # with n = 1008 and three jump operators), but up to x1.36 slower below n = 512,
+        # where the merged product takes fewer kernels.
+        backend, n = jax.default_backend(), self.y0.shape[-1]
+        separate_products = (
+            backend == 'cpu' or n >= _MIN_DIMENSION_SEPARATE_PRODUCTS_ON_GPU
+        ) and all(
+            isinstance(getattr(_L, 'data', None), DenseDataArray)
+            for _L in self.L(self.ts[0])
+        )
+
         def vector_field_unvec_hermitian(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
             Hnh = -1j * H - 0.5 * sum([_L.dag() @ _L for _L in L])
-            tmp = Hnh @ y + 0.5 * sum([_L @ y @ _L.dag() for _L in L])
+            ys = (y,) * (len(L) + 1)
+            if separate_products:
+                ys = jax.lax.optimization_barrier(ys)
+            jumps = sum([_L @ _y @ _L.dag() for _L, _y in zip(L, ys[1:], strict=True)])
+            tmp = Hnh @ ys[0] + 0.5 * jumps
             return tmp + tmp.dag()
 
         def vector_field_vec(t, y, _):  # noqa: ANN001, ANN202
