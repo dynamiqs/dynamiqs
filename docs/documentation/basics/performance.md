@@ -1,6 +1,6 @@
 # Performance
 
-Dynamiqs is built on [JAX](https://jax.readthedocs.io/), so a simulation is first compiled and then executed on the CPU, GPU or TPU. This page collects the settings that have the largest impact on run time, and explains how to measure their effect on your own simulations.
+Dynamiqs is built on [JAX](https://docs.jax.dev/), so a simulation is first compiled and then executed on the CPU, GPU or TPU. This page collects the settings that have the largest impact on run time, and explains how to measure their effect on your own simulations.
 
 ```python
 import dynamiqs as dq
@@ -9,7 +9,7 @@ import jax.numpy as jnp
 
 ## Turn off the progress meter
 
-By default, solvers display a [tqdm](https://github.com/tqdm/tqdm) progress meter. Updating it requires a callback from the device to the Python host at every solver step, which forces a synchronization and prevents JAX from dispatching work asynchronously. This is invisible for long simulations, but it is a noticeable fraction of the run time for short ones, and it is more costly on GPU than on CPU.
+By default, solvers display a [tqdm](https://github.com/tqdm/tqdm) progress meter. Updating it requires a callback from the device to the Python host every few solver steps, which forces a synchronization and prevents JAX from dispatching work asynchronously. This is invisible for long simulations, but it is a noticeable fraction of the run time for short ones, and it is more costly on GPU than on CPU.
 
 For production runs, disable it with the `progress_meter` argument:
 
@@ -31,6 +31,20 @@ dq.set_progress_meter(False)
 dq.set_progress_meter(True)
 ```
 -->
+
+## Choose a method
+
+The integration method, passed with the `method` argument of each solver, often has the largest impact on run time. The best choice depends on the problem:
+
+- [`Tsit5`][dynamiqs.method.Tsit5] (the default of [`dq.sesolve()`][dynamiqs.sesolve], [`dq.mesolve()`][dynamiqs.mesolve] and [`dq.floquet()`][dynamiqs.floquet]) is an explicit adaptive step size method of order 5, and a good default for most problems.
+- [`Dopri5`][dynamiqs.method.Dopri5] and [`Dopri8`][dynamiqs.method.Dopri8] are the explicit adaptive Dormand-Prince methods of order 5 and 8. The higher order of `Dopri8` pays off when tight tolerances are required.
+- [`Kvaerno3`][dynamiqs.method.Kvaerno3] and [`Kvaerno5`][dynamiqs.method.Kvaerno5] are implicit adaptive methods, suited to stiff problems, typically those with Hamiltonians or Liouvillians whose eigenvalues span several orders of magnitude (e.g. high-order polynomials of the bosonic operators in large dimensions). Each step is more expensive, but explicit methods would need many more steps on such problems.
+- [`Expm`][dynamiqs.method.Expm] explicitly computes the propagator by matrix exponentiation. It only supports constant or piecewise constant operators, and is efficient for small systems ([`dq.sepropagator()`][dynamiqs.sepropagator] and [`dq.mepropagator()`][dynamiqs.mepropagator] use it by default for such operators, and `Tsit5` otherwise). It converts operators to dense, and is not recommended for large open systems due to the $\mathcal{O}(n^6)$ cost of exponentiating the Liouvillian.
+- [`Rouchon1`][dynamiqs.method.Rouchon1], [`Rouchon2`][dynamiqs.method.Rouchon2] and [`Rouchon3`][dynamiqs.method.Rouchon3] are methods tailored to the Lindblad master equation, which write each step as a Kraus map. The density matrix stays positive (and with `normalize=True`, the default, trace-preserving) even at large step sizes.
+- [`LowRank`][dynamiqs.method.LowRank] evolves a low-rank factor $m(t)$ of the density matrix, $\rho(t) = m(t)m(t)^\dagger$, instead of the full $n\times n$ matrix. It is suited to large open systems whose state remains close to low rank.
+- [`JumpMonteCarlo`][dynamiqs.method.JumpMonteCarlo] and [`DiffusiveMonteCarlo`][dynamiqs.method.DiffusiveMonteCarlo] solve the master equation by averaging stochastic trajectories of state vectors, which can be cheaper than evolving the density matrix in large dimensions. For individual trajectories, the jump SSE solver [`dq.jssesolve()`][dynamiqs.jssesolve] uses [`Event`][dynamiqs.method.Event] or [`EulerJump`][dynamiqs.method.EulerJump], see the [Stochastic simulations](stochastic-simulations.md) tutorial.
+
+Each solver lists the methods it supports in its API documentation. For adaptive methods, loosening the tolerances `rtol` and `atol` reduces the number of steps, at the cost of accuracy.
 
 ## Store operators in the `dia` layout
 
@@ -85,11 +99,13 @@ dq.set_matmul_precision('highest')
 
 This reduces the number of significand bits carried through each matrix product. Adaptive methods compensate for the lost accuracy by taking smaller steps, so the speedup is not guaranteed. Always check the result against a `'highest'` run before relying on it.
 
-Finally, `save_states=False` avoids storing and returning the state at every time in `tsave` when only expectation values are needed, which matters for large systems and many save times.
+See the [Devices and precision](devices-and-precision.md) tutorial for how to switch between single and double precision, and how to run simulations on a GPU.
+
+Finally, when only expectation values are needed, pass `save_states=False` to the solver to avoid storing and returning the state at every time in `tsave`. This matters for large systems and many save times.
 
 ## Reuse compiled programs across runs
 
-The first call of a simulation also traces and compiles it, which on a GPU can take longer than the simulation itself. Later calls with the same shapes reuse the compiled program, but only within the same Python process. To also skip the compilation in a new process, for example when running a script again or restarting a notebook kernel, turn on JAX's [persistent compilation cache](https://jax.readthedocs.io/en/latest/persistent_compilation_cache.html) before the first simulation:
+The first call of a simulation also traces and compiles it, which on a GPU can take longer than the simulation itself. Later calls with the same shapes reuse the compiled program, but only within the same Python process. To also skip the compilation in a new process, for example when running a script again or restarting a notebook kernel, turn on JAX's [persistent compilation cache](https://docs.jax.dev/en/latest/persistent_compilation_cache.html) before the first simulation:
 
 <!-- skip: next -->
 ```python
@@ -104,7 +120,7 @@ For example, in our benchmarks, this shortened the first call of a `mesolve` of 
 
 ## Advanced: environment variables
 
-These variables are read when JAX and Equinox are imported, so they must be set before importing Dynamiqs either from the shell, or with `os.environ` at the very top of the script.
+These variables are read when JAX and Equinox are imported, so they must be set before importing Dynamiqs, either from the shell or with `os.environ` at the very top of the script.
 
 ### Turn off runtime error checking
 
@@ -128,12 +144,12 @@ TF_FORCE_UNIFIED_MEMORY=1 XLA_PYTHON_CLIENT_MEM_FRACTION=4 python simulation.py
 
 ## Measure
 
-Dynamiqs ships a benchmark suite that times representative simulations and compares two runs, for example before and after a change:
+Dynamiqs ships a benchmark suite that times representative simulations and compares two runs, for example before and after a change. From a clone of the repository, run:
 
 ```shell
 uv run task bench --tier physics --out before.json
 uv run task bench --tier physics --out after.json
-python -m benchmarks compare before.json after.json
+uv run python -m benchmarks compare before.json after.json
 ```
 
 See [benchmarks/README.md](https://github.com/dynamiqs/dynamiqs/blob/main/benchmarks/README.md) for the list of cases and for instructions on running them on a GPU. To time your own simulation, remember that the first call includes compilation, and that JAX dispatches work asynchronously (use `jax.block_until_ready` on the result before stopping the clock):

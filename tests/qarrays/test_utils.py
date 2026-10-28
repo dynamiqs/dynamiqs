@@ -118,6 +118,15 @@ def test_asqarray_keeps_sparse_sequences_sparse():
 
 
 @pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', [None, dq.dense, dq.dia])
+def test_asqarray_warns_on_ignored_dims(layout):
+    x = dq.eye(6, layout=dq.dense)
+    with pytest.warns(UserWarning, match='Ignoring the provided `dims`'):
+        y = dq.asqarray(x, dims=(2, 3), layout=layout)
+    assert y.dims == (6,)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
 @pytest.mark.parametrize('layout', [dq.dense, dq.dia])
 def test_stack_keeps_vectorized(layout):
     a = dq.destroy(3, layout=layout)

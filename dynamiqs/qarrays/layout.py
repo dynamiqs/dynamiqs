@@ -2,8 +2,18 @@ from __future__ import annotations
 
 from enum import Enum
 
+__all__ = ['dense', 'dia']
+
 
 class Layout(Enum):
+    """Data layout of a qarray.
+
+    The two layouts are [`dq.dense`][dynamiqs.dense] and [`dq.dia`][dynamiqs.dia].
+    Operator constructors such as [`dq.eye()`][dynamiqs.eye] take a `layout`
+    argument, whose default is set globally with
+    [`dq.set_layout()`][dynamiqs.set_layout].
+    """
+
     DENSE = 'dense'
     DIA = 'dia'
 
@@ -15,7 +25,15 @@ class Layout(Enum):
 
 
 dense = Layout.DENSE
+"""Dense layout, storing all the matrix elements of a qarray in a JAX array."""
+
 dia = Layout.DIA
+"""Sparse diagonal layout, storing only the non-zero diagonals of a qarray.
+
+Efficient for operators with few non-zero diagonals, such as the bosonic annihilation
+and creation operators. This is the default layout of the operator constructors, see
+[`dq.set_layout()`][dynamiqs.set_layout].
+"""
 
 _DEFAULT_LAYOUT = dia
 

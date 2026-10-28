@@ -16,23 +16,32 @@ To install the latest development version directly from GitHub:
 pip install git+https://github.com/dynamiqs/dynamiqs.git
 ```
 
+To set up a development environment (editable install, tests and documentation tooling), see the [contributing guide](../../community/contributing.md).
+
 ## GPU support
 
-Dynamiqs leverages [JAX](https://jax.readthedocs.io/) for high-performance computing. By default, JAX is installed with CPU-only support. To enable **GPU acceleration**, you need to install a GPU-compatible version of JAX. Please refer to the [JAX installation guide](https://jax.readthedocs.io/en/latest/installation.html) for detailed, platform-specific instructions on installing JAX with CUDA (NVIDIA) or other accelerator support.
+Dynamiqs leverages [JAX](https://docs.jax.dev/) for high-performance computing. By default, JAX is installed with CPU-only support. To enable **GPU acceleration** on NVIDIA GPUs, install Dynamiqs together with the CUDA-enabled version of JAX:
 
-!!! tip
-    Install the GPU-enabled version of JAX **before** installing Dynamiqs to avoid dependency conflicts.
+```shell
+pip install -U dynamiqs "jax[cuda13]"
+```
 
+Use `"jax[cuda12]"` instead if your NVIDIA driver does not support CUDA 13. These wheels are only available on **Linux**: on Windows, use [WSL2](https://learn.microsoft.com/en-us/windows/wsl/) (where NVIDIA GPU support in JAX is experimental). Please refer to the [JAX installation guide](https://docs.jax.dev/en/latest/installation.html) for the supported driver versions and for other accelerators.
 
-## Reinstalling dynamiqs
+To check that JAX detects your GPU, run:
 
-You may occasionally need to reinstall Dynamiqs, for instance when upgrading to a newer release. Although modern 
-package managers such as [`uv`](https://docs.astral.sh/uv/)￼ handle upgrades and dependency resolution automatically, 
-this is not always true when using plain pip. In that case, uninstalling Dynamiqs alone can leave residual dependencies 
-from the previous installation, potentially causing version conflicts. To guarantee a clean reinstallation, 
-we recommend uninstalling Dynamiqs together with its main JAX dependencies:
+```shell
+python -c "import jax; print(jax.devices())"
+```
 
-```bash
-pip uninstall jax jaxlib optax diffrax jaxtyping equinox dynamiqs
+which should list a `CudaDevice`. Dynamiqs then runs on the GPU by default. To select a device explicitly, use [`dq.set_device()`][dynamiqs.set_device], and see the [Devices and precision](../basics/devices-and-precision.md) tutorial for more details.
+
+## Reinstalling Dynamiqs
+
+You may occasionally need to reinstall Dynamiqs, for instance when upgrading to a newer release. Although modern package managers such as [`uv`](https://docs.astral.sh/uv/) handle upgrades and dependency resolution automatically, this is not always true when using plain `pip`. In that case, uninstalling Dynamiqs alone can leave residual dependencies from the previous installation, potentially causing version conflicts. To guarantee a clean reinstallation, we recommend uninstalling Dynamiqs together with its main JAX dependencies (and the JAX CUDA plugins, if you installed GPU support):
+
+```shell
+pip uninstall jax jaxlib diffrax equinox jaxtyping optimistix dynamiqs
+pip uninstall jax-cuda13-plugin jax-cuda13-pjrt jax-cuda12-plugin jax-cuda12-pjrt
 pip install dynamiqs
 ```

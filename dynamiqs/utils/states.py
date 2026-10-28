@@ -47,7 +47,7 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
 
     Returns:
         (qarray of shape (..., n, 1)): Ket of the Fock state or tensor product of Fock
-            states, with _n = prod(dims)_.
+            states, with _n = prod(dim)_.
 
     Examples:
         Single-mode Fock state $\ket{1}$:
@@ -144,7 +144,7 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
 
     Returns:
         (qarray of shape (..., n, n)): Density matrix of the Fock state or tensor
-            product of Fock states, with _n = prod(dims)_.
+            product of Fock states, with _n = prod(dim)_.
 
     Examples:
         Single-mode Fock state $\ket{1}\bra{1}$:
@@ -190,30 +190,79 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
 
 
 def basis(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
-    """Alias of [`dq.fock()`][dynamiqs.fock]."""
+    r"""Returns the ket of a Fock state or a tensor product of Fock states.
+
+    This function is an alias of [`dq.fock()`][dynamiqs.fock].
+
+    Args:
+        dim: Hilbert space dimension of each mode.
+        number (array-like of shape (...) or (..., len(dim))): Fock state number
+            for each mode, of integer type. If `dim` is a tuple, the last dimension of
+            `number` should match the length of `dim`.
+
+    Returns:
+        (qarray of shape (..., n, 1)): Ket of the Fock state or tensor product of Fock
+            states, with _n = prod(dim)_.
+
+    Examples:
+        >>> dq.basis(3, 1)
+        QArray: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense
+        [[0.+0.j]
+         [1.+0.j]
+         [0.+0.j]]
+    """
     return fock(dim, number)
 
 
 def basis_dm(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
-    """Alias of [`dq.fock_dm()`][dynamiqs.fock_dm]."""
+    r"""Returns the density matrix of a Fock state or a tensor product of Fock states.
+
+    This function is an alias of [`dq.fock_dm()`][dynamiqs.fock_dm].
+
+    Args:
+        dim: Hilbert space dimension of each mode.
+        number (array-like of shape (...) or (..., len(dim))): Fock state number
+            for each mode, of integer type. If `dim` is a tuple, the last dimension of
+            `number` should match the length of `dim`.
+
+    Returns:
+        (qarray of shape (..., n, n)): Density matrix of the Fock state or tensor
+            product of Fock states, with _n = prod(dim)_.
+
+    Examples:
+        >>> dq.basis_dm(3, 1)
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dense
+        [[0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 1.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j]]
+    """
     return fock_dm(dim, number)
 
 
 def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> QArray:
     r"""Returns the ket of a coherent state or a tensor product of coherent states.
 
+    For a single mode, it is defined for a complex amplitude $\alpha$ by
+    $\ket{\alpha} = D(\alpha)\ket{0}$, with $D(\alpha)$ the displacement operator (see
+    [`dq.displace()`][dynamiqs.displace]).
+
     Args:
         dim: Hilbert space dimension of each mode.
         alpha (array-like of shape (...) or (len(dim), ...)): Coherent state
             amplitude for each mode. If `dim` is a tuple, the first dimension of
-            `alpha` should match the length of `dim`.
-
-    Note:
-        If you provide argument `alpha` as a list, all elements must be broadcastable.
+            `alpha` should match the length of `dim`: `alpha[i]` holds the amplitudes
+            of mode `i`, and the amplitudes of all modes must be broadcastable
+            together.
 
     Returns:
         (qarray of shape (..., n, 1)): Ket of the coherent state or tensor product of
-            coherent states, with _n = prod(dims)_.
+            coherent states, with _n = prod(dim)_.
+
+    Note:
+        The displacement operator is exponentiated in the truncated Hilbert space of
+        dimension `dim`. The returned ket has unit norm, but its Fock amplitudes differ
+        from those of the infinite-dimensional coherent state when `dim` is too small
+        for $|\alpha|$.
 
     Examples:
         Single-mode coherent state $\ket{\alpha}$:
@@ -237,7 +286,6 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
           [-0.156+0.j   ]
           [ 0.   -0.047j]]]
 
-
         Multi-mode coherent state $\ket{\alpha}\otimes\ket{\beta}$:
         >>> dq.coherent((2, 3), (0.5, 0.5j))
         QArray: shape=(6, 1), dims=(2, 3), dtype=complex64, layout=dense
@@ -254,6 +302,11 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
         >>> alpha2 = np.linspace(0, 1, 7)
         >>> dq.coherent((8, 8), (alpha1[None, :], alpha2[:, None])).shape
         (7, 5, 64, 1)
+
+        The first dimension of `alpha` indexes the modes, here giving the batch
+        $\{\ket{0.5}\otimes\ket{0.2}\!, \ket{0.1i}\otimes\ket{0.3}\}$:
+        >>> dq.coherent((4, 6), [(0.5, 0.1j), (0.2, 0.3)]).shape
+        (2, 24, 1)
     """
     _dim = np.asarray(dim)
     check_type_int(_dim, 'dim')
@@ -276,15 +329,27 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
     r"""Returns the density matrix of a coherent state or a tensor product of coherent
     states.
 
+    For a single mode, it is defined for a complex amplitude $\alpha$ by
+    $\ket{\alpha}\bra{\alpha}$, with $\ket{\alpha} = D(\alpha)\ket{0}$ and $D(\alpha)$
+    the displacement operator (see [`dq.displace()`][dynamiqs.displace]).
+
     Args:
         dim: Hilbert space dimension of each mode.
-        alpha (array-like of shape (...) or (..., len(dim))): Coherent state
-            amplitude for each mode. If `dim` is a tuple, the last dimension of
-            `alpha` should match the length of `dim`.
+        alpha (array-like of shape (...) or (len(dim), ...)): Coherent state
+            amplitude for each mode. If `dim` is a tuple, the first dimension of
+            `alpha` should match the length of `dim`: `alpha[i]` holds the amplitudes
+            of mode `i`, and the amplitudes of all modes must be broadcastable
+            together.
 
     Returns:
         (qarray of shape (..., n, n)): Density matrix of the coherent state or tensor
-            product of coherent states, with _n = prod(dims)_.
+            product of coherent states, with _n = prod(dim)_.
+
+    Note:
+        The displacement operator is exponentiated in the truncated Hilbert space of
+        dimension `dim`. The returned density matrix has unit trace, but its Fock
+        elements differ from those of the infinite-dimensional coherent state when
+        `dim` is too small for $|\alpha|$.
 
     Examples:
         Single-mode coherent state $\ket{\alpha}\bra{\alpha}$:
@@ -305,10 +370,11 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
         >>> dq.coherent_dm((2, 3), (0.5, 0.5j)).shape
         (6, 6)
 
-        Batched multi-mode coherent states
-        $\{\ket{\alpha_0}\bra{\alpha_0}\otimes\ket{\beta_0}\bra{\beta_0}\!,
-        \ket{\alpha_1}\bra{\alpha_1}\otimes\ket{\beta_1}\bra{\beta_1}\}$:
-        >>> alpha = [(0.5, 0.5j), (0.5j, 0.5)]
+        Batched multi-mode coherent states, where the first dimension of `alpha`
+        indexes the modes, here giving the batch
+        $\{\ket{0.5}\bra{0.5}\otimes\ket{0.2}\bra{0.2}\!,
+        \ket{0.1i}\bra{0.1i}\otimes\ket{0.3}\bra{0.3}\}$:
+        >>> alpha = [(0.5, 0.1j), (0.2, 0.3)]
         >>> dq.coherent_dm((4, 6), alpha).shape
         (2, 24, 24)
     """
@@ -320,12 +386,12 @@ def ground() -> QArray:
 
     It is defined by $\ket{g} = \begin{pmatrix}0\\1\end{pmatrix}$.
 
+    Returns:
+        (qarray of shape (2, 1)): Ket $\ket{g}$.
+
     Note:
         This function is named `ground` because $\ket{g}$ is the lower energy state of
         a two-level system with Hamiltonian $H=\omega \sigma_z$.
-
-    Returns:
-        (qarray of shape (2, 1)): Ket $\ket{g}$.
 
     Examples:
         >>> dq.ground()
@@ -342,12 +408,12 @@ def ground_dm() -> QArray:
 
     It is defined by $\ket{g}\bra{g} = \begin{pmatrix}0 & 0\\0 & 1\end{pmatrix}$.
 
+    Returns:
+        (qarray of shape (2, 2)): Density matrix $\ket{g}\bra{g}$.
+
     Note:
         This function is named `ground_dm` because $\ket{g}$ is the lower energy state
         of a two-level system with Hamiltonian $H=\omega \sigma_z$.
-
-    Returns:
-        (qarray of shape (2, 2)): Density matrix $\ket{g}\bra{g}$.
 
     Examples:
         >>> dq.ground_dm()
@@ -363,12 +429,12 @@ def excited() -> QArray:
 
     It is defined by $\ket{e} = \begin{pmatrix}1\\0\end{pmatrix}$.
 
-    Note:
-        This function is named `excited` because $\ket{e}$ is the higher energy state of
-        a two-level-system with Hamiltonian $H=\omega \sigma_z$.
-
     Returns:
         (qarray of shape (2, 1)): Ket $\ket{e}$.
+
+    Note:
+        This function is named `excited` because $\ket{e}$ is the higher energy state of
+        a two-level system with Hamiltonian $H=\omega \sigma_z$.
 
     Examples:
         >>> dq.excited()
@@ -385,12 +451,12 @@ def excited_dm() -> QArray:
 
     It is defined by $\ket{e}\bra{e} = \begin{pmatrix}1 & 0\\0 & 0\end{pmatrix}$.
 
-    Note:
-        This function is named `excited_dm` because $\ket{e}$ is the higher energy state
-        of a two-level-system with Hamiltonian $H=\omega \sigma_z$.
-
     Returns:
         (qarray of shape (2, 2)): Density matrix $\ket{e}\bra{e}$.
+
+    Note:
+        This function is named `excited_dm` because $\ket{e}$ is the higher energy state
+        of a two-level system with Hamiltonian $H=\omega \sigma_z$.
 
     Examples:
         >>> dq.excited_dm()
@@ -419,7 +485,11 @@ def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> QArray:
 
     Returns:
         (qarray of shape (..., n, n)): Density matrix of the thermal state or tensor
-            product of thermal states, with _n = prod(dims)_.
+            product of thermal states, with _n = prod(dim)_.
+
+    Note:
+        The populations are truncated to the first `dim` Fock states of each mode, then
+        renormalized so that the returned density matrix has unit trace.
 
     Examples:
         Single-mode thermal state with thermal photon number $n_{th}=0.1$:
@@ -494,7 +564,7 @@ def _single_thermal_dm(dim: int, nth: Array) -> QArray:
 def vacuum(dim: int) -> QArray:
     r"""Returns the ket of the vacuum state.
 
-    It is the Fock state with zero photon, defined by
+    It is the Fock state with zero photons, defined by
     $\ket{0} = \begin{pmatrix}1\\0\\\vdots\end{pmatrix}$.
 
     Args:
@@ -517,7 +587,7 @@ def vacuum(dim: int) -> QArray:
 def vacuum_dm(dim: int) -> QArray:
     r"""Returns the density matrix of the vacuum state.
 
-    It is the Fock state with zero photon, defined by $\ket{0}\bra{0} =
+    It is the Fock state with zero photons, defined by $\ket{0}\bra{0} =
     \begin{pmatrix}1 & 0 & \cdots\\0 & 0 & \cdots\\\vdots & \vdots & \ddots
     \end{pmatrix}$.
 
@@ -554,6 +624,9 @@ def cat(dim: int, alpha: ArrayLike, theta: ArrayLike = 0.0) -> QArray:
         theta (array-like of shape (...)): Relative phase between the two coherent
             states.
 
+    Returns:
+        (qarray of shape (..., dim, 1)): Ket of the cat state.
+
     Note:
         Arguments `alpha` and `theta` are broadcast together following NumPy
         broadcasting rules, allowing batching over either or both.
@@ -563,9 +636,6 @@ def cat(dim: int, alpha: ArrayLike, theta: ArrayLike = 0.0) -> QArray:
         collapse onto the vacuum. The returned state is then the vacuum
         $\ket{0}$ for the even cat, and the single-photon Fock state $\ket{1}$
         for the odd cat ($\theta=\pi$), where the vacuum contributions cancel.
-
-    Returns:
-        (qarray of shape (..., dim, 1)): Ket of the cat state.
 
     Examples:
         Even cat state $\ket{\mathrm{cat}(2, 0)}$:
@@ -640,12 +710,12 @@ def cat_dm(dim: int, alpha: ArrayLike, theta: ArrayLike = 0.0) -> QArray:
         theta (array-like of shape (...)): Relative phase between the two coherent
             states.
 
+    Returns:
+        (qarray of shape (..., dim, dim)): Density matrix of the cat state.
+
     Note:
         Arguments `alpha` and `theta` are broadcast together following NumPy
         broadcasting rules, allowing batching over either or both.
-
-    Returns:
-        (qarray of shape (..., dim, dim)): Density matrix of the cat state.
 
     Examples:
         Even cat state $\ket{\mathrm{cat}(2, 0)}\bra{\mathrm{cat}(2, 0)}$:
@@ -658,7 +728,6 @@ def cat_dm(dim: int, alpha: ArrayLike, theta: ArrayLike = 0.0) -> QArray:
 
         Batched over the phase $\{\ket{\mathrm{cat}(2, 0)}\bra{\mathrm{cat}(2, 0)}\!,
         \ket{\mathrm{cat}(2, \pi)}\bra{\mathrm{cat}(2, \pi)}\}$:
-        >>> import numpy as np
         >>> dq.cat_dm(4, 2.0, [0.0, np.pi]).shape
         (2, 4, 4)
     """

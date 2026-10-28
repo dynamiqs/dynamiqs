@@ -45,7 +45,7 @@ There are two common ideas for solving the Schrödinger equation.
 
 ### Computing the propagator
 
-The state at time $t$ is given by $\ket{\psi(t)}=e^{-iHt}\ket{\psi(0)}$, where $\psi(0)$ is the state at time $t=0$. The operator $U(t)=e^{-iHt}$ is called the **propagator**, a matrix of size $n\times n$.
+The state at time $t$ is given by $\ket{\psi(t)}=e^{-iHt}\ket{\psi(0)}$, where $\ket{\psi(0)}$ is the state at time $t=0$. The operator $U(t)=e^{-iHt}$ is called the **propagator**, a matrix of size $n\times n$.
 
 ??? Note "Solution for a time-dependent Hamiltonian"
     For a time-dependent Hamiltonian $H(t)$, the solution at time $t$ is
@@ -61,7 +61,7 @@ The first idea is to explicitly compute the propagator to evolve the state up to
 ^^Time complexity^^: $O(n^3)$ (complexity of computing the matrix exponential(1)).
 { .annotate }
 
-1. Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
+1. Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O}(n^3)$.
 
 !!! Example "Example for a two-level system"
     For $H=\frac{\omega}{2}\sigma_z$, the propagator is straightforward to compute:
@@ -83,7 +83,7 @@ where we used the Schrödinger equation to replace the time derivative of the st
 There are two main types of ODE methods:
 
 - **Fixed step size**: as with the Euler method, the step size $\dt$ is fixed during the simulation. The best known higher order methods are the *Runge-Kutta methods*. It is important for all these methods that the time step is sufficiently small to ensure the accuracy of the solution.
-- **Adaptive step size**: the step size is automatically adjusted during the simulation, at each time step. A well-known method is the *Dormand-Prince method*.
+- **Adaptive step size**: the step size is automatically adjusted during the simulation, at each time step, from an estimate of the local error. A well-known example is the *Dormand-Prince method*, an embedded Runge-Kutta method which computes two solutions of different orders at each step and uses their difference as the error estimate.
 
 ^^Space complexity^^: $O(n^2)$ (storing the Hamiltonian).
 
@@ -93,21 +93,15 @@ There are two main types of ODE methods:
 
 You can create the state and Hamiltonian using any qarray-like. Let's take the example of a two-level system with a simple Hamiltonian:
 
-```python
-import jax.numpy as jnp
-import dynamiqs as dq
-
-jnp.set_printoptions(precision=3, suppress=True)  # set custom array print style
-
-psi0 = dq.ground()  # initial state
-H = dq.sigmaz()  # Hamiltonian
-tsave = jnp.linspace(0, 1.0, 11)  # saving times
-res = dq.sesolve(H, psi0, tsave)  # run the simulation
-print(res.states[-1])  # print the final state
-```
-
-```text title="Output"
-|██████████| 100.0% ◆ elapsed 2.52ms ◆ remaining 0.00ms
+```pycon
+>>> import jax.numpy as jnp
+>>> import dynamiqs as dq
+>>> jnp.set_printoptions(precision=3, suppress=True)  # set custom array print style
+>>> psi0 = dq.ground()  # initial state
+>>> H = dq.sigmaz()  # Hamiltonian
+>>> tsave = jnp.linspace(0, 1.0, 11)  # saving times
+>>> res = dq.sesolve(H, psi0, tsave, progress_meter=False)  # run the simulation
+>>> res.states[-1]  # final state
 QArray: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
 [[0.  +0.j   ]
  [0.54+0.841j]]
@@ -117,12 +111,9 @@ If you want to know more about the available methods or the different options, h
 
 You can also directly compute the propagator with the [`dq.sepropagator()`][dynamiqs.sepropagator] solver. Continuing the last example:
 
-```python
-res = dq.sepropagator(H, tsave)
-print(res.propagators[-1])  # print the final propagator
-```
-
-```text title="Output"
+```pycon
+>>> res = dq.sepropagator(H, tsave, progress_meter=False)
+>>> res.propagators[-1]  # final propagator
 QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
 [[0.54-0.841j 0.  +0.j   ]
  [0.  +0.j    0.54+0.841j]]

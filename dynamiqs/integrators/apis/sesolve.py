@@ -87,31 +87,9 @@ def sesolve(
             details.
 
     Returns:
-        `dq.SESolveResult` object holding the result of the Schrödinger equation
-            integration. Use `result.states` to access the saved states and
-            `result.expects` to access the saved expectation values.
-
-            ??? "Detailed result API"
-                ```python
-                dq.SESolveResult
-                ```
-
-                **Attributes:**
-
-                - **`states`** _(qarray of shape (..., nsave, n, 1))_ - Saved states
-                    with `nsave = ntsave`, or `nsave = 1` if `save_states=False`.
-                - **`final_state`** _(qarray of shape (..., n, 1))_ - Saved final state.
-                - **`expects`** _(array of shape (..., len(exp_ops), ntsave) or None)_ -
-                    Saved expectation values, if specified by `exp_ops`.
-                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
-                    if specified.
-                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
-                    resolution.
-                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
-                    were saved.
-                - **`method`** _(Method)_ - Method used.
-                - **`gradient`** _(Gradient)_ - Gradient used.
-                - **`options`** _(Options)_ - Options used.
+        [`dq.SESolveResult`][dynamiqs.SESolveResult] object holding the result of the
+            Schrödinger equation integration. Use `result.states` to access the saved
+            states and `result.expects` to access the saved expectation values.
 
     Other Parameters:
         save_states: If `True`, the state is saved at every time in
@@ -119,44 +97,34 @@ def sesolve(
         cartesian_batching: If `True`, batched arguments are treated
             as separated batch dimensions, otherwise the batching is performed over a
             single shared batch dimension. Defaults to `True`.
-        progress_meter: Progress
-            meter indicating how far the solve has progressed. Defaults to `None`
-            which uses the global default progress meter (see
+        progress_meter: Progress meter indicating how far the solve has progressed.
+            Defaults to `None` which uses the global default progress meter (see
             [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to `True`
-            for a [tqdm](https://github.com/tqdm/tqdm) progress meter, and `False`
-            for no output. If gradients are computed, the progress meter only
-            displays during the forward pass.
+            for a [`dq.TqdmProgressMeter`][dynamiqs.TqdmProgressMeter], `False` for a
+            [`dq.NoProgressMeter`][dynamiqs.NoProgressMeter], or pass any progress
+            meter such as a [`dq.TextProgressMeter`][dynamiqs.TextProgressMeter]. If
+            gradients are computed, the progress meter only displays during the
+            forward pass.
         t0: Initial time. If `None`, defaults to the first
             time in `tsave`. Defaults to `None`.
-        save_extra: A function with signature
+        save_extra: Function with signature
             `f(Scalar, QArray) -> PyTree` that takes the current time and state as
             input and returns a PyTree. This can be used to save additional
             arbitrary data during the integration, accessible in `result.extra`.
             Defaults to `None`.
 
     Examples:
-        ```python
-        import dynamiqs as dq
-        import jax.numpy as jnp
-
-        n = 16
-        a = dq.destroy(n)
-
-        H = a.dag() @ a
-        psi0 = dq.coherent(n, 1.0)
-        tsave = jnp.linspace(0, 1.0, 11)
-
-        result = dq.sesolve(H, psi0, tsave)
-        print(result)
-        ```
-
-        ```text title="Output"
-        |██████████| 100.0% ◆ elapsed 1.50ms ◆ remaining 0.00ms
+        >>> n = 16
+        >>> a = dq.destroy(n)
+        >>> H = a.dag() @ a
+        >>> psi0 = dq.coherent(n, 1.0)
+        >>> tsave = jnp.linspace(0, 1.0, 11)
+        >>> result = dq.sesolve(H, psi0, tsave, progress_meter=False)
+        >>> print(result)
         ==== SESolveResult ====
         Method : Tsit5
         Infos  : 11 steps (11 accepted, 0 rejected)
         States : QArray complex64 (11, 16, 1) | 1.4 Kb
-        ```
 
     # Advanced use-cases
 
@@ -191,7 +159,7 @@ def sesolve(
     === "If `cartesian_batching = False`"
         The results leading dimensions are
         ```
-        ... = ...H = ...psi0  # (once broadcasted)
+        ... = ...H = ...psi0  # (once broadcast)
         ```
         For example if:
 

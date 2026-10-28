@@ -251,7 +251,7 @@ of docstring examples calling `renderfig`/`rendergif`/`default_mpl_style` or sho
 pages, put `renderfig(...)` in a Sybil `<!-- invisible-code-block: python -->` instead.
 
 Internal links use a specific syntax: `[dq.sesolve()][dynamiqs.sesolve]` for a function (keep the `()`),
-`[dq.Options][dynamiqs.Options]` for a class, and `(doc page)(relative/path.md)` for
+`[dq.QArray][dynamiqs.QArray]` for a class, and `(doc page)(relative/path.md)` for
 another page (parentheses, not brackets). Icons are `:material-*`. Every code example in
 `docs/**.md` is executed by CI, so it must run.
 

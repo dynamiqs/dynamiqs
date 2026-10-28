@@ -10,7 +10,7 @@ __all__ = ['hc']
 class HermitianConjugate:
     def __add__(self, _):  # noqa
         raise TypeError(
-            'The symbol `dq.hq` can only be right-added to a qarray or a timeqarray.'
+            'The symbol `dq.hc` can only be right-added to a qarray or a timeqarray.'
         )
 
     def __radd__(self, y: QArray | TimeQArray) -> QArray | TimeQArray:
@@ -18,7 +18,7 @@ class HermitianConjugate:
             return y + y.dag()
         else:
             raise TypeError(
-                f'The symbol `dq.hq` can only be right-added to a qarray or a '
+                f'The symbol `dq.hc` can only be right-added to a qarray or a '
                 f'timeqarray, but it was added to a {obj_type_str(y)}.'
             )
 
@@ -26,27 +26,6 @@ class HermitianConjugate:
 hc = HermitianConjugate()
 """This symbol can be used as a shortcut to sum a qarray or a timeqarray with its
 Hermitian conjugate.
-
-Examples:
-    For a linear drive with amplitude `omega`:
-    ```diff
-    - H = a.dag() @ a + omega * a + omega.conj() * a.dag()
-    + H = a.dag() @ a + (omega * a + dq.hc)
-    ```
-
-    For two linear drives on two different modes:
-    ```diff
-    - H = omega_a * a + omega_a.conj() * a.dag() + omega_b * b + omega_b.conj() * b
-    + H = (omega_a * a + dq.hc) + (omega_b * b + dq.hc)
-    ```
-
-    For a time-dependent linear drive:
-    ```diff
-    omega = lambda t: jnp.cos(2.0 * jnp.pi * t)
-    - H = dq.modulated(omega, a)
-    - H += H.dag()
-    + H = dq.modulated(omega, a) + dq.hc
-    ```
 
 Warning:
     The only valid operation with this symbol is right-addition to a qarray or a
@@ -66,5 +45,28 @@ Warning:
     QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=3
     [[ 2.+0.j  2.+0.j]
      [ 2.+0.j -2.+0.j]]
+    ```
+
+Examples:
+    For a linear drive with amplitude `omega`:
+    ```diff
+    - H = a.dag() @ a + omega * a + omega.conj() * a.dag()
+    + H = a.dag() @ a + (omega * a + dq.hc)
+    ```
+
+    For two linear drives on two different modes:
+    ```diff
+    - H = (omega_a * a + omega_a.conj() * a.dag()) + (
+    -     omega_b * b + omega_b.conj() * b.dag()
+    - )
+    + H = (omega_a * a + dq.hc) + (omega_b * b + dq.hc)
+    ```
+
+    For a time-dependent linear drive:
+    ```diff
+    omega = lambda t: jnp.cos(2.0 * jnp.pi * t)
+    - H = dq.modulated(omega, a)
+    - H += H.dag()
+    + H = dq.modulated(omega, a) + dq.hc
     ```
 """

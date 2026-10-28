@@ -15,6 +15,8 @@ __all__ = ['Options']
 
 
 class Options(eqx.Module):
+    """Solver options, built internally from the solver keyword arguments."""
+
     save_states: bool = True
     save_propagators: bool = True
     cartesian_batching: bool = True

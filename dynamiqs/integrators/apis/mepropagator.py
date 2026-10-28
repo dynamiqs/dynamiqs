@@ -57,16 +57,16 @@ def mepropagator(
     This function computes the propagator $\mathcal{U}(t)$ at time $t$ of the Lindblad
     master equation (with $\hbar=1$)
     $$
-        \mathcal{U}(t) = \mathscr{T}\exp\left(\int_0^t\mathcal{L}(t')\dt'\right),
+        \mathcal{U}(t) = \mathscr{T}\exp\left(\int_{t_0}^t\mathcal{L}(t')\dt'\right),
     $$
-    where $\mathscr{T}$ is the time-ordering symbol and $\mathcal{L}$ is the system's
-    Liouvillian. The formula simplifies to $\mathcal{U}(t)=e^{t\mathcal{L}}$ if the
-    Liouvillian does not depend on time.
+    where $\mathscr{T}$ is the time-ordering symbol, $\mathcal{L}$ is the system's
+    Liouvillian and $t_0$ is the initial time. The formula simplifies to
+    $\mathcal{U}(t)=e^{(t-t_0)\mathcal{L}}$ if the Liouvillian does not depend on time.
 
-    If the Liouvillian is constant or piecewise constant, the propagator is
-    computed by directly exponentiating the Liouvillian. Otherwise, the
-    propagator is computed by solving the Lindblad master equation with an ODE
-    method.
+    With the default `method=None`, if the Liouvillian is constant or piecewise
+    constant, the propagator is computed by directly exponentiating the Liouvillian.
+    Otherwise, the propagator is computed by solving the Lindblad master equation with
+    an ODE method.
 
     Args:
         H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
@@ -91,30 +91,9 @@ def mepropagator(
             details.
 
     Returns:
-        `dq.MEPropagatorResult` object holding the result of the propagator computation.
-            Use `result.propagators` to access the saved propagators.
-
-            ??? "Detailed result API"
-                ```python
-                dq.MEPropagatorResult
-                ```
-
-                **Attributes:**
-
-                - **`propagators`** _(qarray of shape (..., nsave, n^2, n^2))_ - Saved
-                    propagators with `nsave = ntsave`, or `nsave = 1` if
-                    `save_propagators=False`.
-                - **`final_propagator`** _(qarray of shape (..., n^2, n^2))_ - Saved
-                    final propagator.
-                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
-                    if specified.
-                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
-                    resolution.
-                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
-                    were saved.
-                - **`method`** _(Method)_ - Method used.
-                - **`gradient`** _(Gradient)_ - Gradient used.
-                - **`options`** _(Options)_ - Options used.
+        [`dq.MEPropagatorResult`][dynamiqs.MEPropagatorResult] object holding the
+            result of the propagator computation. Use `result.propagators` to access
+            the saved propagators.
 
     Other Parameters:
         save_propagators: If `True`, the propagator is saved at every
@@ -123,43 +102,34 @@ def mepropagator(
         cartesian_batching: If `True`, batched arguments are treated
             as separated batch dimensions, otherwise the batching is performed over a
             single shared batch dimension. Defaults to `True`.
-        progress_meter: Progress
-            meter indicating how far the solve has progressed. Defaults to `None`
-            which uses the global default progress meter (see
+        progress_meter: Progress meter indicating how far the solve has progressed.
+            Defaults to `None` which uses the global default progress meter (see
             [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to `True`
-            for a [tqdm](https://github.com/tqdm/tqdm) progress meter, and `False`
-            for no output. If gradients are computed, the progress meter only
-            displays during the forward pass.
+            for a [`dq.TqdmProgressMeter`][dynamiqs.TqdmProgressMeter], `False` for a
+            [`dq.NoProgressMeter`][dynamiqs.NoProgressMeter], or pass any progress
+            meter such as a [`dq.TextProgressMeter`][dynamiqs.TextProgressMeter]. If
+            gradients are computed, the progress meter only displays during the
+            forward pass.
         t0: Initial time. If `None`, defaults to the first
             time in `tsave`. Defaults to `None`.
-        save_extra: A function with signature
+        save_extra: Function with signature
             `f(Scalar, QArray) -> PyTree` that takes the current time and propagator as
             input and returns a PyTree. This can be used to save additional
             arbitrary data during the integration, accessible in `result.extra`.
             Defaults to `None`.
 
     Examples:
-        ```python
-        import dynamiqs as dq
-        import jax.numpy as jnp
-
-        n = 16
-        a = dq.destroy(n)
-
-        H = a.dag() @ a
-        jump_ops = [a]
-        tsave = jnp.linspace(0, 1.0, 11)
-
-        result = dq.mepropagator(H, jump_ops, tsave)
-        print(result)
-        ```
-
-        ```text title="Output"
+        >>> n = 16
+        >>> a = dq.destroy(n)
+        >>> H = a.dag() @ a
+        >>> jump_ops = [a]
+        >>> tsave = jnp.linspace(0, 1.0, 11)
+        >>> result = dq.mepropagator(H, jump_ops, tsave, progress_meter=False)
+        >>> print(result)
         ==== MEPropagatorResult ====
         Method      : Expm
         Infos       : 10 steps
         Propagators : QArray complex64 (11, 256, 256) | 5.5 Mb
-        ```
 
     # Advanced use-cases
 
@@ -194,7 +164,7 @@ def mepropagator(
     === "If `cartesian_batching = False`"
         The results leading dimensions are
         ```
-        ... = ...H = ...L0 = ...L1 = (...)  # (once broadcasted)
+        ... = ...H = ...L0 = ...L1 = (...)  # (once broadcast)
         ```
         For example if:
 

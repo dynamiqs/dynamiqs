@@ -21,17 +21,23 @@ _DEFAULT_PROGRESS_METER: AbstractProgressMeter = TqdmProgressMeter()
 def set_device(device: Literal['cpu', 'gpu', 'tpu'], index: int = 0):
     """Configure the default device.
 
+    See [JAX documentation on devices](https://docs.jax.dev/en/latest/faq.html#faq-data-placement).
+
+    Args:
+        device (string 'cpu', 'gpu', or 'tpu'): Default device.
+        index: Index of the device to use, defaults to 0.
+
     Note-: Equivalent JAX syntax
         This function is equivalent to
         ```
         jax.config.update('jax_default_device', jax.devices(device)[index])
         ```
 
-    See [JAX documentation on devices](https://jax.readthedocs.io/en/latest/faq.html#faq-data-placement).
-
-    Args:
-        device (string 'cpu', 'gpu', or 'tpu'): Default device.
-        index: Index of the device to use, defaults to 0.
+    Examples:
+        >>> dq.set_device('cpu')
+        >>> jnp.ones(2).device
+        CpuDevice(id=0)
+        >>> jax.config.update('jax_default_device', None)  # back to default device
     """
     jax.config.update('jax_default_device', jax.devices(device)[index])
 
@@ -44,6 +50,9 @@ def set_precision(precision: Literal['single', 'double']):
     - `'single'` sets default precision to `float32` and `complex64` (default setting),
     - `'double'` sets default precision to `float64` and `complex128`.
 
+    Args:
+        precision (string 'single' or 'double'): Default precision.
+
     Note-: Equivalent JAX syntax
         This function is equivalent to
         ```
@@ -52,10 +61,15 @@ def set_precision(precision: Literal['single', 'double']):
         elif precision == 'double':
             jax.config.update('jax_enable_x64', True)
         ```
-         See [JAX documentation on double precision](https://jax.readthedocs.io/en/latest/notebooks/Common_Gotchas_in_JAX.html#double-64bit-precision).
+        See [JAX documentation on double precision](https://docs.jax.dev/en/latest/notebooks/Common_Gotchas_in_JAX.html#double-64bit-precision).
 
-    Args:
-        precision (string 'single' or 'double'): Default precision.
+    Examples:
+        >>> dq.eye(2).dtype
+        dtype('complex64')
+        >>> dq.set_precision('double')
+        >>> dq.eye(2).dtype
+        dtype('complex128')
+        >>> dq.set_precision('single')  # back to default precision
     """
     if precision == 'single':
         jax.config.update('jax_enable_x64', False)
@@ -77,8 +91,12 @@ def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest']):
     - `'low'` reduces matmul precision to `bfloat16` (fastest but least accurate),
     - `'high'` reduces matmul precision to `bfloat16_3x` or `tensorfloat32` if available
         (faster but less accurate),
-    - `'highest'` keeps matmul precision to `float32` or `float64` as applicable
+    - `'highest'` keeps matmul precision at `float32` or `float64` as applicable
         (slowest but most accurate, default setting).
+
+    Args:
+        matmul_precision (string 'low', 'high', or 'highest'): Default precision
+            for matrix multiplications on GPUs and TPUs.
 
     Note:
         This setting applies only to single precision matrices (`float32` or
@@ -86,15 +104,15 @@ def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest']):
 
     Note-: Equivalent JAX syntax
         This function is equivalent to setting `jax_default_matmul_precision` in
-        `jax.config`. See [JAX documentation on matmul precision](https://jax.readthedocs.io/en/latest/_autosummary/jax.default_matmul_precision.html)
-        and [JAX documentation on the different available options](https://jax.readthedocs.io/en/latest/jax.lax.html#jax.lax.Precision).
+        `jax.config`. See [JAX documentation on matmul precision](https://docs.jax.dev/en/latest/_autosummary/jax.default_matmul_precision.html)
+        and [JAX documentation on the different available options](https://docs.jax.dev/en/latest/jax.lax.html#jax.lax.Precision).
 
-    Args:
-        matmul_precision (string 'low', 'high', or 'highest'): Default precision
-            for matrix multiplications on GPUs and TPUs.
+    Examples:
+        >>> dq.set_matmul_precision('low')
+        >>> dq.set_matmul_precision('highest')  # back to default precision
     """
     if matmul_precision == 'low':
-        jax.config.update('jax_default_matmul_precision', 'fastest')
+        jax.config.update('jax_default_matmul_precision', 'bfloat16')
     elif matmul_precision == 'high':
         jax.config.update('jax_default_matmul_precision', 'high')
     elif matmul_precision == 'highest':
@@ -110,16 +128,16 @@ def set_layout(layout: Literal['dense', 'dia']):
     """Configure the default matrix layout for operators supporting this option.
 
     Two layouts are supported by most operators (see the list of available operators in
-    the [Python API](/python_api/index.html#operators))):
+    the [Python API](../../index.md#operators)):
 
     - `'dense'`: JAX native dense layout,
-    - `'dia'`: dynamiqs sparse diagonal layout, only non-zero diagonals are stored.
-
-    Note:
-        The default layout upon importing dynamiqs is `'dia'`.
+    - `'dia'`: Dynamiqs sparse diagonal layout, only non-zero diagonals are stored.
 
     Args:
         layout (string 'dense' or 'dia'): Default matrix layout for operators.
+
+    Note:
+        The default layout upon importing Dynamiqs is `'dia'`.
 
     Examples:
         >>> dq.eye(4)
@@ -150,9 +168,15 @@ def set_progress_meter(progress_meter: AbstractProgressMeter | bool):
     """Configure the default progress meter.
 
     Args:
-        progress_meter: Default progress meter. Set to `True` for a [tqdm](https://github.com/tqdm/tqdm)
-            progress meter, and `False` for no output. See other options in
-            [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
+        progress_meter: Default progress meter. Set to `True` for a
+            [`dq.TqdmProgressMeter`][dynamiqs.TqdmProgressMeter], and `False` for a
+            [`dq.NoProgressMeter`][dynamiqs.NoProgressMeter]. Any other progress meter
+            can also be passed, such as
+            [`dq.TextProgressMeter`][dynamiqs.TextProgressMeter].
+
+    Examples:
+        >>> dq.set_progress_meter(False)
+        >>> dq.set_progress_meter(True)  # back to default progress meter
     """
     global _DEFAULT_PROGRESS_METER  # noqa: PLW0603
 

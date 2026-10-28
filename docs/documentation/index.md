@@ -13,16 +13,19 @@ First time using Dynamiqs? Get to know the library and run your first simulation
 
 ## Learn the basics
 
-Familiarize yourself with Dynamiqs. Learn how to simulate quantum systems, define time-dependent operators, run multiple simulations concurrently, and compute gradients.
+Familiarize yourself with Dynamiqs. Learn how to define quantum arrays and time-dependent operators, simulate closed, open and stochastic systems, run many simulations concurrently, compute gradients, and get the most out of your hardware.
 
 - [Workflow in Dynamiqs](basics/workflow.md)
+- [Quantum arrays and layouts](basics/qarrays-and-layouts.md)
 - [Time-dependent operators](basics/time-dependent-operators.md)
 - [Closed systems](basics/closed-systems.md)
 - [Open systems](basics/open-systems.md)
+- [Stochastic simulations](basics/stochastic-simulations.md)
 - [Batching simulations](basics/batching-simulations.md)
 - [Computing gradients](basics/computing-gradients.md)
 - [Floquet integration](basics/floquet-integration.md)
-- [Optimizing performance](basics/performance.md)
+- [Devices and precision](basics/devices-and-precision.md)
+- [Performance](basics/performance.md)
 
 ## Advanced examples
 

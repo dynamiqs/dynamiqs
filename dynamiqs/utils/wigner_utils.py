@@ -56,6 +56,17 @@ def wigner(
             automatically by [`dq.plot.wigner()`][dynamiqs.plot.wigner] and
             [`dq.plot.wigner_data()`][dynamiqs.plot.wigner_data]).
 
+    Examples:
+        >>> xvec, yvec, w = dq.wigner(dq.coherent(16, 1.0))
+        >>> xvec.shape, yvec.shape, w.shape
+        ((201,), (201,), (201, 201))
+
+        Batched Wigner distributions on a custom grid:
+        >>> xvec = jnp.linspace(-3, 3, 51)
+        >>> _, _, w = dq.wigner(dq.fock(4, [0, 1]), xvec=xvec, yvec=xvec)
+        >>> w.shape
+        (2, 51, 51)
+
     See also:
         - [`dq.plot.wigner()`][dynamiqs.plot.wigner]: plot the Wigner function of a
             state.

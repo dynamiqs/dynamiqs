@@ -103,15 +103,22 @@ def jsmesolve(
         multiples of the method fixed step size `dt`. The values of `etas` must also be
         known at compile time, because they determine which loss channels are measured.
 
+    Warning:
+        Batching on `jump_ops`, `thetas` and `etas` is not yet supported, if this is
+        needed don't hesitate to
+        [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
+
     Note: Simulating the measurement record only
         If you are only interested in the measurement record and not the state, you
-        should use [`dq.dssesolve()`][dynamiqs.dssesolve] instead, and post-process the
+        should use [`dq.jssesolve()`][dynamiqs.jssesolve] instead, and post-process the
         SSE measurement record to obtain the SME measurement record. You can use the
         helper function
         [`dq.clicktimes_sse_to_sme()`][dynamiqs.clicktimes_sse_to_sme]
         to do this:
         ```
-        result_sse = dq.jssesolve(H, jump_ops, psi0, tsave, keys)
+        result_sse = dq.jssesolve(
+            H, jump_ops, psi0, tsave, keys, method=dq.method.EulerJump(dt=1e-3)
+        )
         key = jax.random.key(42)
         clicktimes_sme = dq.clicktimes_sse_to_sme(
             result_sse.clicktimes, tsave, thetas, etas, key
@@ -128,59 +135,29 @@ def jsmesolve(
         etas (array-like of shape (len(jump_ops),)): Measurement efficiency for each
             loss channel with values between 0 (purely dissipative) and 1 (perfectly
             measured). No measurement is returned for purely dissipative loss channels.
-        rho0 (qarray-like of shape (...rho0, n, 1) or (...rho0, n, n)): Initial state.
+        rho0 (qarray-like of shape (...rho0, n, 1) or (...rho0, n, n)): Initial state,
+            must have the dense layout.
         tsave (array-like of shape (ntsave,)): Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`.
         keys (list of PRNG keys): PRNG keys used to sample the point processes.
             The number of elements defines the number of sampled stochastic
             trajectories.
-        exp_ops (list of array-like, each of shape (n, n), optional): List of
+        exp_ops (list of qarray-like, each of shape (n, n), optional): List of
             operators for which the expectation value is computed.
-        method: Method for the integration. No defaults for now, you have to specify a
-            method (supported: [`EulerJump`][dynamiqs.method.EulerJump]).
+        method: Method for the integration, must be specified (supported:
+            [`EulerJump`][dynamiqs.method.EulerJump]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
 
     Returns:
-        `dq.JSMESolveResult` object holding the result of the jump SME integration. Use
+        [`dq.JSMESolveResult`][dynamiqs.JSMESolveResult] object holding the result of
+            the jump SME integration, with `ntrajs = len(keys)` trajectories. Use
             `result.states` to access the saved states, `result.expects` to access the
             saved expectation values and `result.clicktimes` to access the detector
-            click times.
-
-            ??? "Detailed result API"
-                ```python
-                dq.JSMESolveResult
-                ```
-
-                For the shape indications we define `ntrajs` as the number of
-                trajectories (`ntrajs = len(keys)`) and `nLm` as the number of measured
-                loss channels (those for which the measurement efficiency is not zero).
-
-                **Attributes:**
-
-                - **`states`** _(qarray of shape (..., ntrajs, nsave, n, n))_ - Saved
-                    states with `nsave = ntsave`, or `nsave = 1` if
-                    `save_states=False`.
-                - **`final_state`** _(qarray of shape (..., ntrajs, n, n))_ - Saved
-                    final state.
-                - **`expects`** _(array of shape (..., ntrajs, len(exp_ops), ntsave)
-                    or None)_ - Saved expectation values, if specified by `exp_ops`.
-                - **`clicktimes`** _(array of shape (..., ntrajs, nLm, nmaxclick))_ -
-                    Times at which the detectors clicked. Variable-length array padded
-                    with `jnp.nan` up to `nmaxclick`.
-                - **`extra`** _(PyTree or None)_ - Extra data saved with `save_extra()`
-                    if specified.
-                - **`keys`** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
-                    sample the point processes.
-                - **`infos`** _(PyTree or None)_ - Method-dependent information on the
-                    resolution.
-                - **`tsave`** _(array of shape (ntsave,))_ - Times for which results
-                    were saved.
-                - **`method`** _(Method)_ - Method used.
-                - **`gradient`** _(Gradient)_ - Gradient used.
-                - **`options`** _(Options)_ - Options used.
+            click times. Use `result.mean_states()` and `result.mean_expects()` to
+            average the states and expectation values over the trajectories.
 
     Other Parameters:
         save_states: If `True`, the state is saved at every time in
@@ -188,7 +165,7 @@ def jsmesolve(
         cartesian_batching: If `True`, batched arguments are treated
             as separated batch dimensions, otherwise the batching is performed over a
             single shared batch dimension. Defaults to `True`.
-        save_extra: A function with signature
+        save_extra: Function with signature
             `f(Scalar, QArray) -> PyTree` that takes the current time and state as
             input and returns a PyTree. This can be used to save additional
             arbitrary data during the integration, accessible in `result.extra`.
@@ -198,41 +175,32 @@ def jsmesolve(
             `10_000`.
 
     Examples:
-        ```python
-        import dynamiqs as dq
-        import jax.numpy as jnp
-        import jax
-
-        n = 16
-        a = dq.destroy(n)
-
-        H = a.dag() @ a
-        jump_ops = [a]
-        thetas = [1.0]
-        etas = [0.5]
-        psi0 = dq.coherent(n, 1.0)
-        tsave = jnp.linspace(0, 1.0, 11)
-        keys = jax.random.split(jax.random.key(42), 100)
-
-        method = dq.method.EulerJump(dt=1e-3)
-        result = dq.jsmesolve(H, jump_ops, thetas, etas, psi0, tsave, keys, method=method)
-        print(result)
-        ```
-
-        ```text title="Output"
+        >>> n = 16
+        >>> a = dq.destroy(n)
+        >>> H = a.dag() @ a
+        >>> jump_ops = [a]
+        >>> thetas = [1.0]
+        >>> etas = [0.5]
+        >>> psi0 = dq.coherent(n, 1.0)
+        >>> tsave = jnp.linspace(0, 1.0, 11)
+        >>> keys = jax.random.split(jax.random.key(42), 100)
+        >>> method = dq.method.EulerJump(dt=1e-3)
+        >>> result = dq.jsmesolve(
+        ...     H, jump_ops, thetas, etas, psi0, tsave, keys, method=method
+        ... )
+        >>> print(result)
         ==== JSMESolveResult ====
         Method     : EulerJump
         Infos      : 1000 steps | infos shape (100,)
         States     : QArray complex64 (100, 11, 16, 16) | 2.1 Mb
         Clicktimes : Array float32 (100, 1, 10000) | 3.8 Mb
-        ```
 
     # Advanced use-cases
 
     ## Defining a time-dependent Hamiltonian or jump operator
 
     If the Hamiltonian or the jump operators depend on time, they can be converted
-    to time-arrays using [`dq.pwc()`][dynamiqs.pwc],
+    to timeqarrays using [`dq.pwc()`][dynamiqs.pwc],
     [`dq.modulated()`][dynamiqs.modulated], or
     [`dq.timecallable()`][dynamiqs.timecallable]. See the
     [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
@@ -242,7 +210,7 @@ def jsmesolve(
 
     The Hamiltonian `H` and the initial density matrix `rho0` can be batched to
     solve multiple SMEs concurrently. Other arguments are common to every batch. The
-    `keys` argument is automatically broadcasted to ensure different trajectories
+    `keys` argument is automatically broadcast to ensure different trajectories
     between batch elements. The resulting states, click times and expectation values
     are batched according to the leading dimensions of `H` and `rho0`. The behaviour
     depends on the value of the `cartesian_batching` option.
@@ -262,7 +230,7 @@ def jsmesolve(
     === "If `cartesian_batching = False`"
         The results leading dimensions are
         ```
-        ... = ...H = ...rho0  # (once broadcasted)
+        ... = ...H = ...rho0  # (once broadcast)
         ```
         For example if:
 
@@ -274,11 +242,6 @@ def jsmesolve(
     See the
     [Batching simulations](../../documentation/basics/batching-simulations.md)
     tutorial for more details.
-
-    Warning:
-        Batching on `jump_ops`, `thetas` and `etas` is not yet supported, if this is
-        needed don't hesitate to
-        [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
     """  # noqa: E501
     # === convert arguments
     H = astimeqarray(H, 'H')
@@ -318,7 +281,7 @@ def jsmesolve(
     rho0 = check_hermitian(rho0, 'rho0')
 
     thetas = eqx.error_if(
-        thetas, thetas < 0, 'Argument `thetas` should only contain positive values.'
+        thetas, thetas < 0, 'Argument `thetas` must only contain non-negative values.'
     )
 
     # === split jump operators
