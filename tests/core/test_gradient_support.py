@@ -8,6 +8,7 @@ from dynamiqs.method import (
     Dopri5,
     Dopri8,
     Euler,
+    EulerMaruyama,
     Kvaerno3,
     Kvaerno5,
     LowRank,
@@ -15,7 +16,7 @@ from dynamiqs.method import (
     Tsit5,
 )
 
-from ..order import TEST_INSTANT, TEST_LONG
+from ..order import TEST_INSTANT, TEST_LONG, TEST_SHORT
 
 # Methods that support `HigherOrder` (explicit Diffrax ODE methods) and methods that
 # don't (implicit solvers, low-rank, Rouchon). These guard the `SUPPORTED_GRADIENT`
@@ -76,3 +77,41 @@ def test_default_gradient_rejects_hessian():
     # second-order differentiation is rejected
     with pytest.raises(TypeError):
         jax.hessian(loss)(1.3)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize(
+    ('gradient', 'reverse', 'forward'),
+    [
+        (None, True, False),
+        (BackwardCheckpointed(), True, False),
+        (Forward(), False, True),
+        (Direct(), True, True),
+    ],
+    ids=['default', 'backward_checkpointed', 'forward', 'direct'],
+)
+def test_fixed_step_sde_autodiff_modes(gradient, reverse, forward):
+    # the number of steps of the fixed step SDE methods depends on the traced `tsave`,
+    # so `gradient` selects a loop that supports reverse and/or forward mode
+    keys = jax.random.split(jax.random.PRNGKey(0), 2)
+
+    def loss(omega):
+        result = dq.dssesolve(
+            omega * dq.sigmax(),
+            [dq.sigmam()],
+            dq.basis(2, 0),
+            jnp.array([0.0, 0.3]),
+            keys,
+            exp_ops=[dq.sigmaz()],
+            method=EulerMaruyama(dt=0.1),
+            gradient=gradient,
+        )
+        return result.expects[:, 0, -1].real.mean()
+
+    modes = [(jax.grad, reverse, ValueError), (jax.jacfwd, forward, TypeError)]
+    for grad, supported, error in modes:
+        if supported:
+            assert jnp.isfinite(grad(loss)(1.0))
+        else:
+            with pytest.raises(error):
+                grad(loss)(1.0)

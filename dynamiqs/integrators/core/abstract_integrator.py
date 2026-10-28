@@ -67,7 +67,6 @@ class StochasticBaseIntegrator(BaseIntegrator[SolveSaved]):
     result_class: type[StochasticSolveResult]
 
     def result(self, saved: SolveSaved, infos: PyTree | None = None) -> Result:
-        ts = jnp.asarray(self.ts)  # todo: fix static tsave
         return self.result_class(
-            ts, self.method, self.gradient, self.options, saved, infos, self.key
+            self.ts, self.method, self.gradient, self.options, saved, infos, self.key
         )

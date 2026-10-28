@@ -7,11 +7,11 @@ from typing import cast
 import equinox as eqx
 import jax
 import jax.numpy as jnp
-import numpy as np
 from diffrax._custom_types import RealScalarLike
 from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
 
+from ...gradient import BackwardCheckpointed, Direct, Forward
 from ...method import Rouchon1, _DEFixedStep
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import stack
@@ -30,19 +30,11 @@ from .interfaces import (
 from .rouchon_integrator import RouchonPropertiesMixin, cholesky_normalize
 from .save_mixin import SolveSaveMixin
 
-
-def _is_multiple_of(
-    x: ArrayLike, dt: float, *, rtol: float = 1e-5, atol: float = 1e-5
-) -> bool:
-    x_rounded = np.round(np.array(x) / dt) * dt
-    return np.allclose(x, x_rounded, rtol=rtol, atol=atol)
-
-
-def _is_linearly_spaced(
-    x: ArrayLike, *, rtol: float = 1e-5, atol: float = 1e-5
-) -> bool:
-    diffs = np.diff(x)
-    return np.allclose(diffs, diffs[0], rtol=rtol, atol=atol)
+# Equinox needs a number of checkpoints for a loop whose number of steps is unknown at
+# trace time. This is its default for 100_000 steps, the bound of the fixed step ODE
+# methods.
+_DEFAULT_NCHECKPOINTS = 447
+_DIRECT_MAX_STEPS = 100_000
 
 
 class SDEState(eqx.Module):
@@ -59,17 +51,6 @@ class StochasticSolveFixedStepIntegrator(
     """
 
     def __check_init__(self):
-        # check that all tsave values are exact multiples of dt
-        if not _is_multiple_of(self.ts, self.dt):
-            raise ValueError(
-                'Argument `tsave` should only contain exact multiples of the method '
-                'fixed step size `dt`.'
-            )
-
-        # check that tsave is linearly spaced
-        if not _is_linearly_spaced(self.ts):
-            raise ValueError('Argument `tsave` must be linearly spaced.')
-
         # check that options.t0 is not used
         if self.options.t0 is not None:
             raise ValueError(
@@ -99,15 +80,9 @@ class StochasticSolveFixedStepIntegrator(
         method = cast(_DEFixedStep, self.method)
         return method.dt
 
-    @property
-    def total_nsteps(self) -> int:
-        # total number of steps of length dt
-        # Currently ty is not able to infer round returns an int
-        # TODO: Remove the ignore flag when fixed in ty
-        return round((self.t1 - self.t0) / self.dt)  # ty: ignore
-
     @abstractmethod
-    def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> PyTree:
+    def sample_rv(self, key: PRNGKeyArray) -> PyTree:
+        # sample the random variable driving a single step
         pass
 
     @abstractmethod
@@ -121,98 +96,85 @@ class StochasticSolveFixedStepIntegrator(
         # define initial SDE state
         pass
 
-    def integrate(
-        self, t0: Scalar, y0: SDEState, key: PRNGKeyArray, nsteps: int
-    ) -> tuple[Scalar, SDEState]:
-        # integrate the SDE for nsteps of length dt
+    def integrate(self, y: SDEState, n: Array, nend: Array) -> tuple[SDEState, Array]:
+        # integrate the SDE from step index n to nend
 
-        # sample random variable driving the SME
-        dXs = self.sample_rv(key, nsteps)
+        def body(carry):  # noqa: ANN001, ANN202
+            y, n = carry
+            # the noise of a step only depends on its index, so that the trajectory
+            # does not depend on `tsave`
+            dX = self.sample_rv(jax.random.fold_in(self.key, n))
+            return self.forward(self.t0 + n * self.dt, y, dX), n + 1
 
-        # iterate over the fixed step size dt
-        def step(carry, dX):  # noqa: ANN001, ANN202
-            t, y = carry
-            y = self.forward(t, y, dX)
-            t = t + self.dt
-            return (t, y), None
+        # The number of steps depends on `tsave`, which is traced, so the loop kind
+        # sets which autodiff mode is supported.
+        max_steps, checkpoints = None, None
+        if isinstance(self.gradient, Forward):
+            kind = 'lax'
+        elif isinstance(self.gradient, Direct):
+            kind, max_steps = 'bounded', _DIRECT_MAX_STEPS
+        else:
+            ncheckpoints = _DEFAULT_NCHECKPOINTS
+            if isinstance(self.gradient, BackwardCheckpointed):
+                ncheckpoints = self.gradient.ncheckpoints or ncheckpoints
+            # each save interval keeps its own checkpoints for the backward pass, so
+            # the budget is split between them
+            nintervals = max(len(self.ts) - 1, 1)
+            kind, checkpoints = 'checkpointed', max(ncheckpoints // nintervals, 1)
 
-        (t, y), _ = jax.lax.scan(step, (t0, y0), dXs)
-
-        return t, y
-
-    def integrate_by_chunks(
-        self, t0: Scalar, y0: SDEState, key: PRNGKeyArray, nsteps: int
-    ) -> tuple[Scalar, SDEState]:
-        # integrate the SDE for nsteps of length dt, splitting the integration in
-        # chunks of 1000 dts to ensure a fixed memory usage
-
-        nsteps_per_chunk = 1000
-        nchunks = nsteps // nsteps_per_chunk
-
-        # iterate over each chunk
-        def step(carry, key):  # noqa: ANN001, ANN202
-            t, y = carry
-            t, y = self.integrate(t, y, key, nsteps_per_chunk)
-            return (t, y), None
-
-        # split the key for each chunk
-        key, lastkey = jax.random.split(key)
-        keys = jax.random.split(key, (nchunks,))
-        (t, y), _ = jax.lax.scan(step, (t0, y0), keys)
-
-        # integrate for the remaining number of steps (< nsubsteps)
-        nremaining = nsteps % nsteps_per_chunk
-        t, y = self.integrate(t, y, lastkey, nremaining)
-
-        return t, y
+        cond = lambda carry: carry[1] < nend
+        return eqx.internal.while_loop(
+            cond, body, (y, n), kind=kind, max_steps=max_steps, checkpoints=checkpoints
+        )
 
     def run(self) -> Result:
-        # this function assumes that ts is linearly spaced with each value an exact
-        # multiple of dt
-
-        # === define variables
-        # number of save interval
-        nsave = len(self.ts) - 1
-        # number of steps per save interval
-        nsteps_per_save = round(self.total_nsteps / nsave)
+        # index n of the step ending at each save time t = t0 + n dt, `tsave` values
+        # are exact multiples of dt (see `check_times_multiple_of()`)
+        save_steps = jnp.round((self.ts - self.t0) / self.dt).astype(int)
+        if isinstance(self.gradient, Direct):
+            save_steps = eqx.error_if(
+                save_steps,
+                save_steps[-1] > _DIRECT_MAX_STEPS,
+                f'Gradient `Direct` supports at most {_DIRECT_MAX_STEPS:_} steps of'
+                ' fixed step SSE or SME methods. Use `dq.gradient.BackwardCheckpointed`'
+                ' or `dq.gradient.Forward` instead.',
+            )
 
         # === initial state
-        # define initial SDE state
-        sde_y0 = self.sde_y0()
-        # save initial SDE state at time 0
-        saved0 = self.save(self.t0, sde_y0)
+        y0 = self.sde_y0()
+        saved0 = self.save(self.ts[0], y0)
 
-        # === run the simulation
-        # integrate the SSE/SME for each save interval
-        def outer_step(carry, key):  # noqa: ANN001, ANN202
-            t, y = carry
-            t, y = self.integrate_by_chunks(t, y, key, nsteps_per_save)
-            return (t, y), self.save(t, y)
+        # === integrate the SSE/SME for each save interval
+        def outer_step(carry, x):  # noqa: ANN001, ANN202
+            t, nend = x
+            y, n = self.integrate(*carry, nend)
+            return (y, n), self.save(t, y)
 
-        # split the key for each save interval
-        keys = jax.random.split(self.key, nsave)
-        ylast, saved = jax.lax.scan(outer_step, (self.t0, sde_y0), keys)
-        ylast = ylast[1]
+        xs = (self.ts[1:], save_steps[1:])
+        (ylast, nsteps), saved = jax.lax.scan(outer_step, (y0, jnp.asarray(0)), xs)
 
         # === collect and format results
         # insert the initial saved result
         saved = jax.tree.map(lambda x, y: jnp.insert(x, 0, y, axis=0), saved, saved0)
-
-        # postprocess the saved results
         saved = self.postprocess_saved(saved, ylast)
-
-        # postprocess the saved results
-        return self.result(saved, infos=self.Infos(jnp.asarray(self.total_nsteps)))
+        return self.result(saved, infos=self.Infos(nsteps))
 
 
 class JumpState(SDEState):
     """State for the jump SSE/SME fixed step integrators."""
 
     state: QArray  # state (integrated from initial to current time)
-    # click indicator of shape (self.total_nsteps): 0 = no click, i + 1 = click of the
-    # i-th jump operator
-    clicks: Array
-    step_idx: int  # step index
+    clicktimes: Array  # click times of shape (nmeas, nmaxclick)
+    nclicks: Array  # number of clicks of shape (nmeas,)
+
+    def record_click(
+        self, state: QArray, dN: Array, idx: Array, t: RealScalarLike
+    ) -> JumpState:
+        # record a click of the idx-th detector at time t if dN = 1, no click (dN = 0)
+        # or a click beyond `nmaxclick` writes out of bounds and is dropped
+        nclick = jnp.where(dN == 1, self.nclicks[idx], self.clicktimes.shape[1])
+        clicktimes = self.clicktimes.at[idx, nclick].set(t, mode='drop')
+        return JumpState(state, clicktimes, self.nclicks.at[idx].add(dN))
 
 
 class JumpSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
@@ -224,34 +186,21 @@ class JumpSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
         pass
 
     def sde_y0(self) -> SDEState:
-        clicks = jnp.full(self.total_nsteps, jnp.nan)
-        return JumpState(self.y0, clicks, 0)
+        clicktimes = jnp.full((self.nmeas, self.options.nmaxclick), jnp.nan)
+        return JumpState(self.y0, clicktimes, jnp.zeros(self.nmeas, dtype=int))
 
-    def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> PyTree:
-        # Sample a tuple of uniform between 0 and 1 for each step. The first value is
-        # used to sample a click or no click, the second value is used to sample one of
-        # the jump operator when a click occurs.
-        return jax.random.uniform(key, (nsteps, 2))
+    def sample_rv(self, key: PRNGKeyArray) -> PyTree:
+        # Sample two uniforms between 0 and 1. The first value is used to sample a
+        # click or no click, the second value is used to sample one of the jump
+        # operator when a click occurs.
+        return jax.random.uniform(key, (2,))
 
     def save(self, t: Scalar, y: PyTree) -> SolveSaved:
         return super().save(t, y.state)
 
     def postprocess_saved(self, saved: SolveSaved, ylast: PyTree) -> JumpSolveSaved:
         saved = super().postprocess_saved(saved, ylast.state[None, :])
-
-        # convert array of click indicators at each step to array of clicktimes, for
-        # example:
-        #   times = [0, 10, 20, 30, 40, 50]
-        #   clicks = [0, 1, 0, 1, 0, 2]
-        #   => clicktimes = [[10, 30, nan, ...], [50, nan, nan, ...]]
-        clicktimes = jnp.full((self.nmeas, self.options.nmaxclick), jnp.nan)
-        for jump_idx in jnp.arange(self.nmeas):
-            times = self.t0 + jnp.arange(self.total_nsteps) * self.dt
-            times = jnp.where(ylast.clicks == jump_idx + 1, times, jnp.nan).sort()
-            ncopy = min(len(times), clicktimes.shape[1])
-            clicktimes = clicktimes.at[jump_idx, :ncopy].set(times[:ncopy])
-
-        return JumpSolveSaved(saved.ysave, saved.extra, saved.Esave, clicktimes)
+        return JumpSolveSaved(saved.ysave, saved.extra, saved.Esave, ylast.clicktimes)
 
 
 class JSSESolveFixedStepIntegrator(JumpSolveFixedStepIntegrator, JSSEInterface):
@@ -300,15 +249,9 @@ class JSSESolveEulerJumpIntegrator(JSSESolveFixedStepIntegrator):
             self.dt * (1j * H + 0.5 * sum(LdL - exp_LdL[:, None, None] * I)) @ psi
         )
 
-        # === update state
+        # === update state and click record
         psi = dN * psi_click + (1 - dN) * psi_noclick
-
-        # === update click record
-        # 0 for no click, i + 1 for click of the i-th jump operator
-        y = cast(JumpState, y)
-        clicks = y.clicks.at[y.step_idx].set(dN * (jump_idx + 1))
-
-        return JumpState(psi, clicks, y.step_idx + 1)
+        return cast(JumpState, y).record_click(psi, dN, jump_idx, t)
 
 
 jssesolve_euler_jump_integrator_constructor = JSSESolveEulerJumpIntegrator
@@ -375,15 +318,9 @@ class JSMESolveEulerJumpIntegrator(JSMESolveFixedStepIntegrator):
             + self.dt * sum(tr_Ccal_rho[:, None, None] * rho - Ccal_rho)
         )
 
-        # === update state
+        # === update state and click record
         rho = dN * rho_click + (1 - dN) * rho_noclick
-
-        # === update click record
-        # 0 for no click, i + 1 for click of the i-th jump operator
-        y = cast(JumpState, y)
-        clicks = y.clicks.at[y.step_idx].set(dN * (jump_idx + 1))
-
-        return JumpState(rho, clicks, y.step_idx + 1)
+        return cast(JumpState, y).record_click(rho, dN, jump_idx, t)
 
 
 jsmesolve_euler_jump_integrator_constructor = JSMESolveEulerJumpIntegrator
@@ -408,8 +345,8 @@ class DiffusiveSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
         # define initial SDE state (state, Y) = (state0, 0)
         return DiffusiveState(self.y0, jnp.zeros(self.nmeas))
 
-    def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> PyTree:
-        return jnp.sqrt(self.dt) * jax.random.normal(key, (nsteps, self.nmeas))
+    def sample_rv(self, key: PRNGKeyArray) -> PyTree:
+        return jnp.sqrt(self.dt) * jax.random.normal(key, (self.nmeas,))
 
     def save(self, t: Scalar, y: PyTree) -> DiffusiveSolveSaved:
         saved = super().save(t, y.state)
@@ -424,8 +361,7 @@ class DiffusiveSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
 
         # The averaged measurement I^{(ta, tb)} is recovered by diffing the measurement
         # I which is integrated between ts[0] and ts[-1]
-        delta_t = self.ts[1] - self.ts[0]
-        Isave = jnp.diff(saved.Isave, axis=0) / delta_t
+        Isave = jnp.diff(saved.Isave, axis=0) / jnp.diff(self.ts)[:, None]
 
         # reorder Isave after jax.lax.scan stacking (ntsave, nLm) -> (nLm, ntsave)
         Isave = Isave.swapaxes(-1, -2)

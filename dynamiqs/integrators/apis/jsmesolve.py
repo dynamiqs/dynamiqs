@@ -11,7 +11,13 @@ import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
 
-from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
+from ..._checks import (
+    check_hermitian,
+    check_qarray_is_dense,
+    check_shape,
+    check_times,
+    check_times_multiple_of,
+)
 from ...gradient import Gradient
 from ...method import EulerJump, Method
 from ...options import Options, check_options
@@ -93,11 +99,9 @@ def jsmesolve(
     $I_k = \{t \in [t_0, t_\text{end}[ \,|\, \dd N_k(t)=1\}$.
 
     Warning:
-        For now, `jsmesolve()` only supports linearly spaced `tsave` with values that
-        are exact multiples of the method fixed step size `dt`. Moreover, to JIT-compile
-        code using `jsmesolve()`, `tsave` must be passed as tuple. The values of `etas`
-        must also be known at compile time, because they determine which loss channels
-        are measured.
+        For now, `jsmesolve()` only supports `tsave` with values that are exact
+        multiples of the method fixed step size `dt`. The values of `etas` must also be
+        known at compile time, because they determine which loss channels are measured.
 
     Note: Simulating the measurement record only
         If you are only interested in the measurement record and not the state, you
@@ -301,17 +305,13 @@ def jsmesolve(
     check_options(options, 'jsmesolve')
     options = options.initialise()
 
-    # todo: fix static tsave
-    # this condition allows the user to pass a tuple for tsave to bypass this bit of
-    # code (e.g., to JIT-compile this function)
-    _tsave = tsave
-    if not isinstance(tsave, tuple):
-        _tsave = jnp.asarray(tsave)
-        _tsave = check_times(_tsave, 'tsave')
-        _tsave = tuple(_tsave.tolist())
+    tsave = jnp.asarray(tsave)
+    tsave = check_times(tsave, 'tsave')
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
+    if isinstance(method, EulerJump):
+        tsave = check_times_multiple_of(tsave, method.dt, 'tsave')
 
     # === convert rho0 to density matrix
     rho0 = rho0.todm()
@@ -337,7 +337,7 @@ def jsmesolve(
         thetas,
         etas,
         rho0,
-        _tsave,
+        tsave,
         keys,
         _exp_ops,
         method,
@@ -347,7 +347,7 @@ def jsmesolve(
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('tsave', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_jsmesolve(
     H: TimeQArray,
     Lcs: list[TimeQArray],

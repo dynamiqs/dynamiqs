@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 from typing import cast
 
 import jax
@@ -8,7 +9,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar, ScalarLike
 
-from ..._checks import check_shape, check_times
+from ..._checks import check_shape, check_times, check_times_multiple_of
 from ...gradient import Gradient
 from ...method import EulerJump, Event, Method
 from ...options import Options, check_options
@@ -95,10 +96,9 @@ def jssesolve(
         This function is the Dynamiqs counterpart of QuTiP's `mcsolve()` function.
 
     Warning:
-        For now, `jssesolve()` only supports linearly spaced `tsave` with values that
-        are exact multiples of the method fixed step size `dt` for the
-        [`EulerJump`][dynamiqs.method.EulerJump] method. Moreover, to JIT-compile code
-        using `jssesolve()`, `tsave` must be passed as tuple.
+        For now, `jssesolve()` only supports `tsave` with values that are exact
+        multiples of the method fixed step size `dt` for the
+        [`EulerJump`][dynamiqs.method.EulerJump] method.
 
     Args:
         H (qarray-like or timeqarray of shape (...H, n, n)): Hamiltonian.
@@ -280,30 +280,23 @@ def jssesolve(
     check_options(options, 'jssesolve')
     options = options.initialise()
 
-    # todo: fix static tsave
-    # this condition allows the user to pass a tuple for tsave to bypass this bit of
-    # code (e.g., to JIT-compile this function)
-    _tsave = tsave
-    if not isinstance(tsave, tuple):
-        _tsave = jnp.asarray(tsave)
-        _tsave = check_times(_tsave, 'tsave')
-        if isinstance(method, EulerJump):
-            _tsave = tuple(_tsave.tolist())
+    tsave = jnp.asarray(tsave)
+    tsave = check_times(tsave, 'tsave')
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
+    if isinstance(method, EulerJump):
+        tsave = check_times_multiple_of(tsave, method.dt, 'tsave')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    f = _vectorized_jssesolve
-    if isinstance(method, EulerJump):
-        f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
-    else:
-        f = jax.jit(f, static_argnames=('gradient', 'options'))
-    return f(H, Ls, psi0, _tsave, keys, _exp_ops, method, gradient, options)
+    return _vectorized_jssesolve(
+        H, Ls, psi0, tsave, keys, _exp_ops, method, gradient, options
+    )
 
 
 @catch_xla_runtime_error
+@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_jssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],

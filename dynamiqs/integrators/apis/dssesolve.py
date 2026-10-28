@@ -9,7 +9,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
 
-from ..._checks import check_shape, check_times
+from ..._checks import check_shape, check_times, check_times_multiple_of
 from ...gradient import Gradient
 from ...method import EulerMaruyama, Method, Rouchon1
 from ...options import Options, check_options
@@ -94,9 +94,8 @@ def dssesolve(
     returned measurement values for each detector is `len(tsave)-1`.
 
     Warning:
-        For now, `dssesolve()` only supports linearly spaced `tsave` with values that
-        are exact multiples of the method fixed step size `dt`. Moreover, to JIT-compile
-        code using `dssesolve()`, `tsave` must be passed as tuple.
+        For now, `dssesolve()` only supports `tsave` with values that are exact
+        multiples of the method fixed step size `dt`.
 
     Note:
         If you are only interested in simulating trajectories to solve the Lindblad
@@ -274,27 +273,23 @@ def dssesolve(
     check_options(options, 'dssesolve')
     options = options.initialise()
 
-    # todo: fix static tsave
-    # this condition allows the user to pass a tuple for tsave to bypass this bit of
-    # code (e.g., to JIT-compile this function)
-    _tsave = tsave
-    if not isinstance(tsave, tuple):
-        _tsave = jnp.asarray(tsave)
-        _tsave = check_times(_tsave, 'tsave')
-        _tsave = tuple(_tsave.tolist())
+    tsave = jnp.asarray(tsave)
+    tsave = check_times(tsave, 'tsave')
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
+    if isinstance(method, EulerMaruyama | Rouchon1):
+        tsave = check_times_multiple_of(tsave, method.dt, 'tsave')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
     return _vectorized_dssesolve(
-        H, Ls, psi0, _tsave, keys, _exp_ops, method, gradient, options
+        H, Ls, psi0, tsave, keys, _exp_ops, method, gradient, options
     )
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('tsave', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_dssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
