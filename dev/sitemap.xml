@@ -118,6 +118,9 @@
         <loc>https://www.dynamiqs.org/stable/python_api/integrators/sesolve.html</loc>
       </url>
       <url>
+        <loc>https://www.dynamiqs.org/stable/python_api/integrators/steadystate.html</loc>
+      </url>
+      <url>
         <loc>https://www.dynamiqs.org/stable/python_api/method/DiffusiveMonteCarlo.html</loc>
       </url>
       <url>
@@ -167,6 +170,9 @@
       </url>
       <url>
         <loc>https://www.dynamiqs.org/stable/python_api/method/Rouchon3.html</loc>
+      </url>
+      <url>
+        <loc>https://www.dynamiqs.org/stable/python_api/method/TimeEvolution.html</loc>
       </url>
       <url>
         <loc>https://www.dynamiqs.org/stable/python_api/method/Tsit5.html</loc>
