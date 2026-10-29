@@ -73,15 +73,28 @@ def _diagonalize_unitary(U: Array) -> tuple[Array, Array]:
     # phase θ moves the pole φ = π to the middle of the widest gap in the spectrum of
     # U. A Schur decomposition would also work, but JAX implements it on CPU only and
     # without a differentiation rule.
-    phases = jnp.sort(jnp.angle(jnp.linalg.eigvals(jax.lax.stop_gradient(U))))
+    I = jnp.eye(U.shape[-1], dtype=U.dtype)
+
+    def cayley(W: Array) -> Array:
+        K = 1j * jnp.linalg.solve(I + W, I - W)
+        return 0.5 * (K + K.mT.conj())
+
+    # Rough eigenphases of W = e^{i}U are enough to find the widest gap. They are the
+    # eigenvalues of the transform of W or of -W, whichever has the smaller largest
+    # entry: its pole is farther from the spectrum. The factor e^{i} moves both poles
+    # away from ±1 and ±i, which are eigenvalues of many structured unitaries.
+    W = jnp.exp(1j) * U
+    V = jax.lax.stop_gradient(W)
+    K, K_opposite = cayley(V), cayley(-V)
+    opposite = jnp.abs(K_opposite).max((-2, -1)) < jnp.abs(K).max((-2, -1))
+    K = jnp.where(opposite[..., None, None], K_opposite, K)
+    phases = 2 * jnp.arctan(jnp.linalg.eigvalsh(K))  # of V, or of -V minus π
+    phases = jnp.sort(jnp.where(opposite[..., None], phases + jnp.pi, phases))
     gaps = jnp.diff(phases, append=phases[..., :1] + 2 * jnp.pi)
     widest = jnp.argmax(gaps, axis=-1, keepdims=True)
     middle = jnp.take_along_axis(phases + 0.5 * gaps, widest, axis=-1)
-    W = jnp.exp(1j * (jnp.pi - middle))[..., None] * U
-
-    I = jnp.eye(U.shape[-1], dtype=U.dtype)
-    K = 1j * jnp.linalg.solve(I + W, I - W)
-    _, evecs = jnp.linalg.eigh(0.5 * (K + K.mT.conj()))
+    W = jnp.exp(1j * (jnp.pi - middle))[..., None] * W
+    _, evecs = jnp.linalg.eigh(cayley(W))
 
     # fix the arbitrary phase of each mode by making its largest component positive
     largest = jnp.argmax(jnp.abs(evecs), axis=-2, keepdims=True)

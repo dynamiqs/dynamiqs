@@ -1,8 +1,10 @@
 import jax
 import jax.numpy as jnp
 import pytest
+from jax.scipy.linalg import block_diag
 
 import dynamiqs as dq
+from dynamiqs.integrators.core.floquet_integrator import _diagonalize_unitary
 from dynamiqs.method import Tsit5
 
 from ..order import TEST_LONG
@@ -43,3 +45,14 @@ class TestFloquet:
         evals = jnp.exp(-1j * result.quasienergies * T)
         assert jnp.allclose(modes.mT.conj() @ modes, jnp.eye(n), atol=1e-5)
         assert jnp.allclose(U @ modes, modes * evals, atol=1e-5)
+
+    def test_exact_plus_minus_one_eigenvalues(self):
+        # dq.floquet cannot build exact eigenvalues, so the diagonalization is called
+        # directly: sigmax has the eigenvalues ±1, the other block a tight cluster
+        _, R = jnp.linalg.eigh(dq.random.herm(jax.random.PRNGKey(42), (3, 3)).to_jax())
+        cluster = jnp.exp(1j * jnp.array([2.0, 2.0 + 1e-4, 2.0 + 2e-4]))
+        U = block_diag(dq.sigmax().to_jax(), (R * cluster) @ R.mT.conj())
+
+        evals, evecs = _diagonalize_unitary(U)
+        assert jnp.allclose(evecs.mT.conj() @ evecs, jnp.eye(5), atol=1e-5)
+        assert jnp.allclose(U @ evecs, evecs * evals, atol=1e-5)
