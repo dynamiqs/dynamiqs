@@ -167,6 +167,7 @@ def steadystate(
     method = _init_method(method, _H)
 
     # === check gradient is supported
+    method.assert_supports_gradient(gradient)
     method.ode_method.assert_supports_gradient(gradient)
 
     # todo: evolve rho0 with `ode_method` until the stopping criterion of the method

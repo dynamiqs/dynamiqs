@@ -932,12 +932,14 @@ class TimeEvolution(Method):
             Defaults to `1e-6`.
 
     Note-: Supported gradients
-        This method supports
-        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
-        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
-        (default) and [`dq.gradient.Forward`][dynamiqs.gradient.Forward]. The
-        gradient is computed by differentiating through every step of the time
-        evolution, and is less accurate than the state: the sensitivity
+        This method only supports
+        [`dq.gradient.Forward`][dynamiqs.gradient.Forward], use it with
+        `jax.jacfwd()` or `jax.jvp()`. Reverse mode (e.g. `jax.grad()`) is not
+        supported: with the tight tolerances that `ode_method` needs to meet the
+        stopping criterion, differentiating the adaptive time evolution in reverse
+        mode returns wrong gradients. The gradient is computed by differentiating
+        through every step of the time evolution, and is less accurate than the
+        state: the sensitivity
         $\partial\rho(t)/\partial\theta$ converges more slowly than $\rho(t)$, so
         the error on the gradient is typically 10 to 100 times the error on the
         state. Decrease `rtol` (and the tolerances of `ode_method`) accordingly.
@@ -948,7 +950,7 @@ class TimeEvolution(Method):
     atol: float
     rtol: float
 
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_ODE_GRADIENTS
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Forward,)
 
     def __init__(
         self,

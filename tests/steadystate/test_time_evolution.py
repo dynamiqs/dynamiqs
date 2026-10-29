@@ -29,3 +29,15 @@ from ..order import TEST_INSTANT
 def test_invalid_args(H, jump_ops, error, match):
     with pytest.raises(error, match=match):
         dq.steadystate(H, jump_ops)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize(
+    'gradient',
+    [dq.gradient.BackwardCheckpointed(), dq.gradient.Direct()],
+    ids=['checkpointed', 'direct'],
+)
+def test_reverse_mode_gradient_unsupported(gradient):
+    a = dq.destroy(4)
+    with pytest.raises(ValueError, match='does not support gradient'):
+        dq.steadystate(a.dag() @ a, [a], gradient=gradient)
