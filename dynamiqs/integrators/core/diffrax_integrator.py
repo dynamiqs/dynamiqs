@@ -634,6 +634,12 @@ class SteadyStateDiffraxIntegrator(MESolveDiffraxIntegrator):
 
     time_evolution: TimeEvolution
 
+    @property
+    def adjoint(self) -> dx.AbstractAdjoint:
+        # forward mode only, also without a gradient: reverse mode through the time
+        # evolution is wrong at the tolerances the stopping criterion requires
+        return dx.ForwardMode()
+
     def run(self) -> Result:
         # 2‖H‖ + 2Σ‖L_k‖² in spectral norm bounds the norm of the Lindbladian induced
         # by the Frobenius norm; the stopping criterion carries no gradient

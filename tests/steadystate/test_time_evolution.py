@@ -3,7 +3,7 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
-from dynamiqs.gradient import BackwardCheckpointed, Forward
+from dynamiqs.gradient import Forward
 from dynamiqs.method import TimeEvolution, Tsit5
 
 from ..order import TEST_INSTANT, TEST_LONG
@@ -29,20 +29,31 @@ def test_correctness(system, vectorized):
 
 
 @pytest.mark.run(order=TEST_LONG)
-@pytest.mark.parametrize('gradient', [BackwardCheckpointed(), Forward()])
-def test_gradient(gradient):
+def test_gradient():
     # the gradient error is 10-100 times the state error, so tighten the defaults
     system = dense_driven_ocavity
     method = TimeEvolution(ode_method=Tsit5(rtol=1e-10, atol=1e-10), rtol=1e-7)
 
     def loss(params):
-        result = system.run(method, gradient=gradient, params=params)
+        result = system.run(method, gradient=Forward(), params=params)
         return system.loss_state(result.state)
 
-    grad = jax.jacfwd if isinstance(gradient, Forward) else jax.grad
-    grads = grad(loss)(system.params_default)
+    grads = jax.jacfwd(loss)(system.params_default)
     true_grads = system.steady_grads_state()
     assert jnp.allclose(jnp.array(grads), jnp.array(true_grads), rtol=1e-3, atol=1e-4)
+
+
+@pytest.mark.run(order=TEST_LONG)
+def test_reverse_mode_without_gradient_raises():
+    # control of `test_reverse_mode_gradient_unsupported`: without a gradient, the
+    # time evolution must not fall back to reverse mode
+    system = dense_driven_ocavity
+
+    def loss(params):
+        return system.loss_state(system.run(TimeEvolution(), params=params).state)
+
+    with pytest.raises(ValueError, match='Reverse-mode differentiation'):
+        jax.grad(loss)(system.params_default)
 
 
 @pytest.mark.run(order=TEST_LONG)
