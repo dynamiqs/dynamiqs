@@ -15,8 +15,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - mesolve
         - sepropagator
         - mepropagator
-        - mesteadystate
         - floquet
+        - steadystate
 
 ### Stochastic
 
@@ -77,7 +77,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - JumpMonteCarlo
         - DiffusiveMonteCarlo
         - LowRank
-        - DiffraxSteadyState
+        - TimeEvolution
 
 ### Gradients (dq.gradient)
 
@@ -90,7 +90,6 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - BackwardCheckpointed
         - Forward
         - HigherOrder
-        - Implicit
 
 ### Progress meters
 

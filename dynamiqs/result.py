@@ -22,10 +22,10 @@ __all__ = [
     'JSMESolveResult',
     'MESolveLowRankResult',
     'MESolveResult',
-    'MESteadyStateResult',
     'DSMESolveResult',
     'SEPropagatorResult',
     'SESolveResult',
+    'SteadyStateResult',
 ]
 
 
@@ -72,10 +72,6 @@ class DiffusiveSolveSaved(SolveSaved):
 
 class PropagatorSaved(Saved):
     pass
-
-
-class SteadyStateSaved(SolveSaved):
-    residual: Array
 
 
 class FloquetSaved(Saved):
@@ -222,30 +218,6 @@ class MESolveLowRankResult(MESolveResult):
         return d | {'Lowrank states': _array_str(self.lowrank_states)}
 
 
-class MESteadyStateResult(Result):
-    _saved: SteadyStateSaved
-
-    @property
-    def state(self) -> QArray:
-        return self._ysave
-
-    @property
-    def expects(self) -> Array | None:
-        return self._saved.Esave
-
-    @property
-    def residual(self) -> Array:
-        return self._saved.residual
-
-    def _str_parts(self) -> dict[str, str | None]:
-        d = super()._str_parts()
-        return d | {
-            'State': _array_str(self.state),
-            'Expects': _array_str(self.expects),
-            'Residual': _array_str(self.residual),
-        }
-
-
 class SEPropagatorResult(PropagatorResult):
     pass
 
@@ -344,3 +316,22 @@ class DSSESolveResult(DiffusiveSolveResult):
 
 class DSMESolveResult(DiffusiveSolveResult):
     pass
+
+
+class SteadyStateResult(Result):
+    _saved: SolveSaved
+
+    @property
+    def state(self) -> QArray:
+        return self._ysave
+
+    @property
+    def expects(self) -> Array | None:
+        return self._saved.Esave
+
+    def _str_parts(self) -> dict[str, str | None]:
+        d = super()._str_parts()
+        return d | {
+            'State': _array_str(self.state),
+            'Expects': _array_str(self.expects),
+        }

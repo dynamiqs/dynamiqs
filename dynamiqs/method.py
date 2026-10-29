@@ -9,14 +9,9 @@ from jaxtyping import PRNGKeyArray
 from optimistix import AbstractRootFinder
 
 from ._utils import tree_str_inline
-from .gradient import (
-    BackwardCheckpointed,
-    Direct,
-    Forward,
-    Gradient,
-    HigherOrder,
-    Implicit,
-)
+from .gradient import BackwardCheckpointed, Direct, Forward, Gradient, HigherOrder
+from .qarrays.qarray import QArray, QArrayLike
+from .qarrays.utils import asqarray
 
 __all__ = [
     'Dopri5',
@@ -27,7 +22,6 @@ __all__ = [
     'Expm',
     'JumpMonteCarlo',
     'DiffusiveMonteCarlo',
-    'DiffraxSteadyState',
     'LinearSolver',
     'LowRank',
     'Kvaerno3',
@@ -37,6 +31,7 @@ __all__ = [
     'Rouchon3',
     'Tsit5',
     'Event',
+    'TimeEvolution',
     'Method',
 ]
 
@@ -771,78 +766,6 @@ class DiffusiveMonteCarlo(_DEMethod):
         self.dsse_method = dsse_method
 
 
-class DiffraxSteadyState(_DEMethod):
-    r"""Time evolution until the steady state, for the Lindblad master equation.
-
-    This method integrates the Lindblad master equation with
-    [Diffrax](https://docs.kidger.site/diffrax/) from the initial state, and stops at
-    the first step where the Lindbladian of the state is small enough:
-    $$
-        \mathrm{rms}(\mathcal{L}(\rho)) < \mathrm{atol}
-        + \mathrm{rtol}\cdot\mathrm{rms}(\rho),
-    $$
-    where $\mathrm{rms}$ is the root mean square of the matrix elements. This
-    stopping criterion is independent of the step size control of `me_method`.
-    $\mathcal{L}(\rho)$ is a rate, so `rtol` and `atol` are in units of inverse
-    time: scaling $H$ and all $L_k$ by $s$ leaves the steady state unchanged but
-    multiplies $\mathcal{L}(\rho)$ by $s$.
-
-    Args:
-        me_method: Method for the time integration. Defaults to
-            [`dq.method.Kvaerno5`][dynamiqs.method.Kvaerno5] (supported:
-            [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
-            [`Dopri8`][dynamiqs.method.Dopri8],
-            [`Kvaerno3`][dynamiqs.method.Kvaerno3],
-            [`Kvaerno5`][dynamiqs.method.Kvaerno5] and
-            [`Euler`][dynamiqs.method.Euler]). Its maximum number of steps bounds
-            the time integration.
-        rtol: Relative tolerance of the stopping criterion, in units of inverse
-            time. Defaults to `1e-5`.
-        atol: Absolute tolerance of the stopping criterion, in units of inverse
-            time. Defaults to `1e-5`.
-
-    Note-: Supported gradients
-        This method supports differentiation with
-        [`dq.gradient.Implicit`][dynamiqs.gradient.Implicit] (default), and with the
-        gradients supported by `me_method`, which differentiate through the time
-        integration.
-    """
-
-    me_method: Method = Kvaerno5()
-    rtol: float = 1e-5
-    atol: float = 1e-5
-
-    # dummy variable, the proper check of gradient support will be done by `me_method`
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
-        Implicit,
-        Direct,
-        BackwardCheckpointed,
-        Forward,
-        HigherOrder,
-    )
-
-    # dummy init to have the signature in the documentation
-    def __init__(
-        self,
-        me_method: Method = Kvaerno5(),  # noqa: B008
-        rtol: float = 1e-5,
-        atol: float = 1e-5,
-    ):
-        self.me_method = me_method
-        self.rtol = rtol
-        self.atol = atol
-
-        # the fixed points of the Rouchon schemes differ from the steady state by
-        # O(dt^order), which exceeds the default tolerances even with adaptive steps
-        supported = (Tsit5, Dopri5, Dopri8, Kvaerno3, Kvaerno5, Euler)
-        if not isinstance(self.me_method, supported):
-            supported_str = ', '.join(f'`{x.__name__}`' for x in supported)
-            raise TypeError(
-                f'Argument `me_method` must be one of {supported_str}, but has '
-                f'type `{type(self.me_method).__name__}`.'
-            )
-
-
 class LinearSolver(Enum):
     """Enum for linear solvers used in the low-rank method."""
 
@@ -964,3 +887,77 @@ class LowRank(Method):
 
         self.key = jnp.asarray(key)
         self.is_save_extra_low_rank = is_save_extra_low_rank
+
+
+class TimeEvolution(Method):
+    r"""Time evolution method for the steady state of the Lindblad master equation.
+
+    This method integrates the Lindblad master equation from an initial state
+    $\rho_0$ until the residual $\|\mathcal{L}(\rho)\|$ is small enough, where
+    $\mathcal{L}$ is the Lindbladian and $\|\cdot\|$ the Frobenius norm. The
+    integration stops at the first step where
+    $$
+        \|\mathcal{L}(\rho)\| \leq \mathrm{atol} + \mathrm{rtol}\,\|\mathcal{L}\|,
+    $$
+    with $\|\mathcal{L}\| = 2\|H\| + 2\sum_k \|L_k\|^2$ (in spectral norm) an upper
+    bound of the norm of the Lindbladian. The relative tolerance `rtol` is thus
+    dimensionless, and independent of the frequency scale of the problem.
+
+    Warning: Accuracy and Liouvillian gap
+        A small residual does not imply a small error on the state: the error on
+        $\rho$ is of order $\|\mathcal{L}(\rho)\|/\Delta$, with $\Delta$ the
+        Liouvillian gap, i.e. the slowest relaxation rate of the system. For a system
+        with a small gap compared to $\|\mathcal{L}\|$ (e.g. metastable states,
+        cat qubits), decrease `rtol` accordingly.
+
+    Warning: Tolerances of the ODE method
+        The tolerances of `ode_method` must be well below `rtol`, typically by a
+        factor 1000. Otherwise, close to the steady state, explicit methods take
+        steps at the edge of their stability region, the residual stalls above the
+        stopping criterion, and the method does not converge.
+
+    Args:
+        rho0 (qarray-like of shape (n, 1) or (n, n), optional): Initial state, must
+            have the dense layout. When the steady state is not unique, it selects the
+            steady state that is reached. Defaults to the maximally mixed state
+            $I/n$.
+        ode_method: ODE method used for the time evolution (supported:
+            [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8], [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5], [`Euler`][dynamiqs.method.Euler]).
+            Its `max_steps` bounds the number of steps before giving up. Defaults to
+            [`Tsit5(rtol=1e-9, atol=1e-9)`][dynamiqs.method.Tsit5].
+        atol: Absolute tolerance on the residual, in units of rate. Defaults to `0.0`.
+        rtol: Relative tolerance on the residual, relative to $\|\mathcal{L}\|$.
+            Defaults to `1e-6`.
+
+    Note-: Supported gradients
+        This method supports
+        [`dq.gradient.Direct`][dynamiqs.gradient.Direct],
+        [`dq.gradient.BackwardCheckpointed`][dynamiqs.gradient.BackwardCheckpointed]
+        (default) and [`dq.gradient.Forward`][dynamiqs.gradient.Forward]. The
+        gradient is computed by differentiating through every step of the time
+        evolution, and is less accurate than the state: the sensitivity
+        $\partial\rho(t)/\partial\theta$ converges more slowly than $\rho(t)$, so
+        the error on the gradient is typically 10 to 100 times the error on the
+        state. Decrease `rtol` (and the tolerances of `ode_method`) accordingly.
+    """
+
+    rho0: QArray | None
+    ode_method: Method
+    atol: float
+    rtol: float
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = _DIFFRAX_ODE_GRADIENTS
+
+    def __init__(
+        self,
+        rho0: QArrayLike | None = None,
+        ode_method: Method = Tsit5(rtol=1e-9, atol=1e-9),  # noqa: B008
+        atol: float = 0.0,
+        rtol: float = 1e-6,
+    ):
+        self.rho0 = None if rho0 is None else asqarray(rho0)
+        self.ode_method = ode_method
+        self.atol = atol
+        self.rtol = rtol
