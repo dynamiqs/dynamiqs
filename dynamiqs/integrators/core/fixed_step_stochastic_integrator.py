@@ -209,9 +209,11 @@ class JSSESolveFixedStepIntegrator(JumpSolveFixedStepIntegrator, JSSEInterface):
         return len(self.Ls)
 
 
-def _safe_divide(x: ArrayLike, y: ArrayLike) -> ArrayLike:
-    # avoid division by zero by returning 0 when y is 0
-    return jnp.where(y == 0.0, 0.0, x / y)
+def _nonzero(x: ArrayLike) -> Array:
+    # Replace zeros by ones, to divide by x when the click probability is zero (the
+    # quotient is then zero or discarded). Guarding the quotient with `jnp.where`
+    # instead gives NaN reverse-mode gradients (0 * inf).
+    return jnp.where(x == 0.0, 1.0, x)
 
 
 class JSSESolveEulerJumpIntegrator(JSSESolveFixedStepIntegrator):
@@ -219,7 +221,6 @@ class JSSESolveEulerJumpIntegrator(JSSESolveFixedStepIntegrator):
         psi = y.state
         L, H = self.L(t), self.H(t)
         L = stack(L)  # todo: remove stack
-        I = eye_like(H)
         LdL = L.dag() @ L
 
         exp_LdL = expect(LdL, psi).real
@@ -228,7 +229,7 @@ class JSSESolveEulerJumpIntegrator(JSSESolveFixedStepIntegrator):
         tmp = exp_LdL * self.dt
         any_click_proba = sum(tmp)
         # avoid division by zero when the click probability is zero
-        click_probas = _safe_divide(tmp, any_click_proba)
+        click_probas = tmp / _nonzero(any_click_proba)
 
         # === click or no click?
         dN = jax.lax.select(dX[0] < any_click_proba, 1, 0)
@@ -240,14 +241,15 @@ class JSSESolveEulerJumpIntegrator(JSSESolveFixedStepIntegrator):
             cum_probas, dX[1], side='right', method='compare_all'
         )
         # avoid division by zero when the click probability is zero
-        normalisation = _safe_divide(1, jnp.sqrt(exp_LdL[jump_idx]))
+        normalisation = 1 / jnp.sqrt(_nonzero(exp_LdL[jump_idx]))
         # apply the jump operator
         psi_click = L[jump_idx] @ psi * normalisation
 
         # === no click
-        psi_noclick = psi - (
-            self.dt * (1j * H + 0.5 * sum(LdL - exp_LdL[:, None, None] * I)) @ psi
-        )
+        # An Euler step of the nonlinear drift -(iH + 0.5 (LdL - <LdL>)) is unstable at
+        # ||psi|| = 1, d||psi||^2 = <LdL> (||psi||^2 - 1) dt, so we apply the linear
+        # no-click operator and renormalise instead.
+        psi_noclick = (psi - self.dt * (1j * H + 0.5 * sum(LdL)) @ psi).unit()
 
         # === update state and click record
         psi = dN * psi_click + (1 - dN) * psi_noclick
@@ -290,7 +292,7 @@ class JSMESolveEulerJumpIntegrator(JSMESolveFixedStepIntegrator):
         tmp = tr_Ccal_rho * self.dt
         any_click_proba = sum(tmp)
         # avoid division by zero when the click probability is zero
-        click_probas = _safe_divide(tmp, any_click_proba)
+        click_probas = tmp / _nonzero(any_click_proba)
 
         # === click or no click?
         dN = jax.lax.select(dX[0] < any_click_proba, 1, 0)
@@ -302,7 +304,7 @@ class JSMESolveEulerJumpIntegrator(JSMESolveFixedStepIntegrator):
             cum_probas, dX[1], side='right', method='compare_all'
         )
         # avoid division by zero when the click probability is zero
-        normalisation = _safe_divide(1, tr_Ccal_rho[jump_idx])
+        normalisation = 1 / _nonzero(tr_Ccal_rho[jump_idx])
         # apply the measurement backaction superoperator
         rho_click = Ccal_rho[jump_idx] * normalisation
 
