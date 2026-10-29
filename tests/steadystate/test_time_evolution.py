@@ -1,9 +1,70 @@
+import jax
 import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
+from dynamiqs.gradient import BackwardCheckpointed, Forward
+from dynamiqs.method import TimeEvolution, Tsit5
 
-from ..order import TEST_INSTANT
+from ..order import TEST_INSTANT, TEST_LONG
+from ..systems import dense_driven_ocavity, dia_driven_ocavity
+
+
+@pytest.mark.run(order=TEST_LONG)
+@pytest.mark.parametrize(
+    ('system', 'vectorized'),
+    [
+        (dense_driven_ocavity, False),
+        (dia_driven_ocavity, False),
+        (dense_driven_ocavity, True),
+    ],
+    ids=['dense', 'dia', 'dense-vectorized'],
+)
+def test_correctness(system, vectorized):
+    result = system.run(TimeEvolution(), vectorized=vectorized)
+    assert result.infos.converged
+    error = jnp.linalg.norm(result.state.to_jax() - system.steady_state().to_jax())
+    assert error <= 1e-3
+    assert jnp.allclose(result.expects, system.steady_expect(), rtol=1e-3, atol=1e-4)
+
+
+@pytest.mark.run(order=TEST_LONG)
+@pytest.mark.parametrize('gradient', [BackwardCheckpointed(), Forward()])
+def test_gradient(gradient):
+    # the gradient error is 10-100 times the state error, so tighten the defaults
+    system = dense_driven_ocavity
+    method = TimeEvolution(ode_method=Tsit5(rtol=1e-10, atol=1e-10), rtol=1e-7)
+
+    def loss(params):
+        result = system.run(method, gradient=gradient, params=params)
+        return system.loss_state(result.state)
+
+    grad = jax.jacfwd if isinstance(gradient, Forward) else jax.grad
+    grads = grad(loss)(system.params_default)
+    true_grads = system.steady_grads_state()
+    assert jnp.allclose(jnp.array(grads), jnp.array(true_grads), rtol=1e-3, atol=1e-4)
+
+
+@pytest.mark.run(order=TEST_LONG)
+def test_not_converged():
+    # control of `test_correctness`: too few steps to reach the steady state
+    max_steps = 5
+    method = TimeEvolution(ode_method=Tsit5(max_steps=max_steps))
+    result = dense_driven_ocavity.run(method)
+    assert not result.infos.converged
+    assert result.infos.steps.nsteps == max_steps
+
+
+@pytest.mark.run(order=TEST_LONG)
+@pytest.mark.parametrize(
+    ('rho0', 'expected'),
+    [(None, dq.eye(2) / 2), (dq.basis(2, 0), dq.basis_dm(2, 0))],
+    ids=['default', 'ket'],
+)
+def test_rho0_selects_steady_state(rho0, expected):
+    # every diagonal state is steady under pure dephasing
+    result = dq.steadystate(dq.zeros(2), [dq.sigmaz()], method=TimeEvolution(rho0))
+    assert jnp.allclose(result.state.to_jax(), expected.to_jax(), atol=1e-5)
 
 
 @pytest.mark.run(order=TEST_INSTANT)

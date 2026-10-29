@@ -4,11 +4,22 @@ from collections.abc import Callable
 from typing import cast
 
 import equinox as eqx
+import jax
+import jax.numpy as jnp
 from jaxtyping import PyTree
 
 from ..._checks import check_qarray_is_dense, check_shape
 from ...gradient import Gradient
-from ...method import Method, TimeEvolution
+from ...method import (
+    Dopri5,
+    Dopri8,
+    Euler,
+    Kvaerno3,
+    Kvaerno5,
+    Method,
+    TimeEvolution,
+    Tsit5,
+)
 from ...options import Options, check_options
 from ...qarrays.layout import dense
 from ...qarrays.qarray import QArray, QArrayLike
@@ -16,7 +27,22 @@ from ...qarrays.utils import asqarray
 from ...result import SteadyStateResult
 from ...time_qarray import ConstantTimeQArray, TimeQArray, _unclipped
 from ...utils.operators import eye
-from .._utils import assert_method_supported, astimeqarray
+from .._utils import (
+    assert_method_supported,
+    astimeqarray,
+    broadcast_batched,
+    cartesian_vmap,
+    catch_xla_runtime_error,
+    multi_vmap,
+)
+from ..core.diffrax_integrator import (
+    steadystate_dopri5_integrator_constructor,
+    steadystate_dopri8_integrator_constructor,
+    steadystate_euler_integrator_constructor,
+    steadystate_kvaerno3_integrator_constructor,
+    steadystate_kvaerno5_integrator_constructor,
+    steadystate_tsit5_integrator_constructor,
+)
 
 __all__ = ['steadystate']
 
@@ -104,6 +130,28 @@ def steadystate(
             assumed to be Hermitian, see [`dq.mesolve()`][dynamiqs.mesolve].
             Defaults to `True`.
 
+    Examples:
+        ```python
+        import dynamiqs as dq
+
+        n = 16
+        a = dq.destroy(n)
+
+        H = a.dag() @ a + 0.5 * (a + a.dag())
+        jump_ops = [a]
+
+        result = dq.steadystate(H, jump_ops, exp_ops=[a])
+        print(result)
+        ```
+
+        ```text title="Output"
+        ==== SteadyStateResult ====
+        Method  : TimeEvolution
+        Infos   : converged at t=18.7 | 180 steps (164 accepted, 16 rejected)
+        State   : QArray complex64 (16, 16) | 2.0 Kb
+        Expects : Array complex64 (1,) | 0.0 Kb
+        ```
+
     # Advanced use-cases
 
     ## Running multiple computations concurrently
@@ -166,13 +214,82 @@ def steadystate(
     options = options.initialise()
     method = _init_method(method, _H)
 
+    # we implement the jitted vectorization in another function to pre-convert QuTiP
+    # objects (which are not JIT-compatible) to qarrays
+    f = jax.jit(_vectorized_steadystate, static_argnames=('gradient', 'options'))
+    return f(_H, Ls, _exp_ops, method, gradient, options)
+
+
+@catch_xla_runtime_error
+def _vectorized_steadystate(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    exp_ops: list[QArray] | None,
+    method: Method,
+    gradient: Gradient | None,
+    options: Options,
+) -> SteadyStateResult:
+    # vectorize input over H and Ls
+    in_axes = (H.in_axes, [L.in_axes for L in Ls], None, None, None, None)
+    out_axes = SteadyStateResult.out_axes()
+
+    if options.cartesian_batching:
+        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], 0, 0, 0, 0)
+        f = cartesian_vmap(_steadystate, in_axes, out_axes, nvmap)
+    else:
+        bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls]])
+        nvmap = len(bshape)
+        # broadcast batched inputs to the same shape, keep unbatched inputs unbatched
+        H, H_axes = broadcast_batched(H, H.in_axes, bshape)
+        Ls_and_axes = [broadcast_batched(L, L.in_axes, bshape) for L in Ls]
+        Ls = [L for L, _ in Ls_and_axes]
+        in_axes = (H_axes, [axes for _, axes in Ls_and_axes], *in_axes[2:])
+        # vectorize the function
+        f = multi_vmap(_steadystate, in_axes, out_axes, nvmap)
+
+    return f(H, Ls, exp_ops, method, gradient, options)
+
+
+def _steadystate(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    exp_ops: list[QArray] | None,
+    method: Method,
+    gradient: Gradient | None,
+    options: Options,
+) -> SteadyStateResult:
+    # === select integrator constructor
+    method = cast(TimeEvolution, method)
+    integrator_constructors = {
+        Euler: steadystate_euler_integrator_constructor,
+        Dopri5: steadystate_dopri5_integrator_constructor,
+        Dopri8: steadystate_dopri8_integrator_constructor,
+        Tsit5: steadystate_tsit5_integrator_constructor,
+        Kvaerno3: steadystate_kvaerno3_integrator_constructor,
+        Kvaerno5: steadystate_kvaerno5_integrator_constructor,
+    }
+    assert_method_supported(method.ode_method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method.ode_method)]  # ty: ignore
+
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
     method.ode_method.assert_supports_gradient(gradient)
 
-    # todo: evolve rho0 with `ode_method` until the stopping criterion of the method
-    # is met
-    raise NotImplementedError('`dq.steadystate()` is not implemented yet.')
+    # === init integrator
+    integrator = integrator_constructor(
+        ts=jnp.array([0.0, jnp.inf]),
+        y0=method.rho0,
+        method=method.ode_method,
+        gradient=gradient,
+        options=options,
+        H=H,
+        Ls=Ls,
+        Es=exp_ops,
+        time_evolution=method,
+    )
+
+    # === run integrator
+    return cast(SteadyStateResult, integrator.run())
 
 
 def _init_method(method: Method, H: TimeQArray) -> TimeEvolution:

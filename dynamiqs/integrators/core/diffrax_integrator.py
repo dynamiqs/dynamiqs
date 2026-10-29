@@ -25,6 +25,7 @@ from ...method import (
     Kvaerno3,
     Kvaerno5,
     Method,
+    TimeEvolution,
     Tsit5,
     _DEAdaptiveStep,
     _DEFixedStep,
@@ -34,8 +35,8 @@ from ...progress_meter import AbstractProgressMeter
 from ...progress_meter import to_diffrax as progress_meter_to_diffrax
 from ...qarrays.dense_dataarray import DenseDataArray
 from ...qarrays.sparsedia_dataarray import SparseDIADataArray
-from ...result import MESolveResult, Result, SolveSaved
-from ...utils.general import lindbladian_sparsedia_terms
+from ...result import MESolveResult, Result, SolveSaved, SteadyStateResult
+from ...utils.general import expect, lindbladian_sparsedia_terms
 from ...utils.vectorization import slindbladian, unvectorize, vectorize
 from .abstract_integrator import BaseIntegrator
 from .error_norm import error_norm
@@ -227,6 +228,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         saveat: dx.SaveAt,
         event: dx.Event | None = None,
         dtmax: float | None = None,
+        throw: bool = True,
     ) -> dx.Solution:
         with warnings.catch_warnings():
             # TODO: remove once complex support is stabilized in diffrax
@@ -271,6 +273,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                 adjoint=self.adjoint,
                 event=event,
                 max_steps=self.max_steps,
+                throw=throw,
                 progress_meter=progress_meter_to_diffrax(
                     cast(AbstractProgressMeter, self.options.progress_meter)
                 ),
@@ -608,4 +611,105 @@ mepropagator_kvaerno3_integrator_constructor = partial(
 )
 mepropagator_kvaerno5_integrator_constructor = partial(
     MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+)
+
+
+class SteadyStateInfos(eqx.Module):
+    converged: Array
+    time: Array
+    steps: FixedStepInfos | AdaptiveStepInfos
+
+    def __str__(self) -> str:
+        if self.converged.ndim >= 1:
+            nconverged = f'{self.converged.sum()}/{self.converged.size} converged'
+            return f'{nconverged} | {self.steps}'
+        status = 'converged' if self.converged else 'not converged'
+        return f'{status} at t={self.time:.3g} | {self.steps}'
+
+
+class SteadyStateDiffraxIntegrator(MESolveDiffraxIntegrator):
+    """Integrator evolving the Lindblad master equation until its steady state using
+    the Diffrax library.
+    """
+
+    time_evolution: TimeEvolution
+
+    def run(self) -> Result:
+        # 2‖H‖ + 2Σ‖L_k‖² in spectral norm bounds the norm of the Lindbladian induced
+        # by the Frobenius norm; the stopping criterion carries no gradient
+        H = self.H(self.t0).to_jax()
+        LdLs = [(L.dag() @ L).to_jax() for L in self.L(self.t0)]
+        norm = 2 * jnp.abs(jnp.linalg.eigvalsh(H)).max()
+        norm += 2 * sum(jnp.linalg.eigvalsh(LdL).max() for LdL in LdLs)
+        method = self.time_evolution
+        threshold = jax.lax.stop_gradient(method.atol + method.rtol * norm)
+
+        vector_field = cast(dx.ODETerm, self.terms).vector_field
+
+        def cond_fn(t, y, args, **kwargs):  # noqa: ANN001, ANN202
+            residual = vector_field(t, y, args).to_jax()
+            return jnp.linalg.norm(residual) <= threshold
+
+        saveat = dx.SaveAt(t1=True)
+        solution = self.diffeqsolve(
+            self.t0, self.t1, self.y0, saveat, event=dx.Event(cond_fn), throw=False
+        )
+
+        # === collect and return results
+        state = jtu.tree_map(lambda x: x[0], solution.ys)
+        if self.options.vectorized:
+            state = unvectorize(state)
+        extra = self.options.save_extra(state) if self.options.save_extra else None
+        Esave = None
+        if self.Es is not None:
+            Esave = jnp.stack([expect(E, state) for E in self.Es])
+        saved = SolveSaved(state, extra, Esave)
+        infos = SteadyStateInfos(
+            converged=solution.result == dx.RESULTS.event_occurred,
+            time=cast(Array, solution.ts)[0],
+            steps=self.infos(solution.stats),
+        )
+        return self.result(saved, infos=infos)
+
+    def result(self, saved: SolveSaved, infos: PyTree | None = None) -> Result:
+        return self.result_class(
+            self.ts, self.time_evolution, self.gradient, self.options, saved, infos
+        )
+
+
+steadystate_euler_integrator_constructor = partial(
+    SteadyStateDiffraxIntegrator,
+    diffrax_solver=dx.Euler(),
+    fixed_step=True,
+    result_class=SteadyStateResult,
+)
+steadystate_dopri5_integrator_constructor = partial(
+    SteadyStateDiffraxIntegrator,
+    diffrax_solver=UnrolledDopri5(),
+    fixed_step=False,
+    result_class=SteadyStateResult,
+)
+steadystate_dopri8_integrator_constructor = partial(
+    SteadyStateDiffraxIntegrator,
+    diffrax_solver=UnrolledDopri8(),
+    fixed_step=False,
+    result_class=SteadyStateResult,
+)
+steadystate_tsit5_integrator_constructor = partial(
+    SteadyStateDiffraxIntegrator,
+    diffrax_solver=UnrolledTsit5(),
+    fixed_step=False,
+    result_class=SteadyStateResult,
+)
+steadystate_kvaerno3_integrator_constructor = partial(
+    SteadyStateDiffraxIntegrator,
+    diffrax_solver=dx.Kvaerno3(),
+    fixed_step=False,
+    result_class=SteadyStateResult,
+)
+steadystate_kvaerno5_integrator_constructor = partial(
+    SteadyStateDiffraxIntegrator,
+    diffrax_solver=dx.Kvaerno5(),
+    fixed_step=False,
+    result_class=SteadyStateResult,
 )
