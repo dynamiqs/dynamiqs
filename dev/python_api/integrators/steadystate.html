@@ -7610,6 +7610,26 @@ Defaults to <code>True</code>.</p>
         </div>
       </li>
   </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynamiqs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dq</span>
+
+<span class="n">n</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+<span class="n">H</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">()</span> <span class="o">@</span> <span class="n">a</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">())</span>
+<span class="n">jump_ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">steadystate</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">jump_ops</span><span class="p">,</span> <span class="n">exp_ops</span><span class="o">=</span><span class="p">[</span><span class="n">a</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><span class="filename">Output</span><pre><span></span><code>==== SteadyStateResult ====
+Method  : TimeEvolution
+Infos   : converged at t=18.7 | 180 steps (164 accepted, 16 rejected)
+State   : QArray complex64 (16, 16) | 2.0 Kb
+Expects : Array complex64 (1,) | 0.0 Kb
+</code></pre></div>
         <h2 id="dynamiqs.integrators.steadystate--advanced-use-cases">Advanced use-cases</h2>
 <h3 id="dynamiqs.integrators.steadystate--running-multiple-computations-concurrently">Running multiple computations concurrently</h3>
 <p>The Hamiltonian <code>H</code> and the jump operators <code>jump_ops</code> can be batched to compute
