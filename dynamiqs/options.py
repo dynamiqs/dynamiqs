@@ -4,11 +4,10 @@ from collections.abc import Callable
 
 import equinox as eqx
 import jax.tree_util as jtu
-from jaxtyping import PyTree, Scalar, ScalarLike
+from jaxtyping import PyTree, ScalarLike
 
 from ._utils import tree_str_inline
 from .progress_meter import AbstractProgressMeter
-from .qarrays.qarray import QArray
 from .utils.global_settings import get_progress_meter
 
 __all__ = ['Options']
@@ -20,7 +19,7 @@ class Options(eqx.Module):
     cartesian_batching: bool = True
     progress_meter: AbstractProgressMeter | bool | None = None
     t0: ScalarLike | None = None
-    save_extra: Callable[[Scalar, QArray], PyTree] | None = None
+    save_extra: Callable[..., PyTree] | None = None
     nmaxclick: int = 10_000
     vectorized: bool = False
     assume_hermitian: bool = True
@@ -32,7 +31,7 @@ class Options(eqx.Module):
         cartesian_batching: bool = True,
         progress_meter: AbstractProgressMeter | bool | None = None,
         t0: ScalarLike | None = None,
-        save_extra: Callable[[Scalar, QArray], PyTree] | None = None,
+        save_extra: Callable[..., PyTree] | None = None,
         nmaxclick: int = 10_000,
         vectorized: bool = False,
         assume_hermitian: bool = True,
@@ -114,6 +113,13 @@ def check_options(options: Options, solver_name: str):
         'dssesolve': ('save_states', 'cartesian_batching', 'save_extra'),
         'jsmesolve': ('save_states', 'cartesian_batching', 'save_extra', 'nmaxclick'),
         'dsmesolve': ('save_states', 'cartesian_batching', 'save_extra'),
+        'steadystate': (
+            'cartesian_batching',
+            'progress_meter',
+            'save_extra',
+            'vectorized',
+            'assume_hermitian',
+        ),
     }
     valid_options = supported_options[solver_name]
 

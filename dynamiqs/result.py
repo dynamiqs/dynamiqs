@@ -25,6 +25,7 @@ __all__ = [
     'DSMESolveResult',
     'SEPropagatorResult',
     'SESolveResult',
+    'SteadyStateResult',
 ]
 
 
@@ -315,3 +316,22 @@ class DSSESolveResult(DiffusiveSolveResult):
 
 class DSMESolveResult(DiffusiveSolveResult):
     pass
+
+
+class SteadyStateResult(Result):
+    _saved: SolveSaved
+
+    @property
+    def state(self) -> QArray:
+        return self._ysave
+
+    @property
+    def expects(self) -> Array | None:
+        return self._saved.Esave
+
+    def _str_parts(self) -> dict[str, str | None]:
+        d = super()._str_parts()
+        return d | {
+            'State': _array_str(self.state),
+            'Expects': _array_str(self.expects),
+        }

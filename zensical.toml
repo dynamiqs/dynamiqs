@@ -60,6 +60,7 @@ nav = [
       { "sepropagator" = "python_api/integrators/sepropagator.md" },
       { "mepropagator" = "python_api/integrators/mepropagator.md" },
       { "floquet" = "python_api/integrators/floquet.md" },
+      { "steadystate" = "python_api/integrators/steadystate.md" },
       { "stochastic" = [
         { "jssesolve" = "python_api/integrators/jssesolve.md" },
         { "dssesolve" = "python_api/integrators/dssesolve.md" },
@@ -93,6 +94,7 @@ nav = [
         { "JumpMonteCarlo" = "python_api/method/JumpMonteCarlo.md" },
         { "DiffusiveMonteCarlo" = "python_api/method/DiffusiveMonteCarlo.md" },
         { "LowRank" = "python_api/method/LowRank.md" },
+        { "TimeEvolution" = "python_api/method/TimeEvolution.md" },
       ] },
       { "Gradients (dq.gradient)" = [
         { "Direct" = "python_api/gradient/Direct.md" },
