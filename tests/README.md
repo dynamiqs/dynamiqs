@@ -183,3 +183,35 @@ $$
     \end{pmatrix}
 \end{aligned}
 $$
+
+## `DrivenOCavity`
+
+Solved by `steadystate`: only the steady state is known.
+
+**Problem**
+
+- Hamiltonian: $H = \Delta a^\dagger a + \varepsilon (a + a^\dagger)$
+- Jump operators: $L = \sqrt{\kappa} a$
+- Expectation operators: $O_1 = a$
+- Cost function: $C(\rho) = \mathrm{Tr}[a^\dagger a \rho]$
+- Gradient parameters: $\theta=(\varepsilon, \Delta, \kappa)$
+
+**Steady state**
+
+The displacement $a = \alpha + b$ with $\alpha = -i\varepsilon / (i\Delta + \kappa/2)$ cancels the drive, and leaves $b$ in the vacuum:
+
+$$
+\rho_\infty = \ket{\alpha}\bra{\alpha}
+$$
+
+- Expectation values: $\braket{O_1} = \alpha$
+- Loss: $C(\rho_\infty) = |\alpha|^2 = \varepsilon^2 / D$ with $D = \Delta^2 + \kappa^2/4$
+- Gradient of the loss:
+
+$$
+\begin{aligned}
+    \frac{\partial C}{\partial\varepsilon} &= \frac{2\varepsilon}{D} &
+    \frac{\partial C}{\partial\Delta} &= -\frac{2\varepsilon^2\Delta}{D^2} &
+    \frac{\partial C}{\partial\kappa} &= -\frac{\varepsilon^2\kappa}{2D^2}
+\end{aligned}
+$$
