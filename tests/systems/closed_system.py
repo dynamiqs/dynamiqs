@@ -121,11 +121,8 @@ class CompositeCavity(Cavity):
     # i alpha0, with every operator a composite qarray: the state stays the product of
     # the two coherent states
     def H(self, params: PyTree) -> QArray | TimeQArray:
-        N = dq.number(self.n, layout=self.layout)
-        I = dq.eye(self.n, layout=self.layout)
-        H_a = dq.tensor(N, I, composite=True)
-        H_b = dq.tensor(I, 2 * N, composite=True)
-        return params.delta * (H_a + H_b)
+        N_a, N_b = dq.number(self.n, self.n, layout=self.layout, composite=True)
+        return params.delta * (N_a + 2 * N_b)
 
     def y0(self, params: PyTree) -> QArray:
         alpha0 = params.alpha0

@@ -240,12 +240,18 @@ def zeros_like(
 
 
 @overload
-def destroy(dim: int, /, *, layout: Layout | None = None) -> QArray: ...
+def destroy(
+    dim: int, /, *, layout: Layout | None = None, composite: bool | None = None
+) -> QArray: ...
 @overload
-def destroy(*dims: int, layout: Layout | None = None) -> tuple[QArray, ...]: ...
+def destroy(
+    *dims: int, layout: Layout | None = None, composite: bool | None = None
+) -> tuple[QArray, ...]: ...
 
 
-def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
+def destroy(
+    *dims: int, layout: Layout | None = None, composite: bool | None = None
+) -> QArray | tuple[QArray, ...]:
     r"""Returns a bosonic annihilation operator, or a tuple of annihilation operators
     for a multi-mode system.
 
@@ -260,6 +266,9 @@ def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, 
     Args:
         *dims: Hilbert space dimension of each mode.
         layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        composite: Whether to store each operator as its factors (`True`, `False`
+            or `None`). If `None`, uses the default set by
+            [`dq.set_composite()`][dynamiqs.set_composite]. Ignored for a single mode.
 
     Returns:
         (qarray or tuple of qarrays, each of shape (n, n)): Annihilation operator(s),
@@ -308,18 +317,26 @@ def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, 
     a = [destroy_single(dim) for dim in dims]
     Id = [eye(dim, layout=layout) for dim in dims]
     return tuple(
-        tensor(*[a[j] if i == j else Id[j] for j in range(len(dims))])
+        tensor(
+            *[a[j] if i == j else Id[j] for j in range(len(dims))], composite=composite
+        )
         for i in range(len(dims))
     )
 
 
 @overload
-def create(dim: int, /, *, layout: Layout | None = None) -> QArray: ...
+def create(
+    dim: int, /, *, layout: Layout | None = None, composite: bool | None = None
+) -> QArray: ...
 @overload
-def create(*dims: int, layout: Layout | None = None) -> tuple[QArray, ...]: ...
+def create(
+    *dims: int, layout: Layout | None = None, composite: bool | None = None
+) -> tuple[QArray, ...]: ...
 
 
-def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
+def create(
+    *dims: int, layout: Layout | None = None, composite: bool | None = None
+) -> QArray | tuple[QArray, ...]:
     r"""Returns a bosonic creation operator, or a tuple of creation operators for a
     multi-mode system.
 
@@ -334,6 +351,9 @@ def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
     Args:
         *dims: Hilbert space dimension of each mode.
         layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        composite: Whether to store each operator as its factors (`True`, `False`
+            or `None`). If `None`, uses the default set by
+            [`dq.set_composite()`][dynamiqs.set_composite]. Ignored for a single mode.
 
     Returns:
         (qarray or tuple of qarrays, each of shape (n, n)): Creation operator(s), with
@@ -382,12 +402,17 @@ def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
     adag = [create_single(dim) for dim in dims]
     Id = [eye(dim, layout=layout) for dim in dims]
     return tuple(
-        tensor(*[adag[j] if i == j else Id[j] for j in range(len(dims))])
+        tensor(
+            *[adag[j] if i == j else Id[j] for j in range(len(dims))],
+            composite=composite,
+        )
         for i in range(len(dims))
     )
 
 
-def fdestroy(n: int, *, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
+def fdestroy(
+    n: int, *, layout: Layout | None = None, composite: bool | None = None
+) -> QArray | tuple[QArray, ...]:
     r"""Returns a fermionic annihilation operator, or a tuple of annihilation operators
     for a multi-mode system.
 
@@ -404,6 +429,9 @@ def fdestroy(n: int, *, layout: Layout | None = None) -> QArray | tuple[QArray, 
     Args:
         n: Number of fermionic modes.
         layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        composite: Whether to store each operator as its factors (`True`, `False`
+            or `None`). If `None`, uses the default set by
+            [`dq.set_composite()`][dynamiqs.set_composite]. Ignored for a single mode.
 
     Returns:
         (qarray or tuple of qarrays, each of shape (2^n, 2^n)): Annihilation
@@ -436,13 +464,18 @@ def fdestroy(n: int, *, layout: Layout | None = None) -> QArray | tuple[QArray, 
     Id = eye(2, layout=layout)
     # Jordan-Wigner strings
     operators = tuple(
-        tensor(*[z if j < k else a if j == k else Id for j in range(n)])
+        tensor(
+            *[z if j < k else a if j == k else Id for j in range(n)],
+            composite=composite,
+        )
         for k in range(n)
     )
     return operators[0] if n == 1 else operators
 
 
-def fcreate(n: int, *, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
+def fcreate(
+    n: int, *, layout: Layout | None = None, composite: bool | None = None
+) -> QArray | tuple[QArray, ...]:
     r"""Returns a fermionic creation operator, or a tuple of creation operators for a
     multi-mode system.
 
@@ -459,6 +492,9 @@ def fcreate(n: int, *, layout: Layout | None = None) -> QArray | tuple[QArray, .
     Args:
         n: Number of fermionic modes.
         layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        composite: Whether to store each operator as its factors (`True`, `False`
+            or `None`). If `None`, uses the default set by
+            [`dq.set_composite()`][dynamiqs.set_composite]. Ignored for a single mode.
 
     Returns:
         (qarray or tuple of qarrays, each of shape (2^n, 2^n)): Creation operator(s).
@@ -491,19 +527,28 @@ def fcreate(n: int, *, layout: Layout | None = None) -> QArray | tuple[QArray, .
     Id = eye(2, layout=layout)
     # Jordan-Wigner strings
     operators = tuple(
-        tensor(*[z if j < k else adag if j == k else Id for j in range(n)])
+        tensor(
+            *[z if j < k else adag if j == k else Id for j in range(n)],
+            composite=composite,
+        )
         for k in range(n)
     )
     return operators[0] if n == 1 else operators
 
 
 @overload
-def number(dim: int, /, *, layout: Layout | None = None) -> QArray: ...
+def number(
+    dim: int, /, *, layout: Layout | None = None, composite: bool | None = None
+) -> QArray: ...
 @overload
-def number(*dims: int, layout: Layout | None = None) -> tuple[QArray, ...]: ...
+def number(
+    *dims: int, layout: Layout | None = None, composite: bool | None = None
+) -> tuple[QArray, ...]: ...
 
 
-def number(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
+def number(
+    *dims: int, layout: Layout | None = None, composite: bool | None = None
+) -> QArray | tuple[QArray, ...]:
     r"""Returns the number operator of a bosonic mode, or a tuple of number operators
     for a multi-mode system.
 
@@ -519,6 +564,9 @@ def number(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
     Args:
         *dims: Hilbert space dimension of each mode.
         layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        composite: Whether to store each operator as its factors (`True`, `False`
+            or `None`). If `None`, uses the default set by
+            [`dq.set_composite()`][dynamiqs.set_composite]. Ignored for a single mode.
 
     Returns:
         (qarray or tuple of qarrays, each of shape (n, n)): Number operator(s), with
@@ -567,7 +615,10 @@ def number(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
     nums = [number_single(dim) for dim in dims]
     Id = [eye(dim, layout=layout) for dim in dims]
     return tuple(
-        tensor(*[nums[j] if i == j else Id[j] for j in range(len(dims))])
+        tensor(
+            *[nums[j] if i == j else Id[j] for j in range(len(dims))],
+            composite=composite,
+        )
         for i in range(len(dims))
     )
 
@@ -905,7 +956,7 @@ def xyz(*, layout: Layout | None = None) -> QArray:
     return stack([sigmax(layout=layout), sigmay(layout=layout), sigmaz(layout=layout)])
 
 
-def hadamard(n: int = 1) -> QArray:
+def hadamard(n: int = 1, *, composite: bool | None = None) -> QArray:
     r"""Returns the Hadamard transform on $n$ qubits.
 
     For a single qubit, it is defined by
@@ -922,6 +973,9 @@ def hadamard(n: int = 1) -> QArray:
 
     Args:
         n: Number of qubits to act on.
+        composite: Whether to store each operator as its factors (`True`, `False`
+            or `None`). If `None`, uses the default set by
+            [`dq.set_composite()`][dynamiqs.set_composite]. Ignored for a single qubit.
 
     Returns:
         (qarray of shape (2^n, 2^n)): Hadamard transform operator.
@@ -940,7 +994,7 @@ def hadamard(n: int = 1) -> QArray:
     """
     H1 = jnp.array([[1, 1], [1, -1]], dtype=cdtype()) / jnp.sqrt(2)
     Hs = jnp.broadcast_to(H1, (n, 2, 2))  # (n, 2, 2)
-    return tensor(*Hs)
+    return tensor(*Hs, composite=composite)
 
 
 def rx(theta: ArrayLike) -> QArray:
