@@ -86,6 +86,9 @@ class MaterializedQArray(QArray):
             )
         return cast(int, self.data.ndiags)
 
+    def _materialize(self) -> MaterializedQArray:
+        return self
+
     # === Array methods delegated to DataArray ===
 
     def conj(self) -> QArray:

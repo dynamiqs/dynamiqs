@@ -116,6 +116,46 @@ class Cavity(ClosedSystem):
         return jax.hessian(self._expect)(self.params_default, t)
 
 
+class CompositeCavity(Cavity):
+    # `Cavity` next to a second cavity, of detuning 2 delta and starting from
+    # i alpha0, with every operator a composite qarray: the state stays the product of
+    # the two coherent states
+    def H(self, params: PyTree) -> QArray | TimeQArray:
+        N = dq.number(self.n, layout=self.layout)
+        I = dq.eye(self.n, layout=self.layout)
+        H_a = dq.tensor(N, I, composite=True)
+        H_b = dq.tensor(I, 2 * N, composite=True)
+        return params.delta * (H_a + H_b)
+
+    def y0(self, params: PyTree) -> QArray:
+        alpha0 = params.alpha0
+        return dq.tensor(dq.coherent(self.n, alpha0), dq.coherent(self.n, 1j * alpha0))
+
+    def Es(self, params: PyTree) -> list[QArray]:  # noqa: ARG002
+        x = dq.position(self.n, layout=self.layout)
+        p = dq.momentum(self.n, layout=self.layout)
+        I = dq.eye(self.n, layout=self.layout)
+        return [dq.tensor(x, I, composite=True), dq.tensor(I, p, composite=True)]
+
+    def _beta(self, params: PyTree, t: float) -> Array:
+        return 1j * params.alpha0 * jnp.exp(-2j * params.delta * t)
+
+    def _state(self, params: PyTree, t: float) -> QArray:
+        psi_a = dq.coherent(self.n, self._alpha(params, t))
+        psi_b = dq.coherent(self.n, self._beta(params, t))
+        return dq.tensor(psi_a, psi_b)
+
+    def _expect(self, params: PyTree, t: float) -> Array:
+        # analytical expectation values (<x_a>, <p_b>) as a function of the parameters
+        alpha_t, beta_t = self._alpha(params, t), self._beta(params, t)
+        return jnp.array([alpha_t.real, beta_t.imag])
+
+    def loss_state(self, state: QArray) -> Array:
+        N = dq.number(self.n, layout=self.layout)
+        I = dq.eye(self.n, layout=self.layout)
+        return dq.expect(dq.tensor(N, I) + dq.tensor(I, N), state).real
+
+
 class TDQubit(ClosedSystem):
     class Params(NamedTuple):
         eps: float
@@ -181,6 +221,12 @@ Hz = 2 * jnp.pi
 tsave = np.linspace(0.0, 0.3, 11)
 dense_cavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, tsave=tsave, layout=dq.dense)
 dia_cavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, tsave=tsave, layout=dq.dia)
+dense_composite_cavity = CompositeCavity(
+    n=8, delta=1.0 * Hz, alpha0=0.5, tsave=tsave, layout=dq.dense
+)
+dia_composite_cavity = CompositeCavity(
+    n=8, delta=1.0 * Hz, alpha0=0.5, tsave=tsave, layout=dq.dia
+)
 
 tsave = np.linspace(0.0, 1.0, 11)
 tdqubit = TDQubit(eps=3.0, omega=10.0, tsave=tsave)

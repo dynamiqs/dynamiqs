@@ -5,6 +5,8 @@ import qutip as qt
 from jax import Array
 
 import dynamiqs as dq
+from dynamiqs.qarrays.composite_qarray import CompositeQArray
+from dynamiqs.qarrays.materialized_qarray import MaterializedQArray
 
 from ..order import TEST_INSTANT, TEST_SHORT
 
@@ -16,6 +18,16 @@ b = pytest.fixture(lambda: dq.random.ket(k2, 4))
 x = pytest.fixture(lambda: dq.random.dm(k3, 4))
 y = pytest.fixture(lambda: dq.random.dm(k4, 4))
 z = pytest.fixture(lambda: dq.random.dm(k5, 4))
+# a composite operator and states of the same dims (3, 4)
+O = pytest.fixture(
+    lambda: dq.tensor(
+        dq.random.operator(k1, 3, hermitian=False),
+        dq.random.operator(k2, 4, hermitian=False),
+        composite=True,
+    )
+)
+psi = pytest.fixture(lambda: dq.random.ket(k3, (3, 4)))
+rho = pytest.fixture(lambda: dq.random.dm(k4, (3, 4)))
 
 
 @pytest.mark.run(order=TEST_INSTANT)
@@ -93,6 +105,59 @@ def test_ptrace():
 def test_tensor(x, y):
     # check that no error is raised while tracing the function
     jax.jit(dq.tensor).trace(x, y)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_tensor_composite(layout):
+    A = dq.destroy(3, layout=layout)
+    B = dq.number(4, layout=layout) + dq.create(4, layout=layout)
+    x = dq.tensor(A, B, composite=True)
+    expected = dq.tensor(A, B)
+    assert type(x) is CompositeQArray
+    assert x.dims == expected.dims
+    assert x.layout is expected.layout
+    assert jnp.allclose(x.to_jax(), expected.to_jax())
+
+
+@pytest.fixture
+def composite_default():
+    dq.set_composite(True)
+    yield
+    dq.set_composite(False)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+@pytest.mark.usefixtures('composite_default')
+def test_tensor_composite_default():
+    # operators are composite by default, states and explicit opt-outs are not
+    assert type(dq.destroy(3, 4)[0]) is CompositeQArray
+    assert type(dq.tensor(dq.fock(3, 0), dq.fock(4, 0))) is MaterializedQArray
+    assert type(dq.thermal_dm((3, 4), (0.1, 0.2))) is MaterializedQArray
+    assert type(dq.tensor(dq.eye(3), dq.eye(4), composite=False)) is MaterializedQArray
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_tracemm_composite(O, rho):
+    # tr(O rho) = tr(rho O), with the composite operand on either side
+    expected = dq.tracemm(O._materialize(), rho)
+    assert jnp.allclose(dq.tracemm(O, rho), expected)
+    assert jnp.allclose(dq.tracemm(rho, O), expected)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_expect_composite_list(O, psi):
+    # a list of composite operators is not stacked into one array
+    expected = dq.expect([O._materialize(), 2 * O._materialize()], psi)
+    assert jnp.allclose(dq.expect([O, 2 * O], psi), expected)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_expect_composite_batched(O, psi):
+    # the coefficient is batched, the factors are not
+    omegas = jnp.array([1.0, 2.0])[:, None, None]
+    expected = dq.expect(omegas * O._materialize(), psi)
+    assert jnp.allclose(dq.expect(omegas * O, psi), expected)
 
 
 @pytest.mark.run(order=TEST_INSTANT)
