@@ -9,6 +9,7 @@ from typing import cast
 
 import diffrax as dx
 import equinox as eqx
+import equinox.internal as eqxi
 import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
@@ -246,6 +247,29 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
                 )
                 stepsize_controller = eqx.tree_at(
                     get_dtmax, stepsize_controller, dtmax, is_leaf=lambda x: x is None
+                )
+
+            # === end the solve just before a jump at t1
+            # Diffrax ends a step one ULP (unit in the last place) before a jump time,
+            # and starts the next step one ULP after it. For a jump at t1, or one ULP
+            # before t1, that next step starts at or after t1. The solve then stops
+            # without saving at t1, and the saved state there stays `inf`
+            # (diffrax#791). So the solve ends one ULP before such a jump, and the
+            # save times after this new end move onto it. The derivative with respect
+            # to t1 is kept.
+            # To remove: when Diffrax fixes #791, the strict xfail
+            # `test_diffrax_saves_at_jump_at_t1` passes and fails the test suite.
+            if not self.fixed_step and self.discontinuity_ts.size > 0:
+                jump_ts = self.discontinuity_ts
+                t1_value = jax.lax.stop_gradient(t1)
+                at_end = (jump_ts >= eqxi.prevbefore(t1_value)) & (jump_ts <= t1_value)
+                at_end = at_end & (jump_ts > t0)
+                end = jnp.min(jnp.where(at_end, eqxi.prevbefore(jump_ts), t1_value))
+                t1 = t1 + jax.lax.stop_gradient(end - t1)
+                saveat = eqx.tree_at(
+                    lambda s: [sub.ts for sub in s.subs if sub.ts is not None],
+                    saveat,
+                    replace_fn=lambda ts: jnp.minimum(ts, t1),
                 )
 
             # === jit the vector field: Diffrax and the unrolled solvers evaluate it

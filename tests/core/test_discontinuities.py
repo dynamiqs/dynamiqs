@@ -1,9 +1,12 @@
+import diffrax as dx
 import jax
 import jax.numpy as jnp
+import jax.tree_util as jtu
+import optimistix as optx
 import pytest
 
 import dynamiqs as dq
-from dynamiqs.method import Tsit5
+from dynamiqs.method import Event, Tsit5
 
 from ..order import TEST_SHORT
 
@@ -96,3 +99,86 @@ def test_gradient_wrt_discontinuity_time_with_progress_meter(progress_meter):
     assert jnp.allclose(
         jax.jacfwd(lambda tau: population(tau, progress_meter))(0.37), expected
     )
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize(('t1', 'ulps'), [(3.0, 0), (3.0, 1), (-3.0, 1)])
+@pytest.mark.parametrize('jump_trajectories', [False, True])
+def test_discontinuity_at_last_save_time(t1, ulps, jump_trajectories):
+    # The drive drops to zero exactly at the last save time, or one ULP (unit in the
+    # last place) before it. Every saved state must still be exact.
+    tsave = jnp.linspace(t1 - 3.0, t1, 11)
+    t0, edge = tsave[0], tsave[-1]
+    for _ in range(ulps):
+        edge = jnp.nextafter(edge, -jnp.inf)
+    H = dq.pwc(jnp.stack([t0, t0 + 1.5, edge]), jnp.array([1.6, -1.1]), dq.sigmax())
+    # The tight tolerances are on purpose: with the default ones, this test also
+    # passes without the workaround for Diffrax.
+    psi0, method = dq.fock(2, 0), Tsit5(rtol=1e-9, atol=1e-9)
+    if jump_trajectories:
+        # The jump operator is proportional to the identity, so a click does not
+        # change the state. Every trajectory must be exact, whatever its clicks.
+        # The root finder places the clicks, as in the other jssesolve tests.
+        jump_ops = [jnp.sqrt(0.5) * dq.eye(2)]
+        keys = jax.random.split(jax.random.key(42), 4)
+        root_finder = optx.Newton(1e-4, 1e-4, jtu.Partial(optx.rms_norm))
+        method = Event(noclick_method=method, root_finder=root_finder)
+        result = dq.jssesolve(H, jump_ops, psi0, tsave, keys, method=method)
+    else:
+        result = dq.sesolve(H, psi0, tsave, method=method, progress_meter=False)
+
+    t = tsave - t0
+    theta = jnp.where(t < 1.5, 1.6 * t, 2.4 - 1.1 * (t - 1.5))
+    expected = jnp.stack([jnp.cos(theta), -1j * jnp.sin(theta)], axis=-1)[..., None]
+    assert jnp.allclose(result.states.to_jax(), expected, atol=1e-5)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.parametrize('gradient', [None, dq.gradient.Forward()])
+def test_gradient_wrt_last_save_time_at_discontinuity(gradient):
+    # The drive ends at 3, the last save time T, so the solve ends one ULP before T.
+    # The derivative with respect to T must still be that of the state at T.
+    H = dq.pwc(jnp.array([0.0, 1.5, 3.0]), jnp.array([1.6, -1.1]), dq.sigmax())
+
+    def population(T):
+        result = solve(H, jnp.stack([0.0, 1.0, T]), gradient=gradient)
+        return jnp.abs(result.states[-1].to_jax()[0, 0]) ** 2
+
+    # |⟨0|psi(T)⟩|² = cos²(theta) with theta = 1.6 * 1.5 - 1.1 (T - 1.5)
+    theta = 2.4 - 1.1 * 1.5
+    expected = 1.1 * jnp.sin(2 * theta)
+    derivative = jax.jacrev if gradient is None else jax.jacfwd
+    assert jnp.allclose(derivative(population)(3.0), expected, rtol=1e-4)
+
+
+@pytest.mark.run(order=TEST_SHORT)
+@pytest.mark.xfail(
+    reason='diffrax#791: with a jump at t1, the saved state at t1 stays `inf`; an '
+    'XPASS means the installed Diffrax saves it: remove the block "end the solve '
+    'just before a jump at t1" of `DiffraxIntegrator.diffeqsolve`',
+    raises=AssertionError,
+    strict=True,
+)
+def test_diffrax_saves_at_jump_at_t1():
+    # Diffrax alone, in single precision: a rotation at speed 1.6 up to 1.5, -1.1
+    # up to 3, then 0, solved up to t1 = 3 with both jump times declared
+    def f(t, y, args):
+        h = jnp.where(t < 1.5, 1.6, jnp.where(t < 3.0, -1.1, 0.0))
+        return h * jnp.stack([-y[1], y[0]])
+
+    controller = dx.ClipStepSizeController(
+        dx.PIDController(rtol=1e-9, atol=1e-9), jump_ts=jnp.array([1.5, 3.0])
+    )
+    saveat = dx.SaveAt(ts=jnp.linspace(0.0, 3.0, 11))
+    y0 = jnp.array([1.0, 0.0])
+    solution = dx.diffeqsolve(
+        dx.ODETerm(f),
+        dx.Tsit5(),
+        0.0,
+        3.0,
+        None,
+        y0,
+        saveat=saveat,
+        stepsize_controller=controller,
+    )
+    assert jnp.all(jnp.isfinite(solution.ys[-1]))
