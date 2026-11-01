@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install uv and Python
-        uses: astral-sh/setup-uv@v10.3.0
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           python-version: "3.11"
           enable-cache: true
@@ -55,7 +55,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install uv and Python
-        uses: astral-sh/setup-uv@v10.3.0
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           python-version: "3.11"
           enable-cache: true
@@ -80,7 +80,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install uv and Python
-        uses: astral-sh/setup-uv@v10.3.0
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           python-version: "3.11"
           enable-cache: true
@@ -101,7 +101,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install uv and Python
-        uses: astral-sh/setup-uv@v10.3.0
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           python-version: "3.11"
           enable-cache: true
