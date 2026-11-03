@@ -5,7 +5,13 @@ from dynamiqs.method import Rouchon1, Rouchon2, Rouchon3
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
-from ..systems import dense_nojump_cavity, dense_ocavity, otdqubit
+from ..systems import (
+    dense_driven_ocavity,
+    dense_nojump_cavity,
+    dense_ocavity,
+    dense_weakly_driven_ocavity,
+    otdqubit,
+)
 
 # for speed we don't test all possible options:
 # - normalize: set to True
@@ -37,3 +43,17 @@ class TestMESolveFixedRouchon(IntegratorTester):
     )
     def test_correctness_no_jump_ops(self, method_class, dt):
         self._test_correctness(dense_nojump_cavity, method_class(dt=dt))
+
+    # a drive makes sum_k Mk^† @ Mk non-diagonal, see
+    # `unrotated_cholesky_normalize()`; the larger amplitudes need smaller steps than
+    # `test_correctness`
+    @pytest.mark.parametrize(
+        ('method_class', 'dt', 'system'),
+        [
+            (Rouchon1, 1e-4, dense_weakly_driven_ocavity),
+            (Rouchon2, 5e-4, dense_driven_ocavity),
+            (Rouchon3, 2e-3, dense_driven_ocavity),
+        ],
+    )
+    def test_correctness_driven(self, method_class, dt, system):
+        self._test_correctness(system, method_class(dt=dt))

@@ -12,6 +12,7 @@ import jax.numpy as jnp
 from diffrax import AbstractRungeKutta, Bosh3, Euler, Midpoint, ODETerm
 from diffrax._custom_types import VF, Args, BoolScalarLike, Control, RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
+from jax import Array
 from jaxtyping import PyTree
 
 from ...gradient import Forward, Gradient
@@ -427,7 +428,8 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
         def rouchon_step(t0, t1, y0):  # noqa: ANN001, ANN202
             # The Rouchon update for a single loss channel is:
             #   rho_{k+1} = sum_k Mk @ rho_k @ Mk^†
-            # See comment of `cholesky_normalize()` for the normalization.
+            # See comments of `cholesky_normalize()` and
+            # `unrotated_cholesky_normalize()` for the normalization.
 
             rho = y0
             dt = t1 - t0
@@ -435,7 +437,7 @@ class MESolveFixedRouchonIntegrator(RouchonPropertiesMixin, MESolveDiffraxIntegr
             kraus_map = self.build_kraus_map(nojump_propagator, self.H, self.L, t0, dt)
 
             if self.method.normalize:
-                rho = cholesky_normalize(kraus_map.S(), rho)
+                rho = unrotated_cholesky_normalize(kraus_map.S(), rho)
 
             return kraus_map(rho), None
 
@@ -554,21 +556,19 @@ class MESolveAdaptiveRouchonIntegrator(
             dt = t1 - t0
             propagator_low, propagator_high = self.make_nojump_propagators(t0, dt)
 
-            # low order
+            # low order, without normalization, so that the error estimate below
+            # includes the error of the normalization of the high order solution
             kraus_low = self._fixed_cls_low.build_kraus_map(
                 propagator_low, self.H, self.L, t0, dt
             )
-            rho_low = (
-                cholesky_normalize(kraus_low.S(), rho) if self.method.normalize else rho
-            )
-            rho_low = kraus_low(rho_low)
+            rho_low = kraus_low(rho)
 
             # high order
             kraus_high = self._fixed_cls_high.build_kraus_map(
                 propagator_high, self.H, self.L, t0, dt
             )
             rho_high = (
-                cholesky_normalize(kraus_high.S(), rho)
+                unrotated_cholesky_normalize(kraus_high.S(), rho)
                 if self.method.normalize
                 else rho
             )
@@ -614,21 +614,39 @@ def cholesky_normalize(S: QArray, rho: QArray) -> QArray:
     #                       = I
     # In practice we directly replace rho_k by T^{†(-1)} @ rho_k @ T^{-1} instead of
     # computing all ~Mks.
+    # The stochastic solvers use this normalization. The Rouchon methods of mesolve
+    # use `unrotated_cholesky_normalize()`, which removes the rotation it adds.
 
     T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
-    dims = rho.dims
-    layout = rho.layout
+    rho_jax = _inverse_cholesky_sandwich(T, rho.to_jax())
+    return asqarray(rho_jax, dims=rho.dims, layout=rho.layout)
 
-    # we want T^{†(-1)} @ y0 @ T^{-1}
-    rho_jax = rho.to_jax()
 
+def unrotated_cholesky_normalize(S: QArray, rho: QArray) -> QArray:
+    # The normalization of `cholesky_normalize()`, without its rotation.
+    # T^{†(-1)} is not S^{-1/2}: it is S^{-1/2} @ W, with W a unitary close to the
+    # identity, and W rotates the state at each step. When S is not diagonal (for
+    # example with a drive), this rotation can be much larger than the scheme's own
+    # error. We undo it with the unitary
+    #   C = (I - K/2)^{-1} @ (I + K/2), where K = (T^† - T)/2 is anti-Hermitian.
+    # Then T^{†(-1)} @ C = S^{-1/2}, with an error of order (S - I)^2. As C is
+    # unitary, the scheme stays trace-preserving. We replace rho_k by
+    #   T^{†(-1)} @ C @ rho_k @ C^† @ T^{-1}.
+    T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
+    identity = jnp.eye(T.shape[-1], dtype=T.dtype)
+    K = 0.5 * (T.conj().mT - T)
+    C = jnp.linalg.solve(identity - 0.5 * K, identity + 0.5 * K)
+    rho_jax = _inverse_cholesky_sandwich(T, C @ rho.to_jax() @ C.conj().mT)
+    return asqarray(rho_jax, dims=rho.dims, layout=rho.layout)
+
+
+def _inverse_cholesky_sandwich(T: Array, rho: Array) -> Array:
     # solve T^† @ x = rho => x = T^{†(-1)} @ rho
-    rho_jax = jax.lax.linalg.triangular_solve(
-        T, rho_jax, lower=True, transpose_a=True, conjugate_a=True, left_side=True
+    rho = jax.lax.linalg.triangular_solve(
+        T, rho, lower=True, transpose_a=True, conjugate_a=True, left_side=True
     )
     # solve x @ T = rho => x = rho @ T^{-1}
-    rho_jax = jax.lax.linalg.triangular_solve(T, rho_jax, lower=True, left_side=False)
-    return asqarray(rho_jax, dims=dims, layout=layout)
+    return jax.lax.linalg.triangular_solve(T, rho, lower=True, left_side=False)
 
 
 class MESolveAdaptiveRouchon2Integrator(MESolveAdaptiveRouchonIntegrator):
