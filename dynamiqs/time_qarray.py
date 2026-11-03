@@ -17,7 +17,10 @@ from jaxtyping import ArrayLike, PyTree, ScalarLike
 from ._checks import check_shape, check_times
 from ._utils import cdtype, concatenate_sort, obj_type_str
 from .qarrays.layout import Layout, dia, promote_layouts
-from .qarrays.qarray import QArray, QArrayLike, isqarraylike
+from .qarrays.materialized_qarray import MaterializedQArray
+from .qarrays.qarray import QArray, QArrayLike, check_compatible_dims, isqarraylike
+from .qarrays.sparsedia_dataarray import SparseDIADataArray
+from .qarrays.sparsedia_primitives import sum_sparsedia
 from .qarrays.utils import asqarray
 
 __all__ = ['TimeQArray', 'constant', 'modulated', 'pwc', 'timecallable']
@@ -947,8 +950,8 @@ class SummedTimeQArray(TimeQArray):
         )
 
     def __call__(self, t: RealScalarLike) -> QArray:
-        return self._prefactor(t)[..., None, None] * ft.reduce(
-            lambda x, y: x + y, [tqarray(t) for tqarray in self.timeqarrays]
+        return self._prefactor(t)[..., None, None] * _sum(
+            [tqarray(t) for tqarray in self.timeqarrays]
         )
 
     def _operator(self, t: RealScalarLike) -> QArray:
@@ -989,6 +992,24 @@ class SummedTimeQArray(TimeQArray):
 
 def _unclipped(x: TimeQArray) -> bool:
     return x.tstart is None and x.tend is None
+
+
+def _sum(qarrays: list[QArray]) -> QArray:
+    # sparse DIA qarrays are summed in one pass over their diagonals, rather than
+    # building the diagonals of each partial sum
+    operands = []
+    for qarray in qarrays:
+        if not (
+            isinstance(qarray, MaterializedQArray)
+            and isinstance(qarray.data, SparseDIADataArray)
+        ):
+            return ft.reduce(lambda x, y: x + y, qarrays)
+        check_compatible_dims(qarrays[0].dims, qarray.dims)
+        operands.append((qarray.data.offsets, qarray.data.diags))
+    if len(operands) == 1:
+        return qarrays[0]
+    offsets, diags = sum_sparsedia(operands)
+    return replace(qarrays[0], data=SparseDIADataArray(offsets, diags))
 
 
 def _terms(x: TimeQArray) -> list[TimeQArray]:

@@ -24,7 +24,6 @@ from .dataarray import (
 from .dense_dataarray import DenseDataArray
 from .layout import Layout, dia
 from .sparsedia_primitives import (
-    add_sparsedia_sparsedia,
     and_sparsedia_sparsedia,
     broadcast_sparsedia,
     matmul_array_sparsedia,
@@ -36,6 +35,7 @@ from .sparsedia_primitives import (
     reshape_sparsedia,
     shape_sparsedia,
     sparsedia_to_array,
+    sum_sparsedia,
     trace_sparsedia,
     transpose_sparsedia,
 )
@@ -293,8 +293,8 @@ class SparseDIADataArray(DataArray):
             return self
 
         if isinstance(y, SparseDIADataArray):
-            offsets, diags = add_sparsedia_sparsedia(
-                self.offsets, self.diags, y.offsets, y.diags
+            offsets, diags = sum_sparsedia(
+                [(self.offsets, self.diags), (y.offsets, y.diags)]
             )
             return replace(self, offsets=offsets, diags=diags)
         elif isinstance(y, DenseDataArray):

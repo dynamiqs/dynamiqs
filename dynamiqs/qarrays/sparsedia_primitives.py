@@ -190,18 +190,17 @@ def _construct_diags(offsets: tuple[int, ...], x: Array) -> Array:
     return diags
 
 
-def add_sparsedia_sparsedia(
-    left_offsets: tuple[int, ...],
-    left_diags: Array,
-    right_offsets: tuple[int, ...],
-    right_diags: Array,
+def sum_sparsedia(
+    operands: Sequence[tuple[tuple[int, ...], Array]],
 ) -> tuple[tuple[int, ...], Array]:
-    out_offsets = np.union1d(left_offsets, right_offsets).astype(int)
-    batch_shape = jnp.broadcast_shapes(left_diags.shape[:-2], right_diags.shape[:-2])
-    out_shape = (*batch_shape, len(out_offsets), left_diags.shape[-1])
-    dtype = jnp.promote_types(left_diags.dtype, right_diags.dtype)
-    # the diagonals of the two operands that add up to each output diagonal
-    operands = ((left_offsets, left_diags), (right_offsets, right_diags))
+    # Each output diagonal is built once from the diagonals of all operands, in their
+    # order: the same sums as adding the operands one after the other.
+    out_offsets = np.unique(np.concatenate([offsets for offsets, _ in operands]))
+    out_offsets = out_offsets.astype(int)
+    batch_shape = jnp.broadcast_shapes(*[diags.shape[:-2] for _, diags in operands])
+    out_shape = (*batch_shape, len(out_offsets), operands[0][1].shape[-1])
+    dtype = reduce(jnp.promote_types, [diags.dtype for _, diags in operands])
+    # the diagonals of the operands that add up to each output diagonal
     terms = [
         [
             diags[..., offsets.index(offset), :]
@@ -215,13 +214,13 @@ def add_sparsedia_sparsedia(
     # runs on (as for the real-array saves of `_saveat`). With `lax.platform_dependent`
     # instead, a batched `mesolve` on an A100 was 1.24x slower.
     if jax.default_backend() == 'gpu':
-        out_diags = _add_sparsedia_sparsedia_by_stacking(terms, out_shape, dtype)
+        out_diags = _sum_sparsedia_by_stacking(terms, out_shape, dtype)
     else:
-        out_diags = _add_sparsedia_sparsedia_by_scattering(terms, out_shape, dtype)
+        out_diags = _sum_sparsedia_by_scattering(terms, out_shape, dtype)
     return _numpy_to_tuple(out_offsets), out_diags
 
 
-def _add_sparsedia_sparsedia_by_stacking(
+def _sum_sparsedia_by_stacking(
     terms: list[list[Array]], shape: tuple[int, ...], dtype: jnp.dtype
 ) -> Array:
     # Each output diagonal built, then stacked: on GPU, XLA fuses this into one
@@ -233,7 +232,7 @@ def _add_sparsedia_sparsedia_by_stacking(
     return jnp.concatenate(diags, axis=-2)
 
 
-def _add_sparsedia_sparsedia_by_scattering(
+def _sum_sparsedia_by_scattering(
     terms: list[list[Array]], shape: tuple[int, ...], dtype: jnp.dtype
 ) -> Array:
     # A zero array filled with one `.at[i].add` per term: on CPU, twice as fast as
