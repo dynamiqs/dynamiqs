@@ -189,6 +189,30 @@ def test_odd_sized_stages_match(monkeypatch):
 
 
 @pytest.mark.run(order=TEST_LONG)
+@pytest.mark.usefixtures('_double_precision')
+def test_odd_sized_tangents_match(monkeypatch):
+    # forward-mode solves write the tangents of small states out with an odd number of
+    # elements when a batch of them is large: forced here on 2 tangents of a state of
+    # 64 elements, the Jacobian is unchanged
+    monkeypatch.setattr(jax, 'default_backend', lambda: 'gpu')
+
+    def run():
+        # the Jacobian, and whether its program writes arrays out with an odd size
+        jax.clear_caches()
+        solve = _solve(dq.gradient.Forward())
+        jacobian = jax.jit(jax.jacfwd(lambda x: solve(x[0] * x[1])[0]))
+        x = jnp.array([1.3, 1.0])
+        return jacobian(x), 'optimization_barrier' in jacobian.lower(x).as_text()
+
+    jacobian, odd = run()
+    monkeypatch.setattr(unrolled_solvers, '_MIN_SIZE_ODD_STAGES', 100)
+    jacobian_odd, odd_tangents = run()
+    assert not odd
+    assert odd_tangents
+    assert jnp.allclose(jacobian_odd, jacobian, rtol=1e-12)
+
+
+@pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize(
     ('diffrax_solver', 'solver'),
     [

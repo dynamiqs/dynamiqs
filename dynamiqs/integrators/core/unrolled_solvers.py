@@ -40,6 +40,8 @@ from diffrax._custom_types import Args, BoolScalarLike, RealScalarLike, Y
 from jax.experimental import layout
 from jaxtyping import Array, ArrayLike, PyTree
 
+from ...gradient import Forward, Gradient
+
 
 def _combine(
     y0: PyTree, coefficients: Sequence[float] | np.ndarray, ks: list[PyTree]
@@ -107,10 +109,13 @@ def _odd_sized(fn: Callable, *xs: Array) -> tuple[Array, ...]:
     # keeps XLA from slicing the outputs back to their shape before writing them.
     # Under vmap, the whole batch is flattened, for an odd number of elements at any
     # batch size; a batch sharded across devices is then no longer split evenly, and
-    # XLA moves data between them. The tangents are those of fn.
+    # XLA moves data between them. Arrays with fewer than `_MIN_SIZE_ODD_STAGES`
+    # elements, counting the whole batch, are fn(*xs). The tangents are those of fn.
 
     @jax.custom_batching.custom_vmap
     def odd_sized(*xs: Array) -> tuple[Array, ...]:
+        if xs[0].size < _MIN_SIZE_ODD_STAGES:
+            return fn(*xs)
         out = jax.lax.optimization_barrier(fn(*map(_flatten_odd, xs)))
         return tuple(x[: xs[0].size].reshape(xs[0].shape) for x in out)
 
@@ -145,7 +150,34 @@ def _odd_sized_trees(
     return tuple(treedef.unflatten(list(x)) for x in zip(*outs, strict=True))
 
 
+def _odd_sized_tangents(
+    fn: Callable, treedef: jtu.PyTreeDef, *trees: PyTree
+) -> tuple[PyTree, ...]:
+    # fn(*trees) for a linear fn as in `_odd_sized_trees`, with only its tangents
+    # written out by `_odd_sized_trees`. Under `jax.jacfwd`, XLA evaluates the
+    # tangents of a whole batch at once: e.g. 18 tangents of a 128 x 128 state,
+    # 294,912 elements, unrolled as large states are (1.2x slower solves on an A100).
+    # `custom_vmap` has no transpose rule, so this is only for forward-mode solves
+    # (`Forward` gradient), which cannot be differentiated in reverse mode.
+
+    @jax.custom_jvp
+    def odd_sized_tangents(*trees: PyTree) -> tuple[PyTree, ...]:
+        return fn(*trees)
+
+    @odd_sized_tangents.defjvp
+    def _(primals: tuple, tangents: tuple) -> tuple:
+        # fn is linear: its tangents are fn of the tangents
+        tangents_out = _odd_sized_trees(fn, treedef, *tangents)
+        return odd_sized_tangents(*primals), tangents_out
+
+    return odd_sized_tangents(*trees)
+
+
 class _UnrolledERK(dx.AbstractERK):
+    # the gradient of the solve: a forward-mode solve writes its tangents out with an
+    # odd size (see `_odd_sized_tangents`)
+    gradient: Gradient | None = eqx.field(default=None, static=True)
+
     def _supported(
         self,
         terms: dx.AbstractTerm,
@@ -258,20 +290,31 @@ class _UnrolledERK(dx.AbstractERK):
         # elements, by the kernel that evaluates the stage before it (see
         # `_odd_sized`). The size is that of one batch element: under vmap, XLA sees
         # the whole batch, so a batch of smaller states keeps the unrolled kernels.
+        # Smaller states in a forward-mode solve: only their tangents are (see
+        # `_odd_sized_tangents`).
         leaves, treedef = jtu.tree_flatten(y0)
         odd = all(x.size >= _MIN_SIZE_ODD_STAGES for x in leaves)
+        if odd:
+            odd_sized = _odd_sized_trees
+        elif isinstance(self.gradient, Forward):
+            odd_sized = _odd_sized_tangents
+        else:
+            odd_sized = None
 
         def odd_sized_stages(fn: Callable, *trees: PyTree) -> tuple[PyTree, ...]:
-            return _odd_sized_trees(fn, treedef, *trees) if odd else fn(*trees)
+            if odd_sized is None:
+                return fn(*trees)
+            return odd_sized(fn, treedef, *trees)
 
         def next_stage(k: PyTree, a: np.ndarray) -> tuple[PyTree, PyTree]:
             # the stage k, row-major, and the next stage input
             if not odd:
                 k = _row_major(k)
+            if odd_sized is None:
                 return k, _combine(y0, a, [*ks, k])
             # both written by one kernel
-            k, yi = _odd_sized_trees(
-                lambda y0, k, *ks: (k, _combine(y0, a, [*ks, k])), treedef, y0, k, *ks
+            k, yi = odd_sized_stages(
+                lambda y0, k, *ks: (k, _combine(y0, a, [*ks, k])), y0, k, *ks
             )
             return _row_major(k), yi
 
